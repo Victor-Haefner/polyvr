@@ -48,10 +48,6 @@ VRElectricComponentPtr VRElectricSystem::newComponent(string name, string eID, s
 void VRElectricSystem::setVariable(string HWaddr, string ci) {
     for (auto& var : profinetVariables) {
         auto& v = var.second;
-        if (v->name == "SFT_Estop_Button" || v->name == "SS_Ext_Hopper") {
-            //cout << " - - - VRElectricSystem, skip " << v->name << ", " << v->logicalAddress << endl;
-            continue; // TODO: those are probably switches to toggle!
-        }
         if (v->logicalAddress == HWaddr && v->value != ci ) v->value = ci;
     }
 }
@@ -250,7 +246,6 @@ void VRElectricSystem::importECAD() {
 
 	auto ecadProject = XML::create();
 	ecadProject->read("data/ECAD/EPJ/217155 SOBCO Algerien Ball Forming Line.epj");
-	//ecadProject = VR->importXML("data/ECAD/EPJ/Extruder->epj");
 	for (auto i : ecadProject->getRoot()->getChildren("O117", true) ) {
 		for (auto j : i->getChildren("P11", true)) { // get ecad -> mcad mapping data;
 			if (!j->hasAttribute("P22003") || !j->hasAttribute("P22001")) continue;
@@ -273,20 +268,24 @@ void VRElectricSystem::importECAD() {
 
 	//make 100% sure each component has correct ecadID and mcadID based on traverse scene
 	for (auto i : ecadProject->getRoot()->getChildren("O117", true) ) {
+
+        break; // TODO: der code killt den einaus schalter, aber ohne können die doppel switches nicht gefunden werden!
+
 		for (auto j : i->getChildren("P11", true) ) {
 			if (!j->hasAttribute("P22001") || !j->hasAttribute("P22003")) continue;
 			auto mcadID = j->getAttribute("P22003");
 			auto name = j->getAttribute("P22001");
+			//if (mcadID == "0681 760 09") cout << " -------- PNT3 mcadID: " << mcadID << ", name: " << name << endl;
             //if (mcadID == "0656 012 03") cout << " -- O117 > P11 " << name << "  ,  " << mcadID << endl;
 			for (auto obj : objectsByName) {
-                //if (mcadID == "0656 012 03") cout << "    " << contains(obj.first, mcadID) << "   " << obj.first << endl;
+                //if (mcadID == "0681 760 09") cout << "    " << contains(obj.first, mcadID) << "   " << obj.first << endl;
 				if (contains(obj.first, mcadID)) { //if mcadID is not in traversed scene;
-                    //cout << " -- " << obj.first << endl;
+                    //if (mcadID == "0681 760 09") cout << " -- " << obj.first << endl;
 					for (auto s : ecadProject->getRoot()->getChildren("O17", true)) { //get correct mcadID;
 						for (auto t : s->getChildren("P11", true) ) {
 							for (auto attrib : t->getAttributes() ) {
 								if (name == attrib.second) {
-                                    //cout << " --B" << endl;
+                                    if (mcadID == "0681 760 09") cout << " --B" << endl;
 									for (auto l : s->getChildren("P150", true) ) {
 										auto plant1 = l->getAttribute("P1100");
 										auto plant2 = l->getAttribute("P1200");
@@ -300,6 +299,9 @@ void VRElectricSystem::importECAD() {
 											if (corrspd_ecadID == compts.second[0]->ecadID ) {
 												compts.second[0]->mcadID = mcadID;
 												compts.second[0]->name = name;
+                                                if (compts.second[0]->ecadID == "=KVE120+-60S2") {
+                                                    cout << " -------- PNT4 mcadID: " << mcadID << ", ecadID: " << compts.second[0]->ecadID << ", name: " << name << endl;
+                                                }
 											}
 										}
 									}
