@@ -92,9 +92,10 @@ void VRPointCloud::loadChunk(VRLodPtr lod) {
     options["keepOctree"] = toString(0);
     options["region"] = toString( region );
     options["splatScale"] = toString( splatScale );
+    options["threaded"] = toString( 1 );
     cout << " ---------------- " << splatScale << endl;
 
-    bool threaded = true;
+    bool threaded = false;
     auto chunk = VRImport::get()->load(path, prxy, false, "OSG", threaded, options);
     prxy->addChild(chunk);
     //cout << " VRPointCloud::onLodSwitch loaded " << chunk->getName() << ", parent: " << chunk->getParent() << ", region: " << toString(region) << endl;

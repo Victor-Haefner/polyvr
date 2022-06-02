@@ -409,6 +409,8 @@
 		<Unit filename="src/addons/Engineering/Milling/VRPyMillingMachine.h" />
 		<Unit filename="src/addons/Engineering/Milling/VRPyMillingWorkPiece.cpp" />
 		<Unit filename="src/addons/Engineering/Milling/VRPyMillingWorkPiece.h" />
+		<Unit filename="src/addons/Engineering/Programming/VRLADEngine.cpp" />
+		<Unit filename="src/addons/Engineering/Programming/VRLADEngine.h" />
 		<Unit filename="src/addons/Engineering/Programming/VRLADVariable.cpp" />
 		<Unit filename="src/addons/Engineering/Programming/VRLADVariable.h" />
 		<Unit filename="src/addons/Engineering/Space/VRRocketExhaust.cpp" />
@@ -1041,6 +1043,8 @@
 		<Unit filename="src/core/networking/VRNetworkClient.h" />
 		<Unit filename="src/core/networking/VRNetworkManager.cpp" />
 		<Unit filename="src/core/networking/VRNetworkManager.h" />
+		<Unit filename="src/core/networking/VRNetworkServer.cpp" />
+		<Unit filename="src/core/networking/VRNetworkServer.h" />
 		<Unit filename="src/core/networking/VRNetworkingFwd.h" />
 		<Unit filename="src/core/networking/VROPCUA.cpp" />
 		<Unit filename="src/core/networking/VROPCUA.h" />
