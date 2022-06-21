@@ -173,7 +173,10 @@ void CEF::global_initiate() {
     //settings.log_severity = LOGSEVERITY_VERBOSE;
 #endif
 
-    CefMainArgs args;
+    vector<const char *> cmdArgs;
+    cmdArgs.push_back("--enable-media-stream=1");
+    cmdArgs.push_back("--use-fake-ui-for-media-stream=1");
+    CefMainArgs args(cmdArgs.size(), (char**)cmdArgs.data());
     CefInitialize(args, settings, 0, 0);
 }
 
