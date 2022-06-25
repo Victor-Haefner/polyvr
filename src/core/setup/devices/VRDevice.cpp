@@ -122,6 +122,14 @@ VRSignalPtr VRDevice::newSignal(int key, int state) {
     return sig;
 }
 
+VRSignalPtr VRDevice::getSignal(int key, int state) {
+    stringstream ss;
+    ss << "on_" << name << "_" << key << "_" << state;
+    string sname = ss.str();
+    if (callbacks.count(sname)) return callbacks[sname];
+    return 0;
+}
+
 // signal activation setup
 VRSignalPtr VRDevice::addToggleSignal(int key) { // TODO: this is not ok, an active signal may also be used by someone who does not want it to be active!!
     BStates[key] = false;

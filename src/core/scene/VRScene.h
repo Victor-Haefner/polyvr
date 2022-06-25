@@ -55,6 +55,8 @@ class VRScene : public VRObjectGroupManager,
         VRToggleCbPtr layer_cam_toggle;
         VRToggleCbPtr layer_light_toggle;
 
+        VRDeviceCbPtr onSelectObjCb;
+
         VRSemanticManagerPtr semanticManager;
 
         VRProgressPtr loadingProgress;
@@ -63,8 +65,11 @@ class VRScene : public VRObjectGroupManager,
         int loadingTime = 0;
         VRTimer loadingTimer;
         VRUpdateCbPtr loadingTimeCb;
+
         void updateLoadingProgress(VRThreadWeakPtr t);
         void recLoadingTime();
+
+        bool onSelectObject(VRDeviceWeakPtr dev);
 
     public:
         VRScene();

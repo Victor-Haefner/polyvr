@@ -8,6 +8,7 @@
 #include "core/utils/VRFunctionFwd.h"
 #include "core/utils/VRUtilsFwd.h"
 #include "core/scripting/VRScriptFwd.h"
+#include "core/objects/VRObjectFwd.h"
 #include "VRGuiFwd.h"
 
 struct _GtkWindow;
@@ -48,6 +49,8 @@ class VRGuiManager {
 
         void openHelp(string search = "");
         void updateSystemInfo();
+
+        void selectObject(VRObjectPtr obj);
 
         _GtkWindow* newWindow();
         void remWindow(_GtkWindow* w);

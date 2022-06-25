@@ -187,6 +187,8 @@ class VRGuiScene {
 
         bool updateTreeView();
         void update();
+
+        void selectObject(VRObjectPtr obj);
 };
 
 OSG_END_NAMESPACE;

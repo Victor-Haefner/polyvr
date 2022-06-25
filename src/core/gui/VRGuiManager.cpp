@@ -208,6 +208,10 @@ VRGuiManager::~VRGuiManager() {
     if (mtx) delete mtx;
 }
 
+void VRGuiManager::selectObject(VRObjectPtr obj) {
+    if (g_scene) g_scene->selectObject(obj);
+}
+
 void VRGuiManager::openHelp(string search) {
     g_sc->openHelp(search);
 }
