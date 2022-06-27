@@ -33,8 +33,9 @@ void VRGuiVectorEntry::init(string placeholder, string label,  function<void(OSG
     auto hb = gtk_hbox_new(false, 0);
     gtk_container_add((GtkContainer*)frame, hb);
 
-    auto lbl = gtk_label_new(label.c_str());
-    gtk_widget_set_size_request(lbl, 50, -1);
+    this->label = label;
+    lbl = (GtkLabel*)gtk_label_new(label.c_str());
+    gtk_widget_set_size_request((GtkWidget*)lbl, 50, -1);
 
     ex = (GtkEntry*)gtk_entry_new();
     ey = (GtkEntry*)gtk_entry_new();
@@ -53,7 +54,7 @@ void VRGuiVectorEntry::init(string placeholder, string label,  function<void(OSG
     auto s2 = gtk_vseparator_new();
     auto s3 = gtk_vseparator_new();
 
-    gtk_box_pack_start((GtkBox*)hb, lbl, true, true, 2);
+    gtk_box_pack_start((GtkBox*)hb, (GtkWidget*)lbl, true, true, 2);
     //gtk_box_pack_start((GtkBox*)hb, s1, false, true, 0);
     gtk_box_pack_start((GtkBox*)hb, (GtkWidget*)ex, true, true, 0);
     //gtk_box_pack_start((GtkBox*)hb, s2, false, true, 0);
@@ -81,8 +82,9 @@ void VRGuiVectorEntry::init2D(string placeholder, string label,  function<void(O
     auto hb = gtk_hbox_new(false, 0);
     gtk_container_add((GtkContainer*)frame, hb);
 
-    auto lbl = gtk_label_new(label.c_str());
-    gtk_widget_set_size_request(lbl, 50, -1);
+    this->label = label;
+    lbl = (GtkLabel*)gtk_label_new(label.c_str());
+    gtk_widget_set_size_request((GtkWidget*)lbl, 50, -1);
 
     ex = (GtkEntry*)gtk_entry_new();
     ey = (GtkEntry*)gtk_entry_new();
@@ -94,7 +96,7 @@ void VRGuiVectorEntry::init2D(string placeholder, string label,  function<void(O
     auto s1 = gtk_vseparator_new();
     auto s2 = gtk_vseparator_new();
 
-    gtk_box_pack_start((GtkBox*)hb, lbl, true, true, 2);
+    gtk_box_pack_start((GtkBox*)hb, (GtkWidget*)lbl, true, true, 2);
     //gtk_box_pack_start((GtkBox*)hb, s1, true, true, 0);
     gtk_box_pack_start((GtkBox*)hb, (GtkWidget*)ex, true, true, 0);
     //gtk_box_pack_start((GtkBox*)hb, s2, true, true, 0);
@@ -128,8 +130,11 @@ void VRGuiVectorEntry::setFontColor(OSG::Vec3d c) {
     col.red = c[0]*65535;
     col.green = c[1]*65535;
     col.blue = c[2]*65535;
-    if (lbl) gtk_widget_modify_fg((GtkWidget*)lbl, gtk_widget_get_state((GtkWidget*)lbl), &col);
-    if (ex) gtk_widget_modify_text((GtkWidget*)ex, gtk_widget_get_state((GtkWidget*)ex), &col);
-    if (ey) gtk_widget_modify_text((GtkWidget*)ey, gtk_widget_get_state((GtkWidget*)ey), &col);
-    if (ez) gtk_widget_modify_text((GtkWidget*)ez, gtk_widget_get_state((GtkWidget*)ez), &col);
+    GdkRGBA rgbaCol;
+    gdk_rgba_parse(&rgbaCol, gdk_color_to_string(&col));
+
+    if (lbl) gtk_widget_override_color((GtkWidget*)lbl, gtk_widget_get_state_flags((GtkWidget*)lbl), &rgbaCol);
+    if (ex) gtk_widget_override_color((GtkWidget*)ex, gtk_widget_get_state_flags((GtkWidget*)ex), &rgbaCol);
+    if (ey) gtk_widget_override_color((GtkWidget*)ey, gtk_widget_get_state_flags((GtkWidget*)ey), &rgbaCol);
+    if (ez) gtk_widget_override_color((GtkWidget*)ez, gtk_widget_get_state_flags((GtkWidget*)ez), &rgbaCol);
 }

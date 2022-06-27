@@ -107,8 +107,8 @@ void VRGuiScene::setTransform(VRTransformPtr e) {
 
     atEntry.setFontColor(Vec3d(0, 0, 0));
     dirEntry.setFontColor(Vec3d(0, 0, 0));
-    if (e->get_orientation_mode())  atEntry.setFontColor(Vec3d(0.6, 0.6, 0.6));
-    else                            dirEntry.setFontColor(Vec3d(0.6, 0.6, 0.6));
+    if (e->get_orientation_mode())  atEntry.setFontColor(Vec3d(0.7, 0.7, 0.7));
+    else                            dirEntry.setFontColor(Vec3d(0.7, 0.7, 0.7));
 
     /*bool doTc = c->hasTConstraint();
     bool doRc = c->hasRConstraint();
