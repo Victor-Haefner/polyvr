@@ -257,16 +257,16 @@ void VRView::setDecorators() {//set decorators, only if projection true
 }
 
 static string coordsVP =
-"#version 400 compatibility\n"
-"in vec4 osg_Vertex;\n"
-"in vec4 osg_Color;\n"
-"uniform mat4 OSGCameraOrientation;\n"
-"out vec4 color;\n"
+"attribute vec4 osg_Vertex;\n"
+"attribute vec4 osg_Color;\n"
+"uniform mat4 OSGViewMatrix;\n"
+"varying vec4 color;\n"
 "void main(void) {\n"
-"  mat4 M = OSGCameraOrientation;\n"
-"  M = inverse(M);\n"
-"  vec4 p = vec4(osg_Vertex.xyz*0.03, osg_Vertex.w);\n"
-"  gl_Position = gl_ModelViewProjectionMatrix * ( M * p + vec4(0,0,-0.5,0)) + vec4(0.42,-0.42,0,0);\n"
+"  mat4 M = OSGViewMatrix;\n"
+"  M[3] = vec4(0,0,0,1);\n"
+"  vec4 p = vec4(osg_Vertex.xyz*0.08, osg_Vertex.w);\n"
+"  gl_Position = (gl_ModelViewProjectionMatrix * ( M * p + vec4(0,0,-0.5,0))) + vec4(0.85,-0.8,0,0);\n"
+"  gl_Position.w = 1.0;\n"
 "  color = osg_Color;\n"
 "}\n";
 
@@ -299,7 +299,7 @@ VRView::VRView(string name) {
     coordsGeoMat = VRMaterial::create("view coords mat");
     coordsGeoMat->setVertexShader(coordsVP, "coordsVP");
     coordsGeoMat->setFragmentShader(coordsFP, "coordsFP");
-    coordsGeoMat->enableShaderParameter("OSGCameraOrientation");
+    coordsGeoMat->enableShaderParameter("OSGViewMatrix");
     coordsGeoMat->setLineWidth(2);
     BoxVolume &vol = coordsGeo->editVolume(false);
     vol.setInfinite(true);
