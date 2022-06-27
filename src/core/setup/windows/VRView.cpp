@@ -256,6 +256,26 @@ void VRView::setDecorators() {//set decorators, only if projection true
     PCDecoratorRight->editMFSurface()->push_back(screenUpperLeft);
 }
 
+static string coordsVP =
+"#version 400 compatibility\n"
+"in vec4 osg_Vertex;\n"
+"in vec4 osg_Color;\n"
+"uniform mat4 OSGCameraOrientation;\n"
+"out vec4 color;\n"
+"void main(void) {\n"
+"  mat4 M = OSGCameraOrientation;\n"
+"  M = inverse(M);\n"
+"  vec4 p = vec4(osg_Vertex.xyz*0.03, osg_Vertex.w);\n"
+"  gl_Position = gl_ModelViewProjectionMatrix * ( M * p + vec4(0,0,-0.5,0)) + vec4(0.42,-0.42,0,0);\n"
+"  color = osg_Color;\n"
+"}\n";
+
+static string coordsFP =
+"varying vec4 color;\n"
+"void main(void) {\n"
+"  gl_FragColor = color;\n"
+"}\n";
+
 VRView::VRView(string name) {
     this->name = name;
 
@@ -270,9 +290,23 @@ VRView::VRView(string name) {
 
     viewGeo = makeNodeFor(makePlaneGeo(1,1,1,1));
     viewGeo->setTravMask(0);
-    viewGeoMat = VRMaterial::create("setup view mat");
+    viewGeoMat = VRMaterial::create("view visu mat");
     GeometryMTRecPtr geo = dynamic_cast<Geometry*>( viewGeo->getCore() );
     geo->setMaterial(viewGeoMat->getMaterial()->mat);
+
+    coordsGeo = makeCoordAxis(1, 3, true);
+    coordsGeo->setTravMask(0);
+    coordsGeoMat = VRMaterial::create("view coords mat");
+    coordsGeoMat->setVertexShader(coordsVP, "coordsVP");
+    coordsGeoMat->setFragmentShader(coordsFP, "coordsFP");
+    coordsGeoMat->enableShaderParameter("OSGCameraOrientation");
+    coordsGeoMat->setLineWidth(2);
+    BoxVolume &vol = coordsGeo->editVolume(false);
+    vol.setInfinite(true);
+    vol.setStatic(true);
+    vol.setValid(true);
+    GeometryMTRecPtr cgeo = dynamic_cast<Geometry*>( coordsGeo->getCore() );
+    cgeo->setMaterial(coordsGeoMat->getMaterial()->mat);
 
     renderingL = VRRenderStudio::create( VRRenderStudio::LEFT );
     renderingR = VRRenderStudio::create( VRRenderStudio::RIGHT );
@@ -448,6 +482,11 @@ void VRView::showViewGeo(bool b) {
     else viewGeo->setTravMask(0);
 }
 
+void VRView::showCoords(bool b) {
+    if (b) coordsGeo->setTravMask(0xffffffff);
+    else coordsGeo->setTravMask(0);
+}
+
 Vec4d VRView::getPosition() { return position; }
 void VRView::setPosition(Vec4d pos) { position = pos; update(); }
 
@@ -456,6 +495,7 @@ VRObjectPtr VRView::getRoot() { return view_root; }
 
 void VRView::setRoot() {
     if (real_root && viewGeo) real_root->addChild(OSGObject::create(viewGeo));
+    if (real_root && coordsGeo) real_root->addChild(OSGObject::create(coordsGeo));
 
     if (user && real_root) user->switchParent(real_root);
     if (dummy_user && real_root) dummy_user->switchParent(real_root);

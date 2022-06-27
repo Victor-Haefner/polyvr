@@ -240,6 +240,12 @@ void VRScene::showReferentials(bool b, VRObjectPtr o) {
     if (t) t->showCoordAxis(b);
 
     for (unsigned int i=0; i<o->getChildrenCount(); i++) showReferentials(b, o->getChild(i));
+
+    if (auto setup = VRSetup::getCurrent()) {
+        for (auto v : setup->getViews()) {
+            if (v) v->showCoords(b);
+        }
+    }
 }
 
 void VRScene::showLights(bool b) { for (auto be : VRLightBeacon::getAll()) be.lock()->showLightGeo(b); }
