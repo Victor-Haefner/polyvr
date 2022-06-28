@@ -1371,15 +1371,13 @@ void VRGuiScene::update() {
     updateObjectForms();
 }
 
-// TODO: select in treeview
 void VRGuiScene::selectObject(VRObjectPtr obj) {
-    cout << "VRGuiScene::selectObject " << obj->getName() << endl;
-
-    //GtkTreeSelection* sel = gtk_tree_view_get_selection(tree_view);
-    //GtkTreeModel* model = gtk_tree_view_get_model(tree_view);
-
-    //if (!selected_itr) selected_itr = new GtkTreeIter();
-    //if (!gtk_tree_selection_get_selected(sel, &model, selected_itr)) return;
+    string path = obj->getPath();
+    GtkTreePath* tpath = gtk_tree_path_new_from_string(path.c_str());
+    GtkTreeViewColumn* focus_column = gtk_tree_view_get_column(tree_view, 0);
+    gtk_tree_view_expand_to_path(tree_view, tpath);
+    gtk_tree_view_set_cursor(tree_view, tpath, focus_column, false);
+    gtk_tree_path_free(tpath);
 
     setWidgetSensitivity("table11", true);
 
