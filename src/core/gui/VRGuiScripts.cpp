@@ -1006,6 +1006,7 @@ void VRGuiScripts::on_change_group() {
     on_select_script();
     on_save_clicked();
     updateList();
+    focusScript(script->getName(), 4, 2);
 }
 
 void VRGuiScripts::on_change_server() {
