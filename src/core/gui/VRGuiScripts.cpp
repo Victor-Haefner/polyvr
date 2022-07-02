@@ -133,8 +133,9 @@ void VRGuiScripts::setScriptListRow(GtkTreeIter* itr, VRScriptPtr script, bool o
 void VRGuiScripts::on_new_clicked() {
     auto scene = VRScene::getCurrent();
     if (scene == 0) return;
-    scene->newScript("Script", "\timport VR");
+    auto s = scene->newScript("Script", "\timport VR\n\n\t");
     updateList();
+    focusScript(s->getName(), 4, 2);
 }
 
 VRGuiScripts::group::group() { static int i = 0; ID = i; i++; }
