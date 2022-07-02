@@ -141,9 +141,11 @@ void VRGuiScripts::on_new_clicked() {
 VRGuiScripts::group::group() { static int i = 0; ID = i; i++; }
 
 void VRGuiScripts::on_addSep_clicked() {
+    VRScriptPtr script = getSelectedScript();
     group g;
     groups[g.ID] = g;
     updateList();
+    if (script) focusScript(script->getName(), 4, 2);
 }
 
 void VRGuiScripts::on_save_clicked() {
@@ -429,14 +431,20 @@ void VRGuiScripts::on_name_edited(const char* path, const char* new_name) {
         if (scene == 0) return;
         auto s = scene->changeScriptName(name, new_name);
         new_name = s->getName().c_str();
+        updateList();
+        focusScript(new_name, 4, 2);
     } else { // change group name
         groups[type].name = new_name;
         for (auto& sw : groups[type].scripts) if (auto s = sw.lock()) s->setGroup(new_name);
-    }
 
-    updateList();
-    if (type == -1) focusScript(new_name, 4, 2);
-    on_select_script();
+        updateList();
+        on_select_script();
+
+        auto tree_view = (GtkTreeView*)VRGuiBuilder::get()->get_widget("treeview5");
+        GtkTreePath* tpath = gtk_tree_path_new_from_string(path);
+        gtk_tree_view_expand_row(tree_view, tpath, true);
+        gtk_tree_path_free(tpath);
+    }
 }
 
 void VRGuiScripts::on_buffer_changed() {
