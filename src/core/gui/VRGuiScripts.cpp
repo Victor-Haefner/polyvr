@@ -424,16 +424,18 @@ void VRGuiScripts::on_name_edited(const char* path, const char* new_name) {
 
     // update data
     int type = tree_view.getSelectedIntValue(8);
-    if (type == -1) {
+    if (type == -1) { // change script name
         auto scene = VRScene::getCurrent();
         if (scene == 0) return;
-        scene->changeScriptName(name, new_name);
-    } else {
-        cout << "VRGuiScripts::on_name_edited grp ID " << type << endl;
+        auto s = scene->changeScriptName(name, new_name);
+        new_name = s->getName().c_str();
+    } else { // change group name
         groups[type].name = new_name;
         for (auto& sw : groups[type].scripts) if (auto s = sw.lock()) s->setGroup(new_name);
     }
+
     updateList();
+    if (type == -1) focusScript(new_name, 4, 2);
     on_select_script();
 }
 
