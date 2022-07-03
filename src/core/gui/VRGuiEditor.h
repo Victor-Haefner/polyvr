@@ -43,8 +43,8 @@ class VRGuiEditor {
         void addKeyBinding(string name, VRUpdateCbPtr cb);
         void setLanguage(string lang);
         void grabFocus();
-        void setCursor(int line, int column);
-        void getCursor(int& line, int& column);
+        void setCursorPosition(int line, int column);
+        void getCursorPosition(int& line, int& column);
         void setSelection(string s);
         string getSelection();
         _GtkWidget* getEditor();

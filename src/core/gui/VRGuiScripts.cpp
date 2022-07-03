@@ -287,7 +287,7 @@ void VRGuiScripts::on_del_clicked() {
 void VRGuiScripts::on_select_script() { // selected a script
     if (pages.count(selected)) {
         auto& P = pages[selected];
-        editor->getCursor(P.line, P.column);
+        editor->getCursorPosition(P.line, P.column);
         P.line++;
         P.column++;
         cout << "editor focus out, cursor at: " << selected << "  " << P.line << "  " << P.column << endl;
@@ -370,7 +370,7 @@ void VRGuiScripts::on_select_script() { // selected a script
 
     if (pages.count(selected)) {
         pagePos P2 = pages[selected];
-        editor->focus(P2.line, P2.column);
+        if (P2.line > 0) editor->focus(P2.line, P2.column);
     }
 }
 
@@ -928,10 +928,10 @@ void VRGuiScripts::focusScript(string name, int line, int column) {
 
     // set focus on editor
     editor->grabFocus();
-    editor->setCursor(line, column);
+    editor->setCursorPosition(line, column);
 }
 
-void VRGuiScripts::getLineFocus(int& line, int& column) { editor->getCursor(line, column); }
+void VRGuiScripts::getLineFocus(int& line, int& column) { editor->getCursorPosition(line, column); }
 
 void VRGuiScripts::on_search_link_clicked(searchResult res, string s) {
     focusScript(res.scriptName, res.line, res.column);
