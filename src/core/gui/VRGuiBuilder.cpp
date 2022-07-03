@@ -1278,8 +1278,8 @@ void VRGuiBuilder::buildBaseUI() {
     auto table39 = addGrid("table39");
     addNotebookPage(notebook3, table30, "General");
     addNotebookPage(notebook3, scenegraph_tab, "Scenegraph");
-    addNotebookPage(notebook3, table4, "Navigation");
     addNotebookPage(notebook3, table14, "Scripting");
+    addNotebookPage(notebook3, table4, "Navigation");
     addNotebookPage(notebook3, table21, "Semantics");
     addNotebookPage(notebook3, table39, "Network");
 

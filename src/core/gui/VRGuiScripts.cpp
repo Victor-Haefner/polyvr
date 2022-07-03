@@ -891,7 +891,7 @@ VRGuiScripts::searchResult::searchResult(string s, int l, int c) : scriptName(s)
 
 void VRGuiScripts::focusScript(string name, int line, int column) {
     setNotebookPage("notebook1", 2);
-    setNotebookPage("notebook3", 3);
+    setNotebookPage("notebook3", 2);
 
     auto store = (GtkTreeStore*)VRGuiBuilder::get()->get_object("script_tree");
     auto tree_view = (GtkTreeView*)VRGuiBuilder::get()->get_widget("treeview5");
