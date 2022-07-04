@@ -133,9 +133,11 @@ void VRGuiScripts::setScriptListRow(GtkTreeIter* itr, VRScriptPtr script, bool o
 void VRGuiScripts::on_new_clicked() {
     auto scene = VRScene::getCurrent();
     if (scene == 0) return;
+    int l,c;
+    getLineFocus(l,c);
     auto s = scene->newScript("Script", "\timport VR\n\n\t");
     updateList();
-    focusScript(s->getName(), 4, 2);
+    focusScript(s->getName(), l,c);
 }
 
 VRGuiScripts::group::group() { static int i = 0; ID = i; i++; }
@@ -144,8 +146,10 @@ void VRGuiScripts::on_addSep_clicked() {
     VRScriptPtr script = getSelectedScript();
     group g;
     groups[g.ID] = g;
+    int l,c;
+    getLineFocus(l,c);
     updateList();
-    if (script) focusScript(script->getName(), 4, 2);
+    if (script) focusScript(script->getName(), l,c);
 }
 
 void VRGuiScripts::on_save_clicked() {
@@ -287,10 +291,8 @@ void VRGuiScripts::on_del_clicked() {
 void VRGuiScripts::on_select_script() { // selected a script
     if (pages.count(selected)) {
         auto& P = pages[selected];
-        editor->getCursorPosition(P.line, P.column);
-        P.line++;
-        P.column++;
-        cout << "editor focus out, cursor at: " << selected << "  " << P.line << "  " << P.column << endl;
+        getLineFocus(P.line, P.column);
+        cout << "editor deselect " << selected << ", cursor at: " << selected << "  " << P.line << "  " << P.column << endl;
     }
 
     VRScriptPtr script = VRGuiScripts::getSelectedScript();
@@ -370,7 +372,10 @@ void VRGuiScripts::on_select_script() { // selected a script
 
     if (pages.count(selected)) {
         pagePos P2 = pages[selected];
-        if (P2.line > 0) editor->focus(P2.line, P2.column);
+        if (P2.line > 0) {
+            cout << " fokus selected " << selected << " " << P2.line << ", " << P2.column << endl;
+            editor->focus(P2.line, P2.column);
+        }
     }
 }
 
@@ -431,8 +436,10 @@ void VRGuiScripts::on_name_edited(const char* path, const char* new_name) {
         if (scene == 0) return;
         auto s = scene->changeScriptName(name, new_name);
         new_name = s->getName().c_str();
+        int l,c;
+        getLineFocus(l,c);
         updateList();
-        focusScript(new_name, 4, 2);
+        focusScript(new_name, l,c);
     } else { // change group name
         groups[type].name = new_name;
         for (auto& sw : groups[type].scripts) if (auto s = sw.lock()) s->setGroup(new_name);
@@ -931,7 +938,11 @@ void VRGuiScripts::focusScript(string name, int line, int column) {
     editor->setCursorPosition(line, column);
 }
 
-void VRGuiScripts::getLineFocus(int& line, int& column) { editor->getCursorPosition(line, column); }
+void VRGuiScripts::getLineFocus(int& line, int& column) {
+    editor->getCursorPosition(line, column);
+    line++;
+    column++;
+}
 
 void VRGuiScripts::on_search_link_clicked(searchResult res, string s) {
     focusScript(res.scriptName, res.line, res.column);
@@ -1002,11 +1013,13 @@ void VRGuiScripts::on_change_group() {
     if(!trigger_cbs) return;
     VRScriptPtr script = getSelectedScript();
     if (!script) return;
+    int l,c;
+    getLineFocus(l,c);
     script->setGroup( getComboboxText("combobox10") );
     on_select_script();
     on_save_clicked();
     updateList();
-    focusScript(script->getName(), 4, 2);
+    focusScript(script->getName(), l,c);
 }
 
 void VRGuiScripts::on_change_server() {
