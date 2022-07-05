@@ -225,7 +225,7 @@ vector<float> VRRobotArm::calcReverseKinematicsKuka(PosePtr p) {
 	resultingAngles[1] = a - Pi*0.5;
 	//resultingAngles[1] = a;
 
-    float f = pos[2] > 0 ? atan(pos[0]/pos[2]) : Pi - atan(-pos[0]/pos[2]);
+    float f = atan2(pos[0], pos[2]);
     resultingAngles[0] = f;
 
     // end effector
@@ -315,7 +315,7 @@ vector<float> VRRobotArm::calcReverseKinematicsAubo(PosePtr p) {
 	resultingAngles[1] = a - Pi*0.5;
 	//resultingAngles[1] = a;
 
-    float f = pos[2] > 0 ? atan(pos[0]/pos[2]) : Pi - atan(-pos[0]/pos[2]);
+    float f = atan2(pos[0], pos[2]);
     resultingAngles[0] = f;
 
     Vec3d e0 = Vec3d(cos(-f),0,sin(-f));
