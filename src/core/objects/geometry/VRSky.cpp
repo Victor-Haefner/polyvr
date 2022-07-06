@@ -346,13 +346,19 @@ uniform mat4 extInvMat;
 uniform int c1; // test input
 
 void main() {
+\n
 #ifdef __EMSCRIPTEN__
+\n
 	mFragInv = extInvMat;
+\n
 #else
+\n
     mFragInv = gl_ModelViewProjectionMatrix; // this is the only working solution for cave
     mFragInv[3] = vec4(0,0,0,mFragInv[3][3]);
     mFragInv = inverse(mFragInv);
+\n
 #endif
+\n
 
 
 	pos = osg_Vertex * 0.5;
