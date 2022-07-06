@@ -396,8 +396,16 @@ Color4f VRTexture::getPixel(int i) {
     }
 
     if (N == 2) {
-        Vec2f* data2 = (Vec2f*)data;
-        Vec2f d = data2[i];
+        Vec2f d;
+
+        if (f == Image::OSG_UINT8_IMAGEDATA)   for (int j=0; j<2; j++) d[j] = ((UInt8*)data)[2*i+j]/256.0;
+        if (f == Image::OSG_INT16_IMAGEDATA)   for (int j=0; j<2; j++) d[j] = ((Int16*)data)[2*i+j]/32768.0;
+        if (f == Image::OSG_UINT16_IMAGEDATA)  for (int j=0; j<2; j++) d[j] = ((UInt16*)data)[2*i+j]/65536.0;
+        if (f == Image::OSG_FLOAT16_IMAGEDATA) for (int j=0; j<2; j++) d[j] = ((Real16*)data)[2*i+j];
+        if (f == Image::OSG_INT32_IMAGEDATA)   for (int j=0; j<2; j++) d[j] = ((Int32*)data)[2*i+j]/2147483648.0;
+        if (f == Image::OSG_UINT32_IMAGEDATA)  for (int j=0; j<2; j++) d[j] = ((UInt32*)data)[2*i+j]/4294967296.0;
+        if (f == Image::OSG_FLOAT32_IMAGEDATA) for (int j=0; j<2; j++) d[j] = ((Real32*)data)[2*i+j];
+
         res = Color4f(d[0], d[1], 0.0, 1.0);
     }
 
@@ -408,7 +416,6 @@ Color4f VRTexture::getPixel(int i) {
         if (f == Image::OSG_INT16_IMAGEDATA)   for (int j=0; j<3; j++) d[j] = ((Int16*)data)[3*i+j]/32768.0;
         if (f == Image::OSG_UINT16_IMAGEDATA)  for (int j=0; j<3; j++) d[j] = ((UInt16*)data)[3*i+j]/65536.0;
         if (f == Image::OSG_FLOAT16_IMAGEDATA) for (int j=0; j<3; j++) d[j] = ((Real16*)data)[3*i+j];
-        //if (f == Image::OSG_UINT24_8_IMAGEDATA)for (int j=0; j<3; j++) d[j] = ((UInt24*)data)[3*i+j];
         if (f == Image::OSG_INT32_IMAGEDATA)   for (int j=0; j<3; j++) d[j] = ((Int32*)data)[3*i+j]/2147483648.0;
         if (f == Image::OSG_UINT32_IMAGEDATA)  for (int j=0; j<3; j++) d[j] = ((UInt32*)data)[3*i+j]/4294967296.0;
         if (f == Image::OSG_FLOAT32_IMAGEDATA) for (int j=0; j<3; j++) d[j] = ((Real32*)data)[3*i+j];
@@ -417,8 +424,17 @@ Color4f VRTexture::getPixel(int i) {
     }
 
     if (N == 4) {
-        Color4f* data4 = (Color4f*)data;
-        res = data4[i];
+        Color4f d;
+
+        if (f == Image::OSG_UINT8_IMAGEDATA)   for (int j=0; j<4; j++) d[j] = ((UInt8*)data)[4*i+j]/256.0;
+        if (f == Image::OSG_INT16_IMAGEDATA)   for (int j=0; j<4; j++) d[j] = ((Int16*)data)[4*i+j]/32768.0;
+        if (f == Image::OSG_UINT16_IMAGEDATA)  for (int j=0; j<4; j++) d[j] = ((UInt16*)data)[4*i+j]/65536.0;
+        if (f == Image::OSG_FLOAT16_IMAGEDATA) for (int j=0; j<4; j++) d[j] = ((Real16*)data)[4*i+j];
+        if (f == Image::OSG_INT32_IMAGEDATA)   for (int j=0; j<4; j++) d[j] = ((Int32*)data)[4*i+j]/2147483648.0;
+        if (f == Image::OSG_UINT32_IMAGEDATA)  for (int j=0; j<4; j++) d[j] = ((UInt32*)data)[4*i+j]/4294967296.0;
+        if (f == Image::OSG_FLOAT32_IMAGEDATA) for (int j=0; j<4; j++) d[j] = ((Real32*)data)[4*i+j];
+
+        res = d;
     }
 
     return res;

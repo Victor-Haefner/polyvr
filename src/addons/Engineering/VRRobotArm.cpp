@@ -432,6 +432,7 @@ void VRRobotArm::setAngles(vector<float> angles, bool force) {
     }
 }
 
+void VRRobotArm::setSpeed(float s) { animSpeed = s; }
 void VRRobotArm::setMaxSpeed(float s) { maxSpeed = s; }
 
 PosePtr VRRobotArm::getLastPose() { return lastPose; }
@@ -491,7 +492,7 @@ void VRRobotArm::moveTo(PosePtr p2, bool local) {
 
 
     //addJob( job(animPath, 0, 1, 2*animPath->getLength()) ); // TODO
-    addJob( job(animPath) );
+    addJob( job(animPath, 0, 0, 1, 2*animPath->getLength()/animSpeed, false) );
 }
 
 void VRRobotArm::setGrab(float g) {

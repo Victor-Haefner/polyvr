@@ -184,6 +184,7 @@ PyMethodDef VRPyRobotArm::methods[] = {
     {"setAngleDirections", PyWrap(RobotArm, setAngleDirections, "Set angles rotation direction - setAngleDirections([1/-1])", void, vector<int> ) },
     {"setAxis", PyWrap(RobotArm, setAxis, "Set rotation axis for each part - setAxis([int a])\n a: 0 = 'x', 1 = 'y', 2 = 'z'", void, vector<int> ) },
     {"setLengths", PyWrap(RobotArm, setLengths, "Set kinematic lengths between joints - setLengths([base_height, upper_arm length, forearm length, grab position])", void, vector<float> ) },
+    {"setSpeed", PyWrap(RobotArm, setSpeed, "Set path follow animation speed", void, float ) },
     {"setMaxSpeed", PyWrap(RobotArm, setMaxSpeed, "Set max angular speed", void, float ) },
     {"canReach", PyWrapOpt(RobotArm, canReach, "Check if the end effector can reach a certain pose, optionally in local robot coords, default in world coords - canReach(pose | local)", "0", bool, PosePtr, bool ) },
     {"moveTo", PyWrapOpt(RobotArm, moveTo, "Move the end effector to a certain pose, optionally in local robot coords, default in world coords - moveTo(pose | local)", "0", void, PosePtr, bool ) },
