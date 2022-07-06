@@ -173,10 +173,15 @@ void CEF::global_initiate() {
     //settings.log_severity = LOGSEVERITY_VERBOSE;
 #endif
 
+#ifdef _WIN32
+    CefMainArgs args;
+	//args.set(const struct_type* src, struct_type* target, bool copy); // TODO: set parameters as defined below
+#else
     vector<const char *> cmdArgs;
     cmdArgs.push_back("--enable-media-stream=1");
     cmdArgs.push_back("--use-fake-ui-for-media-stream=1");
     CefMainArgs args(cmdArgs.size(), (char**)cmdArgs.data());
+#endif
     CefInitialize(args, settings, 0, 0);
 }
 
