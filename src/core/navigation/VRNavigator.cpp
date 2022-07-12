@@ -244,8 +244,11 @@ bool VRNavigator::orbit(VRDeviceWeakPtr _dev) {
         camSphereRef[2] = asin(dir[1]);
 
         float cosb = cos(camSphereRef[2]);
-        float a = acos(dir[0]/cosb);
-        if (dir[2]/cosb<0) a *= -1;
+        float cosa = dir[0]/cosb;
+        cosa = min(cosa,  1.f);
+        cosa = max(cosa, -1.f);
+        float a = acos(cosa);
+        if (dir[2]/cosb < 0) a *= -1;
         camSphereRef[1] = a;
     }
 
