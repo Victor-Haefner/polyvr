@@ -39,15 +39,18 @@ class VRSetup : public VRViewManager, public VRWindowManager, public VRDeviceMan
         VRVisualLayerPtr setup_layer;
         VRVisualLayerPtr stats_layer;
         VRVisualLayerPtr stencil_layer;
+        VRVisualLayerPtr pause_layer;
         VRToggleCbPtr layer_setup_toggle;
         VRToggleCbPtr layer_stats_toggle;
         VRToggleCbPtr layer_stencil_toggle;
+        VRToggleCbPtr layer_pause_toggle;
 
         VRNetworkPtr network;
         map<string, VRScriptPtr> scripts;
 
         void showStats(bool b);
         void showStencil(bool b);
+        void togglePause(bool b);
         void parseSetup(XMLElementPtr setup);
         void processOptions();
 

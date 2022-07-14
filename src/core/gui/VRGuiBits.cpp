@@ -483,22 +483,27 @@ void VRGuiBits::updateVisualLayer() {
 
     for (auto l : VRVisualLayer::getLayers()) {
         auto lay = VRVisualLayer::getLayer(l).get();
-        auto ttb = gtk_toggle_tool_button_new();
-        auto icon = gtk_image_new();
+        GtkToolItem* ttb = 0;
+
+        string icon_path = VRSceneManager::get()->getOriginalWorkdir() + "/ressources/gui/" + lay->getIconName();
+        if (exists(icon_path)) {
+            ttb = gtk_toggle_tool_button_new();
+            auto icon = gtk_image_new();
+            gtk_image_set_from_file((GtkImage*)icon, icon_path.c_str());
+            auto pbuf = gtk_image_get_pixbuf((GtkImage*)icon);
+            if (pbuf) {
+                pbuf = gdk_pixbuf_scale_simple((GdkPixbuf*)pbuf, 24, 24, GDK_INTERP_BILINEAR);
+                gtk_image_set_from_pixbuf((GtkImage*)icon, pbuf);
+                gtk_tool_button_set_icon_widget((GtkToolButton*)ttb, icon);
+            }
+        } else { // try stock image
+            ttb = gtk_toggle_tool_button_new_from_stock(lay->getIconName().c_str());
+        }
 
         gtk_tool_item_set_tooltip_markup(ttb, l.c_str());
         gtk_toolbar_insert((GtkToolbar*)bar, (GtkToolItem*)ttb, -1);
 
         connect_signal<void>(ttb, bind(&VRGuiBits::on_view_option_toggle, this, lay, (GtkToggleToolButton*)ttb), "toggled");
-
-        string icon_path = VRSceneManager::get()->getOriginalWorkdir() + "/ressources/gui/" + lay->getIconName();
-        gtk_image_set_from_file((GtkImage*)icon, icon_path.c_str());
-        auto pbuf = gtk_image_get_pixbuf((GtkImage*)icon);
-        if (pbuf) {
-            pbuf = gdk_pixbuf_scale_simple((GdkPixbuf*)pbuf, 24, 24, GDK_INTERP_BILINEAR);
-            gtk_image_set_from_pixbuf((GtkImage*)icon, pbuf);
-            gtk_tool_button_set_icon_widget((GtkToolButton*)ttb, icon);
-        }
     }
 
     gtk_widget_show_all(bar);
