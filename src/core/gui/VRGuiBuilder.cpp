@@ -236,10 +236,11 @@ GtkWidget* addButton(string ID, string label) {
     return n;
 }
 
-GtkWidget* addImgButton(string ID, string stockID) {
+GtkWidget* addImgButton(string ID, string stockID, string tooltip) {
     auto n = gtk_button_new();
     auto img = gtk_image_new_from_stock(stockID.c_str(), GTK_ICON_SIZE_SMALL_TOOLBAR);
     gtk_button_set_image(GTK_BUTTON(n), img);
+    gtk_widget_set_tooltip_text(GTK_WIDGET(n), tooltip.c_str());
     VRGuiBuilder::get()->reg_widget(n, ID);
     return n;
 }
@@ -691,7 +692,7 @@ void VRGuiBuilder::buildBaseUI() {
     auto sc_Grid = addGrid("sc_Grid");
     auto sc_spacer = addSpacer(20);
     auto sc_label1 = addLabel("sc_label1", "Take Screenshot");
-    auto sc_path = addImgButton("sc_path", "gtk-directory");
+    auto sc_path = addImgButton("sc_path", "gtk-directory", "Select folder");
     auto sc_entry = addEntry("sc_entry");
     auto sc_trigger = addButton("sc_trigger", "Take");
     gtk_box_pack_start(GTK_BOX(dialog_vbox15), sc_label1, true, true, 5);
@@ -1389,11 +1390,11 @@ void VRGuiBuilder::buildBaseUI() {
     auto triggers = gtk_list_store_new(7, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_POINTER, G_TYPE_STRING);
     auto treeview14_and_frame = addTreeview("treeview14", "triggers", GTK_TREE_MODEL(triggers), false, false);
     auto treeview14 = treeview14_and_frame.first;
-    auto button23 = addImgButton("button23", "gtk-add");
-    auto button24 = addImgButton("button24", "gtk-remove");
-    gtk_grid_attach(GTK_GRID(hbox3), treeview14_and_frame.second, 0,0,1,2);
-    gtk_grid_attach(GTK_GRID(hbox3), button23, 1,0,1,1);
-    gtk_grid_attach(GTK_GRID(hbox3), button24, 1,1,1,1);
+    auto button23 = addImgButton("button23", "gtk-add", "Add trigger");
+    auto button24 = addImgButton("button24", "gtk-remove", "Remove selected trigger");
+    gtk_grid_attach(GTK_GRID(hbox3), treeview14_and_frame.second, 1,0,1,2);
+    gtk_grid_attach(GTK_GRID(hbox3), button23, 0,0,1,1);
+    gtk_grid_attach(GTK_GRID(hbox3), button24, 0,1,1,1);
     gtk_widget_set_hexpand(treeview14, true);
     gtk_widget_set_vexpand(treeview14_and_frame.second, false);
 
@@ -1421,11 +1422,11 @@ void VRGuiBuilder::buildBaseUI() {
     auto liststore2 = gtk_list_store_new(4, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_POINTER, G_TYPE_STRING);
     auto treeview7_and_frame = addTreeview("treeview7", "liststore2", GTK_TREE_MODEL(liststore2), false, false);
     auto treeview7 = treeview7_and_frame.first;
-    auto button12 = addImgButton("button12", "gtk-add");
-    auto button13 = addImgButton("button13", "gtk-remove");
-    gtk_grid_attach(GTK_GRID(hbox13), treeview7_and_frame.second, 0,0,1,2);
-    gtk_grid_attach(GTK_GRID(hbox13), button12, 1,0,1,1);
-    gtk_grid_attach(GTK_GRID(hbox13), button13, 1,1,1,1);
+    auto button12 = addImgButton("button12", "gtk-add", "Add parameter");
+    auto button13 = addImgButton("button13", "gtk-remove", "Remove selected parameter");
+    gtk_grid_attach(GTK_GRID(hbox13), treeview7_and_frame.second, 1,0,1,2);
+    gtk_grid_attach(GTK_GRID(hbox13), button12, 0,0,1,1);
+    gtk_grid_attach(GTK_GRID(hbox13), button13, 0,1,1,1);
     gtk_widget_set_hexpand(treeview7, true);
     gtk_widget_set_vexpand(treeview7_and_frame.second, false);
 
@@ -1535,15 +1536,15 @@ void VRGuiBuilder::buildBaseUI() {
     /* ---------- VR Scene - navigation ---------------------- */
     auto label16 = addLabel("label16", "Preset:");
     auto combobox5 = addCombobox("combobox5", "nav_presets");
-    auto button2 = addImgButton("button2", "gtk-add");
-    auto button7 = addImgButton("button7", "gtk-remove");
+    auto button2 = addImgButton("button2", "gtk-add", "Add preset");
+    auto button7 = addImgButton("button7", "gtk-remove", "Remove preset");
     auto label19 = addLabel("label19", "Target:");
     auto combobox7 = addCombobox("combobox7", "trgt_list");
     auto label47 = addLabel("label47", "Device:");
     auto combobox11 = addCombobox("combobox11", "devs_list");
     auto label48 = addLabel("label48", "Bindings:");
-    auto button5 = addImgButton("button5", "gtk-add");
-    auto button8 = addImgButton("button8", "gtk-remove");
+    auto button5 = addImgButton("button5", "gtk-add", "Add binding");
+    auto button8 = addImgButton("button8", "gtk-remove", "Remove binding");
     auto nav_bindings = gtk_list_store_new(6, G_TYPE_INT, G_TYPE_INT, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_POINTER, G_TYPE_FLOAT);
     auto treeview4_and_frame = addTreeview("treeview4", "nav_bindings", GTK_TREE_MODEL(nav_bindings));
     auto treeview4 = treeview4_and_frame.first;
@@ -1585,7 +1586,7 @@ void VRGuiBuilder::buildBaseUI() {
     auto label88 = addLabel("label88", "Path:");
     auto entry42 = addEntry("entry42");
     auto entry14 = addEntry("entry14", 4);
-    auto button18 = addImgButton("button18", "gtk-directory");
+    auto button18 = addImgButton("button18", "gtk-directory", "Select folder");
     auto spacer = addSpacer(20);
 
     gtk_grid_attach(GTK_GRID(table30), label87, 0,0,1,1);
@@ -1672,7 +1673,7 @@ void VRGuiBuilder::buildBaseUI() {
     auto treeview6_and_frame = addTreeview("treeview6", "scenegraph", GTK_TREE_MODEL(scenegraph), true);
     auto treeview6 = treeview6_and_frame.first;
     auto table11 = addBox("table11", GTK_ORIENTATION_VERTICAL);
-    auto button17 = addImgButton("button17", "gtk-refresh");
+    auto button17 = addImgButton("button17", "gtk-refresh", "Update scene-graph view");
     auto current_object_lab = addLabel("current_object_lab", "obj");
     auto checkbutton16 = addCheckbutton("checkbutton16", "live");
     gtk_grid_attach(GTK_GRID(scenegraph_tab), button17, 0,0,1,1);
