@@ -124,7 +124,13 @@ VRPipeSystem::~VRPipeSystem() {}
 VRPipeSystemPtr VRPipeSystem::create() { return VRPipeSystemPtr( new VRPipeSystem() ); }
 VRPipeSystemPtr VRPipeSystem::ptr() { return static_pointer_cast<VRPipeSystem>(shared_from_this()); }
 
+GraphPtr VRPipeSystem::getGraph() { return graph; }
 VROntologyPtr VRPipeSystem::getOntology() { return ontology; }
+
+VREntityPtr VRPipeSystem::getNodeEntity(int nID) {
+    if (!nodes.count(nID)) return 0;
+    return nodes[nID]->entity;
+}
 
 int VRPipeSystem::addNode(string name, PosePtr pos, string type, map<string, string> params) {
     rebuildMesh = true;

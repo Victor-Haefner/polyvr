@@ -91,12 +91,16 @@ class VRPipeSystem : public VRGeometry {
 		static VRPipeSystemPtr create();
 		VRPipeSystemPtr ptr();
 
+        GraphPtr getGraph();
+        VROntologyPtr getOntology();
+
 		int addNode(string name, PosePtr pos, string type, map<string, string> params);
 		int addSegment(double radius, int n1, int n2);
 		void remNode(int nID);
 		void remSegment(int eID);
 		int getNode(string name);
 		string getNodeName(int nID);
+		VREntityPtr getNodeEntity(int nID);
 		int getSegment(int n1, int n2);
 
 		void setNodePose(int nID, PosePtr p);
@@ -106,7 +110,6 @@ class VRPipeSystem : public VRGeometry {
 
 		void update();
 		void updateVisual();
-		VROntologyPtr getOntology();
 
 		PosePtr getNodePose(int i);
 		double getSegmentPressure(int i);
