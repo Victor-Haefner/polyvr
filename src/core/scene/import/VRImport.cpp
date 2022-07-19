@@ -224,7 +224,7 @@ void VRImport::LoadJob::load(VRThreadWeakPtr tw) {
 #endif
             } else {
 #ifndef WITHOUT_STEP
-				loadSTEPCascade(path, res);
+				loadSTEPCascade(path, res, options);
 #endif
 			}
             return;

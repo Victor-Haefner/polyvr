@@ -60,6 +60,7 @@ void on_update(int i, int N, int stage) {
 
 class STEPLoader {
     private:
+        map<string, string> options;
         Handle(XCAFDoc_ColorTool) colors;
         Handle(XCAFDoc_MaterialTool) materials;
 
@@ -81,7 +82,7 @@ class STEPLoader {
             return make_pair(valid, Color3f(c.Red(), c.Green(), c.Blue()));
         }
 
-        VRGeometryPtr convertGeo(const TopoDS_Shape& shape) {
+        VRTransformPtr convertGeo(const TopoDS_Shape& shape, bool subParts = false) {
             if (shape.IsNull()) return 0;
 
             double linear_deflection = 0.1;
@@ -96,65 +97,136 @@ class STEPLoader {
 
             auto shapeColor = getColor(shape);
             if (!shapeColor.first) shapeColor.second = Color3f(0.5,0.9,0.4);
+
             bool useVertexColors = false;
+            for (TopExp_Explorer exp(shape, TopAbs_SOLID); exp.More(); exp.Next()) {
+                const TopoDS_Solid& body = TopoDS::Solid(exp.Current());
+                auto color = getColor(body);
+                if (color.first) { useVertexColors = true; break; }
+            }
             for (TopExp_Explorer exp(shape, TopAbs_FACE); exp.More(); exp.Next()) {
+                if (useVertexColors) break;
                 const TopoDS_Face& face = TopoDS::Face(exp.Current());
                 auto color = getColor(face);
                 if (color.first) { useVertexColors = true; break; }
             }
 
-            VRGeoData data;
-            for (TopExp_Explorer exp(shape, TopAbs_FACE); exp.More(); exp.Next()) {
-                const TopoDS_Face& face = TopoDS::Face(exp.Current());
-                TopLoc_Location loc;
-                Handle(Poly_Triangulation) tri = BRep_Tool::Triangulation(face, loc);
-                if (tri.IsNull()) continue;
 
-                const TColgp_Array1OfPnt& nodes = tri->Nodes();
-                int i0 = data.size();
+            if (!subParts) {
+                VRGeoData data;
+                for (TopExp_Explorer exp(shape, TopAbs_FACE); exp.More(); exp.Next()) {
+                    const TopoDS_Face& face = TopoDS::Face(exp.Current());
+                    TopLoc_Location loc;
+                    Handle(Poly_Triangulation) tri = BRep_Tool::Triangulation(face, loc);
+                    if (tri.IsNull()) continue;
 
-                // face vertices
-                for (int i = 1; i <= nodes.Length(); ++i) {
-                    gp_Pnt pnt = nodes(i).Transformed(loc);
-                    Pnt3d pos(pnt.X(), pnt.Y(), pnt.Z());
-                    data.pushPos( pos );
-                }
+                    const TColgp_Array1OfPnt& nodes = tri->Nodes();
+                    int i0 = data.size();
 
-                // face normals
-                if (tri->HasUVNodes()) {
-                    const TColgp_Array1OfPnt2d& uvs = tri->UVNodes();
-                    BRepGProp_Face prop(face);
-                    gp_Vec n;
-                    gp_Pnt pnt;
-                    for (int i=1; i<=uvs.Length(); i++) {
-                        gp_Pnt2d uv = uvs(i);
-                        prop.Normal(uv.X(),uv.Y(),pnt,n);
-                        Vec3d norm(n.X(), n.Y(), n.Z());
-                        data.pushNorm( norm );
+                    // face vertices
+                    for (int i = 1; i <= nodes.Length(); ++i) {
+                        gp_Pnt pnt = nodes(i).Transformed(loc);
+                        Pnt3d pos(pnt.X(), pnt.Y(), pnt.Z());
+                        data.pushPos( pos );
+                    }
+
+                    // face normals
+                    if (tri->HasUVNodes()) {
+                        const TColgp_Array1OfPnt2d& uvs = tri->UVNodes();
+                        BRepGProp_Face prop(face);
+                        gp_Vec n;
+                        gp_Pnt pnt;
+                        for (int i=1; i<=uvs.Length(); i++) {
+                            gp_Pnt2d uv = uvs(i);
+                            prop.Normal(uv.X(),uv.Y(),pnt,n);
+                            Vec3d norm(n.X(), n.Y(), n.Z());
+                            data.pushNorm( norm );
+                        }
+                    }
+
+                    // face triangle indices
+                    const Poly_Array1OfTriangle& triangles = tri->Triangles();
+                    for (int i = 1; i <= triangles.Length(); ++i) {
+                        int n1, n2, n3;
+                        triangles(i).Get(n1, n2, n3);
+                        if (face.Orientation() == TopAbs_REVERSED) data.pushTri(i0+n1-1, i0+n3-1, i0+n2-1);
+                        else                                       data.pushTri(i0+n1-1, i0+n2-1, i0+n3-1);
+                    }
+
+                    // face colors
+                    if (useVertexColors) {
+                        auto color = getColor(face);
+                        if (!color.first) color.second = shapeColor.second;
+                        for (int i = 1; i <= nodes.Length(); ++i) data.pushColor( color.second );
                     }
                 }
 
-                // face triangle indices
-                const Poly_Array1OfTriangle& triangles = tri->Triangles();
-                for (int i = 1; i <= triangles.Length(); ++i) {
-                    int n1, n2, n3;
-                    triangles(i).Get(n1, n2, n3);
-                    if (face.Orientation() == TopAbs_REVERSED) data.pushTri(i0+n1-1, i0+n3-1, i0+n2-1);
-                    else                                       data.pushTri(i0+n1-1, i0+n2-1, i0+n3-1);
-                }
+                auto geo = data.asGeometry("test");
+                return geo;
+            } else {
+                auto obj = VRTransform::create("test");
+                for (TopExp_Explorer exp1(shape, TopAbs_SOLID); exp1.More(); exp1.Next()) {
+                    const TopoDS_Solid& body = TopoDS::Solid(exp1.Current());
 
-                // face colors
-                if (useVertexColors) {
-                    auto color = getColor(face);
-                    if (!color.first) color.second = shapeColor.second;
-                    for (int i = 1; i <= nodes.Length(); ++i) data.pushColor( color.second );
+                    auto bodyColor = getColor(body);
+
+                    VRGeoData data;
+                    for (TopExp_Explorer exp(body, TopAbs_FACE); exp.More(); exp.Next()) {
+                        const TopoDS_Face& face = TopoDS::Face(exp.Current());
+                        TopLoc_Location loc;
+                        Handle(Poly_Triangulation) tri = BRep_Tool::Triangulation(face, loc);
+                        if (tri.IsNull()) continue;
+
+                        const TColgp_Array1OfPnt& nodes = tri->Nodes();
+                        int i0 = data.size();
+
+                        // face vertices
+                        for (int i = 1; i <= nodes.Length(); ++i) {
+                            gp_Pnt pnt = nodes(i).Transformed(loc);
+                            Pnt3d pos(pnt.X(), pnt.Y(), pnt.Z());
+                            data.pushPos( pos );
+                        }
+
+                        // face normals
+                        if (tri->HasUVNodes()) {
+                            const TColgp_Array1OfPnt2d& uvs = tri->UVNodes();
+                            BRepGProp_Face prop(face);
+                            gp_Vec n;
+                            gp_Pnt pnt;
+                            for (int i=1; i<=uvs.Length(); i++) {
+                                gp_Pnt2d uv = uvs(i);
+                                prop.Normal(uv.X(),uv.Y(),pnt,n);
+                                Vec3d norm(n.X(), n.Y(), n.Z());
+                                data.pushNorm( norm );
+                            }
+                        }
+
+                        // face triangle indices
+                        const Poly_Array1OfTriangle& triangles = tri->Triangles();
+                        for (int i = 1; i <= triangles.Length(); ++i) {
+                            int n1, n2, n3;
+                            triangles(i).Get(n1, n2, n3);
+                            if (face.Orientation() == TopAbs_REVERSED) data.pushTri(i0+n1-1, i0+n3-1, i0+n2-1);
+                            else                                       data.pushTri(i0+n1-1, i0+n2-1, i0+n3-1);
+                        }
+
+                        // face colors
+                        if (useVertexColors) {
+                            auto color = getColor(face);
+                            if (!color.first) {
+                                if (bodyColor.first) color.second = bodyColor.second;
+                                else color.second = shapeColor.second;
+                            }
+                            for (int i = 1; i <= nodes.Length(); ++i) data.pushColor( color.second );
+                        }
+                    }
+
+                    string name = "body";
+                    auto geo = data.asGeometry(name);
+                    obj->addChild(geo);
                 }
+                return obj;
             }
-
-            string name = "test"; //shape.Name();
-            auto geo = data.asGeometry(name);
-            //applyTransformation(o,geo);
-            return geo;
         }
 
         void applyMaterial(VRGeometryPtr geo, const TopoDS_Shape& shape) {
@@ -216,7 +288,9 @@ class STEPLoader {
             return "UNKNOWN";
         }
 
-        void load(string path, VRTransformPtr res) {
+        void load(string path, VRTransformPtr res, map<string, string> opts) {
+            options = opts;
+
             try {
                 Handle(TDocStd_Document) aDoc;
                 Handle(XCAFApp_Application) anApp = XCAFApp_Application::GetApplication();
@@ -269,8 +343,11 @@ class STEPLoader {
                 materials->GetMaterialLabels(mats);
                 cout << "imported materials: (" << mats.Length() << ")" << endl;
 
+                bool subParts = false;
+                if (options.count("subParts")) subParts = true;
+
                 cout << "build STEP parts:" << endl;
-                map<int, VRGeometryPtr> parts;
+                map<int, VRTransformPtr> parts;
                 for (int i=1; i<=shapes.Length(); i++) {
                     TopoDS_Shape shape = Assembly->GetShape(shapes.Value(i));
                     TDF_Label label = Assembly->FindShape(shape, false);
@@ -280,13 +357,25 @@ class STEPLoader {
                         //cout << "  shape " << name << " " << Assembly->IsSimpleShape(label) << " " << Assembly->IsAssembly(label) << " " << Assembly->IsFree(label) << endl;
                         if (Assembly->IsSimpleShape(label)) {
                             cout << " create shape " << name << endl;
-                            VRGeometryPtr obj = convertGeo(shape);
+                            VRTransformPtr obj = convertGeo(shape, subParts);
                             if (obj) {
                                 obj->setName( name );
-                                applyMaterial(obj, shape);
                                 if (parts.count(label.Tag())) cout << "Warning in STEP import, the label tag " << label.Tag() << " is allready used!" << endl;
                                 parts[label.Tag()] = obj;
-                                obj->setReference(VRGeometry::Reference(VRGeometry::FILE, path+"|"+obj->getName()));
+
+                                if (!subParts) {
+                                    VRGeometryPtr geo = dynamic_pointer_cast<VRGeometry>(obj);
+                                    if (geo) {
+                                        applyMaterial(geo, shape);
+                                        geo->setReference(VRGeometry::Reference(VRGeometry::FILE, path+"|"+geo->getName()));
+                                    }
+                                } else {
+                                    for (auto c : obj->getChildren()) {
+                                        VRGeometryPtr geo = dynamic_pointer_cast<VRGeometry>(c);
+                                        applyMaterial(geo, shape);
+                                        geo->setReference(VRGeometry::Reference(VRGeometry::FILE, path+"|"+geo->getName()));
+                                    }
+                                }
                             }
                         }
                     }
@@ -318,7 +407,7 @@ class STEPLoader {
                         if (parts.count( label.Tag() )) {
                             auto partTemplate = parts[label.Tag()];
                             if (partTemplate) {
-                                VRGeometryPtr part = dynamic_pointer_cast<VRGeometry>( partTemplate->duplicate() );
+                                VRTransformPtr part = dynamic_pointer_cast<VRTransform>( partTemplate->duplicate() );
                                 if (part) {
                                     applyTransform(part, shape);
                                     parent->addChild( part );
@@ -350,7 +439,7 @@ class STEPLoader {
         }
 };
 
-void OSG::loadSTEPCascade(string path, VRTransformPtr res) {
+void OSG::loadSTEPCascade(string path, VRTransformPtr res, map<string, string> options) {
     STEPLoader step;
-    step.load(path, res);
+    step.load(path, res, options);
 }
