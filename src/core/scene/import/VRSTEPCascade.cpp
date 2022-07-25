@@ -82,6 +82,84 @@ class STEPLoader {
             return make_pair(valid, Color3f(c.Red(), c.Green(), c.Blue()));
         }
 
+        bool needsVertexColors(const TopoDS_Shape& shape) {
+            for (TopExp_Explorer exp(shape, TopAbs_SOLID); exp.More(); exp.Next()) {
+                const TopoDS_Solid& body = TopoDS::Solid(exp.Current());
+                auto color = getColor(body);
+                if (color.first) return true;
+            }
+
+            for (TopExp_Explorer exp(shape, TopAbs_SHELL); exp.More(); exp.Next()) {
+                const TopoDS_Shell& shell = TopoDS::Shell(exp.Current());
+                auto color = getColor(shell);
+                if (color.first) return true;
+            }
+
+            for (TopExp_Explorer exp(shape, TopAbs_FACE); exp.More(); exp.Next()) {
+                const TopoDS_Face& face = TopoDS::Face(exp.Current());
+                auto color = getColor(face);
+                if (color.first) return true;
+            }
+
+            return false;
+        }
+
+        void iterateFaces(const TopoDS_Shape& part, const TopoDS_Shape& body, VRGeoData& data, bool useVertexColors) {
+            auto bodyColor = getColor(body);
+            auto partColor = getColor(part);
+
+            for (TopExp_Explorer exp(body, TopAbs_FACE); exp.More(); exp.Next()) {
+                const TopoDS_Face& face = TopoDS::Face(exp.Current());
+                TopLoc_Location loc;
+                Handle(Poly_Triangulation) tri = BRep_Tool::Triangulation(face, loc);
+                if (tri.IsNull()) continue;
+
+                const TColgp_Array1OfPnt& nodes = tri->Nodes();
+                int i0 = data.size();
+
+                // face vertices
+                for (int i = 1; i <= nodes.Length(); ++i) {
+                    gp_Pnt pnt = nodes(i).Transformed(loc);
+                    Pnt3d pos(pnt.X(), pnt.Y(), pnt.Z());
+                    data.pushPos( pos );
+                }
+
+                // face normals
+                if (tri->HasUVNodes()) {
+                    const TColgp_Array1OfPnt2d& uvs = tri->UVNodes();
+                    BRepGProp_Face prop(face);
+                    gp_Vec n;
+                    gp_Pnt pnt;
+                    for (int i=1; i<=uvs.Length(); i++) {
+                        gp_Pnt2d uv = uvs(i);
+                        prop.Normal(uv.X(),uv.Y(),pnt,n);
+                        Vec3d norm(n.X(), n.Y(), n.Z());
+                        data.pushNorm( norm );
+                    }
+                }
+
+                // face triangle indices
+                const Poly_Array1OfTriangle& triangles = tri->Triangles();
+                for (int i = 1; i <= triangles.Length(); ++i) {
+                    int n1, n2, n3;
+                    triangles(i).Get(n1, n2, n3);
+                    if (face.Orientation() == TopAbs_REVERSED) data.pushTri(i0+n1-1, i0+n3-1, i0+n2-1);
+                    else                                       data.pushTri(i0+n1-1, i0+n2-1, i0+n3-1);
+                }
+
+                // face colors
+                if (useVertexColors) {
+                    auto color = getColor(face);
+                    if (!color.first) {
+                        if (bodyColor.first) color.second = bodyColor.second;
+                        else if (partColor.first) color.second = partColor.second;
+                        else color.second = Color3f(0.5,0.9,0.4);
+                    }
+                    for (int i = 1; i <= nodes.Length(); ++i) data.pushColor( color.second );
+                }
+            }
+        }
+
         VRTransformPtr convertGeo(const TopoDS_Shape& shape, bool subParts = false) {
             if (shape.IsNull()) return 0;
 
@@ -95,137 +173,61 @@ class STEPLoader {
             } catch(exception& e) { cout << " Warning in STEP convertGeo: " << e.what() << endl;  return 0; }
             catch(...) { cout << " Warning in STEP convertGeo: unknown exception" << endl; return 0; }
 
-            auto shapeColor = getColor(shape);
-            if (!shapeColor.first) shapeColor.second = Color3f(0.5,0.9,0.4);
+            bool useVertexColors = needsVertexColors(shape);
 
-            bool useVertexColors = false;
-            for (TopExp_Explorer exp(shape, TopAbs_SOLID); exp.More(); exp.Next()) {
-                const TopoDS_Solid& body = TopoDS::Solid(exp.Current());
-                auto color = getColor(body);
-                if (color.first) { useVertexColors = true; break; }
-            }
-            for (TopExp_Explorer exp(shape, TopAbs_FACE); exp.More(); exp.Next()) {
-                if (useVertexColors) break;
-                const TopoDS_Face& face = TopoDS::Face(exp.Current());
-                auto color = getColor(face);
-                if (color.first) { useVertexColors = true; break; }
-            }
+            /** TODO
+            enum TopAbs_ShapeEnum
+                TopAbs_COMPOUND,
+                TopAbs_COMPSOLID,
+                TopAbs_SOLID,
+                TopAbs_SHELL,
+                TopAbs_FACE,
+                TopAbs_WIRE,
+                TopAbs_EDGE,
+                TopAbs_VERTEX,
+                TopAbs_SHAPE
+            */
 
+            map<TopoDS_Shape*, bool> traversed;
+            auto isTraversed = [&traversed](const TopoDS_Shape& s) {
+                auto k = (TopoDS_Shape*)&s;
+                bool t = traversed.count(k);
+                if (!t) traversed[k] = true;
+                return t;
+            };
 
-            if (!subParts) {
-                VRGeoData data;
-                for (TopExp_Explorer exp(shape, TopAbs_FACE); exp.More(); exp.Next()) {
-                    const TopoDS_Face& face = TopoDS::Face(exp.Current());
-                    TopLoc_Location loc;
-                    Handle(Poly_Triangulation) tri = BRep_Tool::Triangulation(face, loc);
-                    if (tri.IsNull()) continue;
-
-                    const TColgp_Array1OfPnt& nodes = tri->Nodes();
-                    int i0 = data.size();
-
-                    // face vertices
-                    for (int i = 1; i <= nodes.Length(); ++i) {
-                        gp_Pnt pnt = nodes(i).Transformed(loc);
-                        Pnt3d pos(pnt.X(), pnt.Y(), pnt.Z());
-                        data.pushPos( pos );
-                    }
-
-                    // face normals
-                    if (tri->HasUVNodes()) {
-                        const TColgp_Array1OfPnt2d& uvs = tri->UVNodes();
-                        BRepGProp_Face prop(face);
-                        gp_Vec n;
-                        gp_Pnt pnt;
-                        for (int i=1; i<=uvs.Length(); i++) {
-                            gp_Pnt2d uv = uvs(i);
-                            prop.Normal(uv.X(),uv.Y(),pnt,n);
-                            Vec3d norm(n.X(), n.Y(), n.Z());
-                            data.pushNorm( norm );
-                        }
-                    }
-
-                    // face triangle indices
-                    const Poly_Array1OfTriangle& triangles = tri->Triangles();
-                    for (int i = 1; i <= triangles.Length(); ++i) {
-                        int n1, n2, n3;
-                        triangles(i).Get(n1, n2, n3);
-                        if (face.Orientation() == TopAbs_REVERSED) data.pushTri(i0+n1-1, i0+n3-1, i0+n2-1);
-                        else                                       data.pushTri(i0+n1-1, i0+n2-1, i0+n3-1);
-                    }
-
-                    // face colors
-                    if (useVertexColors) {
-                        auto color = getColor(face);
-                        if (!color.first) color.second = shapeColor.second;
-                        for (int i = 1; i <= nodes.Length(); ++i) data.pushColor( color.second );
-                    }
-                }
-
-                auto geo = data.asGeometry("test");
-                return geo;
-            } else {
+            if (subParts) {
                 auto obj = VRTransform::create("test");
                 for (TopExp_Explorer exp1(shape, TopAbs_SOLID); exp1.More(); exp1.Next()) {
                     const TopoDS_Solid& body = TopoDS::Solid(exp1.Current());
-
-                    auto bodyColor = getColor(body);
-
+                    if (isTraversed(body)) continue;
                     VRGeoData data;
-                    for (TopExp_Explorer exp(body, TopAbs_FACE); exp.More(); exp.Next()) {
-                        const TopoDS_Face& face = TopoDS::Face(exp.Current());
-                        TopLoc_Location loc;
-                        Handle(Poly_Triangulation) tri = BRep_Tool::Triangulation(face, loc);
-                        if (tri.IsNull()) continue;
-
-                        const TColgp_Array1OfPnt& nodes = tri->Nodes();
-                        int i0 = data.size();
-
-                        // face vertices
-                        for (int i = 1; i <= nodes.Length(); ++i) {
-                            gp_Pnt pnt = nodes(i).Transformed(loc);
-                            Pnt3d pos(pnt.X(), pnt.Y(), pnt.Z());
-                            data.pushPos( pos );
-                        }
-
-                        // face normals
-                        if (tri->HasUVNodes()) {
-                            const TColgp_Array1OfPnt2d& uvs = tri->UVNodes();
-                            BRepGProp_Face prop(face);
-                            gp_Vec n;
-                            gp_Pnt pnt;
-                            for (int i=1; i<=uvs.Length(); i++) {
-                                gp_Pnt2d uv = uvs(i);
-                                prop.Normal(uv.X(),uv.Y(),pnt,n);
-                                Vec3d norm(n.X(), n.Y(), n.Z());
-                                data.pushNorm( norm );
-                            }
-                        }
-
-                        // face triangle indices
-                        const Poly_Array1OfTriangle& triangles = tri->Triangles();
-                        for (int i = 1; i <= triangles.Length(); ++i) {
-                            int n1, n2, n3;
-                            triangles(i).Get(n1, n2, n3);
-                            if (face.Orientation() == TopAbs_REVERSED) data.pushTri(i0+n1-1, i0+n3-1, i0+n2-1);
-                            else                                       data.pushTri(i0+n1-1, i0+n2-1, i0+n3-1);
-                        }
-
-                        // face colors
-                        if (useVertexColors) {
-                            auto color = getColor(face);
-                            if (!color.first) {
-                                if (bodyColor.first) color.second = bodyColor.second;
-                                else color.second = shapeColor.second;
-                            }
-                            for (int i = 1; i <= nodes.Length(); ++i) data.pushColor( color.second );
-                        }
-                    }
-
-                    string name = "body";
-                    auto geo = data.asGeometry(name);
+                    iterateFaces(shape, body, data, useVertexColors);
+                    auto geo = data.asGeometry("body");
+                    obj->addChild(geo);
+                }
+                for (TopExp_Explorer exp1(shape, TopAbs_SHELL); exp1.More(); exp1.Next()) {
+                    const TopoDS_Shell& body = TopoDS::Shell(exp1.Current());
+                    if (isTraversed(body)) continue;
+                    VRGeoData data;
+                    iterateFaces(shape, body, data, useVertexColors);
+                    auto geo = data.asGeometry("shell");
                     obj->addChild(geo);
                 }
                 return obj;
+            } else {
+                VRGeoData data;
+                for (TopExp_Explorer exp1(shape, TopAbs_SOLID); exp1.More(); exp1.Next()) {
+                    const TopoDS_Solid& body = TopoDS::Solid(exp1.Current());
+                    if (isTraversed(body)) continue;
+                    iterateFaces(shape, body, data, useVertexColors);
+                }
+                for (TopExp_Explorer exp1(shape, TopAbs_SHELL); exp1.More(); exp1.Next()) {
+                    const TopoDS_Shell& body = TopoDS::Shell(exp1.Current());
+                    if (isTraversed(body)) continue;
+                    iterateFaces(shape, body, data, useVertexColors);
+                }
+                return data.asGeometry("part");
             }
         }
 
