@@ -41,7 +41,7 @@
 	VR.scene.addChild(VR.indicator)
 
 
-	VR.simInput()
+	#VR.simInput()
 </core>
       <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" base_name="trigger" name_space="__global__" name_suffix="1" persistency="666"/>
     </Script>
