@@ -21,6 +21,7 @@ using namespace OSG;
 VRMicrophone::VRMicrophone() { setup(); }
 
 VRMicrophone::~VRMicrophone() {
+    stop();
     alcCaptureCloseDevice(device);
     delete streamMutex;
 }
@@ -148,7 +149,7 @@ void VRMicrophone::startStreamingThread() {
 
                     if (frame) {
                         //cout << " stream mike buffer " << frame->size << endl;
-                        recordingSound->streamBuffer(frame);
+                        if (recordingSound) recordingSound->streamBuffer(frame);
                         queuedFrames = max(queuedFrames-1, 0);
                         if (!needsFlushing) queuedStream++;
                     }
@@ -156,7 +157,7 @@ void VRMicrophone::startStreamingThread() {
             }
 
             if (needsFlushing) {
-                recordingSound->flushPackets();
+                if (recordingSound) recordingSound->flushPackets();
                 needsFlushing = false;
             }
 
@@ -164,7 +165,7 @@ void VRMicrophone::startStreamingThread() {
             std::this_thread::sleep_for(T);
         }
 
-        recordingSound->closeStream();
+        if (recordingSound) recordingSound->closeStream();
         streaming = false;
     };
 
@@ -201,15 +202,25 @@ void VRMicrophone::pauseStreaming(bool p) {
 }
 
 void VRMicrophone::stop() {
-    if (recordingThread) recordingThread->join();
-    if (streamingThread) streamingThread->join();
+    doRecord = false;
+    doStream = false;
+
+    if (recordingThread) {
+        recordingThread->join();
+        delete recordingThread;
+    }
+
+    if (streamingThread) {
+        streamingThread->join();
+        delete streamingThread;
+    }
+
     recordingThread = 0;
     streamingThread = 0;
     if (deviceOk) alcCaptureStop(device);
 }
 
 VRSoundPtr VRMicrophone::stopRecording() {
-    doRecord = false;
     stop();
     auto r = recordingSound;
     recordingSound = 0;
@@ -217,7 +228,6 @@ VRSoundPtr VRMicrophone::stopRecording() {
 }
 
 void VRMicrophone::stopStreaming() {
-    doStream = false;
     stop();
     recording = 0;
 }
