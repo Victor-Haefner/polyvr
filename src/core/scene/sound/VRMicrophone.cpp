@@ -184,12 +184,12 @@ void VRMicrophone::startStreamingOver(VRNetworkClientPtr client) {
 
 void VRMicrophone::startStreaming(string address, int port) {
     if (!deviceOk) return;
-    start();
-    streamMutex = new VRMutex();
-    doStream = recordingSound->setupOutStream(address, port);
+    if (!started) start();
+    doStream = true;
+    recordingSound->setupOutStream(address, port);
 
-    startRecordingThread();
-    startStreamingThread();
+    if (!recording) startRecordingThread();
+    if (!streaming) startStreamingThread();
 }
 
 void VRMicrophone::pauseStreaming(bool p) {
