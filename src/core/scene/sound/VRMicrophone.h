@@ -51,6 +51,12 @@ class VRMicrophone : public std::enable_shared_from_this<VRMicrophone> {
 	    int queuedFrames = 0; // frames recorded but not streamed yet
 	    int queuedStream = 0; // frames streamed at the beginning
 
+	    bool doSim = false;
+	    float frequency = 440;
+	    float period1 = 0;
+	    float period2 = 0;
+	    float simPhase = 0;
+
 	    void setup();
 	    void start();
 	    void stop();
@@ -58,12 +64,17 @@ class VRMicrophone : public std::enable_shared_from_this<VRMicrophone> {
 	    void startRecordingThread();
 	    void startStreamingThread();
 
+	    VRSoundBufferPtr fetchDevicePacket();
+	    VRSoundBufferPtr genPacket();
+
 	public:
 		VRMicrophone();
 		~VRMicrophone();
 
 		static VRMicrophonePtr create();
 		VRMicrophonePtr ptr();
+
+		void simSource(bool active, float freq, float tone, float pause);
 
 		void startRecording();
 		VRSoundPtr stopRecording();

@@ -10,6 +10,8 @@
 #include <thread>
 #include <chrono>
 
+const float Pi  = 3.141592653589793f;
+
 using namespace OSG;
 
 VRMicrophone::VRMicrophone() { setup(); }
@@ -44,6 +46,24 @@ void VRMicrophone::start() {
     started = true;
 }
 
+VRSoundBufferPtr VRMicrophone::fetchDevicePacket() {
+    if (doSim) return genPacket();
+
+    ALint Count = 0;
+    alGetError();
+    alcGetIntegerv(device, ALC_CAPTURE_SAMPLES, (ALCsizei)sizeof(ALint), &Count);
+
+    if (Count > 0) {
+        auto frame = VRSoundBuffer::allocate(Count*2, sample_rate, AL_FORMAT_MONO16);
+        alGetError();
+        alcCaptureSamples(device, frame->data, Count);
+        //cout << "fetchDevicePacket " << frame->size << endl;
+        return frame;
+    }
+
+    return 0;
+}
+
 void VRMicrophone::startRecording() {
     if (!deviceOk) return;
     start();
@@ -51,16 +71,8 @@ void VRMicrophone::startRecording() {
 
     auto recordCb = [&]() {
         while (doRecord) {
-            ALint Count = 0;
-            alGetError();
-            alcGetIntegerv(device, ALC_CAPTURE_SAMPLES, (ALCsizei)sizeof(ALint), &Count);
-
-            if (Count > 0) {
-                auto frame = VRSoundBuffer::allocate(2*Count, sample_rate, AL_FORMAT_MONO16);
-                alGetError();
-                alcCaptureSamples(device, frame->data, Count);
-                recordingSound->addBuffer(frame);
-            }
+            auto frame = fetchDevicePacket();
+            if (frame) recordingSound->addBuffer(frame);
         }
     };
 
@@ -75,26 +87,18 @@ void VRMicrophone::startRecordingThread() {
         recording = true;
 
         while (doStream) {
-            ALint Count = 0;
-            alGetError();
-            alcGetIntegerv(device, ALC_CAPTURE_SAMPLES, (ALCsizei)sizeof(ALint), &Count);
+            auto frame = fetchDevicePacket();
 
-            if (Count > 0) {
-                auto frame = VRSoundBuffer::allocate(Count*2, sample_rate, AL_FORMAT_MONO16);
-                alGetError();
-                alcCaptureSamples(device, frame->data, Count);
-
-                if (!streamPaused) {
-                    VRLock lock(*streamMutex);
-                    if (frameBuffer.size() < maxBufferSize) {
-                        frameBuffer.push_back(frame);
-                        queuedFrames++;
-                        queuedFrames = min(int(frameBuffer.size()), queuedFrames);
-                        queuedStream = max(queuedStream-1, 0);
-                    } else {
-                        frameBuffer.pop_front();
-                        frameBuffer.push_back(frame);
-                    }
+            if (frame && !streamPaused) {
+                VRLock lock(*streamMutex);
+                if (frameBuffer.size() < maxBufferSize) {
+                    frameBuffer.push_back(frame);
+                    queuedFrames++;
+                    queuedFrames = min(int(frameBuffer.size()), queuedFrames);
+                    queuedStream = max(queuedStream-1, 0);
+                } else {
+                    frameBuffer.pop_front();
+                    frameBuffer.push_back(frame);
                 }
             }
         }
@@ -120,6 +124,7 @@ void VRMicrophone::startStreamingThread() {
                     frameBuffer.pop_front();
 
                     if (frame) {
+                        //cout << " stream mike buffer " << frame->size << endl;
                         recordingSound->streamBuffer(frame);
                         queuedFrames = max(queuedFrames-1, 0);
                         if (!needsFlushing) queuedStream++;
@@ -193,5 +198,44 @@ void VRMicrophone::stopStreaming() {
     stop();
     recording = 0;
 }
+
+VRSoundBufferPtr VRMicrophone::genPacket() {
+    float Ac = 32760;
+    float duration = period1+period2;
+    float wc = frequency;
+
+    int sample_rate = 22050;
+    size_t buf_size = duration * sample_rate;
+    buf_size = 208; // TODO: mike bsize..
+    buf_size += buf_size%2;
+    auto frame = VRSoundBuffer::allocate(buf_size*sizeof(short), sample_rate, AL_FORMAT_MONO16);
+
+    double t = 0;
+    for(uint i=0; i<buf_size; i++) {
+        double k = double(i)/(buf_size-1);
+        double Ak = 0.0;
+        if (k < period1*0.1) Ak = k*10.0/period1;
+        else if (k < period1*0.9) Ak = 1.0;
+        else if (k < period1) Ak = 1.0-(k-period1*0.9)*10.0;
+        else Ak = 0.0;
+
+        Ak = 1.0; // TODO
+
+        t = i*2*Pi/sample_rate + simPhase;
+        short v = Ak * Ac * sin( wc*t );
+        ((short*)frame->data)[i] = v;
+    }
+    simPhase = t;
+    //cout << frame->size << " > " << ((short*)frame->data)[0] << endl;
+    return frame;
+}
+
+void VRMicrophone::simSource(bool active, float freq, float tone, float pause) {
+    doSim = active;
+    frequency = freq;
+    period1 = tone;
+    period2 = pause;
+}
+
 
 
