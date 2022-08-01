@@ -606,7 +606,7 @@ void VRSound::write_buffer(AVFormatContext *oc, OutputStream *ost, VRSoundBuffer
         if (frame && ret != ost->frame->nb_samples) {
             //fprintf(stderr, "Too few samples returned from lavr\n");
             if (ret == 0) {
-                cout << " VRSound::write_buffer: Too few samples returned from lavr! expected: " << ost->frame->nb_samples << ", got: " << ret << endl;
+                //cout << " VRSound::write_buffer: Too few samples returned from lavr! expected: " << ost->frame->nb_samples << ", got: " << ret << endl;
                 return;
             }
         }

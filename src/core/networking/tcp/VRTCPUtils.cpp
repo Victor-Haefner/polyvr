@@ -35,6 +35,9 @@ string VRTCPUtils::getHostName(string uri) {
     if (contains(uri, "/")) {
         uri = splitString(uri, "/")[0];
     }
+    if (contains(uri, ":")) {
+        uri = splitString(uri, ":")[0];
+    }
     return uri;
 }
 

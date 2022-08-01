@@ -43,7 +43,9 @@ void VRMicrophone::start() {
         cout << "VRMicrophone::start, skip, already started" << endl;
         return;
     }
-    recordingSound = VRSoundManager::get()->setupSound("");
+
+    static int i=0; i++;
+    recordingSound = VRSoundManager::get()->setupSound("mikeRec"+toString(i));
     alcCaptureStart(device);
     started = true;
 }
