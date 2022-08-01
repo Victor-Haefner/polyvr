@@ -106,7 +106,7 @@ void VRMicrophone::startRecordingThread() {
 
         while (doStream) {
             auto frame = fetchDevicePacket();
-            printFrame(frame);
+            //printFrame(frame);
 
             if (frame && !streamPaused) {
                 VRLock lock(*streamMutex);
@@ -227,23 +227,18 @@ VRSoundBufferPtr VRMicrophone::genPacket(double dt) {
     buf_size += buf_size%2;
     auto frame = VRSoundBuffer::allocate(buf_size*sizeof(short), sample_rate, AL_FORMAT_MONO16);
 
+    double H = dt/(buf_size-1);
+
     double st = 0;
     for(uint i=0; i<buf_size; i++) {
-        double k = double(i)/(buf_size-1);
-        double Ak = 0.0;
-        if (k < period1*0.1) Ak = k*10.0/period1;
-        else if (k < period1*0.9) Ak = 1.0;
-        else if (k < period1) Ak = 1.0-(k-period1*0.9)*10.0;
-        else Ak = 0.0;
-
-        Ak = 1.0; // TODO
+        double k = lastSimTime + double(i)*H;
+        double Ak = abs(sin(k/period1));
 
         st = i*2*Pi/sample_rate + simPhase;
         short v = Ak * Ac * sin( wc*st );
         ((short*)frame->data)[i] = v;
     }
     simPhase = st;
-    //cout << frame->size << " > " << ((short*)frame->data)[0] << endl;
     return frame;
 }
 
