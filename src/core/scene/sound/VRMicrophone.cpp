@@ -2,7 +2,9 @@
 #include "VRSound.h"
 #include "VRSoundManager.h"
 #include "VRSoundUtils.h"
+
 #include "core/utils/VRMutex.h"
+#include "core/utils/system/VRSystem.h"
 
 #include <AL/al.h>
 #include <AL/alc.h>
@@ -46,8 +48,25 @@ void VRMicrophone::start() {
     started = true;
 }
 
+void printFrame(VRSoundBufferPtr f) {
+    if (f) cout << " frame: " << f->sample_rate << " " << f->format << ", " << f->size << ", " << (int)f->data[0] << endl;
+}
+
 VRSoundBufferPtr VRMicrophone::fetchDevicePacket() {
-    if (doSim) return genPacket();
+    if (doSim) {
+        double t = getTime()*1e-6;
+        double dt = t - lastSimTime;
+
+        if (dt > 0.03) {
+            alGetError();
+            VRSoundBufferPtr frame;
+            if (dt < 0.2) frame = genPacket(dt);
+            lastSimTime = t;
+            return frame;
+        }
+
+        return 0;
+    }
 
     ALint Count = 0;
     alGetError();
@@ -57,7 +76,6 @@ VRSoundBufferPtr VRMicrophone::fetchDevicePacket() {
         auto frame = VRSoundBuffer::allocate(Count*2, sample_rate, AL_FORMAT_MONO16);
         alGetError();
         alcCaptureSamples(device, frame->data, Count);
-        //cout << "fetchDevicePacket " << frame->size << endl;
         return frame;
     }
 
@@ -88,6 +106,7 @@ void VRMicrophone::startRecordingThread() {
 
         while (doStream) {
             auto frame = fetchDevicePacket();
+            printFrame(frame);
 
             if (frame && !streamPaused) {
                 VRLock lock(*streamMutex);
@@ -199,18 +218,16 @@ void VRMicrophone::stopStreaming() {
     recording = 0;
 }
 
-VRSoundBufferPtr VRMicrophone::genPacket() {
+VRSoundBufferPtr VRMicrophone::genPacket(double dt) {
     float Ac = 32760;
-    float duration = period1+period2;
     float wc = frequency;
-
     int sample_rate = 22050;
-    size_t buf_size = duration * sample_rate;
-    buf_size = 208; // TODO: mike bsize..
+
+    size_t buf_size = dt * sample_rate;
     buf_size += buf_size%2;
     auto frame = VRSoundBuffer::allocate(buf_size*sizeof(short), sample_rate, AL_FORMAT_MONO16);
 
-    double t = 0;
+    double st = 0;
     for(uint i=0; i<buf_size; i++) {
         double k = double(i)/(buf_size-1);
         double Ak = 0.0;
@@ -221,11 +238,11 @@ VRSoundBufferPtr VRMicrophone::genPacket() {
 
         Ak = 1.0; // TODO
 
-        t = i*2*Pi/sample_rate + simPhase;
-        short v = Ak * Ac * sin( wc*t );
+        st = i*2*Pi/sample_rate + simPhase;
+        short v = Ak * Ac * sin( wc*st );
         ((short*)frame->data)[i] = v;
     }
-    simPhase = t;
+    simPhase = st;
     //cout << frame->size << " > " << ((short*)frame->data)[0] << endl;
     return frame;
 }

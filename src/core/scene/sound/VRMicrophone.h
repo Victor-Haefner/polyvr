@@ -56,6 +56,7 @@ class VRMicrophone : public std::enable_shared_from_this<VRMicrophone> {
 	    float period1 = 0;
 	    float period2 = 0;
 	    float simPhase = 0;
+	    double lastSimTime = 0;
 
 	    void setup();
 	    void start();
@@ -65,7 +66,7 @@ class VRMicrophone : public std::enable_shared_from_this<VRMicrophone> {
 	    void startStreamingThread();
 
 	    VRSoundBufferPtr fetchDevicePacket();
-	    VRSoundBufferPtr genPacket();
+	    VRSoundBufferPtr genPacket(double dt);
 
 	public:
 		VRMicrophone();
