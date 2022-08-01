@@ -12,6 +12,8 @@
 #include <thread>
 #include <chrono>
 
+#include "core/utils/toString.h"
+
 const float Pi  = 3.141592653589793f;
 
 using namespace OSG;
@@ -45,7 +47,7 @@ void VRMicrophone::start() {
     }
 
     static int i=0; i++;
-    recordingSound = VRSoundManager::get()->setupSound("mikeRec"+toString(i));
+    recordingSound = VRSoundManager::get()->setupSound( "mikeRec"+::toString(i) );
     alcCaptureStart(device);
     started = true;
 }

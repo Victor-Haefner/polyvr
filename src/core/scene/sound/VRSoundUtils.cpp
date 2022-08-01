@@ -13,7 +13,7 @@
 
 using namespace OSG;
 
-string toString(ALenum a) {
+string alToString(ALenum a) {
     switch (a) {
         case AL_NO_ERROR: return "ok";
         case AL_INVALID_NAME: return "invalid name";
