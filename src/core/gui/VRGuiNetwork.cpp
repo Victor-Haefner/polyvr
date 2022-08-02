@@ -118,7 +118,7 @@ void VRGuiNetwork::updateFlows() {
     auto netMgr = VRSceneManager::get();
     if (!netMgr) return;
 
-    cout << "updateFlows" << endl;
+    //cout << "updateFlows" << endl;
 
     auto updateFlowWidget = [&](VRNetworkFlow& flow) {
         if (!flows.count(&flow)) return;
