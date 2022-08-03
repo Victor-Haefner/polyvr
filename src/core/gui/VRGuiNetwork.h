@@ -48,7 +48,7 @@ class VRGuiNetwork {
         VRWidgetsCanvasPtr canvas;
         bool tabIsVisible = false;
         VRUpdateCbPtr updateFlowsCb;
-        map<void*, int> flows;
+        map<void*, vector<int>> flows;
 
         void clear();
         int addFlow(Vec2i pos, void* key);

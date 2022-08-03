@@ -120,28 +120,32 @@ void VRGuiNetwork::updateFlows() {
 
     //cout << "updateFlows" << endl;
 
-    auto updateFlowWidget = [&](VRNetworkFlow& flow) {
+    auto updateFlowWidgets = [&](VRNetworkFlow& flow) {
         if (!flows.count(&flow)) return;
-        auto fwid = canvas->getWidget( flows[&flow] );
+
         auto curve = flow.getKBperSec();
         double bMax = 1;
         for (auto c : curve) bMax = max(c*1000, bMax);
         for (auto& c : curve) c = c*1000/bMax;
-        if (auto fw = dynamic_pointer_cast<VRDataFlowWidget>(fwid)) fw->setCurve(curve);
+
+        for (auto fl : flows[&flow]) {
+            auto fwid = canvas->getWidget( fl );
+            if (auto fw = dynamic_pointer_cast<VRDataFlowWidget>(fwid)) fw->setCurve(curve);
+        }
     };
 
     auto clients = netMgr->getNetworkClients();
     for (auto& client : clients) {
         if (!client) continue;
-        updateFlowWidget(client->getInFlow());
-        updateFlowWidget(client->getOutFlow());
+        updateFlowWidgets(client->getInFlow());
+        updateFlowWidgets(client->getOutFlow());
     }
 
     auto servers = netMgr->getNetworkServers();
     for (auto& server : servers) {
         if (!server) continue;
-        updateFlowWidget(server->getInFlow());
-        updateFlowWidget(server->getOutFlow());
+        updateFlowWidgets(server->getInFlow());
+        updateFlowWidgets(server->getOutFlow());
     }
 }
 
@@ -149,7 +153,8 @@ int VRGuiNetwork::addFlow(Vec2i pos, void* key) {
     auto dfw = VRDataFlowWidgetPtr( new VRDataFlowWidget(canvas->getCanvas()) );
     canvas->addWidget(dfw->wID, dfw);
     dfw->move(Vec2d(pos));
-    flows[key] = dfw->wID;
+    if (!flows.count(key)) flows[key] = vector<int>();
+    flows[key].push_back( dfw->wID );
     return dfw->wID;
 }
 
@@ -208,6 +213,9 @@ int VRGuiNetwork::addTCPClient(VRTCPClientPtr client, Vec2i& position) {
     int n2 = addNode(remoteUri, position+Vec2i(200, 0));
     string color = client->connected() ? "#0F0" : "#F00";
     connectNodes(n1, n2, color);
+
+    addFlow(position+Vec2i(20,22), &client->getInFlow());
+    addFlow(position+Vec2i(50,22), &client->getOutFlow());
     return n1;
 }
 

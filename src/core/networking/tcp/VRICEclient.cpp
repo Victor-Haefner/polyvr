@@ -178,13 +178,13 @@ VRNetworkClientPtr VRICEClient::getClient(string otherID, CHANNEL channel) {
 
     if (!clients.count(otherID) || !clients[otherID].count(channel)) {
         if (channel == SCENEGRAPH) {
-            auto client = VRTCPClient::create();
+            auto client = VRTCPClient::create("ice-sync");
             client->setGuard("TCPPVR\n");
             clients[otherID][channel] = client;
         }
 
         if (channel == AUDIO) {
-            clients[otherID][channel] = VRUDPClient::create();
+            clients[otherID][channel] = VRUDPClient::create("ice-audio");
         }
     }
 
