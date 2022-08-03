@@ -165,9 +165,10 @@ void VRCollaboration::onIceEvent(string m) {
 			sendUI("conReq", "configMessage|"+name);
 			connectionInWidget->show();
 			connReqOrigin = origin;
+			connReqNet = parseSubNet(content);
 		}
 
-		if (startsWith(content, "CONACC") ) finishConnection(origin);
+		if (startsWith(content, "CONACC") ) finishConnection(origin, parseSubNet(content));
     }
 }
 
@@ -251,7 +252,8 @@ bool VRCollaboration::handleUI(VRDeviceWeakPtr wdev) {
 	if (startsWith(m, "onUserClick") ) {
 		auto data = splitString(m, '|');
 		sendUI("usersList", "setUserStats|"+data[1]+"|#fa0");
-		ice->send(data[1], "CONREQ");
+        string net = getSubnet();
+		ice->send(data[1], "CONREQ$"+net);
 	}
 
 	if (startsWith(m, "setMute") ) {
@@ -268,14 +270,27 @@ bool VRCollaboration::handleUI(VRDeviceWeakPtr wdev) {
 	return true;
 }
 
+string VRCollaboration::getSubnet() {
+    string net = ice->getID();
+    for (auto c : ice->getClients()) net += "$"+c.first;
+    return net;
+}
+
+vector<string> VRCollaboration::parseSubNet(string net) {
+    auto data = splitString(net, '$');
+    data.erase(data.begin()); // removes "CONREQ" or "CONACC"
+    return data;
+}
+
 void VRCollaboration::acceptConnection() {
-    ice->connectTo(connReqOrigin);
-    ice->send(connReqOrigin, "CONACC");
-    connectTCP(connReqOrigin);
+    string net = getSubnet();
+    for (auto node : connReqNet) ice->connectTo(node);
+    ice->send(connReqOrigin, "CONACC$"+net);
+    for (auto node : connReqNet) connectTCP(node);
     connectionInWidget->hide();
 }
 
-void VRCollaboration::finishConnection(string origin) {
+void VRCollaboration::finishConnection(string origin, vector<string> net) {
 #ifndef WITHOUT_GTK
     VRConsoleWidget::get("Collaboration")->write( " GOT CONACC connect ice to origin!\n");
 #endif

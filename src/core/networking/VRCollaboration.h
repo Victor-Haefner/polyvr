@@ -33,11 +33,14 @@ class VRCollaboration : public VRObject {
 
 	    string userName;
 	    string connReqOrigin;
+	    vector<string> connReqNet;
 
 	    void init();
+	    string getSubnet();
+	    vector<string> parseSubNet(string net);
 	    void connectTCP(string origin);
 	    void acceptConnection();
-	    void finishConnection(string origin);
+	    void finishConnection(string origin, vector<string> net);
 	    void setupAvatar(string rID, string name);
 	    void onIceEvent(string m);
 	    void onSyncNodeEvent(string e);
