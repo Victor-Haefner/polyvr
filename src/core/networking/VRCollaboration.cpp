@@ -167,14 +167,7 @@ void VRCollaboration::onIceEvent(string m) {
 			connReqOrigin = origin;
 		}
 
-		if (startsWith(content, "CONACC") ) {
-#ifndef WITHOUT_GTK
-            VRConsoleWidget::get("Collaboration")->write( " GOT CONACC connect ice to origin!\n");
-#endif
-			sendUI("usersList", "setUserStats|"+origin+"|#2c4");
-			ice->connectTo(origin);
-			connectTCP(origin);
-        }
+		if (startsWith(content, "CONACC") ) finishConnection(origin);
     }
 }
 
@@ -268,16 +261,27 @@ bool VRCollaboration::handleUI(VRDeviceWeakPtr wdev) {
 		mike->pauseStreaming(b);
 	}
 
-	if (m == "connectionAccept" ) {
-		ice->connectTo(connReqOrigin);
-		ice->send(connReqOrigin, "CONACC");
-		connectTCP(connReqOrigin);
-		connectionInWidget->hide();
-	}
+	if (m == "connectionAccept" ) acceptConnection();
 
 	if (m == "connectionRefuse" ) connectionInWidget->hide();
 
 	return true;
+}
+
+void VRCollaboration::acceptConnection() {
+    ice->connectTo(connReqOrigin);
+    ice->send(connReqOrigin, "CONACC");
+    connectTCP(connReqOrigin);
+    connectionInWidget->hide();
+}
+
+void VRCollaboration::finishConnection(string origin) {
+#ifndef WITHOUT_GTK
+    VRConsoleWidget::get("Collaboration")->write( " GOT CONACC connect ice to origin!\n");
+#endif
+    sendUI("usersList", "setUserStats|"+origin+"|#2c4");
+    ice->connectTo(origin);
+    connectTCP(origin);
 }
 
 string VRCollaboration::uiCSS = WEBSITE(
