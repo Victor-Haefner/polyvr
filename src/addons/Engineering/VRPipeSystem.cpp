@@ -549,6 +549,8 @@ void VRPipeSystem::setValve(string n, bool b)  { auto e = getEntity(n); if (e) e
 void VRPipeSystem::setTankPressure(string n, double p) { auto e = getEntity(n); if (e) e->set("pressure", toString(p)); }
 void VRPipeSystem::setTankDensity(string n, double p) { auto e = getEntity(n); if (e) e->set("density", toString(p)); }
 void VRPipeSystem::setPipeRadius(int i, double r) { segments[i]->radius = r; }
+void VRPipeSystem::setOutletDensity(string n, double p) { auto e = getEntity(n); if (e) e->set("density", toString(p)); }
+void VRPipeSystem::setOutletPressure(string n, double p) { auto e = getEntity(n); if (e) e->set("pressure", toString(p)); }
 
 void VRPipeSystem::setPump(string n, double p, double pmax) {
     auto e = getEntity(n);

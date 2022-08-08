@@ -128,6 +128,8 @@ class VRPipeSystem : public VRGeometry {
 		void setPump(string n, double p, double pmax);
 		void setTankPressure(string n, double p);
 		void setTankDensity(string n, double p);
+		void setOutletDensity(string n, double p);
+		void setOutletPressure(string n, double p);
 		void setPipeRadius(int i, double r);
 
         void printSystem();
