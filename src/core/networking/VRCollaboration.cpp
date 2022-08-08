@@ -263,7 +263,10 @@ bool VRCollaboration::handleUI(VRDeviceWeakPtr wdev) {
 		mike->pauseStreaming(b);
 	}
 
-	if (m == "connectionAccept" ) acceptConnection();
+	if (m == "connectionAccept" ) {
+        acceptConnection();
+        connectionInWidget->hide();
+	}
 
 	if (m == "connectionRefuse" ) connectionInWidget->hide();
 
@@ -284,19 +287,24 @@ vector<string> VRCollaboration::parseSubNet(string net) {
 
 void VRCollaboration::acceptConnection() {
     string net = getSubnet();
-    for (auto node : connReqNet) ice->connectTo(node);
-    ice->send(connReqOrigin, "CONACC$"+net);
-    for (auto node : connReqNet) connectTCP(node);
-    connectionInWidget->hide();
+    for (auto node : connReqNet) {
+        sendUI("usersList", "setUserStats|"+node+"|#2c4");
+        ice->connectTo(node);
+        ice->send(node, "CONACC$"+net);
+        connectTCP(node);
+    }
 }
 
 void VRCollaboration::finishConnection(string origin, vector<string> net) {
 #ifndef WITHOUT_GTK
     VRConsoleWidget::get("Collaboration")->write( " GOT CONACC connect ice to origin!\n");
 #endif
-    sendUI("usersList", "setUserStats|"+origin+"|#2c4");
-    ice->connectTo(origin);
-    connectTCP(origin);
+    for (auto node : net) {
+        sendUI("usersList", "setUserStats|"+node+"|#2c4");
+        ice->connectTo(node);
+        connectTCP(node);
+        if (node != origin) ice->send(node, "CONACC$"+ice->getID());
+    }
 }
 
 string VRCollaboration::uiCSS = WEBSITE(
