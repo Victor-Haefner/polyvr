@@ -85,6 +85,15 @@ void VRPipeSegment::handleValve(double area, VRPipeSegmentPtr other, double dt, 
     other->addEnergy(m, density, op1);
 }
 
+void VRPipeSegment::handleOutlet(double area, double extPressure, double extDensity, double dt, bool p1) {
+    double pressure = p1 ? pressure1 : pressure2;
+    area = min(area, this->area);
+    double dP = pressure - extPressure;
+    double m = dP*area*dt*gasSpeed; // energy through the opening
+    m = min(m, pressure*volume); // not more than available!
+    addEnergy(-m, extDensity, p1);
+}
+
 void VRPipeSegment::handlePump(double performance, double maxPressure, bool isOpen, VRPipeSegmentPtr other, double dt, bool p1, bool op1) {
     double pressure = p1 ? pressure1 : pressure2;
     double otherPressure = op1 ? other->pressure1 : other->pressure2;
@@ -97,7 +106,7 @@ void VRPipeSegment::handlePump(double performance, double maxPressure, bool isOp
     m = min(m, pressure*volume); // pump out not more than available!
     addEnergy(-m, other->density, p1);
     other->addEnergy(m, density, op1);
-    //cout << " pump " << dP << " m " << m << " v " << v << endl;
+    //cout << " pump " << performance << " m " << m << " v " << v << endl;
 }
 
 
@@ -319,15 +328,13 @@ void VRPipeSystem::update() {
 
             if (entity->is_a("Outlet")) {
                 double outletRadius = entity->getValue("radius", 0.0);
+                double outletPressure = entity->getValue("pressure", 1.0);
                 auto pipes = getPipes(nID);
                 if (pipes.size() != 1) continue;
                 auto pipe = pipes[0];
-
-                bool p1 = goesOut(pipe, nID);
-
+                double outletDensity = entity->getValue("density", pipe->density);
                 double area = outletRadius*outletRadius*Pi;
-                if (p1) pipe->pressure1 -= (pipe->pressure1-1.0)*area*dt;
-                else    pipe->pressure2 -= (pipe->pressure2-1.0)*area*dt;
+                pipe->handleOutlet(area, outletPressure, outletDensity, dt, goesOut(pipe, nID));
                 continue;
             }
         }
@@ -453,7 +460,7 @@ void VRPipeSystem::update() {
 
             s.second->flow += s.second->dFl2;  // pipe flow change in m³ / s
             //if (abs(s.second->dFl2) > 1e-9 || 1)
-            //    cout << " flow +" << s.second->dFl2 << " -> " << s.second->flow << " (" << n1 << "->" << n2 << ") blocked? " << s.second->flowBlocked << endl;
+            //    cout << " flow +" << s.second->dFl1 << "/" << s.second->dFl2 << " -> " << s.second->flow << " (" << n1 << "->" << n2 << ") blocked? " << s.second->flowBlocked << endl;
         }
     }
 
@@ -476,6 +483,8 @@ void VRPipeSystem::initOntology() {
     Pump->addProperty("maxPressure", "double");
     Pump->addProperty("isOpen", "bool");
     Outlet->addProperty("radius", "double");
+    Outlet->addProperty("pressure", "double");
+    Outlet->addProperty("density", "double");
     Valve->addProperty("state", "bool");
     Valve->addProperty("radius", "double");
 }
@@ -662,9 +671,8 @@ void VRPipeSystem::updateVisual() {
             c = s ? Color3f(0,1,0) : Color3f(1,0,0);
         }
 
-        if (n.second->entity->is_a("Junction")) {
-            c = Color3f(0.2,0.4,1);
-        }
+        if (n.second->entity->is_a("Junction")) c = Color3f(0.2,0.4,1);
+        if (n.second->entity->is_a("Outlet"))   c = Color3f(0.1,0.2,0.8);
 
         if (n.second->entity->is_a("Pump")) {
             double p = n.second->entity->getValue("performance", 0.0);

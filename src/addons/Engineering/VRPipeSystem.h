@@ -39,6 +39,7 @@ class VRPipeSegment {
 
         void handleTank(double& pressure, double otherVolume, double& otherDensity, double dt, bool p1);
         void handleValve(double area, VRPipeSegmentPtr other, double dt, bool p1, bool op1);
+        void handleOutlet(double area, double extPressure, double extDensity, double dt, bool p1);
         void handlePump(double performance, double maxPressure, bool isOpen, VRPipeSegmentPtr other, double dt, bool p1, bool op1);
 
         void addEnergy(double m, double d, bool p1);
