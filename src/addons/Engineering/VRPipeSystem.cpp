@@ -100,8 +100,12 @@ void VRPipeSegment::handlePump(double performance, double maxPressure, bool isOp
     if (pressure < 1e-6) return; // min pressure
     if (otherPressure > maxPressure) return;
 
+    double mO = 0;
+    if (isOpen) mO = computeExchange(area*0.1, other, dt, p1, op1); // minimal exchange if pump is open
+
     double v = 1.0 + otherPressure/pressure;
     double m = performance*dt/exp(v);
+    m = max(m, mO);
     //if (isOpen) m = max(m, computeExchange(area*0.1, other, dt, p1)); // minimal exchange if pump is open
     m = min(m, pressure*volume); // pump out not more than available!
     addEnergy(-m, other->density, p1);
