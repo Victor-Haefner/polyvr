@@ -37,6 +37,8 @@ void VRPipeSegment::computeGeometry() {
 }
 
 void VRPipeSegment::addEnergy(double m, double d, bool p1) {
+    if (volume < 1e-9) return;
+
     if (p1) pressure1 += m/volume;
     else pressure2 += m/volume;
 
@@ -46,6 +48,8 @@ void VRPipeSegment::addEnergy(double m, double d, bool p1) {
 }
 
 void VRPipeSegment::handleTank(double& otherPressure, double otherVolume, double& otherDensity, double dt, bool p1) {
+    if (otherVolume < 1e-9) return;
+
     double pressure = p1 ? pressure1 : pressure2;
     double dP = pressure - otherPressure;
     double m = dP*area*dt*gasSpeed; // energy through the pipe section area
@@ -359,6 +363,7 @@ void VRPipeSystem::update() {
             double a = (F-R)/m; // accelleration
             s.second->dFl1 = a*dt*s.second->area;  // pipe flow change in m³ / s
             s.second->flowBlocked = false;
+            //if (isNan(s.second->dFl1)) cout << "dFl1 is NaN! m: " << m << " dP: " << dP << " F: " << F << " A: " << s.second->area << " R: " << R << " a: " << a << endl;
         }
 
         for (auto n : nodes) { // check for closed nodes
@@ -388,6 +393,14 @@ void VRPipeSystem::update() {
                     pipe1->flowBlocked = true;
                     pipe2->flowBlocked = true;
                 }
+            }
+        }
+
+        for (auto s : segments) { // check for closed pipes
+            double a = s.second->area;
+            if (a < 1e-8) {
+                s.second->dFl1 = -s.second->flow*latency;
+                s.second->flowBlocked = true;
             }
         }
 
@@ -460,9 +473,13 @@ void VRPipeSystem::update() {
             if (isNan(s.second->dFl2)) {
                 s.second->dFl2 = 0;
                 cout << "Warning in Pipe simulation! dFL is NaN!" << endl;
+                cout << " pipe: " << s.first << ", nodes: " << n1 << " -> " << n2 << endl;
+                cout << " flow: " << s.second->flow << ", dF1: " << s.second->dFl1 << endl;
             }
 
+
             s.second->flow += s.second->dFl2;  // pipe flow change in m³ / s
+
             //if (abs(s.second->dFl2) > 1e-9 || 1)
             //    cout << " flow +" << s.second->dFl1 << "/" << s.second->dFl2 << " -> " << s.second->flow << " (" << n1 << "->" << n2 << ") blocked? " << s.second->flowBlocked << endl;
         }
@@ -552,7 +569,7 @@ bool VRPipeSystem::getValveState(string n) { auto e = getEntity(n); return e ? e
 void VRPipeSystem::setValve(string n, bool b)  { auto e = getEntity(n); if (e) e->set("state", toString(b)); }
 void VRPipeSystem::setTankPressure(string n, double p) { auto e = getEntity(n); if (e) e->set("pressure", toString(p)); }
 void VRPipeSystem::setTankDensity(string n, double p) { auto e = getEntity(n); if (e) e->set("density", toString(p)); }
-void VRPipeSystem::setPipeRadius(int i, double r) { segments[i]->radius = r; }
+void VRPipeSystem::setPipeRadius(int i, double r) { segments[i]->radius = r; segments[i]->computeGeometry(); }
 void VRPipeSystem::setOutletDensity(string n, double p) { auto e = getEntity(n); if (e) e->set("density", toString(p)); }
 void VRPipeSystem::setOutletPressure(string n, double p) { auto e = getEntity(n); if (e) e->set("pressure", toString(p)); }
 
