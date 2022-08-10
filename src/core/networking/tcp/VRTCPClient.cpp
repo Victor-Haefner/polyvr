@@ -52,11 +52,15 @@ class TCPClient {
         function<void (void)> onConnectCb;
 
         vector<tcp::endpoint> uriToEndpoints(const string& uri) {
-            tcp::resolver resolver(io_service);
-            tcp::resolver::query query(uri, "");
             vector<tcp::endpoint> res;
-            for(tcp::resolver::iterator i = resolver.resolve(query); i != tcp::resolver::iterator(); ++i) {
-                res.push_back(*i);
+            try {
+                tcp::resolver resolver(io_service);
+                tcp::resolver::query query(uri, "");
+                for (tcp::resolver::iterator i = resolver.resolve(query); i != tcp::resolver::iterator(); ++i) {
+                    res.push_back(*i);
+                }
+            } catch(boost::system::system_error& e) {
+                cout << "Exception at TCPClient::uriToEndpoints: " << e.what() << endl;
             }
             return res;
         }
@@ -195,10 +199,11 @@ class TCPClient {
 #ifndef WITHOUT_GTK
                 VRConsoleWidget::get("Collaboration")->write( " TCP connect to "+uri+" failed, no endpoints found\n", "red");
 #endif
+                return;
             }
 
             try {
-                socket->connect( endpoints[0] );
+                if (socket) socket->connect( endpoints[0] );
                 read();
             } catch(std::exception& e) {
                 cout << "TCPClient::connect failed with: " << e.what() << endl;
