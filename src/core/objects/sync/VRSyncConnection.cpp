@@ -109,7 +109,7 @@ vector<BYTE> VRSyncConnection::base64_decode(string const& encoded_string) {
 
 VRSyncConnection::VRSyncConnection(string host, int port, string localUri) : localUri(localUri) {
     timer = VRTimer::create();
-    client = VRTCPClient::create();
+    client = VRTCPClient::create("syncCli");
     client->setGuard("TCPPVR\n");
     uri = host+":"+toString(port);
     if (host != "") connect();

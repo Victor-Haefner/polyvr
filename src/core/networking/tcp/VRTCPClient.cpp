@@ -51,11 +51,17 @@ class TCPClient {
         function<string(string)> onMessageCb;
         function<void (void)> onConnectCb;
 
-        vector<tcp::endpoint> uriToEndpoints(const string& uri) {
+        vector<tcp::endpoint> uriToEndpoints(string uri) {
+            string port = "";
+            if (contains(uri, ":")) {
+                port = splitString(uri, ':')[1];
+                uri  = splitString(uri, ':')[0];
+            }
+
             vector<tcp::endpoint> res;
             try {
                 tcp::resolver resolver(io_service);
-                tcp::resolver::query query(uri, "");
+                tcp::resolver::query query(uri, port);
                 for (tcp::resolver::iterator i = resolver.resolve(query); i != tcp::resolver::iterator(); ++i) {
                     res.push_back(*i);
                 }

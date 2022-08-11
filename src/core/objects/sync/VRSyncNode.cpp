@@ -862,7 +862,7 @@ void VRSyncNode::handleNewConnect(string data) {
 }
 
 void VRSyncNode::startInterface(int port) {
-    server = VRTCPServer::create();
+    server = VRTCPServer::create("syncSrv");
     serverUri = VRTCPUtils::getPublicIP() + ":" + toString(port);
     server->listen(port, "TCPPVR\n");
     VRSyncConnectionWeakPtr weakRemote;
