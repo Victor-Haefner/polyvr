@@ -167,6 +167,8 @@ void VRSyncConnection::keepAlive() {
     }
 }
 
+VRTCPClientPtr VRSyncConnection::getClient() { return client; }
+
 string VRSyncConnection::getStatus() {
     string s;
     s = " connection with "+uri+", "+toString(client->connected());

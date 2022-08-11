@@ -130,7 +130,12 @@ string VRSyncNode::addTCPClient(VRNetworkClientPtr nclient) {
 
 void VRSyncNode::accTCPConnection(string msg, VRSyncConnectionWeakPtr weakRemote) {
     auto remote = weakRemote.lock();
-    if (!remote) return;
+    if (!remote) {
+#ifndef WITHOUT_GTK
+        VRConsoleWidget::get("Collaboration")->write( name+": got tcp client acc, but remote is invalid!\n", "red");
+#endif
+        return;
+    }
 #ifndef WITHOUT_GTK
     VRConsoleWidget::get("Collaboration")->write( name+": got tcp client acc, "+msg+"\n");
 #endif
@@ -174,9 +179,18 @@ void VRSyncNode::addRemote(string host, int port) {
 
     // sync node ID
     auto nID = getNode()->node->getId();
+    //remote->send("newConnect|"+serverUri); // TODO: maybe necessary?!?
     remote->send("selfmap|"+toString(nID)+"|"+UUID);
-    remote->send("newConnect|"+serverUri);
-    cout << "   send newConnect from " << uri << endl;
+    //cout << "   send newConnect from " << uri << endl;
+
+    auto client = remote->getClient();
+    VRSyncConnectionWeakPtr weakRemote = remote;
+    client->onMessage( bind(&VRSyncNode::handleMessage, this, std::placeholders::_1, weakRemote) );
+#ifndef WITHOUT_GTK
+    VRConsoleWidget::get("Collaboration")->write( name+": add tcp client connected to "+uri+", connected "+toString(client->connected())+"\n");
+#endif
+    remote->send("accConnect|1", 1); // delay one frame, when started locally, syncnodes may not be setup before receiving accConnect1
+
 
     sendTypes(remote);
 }
@@ -861,12 +875,23 @@ void VRSyncNode::handleNewConnect(string data) {
     }
 }
 
+string VRSyncNode::interfaceHandler(string msg, size_t sID) {
+    if (!clientsIDMap.count(sID)) { // TODO: how to get remote?
+#ifndef WITHOUT_GTK
+        VRConsoleWidget::get("Collaboration")->write( name+":  interfaceHandler, unknown sID\n", "red");
+#endif
+        return "";
+    }
+
+    string ruID = clientsIDMap[sID];
+    return handleMessage(msg, remotes[ruID]);
+}
+
 void VRSyncNode::startInterface(int port) {
     server = VRTCPServer::create("syncSrv");
     serverUri = VRTCPUtils::getPublicIP() + ":" + toString(port);
     server->listen(port, "TCPPVR\n");
-    VRSyncConnectionWeakPtr weakRemote;
-    server->onMessage( bind(&VRSyncNode::handleMessage, this, std::placeholders::_1, weakRemote) );
+    server->onMessage( bind(&VRSyncNode::interfaceHandler, this, std::placeholders::_1, std::placeholders::_2) );
 }
 
 void VRSyncNode::handleWarning(string msg, VRSyncConnectionWeakPtr weakRemote) {

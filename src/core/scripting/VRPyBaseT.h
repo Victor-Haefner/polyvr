@@ -94,6 +94,26 @@ R VRPyBase::execPyCall(PyObject* pyFkt, PyObject* pArgs, T t) {
     return r;
 }
 
+template <typename T1, typename T2, typename R>
+R VRPyBase::execPyCall2(PyObject* pyFkt, PyObject* pArgs, T1 t1, T2 t2) {
+    R r;
+    if (pyFkt == 0) return r;
+    PyGILState_STATE gstate = PyGILState_Ensure();
+    if (PyErr_Occurred() != NULL) PyErr_Print();
+
+    PyTuple_SetItem(pArgs, pySize(pArgs)-2, VRPyTypeCaster::cast(t1));
+    PyTuple_SetItem(pArgs, pySize(pArgs)-1, VRPyTypeCaster::cast(t2));
+    auto res = PyObject_CallObject(pyFkt, pArgs);
+
+    //Py_XDECREF(pArgs); Py_DecRef(pyFkt); // TODO!!
+
+    if (PyErr_Occurred() != NULL) PyErr_Print();
+    PyGILState_Release(gstate);
+
+    toValue(res, r);
+    return r;
+}
+
 template <typename T>
 void VRPyBase::execPyCallVoid(PyObject* pyFkt, PyObject* pArgs, T t) {
     if (pyFkt == 0) return;

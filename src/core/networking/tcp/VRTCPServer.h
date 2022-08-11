@@ -22,7 +22,7 @@ class VRTCPServer : public VRNetworkServer {
 
         static VRTCPServerPtr create(string name = "none");
 
-        void onMessage( function<string(string)> f );
+        void onMessage( function<string(string, size_t)> f );
 
         void listen(int port, string guard = "");
         void close();

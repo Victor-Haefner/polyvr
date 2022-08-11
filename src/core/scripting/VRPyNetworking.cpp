@@ -110,10 +110,12 @@ PyMethodDef VRPyTCPClient::methods[] = {
     {NULL}  /* Sentinel */
 };
 
+typedef function<string(string, size_t)> serverCb;
+
 PyMethodDef VRPyTCPServer::methods[] = {
     {"listen", PyWrapOpt(TCPServer, listen, "Listen on port", "", void, int, string) },
     {"close", PyWrap(TCPServer, close, "Close server", void) },
-    {"onMessage", PyWrap(TCPServer, onMessage, "Set onMessage callback", void, function<string(string)>) },
+    {"onMessage", PyWrap(TCPServer, onMessage, "Set onMessage callback", void, serverCb) },
     {NULL}  /* Sentinel */
 };
 
@@ -145,6 +147,14 @@ PyMethodDef VRPyCollaboration::methods[] = {
     {NULL}  /* Sentinel */
 };
 
+template<> bool toValue(PyObject* o, function<string(string, size_t)>& e) {
+    //if (!VRPyEntity::check(o)) return 0; // TODO: add checks!
+    Py_IncRef(o);
+	PyObject* args = PyTuple_New(2);
+    e = bind(VRPyBase::execPyCall2<string, size_t, string>, o, args, placeholders::_1, placeholders::_2);
+    return 1;
+}
+
 template<> bool toValue(PyObject* o, function<string(string)>& e) {
     //if (!VRPyEntity::check(o)) return 0; // TODO: add checks!
     Py_IncRef(o);
@@ -169,10 +179,12 @@ template<> bool toValue(PyObject* o, function<void(void)>& e) {
     return 1;
 }
 
+template<> int toValue(stringstream& ss, function<string(string, size_t)>& e) { return 0; }
 template<> int toValue(stringstream& ss, function<string(string)>& e) { return 0; }
 template<> int toValue(stringstream& ss, function<void(string)>& e) { return 0; }
 template<> int toValue(stringstream& ss, function<void(void)>& e) { return 0; }
 
+template<> string typeName(const function<string(string, size_t)>* t) { return "string function(string, int)"; }
 template<> string typeName(const function<string(string)>* t) { return "string function(string)"; }
 template<> string typeName(const function<void(string)>* t) { return "void function(string)"; }
 template<> string typeName(const function<void(void)>* t) { return "void function()"; }

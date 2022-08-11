@@ -62,6 +62,7 @@ class VRSyncConnection {
         string getStatus();
         string getUri();
         string getLocalUri();
+        VRTCPClientPtr getClient();
 
         Avatar& getAvatar();
         void setupDevices(UInt32 headTransform, UInt32 devTransform, UInt32 devAnchor);

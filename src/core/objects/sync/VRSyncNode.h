@@ -45,6 +45,7 @@ class VRSyncNode : public VRTransform {
         map<UInt32, bool> container; // local containers, sub-set of containers which need to be synced for collaboration
         map<UInt32, UInt32> externalContainer; // local external containers, key is container ID, value is change mask to use
         map<string, VRSyncConnectionPtr> remotes;
+        map<size_t, string> clientsIDMap;
         map<string, string> remoteUUIDs;
         map<UInt32, VRObjectWeakPtr> nodeToVRObject;
         UInt32 getRegisteredContainerID(UInt32 syncID);
@@ -112,6 +113,7 @@ class VRSyncNode : public VRTransform {
         void replaceContainerMapping(UInt32 ID1, UInt32 ID2, VRSyncConnectionWeakPtr weakRemote);
 
         void startInterface(int port);
+        string interfaceHandler(string msg, size_t sID);
         string handleMessage(string msg, VRSyncConnectionWeakPtr weakRemote);
         void update();
         void broadcast(string message);

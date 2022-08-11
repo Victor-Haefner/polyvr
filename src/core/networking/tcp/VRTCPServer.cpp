@@ -25,15 +25,17 @@ class Session {
         VRTCPServer* parent = 0;
         tcp::socket socket;
         string guard;
+        size_t uID = 0;
         boost::asio::streambuf buffer;
-        function<string (string)> onMessageCb;
+        function<string (string, size_t)> onMessageCb;
         //enum { max_length = 1024 };
         //char data_[max_length];
 
     public:
-        Session(boost::asio::io_service& io, string g, function<string (string)> cb, VRTCPServer* p)
+        Session(boost::asio::io_service& io, string g, function<string (string, size_t)> cb, VRTCPServer* p)
             : parent(p), socket(io), guard(g), onMessageCb(cb) {
-            ;
+            static size_t uIDcounter = 0;
+            uID = uIDcounter++;
         }
 
         ~Session() {
@@ -84,7 +86,7 @@ class Session {
                 }
 
                 if (onMessageCb) {
-                    string answer = onMessageCb(data);
+                    string answer = onMessageCb(data, uID);
                     //cout << " send answer: " << answer << endl;
                     if (answer.size() > 0) {
                         auto cb = boost::bind(&Session::handle_write, this, boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred);
@@ -107,7 +109,7 @@ class TCPServer {
         thread service;
         string guard;
 
-        function<string (string)> onMessageCb;
+        function<string (string, size_t)> onMessageCb;
 
         template <typename Itr, typename Out>
         void copy_n(Itr it, size_t count, Out out) {
@@ -131,7 +133,7 @@ class TCPServer {
 
         ~TCPServer() { close(); }
 
-        void onMessage( function<string (string)> f ) {
+        void onMessage( function<string (string, size_t)> f ) {
             onMessageCb = f;
             for (auto s : sessions) s->onMessageCb = f;
         }
@@ -159,7 +161,7 @@ VRTCPServerPtr VRTCPServer::create(string name) {
     return s;
 }
 
-void VRTCPServer::onMessage( function<string(string)> f ) { server->onMessage(f); }
+void VRTCPServer::onMessage( function<string(string, size_t)> f ) { server->onMessage(f); }
 void VRTCPServer::listen(int port, string guard) { this->port = port; server->listen(port, guard); }
 void VRTCPServer::close() { server->close(); }
 int VRTCPServer::getPort() { return port; }
