@@ -79,7 +79,7 @@ class VRSyncNode : public VRTransform {
         vector<string> owned; //names of owned objects by this node
         void handleOwnershipMessage(string ownership, VRSyncConnectionWeakPtr weakRemote);
 
-        void handleNewConnect(string data);
+        string onServerMsg(string msg);
         void accTCPConnection(string msg, VRSyncConnectionWeakPtr weakRemote);
         void reqInitState(VRSyncConnectionWeakPtr weakRemote);
 

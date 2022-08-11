@@ -169,6 +169,22 @@ void VRSyncNode::reqInitState(VRSyncConnectionWeakPtr weakRemote) {
     changelist->sendSceneState(ptr(), weakRemote);
 }
 
+string VRSyncNode::onServerMsg(string msg) {
+    if (startsWith(msg, "mapServerID|")) {
+        string ouri = splitString(msg, '|')[1];
+        string nuri = splitString(msg, '|')[2];
+
+        auto remote = remotes[ouri];
+        if (remote) {
+            remotes[nuri] = remote;
+            remote->send("accConnect|1", 1); // delay one frame, when started locally, syncnodes may not be setup before receiving accConnect1
+            //sendTypes(remote);
+        }
+    }
+
+    return "";
+}
+
 //Add remote Nodes to sync with
 void VRSyncNode::addRemote(string host, int port) {
     cout << " >>> > > VRSyncNode::addRemote to " << getName() << ": " << name << " at " << host << " on " << port << endl;
@@ -177,22 +193,11 @@ void VRSyncNode::addRemote(string host, int port) {
     auto remote = VRSyncConnection::create(host, port, serverUri);
     remotes[uri] = remote;
 
-    // sync node ID
-    auto nID = getNode()->node->getId();
-    //remote->send("newConnect|"+serverUri); // TODO: maybe necessary?!?
-    remote->send("selfmap|"+toString(nID)+"|"+UUID);
-    //cout << "   send newConnect from " << uri << endl;
-
     auto client = remote->getClient();
-    VRSyncConnectionWeakPtr weakRemote = remote;
-    client->onMessage( bind(&VRSyncNode::handleMessage, this, std::placeholders::_1, weakRemote) );
-#ifndef WITHOUT_GTK
-    VRConsoleWidget::get("Collaboration")->write( name+": add tcp client connected to "+uri+", connected "+toString(client->connected())+"\n");
-#endif
-    remote->send("accConnect|1", 1); // delay one frame, when started locally, syncnodes may not be setup before receiving accConnect1
+    client->onMessage( bind(&VRSyncNode::onServerMsg, this, std::placeholders::_1) );
 
-
-    sendTypes(remote);
+    // sync node ID
+    remote->send("newConnect|"+UUID+"|"+uri); // send UUID to server to identify remote connection
 }
 
 void VRSyncNode::setDoWrapping(bool b) { doWrapping = b; }
@@ -590,7 +595,10 @@ map<FieldContainer*, vector<FieldContainer*>> VRSyncNode::getAllSubContainers(Fi
 
 //update this SyncNode
 void VRSyncNode::update() {
-    for (auto& remote : remotes) remote.second->keepAlive();
+    for (auto& remote : remotes) {
+        if (remote.second) remote.second->keepAlive();
+    }
+
     auto localChanges = changelist->filterChanges(ptr());
     if (!localChanges) return;
     //if (getChildrenCount() == 0) return; // TODO: this may happen if the only child is dragged, or the only child was just deleted..
@@ -607,7 +615,9 @@ void VRSyncNode::update() {
 
     //VRConsoleWidget::get("Collaboration")->write( " Broadcast scene updates\n");
     changelist->broadcastChangeList(ptr(), localChanges, true);
-    for (auto remote : remotes) remote.second->clearSyncedContainer();
+    for (auto remote : remotes) {
+        if (remote.second) remote.second->clearSyncedContainer();
+    }
     //cout << "            / " << name << " VRSyncNode::update()" << "  < < < " << endl;
 }
 
@@ -835,47 +845,17 @@ vector<string> VRSyncNode::getRemotes() {
     return res;
 }
 
-void VRSyncNode::handleNewConnect(string data) {
-#ifndef WITHOUT_GTK
-    VRConsoleWidget::get("Collaboration")->write( name+": got new connection: "+data+"\n");
-#endif
-    cout << "VRSyncNode::handleNewConnect '" << data << "'" << endl;
-    auto remoteData = splitString(data, '|');
-    if (remoteData.size() < 2) {
-#ifndef WITHOUT_GTK
-        VRConsoleWidget::get("Collaboration")->write( name+":  Error, new connection, data malformed!\n", "red");
-#endif
-        cout << "Warning in VRSyncNode::handleNewConnect!, data malformed" << endl;
-        return;
-    }
-
-    string remoteName = remoteData[1];
-    auto uri = splitString(remoteName, ':');
-    if (uri.size() < 2) {
-#ifndef WITHOUT_GTK
-        VRConsoleWidget::get("Collaboration")->write( name+":  Error, new connection, remote name malformed!\n", "red");
-#endif
-        cout << "Warning in VRSyncNode::handleNewConnect!, remote name malformed" << endl;
-        return;
-    }
-
-    string ip = uri[0];
-    string port = uri[1];
-
-    cout << " handleNewConnect with ip " << remoteName << endl;
-    if (onEventCb) onEventCb("connection|"+remoteName); // if not in list then it is a new connection, the add remote
-    //else cout << "Warning in VRSyncNode::handleNewConnect!, no onEvent cb!" << endl
-
-    if (!remotes.count(remoteName)) {
-        cout << "  new connection -> add remote" << remoteName << endl;
-#ifndef WITHOUT_GTK
-        VRConsoleWidget::get("Collaboration")->write( name+":  new connection, add remote "+remoteName+"\n");
-#endif
-        VRSyncNode::addRemote(ip, toInt(port));
-    }
-}
-
 string VRSyncNode::interfaceHandler(string msg, size_t sID) {
+    if (startsWith(msg, "newConnect|")) {
+        string uuid = splitString(msg, '|')[1];
+        string ruri = splitString(msg, '|')[2];
+        clientsIDMap[sID] = uuid;
+#ifndef WITHOUT_GTK
+        VRConsoleWidget::get("Collaboration")->write( name+":  interfaceHandler, newConnect\n");
+#endif
+        return "mapServerID|"+ruri+"|"+UUID+"TCPPVR\n";
+    }
+
     if (!clientsIDMap.count(sID)) { // TODO: how to get remote?
 #ifndef WITHOUT_GTK
         VRConsoleWidget::get("Collaboration")->write( name+":  interfaceHandler, unknown sID\n", "red");
@@ -954,7 +934,7 @@ string VRSyncNode::handleMessage(string msg, VRSyncConnectionWeakPtr weakRemote)
     else if (startsWith(msg, "remoteMapping|")) job = VRUpdateCb::create( "sync-handleRemMap", bind(&VRSyncNode::handleRemoteMapping, this, msg, weakRemote) );
     else if (startsWith(msg, "typeMapping|")) job = VRUpdateCb::create("sync-handleTMap", bind(&VRSyncNode::handleTypeMapping, this, msg, weakRemote));
     else if (startsWith(msg, "ownership|")) job = VRUpdateCb::create( "sync-ownership", bind(&VRSyncNode::handleOwnershipMessage, this, msg, weakRemote) );
-    else if (startsWith(msg, "newConnect|")) job = VRUpdateCb::create( "sync-newConnect", bind(&VRSyncNode::handleNewConnect, this, msg) );
+    //else if (startsWith(msg, "newConnect|")) job = VRUpdateCb::create( "sync-newConnect", bind(&VRSyncNode::handleNewConnect, this, msg) );
     else if (startsWith(msg, "accConnect|")) job = VRUpdateCb::create( "sync-accConnect", bind(&VRSyncNode::accTCPConnection, this, msg, weakRemote) );
     else if (startsWith(msg, "reqInitState|")) job = VRUpdateCb::create( "sync-reqInitState", bind(&VRSyncNode::reqInitState, this, weakRemote) );
     else if (startsWith(msg, "changelistEnd|")) job = VRUpdateCb::create( "sync-finalizeCL", bind(&VRSyncChangelist::deserializeAndApply, changelist.get(), ptr(), weakRemote) );
