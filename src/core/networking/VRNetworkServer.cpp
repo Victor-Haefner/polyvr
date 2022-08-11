@@ -3,13 +3,14 @@
 
 using namespace OSG;
 
-VRNetworkServer::VRNetworkServer() {}
+VRNetworkServer::VRNetworkServer(string name) : name(name) {}
 VRNetworkServer::~VRNetworkServer() {
     VRSceneManager::get()->subNetworkServer(this);
 }
 
-VRNetworkServerPtr VRNetworkServer::create() { return VRNetworkServerPtr( new VRNetworkServer() ); }
-VRNetworkServerPtr VRNetworkServer::ptr() { return static_pointer_cast<VRNetworkServer>(shared_from_this()); }
+void VRNetworkServer::regServer(VRNetworkServerPtr s) {
+    VRSceneManager::get()->regNetworkServer(s);
+}
 
 string VRNetworkServer::getName() { return name; }
 string VRNetworkServer::getProtocol() { return protocol; }

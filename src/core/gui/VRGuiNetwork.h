@@ -58,6 +58,7 @@ class VRGuiNetwork {
         int addUDPClient(VRUDPClientPtr client, Vec2i& position);
         int addUDPServer(VRUDPServerPtr server, Vec2i& position);
         int addTCPClient(VRTCPClientPtr client, Vec2i& position);
+        int addTCPServer(VRTCPServerPtr server, Vec2i& position);
         void addICEClient(VRICEClientPtr client, Vec2i& position);
 
         void onTabSwitched(_GtkWidget* page, unsigned int tab);

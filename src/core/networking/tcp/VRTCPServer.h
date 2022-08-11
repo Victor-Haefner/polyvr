@@ -1,7 +1,7 @@
 #ifndef VRTCPSERVER_H_INCLUDED
 #define VRTCPSERVER_H_INCLUDED
 
-#include "../VRNetworkingFwd.h"
+#include "../VRNetworkServer.h"
 
 #include <string>
 #include <functional>
@@ -11,12 +11,10 @@ class TCPServer;
 using namespace std;
 namespace OSG {
 
-class VRTCPServer {
+class VRTCPServer : public VRNetworkServer {
     private:
         TCPServer* server = 0;
-        int port = 0;
         string publicIP = "";
-        string name;
 
     public:
         VRTCPServer(string name);

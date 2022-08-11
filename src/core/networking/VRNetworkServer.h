@@ -11,16 +11,16 @@ class VRNetworkServer : public std::enable_shared_from_this<VRNetworkServer> {
 	protected:
 	    string name;
 	    string protocol;
+        int port = 0;
 
         VRNetworkFlow inFlow;
         VRNetworkFlow outFlow;
 
-	public:
-		VRNetworkServer();
-		virtual ~VRNetworkServer();
+        void regServer(VRNetworkServerPtr s);
 
-		static VRNetworkServerPtr create();
-		VRNetworkServerPtr ptr();
+	public:
+		VRNetworkServer(string name);
+		virtual ~VRNetworkServer();
 
 		string getName();
 		string getProtocol();

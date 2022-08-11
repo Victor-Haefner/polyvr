@@ -96,8 +96,7 @@ class UDPServer {
 };
 
 
-VRUDPServer::VRUDPServer(string n) {
-    name = n;
+VRUDPServer::VRUDPServer(string n) : VRNetworkServer(n) {
     protocol = "udp";
     server = new UDPServer(this);
 }
@@ -106,7 +105,7 @@ VRUDPServer::~VRUDPServer() { delete server; }
 
 VRUDPServerPtr VRUDPServer::create(string name) {
     auto s = VRUDPServerPtr(new VRUDPServer(name));
-    VRSceneManager::get()->regNetworkServer(s);
+    s->regServer(s);
     return s;
 }
 

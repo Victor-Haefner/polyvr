@@ -22,6 +22,7 @@ using ip::tcp;
 
 class Session {
     public:
+        VRTCPServer* parent = 0;
         tcp::socket socket;
         string guard;
         boost::asio::streambuf buffer;
@@ -30,8 +31,8 @@ class Session {
         //char data_[max_length];
 
     public:
-        Session(boost::asio::io_service& io, string g, function<string (string)> cb)
-            : socket(io), guard(g), onMessageCb(cb) {
+        Session(boost::asio::io_service& io, string g, function<string (string)> cb, VRTCPServer* p)
+            : parent(p), socket(io), guard(g), onMessageCb(cb) {
             ;
         }
 
@@ -53,6 +54,11 @@ class Session {
         }
 
         void handle_write(const boost::system::error_code& error, size_t bytes_transferred) {
+            if (parent) {
+                auto& oFlow = parent->getOutFlow();
+                oFlow.logFlow(bytes_transferred*0.001);
+            }
+
             if (!error) start();
             else delete this;
         }
@@ -71,6 +77,12 @@ class Session {
                 for (int i=0; i<=gN; i++) it++;
                 //data += "\n";
                 //cout << "Session, received: " << data << ", cb: " << endl;
+
+                if (parent) {
+                    auto& iFlow = parent->getInFlow();
+                    iFlow.logFlow(data.size()*0.001);
+                }
+
                 if (onMessageCb) {
                     string answer = onMessageCb(data);
                     //cout << " send answer: " << answer << endl;
@@ -86,6 +98,7 @@ class Session {
 
 class TCPServer {
     private:
+        VRTCPServer* parent = 0;
         boost::asio::io_service io_service;
         boost::asio::io_service::work worker;
         vector<Session*> sessions;
@@ -102,7 +115,7 @@ class TCPServer {
         }
 
         void waitFor() {
-            Session* s = new Session(io_service, guard, onMessageCb);
+            Session* s = new Session(io_service, guard, onMessageCb, parent);
             sessions.push_back(s);
             acceptor->async_accept(s->socket, [this,s](boost::system::error_code ec) { if (!ec) { s->start(); waitFor(); } });
         }
@@ -112,7 +125,7 @@ class TCPServer {
 		}
 
     public:
-        TCPServer() : worker(io_service) {
+        TCPServer(VRTCPServer* p) : parent(p), worker(io_service) {
             service = thread([this](){ run(); });
         }
 
@@ -134,10 +147,14 @@ class TCPServer {
         }
 };
 
-VRTCPServer::VRTCPServer(string n) : name(n) { server = new TCPServer(); }
+VRTCPServer::VRTCPServer(string n) : VRNetworkServer(n) { protocol = "tcp"; server = new TCPServer(this); }
 VRTCPServer::~VRTCPServer() { delete server; }
 
-VRTCPServerPtr VRTCPServer::create(string name) { return VRTCPServerPtr(new VRTCPServer(name)); }
+VRTCPServerPtr VRTCPServer::create(string name) {
+    auto s = VRTCPServerPtr(new VRTCPServer(name));
+    s->regServer(s);
+    return s;
+}
 
 void VRTCPServer::onMessage( function<string(string)> f ) { server->onMessage(f); }
 void VRTCPServer::listen(int port, string guard) { this->port = port; server->listen(port, guard); }

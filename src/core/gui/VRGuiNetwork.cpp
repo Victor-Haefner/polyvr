@@ -11,6 +11,7 @@
 #include "core/networking/VRNetworkClient.h"
 #include "core/networking/VRNetworkServer.h"
 #include "core/networking/tcp/VRTCPClient.h"
+#include "core/networking/tcp/VRTCPServer.h"
 #include "core/networking/tcp/VRICEclient.h"
 #include "core/networking/udp/VRUDPClient.h"
 #include "core/networking/udp/VRUDPServer.h"
@@ -202,6 +203,21 @@ int VRGuiNetwork::addUDPServer(VRUDPServerPtr server, Vec2i& position) {
     return n1;
 }
 
+int VRGuiNetwork::addTCPServer(VRTCPServerPtr server, Vec2i& position) {
+    string name = server->getName();
+    string protocol = server->getProtocol(); // tcp or udp
+
+    string label = protocol + " srv " + name;
+
+    int n1 = addNode(label, position);
+    //int n2 = addNode(remoteUri, position+Vec2i(200, 0));
+    //connectNodes(n1, n2, "#FF00FF");
+
+    addFlow(position+Vec2i(20,22), &server->getInFlow());
+    addFlow(position+Vec2i(50,22), &server->getOutFlow());
+    return n1;
+}
+
 int VRGuiNetwork::addTCPClient(VRTCPClientPtr client, Vec2i& position) {
     string name = client->getName();
     string protocol = client->getProtocol(); // tcp or udp
@@ -271,7 +287,9 @@ void VRGuiNetwork::update() {
         if (protocol == "ice") addICEClient(dynamic_pointer_cast<VRICEClient>(client), position);
     }
 
-    position += Vec2i (0, 100);
+    position += Vec2i (-50, 100);
+    addNode("Network Servers:", position);
+    position += Vec2i (50, 50);
     auto servers = netMgr->getNetworkServers();
     for (auto& server : servers) {
         if (!server) continue;
@@ -279,6 +297,7 @@ void VRGuiNetwork::update() {
         string protocol = server->getProtocol();
         position += Vec2i(0, 50);
         if (protocol == "udp") addUDPServer(dynamic_pointer_cast<VRUDPServer>(server), position);
+        if (protocol == "tcp") addTCPServer(dynamic_pointer_cast<VRTCPServer>(server), position);
     }
 
     //canvas->updateLayout();

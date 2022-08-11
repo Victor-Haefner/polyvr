@@ -15,7 +15,6 @@ OSG_BEGIN_NAMESPACE;
 class VRUDPServer : public VRNetworkServer {
 	private:
         UDPServer* server = 0;
-        int port = 0;
 
 	public:
 		VRUDPServer(string name);

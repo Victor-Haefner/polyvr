@@ -272,7 +272,7 @@
 		print 'server received:', m
 		return "hello " + m + "!"
 
-	VR.serv = VR.TCPServer()
+	VR.serv = VR.TCPServer('buddy')
 	VR.serv.onMessage(onServerMsg)
 	VR.serv.listen(port)
 </core>
