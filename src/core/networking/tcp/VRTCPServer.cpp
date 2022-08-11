@@ -131,7 +131,10 @@ class TCPServer {
 
         ~TCPServer() { close(); }
 
-        void onMessage( function<string (string)> f ) { onMessageCb = f; }
+        void onMessage( function<string (string)> f ) {
+            onMessageCb = f;
+            for (auto s : sessions) s->onMessageCb = f;
+        }
 
         void listen(int port, string guard) {
             cout << "TCPServer listen on port " << port << ", guard: " << guard << endl;

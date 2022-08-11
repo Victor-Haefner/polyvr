@@ -955,7 +955,7 @@ void VRSyncChangelist::serialize_entry(VRSyncNodePtr syncNode, ContainerChangeEn
         sentry.uiEntryDesc = entry->uiEntryDesc;
         sentry.fcTypeID = 666;
         data.insert(data.end(), (unsigned char*)&sentry, (unsigned char*)&sentry + sizeof(SerialEntry));
-        cout << " VRSyncChangelist::serialize_entry send destroy " << sentry.localId << endl;
+        //cout << " VRSyncChangelist::serialize_entry send destroy " << sentry.localId << endl;
         count++;
         // TODO: delete ID from remotes mappings and syncnode container
     }
@@ -986,7 +986,7 @@ void VRSyncChangelist::serialize_entry(VRSyncNodePtr syncNode, ContainerChangeEn
             }
         }
 
-        cout << " VRSyncChangelist::serialize_entry " << sentry.localId << endl;
+        //cout << " VRSyncChangelist::serialize_entry " << sentry.localId << endl;
         data.insert(data.end(), (unsigned char*)&sentry, (unsigned char*)&sentry + sizeof(SerialEntry));
         data.insert(data.end(), handler.data.begin(), handler.data.end());
         count++;
