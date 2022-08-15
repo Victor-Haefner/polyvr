@@ -49,6 +49,12 @@ cp -r /c/usr/lib/openvr/* $pckFolder/engine/libs/
 cp -r /c/usr/lib/collada/* $pckFolder/engine/libs/
 cp -r "$vcpkgLibs"/* $pckFolder/engine/libs/
 
+echo " cleanup"
+rm $pckFolder/engine/polyvr.pdb
+rm $pckFolder/engine/libs/*.pdb
+rm -rf $pckFolder/engine/ressources/cef
+rm -rf $pckFolder/engine/ressources/cef18
+
 
 if [ -n "$appProject" ]; then # check is appProject given
 cat <<EOT >> $pckFolder/startApp.bat
