@@ -130,12 +130,7 @@ string VRSyncNode::addTCPClient(VRNetworkClientPtr nclient) {
 
 void VRSyncNode::accTCPConnection(string msg, VRSyncConnectionWeakPtr weakRemote) {
     auto remote = weakRemote.lock();
-    if (!remote) {
-#ifndef WITHOUT_GTK
-        VRConsoleWidget::get("Collaboration")->write( name+": got tcp client acc, but remote is invalid!\n", "red");
-#endif
-        return;
-    }
+    if (!remote) return;
 #ifndef WITHOUT_GTK
     VRConsoleWidget::get("Collaboration")->write( name+": got tcp client acc, "+msg+"\n");
 #endif
@@ -174,8 +169,9 @@ string VRSyncNode::onServerMsg(string msg) {
         string ouri = splitString(msg, '|')[1];
         string nuri = splitString(msg, '|')[2];
 
-        auto remote = remotes[ouri];
-        if (remote) {
+        if (remotes.count(ouri)) {
+            auto remote = remotes[ouri];
+            remotes.erase(ouri);
             remotes[nuri] = remote;
             remote->send("accConnect|1", 1); // delay one frame, when started locally, syncnodes may not be setup before receiving accConnect1
             //sendTypes(remote);
