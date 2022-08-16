@@ -39,9 +39,13 @@ class Session {
         }
 
         ~Session() {
-            socket.cancel();
-            boost::system::error_code _error_code;
-            socket.shutdown(tcp::socket::shutdown_both, _error_code);
+            try {
+                socket.cancel();
+                boost::system::error_code _error_code;
+                socket.shutdown(tcp::socket::shutdown_both, _error_code);
+            } catch(...) {
+                ;
+            }
         }
 
         void start() {
