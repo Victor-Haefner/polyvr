@@ -9,9 +9,11 @@
 #include "core/tools/VRAnnotationEngine.h"
 #include "core/scene/sound/VRMicrophone.h"
 #include "core/scene/sound/VRSound.h"
+#include "core/scene/VRSceneManager.h"
 #include "core/scene/VRScene.h"
 #include "core/setup/VRSetup.h"
 #include "core/setup/devices/VRServer.h"
+#include "core/utils/system/VRSystem.h"
 
 #ifndef WITHOUT_GTK
 #include "core/gui/VRGuiConsole.h"
@@ -68,6 +70,14 @@ void VRCollaboration::subChild(VRObjectPtr child, bool osg) {
 
 void VRCollaboration::setServer(string uri) {
 	ice->setTurnServer(uri);
+}
+
+void VRCollaboration::setupLocalServer() {
+    string D = VRSceneManager::get()->getOriginalWorkdir();
+    string folder = D+"/ressources/PolyServ";
+    if (!exists(folder+"/.git"))
+        systemCall("git clone https://github.com/Victor-Haefner/PolyServ.git \"" + folder + "\"");
+    setServer("http://localhost:5500/ressources/PolyServ");
 }
 
 void VRCollaboration::setAvatarDevices(VRTransformPtr head, VRTransformPtr hand, VRTransformPtr handGrab) {

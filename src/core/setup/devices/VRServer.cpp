@@ -61,7 +61,7 @@ void VRServer::callback(void* _args) { // TODO: implement generic button trigger
         if (args->params->count("state") == 0) { /*cout << "VRServer::callback warning, no state passed\n";*/ return; }
         if (args->params->count("message")) {
             message = (*args->params)["message"];
-	    setMessage(message);
+            setMessage(message);
         }
 
         button = toInt((*args->params)["button"]);

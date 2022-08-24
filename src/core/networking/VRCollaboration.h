@@ -61,6 +61,7 @@ class VRCollaboration : public VRObject {
         void subChild(VRObjectPtr child, bool osg = true) override;
 
 		void setServer(string uri);
+		void setupLocalServer();
 		void setAvatarDevices(VRTransformPtr head, VRTransformPtr hand, VRTransformPtr handGrab = 0);
 		void setAvatarGeometry(VRTransformPtr torso, VRTransformPtr leftHand = 0, VRTransformPtr rightHand = 0);
 };
