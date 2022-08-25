@@ -40,10 +40,14 @@ class VRICEClient : public VRNetworkClient {
         void update();
         void updateUsers();
 
+        void processNameset(string data);
         void processUsers(string data);
         void processMessages(string data);
+        void processConnect(string data, string uid2);
+        void processRespNameset(VRRestResponsePtr r);
         void processRespUsers(VRRestResponsePtr r);
         void processRespMessages(VRRestResponsePtr r);
+        void processRespConnect(VRRestResponsePtr r, string uid2);
 
         void pollUsers(bool async);
         void pollMessages(bool async);

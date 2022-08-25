@@ -156,9 +156,11 @@ void VRRestClient::getAsync(string uri, VRRestCbPtr cb, int timeoutSecs) { // TO
 #else
     auto job = [&](string uri, VRRestCbPtr cb, int timeoutSecs) -> void { // executed in async thread
         auto res = get(uri, timeoutSecs);
-        auto fkt = VRUpdateCb::create("getAsync-finish", bind(&VRRestClient::finishAsync, this, cb, res));
-        auto s = VRScene::getCurrent();
-        if (s) s->queueJob(fkt);
+        if (cb) {
+            auto fkt = VRUpdateCb::create("getAsync-finish", bind(&VRRestClient::finishAsync, this, cb, res));
+            auto s = VRScene::getCurrent();
+            if (s) s->queueJob(fkt);
+        }
     };
 
     future<void> f = async(launch::async, job, uri, cb, timeoutSecs);

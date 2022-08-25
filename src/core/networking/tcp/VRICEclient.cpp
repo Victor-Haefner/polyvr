@@ -42,13 +42,27 @@ void VRICEClient::setTurnServer(string url) {
 
 string VRICEClient::getTurnServer() { return turnURL + " ("+turnIP+")"; }
 
-void VRICEClient::setName(string n) {
-    name = n;
-    uID = broker->get(turnURL+"/regUser.php?NAME="+n)->getData();
+void VRICEClient::processNameset(string data) {
+    uID = data;
     //cout << "register name " << n << " -> " << uID << endl;
 #ifndef WITHOUT_GTK
     VRConsoleWidget::get("Collaboration")->write( " ICE "+toString((void*)this)+", set named "+name+" ("+uID+")\n");
 #endif
+}
+
+void VRICEClient::processRespNameset(VRRestResponsePtr r) { processNameset(r->getData()); }
+
+void VRICEClient::setName(string n) {
+    name = n;
+    bool async = true;
+
+    if (!async) {
+        string data = broker->get(turnURL+"/regUser.php?NAME="+n)->getData();
+        processNameset(data);
+    } else {
+        auto cb = VRRestCb::create("iceNameset", bind(&VRICEClient::processRespNameset, this, placeholders::_1) );
+        broker->getAsync(turnURL+"/regUser.php?NAME="+n, cb);
+    }
 }
 
 void VRICEClient::removeLocalUser(string uid) {
@@ -59,7 +73,7 @@ void VRICEClient::removeLocalUser(string uid) {
 }
 
 void VRICEClient::removeUser(string uid) {
-    broker->get(turnURL+"/remUser.php?UID="+uid);
+    broker->getAsync(turnURL+"/remUser.php?UID="+uid, 0);
 }
 
 string VRICEClient::getID() { return uID; }
@@ -106,7 +120,7 @@ map<string, string> VRICEClient::getUsers() { return users; }
 
 void VRICEClient::send(string otherID, string msg) {
     msg = VRRestResponse::uriEncode(msg);
-    broker->get(turnURL+"/addMessage.php?ORG="+uID+"&UID="+otherID+"&MSG="+msg)->getData();
+    broker->getAsync(turnURL+"/addMessage.php?ORG="+uID+"&UID="+otherID+"&MSG="+msg, 0);
 #ifndef WITHOUT_GTK
     VRConsoleWidget::get("Collaboration")->write( " ICE "+name+" send to "+otherID+": '"+msg+"'\n");
 #endif
@@ -126,7 +140,7 @@ void VRICEClient::processUsers(string data) {
 void VRICEClient::processMessages(string data) {
     if (data != "") {
         auto messages = splitString(data, ">>>---");
-        for (int i=0; i<messages.size(); i++)  {
+        for (size_t i=0; i<messages.size(); i++)  {
             string msg = messages[i];
             if (onEventCb) onEventCb("message|"+msg);
         }
@@ -193,6 +207,46 @@ VRNetworkClientPtr VRICEClient::getClient(string otherID, CHANNEL channel) {
 
 map<string, map<VRICEClient::CHANNEL, VRNetworkClientPtr> > VRICEClient::getClients() { return clients; }
 
+void VRICEClient::processConnect(string data, string uid2) {
+    string uid1 = uID;
+    auto params = splitString(data, ':');
+
+    if (params.size() == 0) {
+#ifndef WITHOUT_GTK
+        VRConsoleWidget::get("Collaboration")->write( " ICE "+name+"("+uid1+"): connect to "+turnIP+" faild! no port received from turn server "+turnURL+", received '"+data+"'\n", "red");
+#endif
+        return;
+    }
+
+    int port1 = toInt( params[0] );
+    if (port1 == 0) {
+#ifndef WITHOUT_GTK
+        VRConsoleWidget::get("Collaboration")->write( " ICE "+name+"("+uid1+"): connect to "+turnIP+" faild! no port received from turn server "+turnURL+", received '"+data+"'\n", "red");
+#endif
+        return;
+    }
+
+    //cout << " -> port " << port1 << endl;
+#ifndef WITHOUT_GTK
+    VRConsoleWidget::get("Collaboration")->write( " ICE "+name+"("+uid1+"): connect to "+users[uid2]+"("+uid2+") over "+turnIP+":"+toString(port1)+", received '"+data+"'\n");
+#endif
+    getClient(uid2, SCENEGRAPH)->connect(turnIP, port1);
+
+    if (params.size() >= 3) {
+        int port2 = toInt( params[3] );
+        if (port2 != 0) {
+            auto cli = getClient(uid2, AUDIO);
+            cli->connect(turnIP, port2);
+            cli->send("hi"); // to register the client port on turn server
+        }
+#ifndef WITHOUT_GTK
+        VRConsoleWidget::get("Collaboration")->write( " ICE "+name+"("+uid1+"): connect AUDIO to "+users[uid2]+"("+uid2+") over "+turnIP+":"+toString(port2)+", received '"+data+"'\n");
+#endif
+    }
+}
+
+void VRICEClient::processRespConnect(VRRestResponsePtr r, string uid2) { processConnect(r->getData(), uid2); }
+
 void VRICEClient::connectTo(string otherID) {
     if (uID == "" || otherID == "") {
         cout << "VRICEClient::connectTo failed, empty ID" << endl;
@@ -201,6 +255,7 @@ void VRICEClient::connectTo(string otherID) {
 #endif
         return;
     }
+
     string uid1 = uID;
     string uid2 = otherID;
     //cout << "VRICEClient::connectTo, name/uid: " << name << "/" << uid1 << " other/uid " << users[uid2] << "/" << uid2 << endl;
@@ -221,39 +276,13 @@ void VRICEClient::connectTo(string otherID) {
         return;
     }
 
-    string data = broker->get(turnURL+"/getConnection.php?UID="+uid1+"&UID2="+uid2)->getData();
-    auto params = splitString(data, ':');
-    if (params.size() == 0) {
-#ifndef WITHOUT_GTK
-        VRConsoleWidget::get("Collaboration")->write( " ICE "+name+"("+uid1+"): connect to "+turnIP+" faild! no port received from turn server "+turnURL+", received '"+data+"'\n", "red");
-#endif
-        return;
-    }
-
-    int port1 = toInt( params[0] );
-    if (port1 == 0) {
-#ifndef WITHOUT_GTK
-        VRConsoleWidget::get("Collaboration")->write( " ICE "+name+"("+uid1+"): connect to "+turnIP+" faild! no port received from turn server "+turnURL+", received '"+data+"'\n", "red");
-#endif
-        return;
-    }
-
-    //cout << " -> port " << port1 << endl;
-#ifndef WITHOUT_GTK
-    VRConsoleWidget::get("Collaboration")->write( " ICE "+name+"("+uid1+"): connect to "+users[uid2]+"("+uid2+") over "+turnIP+":"+toString(port1)+", received '"+data+"'\n");
-#endif
-    getClient(otherID, SCENEGRAPH)->connect(turnIP, port1);
-
-    if (params.size() >= 3) {
-        int port2 = toInt( params[3] );
-        if (port2 != 0) {
-            auto cli = getClient(otherID, AUDIO);
-            cli->connect(turnIP, port2);
-            cli->send("hi"); // to register the client port on turn server
-        }
-#ifndef WITHOUT_GTK
-        VRConsoleWidget::get("Collaboration")->write( " ICE "+name+"("+uid1+"): connect AUDIO to "+users[uid2]+"("+uid2+") over "+turnIP+":"+toString(port2)+", received '"+data+"'\n");
-#endif
+    bool async = true;
+    if (!async) {
+        string data = broker->get(turnURL+"/getConnection.php?UID="+uid1+"&UID2="+uid2)->getData();
+        processConnect(data, uid2);
+    } else {
+        auto cb = VRRestCb::create("iceConnect", bind(&VRICEClient::processRespConnect, this, placeholders::_1, uid2) );
+        broker->getAsync(turnURL+"/getConnection.php?UID="+uid1+"&UID2="+uid2, cb);
     }
 }
 
