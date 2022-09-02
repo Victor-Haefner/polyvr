@@ -1517,9 +1517,6 @@
 		<Unit filename="src/core/setup/tracking/Vive.h" />
 		<Unit filename="src/core/setup/windows/VRGlutWindow.cpp" />
 		<Unit filename="src/core/setup/windows/VRGlutWindow.h" />
-		<Unit filename="src/core/setup/windows/VRGtk2Window.h" />
-		<Unit filename="src/core/setup/windows/VRGtk32Window.h" />
-		<Unit filename="src/core/setup/windows/VRGtk3Window.h" />
 		<Unit filename="src/core/setup/windows/VRGtkWindow.cpp" />
 		<Unit filename="src/core/setup/windows/VRGtkWindow.h" />
 		<Unit filename="src/core/setup/windows/VRMultiWindow.cpp" />
