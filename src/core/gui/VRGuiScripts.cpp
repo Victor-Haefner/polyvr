@@ -35,6 +35,16 @@ VRScriptPtr VRGuiScripts::getSelectedScript() {
     return script;
 }
 
+VRGuiScripts::group* VRGuiScripts::getSelectedGroup() {
+    VRGuiTreeView tree_view("treeview5");
+    if (!tree_view.hasSelection()) return 0;
+
+    // get selected
+    string name = tree_view.getSelectedStringValue(0);
+    for (auto& g : groups) if (g.second.name == name) return &g.second;
+    return 0;
+}
+
 void VRGuiScripts::setGroupListRow(GtkTreeIter* itr, group& g) {
     auto store = (GtkTreeStore*)VRGuiBuilder::get()->get_object("script_tree");
     gtk_tree_store_set (store, itr,
@@ -133,9 +143,11 @@ void VRGuiScripts::setScriptListRow(GtkTreeIter* itr, VRScriptPtr script, bool o
 void VRGuiScripts::on_new_clicked() {
     auto scene = VRScene::getCurrent();
     if (scene == 0) return;
+    auto g = getSelectedGroup();
     int l,c;
     getLineFocus(l,c);
     auto s = scene->newScript("Script", "\timport VR\n\n\t");
+    if (g) s->setGroup(g->name);
     updateList();
     focusScript(s->getName(), l,c);
 }

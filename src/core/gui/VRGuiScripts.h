@@ -137,6 +137,7 @@ class VRGuiScripts {
 
         bool updateList();
         VRScriptPtr getSelectedScript();
+        group* getSelectedGroup();
         void focusScript(string name, int line, int column);
         void getLineFocus(int& line, int& column);
         void update();
