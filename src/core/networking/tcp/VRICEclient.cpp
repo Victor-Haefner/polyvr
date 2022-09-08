@@ -52,9 +52,8 @@ void VRICEClient::processNameset(string data) {
 
 void VRICEClient::processRespNameset(VRRestResponsePtr r) { processNameset(r->getData()); }
 
-void VRICEClient::setName(string n) {
+void VRICEClient::setName(string n, bool async) {
     name = n;
-    bool async = true;
 
     if (!async) {
         string data = broker->get(turnURL+"/regUser.php?NAME="+n)->getData();
@@ -230,7 +229,15 @@ void VRICEClient::processConnect(string data, string uid2) {
 #ifndef WITHOUT_GTK
     VRConsoleWidget::get("Collaboration")->write( " ICE "+name+"("+uid1+"): connect to "+users[uid2]+"("+uid2+") over "+turnIP+":"+toString(port1)+", received '"+data+"'\n");
 #endif
-    getClient(uid2, SCENEGRAPH)->connect(turnIP, port1);
+    auto cli = getClient(uid2, SCENEGRAPH);
+    auto client = dynamic_pointer_cast<VRTCPClient>(cli);
+    client->connect(turnIP, port1);
+
+    if (!client->connected()) {
+#ifndef WITHOUT_GTK
+        VRConsoleWidget::get("Collaboration")->write( " ICE "+name+"("+uid1+"): connection to "+users[uid2]+"("+uid2+") failed!\n", "red");
+#endif
+    }
 
     if (params.size() >= 3) {
         int port2 = toInt( params[3] );
@@ -247,7 +254,7 @@ void VRICEClient::processConnect(string data, string uid2) {
 
 void VRICEClient::processRespConnect(VRRestResponsePtr r, string uid2) { processConnect(r->getData(), uid2); }
 
-void VRICEClient::connectTo(string otherID) {
+void VRICEClient::connectTo(string otherID, bool async) {
     if (uID == "" || otherID == "") {
         cout << "VRICEClient::connectTo failed, empty ID" << endl;
 #ifndef WITHOUT_GTK
@@ -276,7 +283,6 @@ void VRICEClient::connectTo(string otherID) {
         return;
     }
 
-    bool async = true;
     if (!async) {
         string data = broker->get(turnURL+"/getConnection.php?UID="+uid1+"&UID2="+uid2)->getData();
         processConnect(data, uid2);

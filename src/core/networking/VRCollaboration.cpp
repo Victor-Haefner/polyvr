@@ -2,6 +2,7 @@
 #include "core/utils/toString.h"
 
 #include "tcp/VRICEclient.h"
+#include "tcp/VRTCPClient.h"
 #include "core/objects/sync/VRSyncNode.h"
 #include "core/objects/geometry/sprite/VRSprite.h"
 #include "core/objects/material/VRMaterial.h"
@@ -144,10 +145,27 @@ void VRCollaboration::setupAvatar(string rID, string name) {
 
 void VRCollaboration::connectTCP(string origin) {
 #ifndef WITHOUT_GTK
-    VRConsoleWidget::get("Collaboration")->write( " ..connect TCP sync node and audio, setup avatar, origin: "+origin+"\n");
+    VRConsoleWidget::get("Collaboration")->write( "Collab: connect TCP sync node and audio, setup avatar of origin "+origin+"'\n");
 #endif
 
-	auto rID = syncNode->addTCPClient(ice->getClient(origin, VRICEClient::SCENEGRAPH));
+    auto cli = ice->getClient(origin, VRICEClient::SCENEGRAPH);
+    auto client = dynamic_pointer_cast<VRTCPClient>(cli);
+
+    if (!client) {
+#ifndef WITHOUT_GTK
+        VRConsoleWidget::get("Collaboration")->write( "Collab: no TCP client found for origin '"+origin+"'\n", "red");
+#endif
+        return;
+    }
+
+    if (!client->connected()) {
+#ifndef WITHOUT_GTK
+        VRConsoleWidget::get("Collaboration")->write( "Collab: TCP client found for origin '"+origin+"' is not connected!\n", "red");
+#endif
+        return;
+    }
+
+	auto rID = syncNode->addTCPClient(client);
 	auto name = ice->getUserName(origin);
 	setupAvatar(rID, name);
 
@@ -255,7 +273,7 @@ bool VRCollaboration::handleUI(VRDeviceWeakPtr wdev) {
 		userName = splitString(m, '|')[1];
 		userNameWidget->hide();
 		userlist->show();
-		ice->setName(userName);
+		ice->setName(userName, false);
 		updateUsersWidget();
 	}
 
@@ -296,10 +314,13 @@ vector<string> VRCollaboration::parseSubNet(string net) {
 }
 
 void VRCollaboration::acceptConnection() {
+#ifndef WITHOUT_GTK
+    VRConsoleWidget::get("Collaboration")->write( "Collab: accepting incomming connection, connect ice to origin!\n");
+#endif
     string net = getSubnet();
     for (auto node : connReqNet) {
         sendUI("usersList", "setUserStats|"+node+"|#2c4");
-        ice->connectTo(node);
+        ice->connectTo(node, false);
         ice->send(node, "CONACC$"+net);
         connectTCP(node);
     }
@@ -307,11 +328,11 @@ void VRCollaboration::acceptConnection() {
 
 void VRCollaboration::finishConnection(string origin, vector<string> net) {
 #ifndef WITHOUT_GTK
-    VRConsoleWidget::get("Collaboration")->write( " GOT CONACC connect ice to origin!\n");
+    VRConsoleWidget::get("Collaboration")->write( "Collab: got CONACC, connect ice to origin!\n");
 #endif
     for (auto node : net) {
         sendUI("usersList", "setUserStats|"+node+"|#2c4");
-        ice->connectTo(node);
+        ice->connectTo(node, false);
         connectTCP(node);
         if (node != origin) ice->send(node, "CONACC$"+ice->getID());
     }

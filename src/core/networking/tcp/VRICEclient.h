@@ -65,8 +65,8 @@ class VRICEClient : public VRNetworkClient {
         void onEvent( function<void(string)> f );
         void onMessage( function<void(string)> f );
 
-        void setName(string name);
-        void connectTo(string other);
+        void setName(string name, bool async);
+        void connectTo(string other, bool async);
         void sendTCP(string otherID, string msg, CHANNEL channel);
         void send(string otherID, string msg);
         void removeUser(string uid);
