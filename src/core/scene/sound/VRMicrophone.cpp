@@ -225,6 +225,7 @@ VRSoundPtr VRMicrophone::stopRecording() {
     stop();
     auto r = recordingSound;
     recordingSound = 0;
+    started = false;
     return r;
 }
 
