@@ -475,14 +475,20 @@ AVFrame* alloc_audio_frame(enum AVSampleFormat sample_fmt, uint64_t channel_layo
     return frame;
 }
 
-void open_audio(AVFormatContext *oc, OutputStream *ost) {
+bool open_audio(AVFormatContext *oc, OutputStream *ost) {
     int nb_samples, ret;
 
     AVCodecContext* c = ost->enc;
-    if (avcodec_open2(c, NULL, NULL) < 0) { fprintf(stderr, "could not open codec\n"); return; }
+    cout << "Open audio codec: " << c << endl;
+    if (avcodec_open2(c, NULL, NULL) < 0) { fprintf(stderr, "could not open codec\n"); return false; }
 
     if (c->codec->capabilities & AV_CODEC_CAP_VARIABLE_FRAME_SIZE) nb_samples = 10000;
     else nb_samples = c->frame_size;
+	
+	if (nb_samples == 0) {
+		cout << "Warning, no samples set, set to 10000" << endl;
+		nb_samples = 10000;
+	}
 
     cout << "Allocate audio frames: " << nb_samples << endl;
 
@@ -491,7 +497,9 @@ void open_audio(AVFormatContext *oc, OutputStream *ost) {
 
     /* copy the stream parameters to the muxer */
     ret = avcodec_parameters_from_context(ost->st->codecpar, c);
-    if (ret < 0) { fprintf(stderr, "Could not copy the stream parameters\n"); return; }
+    if (ret < 0) { fprintf(stderr, "Could not copy the stream parameters\n"); return false; }
+	
+	return true;
 }
 
 AVFrame* get_audio_frame(OutputStream *ost, VRSoundBufferPtr buffer) {
@@ -561,7 +569,30 @@ int encode_audio_frame(AVFormatContext *oc, OutputStream *ost, AVFrame *frame) {
     //cout << "   init packet" << endl;
     av_init_packet(&pkt);
     //cout << "   encode audio frame" << endl;
+	
+#if LIBAVCODEC_VERSION_INT < AV_VERSION_INT(57, 48, 0) 
     avcodec_encode_audio2(ost->enc, &pkt, frame, &got_packet);
+#else 
+    //cout << "    send frame" << endl;
+    auto error = avcodec_send_frame(ost->enc, frame);
+    if ( error != AVERROR_EOF && error != AVERROR(EAGAIN) && error != 0){
+        fprintf(stderr, "Could not send frame\n");
+        return 0;
+    }   
+    //if ( error == AVERROR_EOF) cout << "     EOF" << endl; 
+    //if ( error == AVERROR(EAGAIN)) cout << "     EAGAIN" << endl;
+
+    //cout << "    receive packet " << error << endl;
+    error = avcodec_receive_packet(ost->enc, &pkt);
+	if (error == 0) got_packet = 1;
+    //if ( error == AVERROR_EOF) cout << "     EOF" << endl; 
+    //if ( error == AVERROR(EAGAIN)) cout << "     EAGAIN" << endl; 
+    if ( error != AVERROR_EOF && error != AVERROR(EAGAIN) && error != 0) {
+        fprintf(stderr, "Could not receive packet\n");
+        return 0;
+    }  
+    //cout << "    write frame " << got_packet << ", " << error << endl; 
+#endif
 
     if (got_packet) {
         pkt.stream_index = ost->st->index;
@@ -632,6 +663,8 @@ void VRSound::exportToFile(string path) {
     OutputStream audio_st = { 0 };
     const char *filename = path.c_str();
     av_register_all();
+	
+	cout << "sound exportToFile: " << filename << endl;
 
     AVOutputFormat* fmt = av_guess_format(NULL, filename, NULL);
     if (!fmt) {
@@ -644,11 +677,15 @@ void VRSound::exportToFile(string path) {
     if (!oc) { fprintf(stderr, "Memory error\n"); return; }
 
     oc->oformat = fmt;
+	cout << "pass filename to av context: " << sizeof(oc->filename) << endl;
     snprintf(oc->filename, sizeof(oc->filename), "%s", filename);
 
-    if (fmt->audio_codec != AV_CODEC_ID_NONE) add_audio_stream(&audio_st, oc, fmt->audio_codec);
+    if (fmt->audio_codec != AV_CODEC_ID_NONE) {
+		add_audio_stream(&audio_st, oc, fmt->audio_codec);
+		cout << "added audio stream" << endl;
+	}
 
-    open_audio(oc, &audio_st);
+    if (!open_audio(oc, &audio_st)) return;
     av_dump_format(oc, 0, filename, 1);
 
     /* open the output file, if needed */
@@ -674,7 +711,6 @@ void VRSound::exportToFile(string path) {
     close_stream(oc, &audio_st);
     if (!(fmt->flags & AVFMT_NOFILE)) avio_close(oc->pb);
     avformat_free_context(oc);
-    return;
 }
 
 void VRSound::writeStreamData(const string& data) {
@@ -728,7 +764,7 @@ bool VRSound::addOutStreamClient(VRNetworkClientPtr client) {
 
     cout << " add audio stream" << endl;
     add_audio_stream(audio_ost, muxer, fmt->audio_codec);
-    open_audio(muxer, audio_ost);
+    if (!open_audio(muxer, audio_ost)) return false;
     av_dump_format(muxer, 0, NULL, 1);
 
     // header
