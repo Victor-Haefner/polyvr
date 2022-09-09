@@ -342,7 +342,7 @@ void VRSound::playFrame() {
     bool internal = (ownedBuffer.size() > 0);
 
     if (al->state == AL_INITIAL) {
-        cout << "playFrame AL_INITIAL" << endl;
+        cout << "playFrame AL_INITIAL initiated: " << initiated << " " << internal << endl;
         if (!initiated) initiate();
         if (internal) { al->state = AL_PLAYING; interrupt = false; return; }
         if (!al->context) { /*cout << "VRSound::playFrame Warning: no context" << endl;*/ return; }

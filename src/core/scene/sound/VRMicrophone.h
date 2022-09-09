@@ -55,7 +55,7 @@ class VRMicrophone : public std::enable_shared_from_this<VRMicrophone> {
 	    float frequency = 440;
 	    float period1 = 0;
 	    float period2 = 0;
-	    float simPhase = 0;
+	    double simPhase = 0;
 	    double lastSimTime = 0;
 
 	    void setup();

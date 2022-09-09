@@ -41,7 +41,7 @@ VRSoundBufferPtr VRSoundBuffer::wrap(ALbyte* d, int s, int r, ALenum f) {
     return b;
 }
 
-VRSoundBufferPtr VRSoundBuffer::allocate(int s, int r, ALenum f) {
+VRSoundBufferPtr VRSoundBuffer::allocate(size_t s, int r, ALenum f) {
     auto b = VRSoundBufferPtr( new VRSoundBuffer() );
     b->size = s;
     b->sample_rate = r;

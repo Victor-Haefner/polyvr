@@ -49,6 +49,7 @@ void VRMicrophone::start() {
 
     static int i=0; i++;
     recordingSound = VRSoundManager::get()->setupSound( "mikeRec"+::toString(i) );
+	recordingSound->setPath("");
     alcCaptureStart(device);
     started = true;
 }
@@ -237,7 +238,7 @@ VRSoundBufferPtr VRMicrophone::genPacket(double dt) {
     float wc = frequency;
     int sample_rate = 22050;
 
-    size_t buf_size = dt * sample_rate;
+    size_t buf_size = size_t(dt * sample_rate);
     buf_size += buf_size%2;
     auto frame = VRSoundBuffer::allocate(buf_size*sizeof(short), sample_rate, AL_FORMAT_MONO16);
 
@@ -249,7 +250,7 @@ VRSoundBufferPtr VRMicrophone::genPacket(double dt) {
         double Ak = abs(sin(k/period1));
 
         st = i*2*Pi/sample_rate + simPhase;
-        short v = Ak * Ac * sin( wc*st );
+        short v = short(Ak * Ac * sin( wc*st ));
         ((short*)frame->data)[i] = v;
     }
     simPhase = st;
