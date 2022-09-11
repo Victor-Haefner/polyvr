@@ -41,7 +41,7 @@ VRSoundBufferPtr VRSoundBuffer::wrap(ALbyte* d, int s, int r, ALenum f) {
     return b;
 }
 
-VRSoundBufferPtr VRSoundBuffer::allocate(size_t s, int r, ALenum f) {
+VRSoundBufferPtr VRSoundBuffer::allocate(int s, int r, ALenum f) {
     auto b = VRSoundBufferPtr( new VRSoundBuffer() );
     b->size = s;
     b->sample_rate = r;
@@ -83,8 +83,8 @@ void VRSoundInterface::play() {
 
 void VRSoundInterface::updatePose(PosePtr pose, float velocity) {
     if (pose) {
-        Vec3d pos = pose->pos();
-        Vec3d vel = pose->dir()*velocity;
+        Vec3f pos = Vec3f(pose->pos());
+        Vec3f vel = Vec3f(pose->dir())*velocity;
         ALCHECK( alSource3f(source, AL_POSITION, pos[0], pos[1], pos[2]));
         ALCHECK( alSource3f(source, AL_VELOCITY, vel[0], vel[1], vel[2]));
         //cout << "VRSoundInterface::updateSource " << pos << ", " << vel << endl;
@@ -104,7 +104,7 @@ void VRSoundInterface::updateSource(float pitch, float gain, float lowpass, floa
     if (filter > 0) {
         ALCHECK( alFilteri(filter, AL_FILTER_TYPE, AL_FILTER_BANDPASS) );
         //ALCHECK( alFilterf(filter, AL_BANDPASS_GAIN, 0.25f) );
-        ALCHECK( alFilterf(filter, AL_BANDPASS_GAIN, (lowpass+highpass)*0.5) );
+        ALCHECK( alFilterf(filter, AL_BANDPASS_GAIN, (lowpass+highpass)*0.5f) );
         ALCHECK( alFilterf(filter, AL_BANDPASS_GAINLF, lowpass) );
         ALCHECK( alFilterf(filter, AL_BANDPASS_GAINHF, highpass) );
         ALCHECK( alSourcei(source, AL_DIRECT_FILTER, filter) );

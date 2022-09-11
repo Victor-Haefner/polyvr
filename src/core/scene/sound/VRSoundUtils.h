@@ -44,7 +44,7 @@ class VRSoundBuffer {
         ~VRSoundBuffer();
 
         static VRSoundBufferPtr wrap(ALbyte* data, int size, int rate, ALenum format);
-        static VRSoundBufferPtr allocate(size_t size, int rate, ALenum format);
+        static VRSoundBufferPtr allocate(int size, int rate, ALenum format);
 };
 
 class VRSoundInterface {
