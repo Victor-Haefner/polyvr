@@ -677,11 +677,11 @@ void VRSound::exportToFile(string path) {
 
     /* Write the stream header, if any. */
     avformat_write_header(oc, NULL);
-    int i=0;
+    //int i=0;
     for (auto buffer : ownedBuffer) {
         write_buffer(oc, &audio_st, buffer);
-        i++;
-        if (i == 4) { ownedBuffer.clear(); break; }
+        /*i++;
+        if (i == 4) { ownedBuffer.clear(); break; }*/
     }
 
     encode_audio_frame(oc, &audio_st, NULL); // flush
@@ -863,7 +863,7 @@ bool VRSound::listenStream(int port) {
 bool VRSound::playPeerStream(VRNetworkClientPtr client) {
     auto streamCb = bind(&VRSound::onStreamData, this, placeholders::_1);
     client->onMessage(streamCb);
-    //av_register_all();
+    av_register_all();
     return true;
 }
 

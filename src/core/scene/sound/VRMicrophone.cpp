@@ -253,7 +253,8 @@ VRSoundBufferPtr VRMicrophone::genPacket(double T) {
     for(uint i=0; i<buf_size; i++) {
         double a = double(i)*dt;
         double k = lastSimTime + a;
-        double Ak = a/T;//abs(sin(k/period1));
+        //double Ak = a/T;
+        double Ak = abs(sin(k/period1));
 
         st = i*2*Pi/sample_rate + simPhase;
         short v = short(Ak * Ac * sin( wc*st ));
