@@ -35,7 +35,7 @@
 		VR.mode = 'echo'
 		
 	if m[1] == 'Stream':   
-		if not hasattr(VR, 'inStream'): VR.listenStream()
+		if not VR.mike.isStreaming(): VR.listenStream()
 		VR.mode = 'stream'
 		
 	if m[1] == 'Record and play':   

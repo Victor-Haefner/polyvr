@@ -564,7 +564,6 @@ void testDecodePacket(AVPacket& pkt) {
 
 int encode_audio_frame(AVFormatContext *oc, OutputStream *ost, AVFrame *frame) {
     AVPacket pkt = { 0 }; // data and size must be 0;
-    int got_packet = 0;
     av_init_packet(&pkt);
 
     if (frame) {
@@ -572,8 +571,9 @@ int encode_audio_frame(AVFormatContext *oc, OutputStream *ost, AVFrame *frame) {
         if ( error != AVERROR_EOF && error != AVERROR(EAGAIN) && error != 0) { fprintf(stderr, "Could not send frame\n"); return 0; }
     }
 
+    bool got_packet = false;
     auto error = avcodec_receive_packet(ost->enc, &pkt);
-	if (error == 0) got_packet = 1;
+	if (error == 0) got_packet = true;
     if ( error != AVERROR_EOF && error != AVERROR(EAGAIN) && error != 0) { fprintf(stderr, "Could not receive packet\n"); return 0; }
 
     if (got_packet) {
@@ -591,7 +591,8 @@ int encode_audio_frame(AVFormatContext *oc, OutputStream *ost, AVFrame *frame) {
         //cout << "   write frame done" << endl;
     }
 
-    return (frame || got_packet) ? 0 : 1;
+    //return (frame || got_packet) ? 0 : 1;
+    return got_packet ? 0 : 1;
 }
 
 void VRSound::write_buffer(AVFormatContext *oc, OutputStream *ost, VRSoundBufferPtr buffer) {

@@ -193,6 +193,8 @@ void VRMicrophone::startStreaming(string address, int port) {
     if (!streaming) startStreamingThread();
 }
 
+bool VRMicrophone::isStreaming() { return doStream; }
+
 void VRMicrophone::pauseStreaming(bool p) {
     VRLock lock(*streamMutex);
     if (streamPaused == p) return;

@@ -48,6 +48,7 @@ PyMethodDef VRPyMicrophone::methods[] = {
     {"startStreamingOver", PyWrap(Microphone, startStreamingOver, "Start streaming over tcp client", void, VRNetworkClientPtr) },
     {"pauseStreaming", PyWrap(Microphone, pauseStreaming, "Pause streaming", void, bool) },
     {"stopStreaming", PyWrap(Microphone, stopStreaming, "Stop streaming", void) },
+    {"isStreaming", PyWrap(Microphone, isStreaming, "Check if streaming", bool) },
     {"simSource", PyWrap(Microphone, simSource, "Simulate input source, (active, frequency, period1, period2)", void, bool, float, float, float) },
     {NULL}  /* Sentinel */
 };

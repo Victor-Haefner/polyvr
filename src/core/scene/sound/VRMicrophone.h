@@ -84,6 +84,7 @@ class VRMicrophone : public std::enable_shared_from_this<VRMicrophone> {
 		void startStreamingOver(VRNetworkClientPtr client);
 		void pauseStreaming(bool p);
 		void stopStreaming();
+		bool isStreaming();
 };
 
 OSG_END_NAMESPACE;
