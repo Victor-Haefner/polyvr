@@ -60,7 +60,6 @@ class VRSound {
         AVFormatContext* muxer = 0;
         OutputStream* audio_ost = 0;
         InputStream*  audio_ist = 0;
-        int lastEncodingFlag = 1;
 
         void updateSampleAndFormat();
         void update3DSound();

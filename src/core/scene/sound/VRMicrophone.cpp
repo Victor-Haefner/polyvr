@@ -236,21 +236,24 @@ void VRMicrophone::stopStreaming() {
     recording = 0;
 }
 
-VRSoundBufferPtr VRMicrophone::genPacket(double dt) {
+VRSoundBufferPtr VRMicrophone::genPacket(double T) {
+    // tone parameters
     float Ac = 32760;
     float wc = frequency;
     int sample_rate = 22050;
 
-    size_t buf_size = size_t(dt * sample_rate);
+    // allocate frame
+    size_t buf_size = size_t(T * sample_rate);
     buf_size += buf_size%2;
     auto frame = VRSoundBuffer::allocate(buf_size*sizeof(short), sample_rate, AL_FORMAT_MONO16);
 
-    double H = dt/(buf_size-1);
+    double dt = T/(buf_size-1);
 
     double st = 0;
     for(uint i=0; i<buf_size; i++) {
-        double k = lastSimTime + double(i)*H;
-        double Ak = abs(sin(k/period1));
+        double a = double(i)*dt;
+        double k = lastSimTime + a;
+        double Ak = a/T;//abs(sin(k/period1));
 
         st = i*2*Pi/sample_rate + simPhase;
         short v = short(Ak * Ac * sin( wc*st ));

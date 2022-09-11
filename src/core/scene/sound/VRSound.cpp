@@ -562,37 +562,34 @@ void testDecodePacket(AVPacket& pkt) {
     av_frame_free(&frame);
 }
 
-int encode_audio_frame(AVFormatContext *oc, OutputStream *ost, AVFrame *frame) {
+void encode_audio_frame(AVFormatContext *oc, OutputStream *ost, AVFrame *frame) {
     AVPacket pkt = { 0 }; // data and size must be 0;
     av_init_packet(&pkt);
 
-    if (frame) {
-        auto error = avcodec_send_frame(ost->enc, frame);
-        if ( error != AVERROR_EOF && error != AVERROR(EAGAIN) && error != 0) { fprintf(stderr, "Could not send frame\n"); return 0; }
-    }
-
-    bool got_packet = false;
-    auto error = avcodec_receive_packet(ost->enc, &pkt);
-	if (error == 0) got_packet = true;
-    if ( error != AVERROR_EOF && error != AVERROR(EAGAIN) && error != 0) { fprintf(stderr, "Could not receive packet\n"); return 0; }
-
-    if (got_packet) {
+    auto writePacket = [&]() {
         pkt.stream_index = ost->st->index;
+        //cout << "write packet" << endl;
 
         //cout << "   rescale packet" << endl;
         av_packet_rescale_ts(&pkt, ost->enc->time_base, ost->st->time_base);
 
-        /* Write the compressed frame to the media file. */
         //cout << "   write frame" << endl;
-        if (av_interleaved_write_frame(oc, &pkt) != 0) {
-            fprintf(stderr, "Error while writing audio frame\n");
-            return 0;
-        }
+        if (av_interleaved_write_frame(oc, &pkt) != 0) { fprintf(stderr, "Error while writing audio frame\n"); return; }
         //cout << "   write frame done" << endl;
-    }
+    };
 
-    //return (frame || got_packet) ? 0 : 1;
-    return got_packet ? 0 : 1;
+    int ret = avcodec_send_frame(ost->enc, frame);
+    //cout << " send packet " << frame << ", ret: " << ret << endl;
+    if ( ret != AVERROR_EOF && ret != AVERROR(EAGAIN) && ret != 0) { fprintf(stderr, "Could not send frame\n"); return; }
+
+    while (ret >= 0) {
+        ret = avcodec_receive_packet(ost->enc, &pkt);
+        //cout << " received packet, ret: " << ret << endl;
+        if (ret == AVERROR(EAGAIN)) continue;
+        if (ret == AVERROR_EOF) return;
+        if (ret < 0) { fprintf(stderr, "!!! Error during encoding\n"); return; }
+        writePacket();
+    }
 }
 
 void VRSound::write_buffer(AVFormatContext *oc, OutputStream *ost, VRSoundBufferPtr buffer) {
@@ -626,11 +623,10 @@ void VRSound::write_buffer(AVFormatContext *oc, OutputStream *ost, VRSoundBuffer
         }
 
         //cout << "  encode frame" << endl;
-
         ost->frame->nb_samples = ret;
         ost->frame->pts        = ost->next_pts;
         ost->next_pts         += ost->frame->nb_samples;
-        lastEncodingFlag = encode_audio_frame(oc, ost, ret ? ost->frame : NULL);
+        encode_audio_frame(oc, ost, ret ? ost->frame : NULL);
         //cout << "  encode frame done" << endl;
     }
 }
@@ -681,13 +677,14 @@ void VRSound::exportToFile(string path) {
 
     /* Write the stream header, if any. */
     avformat_write_header(oc, NULL);
-    for (auto buffer : ownedBuffer) write_buffer(oc, &audio_st, buffer);
+    int i=0;
+    for (auto buffer : ownedBuffer) {
+        write_buffer(oc, &audio_st, buffer);
+        i++;
+        if (i == 4) { ownedBuffer.clear(); break; }
+    }
 
-    int ret = 0;
-    do {
-        ret = encode_audio_frame(oc, &audio_st, NULL); // flush last frames
-    } while ( ret == 0 );
-
+    encode_audio_frame(oc, &audio_st, NULL); // flush
     av_write_trailer(oc);
 
     // cleanup
@@ -710,11 +707,9 @@ int custom_io_write(void* opaque, uint8_t* buffer, int32_t N) {
     return N;
 }
 
-void VRSound::flushPackets() {
+void VRSound::flushPackets() { // deprecated?
     if (!muxer || !audio_ost) return;
-    while ( lastEncodingFlag == 0 ) {
-        lastEncodingFlag = encode_audio_frame(muxer, audio_ost, NULL); // flush last frames
-    }
+    encode_audio_frame(muxer, audio_ost, NULL); // flush last frames
 }
 
 bool VRSound::addOutStreamClient(VRNetworkClientPtr client) {
@@ -868,7 +863,7 @@ bool VRSound::listenStream(int port) {
 bool VRSound::playPeerStream(VRNetworkClientPtr client) {
     auto streamCb = bind(&VRSound::onStreamData, this, placeholders::_1);
     client->onMessage(streamCb);
-    av_register_all();
+    //av_register_all();
     return true;
 }
 
