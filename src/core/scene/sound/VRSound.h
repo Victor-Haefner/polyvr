@@ -12,9 +12,9 @@
 #include "core/utils/VRFunctionFwd.h"
 #include "core/networking/VRNetworkingFwd.h"
 
-class AVPacket;
-class AVCodecContext;
-class AVFormatContext;
+struct AVPacket;
+struct AVCodecContext;
+struct AVFormatContext;
 struct OutputStream;
 struct InputStream;
 

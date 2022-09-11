@@ -400,7 +400,7 @@ void VRSound::update3DSound() {
     auto pose = head->getPoseTo(poseBeacon);
 
     if (!lastPose) lastPose = Pose::create(*pose);
-    velocity = pose->pos().dist(lastPose->pos());
+    velocity = float(pose->pos().dist(lastPose->pos()));
     lastPose->setPos(pose->pos());
     interface->updatePose(pose, velocity);
 }
@@ -516,7 +516,7 @@ AVFrame* get_audio_frame(OutputStream *ost, VRSoundBufferPtr buffer) {
     int16_t* src = (int16_t*)buffer->data;
     int16_t* dst = (int16_t*)frame->data[0];
 
-    frame->nb_samples = buffer->size*0.5;
+    frame->nb_samples = int(buffer->size*0.5);
     for (int j = 0; j < frame->nb_samples; j++) {
         int v = src[j]; // audio data
         for (int i = 0; i < ost->enc->channels; i++) *dst++ = v;
@@ -847,7 +847,7 @@ string VRSound::onStreamData(string data) {
 
         updateSampleAndFormat();
     } else {
-        int r = av_packet_from_data(&al->packet, (uint8_t*)&data[0], data.size());
+        int r = av_packet_from_data(&al->packet, (uint8_t*)&data[0], int(data.size()));
         if (r < 0 ) cout << "  av_packet_from_data failed with " << r << endl;
         queuePacket(&al->packet);
     }
@@ -886,19 +886,19 @@ void VRSound::synthesize(float Ac, float wc, float pc, float Am, float wm, float
     }
 
     int sample_rate = 22050;
-    size_t buf_size = duration * sample_rate;
+    size_t buf_size = size_t(duration * sample_rate);
     buf_size += buf_size%2;
     vector<short> samples(buf_size);
 
     double tmp = 0;
     for(uint i=0; i<buf_size; i++) {
         double t = i*2*Pi/sample_rate + synth_t0;
-        samples[i] = Ac * sin( wc*t + pc + Am*sin(wm*t + pm) );
+        samples[i] = short( Ac * sin( wc*t + pc + Am*sin(wm*t + pm) ) );
         tmp = t;
     }
     synth_t0 = tmp;
 
-    auto frame = VRSoundBuffer::wrap((ALbyte*)&samples[0], samples.size()*sizeof(short), sample_rate, AL_FORMAT_MONO16);
+    auto frame = VRSoundBuffer::wrap((ALbyte*)&samples[0], int(samples.size()*sizeof(short)), sample_rate, AL_FORMAT_MONO16);
     playBuffer(frame);
 }
 
@@ -917,8 +917,8 @@ vector<short> VRSound::synthSpectrum(vector<double> spectrum, uint sample_rate, 
     c.compute(sample_rate);
     */
 
-    size_t buf_size = duration * sample_rate;
-    uint fade = min(fade_factor * sample_rate, duration * sample_rate); // number of samples to fade at beginning and end
+    size_t buf_size = size_t(duration * sample_rate);
+    size_t fade = size_t( min(fade_factor * sample_rate, duration * sample_rate) ); // number of samples to fade at beginning and end
 
     // transform spectrum back to time domain using fftw3
     FFT fft;
@@ -926,7 +926,7 @@ vector<short> VRSound::synthSpectrum(vector<double> spectrum, uint sample_rate, 
 
     vector<short> samples(buf_size);
     for(uint i=0; i<buf_size; ++i) {
-        samples[i] = 0.5 * SHRT_MAX * out[i]; // for fftw normalization
+        samples[i] = short(0.5 * SHRT_MAX * out[i]); // for fftw normalization
     }
 
     auto calcFade = [](double& t) {
@@ -942,11 +942,11 @@ vector<short> VRSound::synthSpectrum(vector<double> spectrum, uint sample_rate, 
     for (uint i=0; i < fade; ++i) {
         double t = double(i)/(fade-1);
         double y = calcFade(t);
-        samples[i] *= y;
-        samples[buf_size-i-1] *= y;
+        samples[i] = short(samples[i]*y);
+        samples[buf_size-i-1] *= short(samples[buf_size-i-1]*y);
     }
 
-    auto frame = VRSoundBuffer::wrap((ALbyte*)&samples[0], samples.size()*sizeof(short), sample_rate, AL_FORMAT_MONO16);
+    auto frame = VRSoundBuffer::wrap((ALbyte*)&samples[0], int(samples.size()*sizeof(short)), sample_rate, AL_FORMAT_MONO16);
     playBuffer(frame);
     return returnBuffer ? samples : vector<short>();
 }
@@ -961,7 +961,7 @@ vector<short> VRSound::synthBuffer(vector<Vec2d> freqs1, vector<Vec2d> freqs2, f
 
     // play sound
     int sample_rate = 22050;
-    size_t buf_size = duration * sample_rate;
+    size_t buf_size = size_t(duration * sample_rate);
     vector<short> samples(buf_size);
     double Ni = 1.0/freqs1.size();
     double T = 2*Pi/sample_rate;
@@ -975,10 +975,10 @@ vector<short> VRSound::synthBuffer(vector<Vec2d> freqs1, vector<Vec2d> freqs2, f
 
             if (!phasors.count(j)) phasors[j] = complex<double>(1,0);
             phasors[j] *= exp( complex<double>(0,T*f) );
-            samples[i] += A*Ni*phasors[j].imag();
+            samples[i] += short(A*Ni*phasors[j].imag());
         }
     }
-    auto frame = VRSoundBuffer::wrap((ALbyte*)&samples[0], samples.size()*sizeof(short), sample_rate, AL_FORMAT_MONO16);
+    auto frame = VRSoundBuffer::wrap((ALbyte*)&samples[0], int(samples.size()*sizeof(short)), sample_rate, AL_FORMAT_MONO16);
     playBuffer(frame);
     if (true) return samples;
     return vector<short>();
@@ -1001,7 +1001,7 @@ vector<short> VRSound::synthBufferForChannel(vector<Vec2d> freqs1, vector<Vec2d>
 
     // play sound
     int sample_rate = 22050;
-    size_t buf_size = duration * sample_rate;
+    size_t buf_size = size_t(duration * sample_rate);
     vector<short> samples(buf_size);
     double Ni = 1.0/freqs1.size();
     double T = 2*Pi/sample_rate;
@@ -1022,7 +1022,7 @@ vector<short> VRSound::synthBufferForChannel(vector<Vec2d> freqs1, vector<Vec2d>
                 phasors[channel][j] = complex<double>(1,0);
             }
             phasors[channel][j] *= exp( complex<double>(0,T*f) );
-            samples[i] += A*Ni*phasors[channel][j].imag();
+            samples[i] += short(A*Ni*phasors[channel][j].imag());
         }
     }
     return samples;
@@ -1052,7 +1052,7 @@ void VRSound::synthBufferOnChannels(vector<vector<Vec2d>> freqs1, vector<vector<
 
     // generate a new buffer with size for all buffers * amount of channels
     int sample_rate = 22050;
-    size_t buffer_size = duration * sample_rate;
+    int buffer_size = int(ceil(sample_rate * duration));
     vector<short> buffer(buffer_size * num_channels);
 
     // generate synth buffers for every channel and store them for later use
@@ -1067,7 +1067,7 @@ void VRSound::synthBufferOnChannels(vector<vector<Vec2d>> freqs1, vector<vector<
       element 1 the first frame on the second channel
       element 8 is the second frame on the first channel
     */
-    for (uint i = 0; i < buffer_size; i++) {
+    for (int i = 0; i < buffer_size; i++) {
         for (uint channel = 0; channel < num_channels; channel++) {
             buffer[num_channels * i + channel] = synth_buffer[channel][i];
         }
@@ -1093,7 +1093,7 @@ void VRSound::synthBufferOnChannels(vector<vector<Vec2d>> freqs1, vector<vector<
             format = AL_FORMAT_MONO16;
     }
 
-    auto frame = VRSoundBuffer::wrap((ALbyte*)&buffer[0], buffer.size()*sizeof(short), sample_rate, format);
+    auto frame = VRSoundBuffer::wrap((ALbyte*)&buffer[0], int(buffer.size()*sizeof(short)), sample_rate, format);
     playBuffer(frame);
 }
 
