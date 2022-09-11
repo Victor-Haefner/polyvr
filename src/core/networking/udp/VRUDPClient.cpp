@@ -61,6 +61,9 @@ class UDPClient {
         }
 
         bool read() {
+#ifdef _WIN32
+			return true; // doesnt work under windows..
+#endif
             if (broken) return false;
 
             auto onRead = [this](boost::system::error_code ec, size_t N) {
@@ -89,7 +92,7 @@ class UDPClient {
                 messages.pop_front();
                 if (!messages.empty()) processQueue();
             } else {
-                cout << " tcp client write ERROR: " << ec.message() << "  N: " << N << ", close socket!" << endl;
+                cout << " udp client write ERROR: " << ec.message() << "  N: " << N << ", close socket!" << endl;
                 socket.close();
             }
         }
@@ -134,7 +137,7 @@ class UDPClient {
             } catch(std::exception& e) {
                 cout << "UDPClient::connect failed with: " << e.what() << endl;
 #ifndef WITHOUT_GTK
-                VRConsoleWidget::get("Collaboration")->write( " TCP connect to "+host+":"+toString(port)+" failed with "+e.what()+"\n", "red");
+                VRConsoleWidget::get("Collaboration")->write( " UDP connect to "+host+":"+toString(port)+" failed with "+e.what()+"\n", "red");
 #endif
             }
         }

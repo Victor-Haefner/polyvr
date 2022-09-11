@@ -417,6 +417,7 @@ struct OutputStream {
 
 void add_audio_stream(OutputStream *ost, AVFormatContext *oc, enum AVCodecID codec_id) {
     AVCodec* codec = avcodec_find_encoder(codec_id);
+	cout << " --- add_audio_stream, found codec: " << codec->name << endl;
     if (!codec) { fprintf(stderr, "codec not found\n"); return; }
 
     ost->st = avformat_new_stream(oc, NULL);
@@ -479,8 +480,15 @@ bool open_audio(AVFormatContext *oc, OutputStream *ost) {
     int nb_samples, ret;
 
     AVCodecContext* c = ost->enc;
-    cout << "Open audio codec: " << c << endl;
-    if (avcodec_open2(c, NULL, NULL) < 0) { fprintf(stderr, "could not open codec\n"); return false; }
+	
+	AVCodec* codec = avcodec_find_encoder(oc->oformat->audio_codec);
+	cout << " --- open_audio, found codec: " << codec->name << endl;
+	
+	//AVCodec* codec = avcodec_find_encoder(c->codec_id);
+    if (codec == NULL) { fprintf(stderr, "could not find codec\n"); return false; }
+	
+    cout << "Open audio codec: " << c << " " << codec << endl;
+    if (avcodec_open2(c, codec, NULL) < 0) { fprintf(stderr, "could not open codec\n"); return false; }
 
     if (c->codec->capabilities & AV_CODEC_CAP_VARIABLE_FRAME_SIZE) nb_samples = 10000;
     else nb_samples = c->frame_size;
