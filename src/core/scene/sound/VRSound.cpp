@@ -565,34 +565,16 @@ void testDecodePacket(AVPacket& pkt) {
 int encode_audio_frame(AVFormatContext *oc, OutputStream *ost, AVFrame *frame) {
     AVPacket pkt = { 0 }; // data and size must be 0;
     int got_packet = 0;
-
-    //cout << "   init packet" << endl;
     av_init_packet(&pkt);
-    //cout << "   encode audio frame" << endl;
 
-#if LIBAVCODEC_VERSION_INT < AV_VERSION_INT(57, 48, 0)
-    avcodec_encode_audio2(ost->enc, &pkt, frame, &got_packet);
-#else
-    //cout << "    send frame" << endl;
-    auto error = avcodec_send_frame(ost->enc, frame);
-    if ( error != AVERROR_EOF && error != AVERROR(EAGAIN) && error != 0){
-        fprintf(stderr, "Could not send frame\n");
-        return 0;
+    if (frame) {
+        auto error = avcodec_send_frame(ost->enc, frame);
+        if ( error != AVERROR_EOF && error != AVERROR(EAGAIN) && error != 0) { fprintf(stderr, "Could not send frame\n"); return 0; }
     }
-    //if ( error == AVERROR_EOF) cout << "     EOF" << endl;
-    //if ( error == AVERROR(EAGAIN)) cout << "     EAGAIN" << endl;
 
-    //cout << "    receive packet " << error << endl;
-    error = avcodec_receive_packet(ost->enc, &pkt);
+    auto error = avcodec_receive_packet(ost->enc, &pkt);
 	if (error == 0) got_packet = 1;
-    //if ( error == AVERROR_EOF) cout << "     EOF" << endl;
-    //if ( error == AVERROR(EAGAIN)) cout << "     EAGAIN" << endl;
-    if ( error != AVERROR_EOF && error != AVERROR(EAGAIN) && error != 0) {
-        fprintf(stderr, "Could not receive packet\n");
-        return 0;
-    }
-    //cout << "    write frame " << got_packet << ", " << error << endl;
-#endif
+    if ( error != AVERROR_EOF && error != AVERROR(EAGAIN) && error != 0) { fprintf(stderr, "Could not receive packet\n"); return 0; }
 
     if (got_packet) {
         pkt.stream_index = ost->st->index;
