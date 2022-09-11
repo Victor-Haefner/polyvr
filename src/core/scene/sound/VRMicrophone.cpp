@@ -158,7 +158,7 @@ void VRMicrophone::startStreamingThread() {
             }
 
             if (needsFlushing) {
-                if (recordingSound) recordingSound->flushPackets();
+                //if (recordingSound) recordingSound->flushPackets(); // this closes the stream!
                 needsFlushing = false;
             }
 
