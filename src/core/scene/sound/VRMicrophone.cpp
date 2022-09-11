@@ -14,7 +14,7 @@
 
 #include "core/utils/toString.h"
 
-const float Pi  = 3.141592653589793f;
+const double Pi  = 3.141592653589793;
 
 using namespace OSG;
 
@@ -248,19 +248,21 @@ VRSoundBufferPtr VRMicrophone::genPacket(double T) {
     auto frame = VRSoundBuffer::allocate(buf_size*sizeof(short), sample_rate, AL_FORMAT_MONO16);
 
     double dt = T/(buf_size-1);
+    double F = simPhase;
 
-    double st = 0;
     for(uint i=0; i<buf_size; i++) {
         double a = double(i)*dt;
         double k = lastSimTime + a;
-        //double Ak = a/T;
         double Ak = abs(sin(k/period1));
 
-        st = i*2*Pi/sample_rate + simPhase;
-        short v = short(Ak * Ac * sin( wc*st ));
+        F += wc*2.0*Pi/sample_rate;
+        while (F > 2*Pi) F -= 2*Pi;
+
+        short v = short(Ak * Ac * sin( F ));
         ((short*)frame->data)[i] = v;
     }
-    simPhase = st;
+
+    simPhase = F;
     return frame;
 }
 
