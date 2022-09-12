@@ -429,8 +429,8 @@ void add_audio_stream(OutputStream *ost, AVFormatContext *oc, enum AVCodecID cod
 
     /* put sample parameters */
     c->sample_fmt     = codec->sample_fmts           ? codec->sample_fmts[0]           : AV_SAMPLE_FMT_S16;
-    c->sample_rate    = codec->supported_samplerates ? codec->supported_samplerates[0] : 44100;
-    c->channel_layout = codec->channel_layouts       ? codec->channel_layouts[0]       : AV_CH_LAYOUT_STEREO;
+    c->sample_rate    = codec->supported_samplerates ? codec->supported_samplerates[0] : 22050;
+    c->channel_layout = codec->channel_layouts       ? codec->channel_layouts[0]       : AV_CH_LAYOUT_MONO;
     c->channels       = av_get_channel_layout_nb_channels(c->channel_layout);
     c->bit_rate       = 64000;
 
