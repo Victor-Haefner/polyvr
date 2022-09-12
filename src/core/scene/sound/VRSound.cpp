@@ -428,10 +428,10 @@ void add_audio_stream(OutputStream *ost, AVFormatContext *oc, enum AVCodecID cod
     ost->enc = c;
 
     /* put sample parameters */
+	c->sample_rate    = codec->supported_samplerates ? codec->supported_samplerates[0] : 44100;
+    c->channel_layout = codec->channel_layouts       ? codec->channel_layouts[0]       : AV_CH_LAYOUT_STEREO;    
     c->sample_fmt     = codec->sample_fmts           ? codec->sample_fmts[0]           : AV_SAMPLE_FMT_S16;
-    c->sample_rate    = codec->supported_samplerates ? codec->supported_samplerates[0] : 22050;
-    c->channel_layout = codec->channel_layouts       ? codec->channel_layouts[0]       : AV_CH_LAYOUT_MONO;
-    c->channels       = av_get_channel_layout_nb_channels(c->channel_layout);
+	c->channels       = av_get_channel_layout_nb_channels(c->channel_layout);
     c->bit_rate       = 64000;
 
 	ost->st->time_base.num = 1;
@@ -525,13 +525,15 @@ bool open_audio(AVFormatContext *oc, OutputStream *ost) {
 AVFrame* get_audio_frame(OutputStream *ost, VRSoundBufferPtr buffer) {
     AVFrame* frame = ost->tmp_frame;
     if (!frame || !buffer) return 0;
+	
     int16_t* src = (int16_t*)buffer->data;
     int16_t* dst = (int16_t*)frame->data[0];
 
-    frame->nb_samples = int(buffer->size*0.5);
+    frame->nb_samples = buffer->size/2;
     for (int j = 0; j < frame->nb_samples; j++) {
         int v = src[j]; // audio data
-        for (int i = 0; i < ost->enc->channels; i++) *dst++ = v;
+        *dst++ = v;
+        //for (int i = 0; i < ost->enc->channels; i++) *dst++ = v; // this was wrong, exploded on windows
     }
 
     return frame;
@@ -593,18 +595,20 @@ void encode_audio_frame(AVFormatContext *oc, OutputStream *ost, AVFrame *frame) 
         //cout << "   rescale packet" << endl;
         av_packet_rescale_ts(&pkt, ost->enc->time_base, ost->st->time_base);
 
-        //cout << "   write frame" << endl;
+        //cout << "    write frame, pkt: " << pkt.size << endl;
         if (av_interleaved_write_frame(oc, &pkt) != 0) { fprintf(stderr, "Error while writing audio frame\n"); return; }
-        //cout << "   write frame done" << endl;
+        //cout << "     write frame done" << endl;
     };
 
     int ret = avcodec_send_frame(ost->enc, frame);
-    //cout << " send packet " << frame << ", ret: " << ret << endl;
+    /*cout << " send packet " << frame << ", ret: " << ret;
+	if (frame) cout << ", " << frame->nb_samples;
+	cout << endl;*/
     if ( ret != AVERROR_EOF && ret != AVERROR(EAGAIN) && ret != 0) { fprintf(stderr, "Could not send frame\n"); return; }
 
     while (ret >= 0) {
         ret = avcodec_receive_packet(ost->enc, &pkt);
-        //cout << " received packet, ret: " << ret << endl;
+        //cout << "  received packet, ret: " << ret << ", pkt: " << pkt.size << endl;
         if (ret == AVERROR(EAGAIN)) continue;
         if (ret == AVERROR_EOF) return;
         if (ret < 0) { fprintf(stderr, "!!! Error during encoding\n"); return; }
@@ -615,7 +619,8 @@ void encode_audio_frame(AVFormatContext *oc, OutputStream *ost, AVFrame *frame) 
 void VRSound::write_buffer(AVFormatContext *oc, OutputStream *ost, VRSoundBufferPtr buffer) {
     //cout << "  get audio frame" << endl;
     AVFrame* frame = get_audio_frame(ost, buffer);
-    if (!frame) return;
+    if (!frame) return;	
+	
     //cout << "  resample convert " << frame->linesize[0] << " " << frame->nb_samples << endl;
     int ret = swr_convert(ost->avr, NULL, 0, (const uint8_t **)frame->extended_data, frame->nb_samples);
     if (ret < 0) { fprintf(stderr, "Error feeding audio data to the resampler\n"); return; }
@@ -631,7 +636,6 @@ void VRSound::write_buffer(AVFormatContext *oc, OutputStream *ost, VRSoundBuffer
          * the lavr output buffer, while the second one also flushes the
          * resampler */
         ret = swr_convert(ost->avr, ost->frame->extended_data, ost->frame->nb_samples, NULL, 0);
-
         if (ret < 0) { fprintf(stderr, "Error while resampling\n"); return; }
 
         if (frame && ret != ost->frame->nb_samples) {
@@ -647,7 +651,7 @@ void VRSound::write_buffer(AVFormatContext *oc, OutputStream *ost, VRSoundBuffer
         ost->frame->pts        = ost->next_pts;
         ost->next_pts         += ost->frame->nb_samples;
         encode_audio_frame(oc, ost, ret ? ost->frame : NULL);
-        //cout << "  encode frame done" << endl;
+        //cout << "   encode frame done" << endl;
     }
 }
 
