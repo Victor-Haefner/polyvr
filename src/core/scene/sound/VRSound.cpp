@@ -486,9 +486,21 @@ bool open_audio(AVFormatContext *oc, OutputStream *ost) {
 	
 	//AVCodec* codec = avcodec_find_encoder(c->codec_id);
     if (codec == NULL) { fprintf(stderr, "could not find codec\n"); return false; }
-	
+
     cout << "Open audio codec: " << c << " " << codec << endl;
-    if (avcodec_open2(c, codec, NULL) < 0) { fprintf(stderr, "could not open codec\n"); return false; }
+	int r = -1;
+	for (int i=0; i<10; i++) {
+		r = avcodec_open2(c, codec, NULL);
+		if (r >= 0) {
+			cout << "Opened codec on " << i+1 << "-th try" << endl;
+			break;
+		}
+	}
+	
+	if (r < 0) {
+		fprintf(stderr, "Could not open codec!\n");
+		return false;
+	}
 
     if (c->codec->capabilities & AV_CODEC_CAP_VARIABLE_FRAME_SIZE) nb_samples = 10000;
     else nb_samples = c->frame_size;
@@ -1098,5 +1110,110 @@ void VRSound::synthBufferOnChannels(vector<vector<Vec2d>> freqs1, vector<vector<
 }
 
 
+
+double simTime = 0;
+double simPhase = 0;
+	
+VRSoundBufferPtr test_genPacket(double T) {
+    // tone parameters
+    float Ac = 32760;
+    float wc = 440;
+    int sample_rate = 22050;
+    float period1 = 0.2;
+
+    // allocate frame
+    size_t buf_size = size_t(T * sample_rate);
+    buf_size += buf_size%2;
+    auto frame = VRSoundBuffer::allocate(buf_size*sizeof(short), sample_rate, AL_FORMAT_MONO16);
+
+    double dt = T/(buf_size-1);
+    double F = simPhase;
+
+    for(uint i=0; i<buf_size; i++) {
+        double a = double(i)*dt;
+        double k = simTime + a;
+        //double Ak = abs(sin(k/period1));
+        double Ak = 1.0-a/T;
+
+        F += wc*2.0*Pi/sample_rate;
+        while (F > 2*Pi) F -= 2*Pi;
+
+        short v = short(Ak * Ac * sin( F ));
+        ((short*)frame->data)[i] = v;
+    }
+
+    simPhase = F;
+	simTime += T;
+    return frame;
+}
+
+void VRSound::testMP3Write() {
+	cout << "start av mp3 write test" << endl;
+	cout << " AV versions: " << endl;
+	cout << " codec:  " << AV_VERSION_MAJOR(LIBAVCODEC_VERSION_INT) << "." << AV_VERSION_MINOR(LIBAVCODEC_VERSION_INT) << endl;
+	cout << " format: " << AV_VERSION_MAJOR(LIBAVFORMAT_VERSION_INT) << "." << AV_VERSION_MINOR(LIBAVFORMAT_VERSION_INT) << endl;
+	
+	// create data
+	simTime = 0;
+	simPhase = 0;
+	for (int i=0; i<10; i++) {
+		ownedBuffer.push_back( test_genPacket(0.3) );
+	}
+	
+	string path = "test.mp3";
+	
+    OutputStream audio_st = { 0 };
+    const char *filename = path.c_str();
+    av_register_all();
+	
+	cout << "sound exportToFile: " << filename << endl;
+
+    AVOutputFormat* fmt = av_guess_format(NULL, filename, NULL);
+    if (!fmt) { fprintf(stderr, "Could not find suitable output format\n"); return; }
+
+    AVFormatContext* oc = avformat_alloc_context();
+    if (!oc) { fprintf(stderr, "Memory error\n"); return; }
+
+    oc->oformat = fmt;
+	cout << "pass filename to av context: " << sizeof(oc->filename) << endl;
+    snprintf(oc->filename, sizeof(oc->filename), "%s", filename);
+
+    if (fmt->audio_codec != AV_CODEC_ID_NONE) {
+		add_audio_stream(&audio_st, oc, fmt->audio_codec);
+		cout << "added audio stream" << endl;
+	}
+
+    if (!open_audio(oc, &audio_st)) return;
+    av_dump_format(oc, 0, filename, 1);
+
+    /* open the output file, if needed */
+    if (!(fmt->flags & AVFMT_NOFILE)) {
+		cout << "open output file" << endl;
+        if (avio_open(&oc->pb, filename, AVIO_FLAG_WRITE) < 0) {
+            fprintf(stderr, "Could not open '%s'\n", filename);
+            return;
+        }
+    }
+
+    /* Write the stream header, if any. */
+	cout << " start writing buffers" << endl;
+    avformat_write_header(oc, NULL);
+    for (auto buffer : ownedBuffer) write_buffer(oc, &audio_st, buffer);
+	cout << " done writing buffers" << endl;
+
+    encode_audio_frame(oc, &audio_st, NULL); // flush last frames
+    av_write_trailer(oc);
+
+    // cleanup
+	cout << " cleanup" << endl;
+	//cout << "  close stream" << endl;
+    //close_stream(oc, &audio_st);
+	cout << "  close file" << endl;
+    if (!(fmt->flags & AVFMT_NOFILE)) avio_close(oc->pb);
+	cout << "  free context" << endl;
+    avformat_free_context(oc);
+	
+	cout << "av mp3 write test success!" << endl;
+}
 
 

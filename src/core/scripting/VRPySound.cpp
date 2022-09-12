@@ -23,6 +23,7 @@ PyMethodDef VRPySound::methods[] = {
     {"setBeacon", PyWrapOpt(Sound, setBeacon, "Set beacons for 3D sound, (source, head) - head is optional, default is active camera", "0", void, VRTransformPtr, VRTransformPtr ) },
     {"isRunning", PyWrap(Sound, isRunning, "Check if sound is running", bool) },
     {"exportToFile", PyWrap(Sound, exportToFile, "Export to file, (.mp3)", void, string) },
+    {"testMP3Write", PyWrap(Sound, testMP3Write, "Test mp3 output, creates test.mp3", void) },
     {"synthesize", PyWrap(Sound, synthesize, "synthesize( Ac, wc, pc, Am, wm, pm, T)\t\n A,w,p are the amplitude, frequency and phase, c and m are the carrier sinusoid and modulator sinusoid, T is the packet duration in seconds", void, float, float, float, float, float, float, float, int) },
     {"synthBuffer", PyWrap(Sound, synthBuffer, "synthBuffer( [[f,A]], [[f,A]], T )\t\n [f,A] frequency/amplitude pairs, interpolate the two spectra, T is the packet duration in seconds", vector<short>, vector<Vec2d>, vector<Vec2d>, float, int) },
     {"synthBufferOnChannels", PyWrap(Sound, synthBufferOnChannels, "synthBufferOnChannels( [[[f,A]]], [[[f,A]]], T)\n\t [[f,A]] list of channels with each containing a list of frequency/amplitude pairs in channel order, interpolate the two spectra\n\tT is the packet duration in seconds\n\t", void, vector<vector<Vec2d>>, vector<vector<Vec2d>>, float, int) },

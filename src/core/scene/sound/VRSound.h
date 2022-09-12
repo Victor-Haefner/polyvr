@@ -120,6 +120,7 @@ class VRSound {
         void synthBufferOnChannels(vector<vector<Vec2d>> freqs1, vector<vector<Vec2d>> freqs2, float T = 1, int maxQueued = -1);
 
         vector<short> test(vector<Vec2d> freqs1, vector<Vec2d> freqs2, float T = 1);
+		void testMP3Write();
 };
 
 OSG_END_NAMESPACE;
