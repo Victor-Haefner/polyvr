@@ -20,6 +20,7 @@ class VRCollaboration : public VRObject {
         VRTransformPtr avatarTorso;
         VRTransformPtr avatarHandLeft;
         VRTransformPtr avatarHandRight;
+        float avatarScale = 1.0;
 
 	    VRSpritePtr userNameWidget;
 	    VRSpritePtr userlist;
@@ -63,7 +64,7 @@ class VRCollaboration : public VRObject {
 		void setServer(string uri);
 		void setupLocalServer();
 		void setAvatarDevices(VRTransformPtr head, VRTransformPtr hand, VRTransformPtr handGrab = 0);
-		void setAvatarGeometry(VRTransformPtr torso, VRTransformPtr leftHand = 0, VRTransformPtr rightHand = 0);
+		void setAvatarGeometry(VRTransformPtr torso, VRTransformPtr leftHand = 0, VRTransformPtr rightHand = 0, float scale = 1.0);
 };
 
 OSG_END_NAMESPACE;

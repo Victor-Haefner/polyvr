@@ -86,25 +86,30 @@ void VRCollaboration::setAvatarDevices(VRTransformPtr head, VRTransformPtr hand,
 	syncNode->setAvatarBeacons(head, hand, handGrab);
 }
 
-void VRCollaboration::setAvatarGeometry(VRTransformPtr torso, VRTransformPtr leftHand, VRTransformPtr rightHand) {
+void VRCollaboration::setAvatarGeometry(VRTransformPtr torso, VRTransformPtr leftHand, VRTransformPtr rightHand, float scale) {
     avatarTorso = torso;
     avatarHandLeft = leftHand;
     avatarHandRight = rightHand;
+    avatarScale = scale;
 }
 
 void VRCollaboration::setupAvatar(string rID, string name) {
 	auto avatar = VRTransform::create("avatar");
 	VRObject::addChild(avatar);
 
+	auto avatarScaleNode = VRTransform::create("avatarScale");
+	avatarScaleNode->setScale( avatarScale );
+	avatar->addChild(avatarScaleNode);
+
 	auto rightHandContainer = VRTransform::create("rightHandContainer");
 	auto anchor = VRTransform::create("anchor");
 	rightHandContainer->addChild(anchor);
-	avatar->addChild(rightHandContainer);
+	avatarScaleNode->addChild(rightHandContainer);
 
 	if (avatarTorso) {
         auto torso = dynamic_pointer_cast<VRTransform>(avatarTorso->duplicate());
         torso->setFrom(Vec3d(0,5,-0.8));
-        avatar->addChild(torso);
+        avatarScaleNode->addChild(torso);
 	}
 
     if (avatarHandLeft) {
@@ -112,7 +117,7 @@ void VRCollaboration::setupAvatar(string rID, string name) {
         leftHand->rotate(1.5707/90*40, Vec3d(1,0,0)) ; // rotate 40° around z-Axis
         leftHand->rotate(1.5707*2, Vec3d(0,1,0));
         leftHand->translate(Vec3d(-2.4,0,0));
-        avatar->addChild(leftHand);
+        avatarScaleNode->addChild(leftHand);
     }
 
     if (avatarHandRight) {
@@ -122,17 +127,10 @@ void VRCollaboration::setupAvatar(string rID, string name) {
         rightHandContainer->addChild(rightHand);
     }
 
-    /*auto sprite = VRSprite::create("nameTag");
-	sprite->setText(name);
-	sprite->setSize(5,1.5);
-	sprite->setFrom(Vec3d(0,9,0));
-	sprite->setBillboard(true);
-	avatar->addChild(sprite);*/
-
 	auto label = VRAnnotationEngine::create("nameTag");
-	label->setSize(1.0);
+	label->setSize(avatarScale);
 	label->setBillboard(true);
-	label->set(0, Vec3d(0,9,0), name);
+	label->set(0, Vec3d(0,9,0)*avatarScale, name);
 	avatar->addChild(label);
 
 	auto job = bind(&VRSyncNode::addRemoteAvatar, syncNode.get(), rID, avatar, rightHandContainer, anchor);
@@ -263,32 +261,42 @@ bool VRCollaboration::handleUI(VRDeviceWeakPtr wdev) {
 	auto n = splitString(m, ';');
 
 	if (startsWith(m, "register")) {
-		string widget = splitString(m, ' ')[1];
-		gui_sites[widget] = dev->key();
-		if (widget == "usersList") updateUsersWidget();
-		if (widget == "namebox") userNameWidget->show();
+        auto data = splitString(m, ' ');
+        if (data.size() == 2) {
+            string widget = data[1];
+            gui_sites[widget] = dev->key();
+            if (widget == "usersList") updateUsersWidget();
+            if (widget == "namebox") userNameWidget->show();
+        }
 	}
 
 	if (startsWith(m, "setName") ) {
-		userName = splitString(m, '|')[1];
-		userNameWidget->hide();
-		userlist->show();
-		ice->setName(userName, false);
-		updateUsersWidget();
+        auto data = splitString(m, '|');
+        if (data.size() >= 2) {
+            userName = data[1];
+            userNameWidget->hide();
+            userlist->show();
+            ice->setName(userName, false);
+            updateUsersWidget();
+        }
 	}
 
 	if (startsWith(m, "onUserClick") ) {
-		auto data = splitString(m, '|');
-		sendUI("usersList", "setUserStats|"+data[1]+"|#fa0");
-        string net = getSubnet();
-		ice->send(data[1], "CONREQ$"+net);
+        auto data = splitString(m, '|');
+        if (data.size() >= 2) {
+            sendUI("usersList", "setUserStats|"+data[1]+"|#fa0");
+            string net = getSubnet();
+            ice->send(data[1], "CONREQ$"+net);
+        }
 	}
 
 	if (startsWith(m, "setMute") ) {
 		auto data = splitString(m, '|');
-		bool b = bool(data[1] == "true");
-		cout << "setMute: " << b << endl;
-		mike->pauseStreaming(b);
+        if (data.size() >= 2) {
+            bool b = bool(data[1] == "true");
+            cout << "setMute: " << b << endl;
+            mike->pauseStreaming(b);
+        }
 	}
 
 	if (m == "connectionAccept" ) {

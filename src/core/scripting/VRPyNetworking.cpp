@@ -144,7 +144,7 @@ PyMethodDef VRPyCollaboration::methods[] = {
     {"setServer", PyWrap(Collaboration, setServer, "Set server, something like http://my.server/PolyServ/", void, string) },
     {"setupLocalServer", PyWrap(Collaboration, setupLocalServer, "Setup local server, this will clone the PolyServ repo if necessary", void) },
     {"setAvatarDevices", PyWrap(Collaboration, setAvatarDevices, "Set device beacons used for remote avatar representation", void, VRTransformPtr, VRTransformPtr, VRTransformPtr) },
-    {"setAvatarGeometry", PyWrap(Collaboration, setAvatarGeometry, "Set avatar template geometries used to represent remote users", void, VRTransformPtr, VRTransformPtr, VRTransformPtr) },
+    {"setAvatarGeometry", PyWrap(Collaboration, setAvatarGeometry, "Set avatar template geometries used to represent remote users, (torso, lHand, rHand, scale)", void, VRTransformPtr, VRTransformPtr, VRTransformPtr, float) },
     {NULL}  /* Sentinel */
 };
 
