@@ -160,8 +160,8 @@ void VRGuiScene::setMaterial(VRMaterialPtr mat) {
     setWidgetSensitivity("table44", bool(tex));
 
     if (tex) {
-        setLabel("label158", toString(tex->getSize()) + " (" + toString(tex->getByteSize()/1048576.0) + " mb)");
-        setLabel("label157", toString(tex->getChannels()));
+        setLabel("label168", toString(tex->getSize()) + " (" + toString(tex->getByteSize()/1048576.0) + " mb)");
+        setLabel("label167", toString(tex->getChannels()));
     }
 }
 
