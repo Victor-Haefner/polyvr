@@ -698,7 +698,16 @@ void VRMaterial::setMaterial(MaterialMTRecPtr m) {
             if (mc) { md->mat->subChunk(md->colChunk); md->colChunk = mc; mc->setBackMaterial(false); md->regChunk(mc,unit,0); continue; }
             if (bc) { md->blendChunk = bc; md->regChunk(bc,unit, 6); continue; }
             if (ec) { md->envChunks[unit] = ec; md->regChunk(ec,unit, 5*10+unit); continue; }
-            if (tc) { md->texChunks[unit] = tc; md->regChunk(tc,unit, 4*10+unit); continue; }
+
+            if (tc) {
+                md->texChunks[unit] = tc; md->regChunk(tc,unit, 4*10+unit);
+                if (useGlobalFCMap) {
+                    auto img = md->texChunks[unit]->getImage();
+                    fieldContainerMap[img->getId()] = md->texChunks[unit]->getId();
+                }
+                continue;
+            }
+
             if (dc) { md->depthChunk = dc; md->regChunk(dc,unit, 8); continue; }
             if (tsc) { md->mat->subChunk(md->twoSidedChunk); md->twoSidedChunk = tsc; md->regChunk(tsc,unit, 1); continue; }
             if (sp) { md->shaderChunk = sp; md->regChunk(sp,unit, 7); continue; }
