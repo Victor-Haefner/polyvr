@@ -1210,8 +1210,8 @@ void VRSound::testMP3Write() {
 
     // cleanup
 	cout << " cleanup" << endl;
-	//cout << "  close stream" << endl;
-    //close_stream(oc, &audio_st);
+	cout << "  close stream" << endl;
+    close_stream(oc, &audio_st);
 	cout << "  close file" << endl;
     if (!(fmt->flags & AVFMT_NOFILE)) avio_close(oc->pb);
 	cout << "  free context" << endl;

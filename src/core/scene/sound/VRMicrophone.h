@@ -67,6 +67,7 @@ class VRMicrophone : public std::enable_shared_from_this<VRMicrophone> {
 
 	    VRSoundBufferPtr fetchDevicePacket();
 	    VRSoundBufferPtr genPacket(double dt);
+		void flushDevice();
 
 	public:
 		VRMicrophone();

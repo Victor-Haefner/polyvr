@@ -33,7 +33,7 @@ void VRMicrophone::setup() {
     streamMutex = new VRMutex();
 
     alGetError();
-    device = alcCaptureOpenDevice(NULL, sample_rate, AL_FORMAT_MONO16, sample_size);
+    device = alcCaptureOpenDevice(NULL, sample_rate, AL_FORMAT_MONO16, sample_rate);
     if (alGetError() != AL_NO_ERROR) {
         cout << "No microphone device found!" << endl;
 
@@ -79,10 +79,21 @@ VRSoundBufferPtr VRMicrophone::fetchDevicePacket() {
     alcGetIntegerv(device, ALC_CAPTURE_SAMPLES, (ALCsizei)sizeof(ALint), &Count);
 
     if (Count > 0) {
-        auto frame = VRSoundBuffer::allocate(Count*2, sample_rate, AL_FORMAT_MONO16);
+        VRSoundBufferPtr frame = VRSoundBuffer::allocate(Count*2, sample_rate, AL_FORMAT_MONO16);
         alGetError();
         alcCaptureSamples(device, frame->data, Count);
-        return frame;
+		
+		// test if its in stereo, make mono
+        /*VRSoundBufferPtr nframe = VRSoundBuffer::allocate(Count*2, sample_rate, AL_FORMAT_MONO16);
+		int16_t* src = (int16_t*)frame->data;
+		int16_t* dst = (int16_t*)nframe->data;
+		
+		for (int i=0; i<Count; i++) {
+			dst[i] = src[2*i];
+		}
+		frame = nframe;*/
+		
+        return frame; // frame
     }
 
     return 0;
@@ -105,6 +116,25 @@ void VRMicrophone::startRecording() {
 
 template <typename T>
 using duration = std::chrono::duration<T, std::milli>;
+
+/*void SaveSound(const std::string& Filename, const std::vector<ALshort>& Samples) {
+    // On renseigne les paramètres du fichier à créer
+    SF_INFO FileInfos;
+    FileInfos.channels   = 1;
+    FileInfos.samplerate = 44100;
+    FileInfos.format     = SF_FORMAT_PCM_16 | SF_FORMAT_WAV;
+
+    // On ouvre le fichier en écriture
+    SNDFILE* File = sf_open(Filename.c_str(), SFM_WRITE, &FileInfos);
+    if (!File)
+        return;
+
+    // Écriture des échantillons audio
+    sf_write_short(File, &Samples[0], Samples.size());
+
+    // Fermeture du fichier
+    sf_close(File);
+}*/
 
 void VRMicrophone::startRecordingThread() {
     auto recordCb = [&]() {
@@ -220,7 +250,20 @@ void VRMicrophone::stop() {
 
     recordingThread = 0;
     streamingThread = 0;
-    if (deviceOk) alcCaptureStop(device);
+    if (deviceOk) {
+		alcCaptureStop(device);
+		flushDevice();
+	}
+}
+
+void VRMicrophone::flushDevice() { // doesnt seem to work yet..
+	ALCint SamplesAvailable;
+	alcGetIntegerv(device, ALC_CAPTURE_SAMPLES, 1, &SamplesAvailable);
+	if (SamplesAvailable > 0) {
+		vector<ALshort> data;
+		data.resize(SamplesAvailable);
+		alcCaptureSamples(device, &data[0], SamplesAvailable);
+	}
 }
 
 VRSoundPtr VRMicrophone::stopRecording() {
