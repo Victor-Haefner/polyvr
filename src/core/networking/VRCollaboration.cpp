@@ -192,12 +192,12 @@ void VRCollaboration::onIceEvent(string m) {
 			connectionInWidget->show();
 			connReqOrigin = origin;
 			connReqNet = parseSubNet(content);
-			auto data2 = splitString(content, '$');
+			auto data2 = splitString(content, '_');
 			connReqSystem = data2[1];
 		}
 
 		if (startsWith(content, "CONACC") ) {
-			auto data2 = splitString(content, '$');
+			auto data2 = splitString(content, '_');
 			bool isWindows = bool(data2[1] == "win");
 			finishConnection(origin, isWindows, parseSubNet(content));
 		}
@@ -293,9 +293,9 @@ bool VRCollaboration::handleUI(VRDeviceWeakPtr wdev) {
             sendUI("usersList", "setUserStats|"+data[1]+"|#fa0");
             string net = getSubnet();			
 #ifdef _WIN32
-			ice->send(data[1], "CONREQ$win$"+net);
+			ice->send(data[1], "CONREQ_win_"+net);
 #else
-			ice->send(data[1], "CONREQ$lnx$"+net);
+			ice->send(data[1], "CONREQ_lnx_"+net);
 #endif
         }
 	}
@@ -322,12 +322,12 @@ bool VRCollaboration::handleUI(VRDeviceWeakPtr wdev) {
 
 string VRCollaboration::getSubnet() {
     string net = ice->getID();
-    for (auto c : ice->getClients()) net += "$"+c.first;
+    for (auto c : ice->getClients()) net += "_"+c.first;
     return net;
 }
 
 vector<string> VRCollaboration::parseSubNet(string net) {
-    auto data = splitString(net, '$');
+    auto data = splitString(net, '_');
     data.erase(data.begin()); // removes "CONREQ" or "CONACC"
     data.erase(data.begin()); // removes "win" or "lnx"
     return data;
@@ -342,9 +342,9 @@ void VRCollaboration::acceptConnection(bool isWindows) {
         sendUI("usersList", "setUserStats|"+node+"|#2c4");
         ice->connectTo(node, false);
 #ifdef _WIN32
-        ice->send(node, "CONACC$win$"+net);
+        ice->send(node, "CONACC_win_"+net);
 #else
-        ice->send(node, "CONACC$lnx$"+net);
+        ice->send(node, "CONACC_lnx_"+net);
 #endif
         connectTCP(node, isWindows);
     }
@@ -360,9 +360,9 @@ void VRCollaboration::finishConnection(string origin, bool isWindows, vector<str
         connectTCP(node, isWindows);
         if (node != origin) {
 #ifdef _WIN32
-			ice->send(node, "CONACC$win$"+ice->getID());
+			ice->send(node, "CONACC_win_"+ice->getID());
 #else
-			ice->send(node, "CONACC$lnx$"+ice->getID());
+			ice->send(node, "CONACC_lnx_"+ice->getID());
 #endif
 		}
     }
