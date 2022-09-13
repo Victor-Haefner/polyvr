@@ -141,7 +141,7 @@ void VRCollaboration::setupAvatar(string rID, string name) {
 	//syncNode->addRemoteAvatar(rID, avatar, rightHandContainer, anchor);
 }
 
-void VRCollaboration::connectTCP(string origin) {
+void VRCollaboration::connectTCP(string origin, bool isWindows) {
 #ifndef WITHOUT_GTK
     VRConsoleWidget::get("Collaboration")->write( "Collab: connect TCP sync node and audio, setup avatar of origin "+origin+"'\n");
 #endif
@@ -171,7 +171,7 @@ void VRCollaboration::connectTCP(string origin) {
 	mike->startStreamingOver(audioClient);
 	//mike->pauseStreaming(false);
 	voices[origin] = VRSound::create();
-	voices[origin]->playPeerStream(audioClient);
+	voices[origin]->playPeerStream(audioClient, isWindows);
 }
 
 void VRCollaboration::onIceEvent(string m) {
@@ -192,9 +192,15 @@ void VRCollaboration::onIceEvent(string m) {
 			connectionInWidget->show();
 			connReqOrigin = origin;
 			connReqNet = parseSubNet(content);
+			auto data2 = splitString(content, '$');
+			connReqSystem = data2[1];
 		}
 
-		if (startsWith(content, "CONACC") ) finishConnection(origin, parseSubNet(content));
+		if (startsWith(content, "CONACC") ) {
+			auto data2 = splitString(content, '$');
+			bool isWindows = bool(data2[1] == "win");
+			finishConnection(origin, isWindows, parseSubNet(content));
+		}
     }
 }
 
@@ -285,8 +291,12 @@ bool VRCollaboration::handleUI(VRDeviceWeakPtr wdev) {
         auto data = splitString(m, '|');
         if (data.size() >= 2) {
             sendUI("usersList", "setUserStats|"+data[1]+"|#fa0");
-            string net = getSubnet();
-            ice->send(data[1], "CONREQ$"+net);
+            string net = getSubnet();			
+#ifdef _WIN32
+			ice->send(data[1], "CONREQ$win$"+net);
+#else
+			ice->send(data[1], "CONREQ$lnx$"+net);
+#endif
         }
 	}
 
@@ -300,7 +310,8 @@ bool VRCollaboration::handleUI(VRDeviceWeakPtr wdev) {
 	}
 
 	if (m == "connectionAccept" ) {
-        acceptConnection();
+		bool isWindows = bool(connReqSystem == "win");
+        acceptConnection(isWindows);
         connectionInWidget->hide();
 	}
 
@@ -318,10 +329,11 @@ string VRCollaboration::getSubnet() {
 vector<string> VRCollaboration::parseSubNet(string net) {
     auto data = splitString(net, '$');
     data.erase(data.begin()); // removes "CONREQ" or "CONACC"
+    data.erase(data.begin()); // removes "win" or "lnx"
     return data;
 }
 
-void VRCollaboration::acceptConnection() {
+void VRCollaboration::acceptConnection(bool isWindows) {
 #ifndef WITHOUT_GTK
     VRConsoleWidget::get("Collaboration")->write( "Collab: accepting incomming connection, connect ice to origin!\n");
 #endif
@@ -329,20 +341,30 @@ void VRCollaboration::acceptConnection() {
     for (auto node : connReqNet) {
         sendUI("usersList", "setUserStats|"+node+"|#2c4");
         ice->connectTo(node, false);
-        ice->send(node, "CONACC$"+net);
-        connectTCP(node);
+#ifdef _WIN32
+        ice->send(node, "CONACC$win$"+net);
+#else
+        ice->send(node, "CONACC$lnx$"+net);
+#endif
+        connectTCP(node, isWindows);
     }
 }
 
-void VRCollaboration::finishConnection(string origin, vector<string> net) {
+void VRCollaboration::finishConnection(string origin, bool isWindows, vector<string> net) {
 #ifndef WITHOUT_GTK
     VRConsoleWidget::get("Collaboration")->write( "Collab: got CONACC, connect ice to origin!\n");
 #endif
     for (auto node : net) {
         sendUI("usersList", "setUserStats|"+node+"|#2c4");
         ice->connectTo(node, false);
-        connectTCP(node);
-        if (node != origin) ice->send(node, "CONACC$"+ice->getID());
+        connectTCP(node, isWindows);
+        if (node != origin) {
+#ifdef _WIN32
+			ice->send(node, "CONACC$win$"+ice->getID());
+#else
+			ice->send(node, "CONACC$lnx$"+ice->getID());
+#endif
+		}
     }
 }
 

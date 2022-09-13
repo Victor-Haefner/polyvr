@@ -822,7 +822,7 @@ struct InputStream {
     }
 };
 
-string VRSound::onStreamData(string data) {
+string VRSound::onStreamData(string data, bool stereo) {
 	if (!audio_ist) {
         if (!initiated) initiate();
         audio_ist = new InputStream(data);
@@ -831,19 +831,19 @@ string VRSound::onStreamData(string data) {
         auto codec = avcodec_find_decoder(AV_CODEC_ID_MP3);
         al->codec = avcodec_alloc_context3(codec);
 
-#ifdef _WIN32
-        al->codec->sample_fmt     = AV_SAMPLE_FMT_FLTP;
-        al->codec->sample_rate    = 44100;
-        al->codec->channel_layout = AV_CH_LAYOUT_STEREO;
-        al->codec->channels       = 2;
-        al->codec->bit_rate       = 96000;
-#else
-        al->codec->sample_fmt     = AV_SAMPLE_FMT_S32P;
-        al->codec->sample_rate    = 44100;
-        al->codec->channel_layout = AV_CH_LAYOUT_MONO;
-        al->codec->channels       = 1;
-        al->codec->bit_rate       = 64000;
-#endif
+		if (stereo) { // windows stream
+			al->codec->sample_fmt     = AV_SAMPLE_FMT_FLTP;
+			al->codec->sample_rate    = 44100;
+			al->codec->channel_layout = AV_CH_LAYOUT_STEREO;
+			al->codec->channels       = 2;
+			al->codec->bit_rate       = 96000;
+		} else { // linux stream
+			al->codec->sample_fmt     = AV_SAMPLE_FMT_S32P;
+			al->codec->sample_rate    = 44100;
+			al->codec->channel_layout = AV_CH_LAYOUT_MONO;
+			al->codec->channels       = 1;
+			al->codec->bit_rate       = 64000;
+		}
 
         if (fmt->flags & AVFMT_GLOBALHEADER) al->codec->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
         int ret = avcodec_open2(al->codec, NULL, NULL);
@@ -856,11 +856,8 @@ string VRSound::onStreamData(string data) {
         stream->time_base.num = 1;
         stream->time_base.den = al->codec->sample_rate;
         ret = avcodec_parameters_from_context(stream->codecpar, al->codec);
-#ifdef _WIN32
-        stream->codecpar->format = AV_SAMPLE_FMT_FLTP;
-#else
-        stream->codecpar->format = AV_SAMPLE_FMT_S32P;
-#endif
+        if (stereo) stream->codecpar->format = AV_SAMPLE_FMT_FLTP;
+        else        stream->codecpar->format = AV_SAMPLE_FMT_S32P;
         if (ret < 0) { fprintf(stderr, "Could not copy the stream parameters\n"); return ""; }
 
         av_dump_format(al->context, 0, NULL, 0);
@@ -879,8 +876,8 @@ string VRSound::onStreamData(string data) {
     return "";
 }
 
-bool VRSound::listenStream(int port) {
-    auto streamCb = bind(&VRSound::onStreamData, this, placeholders::_1);
+bool VRSound::listenStream(int port, bool stereo) {
+    auto streamCb = bind(&VRSound::onStreamData, this, placeholders::_1, stereo);
 
     if (!udpServer) {
         udpServer = VRUDPServer::create("sound-in");
@@ -892,8 +889,8 @@ bool VRSound::listenStream(int port) {
     return true;
 }
 
-bool VRSound::playPeerStream(VRNetworkClientPtr client) {
-    auto streamCb = bind(&VRSound::onStreamData, this, placeholders::_1);
+bool VRSound::playPeerStream(VRNetworkClientPtr client, bool stereo) {
+    auto streamCb = bind(&VRSound::onStreamData, this, placeholders::_1, stereo);
     client->onMessage(streamCb);
     av_register_all();
     return true;

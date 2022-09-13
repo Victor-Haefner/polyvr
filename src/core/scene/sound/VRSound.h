@@ -64,7 +64,7 @@ class VRSound {
         void updateSampleAndFormat();
         void update3DSound();
         void write_buffer(AVFormatContext *oc, OutputStream *ost, VRSoundBufferPtr buffer);
-        string onStreamData(string s);
+        string onStreamData(string s, bool stereo);
 
     public:
         VRSound();
@@ -105,8 +105,8 @@ class VRSound {
         void closeStream(bool keepOpen = false);
         void flushPackets();
 
-        bool listenStream(int port);
-        bool playPeerStream(VRNetworkClientPtr client);
+        bool listenStream(int port, bool stereo);
+        bool playPeerStream(VRNetworkClientPtr client, bool stereo);
 
         void exportToFile(string path);
         void streamTo(string url, int port, bool keepOpen = false);
