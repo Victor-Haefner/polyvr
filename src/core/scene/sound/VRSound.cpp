@@ -739,11 +739,6 @@ void VRSound::flushPackets() { // deprecated?
 bool VRSound::addOutStreamClient(VRNetworkClientPtr client) {
     udpClients.push_back(client);
 
-    /*if (!udpClient->connected()) {
-        udpClient.reset();
-        return false;
-    }*/
-
     audio_ost = new OutputStream();
     av_register_all();
 
@@ -759,7 +754,7 @@ bool VRSound::addOutStreamClient(VRNetworkClientPtr client) {
     //muxer->oformat->audio_codec = AV_CODEC_ID_OPUS;
     //snprintf(muxer->filename, sizeof(muxer->filename), "%s", filename);
 
-    int avio_buffer_size = 256;
+    int avio_buffer_size = 1024;
     unsigned char* avio_buffer = (unsigned char*)av_malloc(avio_buffer_size);
     AVIOContext* custom_io = avio_alloc_context ( avio_buffer, avio_buffer_size, 1, (void*)this, NULL, &custom_io_write, NULL);
     muxer->pb = custom_io;
@@ -828,7 +823,7 @@ struct InputStream {
 };
 
 string VRSound::onStreamData(string data) {
-    if (!audio_ist) {
+	if (!audio_ist) {
         if (!initiated) initiate();
         audio_ist = new InputStream(data);
 
@@ -855,9 +850,6 @@ string VRSound::onStreamData(string data) {
 
         al->context = avformat_alloc_context();
         al->context->iformat = fmt;
-#ifdef _WIN32
-        al->context->bit_rate = 124000;
-#endif
 
         AVStream* stream = avformat_new_stream(al->context, NULL);
         stream->codec = al->codec;
