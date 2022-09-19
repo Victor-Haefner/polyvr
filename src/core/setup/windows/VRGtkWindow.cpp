@@ -279,8 +279,13 @@ VRGtkWindow::VRGtkWindow(GtkWidget* area, string msaa) {
     gl_area_trigger_resize(GL_AREA(widget));
 
 #ifndef WITHOUT_OPENVR
-    if (VRHeadMountedDisplay::checkDeviceAttached())
+    cout << " ..check if an HMD is attached" << endl;
+    if (VRHeadMountedDisplay::checkDeviceAttached()) {
         hmd = VRHeadMountedDisplay::create();
+        cout << "  found HMD!" << endl;
+    } else {
+        cout << "  no HMD detected" << endl;
+    }
 #endif
 }
 

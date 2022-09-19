@@ -95,7 +95,6 @@
 			<Add option="-DGDK_GL_COMPILATION" />
 			<Add option="-DGTK_GL_COMPILATION" />
 			<Add option="-DGTK_SOURCE_COMPILATION" />
-			<Add option="-DWITHOUT_OPENVR" />
 			<Add option="-DWITHOUT_NUMPY" />
 			<Add directory="/usr/include/pango-1.0" />
 			<Add directory="/usr/include/glib-2.0" />
@@ -113,7 +112,6 @@
 			<Add directory="/usr/include/collada" />
 			<Add directory="/usr/include/STEPcode" />
 			<Add directory="/usr/include/vtk-5.10" />
-			<Add directory="/usr/include/Vive" />
 			<Add directory="/usr/include/OCE" />
 			<Add directory="/usr/include/IFC" />
 			<Add directory="/usr/include/vtk-7.1/" />
@@ -123,6 +121,7 @@
 			<Add directory="/usr/include/eigen3" />
 			<Add directory="/usr/include/python2.7" />
 			<Add directory="/usr/include/jsoncpp" />
+			<Add directory="/usr/include/openvr" />
 		</Compiler>
 		<Linker>
 			<Add option="-lTKV3d" />
@@ -242,6 +241,7 @@
 			<Add option="-lswresample" />
 			<Add option="-lswscale" />
 			<Add option="-lavutil" />
+			<Add option="-lopenvr" />
 			<Add option="-lqrencode" />
 			<Add option="-ludev" />
 			<Add option="-lraptor2" />
@@ -1515,7 +1515,9 @@
 		<Unit filename="src/core/setup/windows/VRGtk3Window.h" />
 		<Unit filename="src/core/setup/windows/VRGtkWindow.cpp" />
 		<Unit filename="src/core/setup/windows/VRGtkWindow.h" />
-		<Unit filename="src/core/setup/windows/VRMultiWindow.cpp" />
+		<Unit filename="src/core/setup/windows/VRHeadMountedDisplay.cpp" />
+		<Unit filename="src/core/setup/windows/VRHeadMountedDisplay.h" />
+ 		<Unit filename="src/core/setup/windows/VRMultiWindow.cpp" />
 		<Unit filename="src/core/setup/windows/VRMultiWindow.h" />
 		<Unit filename="src/core/setup/windows/VRView.cpp" />
 		<Unit filename="src/core/setup/windows/VRView.h" />
