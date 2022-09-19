@@ -241,7 +241,7 @@
 			<Add option="-lswresample" />
 			<Add option="-lswscale" />
 			<Add option="-lavutil" />
-			<Add option="-lopenvr" />
+			<Add option="-lopenvr_api" />
 			<Add option="-lqrencode" />
 			<Add option="-ludev" />
 			<Add option="-lraptor2" />
