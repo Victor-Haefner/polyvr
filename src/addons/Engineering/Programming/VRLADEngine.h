@@ -2,6 +2,7 @@
 #define VRLADENGINE_H_INCLUDED
 
 #include <OpenSG/OSGConfig.h>
+#include "core/objects/VRTransform.h"
 #include "addons/Engineering/VREngineeringFwd.h"
 
 #include <string>
@@ -109,6 +110,7 @@ class VRLADEngine : public std::enable_shared_from_this<VRLADEngine> {
 		CompileUnitPtr unit2E;
 
 		VRElectricSystemPtr esystem;
+		VRTransformPtr ladViz;
 
 	public:
 		VRLADEngine();
@@ -130,6 +132,9 @@ class VRLADEngine : public std::enable_shared_from_this<VRLADEngine> {
 		int getCompileUnitWireSignal(string cuID, string wID);
 		VRLADVariablePtr getCompileUnitPartVariable(string cuID, string pID);
 		string getCompileUnitPartName(string cuID, string pID);
+
+		VRTransformPtr addVisual();
+		void updateVisual();
 };
 
 OSG_END_NAMESPACE;

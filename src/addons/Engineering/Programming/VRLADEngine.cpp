@@ -7,6 +7,10 @@
 #include "core/utils/xml.h"
 #include "core/utils/system/VRSystem.h"
 
+#include "core/objects/material/VRMaterial.h"
+#include "core/objects/geometry/VRGeoData.h"
+#include "core/tools/VRAnnotationEngine.h"
+
 #include <functional>
 #include <algorithm>
 
@@ -622,4 +626,233 @@ void VRLADEngine::iterate() { // TODO: once the import is finished tackle this
 	}
 
 	//LADvizUpdate();
+}
+
+VRTransformPtr VRLADEngine::addVisual() {
+    if (ladViz) return ladViz;
+
+	double L = 0.1;
+	double F = 0.015;
+	double D = 0.15;
+
+	double W = 1;
+	double H = 2.4;
+	double S = 0.5 ; // 0.2;
+
+	Vec3d P0(-21,2,0.3);
+	Vec3d p0(-1.5,0,0);
+
+	ladViz = VRTransform::create("ladViz");
+
+	auto lines = VRGeometry::create("lines");
+	ladViz->addChild(lines);
+	auto labels = VRAnnotationEngine::create("labels");
+	labels->setSize(F);
+	labels->setBackground(Color4f(1,1,1,0));
+	labels->setOutline(5, Color4f(0,0,0,1));
+	ladViz->addChild(labels);
+
+	auto m = VRMaterial::create("lm");
+	m->setLit(0);
+	m->setLineWidth(2);
+	m->setPointSize(4);
+	lines->setMaterial(m);
+
+	auto bg = VRGeometry::create("bg");
+	bg->setPrimitive("Plane 6 3 1 1");
+	bg->setTransform(Vec3d(-0.4,-1.2,-0.02), Vec3d(0,0,-1), Vec3d(0,1,0));
+	bg->setMaterial(m);
+	ladViz->addChild(bg);
+
+	VRGeoData ldata(lines);
+
+	auto addLine = [&](Pnt3d p1, Pnt3d p2, Color3f c) {
+		Vec3d n(0,1,0);
+		ldata.pushVert(p1,n,c);
+		ldata.pushVert(p2,n,c);
+		ldata.pushLine();
+	};
+
+	auto addPoint = [&](Pnt3d p, Color3f c) {
+		Vec3d n(0,1,0);
+		ldata.pushVert(p,n,c);
+		ldata.pushPoint();
+	};
+
+	auto getOutParts = [&](string cuID, string wID) {
+		return getCompileUnitWireOutParts(cuID, wID);
+	};
+
+	auto getOutWires = [&](string cuID, string pID) {
+		return getCompileUnitPartOutWires(cuID, pID);
+	};
+
+	auto getPowerWires = [&](string cuID) {
+		return getCompileUnitWires(cuID, true);
+	};
+
+	map<string, Pnt3d> partMap;
+	vector<ComponentPtr> drawnComponent;
+	int lblID = 0;
+
+	function<void(string, string, Pnt3d)> computeNextPartsPosition = [&](string cuID, string part, Pnt3d pos) {
+	    auto wires = getOutWires(cuID, part);
+		for (int j = 0; j< wires.size(); j++) {
+            auto wire2 = wires[j];
+		    auto parts = getOutParts(cuID, wire2);
+            for (int k = 0; k<wires.size(); k++) {
+                auto part2 = parts[k];
+				Pnt3d pos2 = pos + Vec3d(L,0,0);
+				if (partMap.count(part2)) {
+					pos2 = partMap[part2];
+					if (pos2[0] <= pos[0]) pos2[0] += L;
+				}
+				partMap[part2] = pos2;
+				computeNextPartsPosition(cuID, part2, pos2);
+			}
+		}
+	};
+
+	auto computePartPositions = [&](string cuID, Pnt3d p0) {
+		partMap["-1"] = p0;
+		for (auto wire : getPowerWires(cuID) ) {
+            auto parts = getOutParts(cuID, wire);
+			for (int i = 0; i < parts.size(); i++ ) {
+			    auto part = parts[i];
+				Pnt3d pos = p0 + Vec3d(L, -i*D-0.05, 0);
+				partMap[part] = pos;
+				computeNextPartsPosition(cuID, part, pos);
+			}
+		}
+	};
+
+    // TODO ..
+	/*auto drawConnection = [&](cuID, wID, p1, p2, k = 0) ) {
+		; //v = wire->lastComputationResult;
+		v = lsystem->getCompileUnitWireSignal(cuID, wID);
+		c = [1,0,0];
+		if (v == 1) c = [0,1,0];
+
+		if (!p1) f = partMap["-1"];
+		else: f = partMap[p1];
+		t = partMap[p2];
+		d = t-f;
+		if (k == 0) l = f+[d[0],0,0];
+		if (k == 1) l = f+[0,d[1],0];
+		addLine(f, l, c);
+		addLine(l, t, c);
+	};
+
+	auto drawPart = [&](pID) ) {
+		if (pID in drawnComponent) return;
+		drawnComponent->append(pID);
+		v = lsystem->getCompileUnitPartVariable(cuID, pID);
+		n = lsystem->getCompileUnitPartName(cuID, pID);
+		; //v = p->getVariable()[0];
+		if (v ) {
+			pos = partMap[pID];
+			addPoint(pos, [0,0,1]);
+			if (n == "Contact" ) {
+				addLine(pos+[-0.01, 0.01, 0], pos+[-0.01, -0.01, 0], [0,0,0]);
+				addLine(pos+[ 0.01, 0.01, 0], pos+[ 0.01, -0.01, 0], [0,0,0]);
+			};
+			elif n == "Coil" ) {
+				addLine(pos+[-0.006, 0.01, 0], pos+[-0.01, 0.003, 0], [0,0,0]);
+				addLine(pos+[-0.01, 0.003, 0], pos+[-0.01, -0.003, 0], [0,0,0]);
+				addLine(pos+[-0.01, -0.003, 0], pos+[-0.006, -0.01, 0], [0,0,0]);
+				addLine(pos+[ 0.006, 0.01, 0], pos+[ 0.01, 0.003, 0], [0,0,0]);
+				addLine(pos+[ 0.01, 0.003, 0], pos+[ 0.01, -0.003, 0], [0,0,0]);
+				addLine(pos+[ 0.01, -0.003, 0], pos+[ 0.006, -0.01, 0], [0,0,0]);
+			};
+			elif n == "Move" ) {
+				addLine(pos+[-0.01, 0.01, 0], pos+[-0.01, -0.01, 0], [0,0,0]);
+				addLine(pos+[ 0.01, 0.01, 0], pos+[ 0.01, -0.01, 0], [0,0,0]);
+				addLine(pos+[-0.01, 0.01, 0], pos+[ 0.01,  0.01, 0], [0,0,0]);
+				addLine(pos+[-0.01,-0.01, 0], pos+[ 0.01, -0.01, 0], [0,0,0]);
+			};
+			elif n == "Calc" ) {
+				addLine(pos+[-0.01, 0.01, 0], pos+[-0.01, -0.01, 0], [0,1,0]);
+				addLine(pos+[ 0.01, 0.01, 0], pos+[ 0.01, -0.01, 0], [0,1,0]);
+				addLine(pos+[-0.01, 0.01, 0], pos+[ 0.01,  0.01, 0], [0,1,0]);
+				addLine(pos+[-0.01,-0.01, 0], pos+[ 0.01, -0.01, 0], [0,1,0]);
+			};
+			elif n == "PContact": ; // TODO;
+				addLine(pos+[-0.01, 0.01, 0], pos+[-0.01, -0.01, 0], [1,0,1]);
+				addLine(pos+[ 0.01, 0.01, 0], pos+[ 0.01, -0.01, 0], [1,0,1]);
+			};
+			elif n == "RCoil": ; // TODO;
+				addLine(pos+[-0.01, 0.01, 0], pos+[-0.01, -0.01, 0], [0,0,1]);
+				addLine(pos+[ 0.01, 0.01, 0], pos+[ 0.01, -0.01, 0], [0,0,1]);
+			};
+			elif n == "SCoil": ; // TODO;
+				addLine(pos+[-0.01, 0.01, 0], pos+[-0.01, -0.01, 0], [0,1,1]);
+				addLine(pos+[ 0.01, 0.01, 0], pos+[ 0.01, -0.01, 0], [0,1,1]);
+			};
+			elif n == "Ge": ; // TODO;
+				addLine(pos+[-0.015, 0.015, 0], pos+[-0.015, -0.015, 0], [0,0,0]);
+				addLine(pos+[ 0.015, 0.015, 0], pos+[ 0.015, -0.015, 0], [0,0,0]);
+				addLine(pos+[-0.01, 0.015, 0], pos+[ 0, 0.01, 0], [0,0,0]);
+				addLine(pos+[-0.01, 0.005, 0], pos+[ 0, 0.01, 0], [0,0,0]);
+				addLine(pos+[0, 0.013, 0], pos+[ 0.01, 0.013, 0], [0,0,0]);
+				addLine(pos+[0, 0.007, 0], pos+[ 0.01, 0.007, 0], [0,0,0]);
+			};
+			else: print n;
+
+			for (i,l : enumerate(v->getName()->split("_")) ) {
+				labels->set(lblID, pos+[-0.05,0.015-i*2*F,0.02], l);
+				lblID += 1	;
+			}
+		}
+	};
+
+	auto drawNextWires = [&](cuID, part) ) {
+		drawPart(part);
+		for (j,wire : enumerate(getOutWires(cuID, part)) ) {
+			for (k,part2 : enumerate(getOutParts(cuID, wire)) ) {
+				drawConnection(cuID, wire, part, part2);
+				drawNextWires(cuID, part2);
+			}
+		}
+	};
+
+	auto drawCompilationUnit = [&](cuID, p0) ) {
+		computePartPositions(cuID, p0);
+		for (wire : getPowerWires(cuID) ) {
+			for (i,part : enumerate(getOutParts(cuID, wire)) ) {
+				drawConnection(cuID, wire, None, part, 1);
+				drawNextWires(cuID, part);
+			}
+		}
+	};
+
+	; //drawCompilationUnit(compileUnits["2E"], Vec3([-2,0.5,0]));
+
+	auto getHeight = [&]() {
+		S = [1e6,-1e6];
+		for (ID,pos : partMap ) {
+			if (pos[1] < S[0]) S[0] = pos[1] ;
+			if (pos[1] > S[1]) S[1] = pos[1] ;
+		};
+		return S[1]-S[0];
+	};
+
+	ladViz->setFrom(P0);
+	ladViz->setScale([S,S,S]);
+	for (i, cuID : enumerate(lsystem->getCompileUnits()) ) {
+		partMap = {};
+		drawnComponent = [];
+		drawCompilationUnit(cuID, p0);
+		d = getHeight();
+		p0 += [0,-d-D*0.5,0];
+		if (p0[1] < -H) {
+			p0[0] += W;
+			p0[1] = 0;
+		}
+	}*/
+
+    return ladViz;
+}
+
+void VRLADEngine::updateVisual() {
+    ;
 }
