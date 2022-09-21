@@ -48,6 +48,7 @@ simplePyType(OSMNode, 0);
 simplePyType(OSMBase, 0);
 
 PyMethodDef VRPyWorldGenerator::methods[] = {
+    {"initFull", PyWrap( WorldGenerator, initFull, "Init all submodules", void ) },
     {"addAsset", PyWrap( WorldGenerator, addAsset, "Add an asset template", void, string, VRTransformPtr ) },
     {"addRoadNetwork", PyWrap( WorldGenerator, addRoadNetwork, "Add a road network", VRRoadNetworkPtr ) },
     {"addDistrict", PyWrap( WorldGenerator, addDistrict, "Add buildings module", VRDistrictPtr ) },
@@ -60,7 +61,7 @@ PyMethodDef VRPyWorldGenerator::methods[] = {
     {"getRoadNetwork", PyWrap( WorldGenerator, getRoadNetwork, "Access road network", VRRoadNetworkPtr ) },
     {"getTrafficSigns", PyWrap( WorldGenerator, getTrafficSigns, "Access traffic signs", VRTrafficSignsPtr ) },
     {"getNature", PyWrap( WorldGenerator, getNature, "Access nature module", VRNaturePtr ) },
-    {"getTerrain", PyWrap( WorldGenerator, getTerrain, "Access the ith LOD terrain", VRTerrainPtr, int ) },
+    {"getTerrain", PyWrapOpt( WorldGenerator, getTerrain, "Access the ith LOD terrain, default 0", "0", VRTerrainPtr, int ) },
     {"getDistrict", PyWrap( WorldGenerator, getDistrict, "Access the district module", VRDistrictPtr ) },
     {"getLodTree", PyWrap( WorldGenerator, getLodTree, "Access the lod tree", VRLodTreePtr ) },
     {"setOntology", PyWrap( WorldGenerator, setOntology, "Set ontology", void, VROntologyPtr ) },

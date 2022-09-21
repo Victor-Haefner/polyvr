@@ -88,7 +88,7 @@ VRTreePtr VRNature::createTree(string type, Vec3d p) {
     t->addAttachment("tree", 0);
     if (auto t = terrain.lock()) p = t->elevatePoint(p);
     t->setFrom(p);
-    lodTree->addObject(t, p, 0);
+    if (lodTree) lodTree->addObject(t, p, 0);
     treeRefs[t.get()] = treeTemplates[type];
     treesByID[t->getID()] = t;
     return t;
@@ -102,7 +102,7 @@ VRTreePtr VRNature::createBush(string type, Vec3d p) {
     t->addAttachment("tree", 0);
     if (auto t = terrain.lock()) p = t->elevatePoint(p);
     t->setFrom(p);
-    lodTree->addObject(t, p, 0);
+    if (lodTree) lodTree->addObject(t, p, 0);
     treeRefs[t.get()] = bushTemplates[type];
     treesByID[t->getID()] = t;
     return t;
@@ -147,6 +147,7 @@ void VRNature::addBushTemplate(VRTreePtr t) { bushTemplates[t->getName()] = t; t
 
 void VRNature::removeTree(int id) {
     if (!treesByID.count(id)) return;
+    if (!lodTree) return;
     auto t = treesByID[id];
     auto leaf = lodTree->remObject(t);
     treesByID.erase(id);
@@ -227,9 +228,11 @@ void VRNature::addGrassPatch(VRPolygonPtr Area, bool updateLODs, bool addGround)
         grass->setArea(area);
         //cout << "  A2 " << timer.stop() - t0 << endl;
         grassPatchRefs[grass.get()] = grass;
-        auto leaf = lodTree->addObject(grass, median, 0); // pose contains the world position!
-        grass->setWorldPosition(median);
-        toUpdate[leaf] = true;
+        if (lodTree) {
+            auto leaf = lodTree->addObject(grass, median, 0); // pose contains the world position!
+            grass->setWorldPosition(median);
+            toUpdate[leaf] = true;
+        }
 
 
         //cout << "  A3 " << timer.stop() - t0 << endl;
@@ -276,6 +279,7 @@ VRTreePtr VRNature::addTree(VRTreePtr t, bool updateLODs, bool addToStore) { // 
     auto tree = dynamic_pointer_cast<VRTree>( t->duplicate() );
     tree->addAttachment("tree", 0);
     treeRefs[tree.get()] = t;
+    if (!lodTree) return tree;
     auto leaf = lodTree->addObject(tree, p->pos(), 0); // pose contains the world position!
     treesByID[tree->getID()] = tree;
 
@@ -295,6 +299,7 @@ VRTreePtr VRNature::addBush(VRTreePtr t, bool updateLODs, bool addToStore) {
     tree->addAttachment("tree", 0);
     bushTemplates[t->getName()] = t;
     treeRefs[tree.get()] = t;
+    if (!lodTree) return tree;
     auto leaf = lodTree->addObject(tree, p->pos(), 0); // pose contains the world position!
     treesByID[tree->getID()] = tree;
 
@@ -309,6 +314,7 @@ void VRNature::computeLODsThread(VRThreadWeakPtr tw) {
     //if (jobs.size() == 0) { sleep(1); return; } // start as loop
     //MapManager::job j = jobs.front(); jobs.pop_front();
 
+    if (!lodTree) return;
     VRThreadPtr t = tw.lock();
     t->syncFromMain();
     computeLODs3(lodTree->getLeafs());
@@ -316,6 +322,7 @@ void VRNature::computeLODsThread(VRThreadWeakPtr tw) {
 }
 
 void VRNature::computeAllLODs(bool threaded) {
+    if (!lodTree) return;
     if (!threaded) { computeLODs3(lodTree->getLeafs()); return; }
 
     auto scene = VRScene::getCurrent();
@@ -324,6 +331,7 @@ void VRNature::computeAllLODs(bool threaded) {
 }
 
 void VRNature::computeLODs(VRLodLeafPtr leaf) {
+    if (!lodTree) return;
     auto oLeafs = leaf->getOLeaf()->getAncestry();
     map<OctreeNode<VRTransform*>*, VRLodLeafPtr> aLeafs;
     for (auto o : oLeafs) {
@@ -610,7 +618,7 @@ void VRNature::clear() {
     treeRefs.clear();
     treeEntries.clear();
     treeTemplates.clear();
-    lodTree->reset();
+    if (lodTree) lodTree->reset();
 }
 
 void VRNature::addCollisionModels() {

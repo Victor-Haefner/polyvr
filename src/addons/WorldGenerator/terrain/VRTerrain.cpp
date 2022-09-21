@@ -396,6 +396,7 @@ void VRTerrain::setupGeo(VRCameraPtr cam) {
 }
 
 vector<Vec3d> VRTerrain::probeHeight( Vec2d p ) {
+    if (!heigthsTex) return {};
     Vec2d uv = toUVSpace(p); // uv, i and j are tested
     int i = round(uv[0]-0.5);
     int j = round(uv[1]-0.5);
@@ -444,6 +445,7 @@ void VRTerrain::physicalize(bool b) {
 
 Boundingbox VRTerrain::getBoundingBox() {
     Boundingbox bb;
+    if (!heigthsTex) return bb;
     float hmax = -1e30;
     float hmin = 1e30;
 
@@ -571,6 +573,7 @@ bool VRTerrain::applyIntersectionAction(Action* action) {
 }
 
 Vec2d VRTerrain::getTexCoord( Vec2d p ) {
+    if (!heigthsTex) return Vec2d();
     auto texSize = heigthsTex->getSize();
     Vec2d texel = Vec2d( 1.0/texSize[0], 1.0/texSize[1] );
 
@@ -580,6 +583,7 @@ Vec2d VRTerrain::getTexCoord( Vec2d p ) {
 }
 
 Vec2d VRTerrain::toUVSpace(Vec2d p) {
+    if (!heigthsTex) return Vec2d();
     Vec2d uv = getTexCoord(p);
     int W = heigthsTex->getSize()[0]-1;
     int H = heigthsTex->getSize()[1]-1;
@@ -587,6 +591,7 @@ Vec2d VRTerrain::toUVSpace(Vec2d p) {
 }
 
 Vec2d VRTerrain::fromUVSpace(Vec2d uv) {
+    if (!heigthsTex) return Vec2d();
     int W = heigthsTex->getSize()[0]-1;
     int H = heigthsTex->getSize()[1]-1;
     double x = ((uv[0])/W-0.5)*size[0];
@@ -595,6 +600,7 @@ Vec2d VRTerrain::fromUVSpace(Vec2d uv) {
 }
 
 double VRTerrain::getHeight(Vec2d p, bool useEmbankments) {
+    if (!heigthsTex) return 0;
     Vec2d uv = toUVSpace(p); // uv, i and j are tested
     int i = round(uv[0]-0.5);
     int j = round(uv[1]-0.5);

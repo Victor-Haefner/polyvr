@@ -714,6 +714,7 @@ vector<VRGeometryPtr> VRGeometry::splitByVertexColors() {
 
 void VRGeometry::merge(VRGeometryPtr geo, PosePtr pose) {
     if (!geo) return;
+    if (!geo->mesh) return;
     if (!geo->mesh->geo) return;
     if (!meshSet) setMesh();
 

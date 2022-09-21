@@ -140,7 +140,10 @@ void VRDistrict::addBuilding( VRPolygonPtr p, int stories, string housenumber, s
     }
 #ifndef WITHOUT_BULLET
     auto geo = b->getCollisionShape();
-    if (auto w = world.lock()) w->getPhysicsSystem()->add(geo, getID());
+    if (auto w = world.lock()) {
+        auto s = w->getPhysicsSystem();
+        if (s) s->add(geo, getID());
+    }
 #endif
 }
 
