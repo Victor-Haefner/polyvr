@@ -71,6 +71,7 @@ PyMethodDef VRPyWorldGenerator::methods[] = {
     {"addOSMMap", PyWrapOpt( WorldGenerator, addOSMMap, "Add an OpenStreetMap map: path to OSM map, opt: double subN, double subE, double subSize, -1|-1|-1", "-1|-1|-1", void, string, double, double, double ) },
     {"addGML", PyWrapOpt( WorldGenerator, addGML, "adding a GML file and generate buildings, input: file to path, EPSG Code", "31467", void, string, int) },
     {"addTerrain", PyWrap( WorldGenerator, addTerrain, "Add a terrain", VRTerrainPtr, VRTexturePtr, VRTexturePtr, double, double, int, bool, Color4f, float ) },
+    {"getTerrainSize", PyWrap( WorldGenerator, getTerrainSize, "Get terrain size", Vec2d ) },
     {"setupLODTerrain", PyWrapOpt( WorldGenerator, setupLODTerrain, "Sets up LOD for terrain: path to heightmap, path to texture (opt, default = ""), scale (opt, default = 1.0), cache (opt, default = True)", "|1.0|1|1|1 1 1 1|0", void, string, string, float, bool, bool, Color4f, float ) },
     {"readOSMMap", PyWrap( WorldGenerator, readOSMMap, "Read OpenStreetMap map without adding", void, string ) },
     {"getOSMMap", PyWrap( WorldGenerator, getOSMMap, "Access OSM map", OSMMapPtr ) },

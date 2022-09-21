@@ -90,6 +90,7 @@ class VRWorldGenerator : public VRTransform {
         void setupLODTerrain(string pathMap, string pathPaint = "", float scale = 1.0, bool cache = true, bool isLit = true, Color4f mixColor = Color4f(1,1,1,1), float mixAmount = 0);
         void setLODTerrainParameters(float heightScale);
         void setTerrainSize( Vec2d in );
+        Vec2d getTerrainSize();
         VRLodTreePtr getLodTree();
         VROntologyPtr getOntology();
         VRPlanetPtr getPlanet();

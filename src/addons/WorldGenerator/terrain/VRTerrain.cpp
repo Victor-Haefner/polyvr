@@ -417,7 +417,6 @@ vector<Vec3d> VRTerrain::probeHeight( Vec2d p ) {
     for (auto e : embankments) if (e.second->isInside(p)) return e.second->probeHeight(p);
 
     return {Vec3d(p[0], h, p[1]),
-            Vec3d(uvP[0], h, uvP[1]),
             Vec3d(p0[0], h00, p0[1]),
             Vec3d(p1[0], h10, p0[1]),
             Vec3d(p0[0], h01, p1[1]),
@@ -579,9 +578,15 @@ Vec2d VRTerrain::getTexCoord( Vec2d p ) {
     auto texSize = heigthsTex->getSize();
     Vec2d texel = Vec2d( 1.0/texSize[0], 1.0/texSize[1] );
 
-    double u = (1.0-texel[0])*p[0]/size[0] + 0.5;
-    double v = (1.0-texel[1])*p[1]/size[1] + 0.5;
-    if (!doInvertTopoY) return Vec2d(u,1.0-v);
+    // normalized x y
+    //double x = p[0]/size[0];
+    //double y = p[1]/size[1];
+    double x = p[0]/size[0];
+    double y = p[1]/size[1];
+
+    double u = (1.0-texel[0])*x + 0.5;
+    double v = (1.0-texel[1])*y + 0.5;
+    if (doInvertTopoY) return Vec2d(u,1.0-v);
     else return Vec2d(u,v);
 }
 
@@ -602,7 +607,7 @@ Vec2d VRTerrain::fromUVSpace(Vec2d uv) {
     double H = texSize[1]-1;
     uv[0] /= W;
     uv[1] /= H;
-    if (!doInvertTopoY) uv[1] = 1.0-uv[1];
+    if (doInvertTopoY) uv[1] = 1.0-uv[1];
 
     double x = (uv[0]-0.5)*size[0]/(1.0-texel[0]);
     double z = (uv[1]-0.5)*size[1]/(1.0-texel[1]);

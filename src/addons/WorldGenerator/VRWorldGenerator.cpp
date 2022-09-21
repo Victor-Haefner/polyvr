@@ -263,6 +263,7 @@ OSMMapPtr VRWorldGenerator::getOSMMap() { return osmMap; }
 OSMMapPtr VRWorldGenerator::getGMLMap() { return gmlMap; }
 
 void VRWorldGenerator::setTerrainSize( Vec2d in ) { terrainSize = in; }
+Vec2d VRWorldGenerator::getTerrainSize() { return terrainSize; }
 
 VRTerrainPtr VRWorldGenerator::addTerrain(VRTexturePtr sat, VRTexturePtr heights, double lodf, double loddist, int lodlvl, bool isLit, Color4f mixColor, float mixAmount) {
     auto terrain = VRTerrain::create("terrain"+toString(lodlvl), bool(planet));
