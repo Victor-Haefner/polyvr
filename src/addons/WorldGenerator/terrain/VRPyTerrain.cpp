@@ -16,7 +16,7 @@ PyMethodDef VRPyTerrain::methods[] = {
     {"setLit", PyWrap(Terrain, setLit, "Set lit or not", void, bool ) },
     {"setInvertY", PyWrap(Terrain, setInvertY, "Set invert y tex coord in shader, (sat, topo)", void, bool, bool ) },
     {"setAtmosphericEffect", PyWrap(Terrain, setAtmosphericEffect, "Set the atmospheric density and color", void, float, Color3f ) },
-    {"loadMap", PyWrapOpt(Terrain, loadMap, "Load height map opt parameters ( path, channel = 3, consoleOutputEnabled = 1 )", "3|1", void, string, int, bool ) },
+    {"loadMap", PyWrapOpt(Terrain, loadMap, "Load height map opt parameters ( path, channel = 0, consoleOutputEnabled = 1 )", "0|1", void, string, int, bool ) },
     {"setMap", PyWrapOpt(Terrain, setMap, "Set height map, optional channel and rectangle", "0|0 0 1 1", void, VRTexturePtr, int, Vec4d ) },
     {"getMap", PyWrap(Terrain, getMap, "Get height map", VRTexturePtr ) },
     {"setTexture", PyWrapOpt(Terrain, setTexture, "Set color texture", "1 1 1 1|0|0 0 1 1", void, VRTexturePtr, Color4f, float, Vec4d ) },

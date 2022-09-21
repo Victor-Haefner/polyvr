@@ -29,22 +29,6 @@ void VRTerrainPhysicsShape::getAabb(const btTransform& t, btVector3& Min, btVect
 	Max = VRPhysics::toBtVector3( boundingbox.max() );
 }
 
-/*Vec2d VRTerrain::toUVSpace(Vec2d p) {
-    int W = tex->getSize()[0]-1;
-    int H = tex->getSize()[1]-1;
-    double u = (p[0]/size[0] + 0.5)*W;
-    double v = (p[1]/size[1] + 0.5)*H;
-    return Vec2d(u,v);
-};
-
-Vec2d VRTerrain::fromUVSpace(Vec2d uv) {
-    int W = tex->getSize()[0]-1;
-    int H = tex->getSize()[1]-1;
-    double x = ((uv[0])/W-0.5)*size[0];
-    double z = ((uv[1])/H-0.5)*size[1];
-    return Vec2d(x,z);
-};*/
-
 void VRTerrainPhysicsShape::processAllTriangles(btTriangleCallback* callback, const btVector3& aabbMin, const btVector3& aabbMax) const {
     Vec3d Min = VRPhysics::toVec3d(aabbMin);
     Vec3d Max = VRPhysics::toVec3d(aabbMax);

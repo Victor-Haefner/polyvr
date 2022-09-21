@@ -397,7 +397,8 @@ void VRTerrain::setupGeo(VRCameraPtr cam) {
 
 vector<Vec3d> VRTerrain::probeHeight( Vec2d p ) {
     if (!heigthsTex) return {};
-    Vec2d uv = toUVSpace(p); // uv, i and j are tested
+    Vec2d uv = toUVSpace(p);
+    Vec2d uvP = fromUVSpace(uv);
     int i = round(uv[0]-0.5);
     int j = round(uv[1]-0.5);
 
@@ -412,10 +413,11 @@ vector<Vec3d> VRTerrain::probeHeight( Vec2d p ) {
 
     Vec2d p0 = fromUVSpace( Vec2d(i,j) );
     Vec2d p1 = fromUVSpace( Vec2d(i+1,j+1) );
-    //cout << " VRTerrain::getHeight " << uv << " " << i << " " << j << " " << W << " " << H << endl;
+    //cout << " probeHeight uv:" << uv << " i:" << i << " j:" << j << " size:" << size << " p0:" << p0 << " p1:" << p1 << endl;
     for (auto e : embankments) if (e.second->isInside(p)) return e.second->probeHeight(p);
 
     return {Vec3d(p[0], h, p[1]),
+            Vec3d(uvP[0], h, uvP[1]),
             Vec3d(p0[0], h00, p0[1]),
             Vec3d(p1[0], h10, p0[1]),
             Vec3d(p0[0], h01, p1[1]),
@@ -579,7 +581,8 @@ Vec2d VRTerrain::getTexCoord( Vec2d p ) {
 
     double u = (1.0-texel[0])*p[0]/size[0] + 0.5;
     double v = (1.0-texel[1])*p[1]/size[1] + 0.5;
-    return Vec2d(u,1.0-v);
+    if (!doInvertTopoY) return Vec2d(u,1.0-v);
+    else return Vec2d(u,v);
 }
 
 Vec2d VRTerrain::toUVSpace(Vec2d p) {
@@ -592,10 +595,17 @@ Vec2d VRTerrain::toUVSpace(Vec2d p) {
 
 Vec2d VRTerrain::fromUVSpace(Vec2d uv) {
     if (!heigthsTex) return Vec2d();
-    int W = heigthsTex->getSize()[0]-1;
-    int H = heigthsTex->getSize()[1]-1;
-    double x = ((uv[0])/W-0.5)*size[0];
-    double z = ((uv[1])/H-0.5)*size[1];
+
+    auto texSize = heigthsTex->getSize();
+    Vec2d texel = Vec2d( 1.0/texSize[0], 1.0/texSize[1] );
+    double W = texSize[0]-1;
+    double H = texSize[1]-1;
+    uv[0] /= W;
+    uv[1] /= H;
+    if (!doInvertTopoY) uv[1] = 1.0-uv[1];
+
+    double x = (uv[0]-0.5)*size[0]/(1.0-texel[0]);
+    double z = (uv[1]-0.5)*size[1]/(1.0-texel[1]);
     return Vec2d(x,z);
 }
 

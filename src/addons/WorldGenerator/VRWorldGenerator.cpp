@@ -418,9 +418,9 @@ void VRWorldGenerator::setupLOD(int layers) { // deprecated
 #ifndef __EMSCRIPTEN__
     if ( layers == 1 ) { addLod( "wgenlvl0", 10000000.0 ); }
     if ( layers > 1 ) {
-        addLod( "wgenlvl0", 5000.0 );
-        addLod( "wgenlvl1", 15000.0 );
-        addLod( "wgenlvl2", 300000.0);
+        addLod( "wgenlvl0", 15000.0 );
+        addLod( "wgenlvl1", 30000.0 );
+        addLod( "wgenlvl2", 600000.0);
     }
 #else
     addLod( "wgenlvl0", 10000000.0 );
