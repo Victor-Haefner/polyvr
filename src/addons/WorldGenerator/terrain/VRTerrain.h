@@ -32,6 +32,21 @@ class VREmbankment : public VRGeometry {
         void createGeometry();
 };
 
+class VRTerrainGrid {
+    public:
+        Vec3d p00;
+        Vec3d p10;
+        Vec3d p01;
+        Vec3d p11;
+
+        Vec2d size = Vec2d(100,100); // deprecated
+        double grid = 64;
+
+        VRTerrainGrid();
+
+        void setRectangle(double width, double height);
+};
+
 class VRTerrain : public VRGeometry, public VRWorldModule {
     private:
         static string vertexShader;
@@ -42,11 +57,10 @@ class VRTerrain : public VRGeometry, public VRWorldModule {
         static string vertexShader_es2;
         static string fragmentShader_es2;
 
-        Vec2d size = Vec2d(100,100);
+        VRTerrainGrid grid;
         Vec2f texelSize = Vec2f(0.01,0.01); // shader parameter
         float resolution = 1; // shader parameter
         float heightScale = 1; // shader parameter
-        double grid = 64;
         double LODfac = 1.0;
         bool localMesh = false;
         bool useHeightoffset = false;
