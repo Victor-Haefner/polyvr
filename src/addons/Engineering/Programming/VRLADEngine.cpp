@@ -692,7 +692,7 @@ VRTransformPtr VRLADEngine::addVisual() {
 	};
 
 	map<string, Pnt3d> partMap;
-	vector<ComponentPtr> drawnComponent;
+	vector<string> drawnComponent;
 	int lblID = 0;
 
 	function<void(string, string, Pnt3d)> computeNextPartsPosition = [&](string cuID, string part, Pnt3d pos) {
@@ -726,86 +726,85 @@ VRTransformPtr VRLADEngine::addVisual() {
 		}
 	};
 
-    // TODO ..
-	/*auto drawConnection = [&](cuID, wID, p1, p2, k = 0) ) {
-		; //v = wire->lastComputationResult;
-		v = lsystem->getCompileUnitWireSignal(cuID, wID);
-		c = [1,0,0];
-		if (v == 1) c = [0,1,0];
+	auto drawConnection = [&](string cuID, string wID, string p1, string p2, int k = 0) {
+		// v = wire->lastComputationResult;
+		int v = getCompileUnitWireSignal(cuID, wID);
+		Color3f c(1,0,0);
+		if (v == 1) c = Color3f(0,1,0);
 
-		if (!p1) f = partMap["-1"];
-		else: f = partMap[p1];
-		t = partMap[p2];
-		d = t-f;
-		if (k == 0) l = f+[d[0],0,0];
-		if (k == 1) l = f+[0,d[1],0];
+		Pnt3d f;
+		if (!partMap.count(p1)) f = partMap["-1"];
+		else f = partMap[p1];
+		Pnt3d t = partMap[p2];
+		Vec3d d = t-f;
+		Pnt3d l;
+		if (k == 0) l = f+Vec3d(d[0],0,0);
+		if (k == 1) l = f+Vec3d(0,d[1],0);
 		addLine(f, l, c);
 		addLine(l, t, c);
 	};
 
-	auto drawPart = [&](pID) ) {
-		if (pID in drawnComponent) return;
-		drawnComponent->append(pID);
-		v = lsystem->getCompileUnitPartVariable(cuID, pID);
-		n = lsystem->getCompileUnitPartName(cuID, pID);
-		; //v = p->getVariable()[0];
-		if (v ) {
-			pos = partMap[pID];
-			addPoint(pos, [0,0,1]);
-			if (n == "Contact" ) {
-				addLine(pos+[-0.01, 0.01, 0], pos+[-0.01, -0.01, 0], [0,0,0]);
-				addLine(pos+[ 0.01, 0.01, 0], pos+[ 0.01, -0.01, 0], [0,0,0]);
-			};
-			elif n == "Coil" ) {
-				addLine(pos+[-0.006, 0.01, 0], pos+[-0.01, 0.003, 0], [0,0,0]);
-				addLine(pos+[-0.01, 0.003, 0], pos+[-0.01, -0.003, 0], [0,0,0]);
-				addLine(pos+[-0.01, -0.003, 0], pos+[-0.006, -0.01, 0], [0,0,0]);
-				addLine(pos+[ 0.006, 0.01, 0], pos+[ 0.01, 0.003, 0], [0,0,0]);
-				addLine(pos+[ 0.01, 0.003, 0], pos+[ 0.01, -0.003, 0], [0,0,0]);
-				addLine(pos+[ 0.01, -0.003, 0], pos+[ 0.006, -0.01, 0], [0,0,0]);
-			};
-			elif n == "Move" ) {
-				addLine(pos+[-0.01, 0.01, 0], pos+[-0.01, -0.01, 0], [0,0,0]);
-				addLine(pos+[ 0.01, 0.01, 0], pos+[ 0.01, -0.01, 0], [0,0,0]);
-				addLine(pos+[-0.01, 0.01, 0], pos+[ 0.01,  0.01, 0], [0,0,0]);
-				addLine(pos+[-0.01,-0.01, 0], pos+[ 0.01, -0.01, 0], [0,0,0]);
-			};
-			elif n == "Calc" ) {
-				addLine(pos+[-0.01, 0.01, 0], pos+[-0.01, -0.01, 0], [0,1,0]);
-				addLine(pos+[ 0.01, 0.01, 0], pos+[ 0.01, -0.01, 0], [0,1,0]);
-				addLine(pos+[-0.01, 0.01, 0], pos+[ 0.01,  0.01, 0], [0,1,0]);
-				addLine(pos+[-0.01,-0.01, 0], pos+[ 0.01, -0.01, 0], [0,1,0]);
-			};
-			elif n == "PContact": ; // TODO;
-				addLine(pos+[-0.01, 0.01, 0], pos+[-0.01, -0.01, 0], [1,0,1]);
-				addLine(pos+[ 0.01, 0.01, 0], pos+[ 0.01, -0.01, 0], [1,0,1]);
-			};
-			elif n == "RCoil": ; // TODO;
-				addLine(pos+[-0.01, 0.01, 0], pos+[-0.01, -0.01, 0], [0,0,1]);
-				addLine(pos+[ 0.01, 0.01, 0], pos+[ 0.01, -0.01, 0], [0,0,1]);
-			};
-			elif n == "SCoil": ; // TODO;
-				addLine(pos+[-0.01, 0.01, 0], pos+[-0.01, -0.01, 0], [0,1,1]);
-				addLine(pos+[ 0.01, 0.01, 0], pos+[ 0.01, -0.01, 0], [0,1,1]);
-			};
-			elif n == "Ge": ; // TODO;
-				addLine(pos+[-0.015, 0.015, 0], pos+[-0.015, -0.015, 0], [0,0,0]);
-				addLine(pos+[ 0.015, 0.015, 0], pos+[ 0.015, -0.015, 0], [0,0,0]);
-				addLine(pos+[-0.01, 0.015, 0], pos+[ 0, 0.01, 0], [0,0,0]);
-				addLine(pos+[-0.01, 0.005, 0], pos+[ 0, 0.01, 0], [0,0,0]);
-				addLine(pos+[0, 0.013, 0], pos+[ 0.01, 0.013, 0], [0,0,0]);
-				addLine(pos+[0, 0.007, 0], pos+[ 0.01, 0.007, 0], [0,0,0]);
-			};
-			else: print n;
+	auto drawPart = [&](string cuID, string pID) {
+		if (count(drawnComponent.begin(), drawnComponent.end(), pID)) return;
+		drawnComponent.push_back(pID);
 
-			for (i,l : enumerate(v->getName()->split("_")) ) {
-				labels->set(lblID, pos+[-0.05,0.015-i*2*F,0.02], l);
-				lblID += 1	;
+		VRLADVariablePtr v = getCompileUnitPartVariable(cuID, pID);
+		string n = getCompileUnitPartName(cuID, pID);
+		//v = p->getVariable()[0];
+		if (v) {
+			Pnt3d pos = partMap[pID];
+			addPoint(pos, Color3f(0,0,1));
+			if (n == "Contact" ) {
+				addLine(pos+Vec3d(-0.01, 0.01, 0), pos+Vec3d(-0.01, -0.01, 0), Color3f(0,0,0));
+				addLine(pos+Vec3d( 0.01, 0.01, 0), pos+Vec3d( 0.01, -0.01, 0), Color3f(0,0,0));
+			} else if (n == "Coil" ) {
+				addLine(pos+Vec3d(-0.006, 0.01, 0), pos+Vec3d(-0.01, 0.003, 0), Color3f(0,0,0));
+				addLine(pos+Vec3d(-0.01, 0.003, 0), pos+Vec3d(-0.01, -0.003, 0), Color3f(0,0,0));
+				addLine(pos+Vec3d(-0.01, -0.003, 0), pos+Vec3d(-0.006, -0.01, 0), Color3f(0,0,0));
+				addLine(pos+Vec3d( 0.006, 0.01, 0), pos+Vec3d( 0.01, 0.003, 0), Color3f(0,0,0));
+				addLine(pos+Vec3d( 0.01, 0.003, 0), pos+Vec3d( 0.01, -0.003, 0), Color3f(0,0,0));
+				addLine(pos+Vec3d( 0.01, -0.003, 0), pos+Vec3d( 0.006, -0.01, 0), Color3f(0,0,0));
+			} else if (n == "Move" ) {
+				addLine(pos+Vec3d(-0.01, 0.01, 0), pos+Vec3d(-0.01, -0.01, 0), Color3f(0,0,0));
+				addLine(pos+Vec3d( 0.01, 0.01, 0), pos+Vec3d( 0.01, -0.01, 0), Color3f(0,0,0));
+				addLine(pos+Vec3d(-0.01, 0.01, 0), pos+Vec3d( 0.01,  0.01, 0), Color3f(0,0,0));
+				addLine(pos+Vec3d(-0.01,-0.01, 0), pos+Vec3d( 0.01, -0.01, 0), Color3f(0,0,0));
+			} else if (n == "Calc" ) {
+				addLine(pos+Vec3d(-0.01, 0.01, 0), pos+Vec3d(-0.01, -0.01, 0), Color3f(0,1,0));
+				addLine(pos+Vec3d( 0.01, 0.01, 0), pos+Vec3d( 0.01, -0.01, 0), Color3f(0,1,0));
+				addLine(pos+Vec3d(-0.01, 0.01, 0), pos+Vec3d( 0.01,  0.01, 0), Color3f(0,1,0));
+				addLine(pos+Vec3d(-0.01,-0.01, 0), pos+Vec3d( 0.01, -0.01, 0), Color3f(0,1,0));
+			} else if (n == "PContact") { // TODO;
+				addLine(pos+Vec3d(-0.01, 0.01, 0), pos+Vec3d(-0.01, -0.01, 0), Color3f(1,0,1));
+				addLine(pos+Vec3d( 0.01, 0.01, 0), pos+Vec3d( 0.01, -0.01, 0), Color3f(1,0,1));
+			} else if (n == "RCoil") { // TODO;
+				addLine(pos+Vec3d(-0.01, 0.01, 0), pos+Vec3d(-0.01, -0.01, 0), Color3f(0,0,1));
+				addLine(pos+Vec3d( 0.01, 0.01, 0), pos+Vec3d( 0.01, -0.01, 0), Color3f(0,0,1));
+			}
+			else if (n == "SCoil") { // TODO;
+				addLine(pos+Vec3d(-0.01, 0.01, 0), pos+Vec3d(-0.01, -0.01, 0), Color3f(0,1,1));
+				addLine(pos+Vec3d( 0.01, 0.01, 0), pos+Vec3d( 0.01, -0.01, 0), Color3f(0,1,1));
+			} else if (n == "Ge") { // TODO;
+				addLine(pos+Vec3d(-0.015, 0.015, 0), pos+Vec3d(-0.015, -0.015, 0), Color3f(0,0,0));
+				addLine(pos+Vec3d( 0.015, 0.015, 0), pos+Vec3d( 0.015, -0.015, 0), Color3f(0,0,0));
+				addLine(pos+Vec3d(-0.01, 0.015, 0), pos+Vec3d( 0, 0.01, 0), Color3f(0,0,0));
+				addLine(pos+Vec3d(-0.01, 0.005, 0), pos+Vec3d( 0, 0.01, 0), Color3f(0,0,0));
+				addLine(pos+Vec3d(0, 0.013, 0), pos+Vec3d( 0.01, 0.013, 0), Color3f(0,0,0));
+				addLine(pos+Vec3d(0, 0.007, 0), pos+Vec3d( 0.01, 0.007, 0), Color3f(0,0,0));
+			} else cout << n << endl;
+
+			auto idParts = splitString(v->getName(), '_');
+			for (int i = 0; i<idParts.size(); i++) {
+                string l = idParts[i];
+                Vec3d p = Vec3d( pos+Vec3d(-0.05,0.015-i*2*F,0.02) );
+				labels->set(lblID, p, l);
+				lblID += 1;
 			}
 		}
 	};
 
-	auto drawNextWires = [&](cuID, part) ) {
+	// TODO ..
+	/*auto drawNextWires = [&](string cuID, part) ) {
 		drawPart(part);
 		for (j,wire : enumerate(getOutWires(cuID, part)) ) {
 			for (k,part2 : enumerate(getOutParts(cuID, wire)) ) {
@@ -815,7 +814,7 @@ VRTransformPtr VRLADEngine::addVisual() {
 		}
 	};
 
-	auto drawCompilationUnit = [&](cuID, p0) ) {
+	auto drawCompilationUnit = [&](string cuID, p0) ) {
 		computePartPositions(cuID, p0);
 		for (wire : getPowerWires(cuID) ) {
 			for (i,part : enumerate(getOutParts(cuID, wire)) ) {
@@ -837,8 +836,8 @@ VRTransformPtr VRLADEngine::addVisual() {
 	};
 
 	ladViz->setFrom(P0);
-	ladViz->setScale([S,S,S]);
-	for (i, cuID : enumerate(lsystem->getCompileUnits()) ) {
+	ladViz->setScale([S,S,S));
+	for (i, cuID : enumerate(getCompileUnits()) ) {
 		partMap = {};
 		drawnComponent = [];
 		drawCompilationUnit(cuID, p0);
