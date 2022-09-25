@@ -270,8 +270,8 @@ void VRTerrain::curveMesh(VRPlanetPtr p, Vec2d c, PosePtr s) {
     pSectorInv = s;
 }
 
-Vec2d computeGridSpacing(Vec2d gridSize, double res) {
-    Vec2i gridN = Vec2i(round(gridSize[0]*1.0/res-0.5), round(gridSize[1]*1.0/res-0.5));
+Vec2d computeGridSpacing(Vec2d gSize, Vec2d gridSize, double res) {
+    Vec2i gridN = Vec2i(round(gSize[0]*1.0/res-0.5), round(gSize[1]*1.0/res-0.5));
     if (gridN[0] < 1) gridN[0] = 1;
     if (gridN[1] < 1) gridN[1] = 1;
     Vec2d gridS = gridSize;
@@ -289,7 +289,8 @@ bool VRTerrain::createMultiGrid(VRCameraPtr cam, double res) {
         return false;
     };
 
-    Vec2d sectorSize = grid.approxSize();
+    Vec2d gSize = grid.approxSize();
+    Vec2d sectorSize = gSize;
     double N1 = -sectorSize[0]*0.5;
     double N2 =  sectorSize[0]*0.5;
     double E1 = -sectorSize[1]*0.5;
@@ -325,10 +326,10 @@ bool VRTerrain::createMultiGrid(VRCameraPtr cam, double res) {
 
     if (pla) res *= 32;
     else res *= 64;
-    Vec2d r1 = computeGridSpacing(sectorSize, res);
+    Vec2d r1 = computeGridSpacing(gSize, sectorSize, res);
     if (!checkChange(vector<double>({res, r1[0], r1[1], NE[0], NE[1]}))) return false;
 #else
-    Vec2d r1 = computeGridSpacing(sectorSize, res);
+    Vec2d r1 = computeGridSpacing(gSize, sectorSize, res);
 #endif
 
     /*if (camPose) cout << " ---- camPose " << camPose->pos() << endl;
