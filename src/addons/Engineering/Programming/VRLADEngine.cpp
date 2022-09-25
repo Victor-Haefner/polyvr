@@ -803,51 +803,58 @@ VRTransformPtr VRLADEngine::addVisual() {
 		}
 	};
 
-	// TODO ..
-	/*auto drawNextWires = [&](string cuID, part) ) {
-		drawPart(part);
-		for (j,wire : enumerate(getOutWires(cuID, part)) ) {
-			for (k,part2 : enumerate(getOutParts(cuID, wire)) ) {
+	function<void(string, string)> drawNextWires = [&](string cuID, string part) {
+		drawPart(cuID, part);
+		auto wires = getOutWires(cuID, part);
+		for (int j = 0; j<wires.size(); j++ ) {
+            auto wire = wires[j];
+            auto parts = getOutParts(cuID, wire);
+			for (int k = 0; k<parts.size(); k++) {
+			    auto part2 = parts[k];
 				drawConnection(cuID, wire, part, part2);
 				drawNextWires(cuID, part2);
 			}
 		}
 	};
 
-	auto drawCompilationUnit = [&](string cuID, p0) ) {
+	auto drawCompilationUnit = [&](string cuID, Pnt3d p0) {
 		computePartPositions(cuID, p0);
-		for (wire : getPowerWires(cuID) ) {
-			for (i,part : enumerate(getOutParts(cuID, wire)) ) {
-				drawConnection(cuID, wire, None, part, 1);
+		for (auto wire : getPowerWires(cuID) ) {
+            auto parts = getOutParts(cuID, wire);
+			for (int i = 0; i<parts.size(); i++) {
+			    auto part = parts[i];
+				drawConnection(cuID, wire, 0, part, 1);
 				drawNextWires(cuID, part);
 			}
 		}
 	};
 
-	; //drawCompilationUnit(compileUnits["2E"], Vec3([-2,0.5,0]));
+	//drawCompilationUnit(compileUnits["2E"], Vec3([-2,0.5,0]));
 
 	auto getHeight = [&]() {
-		S = [1e6,-1e6];
-		for (ID,pos : partMap ) {
-			if (pos[1] < S[0]) S[0] = pos[1] ;
-			if (pos[1] > S[1]) S[1] = pos[1] ;
+		Vec2d S(1e6,-1e6);
+		for (auto& p : partMap) {
+            string ID = p.first;
+            Pnt3d pos = p.second;
+			if (pos[1] < S[0]) S[0] = pos[1];
+			if (pos[1] > S[1]) S[1] = pos[1];
 		};
 		return S[1]-S[0];
 	};
 
 	ladViz->setFrom(P0);
-	ladViz->setScale([S,S,S));
-	for (i, cuID : enumerate(getCompileUnits()) ) {
-		partMap = {};
-		drawnComponent = [];
+	ladViz->setScale(Vec3d(S,S,S));
+	for (auto cuID : getCompileUnits()) {
+		partMap.clear();
+		drawnComponent.clear();
 		drawCompilationUnit(cuID, p0);
-		d = getHeight();
-		p0 += [0,-d-D*0.5,0];
+		double d = getHeight();
+		p0 += Vec3d(0,-d-D*0.5,0);
 		if (p0[1] < -H) {
 			p0[0] += W;
 			p0[1] = 0;
 		}
-	}*/
+	}
 
     return ladViz;
 }
