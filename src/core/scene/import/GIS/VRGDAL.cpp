@@ -32,11 +32,11 @@
 
 OSG_BEGIN_NAMESPACE;
 
-void loadPDF(string path, VRTransformPtr res) {
-    loadTIFF(path, res);
+void loadPDF(string path, VRTransformPtr res, map<string, string> opts) {
+    loadTIFF(path, res, opts);
 }
 
-void loadSHP(string path, VRTransformPtr res) {
+void loadSHP(string path, VRTransformPtr res, map<string, string> opts) {
     OGRRegisterAll();
 #if GDAL_VERSION_MAJOR < 2
  	OGRDataSource *poDS = OGRSFDriverRegistrar::Open(path.c_str(), false);
@@ -109,6 +109,9 @@ void loadSHP(string path, VRTransformPtr res) {
             t.append(data, false);
             return;
         }
+        if (type == wkbMultiPolygon) {
+            cout << "loadSHP::handleGeometry WARNING: it's a multipolygon, not handled" << endl;
+        }
         cout << "loadSHP::handleGeometry WARNING: type " << type << " not handled!\n";
     };
 
@@ -166,7 +169,7 @@ void loadSHP(string path, VRTransformPtr res) {
 #endif
 }
 
-void loadTIFF(string path, VRTransformPtr res) {
+void loadTIFF(string path, VRTransformPtr res, map<string, string> opts) {
     // setup object
     auto t = loadGeoRasterData(path);
     auto m = VRMaterial::create("GeoTiff");

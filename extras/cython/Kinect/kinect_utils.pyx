@@ -5,6 +5,7 @@ DTYPE = np.float32
 ctypedef np.float32_t DTYPE_t
 
 def compute_kinect_pc(dIn, dOut):
+	print("start")
 	cdef np.ndarray[unsigned short, ndim=1] depth
 	cdef np.ndarray[DTYPE_t, ndim=2] pOut
 	depth = dIn.image
