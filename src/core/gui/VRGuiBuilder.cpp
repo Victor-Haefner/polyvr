@@ -2001,6 +2001,12 @@ void VRGuiBuilder::buildBaseUI() {
     gtk_grid_attach(GTK_GRID(table38), label145, 1,0,1,1);
     gtk_grid_attach(GTK_GRID(table38), treeview11_and_frame.second, 0,1,2,1);
 
+
+    // -------------- initial tabs ------------------
+    gtk_widget_show_all(notebook1); // needed to set the page below!
+    setNotebookPage("notebook3", 2);
+    setNotebookPage("notebook1", 0);
+
     cout << " ..building all widgets done!" << endl;
 }
 
