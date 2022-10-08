@@ -202,10 +202,17 @@ class STEPLoader {
             if (!data) obj = VRTransform::create(getTypeName(shape));
             TopoDS_Iterator sIter(shape);
             do {
-                TopoDS_Shape subShape = sIter.Value();
-                sIter.Next();
+                TopoDS_Shape subShape;
+                TopAbs_ShapeEnum t;
 
-                TopAbs_ShapeEnum t = subShape.ShapeType();
+                try {
+                    subShape = sIter.Value();
+                    sIter.Next();
+                    t = subShape.ShapeType();
+                }
+                catch(exception& e) { cout << endl << "ERROR: unexpected exception " << e.what() << endl; break; }
+                catch(...) { cout << " Warning in STEP convertGeo: unknown exception" << endl; break; }
+
                 if (t == TopAbs_SHAPE) iterateShape(subShape, useVertexColors, color, obj, data);
                 if (t == TopAbs_COMPOUND) iterateShape(subShape, useVertexColors, color, obj, data);
                 if (t == TopAbs_COMPSOLID) iterateShape(subShape, useVertexColors, color, obj, data);
@@ -233,7 +240,8 @@ class STEPLoader {
             //BRepMesh_IncrementalMesh mesher(shape, linear_deflection, false, angular_deflection, true); // shape, linear deflection, relative to edge length, angular deflection, paralellize
             try {
                 BRepMesh_IncrementalMesh mesher(shape, linear_deflection, true, angular_deflection, true, on_update); // shape, linear deflection, relative to edge length, angular deflection, paralellize
-            } catch(exception& e) { cout << " Warning in STEP convertGeo: " << e.what() << endl;  return 0; }
+            }
+            catch(exception& e) { cout << " Warning in STEP convertGeo: " << e.what() << endl;  return 0; }
             catch(...) { cout << " Warning in STEP convertGeo: unknown exception" << endl; return 0; }
 
             bool useVertexColors = needsVertexColors(shape);
