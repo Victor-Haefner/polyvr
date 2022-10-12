@@ -25,6 +25,16 @@ void VRStorage::save_on_cb(T* t, string tag, VRStorageCbParams p) {
 }
 
 template<typename T>
+void VRStorage::save_str_map_cb2(map<string, T>* mt, string tag, bool under, VRStorageCbParams p) {
+    if (mt->size() == 0) return;
+    if (under) p.e = p.e->addChild(tag);
+    for (auto t : *mt) {
+        auto e2 = p.e->addChild(t.first);
+        e2->setText(toString(t.second));
+    }
+}
+
+template<typename T>
 void VRStorage::save_str_map_cb(map<string, T*>* mt, string tag, bool under, VRStorageCbParams p) {
     if (mt->size() == 0) return;
     if (under) p.e = p.e->addChild(tag);
@@ -148,6 +158,18 @@ void VRStorage::load_str_objumap_cb(unordered_map<string, std::shared_ptr<T> >* 
 
         name = t->getName();
         if (!mt->count(name)) (*mt)[name] = t;
+    }
+}
+
+template<typename T>
+void VRStorage::load_str_map_cb2(map<string, T>* mt, string tag, bool under, VRStorageCbParams p) {
+    if (under) p.e = p.e->getChild(tag);
+    if (!p.e) return;
+    for (auto el : p.e->getChildren()) {
+        string name = el->getName();
+        T o;
+        toValue<T>(el->getText(), o);
+        (*mt)[name] = o;
     }
 }
 
@@ -381,6 +403,14 @@ void VRStorage::storeMap(string tag, map<int, std::shared_ptr<T> >* mt, bool und
     VRStorageBin b;
     b.f1 = VRStoreCb::create("load", bind( &VRStorage::load_int_objmap_cb<T>, this, mt, tag, under, placeholders::_1 ) );
     b.f2 = VRStoreCb::create("save", bind( &VRStorage::save_int_objmap_cb<T>, this, mt, tag, under, placeholders::_1 ) );
+    storage[tag] = b;
+}
+
+template<typename T>
+void VRStorage::storeMap(string tag, map<string, T>* mt, bool under) {
+    VRStorageBin b;
+    b.f1 = VRStoreCb::create("load", bind( &VRStorage::load_str_map_cb2<T>, this, mt, tag, under, placeholders::_1 ) );
+    b.f2 = VRStoreCb::create("save", bind( &VRStorage::save_str_map_cb2<T>, this, mt, tag, under, placeholders::_1 ) );
     storage[tag] = b;
 }
 

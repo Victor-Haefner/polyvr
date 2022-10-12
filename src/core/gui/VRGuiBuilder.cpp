@@ -236,6 +236,13 @@ GtkWidget* addButton(string ID, string label) {
     return n;
 }
 
+GtkWidget* addToggleButton(string ID, string label) {
+    auto n = gtk_toggle_button_new();
+    gtk_button_set_label(GTK_BUTTON(n), label.c_str());
+    VRGuiBuilder::get()->reg_widget(n, ID);
+    return n;
+}
+
 GtkWidget* addImgButton(string ID, string stockID, string tooltip) {
     auto n = gtk_button_new();
     auto img = gtk_image_new_from_stock(stockID.c_str(), GTK_ICON_SIZE_SMALL_TOOLBAR);
@@ -597,9 +604,8 @@ void VRGuiBuilder::buildBaseUI() {
     auto hbox1 = addBox("hbox1", GTK_ORIENTATION_HORIZONTAL); // bar above 3d view
     auto glarea = addGLWidget();
     auto label5 = addLabel("label5", "Camera:");
-    auto label45 = addLabel("label45", "Navigation:");
     auto combobox4 = addCombobox("combobox4", "cameras");
-    auto combobox9 = addCombobox("combobox9", "nav_presets");
+    auto navButton = addToggleButton("navButton", "Navigation");
     auto hseparator5 = addSeparator("hseparator5", GTK_ORIENTATION_HORIZONTAL);
     auto hseparator6 = addSeparator("hseparator6", GTK_ORIENTATION_HORIZONTAL);
     auto toolbar6 = addToolbar("toolbar6", GTK_ICON_SIZE_LARGE_TOOLBAR, GTK_ORIENTATION_HORIZONTAL);
@@ -613,13 +619,30 @@ void VRGuiBuilder::buildBaseUI() {
     g_signal_connect(hbox1, "size-allocate", G_CALLBACK(set3DViewBarHeight), hbox1_layout);
     g_signal_connect(hpaned1, "notify::position", (GCallback)set3DViewBarWidth, hbox1_viewport);
 
+    gtk_widget_set_margin_left(label5, 5);
+    gtk_widget_set_margin_right(label5, 5);
+    gtk_widget_set_margin_left(navButton, 15);
+    gtk_widget_set_margin_right(navButton, 15);
+
+    auto glareaOverlayer = gtk_overlay_new();
+    auto glareaOverlay = addGrid("glareaOverlay");
+    gtk_container_add(GTK_CONTAINER(glareaOverlayer), glarea);
+    gtk_overlay_add_overlay(GTK_OVERLAY(glareaOverlayer), glareaOverlay);
+    gtk_overlay_set_overlay_pass_through(GTK_OVERLAY(glareaOverlayer), glareaOverlay, true);
+
+    auto navOverlay = addBox("navOverlay", GTK_ORIENTATION_VERTICAL);
+    gtk_widget_set_size_request(navOverlay, 120, -1);
+    gtk_widget_set_margin_top(navOverlay, 10);
+    gtk_widget_set_margin_left(navOverlay, 10);
+    setWidgetBackgroundColor(navOverlay, OSG::Color4f(1,1,1,0.7));
+    gtk_grid_attach(GTK_GRID(glareaOverlay), navOverlay, 0,0,1,1);
+
     gtk_box_pack_start(GTK_BOX(vbox5), hbox1_layout, false, true, 0);
-    gtk_box_pack_start(GTK_BOX(vbox5), glarea, false, true, 0);
+    gtk_box_pack_start(GTK_BOX(vbox5), glareaOverlayer, false, true, 0);
     gtk_box_pack_start(GTK_BOX(hbox1), label5, false, true, 0);
     gtk_box_pack_start(GTK_BOX(hbox1), combobox4, false, true, 0);
     gtk_box_pack_start(GTK_BOX(hbox1), hseparator5, false, true, 0);
-    gtk_box_pack_start(GTK_BOX(hbox1), label45, false, true, 0);
-    gtk_box_pack_start(GTK_BOX(hbox1), combobox9, false, true, 0);
+    gtk_box_pack_start(GTK_BOX(hbox1), navButton, false, true, 0);
     gtk_box_pack_start(GTK_BOX(hbox1), hseparator6, false, true, 0);
     gtk_box_pack_start(GTK_BOX(hbox1), toolbar6, false, true, 0);
 

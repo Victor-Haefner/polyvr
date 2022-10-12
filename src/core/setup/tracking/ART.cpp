@@ -66,7 +66,7 @@ void ART_device::init() {
         auto scene = VRScene::getCurrent();
         if (scene) {
             scene->initFlyWalk(scene->getActiveCamera(), dev);
-            scene->setActiveNavigation("FlyWalk");
+            //scene->setActiveNavigation("FlyWalk");
             dev->clearDynTrees();
             dev->addDynTree(scene->getRoot());
         }

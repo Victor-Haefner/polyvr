@@ -6,12 +6,14 @@
 #include "core/utils/VRFunction.h"
 #include "core/utils/toString.h"
 #include "core/utils/VRGlobals.h"
+#include "core/utils/VRStorage_template.h"
 #include "core/setup/VRSetup.h"
 #include "core/setup/devices/VRSignal.h"
 #include "core/setup/devices/VRDevice.h"
 #include "core/setup/devices/VRMouse.h"
 #include "core/scene/VRScene.h"
 #include "core/math/path.h"
+
 
 using namespace OSG;
 
@@ -53,7 +55,7 @@ void VRNavPreset::updateBinding(VRNavBinding& b) {
     auto sig = b.doRepeat ? dev->addToggleSignal(b.key) : dev->newSignal( b.key, b.state);
     sig->add(b.cb);
     b.sig = sig;
-    //cout << "\nUPDATE BINDING " << b.cb->getName() << endl;
+    //cout << "\nUPDATE BINDING " << b.key << " " << b.state << " " << dev->getName() << endl;
 }
 
 void VRNavPreset::setDevice(VRDevicePtr _dev) {
@@ -63,6 +65,9 @@ void VRNavPreset::setDevice(VRDevicePtr _dev) {
 }
 
 void VRNavPreset::setTarget(VRTransformPtr _target) { target = _target; if (dev) dev->setTarget(_target); }
+
+void VRNavPreset::setActive(bool b) { if (b) activate(); else deactivate(); }
+bool VRNavPreset::isActive() { return active; }
 
 void VRNavPreset::activate() {
     active = true;
@@ -103,14 +108,16 @@ void VRNavPreset::setSpeed(float vt, float vr) {
 // preset management
 
 VRNavigator_base::VRNavigator_base () {
-    store("active", &current_name);
-    auto np = VRNavPreset::create();
-    np->setName("None");
-    addNavigation(np);
+    storeMap("presetStates", &presetStates, true);
 }
 
 VRNavigator_base::~VRNavigator_base() {
     presets.clear();
+}
+
+void VRNavigator_base::setNavigationState(string name, bool active) {
+    presetStates[name] = active;
+    if (presets.count(name)) presets[name]->setActive(active);
 }
 
 void VRNavigator_base::addNavigation(shared_ptr<VRNavPreset> ps) {
@@ -120,15 +127,6 @@ void VRNavigator_base::addNavigation(shared_ptr<VRNavPreset> ps) {
 
 void VRNavigator_base::remNavigation(string name) {
     presets.erase(name);
-}
-
-void VRNavigator_base::setActiveNavigation(string s) {
-    if (s == "") return;
-    if (presets.count(s) == 0) return;
-    if (current) current->deactivate();
-    current = presets[s];
-    current->activate();
-    current_name = s;
 }
 
 shared_ptr<VRNavPreset> VRNavigator_base::getNavigation(string s) {
@@ -153,7 +151,6 @@ string VRNavigator_base::getNavigationTip(string s) {
     return res;
 }
 
-string VRNavigator_base::getActiveNavigation() { return current_name; }
 vector<string> VRNavigator_base::getNavigationNames() { vector<string> res; for(auto p : presets) res.push_back(p.first); return res; }
 map<string, shared_ptr<VRNavPreset>> VRNavigator_base::getNavigations() { return presets; }
 
@@ -185,7 +182,6 @@ VRNavigator::~VRNavigator() {}
 float VRNavigator::clip_dist_down = 1.5;
 
 bool VRNavigator::zoom(VRDeviceWeakPtr _dev, int dir) {
-    //cout << "VRNavigator::zoom " << dir << endl;
     auto dev = _dev.lock();
     if (!dev) return true;
     VRTransformPtr target = dev->getTarget();
@@ -549,7 +545,11 @@ void VRNavigator::initHydraFly(VRTransformPtr target, VRDevicePtr dev) {
 }
 
 void VRNavigator::update() {
-    setActiveNavigation(getActiveNavigation());
+    for (auto p : presets) {
+        bool active = true;
+        if (presetStates.count(p.first)) active = presetStates[p.first];
+        p.second->setActive(active);
+    }
 }
 
 

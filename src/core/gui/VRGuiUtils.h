@@ -86,6 +86,7 @@ void setButtonCallback(string b, function<void()> sig );
 void setToggleButtonCallback(string b, function<void()> sig );
 void setToolButtonCallback(string b, function<void()> sig );
 void setCheckButtonCallback(string cb, function<void()> sig );
+void setCheckButtonCallback(GtkWidget* cb, function<void()> sig );
 void setRadioToolButtonCallback(string cb, function<void()> sig );
 void setRadioButtonCallback(string cb, function<void()> sig );
 void setComboboxCallback(string b, function<void()> sig);
@@ -134,12 +135,15 @@ void delTreeviewSelected(string treeview);
 // STUFF
 void setNotebookPage(string nb, int p);
 void setTooltip(string widget, string tp);
+void setTooltip(GtkWidget* widget, string tp);
 
 bool keySignalProxy(_GdkEventKey* e, string k, function<void(void)> sig );
 void notifyUser(string msg1, string msg2);
 bool askUser(string msg1, string msg2);
 string askUserInput(string msg);
 string askUserPass(string msg);
+void setWidgetBackgroundColor(GtkWidget* drawable, OSG::Color3f col);
+void setWidgetBackgroundColor(GtkWidget* drawable, OSG::Color4f col);
 OSG::Color4f chooseColor(string drawable, OSG::Color4f current);
 void setColorChooser(string drawable, function<void(_GdkEventButton*)> sig);
 void setColorChooserColor(string drawable, OSG::Color3f col);
