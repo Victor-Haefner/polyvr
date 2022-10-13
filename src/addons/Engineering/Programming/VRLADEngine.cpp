@@ -39,6 +39,22 @@ vector<string> VRLADEngine::getCompileUnitWires(string cuID, bool powered) {
     return res;
 }
 
+vector<string> VRLADEngine::getCompileUnitParts(string cuID) {
+    vector<string> res;
+    if (!compileUnits.count(cuID)) return res;
+    auto cu = compileUnits[cuID];
+    for (auto w : cu->parts) res.push_back(w.first);
+    return res;
+}
+
+vector<string> VRLADEngine::getCompileUnitVariables(string cuID) {
+    vector<string> res;
+    if (!compileUnits.count(cuID)) return res;
+    auto cu = compileUnits[cuID];
+    for (auto w : cu->variables) res.push_back(w.first);
+    return res;
+}
+
 vector<string> VRLADEngine::getCompileUnitWireOutParts(string cuID, string wID) {
     vector<string> res;
     if (!compileUnits.count(cuID)) return res;

@@ -126,6 +126,8 @@ class VRLADEngine : public std::enable_shared_from_this<VRLADEngine> {
 		vector<string> getCompileUnits();
 		CompileUnitPtr getCompileUnit(string cuID);
 		vector<string> getCompileUnitWires(string cuID, bool powered = false);
+		vector<string> getCompileUnitParts(string cuID);
+		vector<string> getCompileUnitVariables(string cuID);
         vector<string> getCompileUnitWireOutParts(string cuID, string wID);
         vector<string> getCompileUnitPartOutWires(string cuID, string wID);
 
