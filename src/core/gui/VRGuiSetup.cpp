@@ -24,6 +24,7 @@
 #endif
 #include "core/setup/devices/VRServer.h"
 #include "core/setup/devices/VRMouse.h"
+#include "core/setup/devices/VRPresenter.h"
 #ifndef WITHOUT_MTOUCH
 #include "core/setup/devices/VRMultiTouch.h"
 #endif
@@ -270,11 +271,13 @@ void VRGuiSetup::updateObjectData() {
         setLabel("label93", dev->getName());
         if (setup) fillStringListstore("dev_types_list", setup->getDeviceTypes());
         setCombobox("combobox26", getListStorePos("dev_types_list", dev->getType()) );
-        string hobj = ins->hit ? ins->name : "NONE";
-        setLabel("label110", hobj);
-        setLabel("label111", toString(ins->point));
-        setLabel("label112", toString(ins->texel));
-        setToggleButton("checkbutton37", dev->getCross()->isVisible());
+        if (ins) {
+            string hobj = ins->hit ? ins->name : "NONE";
+            setLabel("label110", hobj);
+            setLabel("label111", toString(ins->point));
+            setLabel("label112", toString(ins->texel));
+        }
+        if (dev->getCross()) setToggleButton("checkbutton37", dev->getCross()->isVisible());
     }
 
     if (selected_type == "node") {
@@ -1238,6 +1241,7 @@ VRGuiSetup::VRGuiSetup() {
     menu->appendMenu("SM_AddMenu", "Device", "SM_AddDevMenu");
     menu->appendMenu("SM_AddMenu", "VRPN", "SM_AddVRPNMenu");
     menu->appendItem("SM_AddDevMenu", "Mouse", bind( &VRGuiSetup::on_menu_add_device<VRMouse>, this) );
+    menu->appendItem("SM_AddDevMenu", "Presenter", bind( &VRGuiSetup::on_menu_add_device<VRPresenter>, this) );
 #ifndef WITHOUT_MTOUCH
     menu->appendItem("SM_AddDevMenu", "MultiTouch", bind( &VRGuiSetup::on_menu_add_device<VRMultiTouch>, this) );
 #endif
