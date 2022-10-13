@@ -908,10 +908,7 @@ void VRGuiScripts::on_find_diag_cancel_clicked() {
 
 VRGuiScripts::searchResult::searchResult(string s, int l, int c) : scriptName(s), line(l), column(c) {}
 
-void VRGuiScripts::focusScript(string name, int line, int column) {
-    setNotebookPage("notebook1", 2);
-    setNotebookPage("notebook3", 2);
-
+void VRGuiScripts::selectScript(string name) {
     auto store = (GtkTreeStore*)VRGuiBuilder::get()->get_object("script_tree");
     auto tree_view = (GtkTreeView*)VRGuiBuilder::get()->get_widget("treeview5");
 
@@ -944,7 +941,12 @@ void VRGuiScripts::focusScript(string name, int line, int column) {
 
     // select script in tree view
     selectScript2();
+}
 
+void VRGuiScripts::focusScript(string name, int line, int column) {
+    setNotebookPage("notebook1", 2);
+    setNotebookPage("notebook3", 2);
+    selectScript(name);
     // set focus on editor
     editor->grabFocus();
     editor->setCursorPosition(line, column);
@@ -1231,6 +1233,13 @@ bool VRGuiScripts::updateList() {
         else pages[name] = pagePos();
     }
     on_select_script();
+
+    if (selected == "") {
+        cout << "No script open, selecting a script.." << endl;
+        if (scene->getScript("init")) selectScript("init");
+        else selectScript(scene->getScripts()[0]->getName());
+    }
+
     return true;
 }
 

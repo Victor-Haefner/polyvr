@@ -47,6 +47,8 @@ VRProgress progress;
 int lastStage = 0;
 
 void on_update(int i, int N, int stage) {
+    return;
+
     if (stage != lastStage) {
         cout << endl;
         progress.setup("STEP mesher stage " + toString(stage), N);
@@ -196,11 +198,12 @@ class STEPLoader {
         VRTransformPtr iterateShape(const TopoDS_Shape& shape, bool useVertexColors, Color3f color, VRTransformPtr parent = 0, VRGeoData* data = 0) {
             auto colShape = getColor(shape);
             if (colShape.first) color = colShape.second;
-            //cout << endl << " ----- traverse shape: " << getTypeName(shape) << endl;
+            //cout << " ----- traverse shape: " << getTypeName(shape) << endl;
 
             VRTransformPtr obj;
             if (!data) obj = VRTransform::create(getTypeName(shape));
             TopoDS_Iterator sIter(shape);
+
             do {
                 TopoDS_Shape subShape;
                 TopAbs_ShapeEnum t;
@@ -210,8 +213,18 @@ class STEPLoader {
                     sIter.Next();
                     t = subShape.ShapeType();
                 }
+                catch(Standard_Failure& e) { break; } // either invalid value or no more value
                 catch(exception& e) { cout << endl << "ERROR: unexpected exception " << e.what() << endl; break; }
-                catch(...) { cout << " Warning in STEP convertGeo: unknown exception" << endl; break; }
+                catch(...) {
+                    cout << " Warning in STEP convertGeo: unknown exception" << endl;
+                    std::exception_ptr p = std::current_exception();
+                    cout << (p ? p.__cxa_exception_type()->name() : "null") << endl;
+                    break;
+                }
+
+                //static int testN=0;
+                //testN++;
+                //cout << "  teestN " << testN << endl;
 
                 if (t == TopAbs_SHAPE) iterateShape(subShape, useVertexColors, color, obj, data);
                 if (t == TopAbs_COMPOUND) iterateShape(subShape, useVertexColors, color, obj, data);
@@ -382,7 +395,7 @@ class STEPLoader {
                         string name = getName(label);
                         //cout << "  shape " << name << " " << Assembly->IsSimpleShape(label) << " " << Assembly->IsAssembly(label) << " " << Assembly->IsFree(label) << endl;
                         if (Assembly->IsSimpleShape(label)) {
-                            cout << " create shape " << name << endl;
+                            //cout << " create shape " << name << endl;
                             VRTransformPtr obj = convertGeo(shape, subParts);
                             if (obj) {
                                 obj->setName( name );
@@ -429,7 +442,7 @@ class STEPLoader {
                     TDF_Label    label = Assembly->FindShape(shape, false);
 
                     string name = getName(label);
-                    cout << " add node: " << name << " ID: " << label.Tag() << endl;
+                    //cout << " add node: " << name << " ID: " << label.Tag() << endl;
 
                     if (Assembly->IsSimpleShape(label)) {
                         if (parts.count( label.Tag() )) {
