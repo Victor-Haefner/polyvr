@@ -68,6 +68,9 @@ class VRCOLLADA_Scene {
 		void finalize() {
 		    scheduler->callPostponed(true);
 
+		    map<VRObjectPtr, VRObjectPtr> toReparent; // child -> parent
+		    vector<VRObjectPtr> toDestroy;
+
 		    auto geos = root->getChildren(true, "Geometry");
 		    for (auto g : geos) {
                 auto geo = dynamic_pointer_cast<VRTransform>(g);
@@ -77,8 +80,12 @@ class VRCOLLADA_Scene {
                 if (!parent) continue;
 
                 geo->setPose(trans->getPose());
-                parent->addChild(geo);
-                for (auto child : trans->getChildren()) geo->addChild(child);
+                toReparent[geo] = parent;
+                /*for (auto child : trans->getChildren()) {
+                    cout << " finalize:  add '" << child->getName() << "' to '" << geo->getName() << "'" << endl;
+                    //geo->addChild(child);
+                    toReparent[child] = geo;
+                }*/
 
                 for (auto o : objects) {
                     if (auto O = o.second.lock()) {
@@ -89,8 +96,11 @@ class VRCOLLADA_Scene {
                     }
                 }
 
-                trans->destroy();
+                toDestroy.push_back(trans);
 		    }
+
+		    for (auto cp : toReparent) cp.second->addChild(cp.first);
+		    for (auto c : toDestroy) c->destroy();
         }
 
 		void applyMatrix(Matrix4d m) {
@@ -189,7 +199,9 @@ class VRCOLLADA_Scene {
                 auto prototype = library_nodes[url];
                 if (prototype->hasTag("COLLADA-postponed")) {
                     scheduler->postpone( bind(&VRCOLLADA_Scene::instantiateNode, this, url, fPath, parent) );
-                } else parent->addChild( prototype->duplicate() );
+                } else {
+                    parent->addChild( prototype->duplicate() );
+                }
             }
         }
 
@@ -199,8 +211,9 @@ class VRCOLLADA_Scene {
 
         void instantiateScene(string url) {
             if (library_scenes.count(url)) {
-                for (auto child : library_scenes[url]->getChildren())
+                for (auto child : library_scenes[url]->getChildren()) {
                     root->addChild(child);
+                }
             }
         }
 };
