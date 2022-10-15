@@ -3,6 +3,8 @@
 #include "core/utils/toString.h"
 #include "core/utils/xml.h"
 #include "core/objects/geometry/VRGeometry.h"
+#include "core/scene/VRScene.h"
+#include "core/scene/VRSemanticManager.h"
 #include "core/scene/import/VRImport.h"
 #include "core/utils/system/VRSystem.h"
 
@@ -21,7 +23,9 @@ VRTransformPtr VRAMLLoader::getScene() { return scene; }
 
 void VRAMLLoader::read(string path) {
     assets.clear();
-    ontology = VROntology::create("global");
+    auto sm = VRScene::getCurrent()->getSemanticManager();
+    ontology = sm->addOntology("global");
+    ontology->setFlag("");
     AMLDir = getFolderName(path)+"/";
 
     XML xml;

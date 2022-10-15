@@ -215,6 +215,15 @@ VRGuiSemantics::VRGuiSemantics() {
     setCellRendererCallback("cellrenderertext51", bind(VRGuiSemantics_on_name_edited, placeholders::_1, placeholders::_2));
     setWidgetSensitivity("toolbutton15", false);
     setButtonCallback("button33", bind(&VRGuiSemantics::on_query_clicked, this));
+    setNoteBookCallback("notebook3", bind(&VRGuiSemantics::onTabSwitched, this, placeholders::_1, placeholders::_2));
+}
+
+void VRGuiSemantics::onTabSwitched(GtkWidget* page, unsigned int tab) {
+    auto nbook = VRGuiBuilder::get()->get_widget("notebook3");
+    string name = gtk_notebook_get_tab_label_text(GTK_NOTEBOOK(nbook), page);
+    if (name == "Semantics") {
+        updateOntoList();
+    }
 }
 
 void VRGuiSemantics::on_query_clicked() {
@@ -238,20 +247,28 @@ bool VRGuiSemantics::updateOntoList() {
         gtk_tree_store_set(store, itr, 1, type.c_str(), -1);
     };
 
+    auto addToSection = [&](VROntologyPtr o, GtkTreeIter* sec) {
+        GtkTreeIter itr;
+        gtk_tree_store_append(store, &itr, sec);
+        setRow( &itr, o->getName(), o->getFlag());
+    };
+
     auto mgr = getManager();
     if (mgr == 0) return true;
 
-    GtkTreeIter itr_own, itr_lib;
+    GtkTreeIter itr_sce, itr_own, itr_lib;
+    gtk_tree_store_append(store, &itr_sce, NULL);
     gtk_tree_store_append(store, &itr_own, NULL);
     gtk_tree_store_append(store, &itr_lib, NULL);
+    setRow( &itr_sce, "Scene", "section");
     setRow( &itr_own, "Custom", "section");
-    setRow( &itr_lib, "Library", "section");
+    setRow( &itr_lib, "Built-in", "section");
 
     for (auto o : mgr->getOntologies()) {
-        GtkTreeIter itr;
-        if (o->getFlag() == "built-in") gtk_tree_store_append(store, &itr, &itr_lib);
-        if (o->getFlag() == "custom") gtk_tree_store_append(store, &itr, &itr_own);
-        setRow( &itr, o->getName(), o->getFlag());
+        cout << " ontology: " << o->getName() << " " << o->getFlag() << endl;
+        if (o->getFlag() == "") addToSection(o, &itr_sce);
+        if (o->getFlag() == "custom") addToSection(o, &itr_own);
+        if (o->getFlag() == "built-in") addToSection(o, &itr_lib);
     }
 
     clear();

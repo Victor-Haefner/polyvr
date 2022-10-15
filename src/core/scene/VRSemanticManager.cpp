@@ -13,7 +13,7 @@ VRSemanticManager::VRSemanticManager() {
     cout << "Init VRSemanticManager\n";
 
     setStorageType("Semantics");
-    storeMap("Script", &ontologies);
+    storeMap("Ontologies", &ontologies);
 
     for (auto o : VROntology::library) ontologies[o.first] = o.second;
 }
