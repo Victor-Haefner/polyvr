@@ -266,7 +266,7 @@ bool VRGuiSemantics::updateOntoList() {
 
     for (auto o : mgr->getOntologies()) {
         cout << " ontology: " << o->getName() << " " << o->getFlag() << endl;
-        if (o->getFlag() == "") addToSection(o, &itr_sce);
+        if (o->getFlag() == "internal") addToSection(o, &itr_sce);
         if (o->getFlag() == "custom") addToSection(o, &itr_own);
         if (o->getFlag() == "built-in") addToSection(o, &itr_lib);
     }

@@ -24,8 +24,8 @@ VRTransformPtr VRAMLLoader::getScene() { return scene; }
 void VRAMLLoader::read(string path) {
     assets.clear();
     auto sm = VRScene::getCurrent()->getSemanticManager();
-    ontology = sm->addOntology("global");
-    ontology->setFlag("");
+    ontology = sm->addOntology("AutomationML");
+    ontology->setFlag("internal");
     AMLDir = getFolderName(path)+"/";
 
     XML xml;
