@@ -70,6 +70,7 @@ class VRPipeSystem : public VRGeometry {
         bool doVisual = false;
         bool rebuildMesh = true;
         float spread = 0.1;
+        double latency = 0.001;
 
         map<int, VRPipeNodePtr> nodes;
         map<string, int> nodesByName;
@@ -107,6 +108,7 @@ class VRPipeSystem : public VRGeometry {
 		void setNodePose(int nID, PosePtr p);
         int disconnect(int nID, int sID);
         int insertSegment(int nID, int sID, float radius);
+		void setFlowParameters(float latency);
 		void setDoVisual(bool b, float spread = 0.1);
 
 		void update();

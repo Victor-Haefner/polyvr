@@ -114,12 +114,13 @@ void VRGuiSemantics::setOntology(string name) {
 }
 
 void VRGuiSemantics::updateCanvas() {
+    VRTimer t;
     int i = 0;
     clear();
 
     function<void(map<int, vector<VRConceptPtr>>&, VRConceptPtr,int,int,VRConceptWidgetPtr)> travConcepts = [&](map<int, vector<VRConceptPtr>>& cMap, VRConceptPtr c, int cID, int lvl, VRConceptWidgetPtr cp) {
         if (auto w = canvas->getWidget(c->ID)) {
-            if (cp) canvas->connect(cp, w, "#00CCFF");
+            if (cp) connect(cp, w, "#00CCFF");
             return;
         }
 
@@ -130,7 +131,7 @@ void VRGuiSemantics::updateCanvas() {
         int x = 150+cID*60;
         int y = 150+40*lvl;
         cw->move(Vec2d(x,y));
-        if (cp) canvas->connect(cp, cw, "#00CCFF");
+        if (cp) connect(cp, cw, "#00CCFF");
 
         i++;
         int child_i = 0;
@@ -148,7 +149,7 @@ void VRGuiSemantics::updateCanvas() {
             canvas->addWidget(ew->ID(), ew);
             canvas->addNode(ew->ID());
             ew->move(Vec2d(150,150));
-            for ( auto c : e.second->getConcepts() ) canvas->connect(canvas->getWidget(c->ID), ew, "#FFEE00");
+            for ( auto c : e.second->getConcepts() ) connect(canvas->getWidget(c->ID), ew, "#FFEE00");
         }
 
         for (auto r : current->rules) {
@@ -157,23 +158,24 @@ void VRGuiSemantics::updateCanvas() {
             canvas->addNode(rw->ID());
             rw->move(Vec2d(150,150));
             if (auto c = current->getConcept( r.second->associatedConcept) )
-                canvas->connect(canvas->getWidget(c->ID), rw, "#00DD00");
+                connect(canvas->getWidget(c->ID), rw, "#00DD00");
         }
     }
 
     gtk_widget_show_all(GTK_WIDGET(canvas->getCanvas()));
     canvas->foldAll(true);
+    cout << "updateCanvas, took " << t.stop() << endl;
 }
 
-void VRGuiSemantics::connect(VRSemanticWidgetPtr w1, VRSemanticWidgetPtr w2, string color) {
+void VRGuiSemantics::connect(VRCanvasWidgetPtr w1, VRCanvasWidgetPtr w2, string color) {
     canvas->connect(w1, w2, color);
 }
 
-void VRGuiSemantics::disconnect(VRSemanticWidgetPtr w1, VRSemanticWidgetPtr w2) {
+void VRGuiSemantics::disconnect(VRCanvasWidgetPtr w1, VRCanvasWidgetPtr w2) {
     canvas->disconnect(w1, w2);
 }
 
-void VRGuiSemantics::disconnectAny(VRSemanticWidgetPtr w) {
+void VRGuiSemantics::disconnectAny(VRCanvasWidgetPtr w) {
     canvas->disconnectAny(w);
 }
 
