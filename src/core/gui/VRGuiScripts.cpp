@@ -1237,7 +1237,13 @@ bool VRGuiScripts::updateList() {
     if (selected == "") {
         cout << "No script open, selecting a script.." << endl;
         if (scene->getScript("init")) selectScript("init");
-        else selectScript(scene->getScripts()[0]->getName());
+        else {
+            auto scs = scene->getScripts();
+            if (scs.size() > 0) {
+                auto sc = scs.begin()->second;
+                if (sc) selectScript(sc->getName());
+            }
+        }
     }
 
     return true;
