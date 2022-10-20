@@ -4,7 +4,9 @@
 #include <iostream>
 #include <OpenSG/OSGVector.h>
 
+#ifndef WITHOUT_MDB
 #include <mdbtools.h>
+#endif
 
 #include "xml.h"
 #include "system/VRSystem.h"
@@ -55,6 +57,7 @@ void VRSpreadsheet::read(string path) {
         return;
     }
 
+#ifndef WITHOUT_MDB
     if (ext == ".mdb" || ext == ".accdb" || ext == ".eap") { // MS Access DB
         auto mdb = mdb_open(path.c_str(), MDB_NOFLAGS);
         if (!mdb) { cout << "ERROR: failed to open access DB file: " << path << endl; return; }
@@ -148,6 +151,7 @@ void VRSpreadsheet::read(string path) {
 
         return;
     }
+#endif
 
     cout << "VRSpreadsheet::read Error: unknown extention " << ext << endl;
 }
