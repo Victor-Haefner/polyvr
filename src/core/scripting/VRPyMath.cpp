@@ -920,7 +920,9 @@ PyMethodDef VRPyXMLElement::methods[] = {
 };
 
 PyMethodDef VRPySpreadsheet::methods[] = {
-    {"read", PyWrap(Spreadsheet, read, "Read file", void, string) },
+    {"read", PyWrap(Spreadsheet, read, "Read file, .xlsx, .mdb, .eap", void, string) },
+    {"write", PyWrap(Spreadsheet, write, "Write to folder, (folder, extention)", void, string, string) },
+    {"writeSheet", PyWrap(Spreadsheet, writeSheet, "Write to sheet to file (.csv), (sheet, path)", void, string, string) },
     {"getSheets", PyWrap(Spreadsheet, getSheets, "Get list of sheet names", vector<string>) },
     {"getRow", PyWrap(Spreadsheet, getRow, "Get ith row (sheet, row)", vector<string>, string, size_t) },
     {"getRows", PyWrap(Spreadsheet, getRows, "Get list of rows by sheet name", vector<vector<string>>, string) },

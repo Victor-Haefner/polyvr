@@ -4,6 +4,8 @@
 #include <iostream>
 #include <OpenSG/OSGVector.h>
 
+#include <mdbtools.h>
+
 #include "xml.h"
 #include "system/VRSystem.h"
 #include "zipper/unzipper.h"
@@ -53,7 +55,131 @@ void VRSpreadsheet::read(string path) {
         return;
     }
 
+    if (ext == ".mdb" || ext == ".accdb" || ext == ".eap") { // MS Access DB
+        auto mdb = mdb_open(path.c_str(), MDB_NOFLAGS);
+        if (!mdb) { cout << "ERROR: failed to open access DB file: " << path << endl; return; }
+        auto r = mdb_read_catalog (mdb, MDB_ANY);
+        if (!r) { cout << "ERROR: failed to read access DB catalog: " << path << endl; return; }
+
+        vector<string> tables;
+        for (int i=0; i < mdb->num_catalog; i++) {
+            MdbCatalogEntry* entry = (MdbCatalogEntry*)g_ptr_array_index (mdb->catalog, i);
+            if (entry->object_type != MDB_TABLE) continue;
+            if (mdb_is_system_table(entry)) continue;
+            string name = entry->object_name;
+            tables.push_back(name);
+        }
+
+        for (auto name : tables) {
+            auto& sheet = sheets[name];
+            sheet.name = name;
+
+            MdbTableDef* table = mdb_read_table_by_name(mdb, (char*)name.c_str(), MDB_TABLE);
+            if (table) {
+                mdb_read_columns(table);
+                mdb_rewind_table(table);
+
+                char** bound_values = (char**)g_malloc(table->num_cols * sizeof(char *));
+                int* bound_lens = (int*)g_malloc(table->num_cols * sizeof(int));
+                for (int i=0;i<table->num_cols;i++) { // bind columns
+                    bound_values[i] = (char*)g_malloc0(MDB_BIND_SIZE);
+                    mdb_bind_column(table, i+1, bound_values[i], &bound_lens[i]);
+                }
+
+                // header
+                Row row;
+                for (int i=0;i<table->num_cols;i++) {
+                    MdbColumn* col = (MdbColumn*)g_ptr_array_index(table->columns,i);
+                    Cell C;
+                    C.ID   = "";
+                    C.type = "s";
+                    C.data = col->name;
+                    row.cells.push_back(C);
+                }
+                sheet.rows.push_back(row);
+                sheet.NRows++;
+                sheet.NCols = max(sheet.NCols, row.cells.size());
+
+                // data
+                while(mdb_fetch_row(table)) {
+                    Row row;
+                    for (int i=0;i<table->num_cols;i++) {
+                        Cell C;
+                        C.ID   = "";
+                        C.type = "s";
+
+                        MdbColumn* col = (MdbColumn*)g_ptr_array_index(table->columns,i);
+                        if (bound_lens[i]) {
+                            char* value;
+                            size_t length;
+                            if (col->col_type == MDB_OLE) {
+                                value = (char*)mdb_ole_read_full(mdb, col, &length);
+                            } else {
+                                value = bound_values[i];
+                                length = bound_lens[i];
+                            }
+
+                            C.data = value;
+                            if (col->col_type == MDB_OLE) free(value);
+                        }
+
+                        row.cells.push_back(C);
+                    }
+                    sheet.rows.push_back(row);
+                    sheet.NRows++;
+                    sheet.NCols = max(sheet.NCols, row.cells.size());
+                }
+
+                for (int i=0;i<table->num_cols;i++) g_free(bound_values[i]);
+                g_free(bound_values);
+                g_free(bound_lens);
+                mdb_free_tabledef(table);
+            }
+        }
+
+
+        mdb_close(mdb);
+
+        /**
+        TODO: continue development
+        look at: https://github.com/mdbtools/mdbtools/tree/dev/src/util
+        and: https://leanpub.com/InsideEA/read
+        */
+
+        return;
+    }
+
     cout << "VRSpreadsheet::read Error: unknown extention " << ext << endl;
+}
+
+void VRSpreadsheet::write(string folder, string ext) {
+    cout << "VRSpreadsheet::write to " << folder << " with extention " << ext << endl;
+    if (ext == "csv") {
+        makedir(folder);
+        for (auto s : sheets) writeSheet(s.first, folder+"/"+s.first+"."+ext);
+    }
+}
+
+void VRSpreadsheet::writeSheet(string sheetName, string path) {
+    cout << "VRSpreadsheet::writeSheet " << sheetName << " to " << path << endl;
+    string ext = getFileExtension(path);
+
+    auto& sheet = sheets[sheetName];
+
+    if (ext == ".csv") {
+        ofstream out(path);
+        bool firstRow = true;
+        for (auto& row : sheet.rows) {
+            if (!firstRow) out << endl;
+            bool firstCell = true;
+            for (auto& cell : row.cells) {
+                if (!firstCell) out << ",";
+                out << cell.data;
+                firstCell = false;
+            }
+            firstRow = false;
+        }
+    }
 }
 
 Vec2i VRSpreadsheet::convCoords(string d) {
@@ -153,6 +279,7 @@ void VRSpreadsheet::addSheet(string& name, string& data, vector<string>& strings
 
     cout << " VRSpreadsheet::addSheet " << name << " " << Vec2i(sheet.NRows, sheet.NCols) << endl;
 }
+
 
 vector<string> VRSpreadsheet::getSheets() {
     vector<string> res;

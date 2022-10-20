@@ -52,6 +52,8 @@ class VRSpreadsheet : public std::enable_shared_from_this<VRSpreadsheet> {
 		VRSpreadsheetPtr ptr();
 
 		void read(string path);
+		void write(string folder, string ext);
+		void writeSheet(string sheet, string path);
 
 		vector<string> getSheets();
 		size_t getNColumns(string sheet);
