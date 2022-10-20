@@ -6,6 +6,7 @@
 
 #include <math.h>
 #include <iostream>
+#include <map>
 #ifndef _WIN32
 #include <gdal/gdal.h>
 #include <gdal/gdal_priv.h>
@@ -43,7 +44,259 @@ void loadSHP(string path, VRTransformPtr res, map<string, string> opts) {
 #else
 	GDALDataset *poDS = (GDALDataset*) GDALOpenEx(path.c_str(), GDAL_OF_READONLY, NULL, NULL, NULL);
 #endif
-    if( poDS == NULL ) { printf( "Open failed.\n" ); return; }
+
+
+
+  if(opts["process"] == "1"){
+
+        cout << " process 1 executed ";
+        cout << " process 1 executed ";
+
+
+
+            auto toVec3d = [](OGRPoint& p) {
+                return Vec3d( p.getX(), p.getZ(), -p.getY() );
+            };
+
+
+
+
+            auto handleGeometry = [&](OGRGeometry* geo, VRGeoDataPtr data) {
+                auto type = wkbFlatten(geo->getGeometryType());
+                OGRPoint pnt;
+                if (type == wkbPoint) {
+                    OGRPoint* pnt = (OGRPoint*) geo;
+                    //cout << "  point " << pos << endl;
+
+
+
+
+                    float W2 = 0.00001;
+                    Vec3d H = Vec3d(0,0.5,0);
+                    Vec3d x1 = Vec3d(1,0,0);
+                    Vec3d x2 = Vec3d(0,0,1);
+
+
+                    Vec3d p11 = toVec3d(*pnt) + x1*W2 + x2*W2 + H;
+                    Vec3d p12 = toVec3d(*pnt) + x1*W2 - x2*W2 + H;
+                    Vec3d p21 = toVec3d(*pnt) - x1*W2 + x2*W2 + H;
+                    Vec3d p22 = toVec3d(*pnt) - x1*W2 - x2*W2 + H;
+
+
+
+                    data->pushVert(p11, Vec3d(0,1,0));
+                    data->pushVert(p12, Vec3d(0,1,0));
+                    data->pushVert(p22, Vec3d(0,1,0));
+                    data->pushVert(p21, Vec3d(0,1,0));
+                    data->pushQuad();
+
+
+
+                    //cout << "  point " << pos << endl;
+                    //data->pushVert( toVec3d(*pnt) );
+                    //data->pushPoint();
+                    return;
+                }
+
+                if (type == wkbLineString) {
+                        OGRLineString* line = (OGRLineString*) geo;
+                        //cout << "  polyline: (" << line->getNumPoints() << ")";
+
+                        float W = 0.02;
+                        /*
+
+                        Vec3d p1 = line->getPoint(0, &pnt);
+                        Vec3d p2 = line->getPoint(1, &pnt);
+
+                        Vec3d d = (p2-p1).normalize();
+                        Vec3d x = d.cross(Vec3d(0,1,0));
+
+
+                        Vec3d p11 = p1+x*W;
+                        Vec3d p12 = p1-x*W;
+                        Vec3d p21 = p2+x*W;
+                        Vec3d p22 = p2-x*W;
+
+                        //data->pushVert(p11);
+                        //data->pushVert(p12);
+                        //data->pushVert(p21);
+                        //data->pushVert(p22);
+                        //data->pushQuad();
+
+
+                        VRPolygon quad;
+                        Vec3d p1, p2, d, x;
+                        Vec3d n = Vec3d(0,1,0);
+
+                        for (int i=0; i<line->getNumPoints(); i++) {
+                                line->getPoint(i, &pnt);
+
+                                if (i == 0){
+                                    p1 = toVec3d(pnt);
+                                }
+                                else{
+                                    p2 = toVec3d(pnt);
+                                    d = (p2-p1);
+                                    d.normalize();
+                                    x = getcross(d, n);
+
+                                    //Vec3d p11 = p1+x*W;
+                                    //Vec3d p12 = p1-x*W;
+                                    //Vec3d p21 = p2+x*W;
+                                    //Vec3d p22 = p2-x*W;
+
+                                    data->pushVert(p11, Vec3d(0,0,1));
+                                    data->pushVert(p21, Vec3d(0,0,1));
+                                    data->pushVert(p22, Vec3d(0,0,1));
+                                    data->pushVert(p12, Vec3d(0,0,1));
+                                    data->pushQuad();
+
+                                }
+
+                        }
+
+
+*/
+
+
+
+                        for (int i=0; i<line->getNumPoints(); i++) {
+                            line->getPoint(i, &pnt);
+                            data->pushVert( toVec3d(pnt) );
+                            if (i != 0) data->pushLine(); // TODO: add polylines to VRGeoData?
+                            //cout << "  p " << pos;
+                        }
+
+
+
+
+
+
+                        //cout << endl;
+                        return;
+                    }
+                    if (type == wkbPolygon) {
+                        //cout << "  VRPolygon:" << endl;
+                        OGRPolygon* poly = (OGRPolygon*) geo;
+                        OGRLinearRing* ex = poly->getExteriorRing();
+
+                        //cout << "   outer bound:";
+                        VRPolygon outer;
+                        for (int i=0; i<ex->getNumPoints(); i++) {
+                            ex->getPoint(i, &pnt);
+                            outer.addPoint(toVec3d(pnt));
+                            //data->pushVert( toVec3d(pnt) );
+                            //if (i != 0) data->pushLine();
+                            //cout << "  p " << pos;
+                        }
+                        //cout << endl;
+
+                        Triangulator t;
+                        t.add(outer);
+
+                    for (int i=0; i<poly->getNumInteriorRings(); i++) {
+                        OGRLinearRing* in = poly->getInteriorRing(i);
+
+                        //cout << "   inner bound:";
+                        VRPolygon inner;
+                        for (int i=0; i<in->getNumPoints(); i++) {
+                            in->getPoint(i, &pnt);
+                            inner.addPoint(toVec3d(pnt));
+                            //data->pushVert( toVec3d(pnt) );
+                            //if (i != 0) data->pushLine();
+                            //cout << "  p " << pos;
+                        }
+                        t.add(inner, false);
+                        //cout << endl;
+                    }
+
+                    t.append(data, false);
+                    return;
+                    }
+
+                    if (type == wkbMultiPolygon) {
+                        cout << "loadSHP::handleGeometry WARNING: it's a multipolygon, not handled" << endl;
+                    }
+
+
+            cout << "loadSHP::handleGeometry WARNING: type " << type << " not handled!\n";
+
+            };
+
+
+
+
+            cout << "opened file " << path << " with layers:" << endl;
+
+            for (int i=0; i<poDS->GetLayerCount(); i++) {
+
+
+                OGRLayer* poLayer = poDS->GetLayer(i);
+                cout << " " << i << " " << poLayer->GetName() << endl;
+
+                if (poLayer) {
+                    poLayer->ResetReading();
+
+                    OGRFeature* poFeature = 0;
+                    while( (poFeature = poLayer->GetNextFeature()) != NULL ) {
+                        auto ent = VREntity::create("shape");
+
+                        OGRFeatureDefn* poFDefn = poLayer->GetLayerDefn();
+                        cout << " fields: ";
+                        for( int field = 0; field < poFDefn->GetFieldCount(); field++ ) {
+                            OGRFieldDefn* poFieldDefn = poFDefn->GetFieldDefn( field );
+
+                            string name = poFieldDefn->GetNameRef();
+                            ent->set(name, poFeature->GetFieldAsString(field));
+
+                            cout << name;
+                            if ( poFieldDefn->GetType() == OFTInteger ) printf( "  %d, ", poFeature->GetFieldAsInteger(field) );
+                            if ( poFieldDefn->GetType() == OFTReal ) printf( "  %.3f, ", poFeature->GetFieldAsDouble(field) );
+                            if ( poFieldDefn->GetType() == OFTString ) printf( "  %s, ", poFeature->GetFieldAsString(field) );
+                        }
+                        cout << endl;
+                        /*cout << "  geom fields:";
+                        for( int field = 0; field < poFDefn->GetGeomFieldCount(); field++ ) {
+                            OGRGeomFieldDefn* poFieldDefn = poFDefn->GetGeomFieldDefn( field );
+
+                            if ( poFieldDefn->GetType() == OFTInteger ) printf( "  %d,", poFeature->GetFieldAsInteger(field) );
+                            if ( poFieldDefn->GetType() == OFTReal ) printf( "  %.3f,", poFeature->GetFieldAsDouble(field) );
+                            if ( poFieldDefn->GetType() == OFTString ) printf( "  %s,", poFeature->GetFieldAsString(field) );
+                        }
+                        cout << endl;*/
+
+
+
+                        VRGeoDataPtr data = VRGeoData::create();
+                        OGRGeometry* geo = poFeature->GetGeometryRef();
+                        if (geo) handleGeometry(geo, data);
+                        OGRFeature::DestroyFeature( poFeature );
+                        auto vgeo = data->asGeometry("shape");
+                        vgeo->setEntity(ent);
+                        res->addChild( vgeo );
+
+                    }
+                }
+            }
+
+            if( poDS == NULL ) { printf( "Open failed.\n" ); return; }
+
+
+
+
+
+
+
+
+
+
+
+
+  }
+
+  else {
+
+
 
     auto toVec3d = [](OGRPoint& p) {
         return Vec3d( p.getX(), p.getZ(), -p.getY() );
@@ -53,7 +306,9 @@ void loadSHP(string path, VRTransformPtr res, map<string, string> opts) {
         auto type = wkbFlatten(geo->getGeometryType());
         OGRPoint pnt;
         if (type == wkbPoint) {
+
             OGRPoint* pnt = (OGRPoint*) geo;
+
             //cout << "  point " << pos << endl;
             data->pushVert( toVec3d(*pnt) );
             data->pushPoint();
@@ -62,12 +317,16 @@ void loadSHP(string path, VRTransformPtr res, map<string, string> opts) {
         if (type == wkbLineString) {
             OGRLineString* line = (OGRLineString*) geo;
             //cout << "  polyline: (" << line->getNumPoints() << ")";
+
+
             for (int i=0; i<line->getNumPoints(); i++) {
                 line->getPoint(i, &pnt);
                 data->pushVert( toVec3d(pnt) );
                 if (i != 0) data->pushLine(); // TODO: add polylines to VRGeoData?
                 //cout << "  p " << pos;
             }
+
+
             //cout << endl;
             return;
         }
@@ -112,11 +371,15 @@ void loadSHP(string path, VRTransformPtr res, map<string, string> opts) {
         if (type == wkbMultiPolygon) {
             cout << "loadSHP::handleGeometry WARNING: it's a multipolygon, not handled" << endl;
         }
+
+
         cout << "loadSHP::handleGeometry WARNING: type " << type << " not handled!\n";
     };
 
     cout << "opened file " << path << " with layers:" << endl;
     for (int i=0; i<poDS->GetLayerCount(); i++) {
+
+
         OGRLayer* poLayer = poDS->GetLayer(i);
         cout << " " << i << " " << poLayer->GetName() << endl;
 
@@ -128,7 +391,7 @@ void loadSHP(string path, VRTransformPtr res, map<string, string> opts) {
                 auto ent = VREntity::create("shape");
 
                 OGRFeatureDefn* poFDefn = poLayer->GetLayerDefn();
-                cout << "  fields: ";
+                cout << " fields: ";
                 for( int field = 0; field < poFDefn->GetFieldCount(); field++ ) {
                     OGRFieldDefn* poFieldDefn = poFDefn->GetFieldDefn( field );
 
@@ -151,6 +414,8 @@ void loadSHP(string path, VRTransformPtr res, map<string, string> opts) {
                 }
                 cout << endl;*/
 
+
+
                 VRGeoDataPtr data = VRGeoData::create();
                 OGRGeometry* geo = poFeature->GetGeometryRef();
                 if (geo) handleGeometry(geo, data);
@@ -158,16 +423,34 @@ void loadSHP(string path, VRTransformPtr res, map<string, string> opts) {
                 auto vgeo = data->asGeometry("shape");
                 vgeo->setEntity(ent);
                 res->addChild( vgeo );
+
             }
         }
     }
+
+    if( poDS == NULL ) { printf( "Open failed.\n" ); return; }
+
+
+
+    }
+
+
+
+
+
+
+
+
 
 #if GDAL_VERSION_MAJOR < 2
  	OGRDataSource::DestroyDataSource(poDS);
 #else
 	GDALClose(poDS);
 #endif
+
+
 }
+
 
 void loadTIFF(string path, VRTransformPtr res, map<string, string> opts) {
     // setup object
@@ -626,7 +909,6 @@ vector<double> getGeoTransform(string path) {
     GDALClose(poDS);
     return res;
 }
-
 OSG_END_NAMESPACE;
 
 

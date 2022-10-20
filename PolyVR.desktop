@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=PolyVR
+Terminal=true
+MimeType=application/x-polyvr
+Path=/home/karandeabhijit/Projects/polyvr
+Exec=/home/karandeabhijit/Projects/polyvr/PolyVR.sh
+Icon=/home/karandeabhijit/Projects/polyvr/ressources/gui/logo_icon.png
