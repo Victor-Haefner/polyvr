@@ -41,6 +41,7 @@ PyMethodDef VRPyView::methods[] = {
     {"getProjectionSize", PyWrap(View, getProjectionSize, "Get the size in meter", Vec2d) },
     {"setSize", PyWrap(View, setSize, "Set the size in pixel", void, Vec2i) },
     {"getSize", PyWrap(View, getSize, "Get the size in pixel", Vec2i) },
+    {"setStereoEyeSeparation", PyWrap(View, setStereoEyeSeparation, "Set the distance between eyes for stereo, typical is 0.065", void, float) },
     {"grab", PyWrap(View, grab, "Get the current visual as texture", VRTexturePtr) },
     {"setCamera", PyWrap(View, setCamera, "Set the camera of the view", void, VRCameraPtr ) },
     {"getName", PyWrap(View, getName, "Get the name of the view", string ) },
