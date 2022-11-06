@@ -157,6 +157,8 @@ PyMethodDef VRPyLADEngine::methods[] = {
     {"getCompileUnitPartVariable", PyWrap( LADEngine, getCompileUnitPartVariable, "Return LAD variable from part", VRLADVariablePtr, string, string ) },
     {"getCompileUnitPartOutWires", PyWrap( LADEngine, getCompileUnitPartOutWires, "Return IDs of compile units wires that are outputs of a part", vector<string>, string, string ) },
     {"getCompileUnitPartName", PyWrap( LADEngine, getCompileUnitPartName, "Return part name", string, string, string ) },
+    {"addVisual", PyWrap( LADEngine, addVisual, "Create basic visualization", VRTransformPtr ) },
+    {"updateVisual", PyWrap( LADEngine, updateVisual, "Update visualization based on current state", void ) },
     {NULL}
 };
 
