@@ -231,6 +231,7 @@ void ART::checkNewDevices(int type, int N) {
 }
 
 void ART::applyEvents() {
+    if (!active) return;
     //if (VRGlobals::CURRENT_FRAME < 10) return;
     VRLock lock(*mutex);
     //updateL();
