@@ -17,6 +17,10 @@
 #include "core/utils/VRLogger.h"
 #include "core/utils/system/VRSystem.h"
 
+#ifndef WITHOUT_GTK
+#include "core/gui/VRGuiFile.h"
+#endif // WITHOUT_GTK
+
 using namespace OSG;
 
 vector< weak_ptr<CEF> > instances;
@@ -102,6 +106,7 @@ CefRefPtr<CefRenderHandler> CEF_client::GetRenderHandler() { return handler; }
 CefRefPtr<CefLoadHandler> CEF_client::GetLoadHandler() { return handler; }
 CefRefPtr<CEF_handler> CEF_client::getHandler() { return handler; }
 CefRefPtr<CefContextMenuHandler> CEF_client::GetContextMenuHandler() { return handler; }
+CefRefPtr<CefDialogHandler> CEF_client::GetDialogHandler() { return handler; }
 
 CEF::CEF() {
     global_initiate();
@@ -322,7 +327,13 @@ void CEF::mouse_move(VRDeviceWeakPtr d) {
     }
 }
 
+void CEF::toggleInput(bool m, bool k) {
+    doMouse = m;
+    doKeyboard = k;
+}
+
 bool CEF::mouse(int lb, int rb, int wu, int wd, VRDeviceWeakPtr d) {
+    if (!doMouse) return true;
     //cout << "CEF::mouse " << lb << " " << rb << " " << wu << " " << wd << endl;
     auto dev = d.lock();
     if (!dev) return true;
@@ -388,6 +399,7 @@ bool CEF::mouse(int lb, int rb, int wu, int wd, VRDeviceWeakPtr d) {
 }
 
 bool CEF::keyboard(VRDeviceWeakPtr d) {
+    if (!doKeyboard) return true;
     auto dev = d.lock();
     if (!dev) return true;
     if (!focus) return true;
@@ -442,3 +454,10 @@ bool CEF::keyboard(VRDeviceWeakPtr d) {
     }
     return false;
 }
+
+bool CEF_handler::OnFileDialog( CefRefPtr< CefBrowser > browser, CefDialogHandler::FileDialogMode mode, const CefString& title, const CefString& default_file_path, const std::vector< CefString >& accept_filters, int selected_accept_filter, CefRefPtr< CefFileDialogCallback > callback ) {
+    // TODO: make better use of parameters
+    VRGuiFile::open("Open", 0, title);
+    return true;
+}
+
