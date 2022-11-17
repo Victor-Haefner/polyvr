@@ -456,7 +456,15 @@ bool CEF::keyboard(VRDeviceWeakPtr d) {
 }
 
 bool CEF_handler::OnFileDialog( CefRefPtr< CefBrowser > browser, CefDialogHandler::FileDialogMode mode, const CefString& title, const CefString& default_file_path, const std::vector< CefString >& accept_filters, int selected_accept_filter, CefRefPtr< CefFileDialogCallback > callback ) {
-    // TODO: make better use of parameters
+    auto onAccept = [callback](){
+        callback->Continue( 0, { VRGuiFile::getPath() } );
+    };
+
+    auto onCancel = [callback](){
+        callback->Cancel();
+    };
+
+    VRGuiFile::setCallbacks(onAccept, onCancel);
     VRGuiFile::open("Open", 0, title);
     return true;
 }
