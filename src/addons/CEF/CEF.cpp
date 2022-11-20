@@ -19,6 +19,8 @@
 
 #ifndef WITHOUT_GTK
 #include "core/gui/VRGuiFile.h"
+#include "core/gui/VRGuiManager.h"
+#include "core/gui/VRGuiConsole.h"
 #endif // WITHOUT_GTK
 
 using namespace OSG;
@@ -59,6 +61,31 @@ bool CEF_handler::OnContextMenuCommand( CefRefPtr<CefBrowser> browser, CefRefPtr
     //CEF_REQUIRE_UI_THREAD();
     //MessageBox(browser->GetHost()->GetWindowHandle(), L"The requested action is not supported", L"Unsupported Action", MB_OK | MB_ICONINFORMATION);
     return false;
+}
+
+void CEF_handler::on_link_clicked(string source, int line, string s) {
+    auto data = splitString(source, '/');
+    if (data.size() == 0) return;
+    string script = data[data.size()-1];
+#ifndef WITHOUT_GTK
+    VRGuiManager::get()->focusScript(script, line, 0);
+#endif
+}
+
+bool CEF_handler::OnConsoleMessage( CefRefPtr< CefBrowser > browser, cef_log_severity_t level, const CefString& message, const CefString& source, int line ) {
+#ifndef WITHOUT_GTK
+    VRConsoleWidget::get( "Console" )->addStyle( "blueLink", "#1133ff", "#ffffff", false, false, true, false );
+
+    auto link = VRFunction<string>::create("cef_link", bind(&CEF_handler::on_link_clicked, this, source, line, _1) );
+
+    string msg = message;
+    string src = source;
+    VRConsoleWidget::get( "Console" )->write( src + " (" + toString(line) + ")", "blueLink", link );
+    VRConsoleWidget::get( "Console" )->write( ": " + msg + "\n" );
+    return true;
+#else
+    return false;
+#endif
 }
 
 
@@ -107,6 +134,7 @@ CefRefPtr<CefLoadHandler> CEF_client::GetLoadHandler() { return handler; }
 CefRefPtr<CEF_handler> CEF_client::getHandler() { return handler; }
 CefRefPtr<CefContextMenuHandler> CEF_client::GetContextMenuHandler() { return handler; }
 CefRefPtr<CefDialogHandler> CEF_client::GetDialogHandler() { return handler; }
+CefRefPtr<CefDisplayHandler> CEF_client::GetDisplayHandler() { return handler; }
 
 CEF::CEF() {
     global_initiate();

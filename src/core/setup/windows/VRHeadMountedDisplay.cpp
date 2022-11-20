@@ -75,6 +75,13 @@ VRHeadMountedDisplay::VRHeadMountedDisplay() {
 	if (setup) setup->addDevice(hmd);
 }
 
+struct VRHeadMountedDisplay::FBOData {
+	VRTextureRendererPtr rendererL;
+	VRTextureRendererPtr rendererR;
+	MatrixCameraRecPtr mcamL;
+	MatrixCameraRecPtr mcamR;
+};
+
 VRHeadMountedDisplay::~VRHeadMountedDisplay() {
 	cout << "~VRHeadMountedDisplay" << endl;
 	if (fboData) delete fboData;
@@ -86,13 +93,6 @@ VRHeadMountedDisplayPtr VRHeadMountedDisplay::create() { return VRHeadMountedDis
 bool VRHeadMountedDisplay::checkDeviceAttached() {
 	return vr::VR_IsHmdPresent();
 }
-
-struct VRHeadMountedDisplay::FBOData {
-	VRTextureRendererPtr rendererL;
-	VRTextureRendererPtr rendererR;
-	MatrixCameraRecPtr mcamL;
-	MatrixCameraRecPtr mcamR;
-};
 
 void VRHeadMountedDisplay::initFBO() {
 	fboData = new FBOData();
@@ -293,8 +293,8 @@ void VRHeadMountedDisplay::SetupTexturemaps() {
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-	for (int i = 0; i < m_nRenderHeight; i++) {
-		for (int j = 0; j < m_nRenderWidth; j++) {
+	for (uint i = 0; i < m_nRenderHeight; i++) {
+		for (uint j = 0; j < m_nRenderWidth; j++) {
 			if (i == j) { testImage.push_back(0); testImage.push_back(0); testImage.push_back(255); testImage.push_back(255); }
 			else if (i%2 == 0) { testImage.push_back(0); testImage.push_back(255); testImage.push_back(0); testImage.push_back(255); }
 			else { testImage.push_back(255); testImage.push_back(0); testImage.push_back(0); testImage.push_back(255); }
@@ -394,7 +394,7 @@ void VRHeadMountedDisplay::UpdateHMDMatrixPose() {
 	vr::VRCompositor()->WaitGetPoses(&m_rTrackedDevicePose[0], vr::k_unMaxTrackedDeviceCount, NULL, 0);
 
 	m_iValidPoseCount = 0;
-	for (int devID = 0; devID < vr::k_unMaxTrackedDeviceCount; devID++) {
+	for (uint devID = 0; devID < vr::k_unMaxTrackedDeviceCount; devID++) {
 		if (m_rTrackedDevicePose[devID].bPoseIsValid) {
 			m_iValidPoseCount++;
 			Matrix4d m = convertMatrix(m_rTrackedDevicePose[devID].mDeviceToAbsoluteTracking);

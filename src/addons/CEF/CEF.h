@@ -21,7 +21,7 @@ OSG_BEGIN_NAMESPACE;
 
 class VRDevice;
 
-class CEF_handler : public CefRenderHandler, public CefLoadHandler, public CefContextMenuHandler, public CefDialogHandler {
+class CEF_handler : public CefRenderHandler, public CefLoadHandler, public CefContextMenuHandler, public CefDialogHandler, public CefDisplayHandler {
     private:
         VRTexturePtr image = 0;
         int width = 1024;
@@ -50,6 +50,9 @@ class CEF_handler : public CefRenderHandler, public CefLoadHandler, public CefCo
 
         bool OnFileDialog( CefRefPtr< CefBrowser > browser, CefDialogHandler::FileDialogMode mode, const CefString& title, const CefString& default_file_path, const std::vector< CefString >& accept_filters, int selected_accept_filter, CefRefPtr< CefFileDialogCallback > callback ) override;
 
+        void on_link_clicked(string source, int line, string s);
+        bool OnConsoleMessage( CefRefPtr< CefBrowser > browser, cef_log_severity_t level, const CefString& message, const CefString& source, int line ) override;
+
         IMPLEMENT_REFCOUNTING(CEF_handler);
 };
 
@@ -66,6 +69,7 @@ class CEF_client : public CefClient {
         CefRefPtr<CefLoadHandler> GetLoadHandler() override;
         CefRefPtr<CefContextMenuHandler> GetContextMenuHandler() override;
         CefRefPtr<CefDialogHandler> GetDialogHandler() override;
+        CefRefPtr<CefDisplayHandler> GetDisplayHandler() override;
 
         IMPLEMENT_REFCOUNTING(CEF_client);
 };
