@@ -42,6 +42,7 @@ class Pose {
         void translate(const Vec3d& p);
         void move(double x);
         void rotate(double a, const Vec3d& d);
+        void setEuler(double a, double b, double c);
 
         Matrix4d asMatrix() const;
         void invert();

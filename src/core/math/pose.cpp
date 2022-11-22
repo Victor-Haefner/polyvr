@@ -89,6 +89,15 @@ void Pose::rotate(double a, const Vec3d& d) {
     q.multVec(data[2],data[2]);
 }
 
+void Pose::setEuler(double A, double B, double C) {
+    Vec3d s = Vec3d(sin(A), sin(B), sin(C));
+    Vec3d c = Vec3d(cos(A), cos(B), cos(C));
+    Vec3d d = Vec3d( c[0]*c[2]*s[1]+s[0]*s[2], c[0]*s[1]*s[2]-s[0]*c[2], c[0]*c[1]);
+    Vec3d u = Vec3d( s[0]*s[1]*c[2]-s[2]*c[0], s[0]*s[1]*s[2]+c[2]*c[0], c[1]*s[0]);
+    setUp(u);
+    setDir(d);
+}
+
 Matrix4d Pose::asMatrix() const {
     Matrix4d m;
     if (data.size() > 2) MatrixLookAt(m, data[0], data[0]+data[1], data[2]);

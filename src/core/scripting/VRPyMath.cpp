@@ -929,5 +929,6 @@ PyMethodDef VRPySpreadsheet::methods[] = {
     {"getNColumns", PyWrap(Spreadsheet, getNColumns, "Get N columns of sheet", size_t, string) },
     {"getNRows", PyWrap(Spreadsheet, getNRows, "Get N rows of sheet", size_t, string) },
     {"getCell", PyWrap(Spreadsheet, getCell, "Get cell content (sheet, column, row)", string, string, size_t, size_t) },
+    {"setCell", PyWrap(Spreadsheet, setCell, "Set cell content (sheet, column, row, data)", void, string, size_t, size_t, string) },
     {NULL}  /* Sentinel */
 };

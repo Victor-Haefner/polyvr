@@ -338,5 +338,16 @@ string VRSpreadsheet::getCell(string sheet, size_t i, size_t j) {
     return sheets[sheet].rows[j].cells[i].data;
 }
 
+void VRSpreadsheet::setCell(string sheet, size_t i, size_t j, string c) {
+    if (!sheets.count(sheet)) return;
+    while (j >= sheets[sheet].rows.size()) {
+        sheets[sheet].rows.push_back(Row());
+    }
+    while (i >= sheets[sheet].rows[j].cells.size()) {
+        sheets[sheet].rows[j].cells.push_back(Cell());
+    }
+    sheets[sheet].rows[j].cells[i].data = c;
+}
+
 VRSpreadsheet::Sheet::Sheet() {}
 VRSpreadsheet::Sheet::Sheet(string n) : name(n) {}
