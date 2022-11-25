@@ -61,7 +61,7 @@ void loadSHP(string path, VRTransformPtr res, map<string, string> opts) {
 
     GeoVec2fPropertyMTRecPtr tcs = GeoVec2fProperty::create();
 
-    Layer->addProperty("shapes", "Shape");
+    Layer->addProperty("features", "Shape");
 
     if(opts["process"] == "1"){
 
@@ -209,24 +209,27 @@ void loadSHP(string path, VRTransformPtr res, map<string, string> opts) {
                 OGRLayer* poLayer = poDS->GetLayer(i);
                 cout << " " << i << " " << poLayer->GetName() << endl;
 
-                //VRGeoDataPtr Gdata = VRGeoData::create();
-                //auto vlayer = Gdata->asGeometry("layer");
-                //auto entLayer = ontology->addEntity("layer", "Layer");
                 string layer_name = "layer_";
 
                 if (poLayer) {
 
-                    //VRGeoDataPtr data = VRGeoData::create();
+                    VRGeoDataPtr data = VRGeoData::create();
+
+
                     poLayer->ResetReading();
                     int gi = 0;
                     layer_name = layer_name+to_string(i);
 
 
-                    //auto entLayer = ontology->addEntity("layer", "Layer");
+
+                    auto entLayer = ontology->addEntity("layer", "Layer");
+
 
                     GeoVec2fPropertyMTRecPtr tcs1 = GeoVec2fProperty::create();
+                    //auto entShape = ontology->addEntity("shape", "Shape");
 
                     OGRFeature* poFeature = 0;
+
                     while( (poFeature = poLayer->GetNextFeature()) != NULL ) {
 
                         auto entShape = ontology->addEntity("shape", "Shape");
@@ -236,8 +239,11 @@ void loadSHP(string path, VRTransformPtr res, map<string, string> opts) {
                         for( int field = 0; field < poFDefn->GetFieldCount(); field++ ) {
                             OGRFieldDefn* poFieldDefn = poFDefn->GetFieldDefn( field );
 
-                            string name = poFieldDefn->GetNameRef();
+                            string marker = "&";
+
+                            string name = marker+poFieldDefn->GetNameRef();
                             if (!Shape->getProperty(name)) Shape->addProperty(name, "String");
+                            //entShape->add(name, poFeature->GetFieldAsString(field));
                             entShape->set(name, poFeature->GetFieldAsString(field));
                             //entLayer->set(name, poFeature->GetFieldAsString(field));
                             tcs1->addValue(Vec2d(gi, 1));
@@ -250,27 +256,25 @@ void loadSHP(string path, VRTransformPtr res, map<string, string> opts) {
                         }
                         cout << endl;
 
-                        VRGeoDataPtr data = VRGeoData::create();
+
+                        //VRGeoDataPtr data = VRGeoData::create();
                         OGRGeometry* geo = poFeature->GetGeometryRef();
                         if (geo) handleGeometry(geo, data);
                         OGRFeature::DestroyFeature( poFeature );
-                        auto vshape = data->asGeometry(layer_name);
+                        /*auto vshape = data->asGeometry(layer_name);
                         vshape->setTexCoords(tcs1);
                         vshape->setEntity(entShape);
-                        //res->addChild(vshape);
-                        //vlayer->addQuad(data);
-                        //vlayer->setEntity(entLayer);
-                        //vlayer->addChild(vshape);
-                        res->addChild(vshape);
+                        res->addChild(vshape);*/
+                        entLayer->add("features", entShape->getName());
                         gi++;
                     }
-                    //auto vlayer = data->asGeometry("layer");
-                    //vlayer->setTexCoords(tcs1);
-                    //vlayer->setEntity(entLayer);
-                    //res->addChild( vlayer );
-                    //auto vgeo = data->asGeometry("layer");
-                    //vgeo->setEntity(entLayer);
-                    //res->addChild( vgeo );
+
+                    if (data->size() > 0) {
+                        auto vlayer = data->asGeometry(layer_name);
+                        vlayer->setTexCoords(tcs1);
+                        vlayer->setEntity(entLayer);
+                        res->addChild(vlayer);
+                    }
                 }
             }
 
