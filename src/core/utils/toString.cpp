@@ -155,6 +155,10 @@ template<> string toString(const Vec4ub& v) {
 template<> string toString(const Pnt2d& v) { return toString(Vec2d(v)); }
 template<> string toString(const Pnt3d& v) { return toString(Vec3d(v)); }
 template<> string toString(const Pnt4d& v) { return toString(Vec4d(v)); }
+template<> string toString(const Vec2f& v) { return toString(Vec2d(v)); }
+template<> string toString(const Vec3f& v) { return toString(Vec3d(v)); }
+template<> string toString(const Vec4f& v) { return toString(Vec4d(v)); }
+template<> string toString(const Pnt3f& v) { return toString(Vec3d(v)); }
 
 template<> string toString(const Color3f& v) {
     stringstream ss;

@@ -13,7 +13,7 @@
 
 using namespace OSG;
 
-string toString(ALenum a) {
+string alToString(ALenum a) {
     switch (a) {
         case AL_NO_ERROR: return "ok";
         case AL_INVALID_NAME: return "invalid name";
@@ -83,8 +83,8 @@ void VRSoundInterface::play() {
 
 void VRSoundInterface::updatePose(PosePtr pose, float velocity) {
     if (pose) {
-        Vec3d pos = pose->pos();
-        Vec3d vel = pose->dir()*velocity;
+        Vec3f pos = Vec3f(pose->pos());
+        Vec3f vel = Vec3f(pose->dir())*velocity;
         ALCHECK( alSource3f(source, AL_POSITION, pos[0], pos[1], pos[2]));
         ALCHECK( alSource3f(source, AL_VELOCITY, vel[0], vel[1], vel[2]));
         //cout << "VRSoundInterface::updateSource " << pos << ", " << vel << endl;
@@ -104,7 +104,7 @@ void VRSoundInterface::updateSource(float pitch, float gain, float lowpass, floa
     if (filter > 0) {
         ALCHECK( alFilteri(filter, AL_FILTER_TYPE, AL_FILTER_BANDPASS) );
         //ALCHECK( alFilterf(filter, AL_BANDPASS_GAIN, 0.25f) );
-        ALCHECK( alFilterf(filter, AL_BANDPASS_GAIN, (lowpass+highpass)*0.5) );
+        ALCHECK( alFilterf(filter, AL_BANDPASS_GAIN, (lowpass+highpass)*0.5f) );
         ALCHECK( alFilterf(filter, AL_BANDPASS_GAINLF, lowpass) );
         ALCHECK( alFilterf(filter, AL_BANDPASS_GAINHF, highpass) );
         ALCHECK( alSourcei(source, AL_DIRECT_FILTER, filter) );

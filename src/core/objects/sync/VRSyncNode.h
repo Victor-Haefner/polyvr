@@ -25,6 +25,10 @@ class VRSyncNode : public VRTransform {
         FieldContainerFactoryBase* factory = FieldContainerFactory::the();
         vector<UInt32> createdNodes; //IDs of the currently created nodes/children
 
+        bool peerConnectionOk = false;
+        vector<string> initMsgQueue;
+        function<void(string)> onEventCb;
+
         size_t selfNodeID = 0;
         size_t selfNameID = 0;
         size_t selfCoreID = 0;
@@ -35,13 +39,13 @@ class VRSyncNode : public VRTransform {
         VRTransformPtr avatarDeviceTransform;
         VRTransformPtr avatarDeviceAnchor;
 
-        VRMessageCbPtr onEvent;
         VRSyncChangelistPtr changelist;
 
         string UUID;
         map<UInt32, bool> container; // local containers, sub-set of containers which need to be synced for collaboration
         map<UInt32, UInt32> externalContainer; // local external containers, key is container ID, value is change mask to use
         map<string, VRSyncConnectionPtr> remotes;
+        map<size_t, string> clientsIDMap;
         map<string, string> remoteUUIDs;
         map<UInt32, VRObjectWeakPtr> nodeToVRObject;
         UInt32 getRegisteredContainerID(UInt32 syncID);
@@ -75,7 +79,7 @@ class VRSyncNode : public VRTransform {
         vector<string> owned; //names of owned objects by this node
         void handleOwnershipMessage(string ownership, VRSyncConnectionWeakPtr weakRemote);
 
-        void handleNewConnect(string data);
+        string onServerMsg(string msg);
         void accTCPConnection(string msg, VRSyncConnectionWeakPtr weakRemote);
         void reqInitState(VRSyncConnectionWeakPtr weakRemote);
 
@@ -90,6 +94,8 @@ class VRSyncNode : public VRTransform {
 
         static VRSyncNodePtr create(string name = "None");
         VRSyncNodePtr ptr();
+
+        void onEvent( function<void(string)> f );
 
         UInt32 getSyncNodeID();
         UInt32 getSyncNameID();
@@ -107,6 +113,7 @@ class VRSyncNode : public VRTransform {
         void replaceContainerMapping(UInt32 ID1, UInt32 ID2, VRSyncConnectionWeakPtr weakRemote);
 
         void startInterface(int port);
+        string interfaceHandler(string msg, size_t sID);
         string handleMessage(string msg, VRSyncConnectionWeakPtr weakRemote);
         void update();
         void broadcast(string message);
@@ -141,8 +148,6 @@ class VRSyncNode : public VRTransform {
         void wrapOSG();
 
         string getConnectionLink();
-        void setCallback(VRMessageCbPtr fkt);
-
         string getConnectionStatus();
 };
 

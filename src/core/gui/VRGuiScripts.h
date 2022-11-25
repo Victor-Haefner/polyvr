@@ -106,6 +106,7 @@ class VRGuiScripts {
 
         void updateTemplates();
         void on_select_templ();
+        void on_doubleclick_templ(GtkTreePath*, GtkTreeViewColumn*);
         void on_templ_close_clicked();
         void on_templ_import_clicked();
         void on_templ_filter_edited();
@@ -136,6 +137,8 @@ class VRGuiScripts {
 
         bool updateList();
         VRScriptPtr getSelectedScript();
+        group* getSelectedGroup();
+        void selectScript(string name);
         void focusScript(string name, int line, int column);
         void getLineFocus(int& line, int& column);
         void update();

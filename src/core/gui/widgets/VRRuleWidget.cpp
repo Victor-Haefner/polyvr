@@ -5,6 +5,7 @@
 #include "addons/Semantics/Reasoning/VROntology.h"
 
 #include "../VRGuiUtils.h"
+#include "../VRGuiBuilder.h"
 #include "../VRGuiSemantics.h"
 
 #include "core/utils/toString.h"
@@ -13,14 +14,16 @@ using namespace OSG;
 
 // TODO
 
-/*VRRuleWidget::VRRuleWidget(VRGuiSemantics* m, Gtk::Fixed* canvas, VROntologyRulePtr rule) : VRSemanticWidget(m, canvas, "#00DD00") {
+VRRuleWidget::VRRuleWidget(VRGuiSemantics* m, GtkFixed* canvas, VROntologyRulePtr rule) : VRSemanticWidget(m, canvas, "#00DD00") {
     this->rule = rule;
-    label->set_text("rule");
-    if (rule->query) label->set_text(rule->query->toString());
+    if (rule->query) gtk_label_set_text(label, rule->query->toString().c_str());
+    else gtk_label_set_text(label, "rule");
 
-    Glib::RefPtr<Gtk::TreeStore> treestore = Glib::RefPtr<Gtk::TreeStore>::cast_dynamic( treeview->get_model() );
+    GtkTreeStore* treestore = GTK_TREE_STORE( gtk_tree_view_get_model( treeview ) );
     for (auto s : rule->statements) {
-        setPropRow(treestore->append(), s->toString(), "", "black", 0);
+        GtkTreeIter itr;
+        gtk_tree_store_append(treestore, &itr, 0);
+        setPropRow(&itr, s->toString(), "", "black", 0);
     }
 }
 
@@ -28,18 +31,18 @@ int VRRuleWidget::ID() { return rule->ID; }
 
 void VRRuleWidget::on_edit_prop_clicked() {
     if (!selected_statement) return;
-    Gtk::Dialog* dialog;
-    VRGuiBuilder::get()->get_widget("PropertyEdit", dialog);
+    auto dialog = VRGuiBuilder::get()->get_widget("PropertyEdit");
     setTextEntry("entry23", selected_statement->toString());
     //setTextEntry("entry24", selected_statement->toString());
-    dialog->show();
-    if (dialog->run() == Gtk::RESPONSE_OK) {
+    gtk_widget_show(dialog);
+    auto res = gtk_dialog_run(GTK_DIALOG(dialog));
+    if (res == GTK_RESPONSE_OK) {
         selected_statement->statement = getTextEntry("entry23");
         selected_statement->setup(0);
         //selected_statement->type = getTextEntry("entry24");
         saveScene();
     }
-    dialog->hide();
+    gtk_widget_hide(dialog);
     update();
 }
 
@@ -54,61 +57,68 @@ void VRRuleWidget::on_rem_prop_clicked() {
 }
 
 void VRRuleWidget::on_rem_clicked() {
-    bool b = askUser("Delete rule " + label->get_text() + "?", "Are you sure you want to delete this concept?");
+    string txt = gtk_label_get_text(label);
+    bool b = askUser("Delete rule " + txt + "?", "Are you sure you want to delete this concept?");
     if (b) manager->remRule(this);
 }
 
 void VRRuleWidget::on_edit_clicked() {
-    string s = askUserInput("Change rule " + label->get_text() + ":");
+    string txt = gtk_label_get_text(label);
+    string s = askUserInput("Change rule " + txt + ":");
     if (s == "") return;
     rule->setQuery(s);
-    if (rule->query) label->set_text(rule->query->toString());
+    if (rule->query) gtk_label_set_text(label, rule->query->toString().c_str());
     saveScene();
 }
 
 void VRRuleWidget::on_newp_clicked() {
-    Glib::RefPtr<Gtk::TreeStore> treestore = Glib::RefPtr<Gtk::TreeStore>::cast_dynamic( treeview->get_model() );
+    auto store = GTK_TREE_STORE( gtk_tree_view_get_model(treeview) );
     string name = rule->associatedConcept + "(x)";
-    setPropRow(treestore->append(), name, "", "orange", 0);
+    GtkTreeIter itr;
+    gtk_tree_store_append(store, &itr, 0);
+    setPropRow(&itr, name, "", "orange", 0);
     rule->addStatement(name);
     saveScene();
 }
 
 void VRRuleWidget::on_select_property() {
-    Gtk::TreeModel::iterator iter = treeview->get_selection()->get_selected();
-    Glib::RefPtr<Gtk::TreeStore> store = Glib::RefPtr<Gtk::TreeStore>::cast_dynamic( treeview->get_model() );
-    if (!iter) return;
+    auto store = GTK_TREE_STORE( gtk_tree_view_get_model(treeview) );
+    GtkTreeIter itr;
+    auto treeselection = gtk_tree_view_get_selection(treeview);
+    auto model = GTK_TREE_MODEL(store);
+    bool res = gtk_tree_selection_get_selected(treeselection, &model, &itr);
+    if (!res) return;
 
     auto getStorePos = [&]() {
-        Gtk::TreeModel::iterator iter2;
-        int N = gtk_tree_model_iter_n_children( (GtkTreeModel*) store->gobj(), NULL );
+        GtkTreeIter itr2;
+        int N = gtk_tree_model_iter_n_children( model, NULL );
         for (int i=0; i<N; i++) {
-            iter2 = store->get_iter( toString(i) );
-            if (iter2 == iter) return i;
+            gtk_tree_model_get_iter_from_string(model, &itr2, toString(i).c_str());
+            if (&itr2 == &itr) return i;
         }
         return -1;
     };
 
-    VRGuiSemantics_PropsColumns cols;
-    Gtk::TreeModel::Row row = *iter;
-    int flag = row.get_value(cols.flag);
+    int flag;
+    gtk_tree_model_get(model, &itr, 4, &flag, -1);
     selected_statement = flag ? 0 : rule->getStatement( getStorePos() );
-    treeview->get_selection()->unselect_all(); // clear selection
+    gtk_tree_selection_unselect_all(treeselection); // clear selection
     update();
 }
 
 void VRRuleWidget::update() {
-    Glib::RefPtr<Gtk::TreeStore> treestore = Glib::RefPtr<Gtk::TreeStore>::cast_dynamic( treeview->get_model() );
+    auto store = GTK_TREE_STORE( gtk_tree_view_get_model(treeview) );
 
-    treestore->clear();
+    gtk_tree_store_clear(store);
     for (auto p : rule->statements) {
-        Gtk::TreeModel::iterator i = treestore->append();
+        GtkTreeIter itr;
+        gtk_tree_store_append(store, &itr, 0);
         if (selected_statement && p->toString() == selected_statement->toString())
-            setPropRow(i, p->toString(), "", "green", 1);
-        else setPropRow(i, p->toString(), "", "black", 0);
+            setPropRow(&itr, p->toString(), "", "green", 1);
+        else setPropRow(&itr, p->toString(), "", "black", 0);
     }
 }
 
 void VRRuleWidget::reparent(VRConceptWidgetPtr w) {}
 void VRRuleWidget::reparent(VREntityWidgetPtr w) {}
-void VRRuleWidget::reparent(VRRuleWidgetPtr w) {}*/
+void VRRuleWidget::reparent(VRRuleWidgetPtr w) {}

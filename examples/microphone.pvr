@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Scene base_name="microphone" name_space="Scene" name_suffix="0" persistency="666">
   <Objects>
-    <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" visible="4294967295">
-      <Object ambient="0.3 0.3 0.3 1" base_name="light" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" name_space="__global__" name_suffix="0" on="1" persistency="666" photometricMap="" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" shadowVolume="1e+06 1e+06 1e+06 -1e+06 -1e+06 -1e+06 1" specular="0.1 0.1 0.1 1" type="Light" visible="4294967295">
-        <Object accept_root="1" aspect="1" at="0 0 0" at_dir="0" base_name="Default" far="512" fov="1.0472" from="2.40998 2.99743 3.99625" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="4294967295">
+    <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" visible="-1">
+      <Object ambient="0.3 0.3 0.3 1" base_name="light" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" name_space="__global__" name_suffix="0" on="1" persistency="666" photometricMap="" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" shadowVolume="1e+06 1e+06 1e+06 -1e+06 -1e+06 -1e+06 1" specular="0.1 0.1 0.1 1" type="Light" visible="-1">
+        <Object accept_root="1" aspect="1" at="0 0 0" at_dir="0" base_name="Default" far="512" fov="1.0472" from="2.22173 2.7633 3.6841" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="-1">
           <attachments>
             <Node base_name="transform" name_space="VRAttachment" name_suffix="0" persistency="666" value=""/>
           </attachments>
-          <Object at="0 0 -1" at_dir="0" base_name="Headlight_beacon" from="0 0 0" light="light" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="LightBeacon" up="0 1 0" visible="4294967295">
+          <Object at="0 0 -1" at_dir="0" base_name="Headlight_beacon" from="0 0 0" light="light" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="LightBeacon" up="0 1 0" visible="-1">
             <attachments>
               <Node base_name="transform" name_space="VRAttachment" name_suffix="0" persistency="666" value=""/>
             </attachments>
@@ -21,6 +21,112 @@
   <Cameras activeCam="Default" persistency="666"/>
   <Rendering deferred_rendering="0" fogColor="0.5 0.5 0.5 1" fogParams="0 0 100 0.1" frustum_culling="1" fxaa="0" hmdd="0" marker="0" occlusion_culling="0" persistency="666" ssao="0" ssao_kernel="4" ssao_noise="4" ssao_radius="0.02" two_sided="1"/>
   <Scripts persistency="666">
+    <Script base_name="hudHandler" group="ui" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+      <core>
+	import VR
+
+ 	m = dev.getMessage().split('|')
+ 	print m
+
+	if m[1] == 'Microphone': VR.mike.simSource(0, 440, 0.2, 0.8)
+	if m[1] == 'Simulate':   VR.mike.simSource(1, 440, 0.2, 0.8)
+	
+	if m[1] == 'Echo':   
+		VR.mode = 'echo'
+		
+	if m[1] == 'Stream':   
+		if not VR.mike.isStreaming(): VR.listenStream()
+		VR.mode = 'stream'
+		
+	if m[1] == 'Record and play':   
+		VR.mode = 'record'
+</core>
+      <trig type="on_device" dev="server1" state="Released" param="0" key="-1" base_name="trigger" name_space="__global__" name_suffix="4" persistency="666"/>
+    </Script>
+    <Script base_name="hudInit" group="ui" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+      <core>
+	import VR
+
+ 	def addHud(site,w,h,x,y,parent):
+ 		s = VR.Sprite('site')
+ 		s.setSize(w,h)
+ 		port = VR.find('server1').getPort()
+ 		s.webOpen('http://localhost:'+str(port)+'/'+site, 400, w/h)
+ 		s.setFrom([x,y,-2])
+ 		parent.addChild(s)
+
+ 	if hasattr(VR, 'hud'): VR.hud.destroy()
+ 	VR.hud = VR.Object('hud')
+ 	VR.find('Default').addChild(VR.hud)
+
+ 	addHud( 'hudSite', 0.5,0.3, 0,1, VR.hud )
+</core>
+    </Script>
+    <Script base_name="hudSite" group="ui" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="HTML">
+      <core>
+&lt;!DOCTYPE html&gt;
+ &lt;html&gt;
+
+ &lt;head&gt;
+ 	&lt;style type="text/css"&gt;
+ 		body { 
+ 			display: flex;
+ 			margin:0; 
+ 		}
+ 		
+ 		div {
+ 			display: flex;
+ 			flex-direction: column;
+ 			justify-content: space-around;
+ 			height: 100vh;
+ 		}
+ 		
+ 		button {
+ 			flex-grow: 1;
+ 			font-size:10vh;
+ 			width:50vw;
+ 		}
+ 		
+ 		.active {
+ 			background: #8cf;
+ 		}
+ 	&lt;/style&gt;
+ 	&lt;script&gt;
+ 		var websocket = new WebSocket('ws://localhost:$PORT_server1$');
+ 		websocket.onopen = function() { send('register|hud'); };
+ 		websocket.onerror = function(e) {};
+ 		websocket.onmessage = function(m) { if(m.data) handle(m.data); };
+ 		websocket.onclose = function(e) {};
+
+ 		function send(m) { websocket.send(m); };
+ 		function handle(m) { console.log(m); };
+ 		
+ 		function toggle(b) {
+ 			send("toggle|"+b.innerHTML);
+ 			var p = b.parentNode;
+ 			for (var i=0; i&lt;p.children.length; i++) {
+ 				p.children[i].className = '';
+ 			}
+ 			b.className = 'active';
+ 		}
+ 	&lt;/script&gt;
+ &lt;/head&gt;
+
+ &lt;body&gt;
+ 	&lt;div&gt;
+	 	&lt;button onclick="toggle(this);" class="active"&gt;Echo&lt;/button&gt;
+	 	&lt;button onclick="toggle(this);"&gt;Stream&lt;/button&gt;
+	 	&lt;button onclick="toggle(this);"&gt;Record and play&lt;/button&gt;
+ 	&lt;/div&gt;
+ 	
+ 	&lt;div&gt;
+	 	&lt;button onclick="toggle(this);" class="active"&gt;Microphone&lt;/button&gt;
+	 	&lt;button onclick="toggle(this);"&gt;Simulate&lt;/button&gt;
+ 	&lt;/div&gt;
+ &lt;/body&gt;
+ &lt;/html&gt;
+</core>
+    </Script>
     <Script base_name="init" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
       <core>
 	import VR
@@ -29,13 +135,18 @@
 	VR.scene = VR.Object('scene', 'light')
 	
 	
-	VR.serverAddr = '0.0.0.0'
-	VR.useTurnServer = False
+	VR.hudInit()
 	
+	
+	# config
+	VR.useTurnServer = False
+	VR.serverAddr = '127.0.0.1'
+	
+	
+	# init modules
+	VR.mode = 'echo'
 	VR.mike = VR.Microphone()
 	
-	VR.listenStream()
-
 	VR.indicator = VR.Geometry('indicator')
 	VR.indicator.setPrimitive('Sphere 1 3')
 	VR.scene.addChild(VR.indicator)
@@ -47,7 +158,7 @@
 	import VR
 
 	VR.inStream = VR.Sound()
-	VR.inStream.setBandpass(0.25, 0.25) # basic noise reduction
+	#VR.inStream.setBandpass(0.25, 0.25) # basic noise reduction
 	
 	if VR.useTurnServer:
 		VR.clientIn = VR.UDPClient()
@@ -57,59 +168,73 @@
 	else:
 		VR.inStream.listenStream(1234)
 	#print 'listenStream', VR.clientIn.connected()
+
+
+	if VR.useTurnServer:
+		VR.clientOut = VR.UDPClient()
+		VR.clientOut.connect(VR.serverAddr, 4045)
+		VR.mike.startStreamingOver(VR.clientOut)
+	else:
+		VR.mike.startStreaming(VR.serverAddr, 1234)
+
+	VR.mike.pauseStreaming(True)
+	#print 'setupMikeStream', VR.clientOut.connected()
 </core>
     </Script>
     <Script base_name="record" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
       <core>
 	import VR
+	
+	doStream = bool(VR.mode == 'stream')
+	doEcho = bool(VR.mode == 'echo')
+	doRecord = bool(VR.mode == 'record')
 
-	if not hasattr(VR, 'toggle'): 
-		VR.toggle = False
-		
-		if VR.useTurnServer:
-			VR.clientOut = VR.UDPClient()
-			VR.clientOut.connect(VR.serverAddr, 4045)
-			VR.mike.startStreamingOver(VR.clientOut)
-		else:
-			VR.mike.startStreaming(VR.serverAddr, 1234)
-		
-		VR.mike.pauseStreaming(True)
-		#print 'setupMikeStream', VR.clientOut.connected()
+	if not hasattr(VR, 'toggle'): VR.toggle = False
 		
 	pressed = dev.getState()
 	if VR.toggle == pressed: return
 	if hasattr(VR, 'recording'):
-		if VR.recording.isRunning(): return
+		if VR.recording and VR.recording.isRunning(): return
 	VR.toggle = pressed
 	
 	def setIndicator(c):
 		VR.indicator.setColor(c)
 		
 	def onStopped():
-		print 'stopped'
+		print 'stop'
 		setIndicator('#fff')
 
 	if VR.toggle:
-		print 'record'
-		VR.mike.pauseStreaming(False)
-		#VR.mike.startRecording()
+		print 'start'
+		if doStream: VR.mike.pauseStreaming(False)
+		if doEcho or doRecord: VR.mike.startRecording()
 		setIndicator('#f00')
 		
 	else:
-		print 'stop'
-		VR.mike.pauseStreaming(True)
-		#VR.mike.stopStreaming()
-		setIndicator('#fff')
+		if doStream:
+			print 'pause stream'
+			setIndicator('#fff')
+			VR.mike.pauseStreaming(True)
+			#VR.mike.stopStreaming()
 	
-		"""
-		print 'play'
-		VR.recording = VR.mike.stopRecording()
-		#VR.recording.exportToFile('test.mp3')
-		VR.recording.streamTo('127.0.0.1', 1234, 0)
-		VR.recording.setCallback(onStopped)
-		VR.recording.play()
-		setIndicator('#0af')
-		"""
+		if doEcho:
+			print 'echo'
+			setIndicator('#0af')
+			VR.recording = VR.mike.stopRecording()
+			#VR.recording.streamTo('127.0.0.1', 1234, 0)
+			VR.recording.setCallback(onStopped)
+			VR.recording.play()
+			
+		if doRecord:
+			print 'read and play'
+			setIndicator('#0af')
+			r = VR.mike.stopRecording()
+			r.exportToFile('test.mp3')
+			s = VR.getSoundManager().setupSound('test.mp3')
+			s.setCallback(onStopped)
+			s.play()
+			
+		
 </core>
       <trig type="on_device" dev="keyboard" state="Pressed" param="" key="32" base_name="trigger" name_space="__global__" name_suffix="0" persistency="666"/>
       <trig type="on_device" dev="keyboard" state="Released" param="" key="32" base_name="trigger" name_space="__global__" name_suffix="2" persistency="666"/>
@@ -118,6 +243,7 @@
       <core>
 	import VR
 
+	# stream recorded audio
 	VR.recording.streamTo(VR.serverAddr, 1234, 0)
 </core>
     </Script>

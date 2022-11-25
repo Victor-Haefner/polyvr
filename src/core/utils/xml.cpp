@@ -15,10 +15,20 @@ XMLElementPtr XMLElement::create(_xmlNode* node) { return XMLElementPtr( new XML
 void XMLElement::print() {
     if (!node) cout << "invalid xml node!";
     else {
-        cout << "xml node: '" << getName() << "', ns: '" << getNameSpace() << "', data: " << getText();
-        for (auto a : getAttributes()) cout << ", " << a.first << ":" << a.second;
+        cout << "xml node: '" << getName() << "', ns: '" << getNameSpace() << "', data: '" << getText() << "', attributes: ";
+        for (auto a : getAttributes()) cout << "  " << a.first << ":" << a.second;
     }
     cout << endl;
+}
+
+string XMLElement::toString() {
+    string r;
+    if (!node) return r;
+    else {
+        r = "xml node: '" + getName() + "', ns: '" + getNameSpace() + "', data: '" + getText() + "', attributes: ";
+        for (auto a : getAttributes()) r += "  " + a.first + ":" + a.second;
+    }
+    return r;
 }
 
 string XMLElement::getName() {

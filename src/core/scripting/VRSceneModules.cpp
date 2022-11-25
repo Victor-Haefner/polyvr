@@ -72,6 +72,7 @@
 #include "VRPyNetworking.h"
 #include "VRPyProjectManager.h"
 #include "VRPyGeoPrimitive.h"
+#include "core/objects/geometry/brep/VRPyBRep.h"
 #include "VRPyProgress.h"
 #include "VRPyUndoManager.h"
 #include "VRPyObjectManager.h"
@@ -202,7 +203,7 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPyHDLC>("HDLC", pModVR);
 #endif
 #ifndef WITHOUT_TCP
-    sm->registerModule<VRPyNetworkClient>("UDPClient", pModVR);
+    sm->registerModule<VRPyNetworkClient>("NetworkClient", pModVR);
     sm->registerModule<VRPyUDPClient>("UDPClient", pModVR, VRPyNetworkClient::typeRef);
     sm->registerModule<VRPyUDPServer>("UDPServer", pModVR);
     sm->registerModule<VRPyTCPClient>("TCPClient", pModVR, VRPyNetworkClient::typeRef);
@@ -276,6 +277,7 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPyRainCarWindshield>("RainCarWindshield", pModVR, VRPyGeometry::typeRef);
     sm->registerModule<VRPyPlanet>("Planet", pModVR, VRPyTransform::typeRef);
     sm->registerModule<VRPyRocketExhaust>("RocketExhaust", pModVR, VRPyGeometry::typeRef);
+    sm->registerModule<VRPySpaceMission>("SpaceMission", pModVR);
     sm->registerModule<VRPyOrbit>("Orbit", pModVR);
     sm->registerModule<VRPyMillingMachine>("MillingMachine", pModVR);
     sm->registerModule<VRPyMillingWorkPiece>("MillingWorkPiece", pModVR, VRPyGeometry::typeRef);
@@ -288,6 +290,7 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPyWire>("Wire", pModVR);
     sm->registerModule<VRPyWiringSimulation>("WiringSimulation", pModVR);
     sm->registerModule<VRPyLADVariable>("LADVariable", pModVR);
+    sm->registerModule<VRPyLADEngine>("LADEngine", pModVR);
     sm->registerModule<VRPyElectricComponent>("ElectricComponent", pModVR);
     sm->registerModule<VRPyElectricVisualization>("ElectricVisualization", pModVR, VRPyObject::typeRef);
     sm->registerModule<VRPyOntology>("Ontology", pModVR, VRPyName::typeRef);
@@ -311,6 +314,9 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPyXMLElement>("XMLElement", pModVR);
     sm->registerModule<VRPySpreadsheet>("Spreadsheet", pModVR);
 
+	sm->registerModule<VRPyBRepSurface>("BRepSurface", pModVR);
+	sm->registerModule<VRPyBRepEdge>("BRepEdge", pModVR);
+	sm->registerModule<VRPyBRepBound>("BRepBound", pModVR);
 #ifndef WITHOUT_CGAL
 	sm->registerModule<VRPyCSGGeometry>("CSGGeometry", pModVR, VRPyGeometry::typeRef);
 #endif

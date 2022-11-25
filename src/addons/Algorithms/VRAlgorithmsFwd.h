@@ -6,6 +6,7 @@
 namespace OSG {
     ptrFwd(VRGraphLayout);
     ptrFwd(VRPathFinding);
+    ptrFwd(VRMeshSubdivision);
 }
 
 #endif // VRALGORITHMSFWD_H_INCLUDED

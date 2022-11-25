@@ -4,9 +4,11 @@
 #include <OpenSG/OSGConfig.h>
 #include <map>
 #include <string>
-#include "core/setup/devices/VRSignal.h"
-#include "VRSocket.h"
+
+#include "VRNetworkingFwd.h"
 #include "core/utils/VRStorage.h"
+//#include "core/setup/devices/VRSignal.h"
+//#include "VRSocket.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -14,6 +16,8 @@ using namespace std;
 class VRNetworkManager : public VRStorage {
     private:
         map<string, VRSocketPtr> sockets;
+        map<VRNetworkClient*, VRNetworkClientWeakPtr> networkClients;
+        map<VRNetworkServer*, VRNetworkServerWeakPtr> networkServers;
 
         void test();
 
@@ -30,6 +34,13 @@ class VRNetworkManager : public VRStorage {
 
         VRSocketPtr getSocket(string name);
         map<string, VRSocketPtr> getSockets();
+
+        void regNetworkClient(VRNetworkClientPtr client);
+        void regNetworkServer(VRNetworkServerPtr server);
+        void subNetworkClient(VRNetworkClient* client);
+        void subNetworkServer(VRNetworkServer* server);
+        vector<VRNetworkClientPtr> getNetworkClients();
+        vector<VRNetworkServerPtr> getNetworkServers();
 };
 
 OSG_END_NAMESPACE

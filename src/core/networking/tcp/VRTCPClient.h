@@ -10,14 +10,13 @@ namespace OSG {
 
 class VRTCPClient : public VRNetworkClient {
     private:
-        string uri;
         TCPClient* client = 0;
 
     public:
-        VRTCPClient();
+        VRTCPClient(string name);
         ~VRTCPClient();
 
-        static VRTCPClientPtr create();
+        static VRTCPClientPtr create(string name = "none");
 
         void onConnect( function<void(void)>   f );
         void onMessage( function<string(string)> f ) override;
@@ -31,7 +30,6 @@ class VRTCPClient : public VRNetworkClient {
         void close();
 
         string getPublicIP(bool cached = false);
-        string getConnectedUri();
 };
 
 }

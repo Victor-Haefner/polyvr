@@ -42,6 +42,7 @@ class VRRobotArm {
         float pathPos = 0;
         bool showModel = false;
         bool moving = false;
+        float animSpeed = 1;
         float maxSpeed = 0.01;
         string type = "kuka";
 
@@ -80,6 +81,7 @@ class VRRobotArm {
         void setAngleDirections(vector<int> directions);
         void setAxis(vector<int> axis);
         void setLengths(vector<float> lengths);
+        void setSpeed(float s);
         void setMaxSpeed(float s);
 
         vector<VRTransformPtr> getParts();

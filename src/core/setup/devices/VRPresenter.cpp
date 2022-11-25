@@ -9,6 +9,7 @@ using namespace OSG;
 
 
 VRPresenter::VRPresenter() : VRFlystick() {
+    setName("presenter");
     input = "/dev/input/presenter";
 
     store("input", &input);

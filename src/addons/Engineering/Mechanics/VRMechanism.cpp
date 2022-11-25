@@ -616,6 +616,8 @@ void VRMechanism::updateNeighbors() {
     for (auto p : parts) p->updateNeighbors(parts);
 }
 
+int VRMechanism::getNParts() { return parts.size(); }
+
 void VRMechanism::update() {
     //cout << "\nVRMechanism::update" << endl;
 

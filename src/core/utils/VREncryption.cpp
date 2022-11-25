@@ -22,8 +22,8 @@ string VREncryption::encrypt(string plaintext, string key, string iv) {
     cout << "Encrypt " << plaintext.size() << " bytes" << endl;
     string ciphertext;
     try {
-        CryptoPP::AES::Encryption aesEncryption((const byte*)key.c_str(), key.size());
-        CryptoPP::CBC_Mode_ExternalCipher::Encryption cbcEncryption( aesEncryption, (const byte*)iv.c_str() );
+        CryptoPP::AES::Encryption aesEncryption((const unsigned char*)key.c_str(), key.size());
+        CryptoPP::CBC_Mode_ExternalCipher::Encryption cbcEncryption( aesEncryption, (const unsigned char*)iv.c_str() );
         CryptoPP::StreamTransformationFilter stfEncryptor(cbcEncryption, new CryptoPP::StringSink( ciphertext ), CryptoPP::StreamTransformationFilter::PKCS_PADDING );
         stfEncryptor.Put( reinterpret_cast<const unsigned char*>( plaintext.c_str() ), plaintext.size() );
         stfEncryptor.MessageEnd();
@@ -36,8 +36,8 @@ string VREncryption::decrypt(string ciphertext, string key, string iv) {
     cout << "Decrypt " << ciphertext.size() << " bytes" << endl;
     string decryptedtext;
     try {
-        CryptoPP::AES::Decryption aesDecryption((const byte*)key.c_str(), key.size());
-        CryptoPP::CBC_Mode_ExternalCipher::Decryption cbcDecryption( aesDecryption, (const byte*)iv.c_str() );
+        CryptoPP::AES::Decryption aesDecryption((const unsigned char*)key.c_str(), key.size());
+        CryptoPP::CBC_Mode_ExternalCipher::Decryption cbcDecryption( aesDecryption, (const unsigned char*)iv.c_str() );
         CryptoPP::StreamTransformationFilter stfDecryptor(cbcDecryption, new CryptoPP::StringSink( decryptedtext ), CryptoPP::StreamTransformationFilter::PKCS_PADDING );
         stfDecryptor.Put( reinterpret_cast<const unsigned char*>( ciphertext.c_str() ), ciphertext.size() );
         stfDecryptor.MessageEnd();

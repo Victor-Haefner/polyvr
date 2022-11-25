@@ -21,6 +21,7 @@ ptrFwd(VRElectricVisualization);
 ptrFwd(VRWire);
 ptrFwd(VRWiringSimulation);
 ptrFwd(VRElectricComponent);
+ptrFwd(VRLADEngine);
 ptrFwd(VRLADVariable);
 
 ptrFwd(VRAtom);
@@ -31,6 +32,7 @@ ptrFwd(VRCrystal);
 
 ptrFwd(VRAMLLoader);
 
+ptrFwd(VRSpaceMission);
 ptrFwd(VRRocketExhaust);
 
 }

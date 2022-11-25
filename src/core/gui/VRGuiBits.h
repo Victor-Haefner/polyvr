@@ -4,6 +4,7 @@
 #include <OpenSG/OSGConfig.h>
 #include <string.h>
 #include <queue>
+#include "core/navigation/VRNavigationFwd.h"
 #include "core/utils/VRFunctionFwd.h"
 #include "core/utils/VRDeviceFwd.h"
 #include "VRGuiRecWidget.h"
@@ -38,7 +39,8 @@ class VRGuiBits {
         void toggleVerbose(string s);
 
         void on_camera_changed();
-        void on_navigation_changed();
+        void on_navigation_clicked();
+        void on_navigation_toggled(VRNavPresetWeakPtr np, _GtkWidget* cb);
 
         void on_save_clicked();
         void on_web_export_clicked();

@@ -15,7 +15,9 @@ simpleVRPyType(Wire, 0);
 simpleVRPyType(WiringSimulation, 0);
 simpleVRPyType(ElectricComponent, 0);
 simpleVRPyType(LADVariable, New_ptr);
+simpleVRPyType(LADEngine, New_ptr);
 simpleVRPyType(RocketExhaust, New_VRObjects_ptr);
+simpleVRPyType(SpaceMission, New_ptr);
 
 template<> PyObject* VRPyTypeCaster::cast(const VRElectricComponent::Address& a) {
     map<string, string> v;
@@ -33,11 +35,15 @@ PyMethodDef VRPyPipeSystem::methods[] = {
     {"remNode", PyWrap( PipeSystem, remNode, "Remove node", void, int ) },
     {"addSegment", PyWrap( PipeSystem, addSegment, "Add segment between nodes (radius, n1, n2)", int, double, int, int ) },
     {"remSegment", PyWrap( PipeSystem, remSegment, "Remove segment", void, int ) },
+    {"setFlowParameters", PyWrap( PipeSystem, setFlowParameters, "Set flow parameters, (latency)", void, float ) },
     {"setDoVisual", PyWrapOpt( PipeSystem, setDoVisual, "Enable visual", "0.1", void, bool, float ) },
     {"setNodePose", PyWrap( PipeSystem, setNodePose, "Set node pose by ID", void, int, PosePtr ) },
     {"disconnect", PyWrap( PipeSystem, disconnect, "Disconnect a node from a segment, keeps the segment by adding a junction to its end (nId, sID)", int, int, int ) },
     {"insertSegment", PyWrap( PipeSystem, insertSegment, "Insert a segment between a node and segment (nID, sID, radius)", int, int, int, float ) },
+    {"getGraph", PyWrap( PipeSystem, getGraph, "Get internal graph", GraphPtr ) },
+    {"getOntology", PyWrap( PipeSystem, getOntology, "Get ontology", VROntologyPtr ) },
     {"getNode", PyWrap( PipeSystem, getNode, "Get node ID by name", int, string ) },
+    {"getNodeEntity", PyWrap( PipeSystem, getNodeEntity, "Get node entity by node ID", VREntityPtr, int ) },
     {"getNodeName", PyWrap( PipeSystem, getNodeName, "Get node name", string, int ) },
     {"getNodePose", PyWrap( PipeSystem, getNodePose, "Get node pose", PosePtr, int ) },
     {"getSegment", PyWrap( PipeSystem, getSegment, "Get segment ID by its node IDs", int, int, int ) },
@@ -56,6 +62,8 @@ PyMethodDef VRPyPipeSystem::methods[] = {
     {"setTankPressure", PyWrap( PipeSystem, setTankPressure, "Set tank pressure", void, string, double ) },
     {"setTankDensity", PyWrap( PipeSystem, setTankDensity, "Set tank density", void, string, double ) },
     {"setPipeRadius", PyWrap( PipeSystem, setPipeRadius, "Set pipe radius, set to 0 to simulate blocked pipe", void, int, double ) },
+    {"setOutletDensity", PyWrap( PipeSystem, setOutletDensity, "Set outlet exterior density", void, string, double ) },
+    {"setOutletPressure", PyWrap( PipeSystem, setOutletPressure, "Set outlet exterior pressure", void, string, double ) },
     {"printSystem", PyWrap( PipeSystem, printSystem, "Print system state to console", void ) },
     {NULL}
 };
@@ -113,7 +121,6 @@ PyMethodDef VRPyElectricComponent::methods[] = {
     {"setEntity", PyWrap( ElectricComponent, setEntity, "Set entity", void, VREntityPtr ) },
     {"setEGraphID", PyWrap( ElectricComponent, setEGraphID, "Set E graph ID", void, int ) },
     {"setPGraphID", PyWrap( ElectricComponent, setPGraphID, "Set P graph ID", void, int ) },
-    {"setPGraphID", PyWrap( ElectricComponent, setPGraphID, "Set P graph ID", void, int ) },
     {"setPortEntity", PyWrap( ElectricComponent, setPortEntity, "Set port entity", void, string, VREntityPtr ) },
     {"setPosition", PyWrap( ElectricComponent, setPosition, "Set position", void, Vec3d ) },
     {"getName", PyWrap( ElectricComponent, getName, "Get name", string ) },
@@ -134,6 +141,24 @@ PyMethodDef VRPyElectricComponent::methods[] = {
     {"getPosition", PyWrap( ElectricComponent, getPosition, "Get position", Vec3d ) },
     {"getConnection", PyWrap( ElectricComponent, getConnection, "Get connection", VRWirePtr, string ) },
     {"addPort", PyWrap( ElectricComponent, addPort, "Add port", void, string, string, string, string ) },
+    {NULL}
+};
+
+PyMethodDef VRPyLADEngine::methods[] = {
+    {"setElectricEngine", PyWrap( LADEngine, setElectricEngine, "Set electric system", void, VRElectricSystemPtr ) },
+    {"read", PyWrap( LADEngine, read, "Read data, first path is full path to tag table 'Default tag table.xml', second path is path to modules folder '../Programmbausteine'", void, string, string ) },
+    {"iterate", PyWrap( LADEngine, iterate, "Run iteration", void ) },
+    {"getCompileUnits", PyWrap( LADEngine, getCompileUnits, "Return IDs of compile units", vector<string> ) },
+    {"getCompileUnitWires", PyWrapOpt( LADEngine, getCompileUnitWires, "Return IDs of compile unit wires, optional pnly powered wired", "0", vector<string>, string, bool ) },
+    {"getCompileUnitParts", PyWrap( LADEngine, getCompileUnitParts, "Return IDs of compile unit parts", vector<string>, string ) },
+    {"getCompileUnitVariables", PyWrap( LADEngine, getCompileUnitVariables, "Return IDs of compile unit variables", vector<string>, string ) },
+    {"getCompileUnitWireSignal", PyWrap( LADEngine, getCompileUnitWireSignal, "Return IDs of compile unit wire signal", int, string, string ) },
+    {"getCompileUnitWireOutParts", PyWrap( LADEngine, getCompileUnitWireOutParts, "Return IDs of compile units parts that are outputs of a wire", vector<string>, string, string ) },
+    {"getCompileUnitPartVariable", PyWrap( LADEngine, getCompileUnitPartVariable, "Return LAD variable from part", VRLADVariablePtr, string, string ) },
+    {"getCompileUnitPartOutWires", PyWrap( LADEngine, getCompileUnitPartOutWires, "Return IDs of compile units wires that are outputs of a part", vector<string>, string, string ) },
+    {"getCompileUnitPartName", PyWrap( LADEngine, getCompileUnitPartName, "Return part name", string, string, string ) },
+    {"addVisual", PyWrap( LADEngine, addVisual, "Create basic visualization", VRTransformPtr ) },
+    {"updateVisual", PyWrap( LADEngine, updateVisual, "Update visualization based on current state", void ) },
     {NULL}
 };
 
@@ -168,6 +193,7 @@ PyMethodDef VRPyRobotArm::methods[] = {
     {"setAngleDirections", PyWrap(RobotArm, setAngleDirections, "Set angles rotation direction - setAngleDirections([1/-1])", void, vector<int> ) },
     {"setAxis", PyWrap(RobotArm, setAxis, "Set rotation axis for each part - setAxis([int a])\n a: 0 = 'x', 1 = 'y', 2 = 'z'", void, vector<int> ) },
     {"setLengths", PyWrap(RobotArm, setLengths, "Set kinematic lengths between joints - setLengths([base_height, upper_arm length, forearm length, grab position])", void, vector<float> ) },
+    {"setSpeed", PyWrap(RobotArm, setSpeed, "Set path follow animation speed", void, float ) },
     {"setMaxSpeed", PyWrap(RobotArm, setMaxSpeed, "Set max angular speed", void, float ) },
     {"canReach", PyWrapOpt(RobotArm, canReach, "Check if the end effector can reach a certain pose, optionally in local robot coords, default in world coords - canReach(pose | local)", "0", bool, PosePtr, bool ) },
     {"moveTo", PyWrapOpt(RobotArm, moveTo, "Move the end effector to a certain pose, optionally in local robot coords, default in world coords - moveTo(pose | local)", "0", void, PosePtr, bool ) },
@@ -192,5 +218,15 @@ PyMethodDef VRPyRobotArm::methods[] = {
 
 PyMethodDef VRPyRocketExhaust::methods[] = {
     {"set", PyWrap( RocketExhaust, set, "Set exhaust amount, from 0.0 to 1.0", void, float ) },
+    {NULL}
+};
+
+typedef map<double, string> mapStrDouble;
+
+PyMethodDef VRPySpaceMission::methods[] = {
+    {"setParameters", PyWrap( SpaceMission, setParameters, "Set name, start, stop", void, string, double, double ) },
+    {"addWayPoint", PyWrap( SpaceMission, addWayPoint, "Add way point, name, time", void, string, double ) },
+    {"getName", PyWrap( SpaceMission, getName, "Return mission name", string ) },
+    {"getWayPoints", PyWrap( SpaceMission, getWayPoints, "Return waypoints", mapStrDouble ) },
     {NULL}
 };

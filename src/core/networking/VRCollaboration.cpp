@@ -2,15 +2,23 @@
 #include "core/utils/toString.h"
 
 #include "tcp/VRICEclient.h"
+#include "tcp/VRTCPClient.h"
 #include "core/objects/sync/VRSyncNode.h"
 #include "core/objects/geometry/sprite/VRSprite.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/VRCamera.h"
+#include "core/tools/VRAnnotationEngine.h"
 #include "core/scene/sound/VRMicrophone.h"
 #include "core/scene/sound/VRSound.h"
+#include "core/scene/VRSceneManager.h"
 #include "core/scene/VRScene.h"
 #include "core/setup/VRSetup.h"
 #include "core/setup/devices/VRServer.h"
+#include "core/utils/system/VRSystem.h"
+
+#ifndef WITHOUT_GTK
+#include "core/gui/VRGuiConsole.h"
+#endif
 
 #define WEBSITEV(...) #__VA_ARGS__
 #define WEBSITE(...) WEBSITEV(__VA_ARGS__)
@@ -34,13 +42,23 @@ void VRCollaboration::init() {
 
     syncNode = VRSyncNode::create("syncNode");
 	VRObject::addChild(syncNode);
+	syncNode->onEvent(bind(&VRCollaboration::onSyncNodeEvent, this, placeholders::_1));
 
     mike = VRMicrophone::create();
 	mike->pauseStreaming(true);
 
-    sound = VRSound::create();
-
     initUI();
+}
+
+void VRCollaboration::onSyncNodeEvent(string e) {
+    cout << "VRCollaboration::onSyncNodeEvent, event: " << e << endl;
+    if (startsWith(e, "dropUser|")) {
+        string uID = splitString(e, '|')[1];
+        cout << " drop user with uID: " << uID << endl;
+        cout << "  ICE users: " << toString(ice->getUsers()) << endl;
+        ice->removeLocalUser(uID);
+        updateUsersWidget();
+    }
 }
 
 void VRCollaboration::addChild(VRObjectPtr child, bool osg, int place) {
@@ -55,30 +73,43 @@ void VRCollaboration::setServer(string uri) {
 	ice->setTurnServer(uri);
 }
 
+void VRCollaboration::setupLocalServer() {
+    string D = VRSceneManager::get()->getOriginalWorkdir();
+    string folder = D+"/ressources/PolyServ";
+    if (!exists(folder+"/.git"))
+        systemCall("git clone https://github.com/Victor-Haefner/PolyServ.git \"" + folder + "\"");
+    setServer("http://localhost:5500/ressources/PolyServ");
+}
+
 void VRCollaboration::setAvatarDevices(VRTransformPtr head, VRTransformPtr hand, VRTransformPtr handGrab) {
     if (!handGrab) handGrab = hand;
 	syncNode->setAvatarBeacons(head, hand, handGrab);
 }
 
-void VRCollaboration::setAvatarGeometry(VRTransformPtr torso, VRTransformPtr leftHand, VRTransformPtr rightHand) {
+void VRCollaboration::setAvatarGeometry(VRTransformPtr torso, VRTransformPtr leftHand, VRTransformPtr rightHand, float scale) {
     avatarTorso = torso;
     avatarHandLeft = leftHand;
     avatarHandRight = rightHand;
+    avatarScale = scale;
 }
 
 void VRCollaboration::setupAvatar(string rID, string name) {
 	auto avatar = VRTransform::create("avatar");
 	VRObject::addChild(avatar);
 
+	auto avatarScaleNode = VRTransform::create("avatarScale");
+	avatarScaleNode->setScale( avatarScale );
+	avatar->addChild(avatarScaleNode);
+
 	auto rightHandContainer = VRTransform::create("rightHandContainer");
 	auto anchor = VRTransform::create("anchor");
 	rightHandContainer->addChild(anchor);
-	avatar->addChild(rightHandContainer);
+	avatarScaleNode->addChild(rightHandContainer);
 
 	if (avatarTorso) {
         auto torso = dynamic_pointer_cast<VRTransform>(avatarTorso->duplicate());
         torso->setFrom(Vec3d(0,5,-0.8));
-        avatar->addChild(torso);
+        avatarScaleNode->addChild(torso);
 	}
 
     if (avatarHandLeft) {
@@ -86,7 +117,7 @@ void VRCollaboration::setupAvatar(string rID, string name) {
         leftHand->rotate(1.5707/90*40, Vec3d(1,0,0)) ; // rotate 40° around z-Axis
         leftHand->rotate(1.5707*2, Vec3d(0,1,0));
         leftHand->translate(Vec3d(-2.4,0,0));
-        avatar->addChild(leftHand);
+        avatarScaleNode->addChild(leftHand);
     }
 
     if (avatarHandRight) {
@@ -96,32 +127,51 @@ void VRCollaboration::setupAvatar(string rID, string name) {
         rightHandContainer->addChild(rightHand);
     }
 
-    auto sprite = VRSprite::create("nameTag");
-	sprite->setSize(5,1.5);
-	sprite->setText(name);
-	sprite->setFrom(Vec3d(0,9,0));
-	sprite->setBillboard(true);
-	avatar->addChild(sprite);
+	auto label = VRAnnotationEngine::create("nameTag");
+	label->setSize(avatarScale);
+	label->setBillboard(true);
+	label->set(0, Vec3d(0,9,0)*avatarScale, name);
+	avatar->addChild(label);
 
-	auto job = [&] {
-        syncNode->addRemoteAvatar(rID, avatar, rightHandContainer, anchor);
-	};
-
+	auto job = bind(&VRSyncNode::addRemoteAvatar, syncNode.get(), rID, avatar, rightHandContainer, anchor);
 	VRUpdateCbPtr cb = VRUpdateCb::create("syncNode-addRemoteAvatar", job);
 	VRScene::getCurrent()->queueJob(cb);
+
 	//VR->stackCall(VR->syncNode->addRemoteAvatar, 3, [rID, avatar, rightHandContainer, anchor]);
 	//syncNode->addRemoteAvatar(rID, avatar, rightHandContainer, anchor);
 }
 
-void VRCollaboration::connectTCP(string origin) {
-	auto rID = syncNode->addTCPClient(ice->getClient(origin, VRICEClient::SCENEGRAPH));
+void VRCollaboration::connectTCP(string origin, bool isWindows) {
+#ifndef WITHOUT_GTK
+    VRConsoleWidget::get("Collaboration")->write( "Collab: connect TCP sync node and audio, setup avatar of origin "+origin+"'\n");
+#endif
+
+    auto cli = ice->getClient(origin, VRICEClient::SCENEGRAPH);
+    auto client = dynamic_pointer_cast<VRTCPClient>(cli);
+
+    if (!client) {
+#ifndef WITHOUT_GTK
+        VRConsoleWidget::get("Collaboration")->write( "Collab: no TCP client found for origin '"+origin+"'\n", "red");
+#endif
+        return;
+    }
+
+    if (!client->connected()) {
+#ifndef WITHOUT_GTK
+        VRConsoleWidget::get("Collaboration")->write( "Collab: TCP client found for origin '"+origin+"' is not connected!\n", "red");
+#endif
+        return;
+    }
+
+	auto rID = syncNode->addTCPClient(client);
 	auto name = ice->getUserName(origin);
 	setupAvatar(rID, name);
 
 	auto audioClient = ice->getClient(origin, VRICEClient::AUDIO);
 	mike->startStreamingOver(audioClient);
-	mike->pauseStreaming(false);
-	sound->playPeerStream(audioClient);
+	//mike->pauseStreaming(false);
+	voices[origin] = VRSound::create();
+	voices[origin]->playPeerStream(audioClient, isWindows);
 }
 
 void VRCollaboration::onIceEvent(string m) {
@@ -137,15 +187,20 @@ void VRCollaboration::onIceEvent(string m) {
 		string content = data[3];
 
 		if (startsWith(content, "CONREQ") ) {
+            string name = ice->getUserName(origin);
+			sendUI("conReq", "configMessage|"+name);
 			connectionInWidget->show();
 			connReqOrigin = origin;
+			connReqNet = parseSubNet(content);
+			auto data2 = splitString(content, 'I');
+			connReqSystem = data2[1];
 		}
 
 		if (startsWith(content, "CONACC") ) {
-			sendUI("usersList", "setUserStats|"+origin+"|#2c4");
-			ice->connectTo(origin);
-			connectTCP(origin);
-        }
+			auto data2 = splitString(content, 'I');
+			bool isWindows = bool(data2[1] == "win");
+			finishConnection(origin, isWindows, parseSubNet(content));
+		}
     }
 }
 
@@ -168,7 +223,7 @@ void VRCollaboration::updateUsersWidget() {
 	if (uid != "" ) sendUI("usersList", "setUserStats|"+uid+"|#23c");
 }
 
-void VRCollaboration::initUI() { // TODO: add websites, css, js, html
+void VRCollaboration::initUI() {
 	gui_sites.clear();
 
 	auto dev = VRSetup::getCurrent()->getDevice("server1");
@@ -212,31 +267,52 @@ bool VRCollaboration::handleUI(VRDeviceWeakPtr wdev) {
 	auto n = splitString(m, ';');
 
 	if (startsWith(m, "register")) {
-		string widget = splitString(m, ' ')[1];
-		gui_sites[widget] = dev->key();
-		if (widget == "usersList") updateUsersWidget();
-		if (widget == "namebox") userNameWidget->show();
+        auto data = splitString(m, ' ');
+        if (data.size() == 2) {
+            string widget = data[1];
+            gui_sites[widget] = dev->key();
+            if (widget == "usersList") updateUsersWidget();
+            if (widget == "namebox") userNameWidget->show();
+        }
 	}
 
 	if (startsWith(m, "setName") ) {
-		userName = splitString(m, '|')[1];
-		userNameWidget->hide();
-		userlist->show();
-		ice->setName(userName);
-		updateUsersWidget();
+        auto data = splitString(m, '|');
+        if (data.size() >= 2) {
+            userName = data[1];
+            userNameWidget->hide();
+            userlist->show();
+            ice->setName(userName, false);
+            updateUsersWidget();
+        }
 	}
 
 	if (startsWith(m, "onUserClick") ) {
+        auto data = splitString(m, '|');
+        if (data.size() >= 2) {
+            sendUI("usersList", "setUserStats|"+data[1]+"|#fa0");
+            string net = getSubnet();			
+#ifdef _WIN32
+			ice->send(data[1], "CONREQIwinI"+net);
+#else
+			ice->send(data[1], "CONREQIlnxI"+net);
+#endif
+        }
+	}
+
+	if (startsWith(m, "setMute") ) {
 		auto data = splitString(m, '|');
-		sendUI("usersList", "setUserStats|"+data[1]+"|#fa0");
-		ice->send(data[1], "CONREQ");
+        if (data.size() >= 2) {
+            bool b = bool(data[1] == "true");
+            cout << "setMute: " << b << endl;
+            mike->pauseStreaming(b);
+        }
 	}
 
 	if (m == "connectionAccept" ) {
-		ice->connectTo(connReqOrigin);
-		ice->send(connReqOrigin, "CONACC");
-		connectTCP(connReqOrigin);
-		connectionInWidget->hide();
+		bool isWindows = bool(connReqSystem == "win");
+        acceptConnection(isWindows);
+        connectionInWidget->hide();
 	}
 
 	if (m == "connectionRefuse" ) connectionInWidget->hide();
@@ -244,12 +320,62 @@ bool VRCollaboration::handleUI(VRDeviceWeakPtr wdev) {
 	return true;
 }
 
+string VRCollaboration::getSubnet() {
+    string net = ice->getID();
+    for (auto c : ice->getClients()) net += "I"+c.first;
+    return net;
+}
+
+vector<string> VRCollaboration::parseSubNet(string net) {
+    auto data = splitString(net, 'I');
+    data.erase(data.begin()); // removes "CONREQ" or "CONACC"
+    data.erase(data.begin()); // removes "win" or "lnx"
+    return data;
+}
+
+void VRCollaboration::acceptConnection(bool isWindows) {
+#ifndef WITHOUT_GTK
+    VRConsoleWidget::get("Collaboration")->write( "Collab: accepting incomming connection, connect ice to origin!\n");
+#endif
+    string net = getSubnet();
+    for (auto node : connReqNet) {
+        sendUI("usersList", "setUserStats|"+node+"|#2c4");
+        ice->connectTo(node, false);
+#ifdef _WIN32
+        ice->send(node, "CONACCIwinI"+net);
+#else
+        ice->send(node, "CONACCIlnxI"+net);
+#endif
+        connectTCP(node, isWindows);
+    }
+}
+
+void VRCollaboration::finishConnection(string origin, bool isWindows, vector<string> net) {
+#ifndef WITHOUT_GTK
+    VRConsoleWidget::get("Collaboration")->write( "Collab: got CONACC, connect ice to origin!\n");
+#endif
+    for (auto node : net) {
+        sendUI("usersList", "setUserStats|"+node+"|#2c4");
+        ice->connectTo(node, false);
+        connectTCP(node, isWindows);
+        if (node != origin) {
+#ifdef _WIN32
+			ice->send(node, "CONACCIwinI"+ice->getID());
+#else
+			ice->send(node, "CONACCIlnxI"+ice->getID());
+#endif
+		}
+    }
+}
+
 string VRCollaboration::uiCSS = WEBSITE(
 body {
-	font-size: 4vh;
+	font-size: 8vw;
 	color: white;
 	margin: 0;
 	background-color: #23272a;
+	width: 100vw;
+	height: 100vh;
 }
 
 .emptyBG {
@@ -278,23 +404,30 @@ input {
 	display: flex;
 	flex-direction: column;
 	align-items: center;
+	justify-content: center;
+	text-align: center;
 	width: 100vw;
-	height: 100vh;
+	height: calc(100vh - 20vw);
  	background-color: #2c2f33;
+} #toolbar {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	width: 100vw;
+	height: 20vw;
+ 	background-color: #2c2f66;
 }
 
-.button {
-	font-size: 4vh;
+button {
 	background-color: #888;
 	color: white;
 	border: none;
-	width: 80%;
 	text-align: center;
-	height: 8vh;
-	margin-top: 2vh;
+	font-size: 8vw;
+	height: 20vw;
 }
 
-.button:hover, .open-button:hover {
+button:hover, .open-button:hover {
 	opacity: 1;
 }
 );
@@ -334,44 +467,30 @@ string VRCollaboration::connectionInSite = WEBSITE(
 <html>
 
 <head>
-	<style>
-		body {
-			display: flex;
-			flex-direction: column;
-			height: 100vh;
-			width: 100vw;
-			font-size: 20vh;
-			color: black;
-			margin: 0;
-			background-color: #23272A00;
-		} #buttons {
-			display: flex;
-			flex-direction: row;
-			height: 50vh;
-			width: 100vw;
-			font-size: 4vh;
-			color: white;
-			margin: 0;
-			background-color: #23272a;
-		} #label {
-			height: 50vh;
-		}
-
-		button {
-			width: 100%;
-		}
-	</style>
+    <link rel="stylesheet" href="uiCSS">\n
+	<style>\n
+		button { width: 50%; }\n
+	</style>\n
 </head>
 
 <body>
-	<script>
-		var ws = new WebSocket('ws://localhost:$PORT_server1$');
-		ws.onopen = function() { send('register conReq'); };
-		function send(m) { ws.send(m); };
-	</script>
+	<script>\n
+		var ws = new WebSocket('ws://localhost:$PORT_server1$');\n
+		ws.onopen = function() { send('register conReq'); };\n
+ 		ws.onmessage = function(m) { if(m.data) handle(m.data); };\n
+		function send(m) { ws.send(m); };\n
 
-	<div id='label'>Accept incomming connection?</div>
-	<div id='buttons'>
+ 		function handle(m) {\n
+ 			if (m.startsWith('configMessage|')) {\n
+ 				var data = m.split('|');\n
+                var msg = 'Accept incomming connection from '+data[1]+'?';\n
+                document.getElementById('userlistContainer').innerHTML = msg;\n
+ 			}\n
+ 		};\n\n
+	</script>\n
+
+	<div id='userlistContainer'>Accept incomming connection?</div>
+	<div id='toolbar'>
 		<button onclick='send("connectionAccept")'>Yes</button>
 		<button onclick='send("connectionRefuse")'>No</button>
 	</div>
@@ -387,6 +506,9 @@ string VRCollaboration::userlistSite = WEBSITE(
 	</head>\n
 	<body>\n
 		<div id="userlistContainer"></div>\n\n
+		<div id="toolbar">\n
+            <button onclick="toggleMute();" style="width:33%;"><i id="mikeIcon" class="fa fa-microphone-slash"></i></button>\n
+		</div>\n\n
 
 		<script>\n
 		var websocket = new WebSocket('ws://localhost:$PORT_server1$');\n
@@ -421,6 +543,7 @@ string VRCollaboration::userlistSite = WEBSITE(
 			btn.setAttribute("id", uid);\n
 			btn.className = "button";\n
 			btn.innerHTML = name;\n
+			btn.style.width = '80%';\n
 			document.getElementById("userlistContainer").appendChild(btn);\n
 			btn.onclick = function () {\n
 				console.log("Button " + btn.id + " is clicked");\n
@@ -539,7 +662,22 @@ string VRCollaboration::userlistSite = WEBSITE(
 		function sendDebug(debugMessage) {\n
 			send("chatModule_debugMessage" + seperator + debugMessage);\n
 		}\n
+
+		var muted = true;\n
+		function toggleMute() {\n
+			var mikeIcon = document.getElementById("mikeIcon");\n
+            muted = !muted;\n
+            if ( muted) mikeIcon.className = "fa fa-microphone-slash";\n
+            if (!muted) mikeIcon.className = "fa fa-microphone";\n
+			send("setMute|" + muted);\n
+		}\n
 		</script>\n
 	</body>\n
 </html>
 );
+
+
+
+
+
+

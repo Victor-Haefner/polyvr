@@ -57,7 +57,7 @@ template<> PyTypeObject VRPyBaseT<VRTexture>::type = {
 };
 
 PyMethodDef VRPyTexture::methods[] = {
-    {"read", PyWrap(Texture, read, "Read an image from disk", void, string ) },
+    {"read", PyWrap(Texture, read, "Read an image from disk", bool, string ) },
     {"readGIS", PyWrap(Texture, readGIS, "Read GIS raster data from disk", void, string ) },
     {"write", PyWrapOpt(Texture, write, "Write an image to disk - write( str path )", "0", void, string, bool ) },
     {"getPixel", PyWrap(Texture, getPixelUV, "Return pixel at coordinates u,v - getPixel( [u,v] )", Color4f, Vec2d ) },

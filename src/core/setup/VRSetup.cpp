@@ -62,15 +62,18 @@ VRSetup::VRSetup(string name) {
     vrpn = VRPN::create();
 #endif
 
-    setup_layer = VRVisualLayer::getLayer("Setup", "setup.png",1);
-    stats_layer = VRVisualLayer::getLayer("Statistics", "stats.png",1);
-    stencil_layer = VRVisualLayer::getLayer("Stencil", "stencil.png",1);
+    setup_layer = VRVisualLayer::getLayer("Setup", "setup.png", 1);
+    stats_layer = VRVisualLayer::getLayer("Statistics", "stats.png", 1);
+    stencil_layer = VRVisualLayer::getLayer("Stencil", "stencil.png", 1);
+    pause_layer = VRVisualLayer::getLayer("Pause rendering", "gtk-media-pause", 1);
     layer_setup_toggle = VRFunction<bool>::create("showSetup", bind(&VRSetup::showSetup, this, _1) );
     layer_stats_toggle = VRFunction<bool>::create("showStats", bind(&VRSetup::showStats, this, _1) );
     layer_stencil_toggle = VRFunction<bool>::create("showStencil", bind(&VRSetup::showStencil, this, _1) );
+    layer_pause_toggle = VRFunction<bool>::create("togglePause", bind(&VRSetup::togglePause, this, _1) );
     setup_layer->setCallback( layer_setup_toggle );
     stats_layer->setCallback( layer_stats_toggle );
     stencil_layer->setCallback( layer_stencil_toggle );
+    pause_layer->setCallback( layer_pause_toggle );
 
     network = VRNetworkPtr( new VRNetwork() );
 }
@@ -92,6 +95,10 @@ void VRSetup::showStats(bool b) {
 void VRSetup::showStencil(bool b) {
     auto s = VRScene::getCurrent();
     if (s) s->setStencil(b);
+}
+
+void VRSetup::togglePause(bool b) {
+    pauseRendering(b);
 }
 
 ARTPtr VRSetup::getART() { return art; }

@@ -8,15 +8,15 @@ using namespace OSG;
 simpleVRPyType(HDLC, New_ptr);
 #endif
 simpleVRPyType(RestResponse, 0);
-simpleVRPyType(RestClient, New_ptr);
-simpleVRPyType(RestServer, New_ptr);
+simpleVRPyType(RestClient, New_optNamed_ptr);
+simpleVRPyType(RestServer, New_optNamed_ptr);
 
 #ifndef WITHOUT_TCP
 simpleVRPyType(NetworkClient, 0);
-simpleVRPyType(UDPClient, New_ptr);
-simpleVRPyType(UDPServer, New_ptr);
-simpleVRPyType(TCPClient, New_ptr);
-simpleVRPyType(TCPServer, New_ptr);
+simpleVRPyType(UDPClient, New_optNamed_ptr);
+simpleVRPyType(UDPServer, New_optNamed_ptr);
+simpleVRPyType(TCPClient, New_optNamed_ptr);
+simpleVRPyType(TCPServer, New_optNamed_ptr);
 simpleVRPyType(ICEClient, New_ptr);
 simpleVRPyType(Collaboration, New_VRObjects_ptr);
 
@@ -110,10 +110,12 @@ PyMethodDef VRPyTCPClient::methods[] = {
     {NULL}  /* Sentinel */
 };
 
+typedef function<string(string, size_t)> serverCb;
+
 PyMethodDef VRPyTCPServer::methods[] = {
     {"listen", PyWrapOpt(TCPServer, listen, "Listen on port", "", void, int, string) },
     {"close", PyWrap(TCPServer, close, "Close server", void) },
-    {"onMessage", PyWrap(TCPServer, onMessage, "Set onMessage callback", void, function<string(string)>) },
+    {"onMessage", PyWrap(TCPServer, onMessage, "Set onMessage callback", void, serverCb) },
     {NULL}  /* Sentinel */
 };
 
@@ -124,10 +126,10 @@ PyMethodDef VRPyICEClient::methods[] = {
     {"setTurnServer", PyWrap(ICEClient, setTurnServer, "Setup turn server address, something like http://my.server/PolyServ/", void, string) },
     {"onEvent", PyWrap(ICEClient, onEvent, "Set onEvent callback", void, function<void(string)>) },
     {"onMessage", PyWrap(ICEClient, onMessage, "Set onMessage callback", void, function<void(string)>) },
-    {"setName", PyWrap(ICEClient, setName, "Set your name and uID to register on broker", void, string) },
+    {"setName", PyWrapOpt(ICEClient, setName, "Set your name and uID to register on broker, optional async", "0", void, string, bool) },
     {"sendTCP", PyWrap(ICEClient, sendTCP, "Send data over the TCP connection", void, string, string, VRICEClient::CHANNEL) },
     {"send", PyWrap(ICEClient, send, "Send message to other: (uID, msg)", void, string, string) },
-    {"connectTo", PyWrap(ICEClient, connectTo, "Connect to another user", void, string) },
+    {"connectTo", PyWrapOpt(ICEClient, connectTo, "Connect to another user, optional async", "0", void, string, bool) },
     {"getID", PyWrap(ICEClient, getID, "Get UID", string) },
     {"getUserName", PyWrap(ICEClient, getUserName, "Get user name by UID", string, string) },
     {"getUserID", PyWrap(ICEClient, getUserID, "Get UIDs of all users with certain name", vector<string>, string) },
@@ -140,10 +142,19 @@ PyMethodDef VRPyICEClient::methods[] = {
 
 PyMethodDef VRPyCollaboration::methods[] = {
     {"setServer", PyWrap(Collaboration, setServer, "Set server, something like http://my.server/PolyServ/", void, string) },
+    {"setupLocalServer", PyWrap(Collaboration, setupLocalServer, "Setup local server, this will clone the PolyServ repo if necessary", void) },
     {"setAvatarDevices", PyWrap(Collaboration, setAvatarDevices, "Set device beacons used for remote avatar representation", void, VRTransformPtr, VRTransformPtr, VRTransformPtr) },
-    {"setAvatarGeometry", PyWrap(Collaboration, setAvatarGeometry, "Set avatar template geometries used to represent remote users", void, VRTransformPtr, VRTransformPtr, VRTransformPtr) },
+    {"setAvatarGeometry", PyWrap(Collaboration, setAvatarGeometry, "Set avatar template geometries used to represent remote users, (torso, lHand, rHand, scale)", void, VRTransformPtr, VRTransformPtr, VRTransformPtr, float) },
     {NULL}  /* Sentinel */
 };
+
+template<> bool toValue(PyObject* o, function<string(string, size_t)>& e) {
+    //if (!VRPyEntity::check(o)) return 0; // TODO: add checks!
+    Py_IncRef(o);
+	PyObject* args = PyTuple_New(2);
+    e = bind(VRPyBase::execPyCall2<string, size_t, string>, o, args, placeholders::_1, placeholders::_2);
+    return 1;
+}
 
 template<> bool toValue(PyObject* o, function<string(string)>& e) {
     //if (!VRPyEntity::check(o)) return 0; // TODO: add checks!
@@ -169,10 +180,12 @@ template<> bool toValue(PyObject* o, function<void(void)>& e) {
     return 1;
 }
 
+template<> int toValue(stringstream& ss, function<string(string, size_t)>& e) { return 0; }
 template<> int toValue(stringstream& ss, function<string(string)>& e) { return 0; }
 template<> int toValue(stringstream& ss, function<void(string)>& e) { return 0; }
 template<> int toValue(stringstream& ss, function<void(void)>& e) { return 0; }
 
+template<> string typeName(const function<string(string, size_t)>* t) { return "string function(string, int)"; }
 template<> string typeName(const function<string(string)>* t) { return "string function(string)"; }
 template<> string typeName(const function<void(string)>* t) { return "void function(string)"; }
 template<> string typeName(const function<void(void)>* t) { return "void function()"; }

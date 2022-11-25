@@ -16,9 +16,11 @@ class VRDriver {
         VRCarDynamicsPtr car;
         bool active = false;
         float to = 1;
+        float lastPathT = -1;
         PathPtr p_path;
         PathPtr v_path;
         float target_speed = 8;
+        bool useClutch = true;
         VRUpdateCbPtr updatePtr;
 
         void update();
@@ -33,7 +35,7 @@ class VRDriver {
         void followPath(PathPtr p, PathPtr v, float to = 1);
         void stop();
         void resume();
-        void setTargetSpeed( float speed );
+        void setTargetSpeed( float speed, bool useClutch = true );
         bool isDriving();
 };
 

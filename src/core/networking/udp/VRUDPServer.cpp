@@ -9,6 +9,8 @@
 #include <string>
 #include <memory>
 
+#include "core/scene/VRSceneManager.h"
+
 //#ifdef _WINDOWS // TODO
 //#include <ws2tcpip.h>
 //#endif
@@ -21,6 +23,7 @@ using ip::udp;
 
 class UDPServer {
     private:
+        VRUDPServer* parent = 0;
         boost::asio::io_service io_service;
         boost::asio::io_service::work worker;
         udp::socket socket;
@@ -45,18 +48,29 @@ class UDPServer {
             if (ec) { cout << "Receive failed: " << ec.message() << "\n"; return; }
             string msg(buffer.begin(), buffer.begin()+N);
             //cout << "Received: '" << msg << "' (" << ec.message() << ")\n";
+
+            if (parent) {
+                auto& iFlow = parent->getInFlow();
+                iFlow.logFlow(N*0.001);
+            }
+
             if (onMessageCb) {
                 string res = onMessageCb(msg);
                 if (res != "") {
                     boost::system::error_code ec;
                     auto N = socket.send_to(boost::asio::buffer(res), remote_endpoint, 0, ec);
+
+                    if (parent) {
+                        auto& oFlow = parent->getOutFlow();
+                        oFlow.logFlow(N*0.001);
+                    }
                 }
             }
             wait();
         }
 
     public:
-        UDPServer() : worker(io_service), socket(io_service) {
+        UDPServer(VRUDPServer* s) : parent(s), worker(io_service), socket(io_service) {
             service = thread([this](){ run(); });
         }
 
@@ -82,10 +96,18 @@ class UDPServer {
 };
 
 
-VRUDPServer::VRUDPServer() { server = new UDPServer(); }
+VRUDPServer::VRUDPServer(string n) : VRNetworkServer(n) {
+    protocol = "udp";
+    server = new UDPServer(this);
+}
+
 VRUDPServer::~VRUDPServer() { delete server; }
 
-VRUDPServerPtr VRUDPServer::create() { return VRUDPServerPtr(new VRUDPServer()); }
+VRUDPServerPtr VRUDPServer::create(string name) {
+    auto s = VRUDPServerPtr(new VRUDPServer(name));
+    s->regServer(s);
+    return s;
+}
 
 void VRUDPServer::onMessage( function<string(string)> f ) { server->onMessage(f); }
 void VRUDPServer::listen(int port) { this->port = port; server->listen(port); }

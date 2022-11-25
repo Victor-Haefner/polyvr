@@ -4,6 +4,7 @@
 #include "VROntologyUtils.h"
 #include "addons/Semantics/VRSemanticsFwd.h"
 #include "core/utils/VRName.h"
+#include "core/utils/VRFunctionFwd.h"
 #include <OpenSG/OSGConfig.h>
 
 using namespace std;
@@ -13,6 +14,7 @@ struct VRProperty : public VROntoID, public VRName {
     string type;
     string value;
     vector<string> parents;
+    VRMessageCbPtr onChangeCb;
 
     VRProperty(string name, string type = "");
     static VRPropertyPtr create(string name = "none", string type = "");
@@ -22,6 +24,8 @@ struct VRProperty : public VROntoID, public VRName {
     void setValue(string value);
     string getType();
     string getValue();
+
+    void onChange(VRMessageCbPtr cb);
 
     string toString();
 };

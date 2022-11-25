@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Scene base_name="BRep" name_space="Scene" name_suffix="0" persistency="666">
+  <Objects>
+    <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" visible="4294967295">
+      <Object ambient="0.3 0.3 0.3 1" base_name="light" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" name_space="__global__" name_suffix="0" on="1" persistency="666" photometricMap="" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" shadowVolume="1e+06 1e+06 1e+06 -1e+06 -1e+06 -1e+06 1" specular="0.1 0.1 0.1 1" type="Light" visible="4294967295">
+        <Object accept_root="1" aspect="1" at="1.24108 0.416784 0.926656" at_dir="0" base_name="Default" far="512" fov="1.0472" from="-0.968711 1.61857 -3.43322" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="4294967295">
+          <attachments>
+            <Node base_name="transform" name_space="VRAttachment" name_suffix="0" persistency="666" value=""/>
+          </attachments>
+          <Object at="0 0 -1" at_dir="0" base_name="Headlight_beacon" from="0 0 0" light="light" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="LightBeacon" up="0 1 0" visible="4294967295">
+            <attachments>
+              <Node base_name="transform" name_space="VRAttachment" name_suffix="0" persistency="666" value=""/>
+            </attachments>
+            <constraint persistency="666"/>
+          </Object>
+          <constraint persistency="666"/>
+        </Object>
+      </Object>
+    </Object>
+  </Objects>
+  <Cameras activeCam="Default" persistency="666"/>
+  <Rendering deferred_rendering="0" fogColor="0.5 0.5 0.5 1" fogParams="0 0 100 0.1" frustum_culling="1" fxaa="0" hmdd="0" marker="0" occlusion_culling="0" persistency="666" ssao="0" ssao_kernel="4" ssao_noise="4" ssao_radius="0.02" two_sided="1"/>
+  <Scripts persistency="666">
+    <Script base_name="init" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+      <core>
+	import VR
+
+	if hasattr(VR, 'scene'): VR.scene.destroy()
+	VR.scene = VR.Object('scene', 'light')
+	
+	R = 0.5
+	H = 1.0
+	pi = 3.14159
+
+	p1 = VR.Pose([0,0,-H], [0,0, 1], [0,-1,0])
+	p2 = VR.Pose([0,0, H], [0,0,-1], [0, 1,0])
+	
+	mat = VR.Material('wireframe')
+	mat.setLit(False)
+	mat.setDiffuse([0,0.5,1])
+	mat.setFrontBackModes('GL_LINE', 'GL_NONE')
+	
+	def makeHull():
+		c1 = VR.BRepEdge()
+		c2 = VR.BRepEdge()
+		c3 = VR.BRepEdge()
+		c4 = VR.BRepEdge()
+		c4.setCircle(p1, R, -pi, 0)
+		c3.setCircle(p1, R,  0, pi)
+		c2.setCircle(p2, R,  pi, 0)
+		c1.setCircle(p2, R,  0,-pi)
+		c1.compute()
+		c2.compute()
+		c3.compute()
+		c4.compute()
+		
+		l1 = VR.BRepEdge()
+		l2 = VR.BRepEdge()
+		l1.setLine([-R,0,-H], [-R,0, H])
+		l2.setLine([-R,0, H], [-R,0,-H])
+		l1.compute()
+		l2.compute()
+		
+		b = VR.BRepBound()
+		b.addEdge(c1)
+		b.addEdge(c2)
+		b.addEdge(l1)
+		b.addEdge(c3)
+		b.addEdge(c4)
+		b.addEdge(l2)
+		b.compute()
+		
+		f = VR.BRepSurface()
+		f.setCylinder(R)
+		f.addBound(b)
+		g = f.build()
+		VR.scene.addChild(g)
+		g.setMaterial(mat)
+		g.setName('hullWire')
+		
+		g2 = f.build()
+		VR.scene.addChild(g2)
+		g2.translate([1.5,0,0])
+		g2.setName('hullFull')
+		
+		g3 = f.build(True)
+		VR.scene.addChild(g3)
+		g3.setTransform([0,1.5,0], [0,1,0], [0,0,1])
+		g3.setScale([0.4,0.4,0.4])
+		g3.setMaterial(mat)
+		g3.setName('hullFlat')
+		
+		gb = b.build()
+		VR.scene.addChild(gb)
+
+	def makeCap(p):
+		c1 = VR.BRepEdge()
+		c2 = VR.BRepEdge()
+		c1.setCircle(p, R, -pi, 0)
+		c2.setCircle(p, R,  0, pi)
+		c1.compute()
+		c2.compute()
+		
+		b = VR.BRepBound()
+		b.addEdge(c1)
+		b.addEdge(c2)
+		b.compute()
+		
+		f = VR.BRepSurface()
+		f.setPlane()
+		f.setPose(p)
+		f.addBound(b)
+		g = f.build()
+		VR.scene.addChild(g)
+		g.setMaterial(mat)
+		g.setName('capWire')
+		
+		g2 = f.build()
+		VR.scene.addChild(g2)
+		g2.translate([1.5,0,0])
+		g2.setName('capFull')
+		
+		g3 = f.build(True)
+		VR.scene.addChild(g3)
+		g3.setTransform([2,1.5,0], [0,0,1])
+		g3.setScale([0.8,0.8,0.8])
+		g3.setMaterial(mat)
+		g3.setName('capFlat')
+
+	makeHull()
+	makeCap(p1)
+	makeCap(p2)
+</core>
+      <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" base_name="trigger" name_space="__global__" name_suffix="0" persistency="666"/>
+    </Script>
+  </Scripts>
+  <Sockets persistency="666"/>
+  <Background color="0.24303 0.24303 0.24303" format=".png" path="" persistency="666" type="0"/>
+  <Navigation persistency="666">
+    <presetStates>
+      <Orbit>0</Orbit>
+    </presetStates>
+  </Navigation>
+  <Materials persistency="666"/>
+  <Semantics persistency="666"/>
+</Scene>

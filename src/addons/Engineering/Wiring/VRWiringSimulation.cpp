@@ -70,8 +70,21 @@ void VRWiringSimulation::iterate() {
 			continue;
 		}
 
-		if (e->is_a("Switch") ) {
+		if (e->is_a("Fuse")) {
+			if (e->get("state")->getValue() == "closed") propagate(component, stack, 1);
+		}
+
+		if (e->is_a("Switch")) {
 			if (e->get("state")->getValue() == "pressed") propagate(component, stack, 1);
+		}
+
+		if (e->is_a("SafetyRelay")) { // TODO
+            /*cout << "-- SafetyRelay " << e->toString() << endl;
+            for (auto p : e->getAllEntities("port")) {
+                auto w = p->getEntity("wire");
+                cout << " port: " << p->toString() << "\t -- wire: " << w->toString() << endl;
+            }
+			//if (e->get("state")->getValue() == "pressed") propagate(component, stack, 1);*/
 		}
 	};
 }

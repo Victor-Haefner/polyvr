@@ -34,6 +34,8 @@ struct VRPyBase {
 
     template <typename T, typename R>
     static R execPyCall(PyObject* pyFkt, PyObject* pArgs, T t);
+    template <typename T1, typename T2, typename R>
+    static R execPyCall2(PyObject* pyFkt, PyObject* pArgs, T1 t1, T2 t2);
     template <typename T>
     static void execPyCallVoid(PyObject* pyFkt, PyObject* pArgs, T t);
     static void execPyCallVoidVoid(PyObject* pyFkt, PyObject* pArgs);
@@ -105,6 +107,7 @@ struct VRPyBaseT : public VRPyBase {
     static bool      parse(PyObject *args, std::shared_ptr<T>* obj);
     static PyObject* New_ptr(PyTypeObject *type, PyObject *args, PyObject *kwds);
     static PyObject* New_named_ptr(PyTypeObject *type, PyObject *args, PyObject *kwds);
+    static PyObject* New_optNamed_ptr(PyTypeObject *type, PyObject *args, PyObject *kwds);
     static PyObject* New_toZero(PyTypeObject *type, PyObject *args, PyObject *kwds);
     static PyObject* New_VRObjects_ptr(PyTypeObject *type, PyObject *args, PyObject *kwds);
 

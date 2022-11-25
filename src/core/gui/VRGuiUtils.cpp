@@ -80,8 +80,13 @@ void setRadioToolButtonCallback(string b, function<void()> sig ) { setupCallback
 void setRadioButtonCallback(string b, function<void()> sig ) { setupCallback(b, sig, "toggled"); }
 void setComboboxCallback(string b, function<void()> sig) { setupCallback(b, sig, "changed"); }
 
+void setCheckButtonCallback(GtkWidget* cb, function<void()> sig ) {
+    connect_signal(cb, sig, "toggled", false);
+}
+
 void setSliderCallback(string b, function<bool(int,double)> sig) { setupCallback(b, sig, "change_value"); }
 void setTreeviewSelectCallback(string b, function<void(void)> sig) { setupCallback(b, sig, "cursor_changed"); }
+void setTreeviewDoubleclickCallback(string b, function<void(GtkTreePath*, GtkTreeViewColumn*)> sig) { setupCallback(b, sig, "row-activated"); }
 void setCellRendererCallback(string b, function<void(gchar*, gchar*)> sig, bool after) { setupCallback(b, sig, "edited"); }
 void setNoteBookCallback(string b, function<void(GtkWidget*, guint)> sig) { setupCallback(b, sig, "switch-page", true); }
 
@@ -338,7 +343,7 @@ OSG::Color4f chooseColor(string drawable, OSG::Color4f current) {
     return col;
 }
 
-bool drawBG(GtkWidget *widget, cairo_t *cr, gpointer col) {
+bool drawBG(GtkWidget *widget, cairo_t *cr, gpointer alpha) {
     auto context = gtk_widget_get_style_context (widget);
     int width = gtk_widget_get_allocated_width (widget);
     int height = gtk_widget_get_allocated_height (widget);
@@ -351,7 +356,7 @@ bool drawBG(GtkWidget *widget, cairo_t *cr, gpointer col) {
     return false;
 }
 
-void setColorChooserColor(GtkWidget* drawable, OSG::Color3f col) {
+void setWidgetBackgroundColor(GtkWidget* drawable, OSG::Color3f col) {
     GdkColor c;
     c.pixel = 0;
     c.red = col[0]*65535;
@@ -359,7 +364,23 @@ void setColorChooserColor(GtkWidget* drawable, OSG::Color3f col) {
     c.blue = col[2]*65535;
 
     gtk_widget_modify_bg(drawable, GTK_STATE_NORMAL, &c);
-    g_signal_connect(G_OBJECT(drawable), "draw", G_CALLBACK(drawBG), NULL);
+    g_signal_connect(G_OBJECT(drawable), "draw", G_CALLBACK(drawBG), gpointer(65535));
+}
+
+void setWidgetBackgroundColor(GtkWidget* drawable, OSG::Color4f col) {
+    GdkColor c;
+    c.pixel = 0;
+    c.red = col[0]*65535;
+    c.green = col[1]*65535;
+    c.blue = col[2]*65535;
+    int a = col[3]*65535; // TODO!!!
+
+    gtk_widget_modify_bg(drawable, GTK_STATE_NORMAL, &c);
+    g_signal_connect(G_OBJECT(drawable), "draw", G_CALLBACK(drawBG), gpointer(a));
+}
+
+void setColorChooserColor(GtkWidget* drawable, OSG::Color3f col) {
+    setWidgetBackgroundColor(drawable, col);
 }
 
 void setColorChooserColor(string drawable, OSG::Color3f col) {
@@ -413,6 +434,13 @@ OSG::VRTexturePtr takeSnapshot(bool swapY) {
     //cout << "takeSnapshot1 " << drawArea << " " << VRGuiBuilder::get()->get_widget("hbox1") << " " << VRGuiBuilder::get()->get_widget("vbox5") << endl;
     //cout << "takeSnapshot2 " << src << " " << src2 << " " << src3 << endl;
     return OSG::VRTexture::create(res);
+}
+
+void setBoolProperty(GObject* w, string p, bool v) {
+    GValue V = G_VALUE_INIT;
+    g_value_init(&V, G_TYPE_BOOLEAN);
+    g_value_set_boolean(&V, v);
+    g_object_set_property(w, p.c_str(), &V);
 }
 
 void saveSnapshot(string path) {
@@ -507,7 +535,11 @@ void hideDialog(string d) {
 
 void setTooltip(string widget, string tp) {
     GtkWidget* w = VRGuiBuilder::get()->get_widget(widget);
-    gtk_widget_set_tooltip_text(w, tp.c_str());
+    setTooltip(w, tp);
+}
+
+void setTooltip(GtkWidget* widget, string tp) {
+    gtk_widget_set_tooltip_text(widget, tp.c_str());
 }
 
 GtkImage* loadGTKIcon(GtkImage* img, string path, int w, int h) {

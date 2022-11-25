@@ -3,6 +3,7 @@
 
 #include <OpenSG/OSGConfig.h>
 #include "VRSceneFwd.h"
+#include "core/utils/VRDeviceFwd.h"
 #include "VRThreadManager.h"
 #include "VRCallbackManager.h"
 #include "core/networking/VRNetworkManager.h"

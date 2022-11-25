@@ -335,6 +335,8 @@ void VRAppManager::writeGitignore(string path) {
     f << "*.blend1" << endl;
     f << "*~" << endl;
     f << ".treeLods" << endl;
+    f << "blob_storage" << endl;
+    f << "GPUCache" << endl;
 }
 
 void VRAppManager::on_diag_new_clicked() {

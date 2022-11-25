@@ -2,7 +2,7 @@
 #define VRICECLIENT_H_INCLUDED
 
 #include <OpenSG/OSGConfig.h>
-#include "../VRNetworkingFwd.h"
+#include "../VRNetworkClient.h"
 #include "core/utils/VRFunctionFwd.h"
 
 #include <map>
@@ -13,7 +13,7 @@
 using namespace std;
 OSG_BEGIN_NAMESPACE;
 
-class VRICEClient : public std::enable_shared_from_this<VRICEClient> {
+class VRICEClient : public VRNetworkClient {
     public:
         enum CHANNEL {
             NONE = 0,
@@ -26,7 +26,6 @@ class VRICEClient : public std::enable_shared_from_this<VRICEClient> {
         map<string, map<CHANNEL, VRNetworkClientPtr> > clients;
         map<string, string> users;
 
-        string name;
         string uID;
         string turnURL;
         string turnIP;
@@ -41,10 +40,14 @@ class VRICEClient : public std::enable_shared_from_this<VRICEClient> {
         void update();
         void updateUsers();
 
+        void processNameset(string data);
         void processUsers(string data);
         void processMessages(string data);
+        void processConnect(string data, string uid2);
+        void processRespNameset(VRRestResponsePtr r);
         void processRespUsers(VRRestResponsePtr r);
         void processRespMessages(VRRestResponsePtr r);
+        void processRespConnect(VRRestResponsePtr r, string uid2);
 
         void pollUsers(bool async);
         void pollMessages(bool async);
@@ -57,11 +60,13 @@ class VRICEClient : public std::enable_shared_from_this<VRICEClient> {
 		VRICEClientPtr ptr();
 
 		void setTurnServer(string url);
+		string getTurnServer();
+
         void onEvent( function<void(string)> f );
         void onMessage( function<void(string)> f );
 
-        void setName(string name);
-        void connectTo(string other);
+        void setName(string name, bool async);
+        void connectTo(string other, bool async);
         void sendTCP(string otherID, string msg, CHANNEL channel);
         void send(string otherID, string msg);
         void removeUser(string uid);
@@ -70,6 +75,7 @@ class VRICEClient : public std::enable_shared_from_this<VRICEClient> {
 		string getUserName(string ID);
 		vector<string> getUserID(string name);
 		map<string, string> getUsers();
+        void removeLocalUser(string uid);
 		VRNetworkClientPtr getClient(string otherID, CHANNEL channel);
 		map<string, map<CHANNEL, VRNetworkClientPtr> > getClients();
 };

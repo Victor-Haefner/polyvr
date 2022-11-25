@@ -107,8 +107,8 @@ void VRGuiScene::setTransform(VRTransformPtr e) {
 
     atEntry.setFontColor(Vec3d(0, 0, 0));
     dirEntry.setFontColor(Vec3d(0, 0, 0));
-    if (e->get_orientation_mode())  atEntry.setFontColor(Vec3d(0.6, 0.6, 0.6));
-    else                            dirEntry.setFontColor(Vec3d(0.6, 0.6, 0.6));
+    if (e->get_orientation_mode())  atEntry.setFontColor(Vec3d(0.7, 0.7, 0.7));
+    else                            dirEntry.setFontColor(Vec3d(0.7, 0.7, 0.7));
 
     /*bool doTc = c->hasTConstraint();
     bool doRc = c->hasRConstraint();
@@ -160,8 +160,8 @@ void VRGuiScene::setMaterial(VRMaterialPtr mat) {
     setWidgetSensitivity("table44", bool(tex));
 
     if (tex) {
-        setLabel("label158", toString(tex->getSize()) + " (" + toString(tex->getByteSize()/1048576.0) + " mb)");
-        setLabel("label157", toString(tex->getChannels()));
+        setLabel("label168", toString(tex->getSize()) + " (" + toString(tex->getByteSize()/1048576.0) + " mb)");
+        setLabel("label167", toString(tex->getChannels()));
     }
 }
 
@@ -1369,6 +1369,24 @@ bool VRGuiScene::updateTreeView() {
 void VRGuiScene::update() {
     if (!liveUpdate) return;
     updateObjectForms();
+}
+
+void VRGuiScene::selectObject(VRObjectPtr obj) {
+    string path = obj->getPath();
+    GtkTreePath* tpath = gtk_tree_path_new_from_string(path.c_str());
+    GtkTreeViewColumn* focus_column = gtk_tree_view_get_column(tree_view, 0);
+    gtk_tree_view_expand_to_path(tree_view, tpath);
+    gtk_tree_view_set_cursor(tree_view, tpath, focus_column, false);
+    gtk_tree_path_free(tpath);
+
+    setWidgetSensitivity("table11", true);
+
+    updateObjectForms(true);
+    selected = obj->getID();
+    updateObjectForms();
+
+    selected_geometry.reset();
+    if (obj && obj->hasTag("geometry")) selected_geometry = static_pointer_cast<VRGeometry>(obj);
 }
 
 OSG_END_NAMESPACE;

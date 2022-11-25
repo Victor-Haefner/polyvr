@@ -188,7 +188,7 @@ bool VRGuiNav::update() {
     fillStringListstore("binding_callbacks", callbacks);
 
     setComboboxLastActive("combobox5");
-    setCombobox("combobox5", getListStorePos( "nav_presets", scene->getActiveNavigation() ) );
+    //setCombobox("combobox5", getListStorePos( "nav_presets", scene->getActiveNavigation() ) );
     return true;
 }
 

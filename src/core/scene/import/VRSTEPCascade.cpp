@@ -47,6 +47,8 @@ VRProgress progress;
 int lastStage = 0;
 
 void on_update(int i, int N, int stage) {
+    return;
+
     if (stage != lastStage) {
         cout << endl;
         progress.setup("STEP mesher stage " + toString(stage), N);
@@ -60,6 +62,7 @@ void on_update(int i, int N, int stage) {
 
 class STEPLoader {
     private:
+        map<string, string> options;
         Handle(XCAFDoc_ColorTool) colors;
         Handle(XCAFDoc_MaterialTool) materials;
 
@@ -81,7 +84,187 @@ class STEPLoader {
             return make_pair(valid, Color3f(c.Red(), c.Green(), c.Blue()));
         }
 
-        VRGeometryPtr convertGeo(const TopoDS_Shape& shape) {
+        bool needsVertexColors(const TopoDS_Shape& shape) {
+            for (TopExp_Explorer exp(shape, TopAbs_COMPOUND); exp.More(); exp.Next()) {
+                const TopoDS_Compound& body = TopoDS::Compound(exp.Current());
+                auto color = getColor(body);
+                if (color.first) return true;
+            }
+
+            for (TopExp_Explorer exp(shape, TopAbs_COMPSOLID); exp.More(); exp.Next()) {
+                const TopoDS_CompSolid& body = TopoDS::CompSolid(exp.Current());
+                auto color = getColor(body);
+                if (color.first) return true;
+            }
+
+            for (TopExp_Explorer exp(shape, TopAbs_SOLID); exp.More(); exp.Next()) {
+                const TopoDS_Solid& body = TopoDS::Solid(exp.Current());
+                auto color = getColor(body);
+                if (color.first) return true;
+            }
+
+            for (TopExp_Explorer exp(shape, TopAbs_SHELL); exp.More(); exp.Next()) {
+                const TopoDS_Shell& shell = TopoDS::Shell(exp.Current());
+                auto color = getColor(shell);
+                if (color.first) return true;
+            }
+
+            for (TopExp_Explorer exp(shape, TopAbs_FACE); exp.More(); exp.Next()) {
+                const TopoDS_Face& face = TopoDS::Face(exp.Current());
+                auto color = getColor(face);
+                if (color.first) return true;
+            }
+            return false;
+        }
+
+        void handleFace(const TopoDS_Face& face, VRGeoData& data, bool useVertexColors, Color3f color) {
+            TopLoc_Location loc;
+            Handle(Poly_Triangulation) tri = BRep_Tool::Triangulation(face, loc);
+            if (tri.IsNull()) return;
+
+            const TColgp_Array1OfPnt& nodes = tri->Nodes();
+            int i0 = data.size();
+
+            // face vertices
+            for (int i = 1; i <= nodes.Length(); ++i) {
+                gp_Pnt pnt = nodes(i).Transformed(loc);
+                Pnt3d pos(pnt.X(), pnt.Y(), pnt.Z());
+                data.pushPos( pos );
+            }
+
+            // face normals
+            if (tri->HasUVNodes()) {
+                const TColgp_Array1OfPnt2d& uvs = tri->UVNodes();
+                BRepGProp_Face prop(face);
+                gp_Vec n;
+                gp_Pnt pnt;
+                for (int i=1; i<=uvs.Length(); i++) {
+                    gp_Pnt2d uv = uvs(i);
+                    prop.Normal(uv.X(),uv.Y(),pnt,n);
+                    Vec3d norm(n.X(), n.Y(), n.Z());
+                    data.pushNorm( norm );
+                }
+            }
+
+            // face triangle indices
+            const Poly_Array1OfTriangle& triangles = tri->Triangles();
+            for (int i = 1; i <= triangles.Length(); ++i) {
+                int n1, n2, n3;
+                triangles(i).Get(n1, n2, n3);
+                if (face.Orientation() == TopAbs_REVERSED) data.pushTri(i0+n1-1, i0+n3-1, i0+n2-1);
+                else                                       data.pushTri(i0+n1-1, i0+n2-1, i0+n3-1);
+            }
+
+            // face colors
+            if (useVertexColors) {
+                auto faceC = getColor(face);
+                if (!faceC.first) faceC.second = color;//Color3f(0.5,0.9,0.4);
+                for (int i = 1; i <= nodes.Length(); ++i) data.pushColor( faceC.second );
+            }
+        }
+
+        void iterateFaces(const TopoDS_Shape& shape, VRGeoData& data, bool useVertexColors, Color3f color) {
+            for (TopExp_Explorer exp(shape, TopAbs_FACE); exp.More(); exp.Next()) {
+                const TopoDS_Face& face = TopoDS::Face(exp.Current());
+                handleFace(face, data, useVertexColors, color);
+            }
+        }
+
+        string getTypeName(const TopoDS_Shape& shape) {
+            TopAbs_ShapeEnum t = shape.ShapeType();
+            if (t == TopAbs_SHAPE) return "shape";
+            if (t == TopAbs_COMPOUND) return "compound";
+            if (t == TopAbs_COMPSOLID) return "compsolid";
+            if (t == TopAbs_SOLID) return "solid";
+            if (t == TopAbs_SHELL) return "shell";
+            if (t == TopAbs_FACE) return "face";
+            if (t == TopAbs_WIRE) return "wire";
+            if (t == TopAbs_EDGE) return "edge";
+            if (t == TopAbs_VERTEX) return "vertex";
+            return "shape";
+        }
+
+        void iterateShell(const TopoDS_Shape& shell, VRTransformPtr parent, VRGeoData* pdata, bool useVertexColors, Color3f color, bool verbose = false) {
+            auto colShell = getColor(shell);
+            if (colShell.first) color = colShell.second;
+            if (verbose) cout << endl << " ----- traverse shell: " << getTypeName(shell) << endl;
+
+            if (!pdata) {
+                VRGeoData data;
+                iterateFaces(shell, data, useVertexColors, color);
+                auto geo = data.asGeometry("shell");
+                parent->addChild(geo);
+            } else {
+                iterateFaces(shell, *pdata, useVertexColors, color);
+            }
+        }
+
+        void iterateFace(const TopoDS_Shape& faceS, VRTransformPtr parent, VRGeoData* pdata, bool useVertexColors, Color3f color, bool verbose = false) {
+            auto colFace = getColor(faceS);
+            if (colFace.first) color = colFace.second;
+            if (verbose) cout << endl << " ----- traverse face: " << getTypeName(faceS) << endl;
+
+            const TopoDS_Face& face = TopoDS::Face(faceS);
+            if (!pdata) {
+                VRGeoData data;
+                handleFace(face, data, useVertexColors, color);
+                auto geo = data.asGeometry("face");
+                parent->addChild(geo);
+            } else {
+                handleFace(face, *pdata, useVertexColors, color);
+            }
+        }
+
+        VRTransformPtr iterateShape(const TopoDS_Shape& shape, bool useVertexColors, Color3f color, VRTransformPtr parent = 0, VRGeoData* data = 0, bool verbose = false) {
+            auto colShape = getColor(shape);
+            if (colShape.first) color = colShape.second;
+            if (verbose) cout << " ----- traverse shape: " << getTypeName(shape) << endl;
+
+            VRTransformPtr obj;
+            if (!data) obj = VRTransform::create(getTypeName(shape));
+            TopoDS_Iterator sIter(shape);
+
+            do {
+                TopoDS_Shape subShape;
+                TopAbs_ShapeEnum t;
+
+                try {
+                    subShape = sIter.Value();
+                    sIter.Next();
+                    t = subShape.ShapeType();
+                }
+                catch(Standard_Failure& e) { break; } // either invalid value or no more value
+                catch(exception& e) { cout << endl << "ERROR: unexpected exception " << e.what() << endl; break; }
+                catch(...) {
+                    cout << " Warning in STEP convertGeo: unknown exception" << endl;
+                    std::exception_ptr p = std::current_exception();
+                    cout << (p ? p.__cxa_exception_type()->name() : "null") << endl;
+                    break;
+                }
+
+                //static int testN=0;
+                //testN++;
+                //cout << "  teestN " << testN << endl;
+
+                if (t == TopAbs_SHAPE) iterateShape(subShape, useVertexColors, color, obj, data, verbose);
+                if (t == TopAbs_COMPOUND) iterateShape(subShape, useVertexColors, color, obj, data, verbose);
+                if (t == TopAbs_COMPSOLID) iterateShape(subShape, useVertexColors, color, obj, data, verbose);
+                if (t == TopAbs_SOLID) iterateShape(subShape, useVertexColors, color, obj, data, verbose);
+                if (t == TopAbs_SHELL) iterateShell(subShape, obj, data, useVertexColors, color, verbose);
+                if (t == TopAbs_FACE) iterateFace(subShape, obj, data, useVertexColors, color, verbose);
+                if (t == TopAbs_EDGE) continue; // ignore edges
+                if (t == TopAbs_WIRE || t == TopAbs_VERTEX) {
+                    cout << "ERROR! unexpected shape types while iterating: " << getTypeName(subShape) << endl;
+                }
+            } while(sIter.More());
+
+            if (parent && obj) {
+                if (obj->getChildrenCount() > 0) parent->addChild(obj);
+            }
+            return obj;
+        }
+
+        VRTransformPtr convertGeo(const TopoDS_Shape& shape, bool subParts = false, bool verbose = false) {
             if (shape.IsNull()) return 0;
 
             double linear_deflection = 0.1;
@@ -91,70 +274,20 @@ class STEPLoader {
             //BRepMesh_IncrementalMesh mesher(shape, linear_deflection, false, angular_deflection, true); // shape, linear deflection, relative to edge length, angular deflection, paralellize
             try {
                 BRepMesh_IncrementalMesh mesher(shape, linear_deflection, true, angular_deflection, true, on_update); // shape, linear deflection, relative to edge length, angular deflection, paralellize
-            } catch(exception& e) { cout << " Warning in STEP convertGeo: " << e.what() << endl;  return 0; }
+            }
+            catch(exception& e) { cout << " Warning in STEP convertGeo: " << e.what() << endl;  return 0; }
             catch(...) { cout << " Warning in STEP convertGeo: unknown exception" << endl; return 0; }
 
-            auto shapeColor = getColor(shape);
-            if (!shapeColor.first) shapeColor.second = Color3f(0.5,0.9,0.4);
-            bool useVertexColors = false;
-            for (TopExp_Explorer exp(shape, TopAbs_FACE); exp.More(); exp.Next()) {
-                const TopoDS_Face& face = TopoDS::Face(exp.Current());
-                auto color = getColor(face);
-                if (color.first) { useVertexColors = true; break; }
+            bool useVertexColors = needsVertexColors(shape);
+
+            Color3f colDefault(0.5,0.9,0.4);
+            if (subParts) return iterateShape(shape, useVertexColors, colDefault);
+            else {
+                VRGeoData data;
+                iterateShape(shape, useVertexColors, colDefault, 0, &data, verbose);
+                if (data.size() == 0) return 0;
+                return data.asGeometry("part");
             }
-
-            VRGeoData data;
-            for (TopExp_Explorer exp(shape, TopAbs_FACE); exp.More(); exp.Next()) {
-                const TopoDS_Face& face = TopoDS::Face(exp.Current());
-                TopLoc_Location loc;
-                Handle(Poly_Triangulation) tri = BRep_Tool::Triangulation(face, loc);
-                if (tri.IsNull()) continue;
-
-                const TColgp_Array1OfPnt& nodes = tri->Nodes();
-                int i0 = data.size();
-
-                // face vertices
-                for (int i = 1; i <= nodes.Length(); ++i) {
-                    gp_Pnt pnt = nodes(i).Transformed(loc);
-                    Pnt3d pos(pnt.X(), pnt.Y(), pnt.Z());
-                    data.pushPos( pos );
-                }
-
-                // face normals
-                if (tri->HasUVNodes()) {
-                    const TColgp_Array1OfPnt2d& uvs = tri->UVNodes();
-                    BRepGProp_Face prop(face);
-                    gp_Vec n;
-                    gp_Pnt pnt;
-                    for (int i=1; i<=uvs.Length(); i++) {
-                        gp_Pnt2d uv = uvs(i);
-                        prop.Normal(uv.X(),uv.Y(),pnt,n);
-                        Vec3d norm(n.X(), n.Y(), n.Z());
-                        data.pushNorm( norm );
-                    }
-                }
-
-                // face triangle indices
-                const Poly_Array1OfTriangle& triangles = tri->Triangles();
-                for (int i = 1; i <= triangles.Length(); ++i) {
-                    int n1, n2, n3;
-                    triangles(i).Get(n1, n2, n3);
-                    if (face.Orientation() == TopAbs_REVERSED) data.pushTri(i0+n1-1, i0+n3-1, i0+n2-1);
-                    else                                       data.pushTri(i0+n1-1, i0+n2-1, i0+n3-1);
-                }
-
-                // face colors
-                if (useVertexColors) {
-                    auto color = getColor(face);
-                    if (!color.first) color.second = shapeColor.second;
-                    for (int i = 1; i <= nodes.Length(); ++i) data.pushColor( color.second );
-                }
-            }
-
-            string name = "test"; //shape.Name();
-            auto geo = data.asGeometry(name);
-            //applyTransformation(o,geo);
-            return geo;
         }
 
         void applyMaterial(VRGeometryPtr geo, const TopoDS_Shape& shape) {
@@ -216,7 +349,9 @@ class STEPLoader {
             return "UNKNOWN";
         }
 
-        void load(string path, VRTransformPtr res) {
+        void load(string path, VRTransformPtr res, map<string, string> opts) {
+            options = opts;
+
             try {
                 Handle(TDocStd_Document) aDoc;
                 Handle(XCAFApp_Application) anApp = XCAFApp_Application::GetApplication();
@@ -269,8 +404,11 @@ class STEPLoader {
                 materials->GetMaterialLabels(mats);
                 cout << "imported materials: (" << mats.Length() << ")" << endl;
 
+                bool subParts = false;
+                if (options.count("subParts")) subParts = true;
+
                 cout << "build STEP parts:" << endl;
-                map<int, VRGeometryPtr> parts;
+                map<int, VRTransformPtr> parts;
                 for (int i=1; i<=shapes.Length(); i++) {
                     TopoDS_Shape shape = Assembly->GetShape(shapes.Value(i));
                     TDF_Label label = Assembly->FindShape(shape, false);
@@ -279,14 +417,30 @@ class STEPLoader {
                         string name = getName(label);
                         //cout << "  shape " << name << " " << Assembly->IsSimpleShape(label) << " " << Assembly->IsAssembly(label) << " " << Assembly->IsFree(label) << endl;
                         if (Assembly->IsSimpleShape(label)) {
-                            cout << " create shape " << name << endl;
-                            VRGeometryPtr obj = convertGeo(shape);
+                            //cout << " create shape " << name << endl;
+                            VRTransformPtr obj = convertGeo(shape, subParts);
                             if (obj) {
                                 obj->setName( name );
-                                applyMaterial(obj, shape);
                                 if (parts.count(label.Tag())) cout << "Warning in STEP import, the label tag " << label.Tag() << " is allready used!" << endl;
                                 parts[label.Tag()] = obj;
-                                obj->setReference(VRGeometry::Reference(VRGeometry::FILE, path+"|"+obj->getName()));
+
+                                if (!subParts) {
+                                    VRGeometryPtr geo = dynamic_pointer_cast<VRGeometry>(obj);
+                                    if (geo) {
+                                        applyMaterial(geo, shape);
+                                        geo->setReference(VRGeometry::Reference(VRGeometry::FILE, path+"|"+geo->getName()));
+                                    }
+                                } else {
+                                    for (auto c : obj->getChildren(true, "Geometry")) {
+                                        VRGeometryPtr geo = dynamic_pointer_cast<VRGeometry>(c);
+                                        if (geo) {
+                                            applyMaterial(geo, shape);
+                                            geo->setReference(VRGeometry::Reference(VRGeometry::FILE, path+"|"+geo->getName()));
+                                        }
+                                    }
+                                }
+                            } else {
+                                cout << "Warning in STEP import, no geometry for shape '" << name << "'" << endl;
                             }
                         }
                     }
@@ -312,13 +466,13 @@ class STEPLoader {
                     TDF_Label    label = Assembly->FindShape(shape, false);
 
                     string name = getName(label);
-                    cout << " add node: " << name << " ID: " << label.Tag() << endl;
+                    //cout << " add node: " << name << " ID: " << label.Tag() << endl;
 
                     if (Assembly->IsSimpleShape(label)) {
                         if (parts.count( label.Tag() )) {
                             auto partTemplate = parts[label.Tag()];
                             if (partTemplate) {
-                                VRGeometryPtr part = dynamic_pointer_cast<VRGeometry>( partTemplate->duplicate() );
+                                VRTransformPtr part = dynamic_pointer_cast<VRTransform>( partTemplate->duplicate() );
                                 if (part) {
                                     applyTransform(part, shape);
                                     parent->addChild( part );
@@ -350,7 +504,7 @@ class STEPLoader {
         }
 };
 
-void OSG::loadSTEPCascade(string path, VRTransformPtr res) {
+void OSG::loadSTEPCascade(string path, VRTransformPtr res, map<string, string> options) {
     STEPLoader step;
-    step.load(path, res);
+    step.load(path, res, options);
 }

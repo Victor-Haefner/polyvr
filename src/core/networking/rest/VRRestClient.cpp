@@ -29,15 +29,15 @@ struct VRRestClient::RestPromise {
     }
 };
 
-VRRestClient::VRRestClient() {}
+VRRestClient::VRRestClient(string name) : VRNetworkClient(name) {}
 VRRestClient::~VRRestClient() {
 #ifndef __EMSCRIPTEN__
     if (curl) curl_easy_cleanup(curl);
 #endif
 }
 
-VRRestClientPtr VRRestClient::create() { return VRRestClientPtr( new VRRestClient() ); }
-VRRestClientPtr VRRestClient::ptr() { return static_pointer_cast<VRRestClient>(shared_from_this()); }
+VRRestClientPtr VRRestClient::create(string name) { return VRRestClientPtr( new VRRestClient(name) ); }
+//VRRestClientPtr VRRestClient::ptr() { return dynamic_pointer_cast<VRRestClient>(shared_from_this()); }
 
 size_t getOut(char *ptr, size_t size, size_t nmemb, VRRestResponse* res) {
     res->appendData(string(ptr, size*nmemb));
@@ -156,9 +156,11 @@ void VRRestClient::getAsync(string uri, VRRestCbPtr cb, int timeoutSecs) { // TO
 #else
     auto job = [&](string uri, VRRestCbPtr cb, int timeoutSecs) -> void { // executed in async thread
         auto res = get(uri, timeoutSecs);
-        auto fkt = VRUpdateCb::create("getAsync-finish", bind(&VRRestClient::finishAsync, this, cb, res));
-        auto s = VRScene::getCurrent();
-        if (s) s->queueJob(fkt);
+        if (cb) {
+            auto fkt = VRUpdateCb::create("getAsync-finish", bind(&VRRestClient::finishAsync, this, cb, res));
+            auto s = VRScene::getCurrent();
+            if (s) s->queueJob(fkt);
+        }
     };
 
     future<void> f = async(launch::async, job, uri, cb, timeoutSecs);

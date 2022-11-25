@@ -19,8 +19,12 @@
 #endif
 
 // define needed before including proj_api.h !!
+#if GDAL_VERSION_NUM >= GDAL_COMPUTE_VERSION(3,4,1)
+#include <proj.h>
+#else
 #define ACCEPT_USE_OF_DEPRECATED_PROJ_API_H
 #include <proj_api.h>
+#endif
 #endif
 
 #include <iostream>

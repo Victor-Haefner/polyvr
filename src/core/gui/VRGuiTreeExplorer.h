@@ -27,10 +27,10 @@ class VRGuiTreeExplorer {
         shared_ptr< VRFunction<VRGuiTreeExplorer*> > cb;
         string info;
 
-        _GtkTreeStore* m_refTreeModel;
-        _GtkTextBuffer* infoBuffer;
+        _GtkTreeStore* m_refTreeModel = 0;
+        _GtkTextBuffer* infoBuffer = 0;
         map<int, _GtkTreeIter> rows;
-        _GtkTreeIter* selected;
+        _GtkTreeIter* selected = 0;
 
         void on_search_edited();
         void on_row_select();

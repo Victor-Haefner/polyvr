@@ -16,6 +16,7 @@ PyMethodDef VRPySprite::methods[] = {
     {"setScreensize", PyWrap(Sprite, setScreensize, "Enable screensize", void, bool) },
     {"webOpen", PyWrap(Sprite, webOpen, "Open and display a website - webOpen(str uri, int width, flt ratio)", void, string, int, float) },
     {"webReload", PyWrap(Sprite, webReload, "Reload website", void) },
+    {"getWebModule", PyWrap(Sprite, getWebModule, "Get web module", shared_ptr<CEF>) },
     {"showResizeTool", PyWrapOpt(Sprite, showResizeTool, "Show handles to resize the sprite in 3D", "0.1|1", void, bool, float, bool) },
     {"convertToCloth", PyWrap(Sprite, convertToCloth, "convert this Sprite to cloth (softbody)", void) },
     {"setDoubleSided", PyWrap(Sprite, setDoubleSided, "Set double sided geometry, sets back to GL_NONE", void, bool) },

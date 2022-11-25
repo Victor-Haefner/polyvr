@@ -9,24 +9,24 @@
 
 typedef int ALenum;
 typedef signed char ALbyte;
-std::string toString(ALenum a);
+std::string alToString(ALenum a);
 
 #define ALCHECK(x) { \
 ALenum error = alGetError(); \
 if (error != AL_NO_ERROR) { \
-        fprintf(stderr, " Prior runtime error: before executing %s got %s at %s:%d\n", #x, toString(error).c_str(), __FILE__, __LINE__); \
+        fprintf(stderr, " Prior runtime error: before executing %s got %s at %s:%d\n", #x, alToString(error).c_str(), __FILE__, __LINE__); \
 } \
 x; \
 error = alGetError(); \
 if (error != AL_NO_ERROR) { \
-        fprintf(stderr, "Runtime error: %s got %s at %s:%d\n", #x, toString(error).c_str(), __FILE__, __LINE__); \
+        fprintf(stderr, "Runtime error: %s got %s at %s:%d\n", #x, alToString(error).c_str(), __FILE__, __LINE__); \
 } }
 
 #define ALCHECK_BREAK(x) { \
 x; \
 ALenum error = alGetError(); \
 if (error != AL_NO_ERROR) { \
-        fprintf(stderr, "Runtime error: %s got %s at %s:%d\n", #x, toString(error).c_str(), __FILE__, __LINE__); \
+        fprintf(stderr, "Runtime error: %s got %s at %s:%d\n", #x, alToString(error).c_str(), __FILE__, __LINE__); \
         break; \
 } }
 

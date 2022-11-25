@@ -35,6 +35,16 @@ VRScriptPtr VRGuiScripts::getSelectedScript() {
     return script;
 }
 
+VRGuiScripts::group* VRGuiScripts::getSelectedGroup() {
+    VRGuiTreeView tree_view("treeview5");
+    if (!tree_view.hasSelection()) return 0;
+
+    // get selected
+    string name = tree_view.getSelectedStringValue(0);
+    for (auto& g : groups) if (g.second.name == name) return &g.second;
+    return 0;
+}
+
 void VRGuiScripts::setGroupListRow(GtkTreeIter* itr, group& g) {
     auto store = (GtkTreeStore*)VRGuiBuilder::get()->get_object("script_tree");
     gtk_tree_store_set (store, itr,
@@ -133,16 +143,25 @@ void VRGuiScripts::setScriptListRow(GtkTreeIter* itr, VRScriptPtr script, bool o
 void VRGuiScripts::on_new_clicked() {
     auto scene = VRScene::getCurrent();
     if (scene == 0) return;
-    scene->newScript("Script", "\timport VR");
+    auto g = getSelectedGroup();
+    int l,c;
+    getLineFocus(l,c);
+    auto s = scene->newScript("Script", "\timport VR\n\n\t");
+    if (g) s->setGroup(g->name);
     updateList();
+    focusScript(s->getName(), l,c);
 }
 
 VRGuiScripts::group::group() { static int i = 0; ID = i; i++; }
 
 void VRGuiScripts::on_addSep_clicked() {
+    VRScriptPtr script = getSelectedScript();
     group g;
     groups[g.ID] = g;
+    int l,c;
+    getLineFocus(l,c);
     updateList();
+    if (script) focusScript(script->getName(), l,c);
 }
 
 void VRGuiScripts::on_save_clicked() {
@@ -284,10 +303,8 @@ void VRGuiScripts::on_del_clicked() {
 void VRGuiScripts::on_select_script() { // selected a script
     if (pages.count(selected)) {
         auto& P = pages[selected];
-        editor->getCursor(P.line, P.column);
-        P.line++;
-        P.column++;
-        cout << "editor focus out, cursor at: " << selected << "  " << P.line << "  " << P.column << endl;
+        getLineFocus(P.line, P.column);
+        cout << "editor deselect " << selected << ", cursor at: " << selected << "  " << P.line << "  " << P.column << endl;
     }
 
     VRScriptPtr script = VRGuiScripts::getSelectedScript();
@@ -367,7 +384,10 @@ void VRGuiScripts::on_select_script() { // selected a script
 
     if (pages.count(selected)) {
         pagePos P2 = pages[selected];
-        editor->focus(P2.line, P2.column);
+        if (P2.line > 0) {
+            cout << " fokus selected " << selected << " " << P2.line << ", " << P2.column << endl;
+            editor->focus(P2.line, P2.column);
+        }
     }
 }
 
@@ -423,17 +443,27 @@ void VRGuiScripts::on_name_edited(const char* path, const char* new_name) {
 
     // update data
     int type = tree_view.getSelectedIntValue(8);
-    if (type == -1) {
+    if (type == -1) { // change script name
         auto scene = VRScene::getCurrent();
         if (scene == 0) return;
-        scene->changeScriptName(name, new_name);
-    } else {
-        cout << "VRGuiScripts::on_name_edited grp ID " << type << endl;
+        auto s = scene->changeScriptName(name, new_name);
+        new_name = s->getName().c_str();
+        int l,c;
+        getLineFocus(l,c);
+        updateList();
+        focusScript(new_name, l,c);
+    } else { // change group name
         groups[type].name = new_name;
         for (auto& sw : groups[type].scripts) if (auto s = sw.lock()) s->setGroup(new_name);
+
+        updateList();
+        on_select_script();
+
+        auto tree_view = (GtkTreeView*)VRGuiBuilder::get()->get_widget("treeview5");
+        GtkTreePath* tpath = gtk_tree_path_new_from_string(path);
+        gtk_tree_view_expand_row(tree_view, tpath, true);
+        gtk_tree_path_free(tpath);
     }
-    updateList();
-    on_select_script();
 }
 
 void VRGuiScripts::on_buffer_changed() {
@@ -709,6 +739,10 @@ void VRGuiScripts::on_select_templ() {
     gtk_text_buffer_set_text(tb, core.c_str(), core.size());
 }
 
+void VRGuiScripts::on_doubleclick_templ(GtkTreePath* p, GtkTreeViewColumn* c) {
+    on_templ_import_clicked();
+}
+
 void VRGuiScripts::on_templ_close_clicked() { hideDialog("scriptTemplates"); }
 
 void VRGuiScripts::on_templ_import_clicked() {
@@ -874,10 +908,7 @@ void VRGuiScripts::on_find_diag_cancel_clicked() {
 
 VRGuiScripts::searchResult::searchResult(string s, int l, int c) : scriptName(s), line(l), column(c) {}
 
-void VRGuiScripts::focusScript(string name, int line, int column) {
-    setNotebookPage("notebook1", 2);
-    setNotebookPage("notebook3", 3);
-
+void VRGuiScripts::selectScript(string name) {
     auto store = (GtkTreeStore*)VRGuiBuilder::get()->get_object("script_tree");
     auto tree_view = (GtkTreeView*)VRGuiBuilder::get()->get_widget("treeview5");
 
@@ -910,13 +941,27 @@ void VRGuiScripts::focusScript(string name, int line, int column) {
 
     // select script in tree view
     selectScript2();
-
-    // set focus on editor
-    editor->grabFocus();
-    editor->setCursor(line, column);
 }
 
-void VRGuiScripts::getLineFocus(int& line, int& column) { editor->getCursor(line, column); }
+void VRGuiScripts::focusScript(string name, int line, int column) {
+    setNotebookPage("notebook1", 2);
+    setNotebookPage("notebook3", 2);
+    selectScript(name); // messes with editor cursor position etc.. queueJob fixes it
+
+    auto focusLine = [](shared_ptr<VRGuiEditor> editor, int line, int column) {
+        editor->grabFocus();
+        editor->setCursorPosition(line, column);
+    };
+
+    auto fkt = VRUpdateCb::create("gui_focus_script", bind(focusLine, editor, line, column));
+    VRSceneManager::get()->queueJob(fkt, 0);
+}
+
+void VRGuiScripts::getLineFocus(int& line, int& column) {
+    editor->getCursorPosition(line, column);
+    line++;
+    column++;
+}
 
 void VRGuiScripts::on_search_link_clicked(searchResult res, string s) {
     focusScript(res.scriptName, res.line, res.column);
@@ -987,10 +1032,13 @@ void VRGuiScripts::on_change_group() {
     if(!trigger_cbs) return;
     VRScriptPtr script = getSelectedScript();
     if (!script) return;
+    int l,c;
+    getLineFocus(l,c);
     script->setGroup( getComboboxText("combobox10") );
     on_select_script();
     on_save_clicked();
     updateList();
+    focusScript(script->getName(), l,c);
 }
 
 void VRGuiScripts::on_change_server() {
@@ -1190,6 +1238,19 @@ bool VRGuiScripts::updateList() {
         else pages[name] = pagePos();
     }
     on_select_script();
+
+    if (selected == "") {
+        cout << "No script open, selecting a script.." << endl;
+        if (scene->getScript("init")) selectScript("init");
+        else {
+            auto scs = scene->getScripts();
+            if (scs.size() > 0) {
+                auto sc = scs.begin()->second;
+                if (sc) selectScript(sc->getName());
+            }
+        }
+    }
+
     return true;
 }
 
@@ -1268,6 +1329,7 @@ VRGuiScripts::VRGuiScripts() {
     setTreeviewSelectCallback("treeview5", bind(&VRGuiScripts::on_select_script, this) );
     setTreeviewSelectCallback("treeview3", bind(&VRGuiScripts::on_select_help, this) );
     setTreeviewSelectCallback("ttreeview1", bind(&VRGuiScripts::on_select_templ, this) );
+    setTreeviewDoubleclickCallback("ttreeview1", bind(&VRGuiScripts::on_doubleclick_templ, this, PL::_1, PL::_2) );
 
     editor = shared_ptr<VRGuiEditor>( new VRGuiEditor("scrolledwindow4") );
     editor->addKeyBinding("find", VRUpdateCb::create("findCb", bind(&VRGuiScripts::on_find_clicked, this)));

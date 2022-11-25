@@ -12,10 +12,17 @@ using namespace std;
 OSG_BEGIN_NAMESPACE;
 
 class VRBRepSurface : public VRBRepUtils {
+    private:
+        vector<VRBRepBoundPtr> bounds;
+
     public:
-        vector<VRBRepBound> bounds;
+        string stype;
+        string etype;
+        bool same_sense = true;
         PosePtr trans;
         double R = 1;
+        double R2 = 1; // for toroidal and conical surfaces
+        double h0 = 0; // for conic surfaces
 
         field<Vec3d> cpoints;
         field<double> weights;
@@ -26,8 +33,16 @@ class VRBRepSurface : public VRBRepUtils {
 
     public:
         VRBRepSurface();
+        ~VRBRepSurface();
 
-        VRGeometryPtr build(string type);
+        static VRBRepSurfacePtr create();
+
+        void setPose(PosePtr pose);
+        void setPlane();
+        void setCylinder(double radius);
+
+        void addBound(VRBRepBoundPtr bound);
+        VRGeometryPtr build(bool flat = false);
 };
 
 OSG_END_NAMESPACE;

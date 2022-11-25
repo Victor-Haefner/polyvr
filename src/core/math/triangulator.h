@@ -14,6 +14,7 @@ class Triangulator {
         VRGeoDataPtr geo;
         int num_points = 0;
         bool addNormals = true;
+        vector<Vec3d> tmpVertices;
 
     private:
         vector<VRPolygon> outer_bounds;
@@ -21,6 +22,8 @@ class Triangulator {
 
         void testQuad();
         void tessellate();
+
+        vector<Vec3d> toSpace(const vector<Vec2d>& poly);
 
     public:
         Triangulator();
@@ -31,6 +34,7 @@ class Triangulator {
 
         void append(VRGeoDataPtr data, bool addNormals);
         VRGeometryPtr compute();
+        VRGeometryPtr computeBounds();
 };
 
 OSG_END_NAMESPACE;

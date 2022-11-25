@@ -7,6 +7,10 @@
 #include "core/utils/toString.h"
 #include "core/utils/VRTimer.h"
 
+#ifndef WITHOUT_GTK
+#include "core/gui/VRGuiConsole.h"
+#endif
+
 using namespace OSG;
 
 
@@ -105,7 +109,7 @@ vector<BYTE> VRSyncConnection::base64_decode(string const& encoded_string) {
 
 VRSyncConnection::VRSyncConnection(string host, int port, string localUri) : localUri(localUri) {
     timer = VRTimer::create();
-    client = VRTCPClient::create();
+    client = VRTCPClient::create("syncCli");
     client->setGuard("TCPPVR\n");
     uri = host+":"+toString(port);
     if (host != "") connect();
@@ -140,6 +144,16 @@ bool VRSyncConnection::send(string message, int frameDelay) {
     timer->reset();
     if (!client) {
         cout << "Error in VRSyncConnection::send, failed! no client.. tried to send " << message << endl;
+#ifndef WITHOUT_GTK
+        VRConsoleWidget::get("Collaboration")->write( "Error in VRSyncConnection::send, failed! no client.. tried to send " + message + "\n", "red");
+#endif
+        return 0;
+    }
+    if (!client->connected()) { // this only means it is connected to the turn server, NOT the other peer!
+        cout << "Error in VRSyncConnection::send, failed! client not connected.. tried to send " << message << endl;
+#ifndef WITHOUT_GTK
+        VRConsoleWidget::get("Collaboration")->write( "Error in VRSyncConnection::send, failed! client not connected.. tried to send " + message + "\n", "red");
+#endif
         return 0;
     }
     client->send(message, "TCPPVR\n");
@@ -148,10 +162,12 @@ bool VRSyncConnection::send(string message, int frameDelay) {
 
 void VRSyncConnection::keepAlive() {
     //cout << "keepAlive? " << timer->stop() << endl;
-    if (timer->stop() > 3*60*1000) { // 3 min
+    if (timer->stop() > 3*1000) { // 3 sec
         send("keepAlive");
     }
 }
+
+VRTCPClientPtr VRSyncConnection::getClient() { return client; }
 
 string VRSyncConnection::getStatus() {
     string s;
@@ -175,7 +191,7 @@ UInt32 VRSyncConnection::getTransformID(VRTransformPtr t) {
     return t->getOSGTransformPtr()->trans->getId();
 }
 
-void VRSyncConnection::setupAvatar(VRTransformPtr headTransform, VRTransformPtr devTransform, VRTransformPtr devAnchor) { // some geometries
+string VRSyncConnection::setupAvatar(VRTransformPtr headTransform, VRTransformPtr devTransform, VRTransformPtr devAnchor) { // some geometries
     avatar.head = headTransform;
     avatar.dev = devTransform;
     avatar.anchor = devAnchor;
@@ -188,7 +204,7 @@ void VRSyncConnection::setupAvatar(VRTransformPtr headTransform, VRTransformPtr 
     UInt32 deviceTransID = getTransformID(devTransform);
     UInt32 deviceAnchorID = getNodeID(devAnchor);
     string msg = "addAvatar|"+toString(headTransID)+":"+toString(deviceTransID)+":"+toString(deviceAnchorID);
-    send(msg);
+    return msg;
 }
 
 void VRSyncConnection::updateAvatar(string data) {

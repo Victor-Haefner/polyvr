@@ -9,8 +9,8 @@
 
 using namespace OSG;
 
-VRTerrainPhysicsShape::VRTerrainPhysicsShape(VRTerrainPtr terrain, float resolution) : terrain(terrain), resolution(resolution) {
-	m_shapeType = TERRAIN_SHAPE_PROXYTYPE;
+VRTerrainPhysicsShape::VRTerrainPhysicsShape(VRTerrainPtr terrain, float resolution) : btConcaveShape(), terrain(terrain), resolution(resolution) {
+	m_shapeType = CUSTOM_CONCAVE_SHAPE_TYPE;
     auto tex = terrain->getMap();
     texelSize = terrain->getTexelSize();
 	texSize = Vec2i( tex->getSize()[0], tex->getSize()[1] );
@@ -20,7 +20,7 @@ VRTerrainPhysicsShape::VRTerrainPhysicsShape(VRTerrainPtr terrain, float resolut
 
 VRTerrainPhysicsShape::~VRTerrainPhysicsShape() {;}
 void VRTerrainPhysicsShape::calculateLocalInertia(btScalar, btVector3& inertia) const { inertia.setValue(0,0,0); } //moving concave objects not supported
-void VRTerrainPhysicsShape::setLocalScaling(const btVector3& scaling) {}
+void VRTerrainPhysicsShape::setLocalScaling(const btVector3& scaling) { scale = scaling; }
 const btVector3& VRTerrainPhysicsShape::getLocalScaling() const { return scale; }
 
 void VRTerrainPhysicsShape::getAabb(const btTransform& t, btVector3& Min, btVector3& Max) const {
@@ -29,26 +29,7 @@ void VRTerrainPhysicsShape::getAabb(const btTransform& t, btVector3& Min, btVect
 	Max = VRPhysics::toBtVector3( boundingbox.max() );
 }
 
-/*Vec2d VRTerrain::toUVSpace(Vec2d p) {
-    int W = tex->getSize()[0]-1;
-    int H = tex->getSize()[1]-1;
-    double u = (p[0]/size[0] + 0.5)*W;
-    double v = (p[1]/size[1] + 0.5)*H;
-    return Vec2d(u,v);
-};
-
-Vec2d VRTerrain::fromUVSpace(Vec2d uv) {
-    int W = tex->getSize()[0]-1;
-    int H = tex->getSize()[1]-1;
-    double x = ((uv[0])/W-0.5)*size[0];
-    double z = ((uv[1])/H-0.5)*size[1];
-    return Vec2d(x,z);
-};*/
-
 void VRTerrainPhysicsShape::processAllTriangles(btTriangleCallback* callback, const btVector3& aabbMin, const btVector3& aabbMax) const {
-    //VRTimer timer;
-    //timer.start();
-
     Vec3d Min = VRPhysics::toVec3d(aabbMin);
     Vec3d Max = VRPhysics::toVec3d(aabbMax);
     boundingbox.clamp( Min );
@@ -96,7 +77,6 @@ void VRTerrainPhysicsShape::processAllTriangles(btTriangleCallback* callback, co
 }
 
 map<int, map<int, btVector3>> VRTerrainPhysicsShape::cache;
-
 
 
 

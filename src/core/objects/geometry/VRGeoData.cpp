@@ -210,9 +210,9 @@ bool VRGeoData::validIndices() const {
 }
 
 void VRGeoData::apply(VRGeometryPtr geo, bool check, bool checkIndices) const {
-    if (!geo) { cout << "VRGeoData::apply to geometry " << geo->getName() << " failed: geometry invalid!" << endl; return; }
-    if (check && !valid()) { cout << "VRGeoData::apply to geometry " << geo->getName() << " failed: data invalid!" << endl; return; }
-    if (checkIndices && !validIndices()) { cout << "VRGeoData::apply to geometry " << geo->getName() << " failed: indices invalid!" << endl; return; }
+    if (!geo) { cout << "VRGeoData::apply to geometry '" << geo->getName() << "' failed: geometry invalid!" << endl; return; }
+    if (check && !valid()) { cout << "VRGeoData::apply to geometry '" << geo->getName() << "' failed: data invalid!" << endl; return; }
+    if (checkIndices && !validIndices()) { cout << "VRGeoData::apply to geometry '" << geo->getName() << "' failed: indices invalid!" << endl; return; }
 
     geo->setPositions( data->pos );
     geo->setLengths( data->lengths->size() > 0 ? data->lengths : 0 );
@@ -851,6 +851,15 @@ void VRGeoData::addVertexColors(Color4f c) {
         geo->fixColorMapping();
         geo->getMesh()->geo->setColors(cols);
     }
+}
+
+void VRGeoData::addVertexTexCoords(Vec2d tc) {
+    int N = size();
+    auto& tcoords = data->texs[0];
+    if (tcoords->size() == 0) {
+        for (int i=0; i<N; i++) tcoords->addValue(tc);
+    }
+    if (geo) geo->getMesh()->geo->setTexCoords(tcoords);
 }
 
 void VRGeoData::makeSingleIndex() {

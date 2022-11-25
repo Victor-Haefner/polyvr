@@ -17,7 +17,7 @@ PyObject* VRPyMath::sin(VRPyMath* self, PyObject* args) { float v = VRPyBase::pa
 template<> PyTypeObject VRPyBaseT<Vec2d>::type = {
     PyObject_HEAD_INIT(NULL)
     0,                         /*ob_size*/
-    "VR.Math.Vec3",             /*tp_name*/
+    "VR.Math.Vec2",             /*tp_name*/
     sizeof(VRPyVec2f),             /*tp_basicsize*/
     0,                         /*tp_itemsize*/
     (destructor)dealloc, /*tp_dealloc*/
@@ -36,7 +36,7 @@ template<> PyTypeObject VRPyBaseT<Vec2d>::type = {
     0,                         /*tp_setattro*/
     0,                         /*tp_as_buffer*/
     Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE | Py_TPFLAGS_CHECKTYPES, /*tp_flags*/
-    "Vec3 binding",           /* tp_doc */
+    "Vec2 binding",           /* tp_doc */
     0,		               /* tp_traverse */
     0,		               /* tp_clear */
     0,		               /* tp_richcompare */
@@ -914,17 +914,21 @@ PyMethodDef VRPyXMLElement::methods[] = {
     {"getChildren", PyWrapOpt2(XMLElement, getChildren, "Get children, optional element name and recursive", "|0", vector<XMLElementPtr>, string, bool) },
     {"getChild", PyWrap2(XMLElement, getChild, "Get child by name", XMLElementPtr, string) },
     {"addChild", PyWrap2(XMLElement, addChild, "Add child element", XMLElementPtr, string) },
+    {"toString", PyWrap2(XMLElement, toString, "Return element data as string", string) },
     {"print", PyWrap2(XMLElement, print, "Print to console", void) },
     {NULL}  /* Sentinel */
 };
 
 PyMethodDef VRPySpreadsheet::methods[] = {
-    {"read", PyWrap(Spreadsheet, read, "Read file", void, string) },
+    {"read", PyWrap(Spreadsheet, read, "Read file, .xlsx, .mdb, .eap", void, string) },
+    {"write", PyWrap(Spreadsheet, write, "Write to folder, (folder, extention)", void, string, string) },
+    {"writeSheet", PyWrap(Spreadsheet, writeSheet, "Write to sheet to file (.csv), (sheet, path)", void, string, string) },
     {"getSheets", PyWrap(Spreadsheet, getSheets, "Get list of sheet names", vector<string>) },
     {"getRow", PyWrap(Spreadsheet, getRow, "Get ith row (sheet, row)", vector<string>, string, size_t) },
     {"getRows", PyWrap(Spreadsheet, getRows, "Get list of rows by sheet name", vector<vector<string>>, string) },
     {"getNColumns", PyWrap(Spreadsheet, getNColumns, "Get N columns of sheet", size_t, string) },
     {"getNRows", PyWrap(Spreadsheet, getNRows, "Get N rows of sheet", size_t, string) },
     {"getCell", PyWrap(Spreadsheet, getCell, "Get cell content (sheet, column, row)", string, string, size_t, size_t) },
+    {"setCell", PyWrap(Spreadsheet, setCell, "Set cell content (sheet, column, row, data)", void, string, size_t, size_t, string) },
     {NULL}  /* Sentinel */
 };

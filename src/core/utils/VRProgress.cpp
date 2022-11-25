@@ -26,14 +26,7 @@ size_t VRProgress::left() {
 
 size_t VRProgress::current() { return count; }
 
-void VRProgress::update(size_t i) {
-    if (count < max) {
-        count += i;
-        double k = double(count)/max;
-        if (k-part < 0.01) return;
-        part = k;
-    }
-
+void VRProgress::signal() {
     double dt = timer->stop()*0.001;
     if (count == 0) return;
     double pending = dt*(max/double(count)-1);
@@ -55,10 +48,21 @@ void VRProgress::update(size_t i) {
     }
 }
 
+void VRProgress::update(size_t i) {
+    if (count < max) {
+        count += i;
+        double k = double(count)/max;
+        if (k-part < 0.01) return;
+        part = k;
+    }
+
+    signal();
+}
+
 void VRProgress::finish() { count = max; part = 1.0; update(0); }
 float VRProgress::get() { return part; }
-void VRProgress::set(float t) { part = t; }
 void VRProgress::reset() { part = count = 0; timer->reset(); }
+void VRProgress::set(float t) { part = t; count = t*max; }
 
 void VRProgress::setup(string title, size_t max, Mode m) {
     this->title = title;

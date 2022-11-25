@@ -299,6 +299,7 @@ string VRMaterial::constructShaderVP(VRMatDataPtr data) {
     vp += "attribute vec4 osg_Vertex;\n";
     vp += "attribute vec3 osg_Normal;\n";
     vp += "attribute vec4 osg_Color;\n";
+    if (texD == 1) vp += "attribute vec2 osg_MultiTexCoord0;\n";
     if (texD == 2) vp += "attribute vec2 osg_MultiTexCoord0;\n";
     vp += "uniform mat4 OSGModelViewProjectionMatrix;\n";
     vp += "uniform mat4 OSGModelViewMatrix;\n";
@@ -309,6 +310,7 @@ string VRMaterial::constructShaderVP(VRMatDataPtr data) {
     vp += "varying vec3 vertNorm;\n";
     vp += "varying vec4 lightPos;\n";
     vp += "varying vec4 color;\n";
+	if (texD == 1) vp += "varying vec2 texCoord;\n";
 	if (texD == 2) vp += "varying vec2 texCoord;\n";
     vp += "void main(void) {\n";
     vp += "  vertPos = OSGModelViewMatrix * osg_Vertex;\n";
@@ -316,6 +318,7 @@ string VRMaterial::constructShaderVP(VRMatDataPtr data) {
     //vp += "  lightPos = OSGViewMatrix * glLightPosition;\n";
     vp += "  lightPos = OSGViewMatrix * vec4(-5.0,-5.0,-5.0,1.0);\n";
     vp += "  lightPos.w = glLightPosition.w;\n";
+    if (texD == 1) vp += "  texCoord = osg_MultiTexCoord0;\n";
     if (texD == 2) vp += "  texCoord = osg_MultiTexCoord0;\n";
     vp += "  color = osg_Color;\n";
     vp += "  gl_Position = OSGModelViewProjectionMatrix * osg_Vertex;\n";
@@ -326,6 +329,7 @@ string VRMaterial::constructShaderVP(VRMatDataPtr data) {
     vp += "attribute vec4 osg_Vertex;\n";
     vp += "attribute vec3 osg_Normal;\n";
     //vp += "attribute vec4 osg_Color;\n";
+    if (texD == 1) vp += "attribute vec2 osg_MultiTexCoord0;\n";
     if (texD == 2) vp += "attribute vec2 osg_MultiTexCoord0;\n";
     if (texD == 3) vp += "attribute vec3 osg_MultiTexCoord0;\n";
     vp += "varying vec4 vertPos;\n";
@@ -334,6 +338,7 @@ string VRMaterial::constructShaderVP(VRMatDataPtr data) {
     vp += "void main(void) {\n";
     vp += "  vertPos = gl_ModelViewMatrix * osg_Vertex;\n";
     vp += "  vertNorm = gl_NormalMatrix * osg_Normal;\n";
+    if (texD == 1) vp += "  gl_TexCoord[0] = vec4(osg_MultiTexCoord0,0.0,0.0);\n";
     if (texD == 2) vp += "  gl_TexCoord[0] = vec4(osg_MultiTexCoord0,0.0,0.0);\n";
     if (texD == 3) vp += "  gl_TexCoord[0] = vec4(osg_MultiTexCoord0,0.0);\n";
     vp += "  color  = gl_Color;\n";
@@ -356,11 +361,13 @@ string VRMaterial::constructShaderFP(VRMatDataPtr data, bool deferred, int force
     fp += "varying vec3 vertNorm;\n";
     fp += "varying vec4 color;\n";
     fp += "varying vec4 lightPos;\n";
+	if (texD == 1) fp += "varying vec2 texCoord;\n";
 	if (texD == 2) fp += "varying vec2 texCoord;\n";
     fp += "uniform int isLit;\n";
     fp += "uniform vec4 mat_diffuse;\n";
     fp += "uniform vec4 mat_ambient;\n";
     fp += "uniform vec4 mat_specular;\n";
+    if (texD == 1) fp += "uniform sampler2D tex0;\n";
     if (texD == 2) fp += "uniform sampler2D tex0;\n";
     fp += "void main(void) {\n";
     fp += "  vec3  n = normalize(vertNorm);\n";
@@ -369,7 +376,8 @@ string VRMaterial::constructShaderFP(VRMatDataPtr data, bool deferred, int force
 	//fp += "  if (lightPos.w < 0.5) light = normalize( -lightPos.xyz ); // dir light\n";  // TODO: fix the lights for WASM!
 	//fp += "  else light = -normalize( lightPos.xyz - vertPos.xyz ); // pnt light\n";
     fp += "  float NdotL = max(dot( n, light ), 0.0);\n";
-    if (texD == 2) fp += "  vec4 diffCol = texture2D(tex0, texCoord);\n";
+    if (texD == 1) fp += "  vec4 diffCol = texture2D(tex0, texCoord);\n";
+    else if (texD == 2) fp += "  vec4 diffCol = texture2D(tex0, texCoord);\n";
 //    if (texD == 2) fp += "  vec4 diffCol = vec4(texCoord.x, texCoord.y, 0.0, 1.0);\n";
     else fp += "  vec4 diffCol = color;\n";
     fp += "  diffCol.a *= color.a;\n"; // transparency
@@ -386,6 +394,7 @@ string VRMaterial::constructShaderFP(VRMatDataPtr data, bool deferred, int force
     fp += "varying vec4 vertPos;\n";
     fp += "varying vec3 vertNorm;\n";
     fp += "varying vec4 color;\n";
+    if (texD == 1) fp += "uniform sampler2D tex0;\n";
     if (texD == 2) fp += "uniform sampler2D tex0;\n";
     if (texD == 3) fp += "uniform sampler3D tex0;\n";
 
@@ -406,9 +415,10 @@ string VRMaterial::constructShaderFP(VRMatDataPtr data, bool deferred, int force
 
     fp += "void main(void) {\n";
     fp += "  vec3 pos = vertPos.xyz / vertPos.w;\n";
-    if (texD == 0) fp += "  vec4 diffCol = color;\n";
-    if (texD == 2) fp += "  vec4 diffCol = texture2D(tex0, gl_TexCoord[0].xy);\n";
-    if (texD == 3) fp += "  vec4 diffCol = texture3D(tex0, gl_TexCoord[0].xyz);\n";
+    if (texD == 1) fp += "  vec4 diffCol = texture2D(tex0, gl_TexCoord[0].xy);\n";
+    else if (texD == 2) fp += "  vec4 diffCol = texture2D(tex0, gl_TexCoord[0].xy);\n";
+    else if (texD == 3) fp += "  vec4 diffCol = texture3D(tex0, gl_TexCoord[0].xyz);\n";
+    else fp += "  vec4 diffCol = color;\n";
     if (deferred) {
         fp += "  if (diffCol.a < 0.1) discard;\n";
         fp += "  diffCol.rgb = mix(vec3(0.5), diffCol.rgb, diffCol.a);\n";
@@ -698,7 +708,16 @@ void VRMaterial::setMaterial(MaterialMTRecPtr m) {
             if (mc) { md->mat->subChunk(md->colChunk); md->colChunk = mc; mc->setBackMaterial(false); md->regChunk(mc,unit,0); continue; }
             if (bc) { md->blendChunk = bc; md->regChunk(bc,unit, 6); continue; }
             if (ec) { md->envChunks[unit] = ec; md->regChunk(ec,unit, 5*10+unit); continue; }
-            if (tc) { md->texChunks[unit] = tc; md->regChunk(tc,unit, 4*10+unit); continue; }
+
+            if (tc) {
+                md->texChunks[unit] = tc; md->regChunk(tc,unit, 4*10+unit);
+                if (useGlobalFCMap) {
+                    auto img = md->texChunks[unit]->getImage();
+                    fieldContainerMap[img->getId()] = md->texChunks[unit]->getId();
+                }
+                continue;
+            }
+
             if (dc) { md->depthChunk = dc; md->regChunk(dc,unit, 8); continue; }
             if (tsc) { md->mat->subChunk(md->twoSidedChunk); md->twoSidedChunk = tsc; md->regChunk(tsc,unit, 1); continue; }
             if (sp) { md->shaderChunk = sp; md->regChunk(sp,unit, 7); continue; }

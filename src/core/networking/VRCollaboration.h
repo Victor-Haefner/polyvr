@@ -15,11 +15,12 @@ class VRCollaboration : public VRObject {
 	    VRICEClientPtr ice;
 	    VRSyncNodePtr syncNode;
 	    VRMicrophonePtr mike;
-	    VRSoundPtr sound;
+	    map<string, VRSoundPtr> voices;
 
         VRTransformPtr avatarTorso;
         VRTransformPtr avatarHandLeft;
         VRTransformPtr avatarHandRight;
+        float avatarScale = 1.0;
 
 	    VRSpritePtr userNameWidget;
 	    VRSpritePtr userlist;
@@ -33,11 +34,18 @@ class VRCollaboration : public VRObject {
 
 	    string userName;
 	    string connReqOrigin;
+	    string connReqSystem;
+	    vector<string> connReqNet;
 
 	    void init();
-	    void connectTCP(string origin);
+	    string getSubnet();
+	    vector<string> parseSubNet(string net);
+	    void connectTCP(string origin, bool isWindows);
+	    void acceptConnection(bool isWindows);
+	    void finishConnection(string origin, bool isWindows, vector<string> net);
 	    void setupAvatar(string rID, string name);
 	    void onIceEvent(string m);
+	    void onSyncNodeEvent(string e);
 
 	    void initUI();
 	    void sendUI(string widget, string data);
@@ -55,8 +63,9 @@ class VRCollaboration : public VRObject {
         void subChild(VRObjectPtr child, bool osg = true) override;
 
 		void setServer(string uri);
+		void setupLocalServer();
 		void setAvatarDevices(VRTransformPtr head, VRTransformPtr hand, VRTransformPtr handGrab = 0);
-		void setAvatarGeometry(VRTransformPtr torso, VRTransformPtr leftHand = 0, VRTransformPtr rightHand = 0);
+		void setAvatarGeometry(VRTransformPtr torso, VRTransformPtr leftHand = 0, VRTransformPtr rightHand = 0, float scale = 1.0);
 };
 
 OSG_END_NAMESPACE;

@@ -37,6 +37,8 @@ void VRPipeSegment::computeGeometry() {
 }
 
 void VRPipeSegment::addEnergy(double m, double d, bool p1) {
+    if (volume < 1e-9) return;
+
     if (p1) pressure1 += m/volume;
     else pressure2 += m/volume;
 
@@ -46,6 +48,8 @@ void VRPipeSegment::addEnergy(double m, double d, bool p1) {
 }
 
 void VRPipeSegment::handleTank(double& otherPressure, double otherVolume, double& otherDensity, double dt, bool p1) {
+    if (otherVolume < 1e-9) return;
+
     double pressure = p1 ? pressure1 : pressure2;
     double dP = pressure - otherPressure;
     double m = dP*area*dt*gasSpeed; // energy through the pipe section area
@@ -85,19 +89,32 @@ void VRPipeSegment::handleValve(double area, VRPipeSegmentPtr other, double dt, 
     other->addEnergy(m, density, op1);
 }
 
+void VRPipeSegment::handleOutlet(double area, double extPressure, double extDensity, double dt, bool p1) {
+    double pressure = p1 ? pressure1 : pressure2;
+    area = min(area, this->area);
+    double dP = pressure - extPressure;
+    double m = dP*area*dt*gasSpeed; // energy through the opening
+    m = min(m, pressure*volume); // not more than available!
+    addEnergy(-m, extDensity, p1);
+}
+
 void VRPipeSegment::handlePump(double performance, double maxPressure, bool isOpen, VRPipeSegmentPtr other, double dt, bool p1, bool op1) {
     double pressure = p1 ? pressure1 : pressure2;
     double otherPressure = op1 ? other->pressure1 : other->pressure2;
     if (pressure < 1e-6) return; // min pressure
     if (otherPressure > maxPressure) return;
 
+    double mO = 0;
+    if (isOpen) mO = computeExchange(area*0.1, other, dt, p1, op1); // minimal exchange if pump is open
+
     double v = 1.0 + otherPressure/pressure;
     double m = performance*dt/exp(v);
+    m = max(m, mO);
     //if (isOpen) m = max(m, computeExchange(area*0.1, other, dt, p1)); // minimal exchange if pump is open
     m = min(m, pressure*volume); // pump out not more than available!
     addEnergy(-m, other->density, p1);
     other->addEnergy(m, density, op1);
-    //cout << " pump " << dP << " m " << m << " v " << v << endl;
+    //cout << " pump " << performance << " m " << m << " v " << v << endl;
 }
 
 
@@ -124,7 +141,13 @@ VRPipeSystem::~VRPipeSystem() {}
 VRPipeSystemPtr VRPipeSystem::create() { return VRPipeSystemPtr( new VRPipeSystem() ); }
 VRPipeSystemPtr VRPipeSystem::ptr() { return static_pointer_cast<VRPipeSystem>(shared_from_this()); }
 
+GraphPtr VRPipeSystem::getGraph() { return graph; }
 VROntologyPtr VRPipeSystem::getOntology() { return ontology; }
+
+VREntityPtr VRPipeSystem::getNodeEntity(int nID) {
+    if (!nodes.count(nID)) return 0;
+    return nodes[nID]->entity;
+}
 
 int VRPipeSystem::addNode(string name, PosePtr pos, string type, map<string, string> params) {
     rebuildMesh = true;
@@ -229,7 +252,8 @@ void VRPipeSystem::update() {
     double dT = 1.0/60; // TODO: use animation
     double dt = dT/subSteps;
 
-    double latency = 0.001;
+
+    auto clamp = [](double f, double a = -1, double b = 1) -> double { return f<a ? a : f>b ? b : f; };
 
     for (int i=0; i<subSteps; i++) {
 
@@ -239,13 +263,49 @@ void VRPipeSystem::update() {
             auto entity = node->entity;
 
             if (entity->is_a("Tank")) {
+                auto inPipes = getInPipes(nID);
+                auto outPipes = getOutPipes(nID);
                 double tankVolume = entity->getValue("volume", 0.0);
                 double tankPressure = entity->getValue("pressure", 1.0);
                 double tankDensity = entity->getValue("density", 1.0);
-                for (auto p : getInPipes(nID)) p->handleTank(tankPressure, tankVolume, tankDensity, dt, false);
-                for (auto p : getOutPipes(nID)) p->handleTank(tankPressure, tankVolume, tankDensity, dt, true);
-                entity->set("pressure", toString(tankPressure));
-                entity->set("density", toString(tankDensity));
+                double tankOpen = entity->getValue("isOpen", false);
+
+                if (!tankOpen) {
+                    for (auto p : inPipes)  p->handleTank(tankPressure, tankVolume, tankDensity, dt, false);
+                    for (auto p : outPipes) p->handleTank(tankPressure, tankVolume, tankDensity, dt, true);
+                    entity->set("pressure", toString(tankPressure));
+                    entity->set("density", toString(tankDensity));
+                } else {
+                    double outletPressure = 1.0;//entity->getValue("density", pipe->density);
+                    double outletDensity = 1.0;//entity->getValue("density", pipe->density);
+                    double area = 100.0;
+                    for (auto pipe :  inPipes) pipe->handleOutlet(area, outletPressure, outletDensity, dt, false);
+                    for (auto pipe : outPipes) pipe->handleOutlet(area, outletPressure, outletDensity, dt, true);
+                }
+
+                // update level
+                double k = 10.0; // TODO
+                double tankLevel = entity->getValue("level", 0.0);
+                if (tankVolume > 1e-3) {
+                    vector<int> inFlowPipeIDs;
+                    vector<int> outFlowPipeIDs;
+                    for (auto e : graph->getInEdges(nID) ) {
+                        auto pipe = segments[e.ID];
+                        if (pipe->flow + pipe->dFl2 > 0) inFlowPipeIDs.push_back(e.ID);
+                        if (pipe->flow + pipe->dFl2 < 0) outFlowPipeIDs.push_back(e.ID);
+                    }
+                    for (auto e : graph->getOutEdges(nID) ) {
+                        auto pipe = segments[e.ID];
+                        if (pipe->flow + pipe->dFl2 > 0) outFlowPipeIDs.push_back(e.ID);
+                        if (pipe->flow + pipe->dFl2 < 0) inFlowPipeIDs.push_back(e.ID);
+                    }
+
+                    for (auto p : inFlowPipeIDs)  tankLevel += dt * segments[p]->flow * k / tankVolume;
+                    for (auto p : outFlowPipeIDs) tankLevel -= dt * segments[p]->flow * k / tankVolume;
+                    tankLevel = clamp(tankLevel, 0.0, 1.0);
+                }
+                cout << "level: " << nID << ", " << tankLevel << endl;
+                entity->set("level", toString(tankLevel));
                 continue;
             }
 
@@ -313,15 +373,13 @@ void VRPipeSystem::update() {
 
             if (entity->is_a("Outlet")) {
                 double outletRadius = entity->getValue("radius", 0.0);
+                double outletPressure = entity->getValue("pressure", 1.0);
                 auto pipes = getPipes(nID);
                 if (pipes.size() != 1) continue;
                 auto pipe = pipes[0];
-
-                bool p1 = goesOut(pipe, nID);
-
+                double outletDensity = entity->getValue("density", pipe->density);
                 double area = outletRadius*outletRadius*Pi;
-                if (p1) pipe->pressure1 -= (pipe->pressure1-1.0)*area*dt;
-                else    pipe->pressure2 -= (pipe->pressure2-1.0)*area*dt;
+                pipe->handleOutlet(area, outletPressure, outletDensity, dt, goesOut(pipe, nID));
                 continue;
             }
         }
@@ -342,6 +400,7 @@ void VRPipeSystem::update() {
             double a = (F-R)/m; // accelleration
             s.second->dFl1 = a*dt*s.second->area;  // pipe flow change in m³ / s
             s.second->flowBlocked = false;
+            //if (isNan(s.second->dFl1)) cout << "dFl1 is NaN! m: " << m << " dP: " << dP << " F: " << F << " A: " << s.second->area << " R: " << R << " a: " << a << endl;
         }
 
         for (auto n : nodes) { // check for closed nodes
@@ -371,6 +430,14 @@ void VRPipeSystem::update() {
                     pipe1->flowBlocked = true;
                     pipe2->flowBlocked = true;
                 }
+            }
+        }
+
+        for (auto s : segments) { // check for closed pipes
+            double a = s.second->area;
+            if (a < 1e-8) {
+                s.second->dFl1 = -s.second->flow*latency;
+                s.second->flowBlocked = true;
             }
         }
 
@@ -407,11 +474,36 @@ void VRPipeSystem::update() {
                 for (auto eID : inFlowPipeIDs  ) maxInFlow  += abs(segments[eID]->flow + segments[eID]->dFl2);
                 for (auto eID : outFlowPipeIDs ) maxOutFlow += abs(segments[eID]->flow + segments[eID]->dFl2);
                 double maxFlow = min(maxInFlow, maxOutFlow);
+
+                if (entity->is_a("Tank")) { // only changes the flow if full or empty!
+                    double tankLevel = entity->getValue("level", 0.0);
+                    bool empty = bool(tankLevel <= 1e-3);
+                    bool full  = bool(tankLevel >= 1.0-1e-3);
+                    cout << " tank, level: " << tankLevel << ", empty? " << empty << ", full? " << full << endl;
+                    if (!empty && !full) continue;
+
+                    //if (maxFlow > 1e-6 && maxInFlow > 1e-6 && maxOutFlow > 1e-6) {
+                        if (full) { // if empty the flow out is reduced, but not the flow in!
+                            double outPart = maxFlow/maxOutFlow;
+                            for (auto eID : outFlowPipeIDs ) segments[eID]->dFl2 = (segments[eID]->flow*latency + segments[eID]->dFl2)*outPart - segments[eID]->flow*latency;
+                            if (abs(outPart-1.0) > 1e-3) flowCheck = true;
+                        }
+                        if (empty) { // if full the flow in is reduced, but not the flow out!
+                            double inPart  = maxFlow/maxInFlow;
+                            for (auto eID :  inFlowPipeIDs ) segments[eID]->dFl2 = (segments[eID]->flow*latency + segments[eID]->dFl2)*inPart  - segments[eID]->flow*latency;
+                            if (abs(inPart-1.0) > 1e-3) flowCheck = true;
+                        }
+                    /*} else { // no flow
+                        for (auto eID :  inFlowPipeIDs ) segments[eID]->dFl2 = -segments[eID]->flow*latency;
+                        for (auto eID : outFlowPipeIDs ) segments[eID]->dFl2 = -segments[eID]->flow*latency;
+                        flowCheck = true;
+                    }*/
+                    continue;
+                }
+
                 if (maxFlow > 1e-6 && maxInFlow > 1e-6 && maxOutFlow > 1e-6) {
                     double inPart  = maxFlow/maxInFlow;
                     double outPart = maxFlow/maxOutFlow;
-                    //for (auto eID :  inFlowPipeIDs ) segments[eID]->dFl2 *= inPart;
-                    //for (auto eID : outFlowPipeIDs ) segments[eID]->dFl2 *= outPart;
                     for (auto eID :  inFlowPipeIDs ) segments[eID]->dFl2 = (segments[eID]->flow*latency + segments[eID]->dFl2)*inPart  - segments[eID]->flow*latency;
                     for (auto eID : outFlowPipeIDs ) segments[eID]->dFl2 = (segments[eID]->flow*latency + segments[eID]->dFl2)*outPart - segments[eID]->flow*latency;
                     if (abs(inPart-1.0) > 1e-3 || abs(outPart-1.0) > 1e-3) flowCheck = true;
@@ -443,11 +535,15 @@ void VRPipeSystem::update() {
             if (isNan(s.second->dFl2)) {
                 s.second->dFl2 = 0;
                 cout << "Warning in Pipe simulation! dFL is NaN!" << endl;
+                cout << " pipe: " << s.first << ", nodes: " << n1 << " -> " << n2 << endl;
+                cout << " flow: " << s.second->flow << ", dF1: " << s.second->dFl1 << endl;
             }
 
+
             s.second->flow += s.second->dFl2;  // pipe flow change in m³ / s
+
             //if (abs(s.second->dFl2) > 1e-9 || 1)
-            //    cout << " flow +" << s.second->dFl2 << " -> " << s.second->flow << " (" << n1 << "->" << n2 << ") blocked? " << s.second->flowBlocked << endl;
+            //    cout << " flow +" << s.second->dFl1 << "/" << s.second->dFl2 << " -> " << s.second->flow << " (" << n1 << "->" << n2 << ") blocked? " << s.second->flowBlocked << endl;
         }
     }
 
@@ -466,10 +562,14 @@ void VRPipeSystem::initOntology() {
     Tank->addProperty("pressure", "double");
     Tank->addProperty("volume", "double");
     Tank->addProperty("density", "double");
+    Tank->addProperty("level", "double");
+    Tank->addProperty("isOpen", "bool");
     Pump->addProperty("performance", "double");
     Pump->addProperty("maxPressure", "double");
     Pump->addProperty("isOpen", "bool");
     Outlet->addProperty("radius", "double");
+    Outlet->addProperty("pressure", "double");
+    Outlet->addProperty("density", "double");
     Valve->addProperty("state", "bool");
     Valve->addProperty("radius", "double");
 }
@@ -533,7 +633,9 @@ bool VRPipeSystem::getValveState(string n) { auto e = getEntity(n); return e ? e
 void VRPipeSystem::setValve(string n, bool b)  { auto e = getEntity(n); if (e) e->set("state", toString(b)); }
 void VRPipeSystem::setTankPressure(string n, double p) { auto e = getEntity(n); if (e) e->set("pressure", toString(p)); }
 void VRPipeSystem::setTankDensity(string n, double p) { auto e = getEntity(n); if (e) e->set("density", toString(p)); }
-void VRPipeSystem::setPipeRadius(int i, double r) { segments[i]->radius = r; }
+void VRPipeSystem::setPipeRadius(int i, double r) { segments[i]->radius = r; segments[i]->computeGeometry(); }
+void VRPipeSystem::setOutletDensity(string n, double p) { auto e = getEntity(n); if (e) e->set("density", toString(p)); }
+void VRPipeSystem::setOutletPressure(string n, double p) { auto e = getEntity(n); if (e) e->set("pressure", toString(p)); }
 
 void VRPipeSystem::setPump(string n, double p, double pmax) {
     auto e = getEntity(n);
@@ -541,6 +643,10 @@ void VRPipeSystem::setPump(string n, double p, double pmax) {
         e->set("performance", toString(p));
         e->set("maxPressure", toString(pmax));
     }
+}
+
+void VRPipeSystem::setFlowParameters(float l) {
+    latency = l;
 }
 
 void VRPipeSystem::updateVisual() {
@@ -578,8 +684,17 @@ void VRPipeSystem::updateVisual() {
 
         for (auto& n : nodes) {
             auto p = graph->getPosition(n.first);
-            data.pushVert(p->pos(), norm, white);
-            data.pushPoint();
+            auto e = n.second->entity;
+            if (e->is_a("Tank")) {
+                double s = spread*3;
+                data.pushQuad(p->pos(), Vec3d(0,0,1), Vec3d(0,1,0), Vec2d(s,s), true);
+                data.pushQuad(p->pos(), Vec3d(0,0,1), Vec3d(0,1,0), Vec2d(s,s), true);
+                for (int i=0; i<4; i++) data.pushColor(white);
+                for (int i=0; i<4; i++) data.pushColor(blue);
+            } else {
+                data.pushVert(p->pos(), norm, white);
+                data.pushPoint();
+            }
         }
 
         auto m = VRMaterial::create("pipes");
@@ -649,23 +764,36 @@ void VRPipeSystem::updateVisual() {
     }
 
     for (auto& n : nodes) {
-        Color3f c(0.4,0.4,0.4);
+        if (n.second->entity->is_a("Tank")) {
+            double l = n.second->entity->getValue("level", 0.0);
+            double A = 3*spread;
+            //c = s ? Color3f(0,1,0) : Color3f(1,0,0);
+            Pnt3d pwRef1 = data.getPosition(i+3);
+            Pnt3d pwRef2 = data.getPosition(i+2);
+            Pnt3d pw1 = pwRef1 - Vec3d(0,(1.0-l)*A,0);
+            Pnt3d pw2 = pwRef2 - Vec3d(0,(1.0-l)*A,0);
+            data.setPos(i+0, pw1);
+            data.setPos(i+1, pw2);
+            data.setPos(i+7, pw1);
+            data.setPos(i+6, pw2);
+            i += 8;
+        } else {
+            Color3f c(0.4,0.4,0.4);
+            if (n.second->entity->is_a("Valve")) {
+                bool s = n.second->entity->getValue("state", false);
+                c = s ? Color3f(0,1,0) : Color3f(1,0,0);
+            }
 
-        if (n.second->entity->is_a("Valve")) {
-            bool s = n.second->entity->getValue("state", false);
-            c = s ? Color3f(0,1,0) : Color3f(1,0,0);
+            if (n.second->entity->is_a("Junction")) c = Color3f(0.2,0.4,1);
+            if (n.second->entity->is_a("Outlet"))   c = Color3f(0.1,0.2,0.8);
+
+            if (n.second->entity->is_a("Pump")) {
+                double p = n.second->entity->getValue("performance", 0.0);
+                c = p>1e-3 ? Color3f(1,1,0) : Color3f(1,0.5,0);
+            }
+
+            data.setColor(i, c); i++;
         }
-
-        if (n.second->entity->is_a("Junction")) {
-            c = Color3f(0.2,0.4,1);
-        }
-
-        if (n.second->entity->is_a("Pump")) {
-            double p = n.second->entity->getValue("performance", 0.0);
-            c = p>1e-3 ? Color3f(1,1,0) : Color3f(1,0.5,0);
-        }
-
-        data.setColor(i, c); i++;
     }
 }
 

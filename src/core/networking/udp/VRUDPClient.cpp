@@ -2,6 +2,7 @@
 #include "core/utils/toString.h"
 #include "core/utils/VRMutex.h"
 #include "core/gui/VRGuiConsole.h"
+#include "core/scene/VRSceneManager.h"
 
 #include <boost/asio.hpp>
 #include <boost/array.hpp>
@@ -10,13 +11,13 @@
 #include <thread>
 
 using namespace OSG;
-using namespace boost;
-using asio::ip::udp;
+using boost::asio::ip::udp;
 
 class UDPClient {
     private:
-        asio::io_service io_service;
-        asio::io_service::work worker;
+        VRUDPClient* parent = 0;
+        boost::asio::io_service io_service;
+        boost::asio::io_service::work worker;
         udp::endpoint remote_endpoint;
         udp::socket socket;
         list<string> messages;
@@ -28,17 +29,22 @@ class UDPClient {
         function<string (string)> onMessageCb;
         boost::array<char, 1024> buffer;
 
-        vector<asio::ip::udp::endpoint> uriToEndpoints(const string& uri) {
-            asio::ip::udp::resolver resolver(io_service);
-            asio::ip::udp::resolver::query query(uri, "");
-            vector<asio::ip::udp::endpoint> res;
-            for(asio::ip::udp::resolver::iterator i = resolver.resolve(query); i != asio::ip::udp::resolver::iterator(); ++i) {
+        vector<boost::asio::ip::udp::endpoint> uriToEndpoints(const string& uri) {
+            boost::asio::ip::udp::resolver resolver(io_service);
+            boost::asio::ip::udp::resolver::query query(uri, "");
+            vector<boost::asio::ip::udp::endpoint> res;
+            for(boost::asio::ip::udp::resolver::iterator i = resolver.resolve(query); i != boost::asio::ip::udp::resolver::iterator(); ++i) {
                 res.push_back(*i);
             }
             return res;
         }
 
-        bool read_handler(const system::error_code& ec, size_t N) {
+        bool read_handler(const boost::system::error_code& ec, size_t N) {
+            if (parent) {
+                auto& iFlow = parent->getInFlow();
+                iFlow.logFlow(N*0.001);
+            }
+
             if (ec) { cout << "UDPClient receive failed: " << ec.message() << "\n"; broken = true; return false; }
             string msg(buffer.begin(), buffer.begin()+N);
             //cout << "Received: '" << msg << "' (" << ec.message() << ")\n";
@@ -55,9 +61,12 @@ class UDPClient {
         }
 
         bool read() {
+#ifdef _WIN32
+			return true; // doesnt work under windows..
+#endif
             if (broken) return false;
 
-            auto onRead = [this](system::error_code ec, size_t N) {
+            auto onRead = [this](boost::system::error_code ec, size_t N) {
                 read_handler(ec, N);
                 read();
             };
@@ -73,12 +82,17 @@ class UDPClient {
             boost::system::error_code ec;
             auto N = socket.send_to(boost::asio::buffer(messages.front()), remote_endpoint, 0, ec);
 
+            if (parent) {
+                auto& oFlow = parent->getOutFlow();
+                oFlow.logFlow(N*0.001);
+            }
+
             if (!ec) {
                 VRLock lock(mtx);
                 messages.pop_front();
                 if (!messages.empty()) processQueue();
             } else {
-                cout << " tcp client write ERROR: " << ec.message() << "  N: " << N << ", close socket!" << endl;
+                cout << " udp client write ERROR: " << ec.message() << "  N: " << N << ", close socket!" << endl;
                 socket.close();
             }
         }
@@ -88,7 +102,7 @@ class UDPClient {
         }
 
     public:
-        UDPClient() : worker(io_service), socket(io_service) {
+        UDPClient(VRUDPClient* c) : parent(c), worker(io_service), socket(io_service) {
             socket.open(udp::v4());
             service = thread([this]() { runService(); });
         }
@@ -104,8 +118,8 @@ class UDPClient {
             try {
                 io_service.stop();
                 socket.close();
-                system::error_code _error_code;
-                socket.shutdown(asio::ip::udp::socket::shutdown_both, _error_code);
+                boost::system::error_code _error_code;
+                socket.shutdown(boost::asio::ip::udp::socket::shutdown_both, _error_code);
             } catch(...) {
                 ;
             }
@@ -117,13 +131,13 @@ class UDPClient {
         void connect(string host, int port) {
             cout << "UDPClient::connect " << this << " to: " << host << ", on port " << port << endl;
             try {
-                remote_endpoint = udp::endpoint( asio::ip::address::from_string(host), port);
-                //socket.connect( udp::endpoint( asio::ip::address::from_string(host), port ));
+                remote_endpoint = udp::endpoint( boost::asio::ip::address::from_string(host), port);
+                //socket.connect( udp::endpoint( boost::asio::ip::address::from_string(host), port ));
                 read();
             } catch(std::exception& e) {
                 cout << "UDPClient::connect failed with: " << e.what() << endl;
 #ifndef WITHOUT_GTK
-                VRConsoleWidget::get("Collaboration")->write( " TCP connect to "+host+":"+toString(port)+" failed with "+e.what()+"\n", "red");
+                VRConsoleWidget::get("Collaboration")->write( " UDP connect to "+host+":"+toString(port)+" failed with "+e.what()+"\n", "red");
 #endif
             }
         }
@@ -149,10 +163,20 @@ class UDPClient {
 };
 
 
-VRUDPClient::VRUDPClient() { protocol = "udp"; client = new UDPClient(); }
-VRUDPClient::~VRUDPClient() { delete client; }
+VRUDPClient::VRUDPClient(string name) : VRNetworkClient(name) {
+    protocol = "udp";
+    client = new UDPClient(this);
+}
 
-VRUDPClientPtr VRUDPClient::create() { return VRUDPClientPtr( new VRUDPClient() ); }
+VRUDPClient::~VRUDPClient() {
+    delete client;
+}
+
+VRUDPClientPtr VRUDPClient::create(string name) {
+    auto c = VRUDPClientPtr(new VRUDPClient(name));
+    VRSceneManager::get()->regNetworkClient(c);
+    return c;
+}
 
 void VRUDPClient::onMessage( function<string(string)> f ) { client->onMessage(f); }
 void VRUDPClient::connect(string host, int port) { client->connect(host, port); uri = host+":"+toString(port); }

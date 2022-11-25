@@ -35,17 +35,22 @@ string VRGuiEditor::getCore(int i) {
     gtk_text_buffer_get_start_iter(GTK_TEXT_BUFFER(sourceBuffer), &itr_s);
     gtk_text_buffer_get_end_iter(GTK_TEXT_BUFFER(sourceBuffer), &itr_e);
     for (int j=0; j<i; j++) gtk_text_iter_forward_line(&itr_s); // skip head
-    string data = string( gtk_text_buffer_get_text( GTK_TEXT_BUFFER(sourceBuffer), &itr_s, &itr_e, true) );
-    while(data.back() == '\n') data.pop_back();
+    auto txt = gtk_text_buffer_get_text( GTK_TEXT_BUFFER(sourceBuffer), &itr_s, &itr_e, true);
+    string data;
+    if (txt) data = string( txt );
+    while(data.size() > 0 && data.back() == '\n') data.pop_back();
     return data;
 }
 
 void VRGuiEditor::focus(int line, int column) {
     grabFocus();
-    setCursor(line, column);
+    setCursorPosition(line, column);
 }
 
-void VRGuiEditor::setCursor(int line, int column) {
+void VRGuiEditor::setCursorPosition(int line, int column) {
+    if (line <= 0) line = 1;
+    if (column <= 0) column = 1;
+
     // get iterator at line and column and set cursor to iterator
     GtkTextIter itr;
     GtkTextBuffer* buffer = gtk_text_view_get_buffer((GtkTextView*)editor);
@@ -57,15 +62,16 @@ void VRGuiEditor::setCursor(int line, int column) {
     gtk_text_iter_set_line_offset(&itr, 0);
     GtkTextMark* mark = gtk_text_buffer_create_mark(buffer, 0, &itr, false);
     gtk_text_view_scroll_to_mark((GtkTextView*)editor, mark, 0.25, false, 0, 0);
-    cout << " VRGuiEditor::setCursor l: " << line << " c: " << column << " m: " << gtk_text_iter_get_line(&itr) << endl;
+    cout << " VRGuiEditor::setCursorPosition l: " << line << " c: " << column << " m: " << gtk_text_iter_get_line(&itr) << endl;
 }
 
-void VRGuiEditor::getCursor(int& line, int& column) {
+void VRGuiEditor::getCursorPosition(int& line, int& column) {
     GtkTextIter itr;
     GtkTextBuffer* buffer = gtk_text_view_get_buffer((GtkTextView*)editor);
     gtk_text_buffer_get_iter_at_mark(buffer, &itr, gtk_text_buffer_get_insert(buffer));
     line = gtk_text_iter_get_line(&itr);
     column = gtk_text_iter_get_line_offset(&itr);
+    cout << " VRGuiEditor::getCursorPosition l: " << line << " c: " << column << " m: " << gtk_text_iter_get_line(&itr) << endl;
 }
 
 void VRGuiEditor::printViewerLanguages() {

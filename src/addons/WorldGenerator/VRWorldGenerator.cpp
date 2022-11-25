@@ -103,6 +103,7 @@ VRTerrainPtr VRWorldGenerator::getTerrain(int i) {
 }
 
 void VRWorldGenerator::addMaterial( string name, VRMaterialPtr mat ) { materials[name] = mat; }
+
 void VRWorldGenerator::addAsset( string name, VRTransformPtr geo ) {
     if (!geo) return;
     for (auto o : geo->getChildren(true, "Geometry")) {
@@ -114,7 +115,7 @@ void VRWorldGenerator::addAsset( string name, VRTransformPtr geo ) {
         data.addVertexColors(c);
         g->setMaterial(m);
     }
-    assets->addTemplate(geo, name);
+    if (assets) assets->addTemplate(geo, name);
 }
 
 VRMaterialPtr VRWorldGenerator::getMaterial(string name) {
@@ -262,6 +263,7 @@ OSMMapPtr VRWorldGenerator::getOSMMap() { return osmMap; }
 OSMMapPtr VRWorldGenerator::getGMLMap() { return gmlMap; }
 
 void VRWorldGenerator::setTerrainSize( Vec2d in ) { terrainSize = in; }
+Vec2d VRWorldGenerator::getTerrainSize() { return terrainSize; }
 
 VRTerrainPtr VRWorldGenerator::addTerrain(VRTexturePtr sat, VRTexturePtr heights, double lodf, double loddist, int lodlvl, bool isLit, Color4f mixColor, float mixAmount) {
     auto terrain = VRTerrain::create("terrain"+toString(lodlvl), bool(planet));
@@ -417,9 +419,9 @@ void VRWorldGenerator::setupLOD(int layers) { // deprecated
 #ifndef __EMSCRIPTEN__
     if ( layers == 1 ) { addLod( "wgenlvl0", 10000000.0 ); }
     if ( layers > 1 ) {
-        addLod( "wgenlvl0", 5000.0 );
-        addLod( "wgenlvl1", 15000.0 );
-        addLod( "wgenlvl2", 300000.0);
+        addLod( "wgenlvl0", 15000.0 );
+        addLod( "wgenlvl1", 30000.0 );
+        addLod( "wgenlvl2", 600000.0);
     }
 #else
     addLod( "wgenlvl0", 10000000.0 );
@@ -475,7 +477,7 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
 
         auto addPnt = [&](Vec3d p, Vec3d d) {
             //d.normalize(); // TODO: necessary because of projectTangent, can be optimized!
-            if (terrains.size() == 1) {
+            if (terrains.size()) {
                 p = terrains[0]->elevatePoint(p,p[1]);
                 terrains[0]->projectTangent(d, p);
             } else d.normalize();
@@ -512,7 +514,7 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
         }
 
         auto addPnt = [&](Vec3d p, Vec3d d) {
-            if (terrains.size() == 1) {
+            if (terrains.size()) {
                 p = terrains[0]->elevatePoint(p);
                 terrains[0]->projectTangent(d, p);
             }
@@ -577,7 +579,7 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
         auto getString = [&](string tag, string def) { return way->hasTag(tag) ? way->tags[tag] : def; };
 
         auto addPathData = [&](VREntityPtr node, Vec3d pos, Vec3d norm) {
-            if (terrains.size() == 1) terrains[0]->projectTangent(norm, pos);
+            if (terrains.size()) terrains[0]->projectTangent(norm, pos);
             else norm.normalize();
             nodes.push_back(node);
             norms.push_back(norm);
@@ -680,7 +682,7 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
             auto p2 = wayToPath(w2, 8);
             auto p3 = embSlopePath(w1, 8);
             auto p4 = embSlopePath(w2, 8);
-            terrains[0]->addEmbankment(rel->id, p1, p2, p3, p4);
+            if (terrains.size()) terrains[0]->addEmbankment(rel->id, p1, p2, p3, p4);
         }
     }
 
@@ -794,7 +796,7 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
             auto poly = wayToPolygon(way);
             if (poly->size() == 0) continue;
             for (auto p : poly->gridSplit(5)) {
-                if (terrains.size() == 1) terrains[0]->elevatePolygon(p, 0.03, false);
+                if (terrains.size()) terrains[0]->elevatePolygon(p, 0.03, false);
 #ifndef WITHOUT_GLU_TESS
                 Triangulator tri;
                 tri.add(*p);
@@ -831,7 +833,7 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
 
         Vec3d dir = getDir(node);
         bool hasDir = node->tags.count("direction");
-        if (terrains.size() == 1) pos = terrains[0]->elevatePoint(pos);
+        if (terrains.size()) pos = terrains[0]->elevatePoint(pos);
         //bool addToOnto = false;
         bool added = false;
         for (auto tag : node->tags) {
@@ -909,7 +911,7 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
             if (tag.first == "surveillance:type") {
                 if (tag.second == "camera") {
                     auto cam = assets->copy("Camera", Pose::create(pos, dir), false);
-                    lodTree->addObject(cam, cam->getWorldPosition(), 3, false);
+                    if (lodTree) lodTree->addObject(cam, cam->getWorldPosition(), 3, false);
                     cam->setDir(dir);
                     Pose p(pos, dir);
 #ifndef WITHOUT_BULLET
@@ -923,7 +925,7 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
                 if (tag.second == "street_lamp") {
                     auto lamp = assets->copy("Streetlamp", Pose::create(pos, -dir), false);
                     if (lamp) {
-                        lodTree->addObject(lamp, lamp->getWorldPosition(), 3, false);
+                        if (lodTree) lodTree->addObject(lamp, lamp->getWorldPosition(), 3, false);
                         lamp->setDir(-dir);
                         Pose p(pos, -dir);
 #ifndef WITHOUT_BULLET

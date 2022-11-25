@@ -20,6 +20,42 @@ VRNetworkManager::~VRNetworkManager() {
     cout << "VRNetworkManager::~VRNetworkManager" << endl;
 }
 
+void VRNetworkManager::regNetworkClient(VRNetworkClientPtr client) {
+    networkClients[client.get()] = client;
+}
+
+void VRNetworkManager::subNetworkClient(VRNetworkClient* client) {
+    if (networkClients.count(client)) networkClients.erase(client);
+    else cout << "Warning in VRNetworkManager::subTCPClient, client not registred!" << endl;
+}
+
+void VRNetworkManager::regNetworkServer(VRNetworkServerPtr server) {
+    networkServers[server.get()] = server;
+}
+
+void VRNetworkManager::subNetworkServer(VRNetworkServer* server) {
+    if (networkServers.count(server)) networkServers.erase(server);
+    else cout << "Warning in VRNetworkManager::subTCPServer, server not registred!" << endl;
+}
+
+vector<VRNetworkClientPtr> VRNetworkManager::getNetworkClients() {
+    vector<VRNetworkClientPtr> res;
+    for (auto c : networkClients) {
+        if (auto cl = c.second.lock()) res.push_back(cl);
+        else cout << "Warning! VRNetworkManager::getNetworkClients client invalid!" << endl;
+    }
+    return res;
+}
+
+vector<VRNetworkServerPtr> VRNetworkManager::getNetworkServers() {
+    vector<VRNetworkServerPtr> res;
+    for (auto c : networkServers) {
+        if (auto cl = c.second.lock()) res.push_back(cl);
+        else cout << "Warning! VRNetworkManager::getNetworkServers client invalid!" << endl;
+    }
+    return res;
+}
+
 VRSocketPtr VRNetworkManager::getSocket(int port) {
     for (auto s : sockets) if(s.second->getPort() == port) return s.second;
     VRSocketPtr s = VRSocket::create("Socket");

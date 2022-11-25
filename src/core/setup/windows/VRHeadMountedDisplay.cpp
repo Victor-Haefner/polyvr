@@ -69,11 +69,18 @@ VRHeadMountedDisplay::VRHeadMountedDisplay() {
 	onCameraChanged = VRDeviceCb::create("GUI_updateSceneViewer", bind(&VRHeadMountedDisplay::updateCamera, this));
 	VRGuiSignals::get()->getSignal("camera_changed")->add(onCameraChanged);
 	VRGuiSignals::get()->getSignal("camera_near_far_changed")->add(onCameraChanged);
-	
+
 	hmd = VRDevice::create("hmd");
 	auto setup = VRSetup::getCurrent();
 	if (setup) setup->addDevice(hmd);
 }
+
+struct VRHeadMountedDisplay::FBOData {
+	VRTextureRendererPtr rendererL;
+	VRTextureRendererPtr rendererR;
+	MatrixCameraRecPtr mcamL;
+	MatrixCameraRecPtr mcamR;
+};
 
 VRHeadMountedDisplay::~VRHeadMountedDisplay() {
 	cout << "~VRHeadMountedDisplay" << endl;
@@ -87,20 +94,13 @@ bool VRHeadMountedDisplay::checkDeviceAttached() {
 	return vr::VR_IsHmdPresent();
 }
 
-struct VRHeadMountedDisplay::FBOData {
-	VRTextureRendererPtr rendererL;
-	VRTextureRendererPtr rendererR;
-	MatrixCameraRecPtr mcamL;
-	MatrixCameraRecPtr mcamR;
-};
-
 void VRHeadMountedDisplay::initFBO() {
 	fboData = new FBOData();
 }
 
 void VRHeadMountedDisplay::initTexRenderer() {
 	//renderer = VRTextureRenderer::create();
-	
+
 }
 
 bool VRHeadMountedDisplay::updateCamera() {
@@ -231,11 +231,24 @@ void VRHeadMountedDisplay::render(bool fromThread) {
 
 	setScene(); // TODO: put this in callback when new scene
 
+//#ifdef _WIN32
+    auto ttype = vr::TextureType_OpenGL;
+//#else
+//    auto ttype = vr::API_OpenGL;
+//#endif
+
 	updateTexID(fboData->rendererL, texIDL);
-	updateTexID(fboData->rendererR, texIDR);
-	vr::Texture_t leftEyeTexture  = { (void*)(uintptr_t)texIDL, vr::TextureType_OpenGL, vr::ColorSpace_Gamma };
-	vr::Texture_t rightEyeTexture = { (void*)(uintptr_t)texIDR, vr::TextureType_OpenGL, vr::ColorSpace_Gamma };
+	vr::Texture_t leftEyeTexture;  //= { (void*)(uintptr_t)texIDL, vr::TextureType_OpenGL, vr::ColorSpace_Gamma };
+	leftEyeTexture.eColorSpace = vr::ColorSpace_Gamma;
+	leftEyeTexture.eType = ttype;
+	leftEyeTexture.handle = (void*)(uintptr_t)texIDL;
 	vr::VRCompositor()->Submit(vr::Eye_Left , &leftEyeTexture);
+
+	updateTexID(fboData->rendererR, texIDR);
+	vr::Texture_t rightEyeTexture; //= { (void*)(uintptr_t)texIDR, vr::TextureType_OpenGL, vr::ColorSpace_Gamma };
+	rightEyeTexture.eColorSpace = vr::ColorSpace_Gamma;
+	rightEyeTexture.eType = ttype;
+	rightEyeTexture.handle = (void*)(uintptr_t)texIDR;
 	vr::VRCompositor()->Submit(vr::Eye_Right, &rightEyeTexture);
 
 	glFlush();
@@ -280,8 +293,8 @@ void VRHeadMountedDisplay::SetupTexturemaps() {
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-	for (int i = 0; i < m_nRenderHeight; i++) {
-		for (int j = 0; j < m_nRenderWidth; j++) {
+	for (uint i = 0; i < m_nRenderHeight; i++) {
+		for (uint j = 0; j < m_nRenderWidth; j++) {
 			if (i == j) { testImage.push_back(0); testImage.push_back(0); testImage.push_back(255); testImage.push_back(255); }
 			else if (i%2 == 0) { testImage.push_back(0); testImage.push_back(255); testImage.push_back(0); testImage.push_back(255); }
 			else { testImage.push_back(255); testImage.push_back(0); testImage.push_back(0); testImage.push_back(255); }
@@ -294,7 +307,11 @@ void VRHeadMountedDisplay::SetupTexturemaps() {
 
 Matrix4d VRHeadMountedDisplay::GetHMDMatrixProjectionEye(unsigned int nEye) {
 	if (!m_pHMD) return Matrix4d();
+//#ifdef _WIN32
 	vr::HmdMatrix44_t mat = m_pHMD->GetProjectionMatrix(vr::EVREye(nEye), m_fNearClip, m_fFarClip);
+//#else
+//	vr::HmdMatrix44_t mat = m_pHMD->GetProjectionMatrix(vr::EVREye(nEye), m_fNearClip, m_fFarClip, vr::API_OpenGL);
+//#endif
 	return convertMatrix(mat);
 }
 
@@ -318,7 +335,7 @@ void VRHeadMountedDisplay::addController(int devID) {
 	auto scene = VRScene::getCurrent();
 	if (scene) {
 		scene->initFlyWalk(scene->getActiveCamera(), dev);
-		scene->setActiveNavigation("FlyWalk");
+		//scene->setActiveNavigation("FlyWalk");
 		dev->clearDynTrees();
 		dev->addDynTree(scene->getRoot());
 
@@ -356,7 +373,13 @@ void VRHeadMountedDisplay::handleInput() {
 	for (auto dev : devices) {
 		int devID = dev.first;
 		vr::VRControllerState_t state;
+
+//#ifdef _WIN32
 		m_pHMD->GetControllerState(devID, &state, sizeof(state));
+//#else
+//		m_pHMD->GetControllerState(devID, &state, sizeof(state));
+		//vr::API_OpenGL);
+//#endif
 		float x = state.rAxis[0].x;
 		float y = state.rAxis[0].y;
 
@@ -371,7 +394,7 @@ void VRHeadMountedDisplay::UpdateHMDMatrixPose() {
 	vr::VRCompositor()->WaitGetPoses(&m_rTrackedDevicePose[0], vr::k_unMaxTrackedDeviceCount, NULL, 0);
 
 	m_iValidPoseCount = 0;
-	for (int devID = 0; devID < vr::k_unMaxTrackedDeviceCount; devID++) {
+	for (uint devID = 0; devID < vr::k_unMaxTrackedDeviceCount; devID++) {
 		if (m_rTrackedDevicePose[devID].bPoseIsValid) {
 			m_iValidPoseCount++;
 			Matrix4d m = convertMatrix(m_rTrackedDevicePose[devID].mDeviceToAbsoluteTracking);
@@ -387,7 +410,7 @@ void VRHeadMountedDisplay::UpdateHMDMatrixPose() {
  			}
 		}
 	}
-	
+
 	int hmdID = vr::k_unTrackedDeviceIndex_Hmd;
 	if (m_rTrackedDevicePose[hmdID].bPoseIsValid) {
 		Matrix4d mvm = m_rmat4DevicePose[hmdID];
@@ -403,7 +426,7 @@ void VRHeadMountedDisplay::UpdateHMDMatrixPose() {
 	}
 }
 
-VRTransformPtr VRHeadMountedDisplay::getTracker(int tID) { 
+VRTransformPtr VRHeadMountedDisplay::getTracker(int tID) {
 	if (!tracker.count(tID)) {
 		int bID = hmd->addBeacon();
 		tracker[tID] = hmd->getBeacon(bID);
@@ -411,8 +434,8 @@ VRTransformPtr VRHeadMountedDisplay::getTracker(int tID) {
 	return tracker[tID];
 }
 
-VRDevicePtr VRHeadMountedDisplay::getDevice(int dID) { 
-	if (!devices.count(dID)) addController(dID); 
+VRDevicePtr VRHeadMountedDisplay::getDevice(int dID) {
+	if (!devices.count(dID)) addController(dID);
 	return devices[dID];
 }
 

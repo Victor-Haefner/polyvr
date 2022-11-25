@@ -432,10 +432,13 @@ string hudSite = TEMPLATE(
 
 <head>\n
 \t<style type="text/css">\n
+\t\tbody {\n
+\t\t\tmargin:0;\
+\t\t}\n
 \t\tbutton {\n
-\t\t\tfont-size:20vh;\n
-\t\t\twidth:60vw;\n
-\t\t\theight:60vh;\n
+\t\t\tfont-size:10vh;\n
+\t\t\twidth:100vw;\n
+\t\t\theight:20vh;\n
 \t\t}\n
 \t</style>\n
 \t<script>\n
@@ -451,7 +454,11 @@ string hudSite = TEMPLATE(
 </head>\n\n
 
 <body>\n
-\t<button onclick="send('message from hud')">send message</button>\n
+\t<button onclick="send('message1 from hud')">send message1</button>\n
+\t<button onclick="send('message2 from hud')">send message2</button>\n
+\t<button onclick="send('message3 from hud')">send message3</button>\n
+\t<button onclick="send('message4 from hud')">send message4</button>\n
+\t<button onclick="send('message5 from hud')">send message5</button>\n
 </body>\n
 </html>
 );

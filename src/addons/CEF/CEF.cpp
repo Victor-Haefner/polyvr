@@ -17,6 +17,12 @@
 #include "core/utils/VRLogger.h"
 #include "core/utils/system/VRSystem.h"
 
+#ifndef WITHOUT_GTK
+#include "core/gui/VRGuiFile.h"
+#include "core/gui/VRGuiManager.h"
+#include "core/gui/VRGuiConsole.h"
+#endif // WITHOUT_GTK
+
 using namespace OSG;
 
 vector< weak_ptr<CEF> > instances;
@@ -55,6 +61,31 @@ bool CEF_handler::OnContextMenuCommand( CefRefPtr<CefBrowser> browser, CefRefPtr
     //CEF_REQUIRE_UI_THREAD();
     //MessageBox(browser->GetHost()->GetWindowHandle(), L"The requested action is not supported", L"Unsupported Action", MB_OK | MB_ICONINFORMATION);
     return false;
+}
+
+void CEF_handler::on_link_clicked(string source, int line, string s) {
+    auto data = splitString(source, '/');
+    if (data.size() == 0) return;
+    string script = data[data.size()-1];
+#ifndef WITHOUT_GTK
+    VRGuiManager::get()->focusScript(script, line, 0);
+#endif
+}
+
+bool CEF_handler::OnConsoleMessage( CefRefPtr< CefBrowser > browser, cef_log_severity_t level, const CefString& message, const CefString& source, int line ) {
+#ifndef WITHOUT_GTK
+    VRConsoleWidget::get( "Console" )->addStyle( "blueLink", "#1133ff", "#ffffff", false, false, true, false );
+
+    auto link = VRFunction<string>::create("cef_link", bind(&CEF_handler::on_link_clicked, this, source, line, _1) );
+
+    string msg = message;
+    string src = source;
+    VRConsoleWidget::get( "Console" )->write( src + " (" + toString(line) + ")", "blueLink", link );
+    VRConsoleWidget::get( "Console" )->write( ": " + msg + "\n" );
+    return true;
+#else
+    return false;
+#endif
 }
 
 
@@ -102,6 +133,8 @@ CefRefPtr<CefRenderHandler> CEF_client::GetRenderHandler() { return handler; }
 CefRefPtr<CefLoadHandler> CEF_client::GetLoadHandler() { return handler; }
 CefRefPtr<CEF_handler> CEF_client::getHandler() { return handler; }
 CefRefPtr<CefContextMenuHandler> CEF_client::GetContextMenuHandler() { return handler; }
+CefRefPtr<CefDialogHandler> CEF_client::GetDialogHandler() { return handler; }
+CefRefPtr<CefDisplayHandler> CEF_client::GetDisplayHandler() { return handler; }
 
 CEF::CEF() {
     global_initiate();
@@ -173,7 +206,15 @@ void CEF::global_initiate() {
     //settings.log_severity = LOGSEVERITY_VERBOSE;
 #endif
 
+#ifdef _WIN32
     CefMainArgs args;
+	//args.set(const struct_type* src, struct_type* target, bool copy); // TODO: set parameters as defined below
+#else
+    vector<const char *> cmdArgs;
+    cmdArgs.push_back("--enable-media-stream=1");
+    cmdArgs.push_back("--use-fake-ui-for-media-stream=1");
+    CefMainArgs args(cmdArgs.size(), (char**)cmdArgs.data());
+#endif
     CefInitialize(args, settings, 0, 0);
 }
 
@@ -314,7 +355,13 @@ void CEF::mouse_move(VRDeviceWeakPtr d) {
     }
 }
 
+void CEF::toggleInput(bool m, bool k) {
+    doMouse = m;
+    doKeyboard = k;
+}
+
 bool CEF::mouse(int lb, int rb, int wu, int wd, VRDeviceWeakPtr d) {
+    if (!doMouse) return true;
     //cout << "CEF::mouse " << lb << " " << rb << " " << wu << " " << wd << endl;
     auto dev = d.lock();
     if (!dev) return true;
@@ -380,6 +427,7 @@ bool CEF::mouse(int lb, int rb, int wu, int wd, VRDeviceWeakPtr d) {
 }
 
 bool CEF::keyboard(VRDeviceWeakPtr d) {
+    if (!doKeyboard) return true;
     auto dev = d.lock();
     if (!dev) return true;
     if (!focus) return true;
@@ -434,3 +482,18 @@ bool CEF::keyboard(VRDeviceWeakPtr d) {
     }
     return false;
 }
+
+bool CEF_handler::OnFileDialog( CefRefPtr< CefBrowser > browser, CefDialogHandler::FileDialogMode mode, const CefString& title, const CefString& default_file_path, const std::vector< CefString >& accept_filters, int selected_accept_filter, CefRefPtr< CefFileDialogCallback > callback ) {
+    auto onAccept = [callback](){
+        callback->Continue( 0, { VRGuiFile::getPath() } );
+    };
+
+    auto onCancel = [callback](){
+        callback->Cancel();
+    };
+
+    VRGuiFile::setCallbacks(onAccept, onCancel);
+    VRGuiFile::open("Open", 0, title);
+    return true;
+}
+

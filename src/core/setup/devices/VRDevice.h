@@ -37,6 +37,7 @@ class VRDevice : public std::enable_shared_from_this<VRDevice>, public VRName, p
         virtual void setCamera(VRCameraPtr cam);
 
         VRSignalPtr newSignal(int key, int state);
+        VRSignalPtr getSignal(int key, int state);
         VRSignalPtr addToggleSignal(int key);
         void addSignal(VRSignalPtr sig, int key, int state);
         VRSignalPtr addSlider(int key);

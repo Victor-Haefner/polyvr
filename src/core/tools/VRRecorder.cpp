@@ -266,7 +266,9 @@ void VRRecorder::writeHeader(string path) {
     stream->duration = ofmt_ctx->duration;
     stream->avg_frame_rate = av_make_q(60,1);
     avcodec_parameters_from_context(stream->codecpar, stream->codec);
+#if LIBAVFORMAT_VERSION_MAJOR < 58
     stream->display_aspect_ratio = av_make_q(stream->codec->width, stream->codec->height);
+#endif
     ofmt_ctx->video_codec = codec;
 
     av_dict_set(&ofmt_ctx->metadata, "TPFL", "testtest", 0);

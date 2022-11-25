@@ -20,15 +20,18 @@ class SingleLinkNode;
 #include <OpenSG/OSGLine.h>
 #include "core/objects/VRObjectFwd.h"
 #include "core/utils/VRFunctionFwd.h"
+#include "core/utils/VRUtilsFwd.h"
 #include "core/math/field.h"
 #include "core/math/VRMathFwd.h"
+#include "../VRImportFwd.h"
+#include "core/gui/VRGuiFwd.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
 class VRGuiTreeExplorer;
 
-class VRSTEP {
+class VRSTEP : public std::enable_shared_from_this<VRSTEP> {
     public:
         typedef shared_ptr<Registry> RegistryPtr;
         typedef shared_ptr<InstMgr> InstMgrPtr;
@@ -58,6 +61,7 @@ class VRSTEP {
         };
 
         map<STEPentity*, Node*> nodes;
+        VRSTEPExplorerPtr explorer;
 
         struct Instance {
             string type;
@@ -78,7 +82,6 @@ class VRSTEP {
         struct Surface;
 
         static vector<STEPentity*> unfoldComplex(STEPentity* e);
-        void on_explorer_select(VRGuiTreeExplorer* e);
 
     public:
         RegistryPtr registry;
@@ -87,7 +90,10 @@ class VRSTEP {
 
         map<string, bool> blacklist;
         int blacklisted = 0;
-        string options;
+        map<string,string> options;
+        bool scaleDefined = false;
+        float scale = 1.0;
+        string filePath;
 
         string redBeg  = "\033[0;38;2;255;150;150m";
         string greenBeg  = "\033[0;38;2;150;255;150m";
@@ -102,10 +108,22 @@ class VRSTEP {
         map<STEPentity*, VRTransformPtr> resGeos;
         VRTransformPtr resRoot;
 
+        VRProgressPtr progress;
+        bool threaded = false;
+        VRThreadCbPtr threadCb;
+
         map<string, Type> types;
         Instance& getInstance(STEPentity* e);
         template<class T> void addType(string type, string path, string cpath, bool print = false);
         template<class T> void parse(STEPentity* e, string path, string cpath, string type);
+
+        template<size_t i, class... Args>
+        Instance& getChild(Instance& instance, string type) {
+            auto& child = getInstance( instance.get<i, Args...>() );
+            if (!child) cout << "VRSTEP::getChild Error, " << instance.ID << " has no valid data!";
+            if (child.type != type) cout << "VRSTEP::getChild Error, type mismatch, child " << i << " (#" << child.ID << ") has type '" << child.type << "', expected type: '" << type << "'" << endl;
+            return child;
+        }
 
         bool getValue(STEPentity* e, STEPattribute* a, SingleLinkNode* an, string& t, char c, string& type);
         bool getValue(STEPentity* e, STEPattribute* a, SingleLinkNode* an, int& t, char c, string& type);
@@ -129,17 +147,22 @@ class VRSTEP {
         void traverseEntity(STEPentity* se, int lvl, VRSTEP::Node* parent, bool complexPass = 0);
         void traverseSelect(SDAI_Select* s, int lvl, VRSTEP::Node* parent);
         void traverseAggregate(STEPaggregate* sa, int atype, STEPattribute* attr, int lvl, VRSTEP::Node* parent);
-        void explore(VRSTEP::Node* node, int parent = 0);
 
         void buildGeometries();
         void buildScenegraph();
         void buildMaterials();
         void build();
 
+        void exploreEntity(VRSTEP::Node* n, bool doFilter = true);
+
     public:
         VRSTEP();
+        ~VRSTEP();
 
-        void load(string file, VRTransformPtr res, string options);
+		static VRSTEPPtr create();
+		VRSTEPPtr ptr();
+
+        void load(string file, VRTransformPtr res, map<string,string> options, VRProgressPtr p = 0, bool thread = false);
 };
 
 OSG_END_NAMESPACE;

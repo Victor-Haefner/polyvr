@@ -302,6 +302,7 @@ Color3f Path::getPointColor(int i) { return point_colors[i]; }
 void Path::setPointColor(int i, Color3f c) { point_colors[i] = c; }
 
 void Path::compute(int N) {
+    if (N <= 1) return;
     if (points.size() <= 1) return;
     iterations = N;
 

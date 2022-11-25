@@ -66,7 +66,7 @@ void ART_device::init() {
         auto scene = VRScene::getCurrent();
         if (scene) {
             scene->initFlyWalk(scene->getActiveCamera(), dev);
-            scene->setActiveNavigation("FlyWalk");
+            //scene->setActiveNavigation("FlyWalk");
             dev->clearDynTrees();
             dev->addDynTree(scene->getRoot());
         }
@@ -231,6 +231,7 @@ void ART::checkNewDevices(int type, int N) {
 }
 
 void ART::applyEvents() {
+    if (!active) return;
     //if (VRGlobals::CURRENT_FRAME < 10) return;
     VRLock lock(*mutex);
     //updateL();

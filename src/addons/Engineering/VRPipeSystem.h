@@ -39,6 +39,7 @@ class VRPipeSegment {
 
         void handleTank(double& pressure, double otherVolume, double& otherDensity, double dt, bool p1);
         void handleValve(double area, VRPipeSegmentPtr other, double dt, bool p1, bool op1);
+        void handleOutlet(double area, double extPressure, double extDensity, double dt, bool p1);
         void handlePump(double performance, double maxPressure, bool isOpen, VRPipeSegmentPtr other, double dt, bool p1, bool op1);
 
         void addEnergy(double m, double d, bool p1);
@@ -69,6 +70,7 @@ class VRPipeSystem : public VRGeometry {
         bool doVisual = false;
         bool rebuildMesh = true;
         float spread = 0.1;
+        double latency = 0.001;
 
         map<int, VRPipeNodePtr> nodes;
         map<string, int> nodesByName;
@@ -91,22 +93,26 @@ class VRPipeSystem : public VRGeometry {
 		static VRPipeSystemPtr create();
 		VRPipeSystemPtr ptr();
 
+        GraphPtr getGraph();
+        VROntologyPtr getOntology();
+
 		int addNode(string name, PosePtr pos, string type, map<string, string> params);
 		int addSegment(double radius, int n1, int n2);
 		void remNode(int nID);
 		void remSegment(int eID);
 		int getNode(string name);
 		string getNodeName(int nID);
+		VREntityPtr getNodeEntity(int nID);
 		int getSegment(int n1, int n2);
 
 		void setNodePose(int nID, PosePtr p);
         int disconnect(int nID, int sID);
         int insertSegment(int nID, int sID, float radius);
+		void setFlowParameters(float latency);
 		void setDoVisual(bool b, float spread = 0.1);
 
 		void update();
 		void updateVisual();
-		VROntologyPtr getOntology();
 
 		PosePtr getNodePose(int i);
 		double getSegmentPressure(int i);
@@ -124,6 +130,8 @@ class VRPipeSystem : public VRGeometry {
 		void setPump(string n, double p, double pmax);
 		void setTankPressure(string n, double p);
 		void setTankDensity(string n, double p);
+		void setOutletDensity(string n, double p);
+		void setOutletPressure(string n, double p);
 		void setPipeRadius(int i, double r);
 
         void printSystem();

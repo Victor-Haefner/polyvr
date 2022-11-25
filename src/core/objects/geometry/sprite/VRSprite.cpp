@@ -44,6 +44,8 @@ VRSpritePtr VRSprite::create(string name, bool alpha, float w, float h) {
 
 VRSpritePtr VRSprite::ptr() { return static_pointer_cast<VRSprite>( shared_from_this() ); }
 
+CEFPtr VRSprite::getWebModule() { return web; }
+
 void VRSprite::updateGeo() {
     VRGeoData data;
     float w2 = width*0.5;

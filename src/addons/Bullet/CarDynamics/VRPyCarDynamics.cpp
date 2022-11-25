@@ -203,7 +203,7 @@ PyMethodDef VRPyDriver::methods[] = {
     {"followPath", (PyCFunction)VRPyDriver::followPath, METH_VARARGS, "Start the pilot to follow a path with a certain speed curve - followPath( path p, path v, | float to )" },
     {"stop", PyWrap( Driver, stop, "Stop driving", void ) },
     {"resume", PyWrap( Driver, resume, "Resume driving", void ) },
-    {"setTargetSpeed", PyWrap( Driver, setTargetSpeed, "Set default target speed", void, float ) },
+    {"setTargetSpeed", PyWrapOpt( Driver, setTargetSpeed, "Set default target speed", "1", void, float, bool ) },
     {"isDriving", (PyCFunction)VRPyDriver::isDriving, METH_NOARGS, "Check if driving - bool isDriving()" },
     {NULL}  /* Sentinel */
 };

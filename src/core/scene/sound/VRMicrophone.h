@@ -25,6 +25,9 @@ class VRMicrophone : public std::enable_shared_from_this<VRMicrophone> {
 	private:
         int sample_size = 1024;
         int sample_rate = 22050;
+        bool started = false;
+        bool recording = false;
+        bool streaming = false;
         bool doRecord = false;
         bool doStream = false;
         bool needsFlushing = false;
@@ -37,7 +40,7 @@ class VRMicrophone : public std::enable_shared_from_this<VRMicrophone> {
 #else
 	    ALCdevice_struct* device = 0;
 #endif
-	    VRSoundPtr recording;
+	    VRSoundPtr recordingSound;
 
 	    list<VRSoundBufferPtr> frameBuffer;
 	    bool deviceOk = false;
@@ -48,12 +51,23 @@ class VRMicrophone : public std::enable_shared_from_this<VRMicrophone> {
 	    int queuedFrames = 0; // frames recorded but not streamed yet
 	    int queuedStream = 0; // frames streamed at the beginning
 
+	    bool doSim = false;
+	    float frequency = 440;
+	    float period1 = 0;
+	    float period2 = 0;
+	    double simPhase = 0;
+	    double lastSimTime = 0;
+
 	    void setup();
 	    void start();
 	    void stop();
 
 	    void startRecordingThread();
 	    void startStreamingThread();
+
+	    VRSoundBufferPtr fetchDevicePacket();
+	    VRSoundBufferPtr genPacket(double dt);
+		void flushDevice();
 
 	public:
 		VRMicrophone();
@@ -62,6 +76,8 @@ class VRMicrophone : public std::enable_shared_from_this<VRMicrophone> {
 		static VRMicrophonePtr create();
 		VRMicrophonePtr ptr();
 
+		void simSource(bool active, float freq, float tone, float pause);
+
 		void startRecording();
 		VRSoundPtr stopRecording();
 
@@ -69,6 +85,7 @@ class VRMicrophone : public std::enable_shared_from_this<VRMicrophone> {
 		void startStreamingOver(VRNetworkClientPtr client);
 		void pauseStreaming(bool p);
 		void stopStreaming();
+		bool isStreaming();
 };
 
 OSG_END_NAMESPACE;

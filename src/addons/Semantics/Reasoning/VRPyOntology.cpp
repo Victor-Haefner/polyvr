@@ -23,6 +23,9 @@ PyMethodDef VRPyProperty::methods[] = {
     {"toString", PyWrap(Property, toString, "Return the property as string - str toString()", string ) },
     {"getType", PyWrap(Property, getType, "Return the type - str getType()", string ) },
     {"getValue", PyWrap(Property, getValue, "Return value - val getValue()", string ) },
+    {"setType", PyWrap(Property, setType, "Set the type - setType(t)", void, string ) },
+    {"setValue", PyWrap(Property, setValue, "Set the value - setValue(v)", void, string ) },
+    {"onChange", PyWrap(Property, onChange, "Set a callback to get value change events", void, VRMessageCbPtr ) },
     {NULL}  /* Sentinel */
 };
 

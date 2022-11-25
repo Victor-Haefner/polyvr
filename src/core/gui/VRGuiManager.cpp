@@ -13,6 +13,7 @@
 #include "VRGuiSetup.h"
 #include "VRGuiGeneral.h"
 #include "VRGuiMonitor.h"
+#include "VRGuiNetwork.h"
 #include "VRGuiSemantics.h"
 #include "core/utils/VROptions.h"
 #include "core/utils/VRFunction.h"
@@ -59,6 +60,7 @@ VRAppManager* g_demos = 0;
 VRGuiNav* g_nav = 0;
 VRGuiScripts* g_sc = 0;
 VRGuiSetup* g_di = 0;
+VRGuiNetwork* g_net = 0;
 VRGuiSemantics* g_sem = 0;
 VRGuiGeneral* g_gen = 0;
 VRGuiMonitor* g_mon = 0;
@@ -137,7 +139,8 @@ VRGuiManager::VRGuiManager() {
     g_sc = new VRGuiScripts();
     g_scene = new VRGuiScene();
     g_nav = new VRGuiNav();
-    //g_sem = new VRGuiSemantics();
+    g_net = new VRGuiNetwork();
+    g_sem = new VRGuiSemantics();
     g_di = new VRGuiSetup();
     g_gen = new VRGuiGeneral();
     g_scene->updateTreeView();
@@ -164,9 +167,11 @@ VRGuiManager::VRGuiManager() {
     VRGuiSignals::get()->getSignal("navpresets_changed")->add( fkt );
     guiSignalCbs.push_back(fkt);
 
-    /*fkt = VRFunction<VRDeviceWeakPtr>::create("GUI_updateSem", bind(&VRGuiSemantics::updateOntoList, g_sem) );
-    VRGuiSignals::get()->getSignal("scene_changed")->add( fkt );
-    guiSignalCbs.push_back(fkt);*/
+    if (g_sem) {
+        fkt = VRDeviceCb::create("GUI_updateSem", bind(&VRGuiSemantics::updateOntoList, g_sem) );
+        VRGuiSignals::get()->getSignal("scene_changed")->add( fkt );
+        guiSignalCbs.push_back(fkt);
+    }
 
     fkt = VRDeviceCb::create("GUI_updateScripts", bind(&VRGuiScripts::updateList, g_sc) );
     VRGuiSignals::get()->getSignal("scene_changed")->add( fkt );
@@ -184,6 +189,9 @@ VRGuiManager::VRGuiManager() {
     gtk_window_maximize(top);
     gtk_widget_show_all((GtkWidget*)top);
 
+    // hide overlays
+    setWidgetVisibility("navOverlay", false);
+
 #ifdef _WIN32
     disableBlur(gtk_widget_get_window(GTK_WIDGET(top)));
 #endif
@@ -196,10 +204,15 @@ VRGuiManager::~VRGuiManager() {
     if (g_bits) delete g_bits;
     if (g_demos) delete g_demos;
     if (g_nav) delete g_nav;
+    if (g_net) delete g_net;
     if (g_sem) delete g_sem;
     if (g_sc) delete g_sc;
     if (g_di) delete g_di;
     if (mtx) delete mtx;
+}
+
+void VRGuiManager::selectObject(VRObjectPtr obj) {
+    if (g_scene) g_scene->selectObject(obj);
 }
 
 void VRGuiManager::openHelp(string search) {

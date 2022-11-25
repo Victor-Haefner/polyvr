@@ -99,17 +99,17 @@ void VRScene::initDevices() { // TODO: remove this after refactoring the navigat
         initOrbit(getActiveCamera(), mouse); //TODO, load from xml
         //initWalk(getActiveCamera(), mouse);
         //initOrbit2D(getActiveCamera(), mouse);
-        setActiveNavigation("Orbit");
+        //setActiveNavigation("Orbit");
     }
 
     if (flystick) {
         initFlyWalk(getActiveCamera(), flystick); // TODO
-        setActiveNavigation("FlyWalk");
+        //setActiveNavigation("FlyWalk");
     }
 
     if (razer) {
         initHydraFly(getActiveCamera(), razer); // TODO
-        setActiveNavigation("Hydra");
+        //setActiveNavigation("Hydra");
     }
 
     setup->resetDeviceDynNodes(getRoot());
@@ -208,14 +208,44 @@ VRObjectPtr VRScene::getRoot() { return root; }
 
 void VRScene::printTree() { root->printTree(); }
 
+// TODO: IDEA: select clicked object in scenegraph
+bool VRScene::onSelectObject(VRDeviceWeakPtr wdev) {
+    auto dev = wdev.lock();
+    if (dev->intersect2()) {
+        auto obj = dev->getIntersected();
+        if (obj) {
+            if (auto m = VRGuiManager::get()) m->selectObject(obj);
+        }
+    }
+    return true;
+}
+
 void VRScene::showReferentials(bool b, VRObjectPtr o) {
-    if (o == 0) o = root;
+    if (o == 0) {
+        o = root;
+        // add object selection callback
+        auto mouse = VRSetup::getCurrent()->getDevice("mouse");
+        if (mouse) {
+            if (b) {
+                onSelectObjCb = VRDeviceCb::create( "onSelectObject", bind(&VRScene::onSelectObject, this, placeholders::_1) );
+                mouse->getSignal( 0, 0)->add( onSelectObjCb, -1000 );
+            } else {
+                mouse->getSignal( 0, 0)->sub( onSelectObjCb );
+            }
+        }
+    }
 
     VRTransformPtr t = 0;
     if (o->hasTag("transform")) t = static_pointer_cast<VRTransform>(o);
     if (t) t->showCoordAxis(b);
 
     for (unsigned int i=0; i<o->getChildrenCount(); i++) showReferentials(b, o->getChild(i));
+
+    if (auto setup = VRSetup::getCurrent()) {
+        for (auto v : setup->getViews()) {
+            if (v) v->showCoords(b);
+        }
+    }
 }
 
 void VRScene::showLights(bool b) { for (auto be : VRLightBeacon::getAll()) be.lock()->showLightGeo(b); }

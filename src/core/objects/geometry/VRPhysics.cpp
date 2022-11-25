@@ -17,7 +17,7 @@
 #include <BulletCollision/CollisionDispatch/btGhostObject.h>
 #include <BulletCollision/CollisionShapes/btShapeHull.h>
 #include <BulletCollision/CollisionShapes/btCompoundShape.h>
-#include <BulletCollision/CollisionShapes/btHeightfieldTerrainShape.h>
+//#include <BulletCollision/CollisionShapes/btHeightfieldTerrainShape.h>
 #include <BulletSoftBody/btSoftBodyRigidBodyCollisionConfiguration.h>
 #include <BulletSoftBody/btSoftBodyHelpers.h>
 #include <BulletSoftBody/btSoftRigidDynamicsWorld.h>
@@ -108,7 +108,6 @@ void VRPhysics::setMass(float m) { mass = m; update(); }
 float VRPhysics::getMass() { return mass; }
 void VRPhysics::setFriction(float f) { friction = f; update(); }
 float VRPhysics::getFriction() { return friction; }
-void VRPhysics::setGravity(OSG::Vec3d v) { gravity = toBtVector3(v); update(); }
 void VRPhysics::setCollisionMargin(float m) { collisionMargin = m; update(); }
 float VRPhysics::getCollisionMargin() { return collisionMargin; }
 void VRPhysics::setCollisionGroup(int g) { collisionGroup = g; update(); }
@@ -380,6 +379,15 @@ void VRPhysics::setDynamic(bool b, bool fast) {
             body->setMassProps(mass, inertia);
             body->setCollisionFlags(body->getCollisionFlags() & ~btCollisionObject::CF_STATIC_OBJECT);
         }
+    } else { update(); }
+}
+
+void VRPhysics::setGravity(OSG::Vec3d v) {
+    bool fast = true;
+    gravity = toBtVector3(v);
+    if (fast && body) {
+        VRLock lock(VRPhysics_mtx());
+        body->setGravity(gravity);
     } else { update(); }
 }
 

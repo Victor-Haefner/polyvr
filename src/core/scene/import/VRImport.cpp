@@ -13,7 +13,9 @@
 #endif
 #include "VRML.h"
 #include "VRSTEPCascade.h"
+#ifndef WITHOUT_STEPCODE
 #include "STEP/VRSTEP.h"
+#endif
 #include "E57/E57.h"
 #ifndef WITHOUT_GDAL
 #include "GIS/VRGDAL.h"
@@ -155,7 +157,7 @@ VRTransformPtr VRImport::load(string path, VRObjectPtr parent, bool useCache, st
         }
 
         auto job = new LoadJob(path, preset, res, progress, options, useCache, useBinaryCache); // TODO: fix memory leak!
-        job->loadCb = VRFunction< VRThreadWeakPtr >::create( "geo load", bind(&LoadJob::load, job, _1) );
+        job->loadCb = VRThreadCb::create( "geo load", bind(&LoadJob::load, job, _1) );
         /*auto t =*/ VRScene::getCurrent()->initThread(job->loadCb, "geo load thread", false, 1);
         //testSync(t);
         return res;
@@ -214,10 +216,19 @@ void VRImport::LoadJob::load(VRThreadWeakPtr tw) {
         if (ext == ".pcb") { loadPCB(path, res, options); return; }
         if (ext == ".xyz") { loadXYZ(path, res, options); return; }
         if (ext == ".ply") { loadPly(path, res); return; }
-        //if (ext == ".step" || ext == ".stp" || ext == ".STEP" || ext == ".STP") { VRSTEP step; step.load(path, res, options); }
-#ifndef WITHOUT_STEP
-        if (ext == ".step" || ext == ".stp" || ext == ".STEP" || ext == ".STP") { loadSTEPCascade(path, res); return; }
+        if (ext == ".step" || ext == ".stp" || ext == ".STEP" || ext == ".STP") {
+            if (preset == "PVR") {
+#ifndef WITHOUT_STEPCODE
+                VRSTEPPtr step = VRSTEP::create();
+                step->load(path, res, options, progress, thread);
 #endif
+            } else {
+#ifndef WITHOUT_STEP
+				loadSTEPCascade(path, res, options);
+#endif
+			}
+            return;
+        }
 #ifndef WITHOUT_IFC
 		if (ext == ".ifc") { loadIFC(path, res); return; }
 #endif

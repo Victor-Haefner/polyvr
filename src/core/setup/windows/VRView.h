@@ -38,6 +38,8 @@ class VRView : public std::enable_shared_from_this<VRView> {
 
         NodeMTRecPtr viewGeo;
         VRMaterialPtr viewGeoMat;
+        NodeMTRecPtr coordsGeo;
+        VRMaterialPtr coordsGeoMat;
 
         Vec4d position = Vec4d(0,0,1,1);
         Vec2i window_size = Vec2i(300,300);
@@ -162,6 +164,7 @@ class VRView : public std::enable_shared_from_this<VRView> {
 
         void showStats(bool b);
         void showViewGeo(bool b);
+        void showCoords(bool b);
         void toggleStats();
 
         Vec4d getPosition();

@@ -714,12 +714,14 @@ vector<VRGeometryPtr> VRGeometry::splitByVertexColors() {
 
 void VRGeometry::merge(VRGeometryPtr geo, PosePtr pose) {
     if (!geo) return;
+    if (!geo->mesh) return;
     if (!geo->mesh->geo) return;
     if (!meshSet) setMesh();
 
     Matrix4d M;
     if (pose) M = pose->asMatrix();
     else if (shareAncestry(geo)) M = getMatrixTo(geo);
+    else M = geo->getMatrix();
 
     VRGeoData self(ptr());
     VRGeoData other(geo);

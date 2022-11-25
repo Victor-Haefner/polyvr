@@ -1,5 +1,6 @@
 #include "VRProperty.h"
 #include "core/utils/toString.h"
+#include "core/utils/VRFunction.h"
 
 #include <iostream>
 #include <algorithm>
@@ -27,8 +28,13 @@ string VRProperty::getValue() { return value; }
 
 void VRProperty::setValue(string value) {
     if (!isNumber(value)) for (char c : string(".,")) replace(value.begin(), value.end(),c,'_');
-    this->value = value;
+    if (this->value != value) {
+        this->value = value;
+        if (onChangeCb) (*onChangeCb)(value);
+    }
 }
+
+void VRProperty::onChange(VRMessageCbPtr cb) { onChangeCb = cb; }
 
 string VRProperty::toString() {
     string res;

@@ -197,11 +197,13 @@ class HTTPServer {
 string processPHP(HTTP_args* sad) {
     // copy php file and prepend something to simulate GET/POST parameters
     systemCall("cp "+sad->path+" "+sad->path+"_tmp.php" );
-    string toPrepend = "parse_str($argv[1], $_GET); parse_str($argv[1], $_POST);";
+    string toPrepend = "if (isset($argv[1])) { parse_str($argv[1], $_GET); parse_str($argv[1], $_POST); }";
     systemCall("awk -i inplace 'NR==1{print; print \""+toPrepend+"\"} NR!=1' " + sad->path+"_tmp.php");
 
     // execute php
-    string cmd = "php "+sad->path+"_tmp.php "+sad->paramsString;
+    string folder = getFolderName(sad->path);
+    string file = getFileName(sad->path, true) + "_tmp.php";
+    string cmd = "cd "+folder+" ; php "+file+" "+sad->paramsString;
     string res = systemCall(cmd);
     //cout << "processPHP: " << cmd << endl << res << endl;
     systemCall("rm "+sad->path+"_tmp.php" );
@@ -315,6 +317,16 @@ static void server_answer_to_connection_m(struct mg_connection *conn, int ev, vo
                     if (v) VRLog::log("net", "Send callback response\n");
                 }
             } else { // return ressources
+                bool doRootSrv = false;
+
+                if (!exists( sad->path )) { // test for path to PolyServ
+                    if (startsWith(sad->path, "ressources/PolyServ")) {
+                        string D = VRSceneManager::get()->getOriginalWorkdir();
+                        sad->path = D+"/"+sad->path;
+                        doRootSrv = true;
+                    }
+                }
+
                 if (!exists( sad->path )) {
                     if (v) VRLog::wrn("net", "Did not find ressource: " + sad->path + "\n");
                     if (v) VRLog::log("net", "Send empty string\n");
@@ -325,8 +337,9 @@ static void server_answer_to_connection_m(struct mg_connection *conn, int ev, vo
                         if (v) VRLog::log("net", "Serve PHP\n");
                         sendString( processPHP(sad) );
                     } else {
-                        if (v) VRLog::log("net", "Serve ressource\n");
-                        mg_serve_http(conn, hm, s_http_server_opts);
+                        if (v) VRLog::log("net", "Serve ressource "+sad->path+"\n");
+                        if (!doRootSrv) mg_serve_http(conn, hm, s_http_server_opts);
+                        else sendString(readFileContent(sad->path));
                         // mg_http_serve_file
                         return;
                     }

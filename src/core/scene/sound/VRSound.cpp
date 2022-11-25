@@ -19,7 +19,7 @@
 #endif
 
 extern "C" {
-#include <libavresample/avresample.h>
+#include <libswresample/swresample.h>
 #include <libavutil/mathematics.h>
 #include <libavformat/avformat.h>
 #include <libswscale/swscale.h>
@@ -73,7 +73,7 @@ struct VRSound::ALData {
     ALenum layout = 0;
     ALenum state = AL_INITIAL;
     AVFormatContext* context = 0;
-    AVAudioResampleContext* resampler = 0;
+    SwrContext* resampler = 0;
     AVCodecContext* codec = NULL;
     AVPacket packet;
     AVFrame* frame;
@@ -134,7 +134,7 @@ void VRSound::close() {
     stop();
     interface = 0;
     if (al->context) avformat_close_input(&al->context);
-    if (al->resampler) avresample_free(&al->resampler);
+    if (al->resampler) swr_free(&al->resampler);
     al->context = 0;
     al->resampler = 0;
     init = 0;
@@ -213,7 +213,7 @@ void VRSound::updateSampleAndFormat() {
     }
 
     if (av_sample_fmt_is_planar(al->codec->sample_fmt)) {
-        int out_sample_fmt;
+        AVSampleFormat out_sample_fmt;
         switch(al->codec->sample_fmt) {
             case AV_SAMPLE_FMT_U8P:  out_sample_fmt = AV_SAMPLE_FMT_U8; break;
             case AV_SAMPLE_FMT_S16P: out_sample_fmt = AV_SAMPLE_FMT_S16; break;
@@ -223,14 +223,14 @@ void VRSound::updateSampleAndFormat() {
             default: out_sample_fmt = AV_SAMPLE_FMT_FLT;
         }
 
-        al->resampler = avresample_alloc_context();
-        av_opt_set_int(al->resampler, "in_channel_layout",  al->codec->channel_layout, 0);
-        av_opt_set_int(al->resampler, "in_sample_fmt",      al->codec->sample_fmt,     0);
-        av_opt_set_int(al->resampler, "in_sample_rate",     al->codec->sample_rate,    0);
-        av_opt_set_int(al->resampler, "out_channel_layout", al->codec->channel_layout, 0);
-        av_opt_set_int(al->resampler, "out_sample_fmt",     out_sample_fmt,        0);
-        av_opt_set_int(al->resampler, "out_sample_rate",    al->codec->sample_rate,    0);
-        avresample_open(al->resampler);
+        al->resampler = swr_alloc();
+        av_opt_set_channel_layout(al->resampler, "in_channel_layout",  al->codec->channel_layout, 0);
+        av_opt_set_sample_fmt    (al->resampler, "in_sample_fmt",      al->codec->sample_fmt,     0);
+        av_opt_set_int           (al->resampler, "in_sample_rate",     al->codec->sample_rate,    0);
+        av_opt_set_channel_layout(al->resampler, "out_channel_layout", al->codec->channel_layout, 0);
+        av_opt_set_sample_fmt    (al->resampler, "out_sample_fmt",     out_sample_fmt,            0);
+        av_opt_set_int           (al->resampler, "out_sample_rate",    al->codec->sample_rate,    0);
+        swr_init(al->resampler);
     }
 }
 
@@ -318,7 +318,11 @@ vector<VRSoundBufferPtr> VRSound::extractPacket(AVPacket* packet) {
             ALbyte* frameData;
             if (al->resampler != 0) {
                 frameData = (ALbyte *)av_malloc(data_size*sizeof(uint8_t));
-                avresample_convert( al->resampler, (uint8_t **)&frameData, linesize, al->frame->nb_samples, (uint8_t **)al->frame->data, al->frame->linesize[0], al->frame->nb_samples);
+                swr_convert( al->resampler,
+                            (uint8_t **)&frameData,
+                            al->frame->nb_samples,
+                            (const uint8_t **)al->frame->data,
+                            al->frame->nb_samples);
             } else frameData = (ALbyte*)al->frame->data[0];
 
             auto frame = VRSoundBuffer::wrap(frameData, data_size, frequency, al->format);
@@ -338,7 +342,7 @@ void VRSound::playFrame() {
     bool internal = (ownedBuffer.size() > 0);
 
     if (al->state == AL_INITIAL) {
-        cout << "playFrame AL_INITIAL" << endl;
+        cout << "playFrame AL_INITIAL initiated: " << initiated << " " << internal << endl;
         if (!initiated) initiate();
         if (internal) { al->state = AL_PLAYING; interrupt = false; return; }
         if (!al->context) { /*cout << "VRSound::playFrame Warning: no context" << endl;*/ return; }
@@ -396,7 +400,7 @@ void VRSound::update3DSound() {
     auto pose = head->getPoseTo(poseBeacon);
 
     if (!lastPose) lastPose = Pose::create(*pose);
-    velocity = pose->pos().dist(lastPose->pos());
+    velocity = float(pose->pos().dist(lastPose->pos()));
     lastPose->setPos(pose->pos());
     interface->updatePose(pose, velocity);
 }
@@ -408,11 +412,12 @@ struct OutputStream {
     AVCodecContext *enc = 0;
     AVFrame *frame = 0;
     AVFrame *tmp_frame = 0;
-    AVAudioResampleContext *avr = 0;
+    SwrContext *avr = 0;
 };
 
 void add_audio_stream(OutputStream *ost, AVFormatContext *oc, enum AVCodecID codec_id) {
     AVCodec* codec = avcodec_find_encoder(codec_id);
+	cout << " --- add_audio_stream, found codec: " << codec->name << endl;
     if (!codec) { fprintf(stderr, "codec not found\n"); return; }
 
     ost->st = avformat_new_stream(oc, NULL);
@@ -423,10 +428,10 @@ void add_audio_stream(OutputStream *ost, AVFormatContext *oc, enum AVCodecID cod
     ost->enc = c;
 
     /* put sample parameters */
+	c->sample_rate    = codec->supported_samplerates ? codec->supported_samplerates[0] : 44100;
+    c->channel_layout = codec->channel_layouts       ? codec->channel_layouts[0]       : AV_CH_LAYOUT_STEREO;    
     c->sample_fmt     = codec->sample_fmts           ? codec->sample_fmts[0]           : AV_SAMPLE_FMT_S16;
-    c->sample_rate    = codec->supported_samplerates ? codec->supported_samplerates[0] : 44100;
-    c->channel_layout = codec->channel_layouts       ? codec->channel_layouts[0]       : AV_CH_LAYOUT_STEREO;
-    c->channels       = av_get_channel_layout_nb_channels(c->channel_layout);
+	c->channels       = av_get_channel_layout_nb_channels(c->channel_layout);
     c->bit_rate       = 64000;
 
 	ost->st->time_base.num = 1;
@@ -440,17 +445,17 @@ void add_audio_stream(OutputStream *ost, AVFormatContext *oc, enum AVCodecID cod
      * if the encoder supports the generated format directly -- the price is
      * some extra data copying;
      */
-    ost->avr = avresample_alloc_context();
+    ost->avr = swr_alloc();
     if (!ost->avr) { fprintf(stderr, "Error allocating the resampling context\n"); return; }
 
-    av_opt_set_int(ost->avr, "in_sample_fmt",      AV_SAMPLE_FMT_S16,   0);
-    av_opt_set_int(ost->avr, "in_sample_rate",     22050,               0);
-    av_opt_set_int(ost->avr, "in_channel_layout",  AV_CH_LAYOUT_MONO,   0);
-    av_opt_set_int(ost->avr, "out_sample_fmt",     c->sample_fmt,       0);
-    av_opt_set_int(ost->avr, "out_sample_rate",    c->sample_rate,      0);
-    av_opt_set_int(ost->avr, "out_channel_layout", c->channel_layout,   0);
+    av_opt_set_channel_layout(ost->avr, "in_channel_layout",  AV_CH_LAYOUT_MONO, 0);
+    av_opt_set_sample_fmt    (ost->avr, "in_sample_fmt",      AV_SAMPLE_FMT_S16, 0);
+    av_opt_set_int           (ost->avr, "in_sample_rate",     22050,             0);
+    av_opt_set_channel_layout(ost->avr, "out_channel_layout", c->channel_layout, 0);
+    av_opt_set_sample_fmt    (ost->avr, "out_sample_fmt",     c->sample_fmt,     0);
+    av_opt_set_int           (ost->avr, "out_sample_rate",    c->sample_rate,    0);
 
-    int ret = avresample_open(ost->avr);
+    int ret = swr_init(ost->avr);
     if (ret < 0) { fprintf(stderr, "Error opening the resampling context\n"); return; }
 }
 
@@ -471,14 +476,39 @@ AVFrame* alloc_audio_frame(enum AVSampleFormat sample_fmt, uint64_t channel_layo
     return frame;
 }
 
-void open_audio(AVFormatContext *oc, OutputStream *ost) {
+bool open_audio(AVFormatContext *oc, OutputStream *ost) {
     int nb_samples, ret;
 
     AVCodecContext* c = ost->enc;
-    if (avcodec_open2(c, NULL, NULL) < 0) { fprintf(stderr, "could not open codec\n"); return; }
+	
+	AVCodec* codec = avcodec_find_encoder(oc->oformat->audio_codec);
+	cout << " --- open_audio, found codec: " << codec->name << endl;
+	
+	//AVCodec* codec = avcodec_find_encoder(c->codec_id);
+    if (codec == NULL) { fprintf(stderr, "could not find codec\n"); return false; }
+
+    cout << "Open audio codec: " << c << " " << codec << endl;
+	int r = -1;
+	for (int i=0; i<10; i++) {
+		r = avcodec_open2(c, codec, NULL);
+		if (r >= 0) {
+			cout << "Opened codec on " << i+1 << "-th try" << endl;
+			break;
+		}
+	}
+	
+	if (r < 0) {
+		fprintf(stderr, "Could not open codec!\n");
+		return false;
+	}
 
     if (c->codec->capabilities & AV_CODEC_CAP_VARIABLE_FRAME_SIZE) nb_samples = 10000;
     else nb_samples = c->frame_size;
+
+	if (nb_samples == 0) {
+		cout << "Warning, no samples set, set to 10000" << endl;
+		nb_samples = 10000;
+	}
 
     cout << "Allocate audio frames: " << nb_samples << endl;
 
@@ -487,19 +517,23 @@ void open_audio(AVFormatContext *oc, OutputStream *ost) {
 
     /* copy the stream parameters to the muxer */
     ret = avcodec_parameters_from_context(ost->st->codecpar, c);
-    if (ret < 0) { fprintf(stderr, "Could not copy the stream parameters\n"); return; }
+    if (ret < 0) { fprintf(stderr, "Could not copy the stream parameters\n"); return false; }
+
+	return true;
 }
 
 AVFrame* get_audio_frame(OutputStream *ost, VRSoundBufferPtr buffer) {
     AVFrame* frame = ost->tmp_frame;
     if (!frame || !buffer) return 0;
+	
     int16_t* src = (int16_t*)buffer->data;
     int16_t* dst = (int16_t*)frame->data[0];
 
-    frame->nb_samples = buffer->size*0.5;
+    frame->nb_samples = buffer->size/2;
     for (int j = 0; j < frame->nb_samples; j++) {
         int v = src[j]; // audio data
-        for (int i = 0; i < ost->enc->channels; i++) *dst++ = v;
+        *dst++ = v;
+        //for (int i = 0; i < ost->enc->channels; i++) *dst++ = v; // this was wrong, exploded on windows
     }
 
     return frame;
@@ -550,44 +584,49 @@ void testDecodePacket(AVPacket& pkt) {
     av_frame_free(&frame);
 }
 
-int encode_audio_frame(AVFormatContext *oc, OutputStream *ost, AVFrame *frame) {
+void encode_audio_frame(AVFormatContext *oc, OutputStream *ost, AVFrame *frame) {
     AVPacket pkt = { 0 }; // data and size must be 0;
-    int got_packet = 0;
-
-    //cout << "   init packet" << endl;
     av_init_packet(&pkt);
-    //cout << "   encode audio frame" << endl;
-    avcodec_encode_audio2(ost->enc, &pkt, frame, &got_packet);
 
-    if (got_packet) {
+    auto writePacket = [&]() {
         pkt.stream_index = ost->st->index;
+        //cout << "write packet" << endl;
 
         //cout << "   rescale packet" << endl;
         av_packet_rescale_ts(&pkt, ost->enc->time_base, ost->st->time_base);
 
-        /* Write the compressed frame to the media file. */
-        //cout << "   write frame" << endl;
-        if (av_interleaved_write_frame(oc, &pkt) != 0) {
-            fprintf(stderr, "Error while writing audio frame\n");
-            return 0;
-        }
-        //cout << "   write frame done" << endl;
-    }
+        //cout << "    write frame, pkt: " << pkt.size << endl;
+        if (av_interleaved_write_frame(oc, &pkt) != 0) { fprintf(stderr, "Error while writing audio frame\n"); return; }
+        //cout << "     write frame done" << endl;
+    };
 
-    return (frame || got_packet) ? 0 : 1;
+    int ret = avcodec_send_frame(ost->enc, frame);
+    /*cout << " send packet " << frame << ", ret: " << ret;
+	if (frame) cout << ", " << frame->nb_samples;
+	cout << endl;*/
+    if ( ret != AVERROR_EOF && ret != AVERROR(EAGAIN) && ret != 0) { fprintf(stderr, "Could not send frame\n"); return; }
+
+    while (ret >= 0) {
+        ret = avcodec_receive_packet(ost->enc, &pkt);
+        //cout << "  received packet, ret: " << ret << ", pkt: " << pkt.size << endl;
+        if (ret == AVERROR(EAGAIN)) continue;
+        if (ret == AVERROR_EOF) return;
+        if (ret < 0) { fprintf(stderr, "!!! Error during encoding\n"); return; }
+        writePacket();
+    }
 }
 
 void VRSound::write_buffer(AVFormatContext *oc, OutputStream *ost, VRSoundBufferPtr buffer) {
     //cout << "  get audio frame" << endl;
     AVFrame* frame = get_audio_frame(ost, buffer);
-    if (!frame) return;
+    if (!frame) return;	
+	
     //cout << "  resample convert " << frame->linesize[0] << " " << frame->nb_samples << endl;
-    int ret = avresample_convert(ost->avr, NULL, 0, 0, frame->extended_data, frame->linesize[0], frame->nb_samples);
+    int ret = swr_convert(ost->avr, NULL, 0, (const uint8_t **)frame->extended_data, frame->nb_samples);
     if (ret < 0) { fprintf(stderr, "Error feeding audio data to the resampler\n"); return; }
 
     //cout << "  write buffer" << endl;
-    while ((frame && avresample_available(ost->avr) >= ost->frame->nb_samples) ||
-           (!frame && avresample_get_out_samples(ost->avr, 0))) {
+    while ((frame) || (!frame && swr_get_out_samples(ost->avr, 0))) {
         // when we pass a frame to the encoder, it may keep a reference to it internally; make sure we do not overwrite it here
         ret = av_frame_make_writable(ost->frame);
         if (ret < 0) return;
@@ -596,26 +635,23 @@ void VRSound::write_buffer(AVFormatContext *oc, OutputStream *ost, VRSoundBuffer
          * first one just reads the already converted data that is buffered in
          * the lavr output buffer, while the second one also flushes the
          * resampler */
-        if (frame) {
-            ret = avresample_read(ost->avr, ost->frame->extended_data, ost->frame->nb_samples);
-        } else {
-            ret = avresample_convert(ost->avr, ost->frame->extended_data, ost->frame->linesize[0], ost->frame->nb_samples, NULL, 0, 0);
-        }
-
+        ret = swr_convert(ost->avr, ost->frame->extended_data, ost->frame->nb_samples, NULL, 0);
         if (ret < 0) { fprintf(stderr, "Error while resampling\n"); return; }
 
         if (frame && ret != ost->frame->nb_samples) {
-            fprintf(stderr, "Too few samples returned from lavr\n");
-            return;
+            //fprintf(stderr, "Too few samples returned from lavr\n");
+            if (ret == 0) {
+                //cout << " VRSound::write_buffer: Too few samples returned from lavr! expected: " << ost->frame->nb_samples << ", got: " << ret << endl;
+                return;
+            }
         }
 
         //cout << "  encode frame" << endl;
-
         ost->frame->nb_samples = ret;
         ost->frame->pts        = ost->next_pts;
         ost->next_pts         += ost->frame->nb_samples;
-        lastEncodingFlag = encode_audio_frame(oc, ost, ret ? ost->frame : NULL);
-        //cout << "  encode frame done" << endl;
+        encode_audio_frame(oc, ost, ret ? ost->frame : NULL);
+        //cout << "   encode frame done" << endl;
     }
 }
 
@@ -623,13 +659,15 @@ void close_stream(AVFormatContext *oc, OutputStream *ost) {
     avcodec_free_context(&ost->enc);
     av_frame_free(&ost->frame);
     av_frame_free(&ost->tmp_frame);
-    avresample_free(&ost->avr);
+    swr_free(&ost->avr);
 }
 
 void VRSound::exportToFile(string path) {
     OutputStream audio_st = { 0 };
     const char *filename = path.c_str();
     av_register_all();
+
+	cout << "sound exportToFile: " << filename << endl;
 
     AVOutputFormat* fmt = av_guess_format(NULL, filename, NULL);
     if (!fmt) {
@@ -642,11 +680,15 @@ void VRSound::exportToFile(string path) {
     if (!oc) { fprintf(stderr, "Memory error\n"); return; }
 
     oc->oformat = fmt;
+	cout << "pass filename to av context: " << sizeof(oc->filename) << endl;
     snprintf(oc->filename, sizeof(oc->filename), "%s", filename);
 
-    if (fmt->audio_codec != AV_CODEC_ID_NONE) add_audio_stream(&audio_st, oc, fmt->audio_codec);
+    if (fmt->audio_codec != AV_CODEC_ID_NONE) {
+		add_audio_stream(&audio_st, oc, fmt->audio_codec);
+		cout << "added audio stream" << endl;
+	}
 
-    open_audio(oc, &audio_st);
+    if (!open_audio(oc, &audio_st)) return;
     av_dump_format(oc, 0, filename, 1);
 
     /* open the output file, if needed */
@@ -659,26 +701,26 @@ void VRSound::exportToFile(string path) {
 
     /* Write the stream header, if any. */
     avformat_write_header(oc, NULL);
-    for (auto buffer : ownedBuffer) write_buffer(oc, &audio_st, buffer);
+    //int i=0;
+    for (auto buffer : ownedBuffer) {
+        write_buffer(oc, &audio_st, buffer);
+        /*i++;
+        if (i == 4) { ownedBuffer.clear(); break; }*/
+    }
 
-    int ret = 0;
-    do {
-        ret = encode_audio_frame(oc, &audio_st, NULL); // flush last frames
-    } while ( ret == 0 );
-
+    encode_audio_frame(oc, &audio_st, NULL); // flush
     av_write_trailer(oc);
 
     // cleanup
     close_stream(oc, &audio_st);
     if (!(fmt->flags & AVFMT_NOFILE)) avio_close(oc->pb);
     avformat_free_context(oc);
-    return;
 }
 
 void VRSound::writeStreamData(const string& data) {
     //cout << " custom_io_write " << data.size() << endl;
     //if (data.size() < 200) cout << endl << data << endl;
-    if (udpClient) udpClient->send(data, "", false);
+    for (auto& cli : udpClients) cli->send(data, "", false);
     //doFrameSleep(0, 60);
 }
 
@@ -689,20 +731,13 @@ int custom_io_write(void* opaque, uint8_t* buffer, int32_t N) {
     return N;
 }
 
-void VRSound::flushPackets() {
+void VRSound::flushPackets() { // deprecated?
     if (!muxer || !audio_ost) return;
-    while ( lastEncodingFlag == 0 ) {
-        lastEncodingFlag = encode_audio_frame(muxer, audio_ost, NULL); // flush last frames
-    }
+    encode_audio_frame(muxer, audio_ost, NULL); // flush last frames
 }
 
 bool VRSound::addOutStreamClient(VRNetworkClientPtr client) {
-    udpClient = client;
-
-    /*if (!udpClient->connected()) {
-        udpClient.reset();
-        return false;
-    }*/
+    udpClients.push_back(client);
 
     audio_ost = new OutputStream();
     av_register_all();
@@ -719,14 +754,14 @@ bool VRSound::addOutStreamClient(VRNetworkClientPtr client) {
     //muxer->oformat->audio_codec = AV_CODEC_ID_OPUS;
     //snprintf(muxer->filename, sizeof(muxer->filename), "%s", filename);
 
-    int avio_buffer_size = 256;
+    int avio_buffer_size = 1024;
     unsigned char* avio_buffer = (unsigned char*)av_malloc(avio_buffer_size);
     AVIOContext* custom_io = avio_alloc_context ( avio_buffer, avio_buffer_size, 1, (void*)this, NULL, &custom_io_write, NULL);
     muxer->pb = custom_io;
 
     cout << " add audio stream" << endl;
     add_audio_stream(audio_ost, muxer, fmt->audio_codec);
-    open_audio(muxer, audio_ost);
+    if (!open_audio(muxer, audio_ost)) return false;
     av_dump_format(muxer, 0, NULL, 1);
 
     // header
@@ -737,18 +772,18 @@ bool VRSound::addOutStreamClient(VRNetworkClientPtr client) {
     return true;
 }
 
-bool VRSound::setupOutStream(string url, int port) {
-    if (!udpClient) {
-        udpClient = VRUDPClient::create();
-        udpClient->connect(url, port);
-    }
-
-    return addOutStreamClient(udpClient);
+bool VRSound::setupOutStream(string url, int port) { // TODO: make a udpClients map instead of vector
+    auto cli = VRUDPClient::create("sound-out");
+    cli->connect(url, port);
+    return addOutStreamClient(cli);
 }
 
-void VRSound::streamBuffer(VRSoundBufferPtr frame) { write_buffer(muxer, audio_ost, frame); }
+void VRSound::streamBuffer(VRSoundBufferPtr frame) {
+    write_buffer(muxer, audio_ost, frame);
+}
 
 void VRSound::closeStream(bool keepOpen) {
+    cout << "VRSound::closeStream " << keepOpen << endl;
     flushPackets();
     av_write_trailer(muxer);
 
@@ -758,7 +793,7 @@ void VRSound::closeStream(bool keepOpen) {
     audio_ost = 0;
     avformat_free_context(muxer);
     muxer = 0;
-    if (!keepOpen) udpClient.reset();
+    if (!keepOpen) udpClients.clear();
 }
 
 void VRSound::streamTo(string url, int port, bool keepOpen) {
@@ -787,8 +822,8 @@ struct InputStream {
     }
 };
 
-string VRSound::onStreamData(string data) {
-    if (!audio_ist) {
+string VRSound::onStreamData(string data, bool stereo) {
+	if (!audio_ist) {
         if (!initiated) initiate();
         audio_ist = new InputStream(data);
 
@@ -796,11 +831,20 @@ string VRSound::onStreamData(string data) {
         auto codec = avcodec_find_decoder(AV_CODEC_ID_MP3);
         al->codec = avcodec_alloc_context3(codec);
 
-        al->codec->sample_fmt     = AV_SAMPLE_FMT_S32P;
-        al->codec->sample_rate    = 44100;
-        al->codec->channel_layout = AV_CH_LAYOUT_MONO;
-        al->codec->channels       = 1;
-        al->codec->bit_rate       = 64000;
+		if (stereo) { // windows stream
+			al->codec->sample_fmt     = AV_SAMPLE_FMT_FLTP;
+			al->codec->sample_rate    = 44100;
+			al->codec->channel_layout = AV_CH_LAYOUT_STEREO;
+			al->codec->channels       = 2;
+			al->codec->bit_rate       = 96000;
+		} else { // linux stream
+			al->codec->sample_fmt     = AV_SAMPLE_FMT_S32P;
+			al->codec->sample_rate    = 44100;
+			al->codec->channel_layout = AV_CH_LAYOUT_MONO;
+			al->codec->channels       = 1;
+			al->codec->bit_rate       = 64000;
+		}
+
         if (fmt->flags & AVFMT_GLOBALHEADER) al->codec->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
         int ret = avcodec_open2(al->codec, NULL, NULL);
 
@@ -812,7 +856,8 @@ string VRSound::onStreamData(string data) {
         stream->time_base.num = 1;
         stream->time_base.den = al->codec->sample_rate;
         ret = avcodec_parameters_from_context(stream->codecpar, al->codec);
-        stream->codecpar->format = AV_SAMPLE_FMT_S32P;
+        if (stereo) stream->codecpar->format = AV_SAMPLE_FMT_FLTP;
+        else        stream->codecpar->format = AV_SAMPLE_FMT_S32P;
         if (ret < 0) { fprintf(stderr, "Could not copy the stream parameters\n"); return ""; }
 
         av_dump_format(al->context, 0, NULL, 0);
@@ -823,7 +868,7 @@ string VRSound::onStreamData(string data) {
 
         updateSampleAndFormat();
     } else {
-        int r = av_packet_from_data(&al->packet, (uint8_t*)&data[0], data.size());
+        int r = av_packet_from_data(&al->packet, (uint8_t*)&data[0], int(data.size()));
         if (r < 0 ) cout << "  av_packet_from_data failed with " << r << endl;
         queuePacket(&al->packet);
     }
@@ -831,11 +876,11 @@ string VRSound::onStreamData(string data) {
     return "";
 }
 
-bool VRSound::listenStream(int port) {
-    auto streamCb = bind(&VRSound::onStreamData, this, placeholders::_1);
+bool VRSound::listenStream(int port, bool stereo) {
+    auto streamCb = bind(&VRSound::onStreamData, this, placeholders::_1, stereo);
 
     if (!udpServer) {
-        udpServer = VRUDPServer::create();
+        udpServer = VRUDPServer::create("sound-in");
         udpServer->onMessage(streamCb);
         udpServer->listen(port);
     }
@@ -844,8 +889,8 @@ bool VRSound::listenStream(int port) {
     return true;
 }
 
-bool VRSound::playPeerStream(VRNetworkClientPtr client) {
-    auto streamCb = bind(&VRSound::onStreamData, this, placeholders::_1);
+bool VRSound::playPeerStream(VRNetworkClientPtr client, bool stereo) {
+    auto streamCb = bind(&VRSound::onStreamData, this, placeholders::_1, stereo);
     client->onMessage(streamCb);
     av_register_all();
     return true;
@@ -862,19 +907,19 @@ void VRSound::synthesize(float Ac, float wc, float pc, float Am, float wm, float
     }
 
     int sample_rate = 22050;
-    size_t buf_size = duration * sample_rate;
+    size_t buf_size = size_t(duration * sample_rate);
     buf_size += buf_size%2;
     vector<short> samples(buf_size);
 
     double tmp = 0;
     for(uint i=0; i<buf_size; i++) {
         double t = i*2*Pi/sample_rate + synth_t0;
-        samples[i] = Ac * sin( wc*t + pc + Am*sin(wm*t + pm) );
+        samples[i] = short( Ac * sin( wc*t + pc + Am*sin(wm*t + pm) ) );
         tmp = t;
     }
     synth_t0 = tmp;
 
-    auto frame = VRSoundBuffer::wrap((ALbyte*)&samples[0], samples.size()*sizeof(short), sample_rate, AL_FORMAT_MONO16);
+    auto frame = VRSoundBuffer::wrap((ALbyte*)&samples[0], int(samples.size()*sizeof(short)), sample_rate, AL_FORMAT_MONO16);
     playBuffer(frame);
 }
 
@@ -893,8 +938,8 @@ vector<short> VRSound::synthSpectrum(vector<double> spectrum, uint sample_rate, 
     c.compute(sample_rate);
     */
 
-    size_t buf_size = duration * sample_rate;
-    uint fade = min(fade_factor * sample_rate, duration * sample_rate); // number of samples to fade at beginning and end
+    size_t buf_size = size_t(duration * sample_rate);
+    size_t fade = size_t( min(fade_factor * sample_rate, duration * sample_rate) ); // number of samples to fade at beginning and end
 
     // transform spectrum back to time domain using fftw3
     FFT fft;
@@ -902,7 +947,7 @@ vector<short> VRSound::synthSpectrum(vector<double> spectrum, uint sample_rate, 
 
     vector<short> samples(buf_size);
     for(uint i=0; i<buf_size; ++i) {
-        samples[i] = 0.5 * SHRT_MAX * out[i]; // for fftw normalization
+        samples[i] = short(0.5 * SHRT_MAX * out[i]); // for fftw normalization
     }
 
     auto calcFade = [](double& t) {
@@ -918,11 +963,11 @@ vector<short> VRSound::synthSpectrum(vector<double> spectrum, uint sample_rate, 
     for (uint i=0; i < fade; ++i) {
         double t = double(i)/(fade-1);
         double y = calcFade(t);
-        samples[i] *= y;
-        samples[buf_size-i-1] *= y;
+        samples[i] = short(samples[i]*y);
+        samples[buf_size-i-1] *= short(samples[buf_size-i-1]*y);
     }
 
-    auto frame = VRSoundBuffer::wrap((ALbyte*)&samples[0], samples.size()*sizeof(short), sample_rate, AL_FORMAT_MONO16);
+    auto frame = VRSoundBuffer::wrap((ALbyte*)&samples[0], int(samples.size()*sizeof(short)), sample_rate, AL_FORMAT_MONO16);
     playBuffer(frame);
     return returnBuffer ? samples : vector<short>();
 }
@@ -937,7 +982,7 @@ vector<short> VRSound::synthBuffer(vector<Vec2d> freqs1, vector<Vec2d> freqs2, f
 
     // play sound
     int sample_rate = 22050;
-    size_t buf_size = duration * sample_rate;
+    size_t buf_size = size_t(duration * sample_rate);
     vector<short> samples(buf_size);
     double Ni = 1.0/freqs1.size();
     double T = 2*Pi/sample_rate;
@@ -951,10 +996,10 @@ vector<short> VRSound::synthBuffer(vector<Vec2d> freqs1, vector<Vec2d> freqs2, f
 
             if (!phasors.count(j)) phasors[j] = complex<double>(1,0);
             phasors[j] *= exp( complex<double>(0,T*f) );
-            samples[i] += A*Ni*phasors[j].imag();
+            samples[i] += short(A*Ni*phasors[j].imag());
         }
     }
-    auto frame = VRSoundBuffer::wrap((ALbyte*)&samples[0], samples.size()*sizeof(short), sample_rate, AL_FORMAT_MONO16);
+    auto frame = VRSoundBuffer::wrap((ALbyte*)&samples[0], int(samples.size()*sizeof(short)), sample_rate, AL_FORMAT_MONO16);
     playBuffer(frame);
     if (true) return samples;
     return vector<short>();
@@ -977,7 +1022,7 @@ vector<short> VRSound::synthBufferForChannel(vector<Vec2d> freqs1, vector<Vec2d>
 
     // play sound
     int sample_rate = 22050;
-    size_t buf_size = duration * sample_rate;
+    size_t buf_size = size_t(duration * sample_rate);
     vector<short> samples(buf_size);
     double Ni = 1.0/freqs1.size();
     double T = 2*Pi/sample_rate;
@@ -998,7 +1043,7 @@ vector<short> VRSound::synthBufferForChannel(vector<Vec2d> freqs1, vector<Vec2d>
                 phasors[channel][j] = complex<double>(1,0);
             }
             phasors[channel][j] *= exp( complex<double>(0,T*f) );
-            samples[i] += A*Ni*phasors[channel][j].imag();
+            samples[i] += short(A*Ni*phasors[channel][j].imag());
         }
     }
     return samples;
@@ -1028,7 +1073,7 @@ void VRSound::synthBufferOnChannels(vector<vector<Vec2d>> freqs1, vector<vector<
 
     // generate a new buffer with size for all buffers * amount of channels
     int sample_rate = 22050;
-    size_t buffer_size = duration * sample_rate;
+    int buffer_size = int(ceil(sample_rate * duration));
     vector<short> buffer(buffer_size * num_channels);
 
     // generate synth buffers for every channel and store them for later use
@@ -1043,7 +1088,7 @@ void VRSound::synthBufferOnChannels(vector<vector<Vec2d>> freqs1, vector<vector<
       element 1 the first frame on the second channel
       element 8 is the second frame on the first channel
     */
-    for (uint i = 0; i < buffer_size; i++) {
+    for (int i = 0; i < buffer_size; i++) {
         for (uint channel = 0; channel < num_channels; channel++) {
             buffer[num_channels * i + channel] = synth_buffer[channel][i];
         }
@@ -1069,10 +1114,115 @@ void VRSound::synthBufferOnChannels(vector<vector<Vec2d>> freqs1, vector<vector<
             format = AL_FORMAT_MONO16;
     }
 
-    auto frame = VRSoundBuffer::wrap((ALbyte*)&buffer[0], buffer.size()*sizeof(short), sample_rate, format);
+    auto frame = VRSoundBuffer::wrap((ALbyte*)&buffer[0], int(buffer.size()*sizeof(short)), sample_rate, format);
     playBuffer(frame);
 }
 
 
+
+double simTime = 0;
+double simPhase = 0;
+	
+VRSoundBufferPtr test_genPacket(double T) {
+    // tone parameters
+    float Ac = 32760;
+    float wc = 440;
+    int sample_rate = 22050;
+    float period1 = 0.2;
+
+    // allocate frame
+    size_t buf_size = size_t(T * sample_rate);
+    buf_size += buf_size%2;
+    auto frame = VRSoundBuffer::allocate(buf_size*sizeof(short), sample_rate, AL_FORMAT_MONO16);
+
+    double dt = T/(buf_size-1);
+    double F = simPhase;
+
+    for(uint i=0; i<buf_size; i++) {
+        double a = double(i)*dt;
+        double k = simTime + a;
+        //double Ak = abs(sin(k/period1));
+        double Ak = 1.0-a/T;
+
+        F += wc*2.0*Pi/sample_rate;
+        while (F > 2*Pi) F -= 2*Pi;
+
+        short v = short(Ak * Ac * sin( F ));
+        ((short*)frame->data)[i] = v;
+    }
+
+    simPhase = F;
+	simTime += T;
+    return frame;
+}
+
+void VRSound::testMP3Write() {
+	cout << "start av mp3 write test" << endl;
+	cout << " AV versions: " << endl;
+	cout << " codec:  " << AV_VERSION_MAJOR(LIBAVCODEC_VERSION_INT) << "." << AV_VERSION_MINOR(LIBAVCODEC_VERSION_INT) << endl;
+	cout << " format: " << AV_VERSION_MAJOR(LIBAVFORMAT_VERSION_INT) << "." << AV_VERSION_MINOR(LIBAVFORMAT_VERSION_INT) << endl;
+	
+	// create data
+	simTime = 0;
+	simPhase = 0;
+	for (int i=0; i<10; i++) {
+		ownedBuffer.push_back( test_genPacket(0.3) );
+	}
+	
+	string path = "test.mp3";
+	
+    OutputStream audio_st = { 0 };
+    const char *filename = path.c_str();
+    av_register_all();
+	
+	cout << "sound exportToFile: " << filename << endl;
+
+    AVOutputFormat* fmt = av_guess_format(NULL, filename, NULL);
+    if (!fmt) { fprintf(stderr, "Could not find suitable output format\n"); return; }
+
+    AVFormatContext* oc = avformat_alloc_context();
+    if (!oc) { fprintf(stderr, "Memory error\n"); return; }
+
+    oc->oformat = fmt;
+	cout << "pass filename to av context: " << sizeof(oc->filename) << endl;
+    snprintf(oc->filename, sizeof(oc->filename), "%s", filename);
+
+    if (fmt->audio_codec != AV_CODEC_ID_NONE) {
+		add_audio_stream(&audio_st, oc, fmt->audio_codec);
+		cout << "added audio stream" << endl;
+	}
+
+    if (!open_audio(oc, &audio_st)) return;
+    av_dump_format(oc, 0, filename, 1);
+
+    /* open the output file, if needed */
+    if (!(fmt->flags & AVFMT_NOFILE)) {
+		cout << "open output file" << endl;
+        if (avio_open(&oc->pb, filename, AVIO_FLAG_WRITE) < 0) {
+            fprintf(stderr, "Could not open '%s'\n", filename);
+            return;
+        }
+    }
+
+    /* Write the stream header, if any. */
+	cout << " start writing buffers" << endl;
+    avformat_write_header(oc, NULL);
+    for (auto buffer : ownedBuffer) write_buffer(oc, &audio_st, buffer);
+	cout << " done writing buffers" << endl;
+
+    encode_audio_frame(oc, &audio_st, NULL); // flush last frames
+    av_write_trailer(oc);
+
+    // cleanup
+	cout << " cleanup" << endl;
+	cout << "  close stream" << endl;
+    close_stream(oc, &audio_st);
+	cout << "  close file" << endl;
+    if (!(fmt->flags & AVFMT_NOFILE)) avio_close(oc->pb);
+	cout << "  free context" << endl;
+    avformat_free_context(oc);
+	
+	cout << "av mp3 write test success!" << endl;
+}
 
 

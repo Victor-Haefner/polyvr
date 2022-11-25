@@ -19,6 +19,7 @@ string absolute(string path);
 string getFileName(string path, bool withExtension = true);
 string getFileExtension(string path);
 string getFolderName(string path);
+string readFileContent(string fileName);
 
 vector<string> openFolder(string folder);
 

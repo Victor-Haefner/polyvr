@@ -12,9 +12,9 @@
 #include "core/utils/VRFunctionFwd.h"
 #include "core/networking/VRNetworkingFwd.h"
 
-class AVPacket;
-class AVCodecContext;
-class AVFormatContext;
+struct AVPacket;
+struct AVCodecContext;
+struct AVFormatContext;
 struct OutputStream;
 struct InputStream;
 
@@ -32,7 +32,7 @@ class VRSound {
         vector<VRSoundBufferPtr> ownedBuffer;
         int nextBuffer = 0;
         VRUpdateCbPtr callback;
-        VRNetworkClientPtr udpClient;
+        vector<VRNetworkClientPtr> udpClients;
         VRUDPServerPtr udpServer;
 
         unsigned int frequency = 0;
@@ -60,12 +60,11 @@ class VRSound {
         AVFormatContext* muxer = 0;
         OutputStream* audio_ost = 0;
         InputStream*  audio_ist = 0;
-        int lastEncodingFlag = 1;
 
         void updateSampleAndFormat();
         void update3DSound();
         void write_buffer(AVFormatContext *oc, OutputStream *ost, VRSoundBufferPtr buffer);
-        string onStreamData(string s);
+        string onStreamData(string s, bool stereo);
 
     public:
         VRSound();
@@ -106,8 +105,8 @@ class VRSound {
         void closeStream(bool keepOpen = false);
         void flushPackets();
 
-        bool listenStream(int port);
-        bool playPeerStream(VRNetworkClientPtr client);
+        bool listenStream(int port, bool stereo);
+        bool playPeerStream(VRNetworkClientPtr client, bool stereo);
 
         void exportToFile(string path);
         void streamTo(string url, int port, bool keepOpen = false);
@@ -121,6 +120,7 @@ class VRSound {
         void synthBufferOnChannels(vector<vector<Vec2d>> freqs1, vector<vector<Vec2d>> freqs2, float T = 1, int maxQueued = -1);
 
         vector<short> test(vector<Vec2d> freqs1, vector<Vec2d> freqs2, float T = 1);
+		void testMP3Write();
 };
 
 OSG_END_NAMESPACE;

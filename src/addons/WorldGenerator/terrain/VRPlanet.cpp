@@ -107,15 +107,20 @@ void VRPlanet::localize(double north, double east) {
 Vec2d VRPlanet::getSurfaceUV(double north, double east) {
     Vec2d res;
     auto sector = getSector(north, east);
-    if (!sector) return res;
-    auto terrain = sector->getTerrain(0);
-    if (!terrain) return res;
+    if (sector) {
+        auto terrain = sector->getTerrain(0);
+        if (terrain) {
+            auto sectorCoords = sector->getPlanetCoords();
+            auto s = fromLatLongSize(sectorCoords[0], sectorCoords[1], sectorCoords[0]+sectorSize, sectorCoords[1]+sectorSize); //u = east, v = north
+            auto u = (east-sectorCoords[1]-sectorSize/2)/sectorSize*s[0];
+            auto v = -(north-sectorCoords[0]-sectorSize/2)/sectorSize*s[1];
+            return terrain->getTexCoord( Vec2d(u,v) );
+        }
+    }
 
-    auto sectorCoords = sector->getPlanetCoords();
-    auto s = fromLatLongSize(sectorCoords[0], sectorCoords[1], sectorCoords[0]+sectorSize, sectorCoords[1]+sectorSize); //u = east, v = north
-    auto u = (east-sectorCoords[1]-sectorSize/2)/sectorSize*s[0];
-    auto v = -(north-sectorCoords[0]-sectorSize/2)/sectorSize*s[1];
-    return terrain->getTexCoord( Vec2d(u,v) );
+    res[0] = 0.5 + east  / 360.0;
+    res[1] = 0.5 + north / 180.0;
+    return res;
 }
 
 double VRPlanet::getRadius() { return radius; }

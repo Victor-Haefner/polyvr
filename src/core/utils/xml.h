@@ -43,6 +43,7 @@ class XMLElement {
 
         void importNode(XMLElementPtr e, bool recursive, XML& xml);
 
+        string toString();
         void print();
 };
 

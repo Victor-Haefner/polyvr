@@ -21,21 +21,22 @@ OSG_BEGIN_NAMESPACE;
 
 struct VRSoundChannel;
 
-struct VRSoundContext {
+class VRSoundContext {
+	public:
 #ifdef WIN32
-    ALCdevice* device = 0;
-    ALCcontext* context = 0;
+		ALCdevice* device = 0;
+		ALCcontext* context = 0;
 #else
-    ALCdevice_struct* device = 0;
-    ALCcontext_struct* context = 0;
+		ALCdevice_struct* device = 0;
+		ALCcontext_struct* context = 0;
 #endif
 
-    VRSoundContext();
-    ~VRSoundContext();
-    static VRSoundContextPtr create();
+		VRSoundContext();
+		~VRSoundContext();
+		static VRSoundContextPtr create();
 
-    void makeCurrent();
-    void enumerateDevices();
+		void makeCurrent();
+		void enumerateDevices();
 };
 
 class VRSoundManager {
