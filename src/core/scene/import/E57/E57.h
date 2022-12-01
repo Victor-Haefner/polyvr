@@ -4,10 +4,24 @@
 #include <OpenSG/OSGConfig.h>
 #include <string>
 #include <map>
+#include <fstream>
 #include "core/objects/VRObjectFwd.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
+
+struct ocChunkRef {
+    string path;
+    size_t offset = 0;
+    size_t size = 0;
+    ofstream stream;
+};
+
+struct ocSerialNode {
+    size_t chunkOffset = 0;
+    size_t chunkSize = 0;
+    int children[8] = {0,0,0,0,0,0,0,0};
+};
 
 void loadE57(string path, VRTransformPtr res, map<string, string> importOptions);
 void loadPCB(string path, VRTransformPtr res, map<string, string> importOptions);

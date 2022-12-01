@@ -41,6 +41,7 @@ class OctreeNode : public PartitiontreeNode<T> {
 
         Node* add(Vec3d p, T data, int targetLevel = -1, bool checkPosition = true, int partitionLimit = -1);
         Node* get(Vec3d p, bool checkPosition = true);
+        Node* getChild(int i);
 
         bool isLeaf();
 
@@ -52,6 +53,7 @@ class OctreeNode : public PartitiontreeNode<T> {
         vector<T> getAllData();
 
         int dataSize();
+        size_t countNodes();
 
         int getOctant(Vec3d p);
         Vec3d lvljumpCenter(float s2, Vec3d rp);
@@ -84,6 +86,7 @@ class Octree : public Partitiontree {
         Node* get(Vec3d p, bool checkPosition = true);
         vector<Node*> getAllLeafs();
         double getLeafSize();
+        size_t getNodesCount();
 
         void setResolution(float res);
         float getSize();

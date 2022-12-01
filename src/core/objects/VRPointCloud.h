@@ -93,6 +93,7 @@ class VRPointCloud : public VRTransform {
         void genTestFile2(string path, size_t N, bool doColor);
 
         void externalSort(string path, size_t chunkSize, double binSize);
+        void externalPartition(string path);
         void externalComputeSplats(string path);
 
         shared_ptr<Octree<PntData>>& getOctree();

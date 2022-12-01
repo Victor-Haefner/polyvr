@@ -143,12 +143,16 @@ void VRHeadMountedDisplay::setScene() {
 	root->addChild(fboData->rendererR);
 
 	auto setupMatrixCam = [&](Matrix4d& m) {
+        float f = cam->getFar();
+        float n = cam->getNear();
 		MatrixCameraRecPtr mcam = MatrixCamera::create();
 		mcam->setBeacon(cam->getCam()->cam->getBeacon());
 		//mcam->setUseBeacon(true);
 		mcam->setProjectionMatrix(toMatrix4f(m));
-		mcam->setNear(m_fNearClip);
-		mcam->setFar(m_fFarClip);
+		mcam->setNear(n);
+		mcam->setFar(f);
+        m_fNearClip = n;
+        m_fFarClip = f;
 		return mcam;
 	};
 
