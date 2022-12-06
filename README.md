@@ -27,8 +27,10 @@ clone this repository
  sudo ./install
 
 
-build the project in codeblocks with the project file polyvr/PolyVR_XX.04.cbp (XX is 16/18/20 corresponding to the ubuntu LTS version).
+build the project in codeblocks with the project file polyvr/PolyVR_XX.04.cbp (XX is 18/20/22 corresponding to the ubuntu LTS version).
 Set the number of compilation processes to 5 or more depending on your CPU.
 The option is in Settings > Compiler... > Global compiler settings > Build options.
 
+PolyVR does not yet run with Wayland wich comes with 22.04.
+To switch to X edit (with sudo) /etc/gdm3/custom.conf and uncomment the line with WaylandEnable=false
 
