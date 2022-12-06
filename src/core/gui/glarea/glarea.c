@@ -629,44 +629,47 @@ static void gdk_window_end_paint_internal(_GdkWindow* window) {
 #endif
 
 GdkGLContext* gdk_window_get_paint_gl_context(_GdkWindow* window, GError** error) {
-  GError *internal_error = NULL;
-
-
+    GError *internal_error = NULL;
 
     printf(" gdk_window_get_paint_gl_context %p %p %p\n", window, window->impl, window->impl_window);
 
 
-  _GdkWindow* iwindow = (_GdkWindow*)window->impl_window;
-  if (!iwindow) return 0;
-  if (iwindow->gl_paint_context == NULL) {
-      _GdkWindowImplClass *impl_class = getGdkWindowImplClass();
+    _GdkWindow* iwindow = (_GdkWindow*)window->impl_window;
+    if (!iwindow) return 0;
+    if (iwindow->gl_paint_context == NULL) {
+        _GdkWindowImplClass* impl_class = getGdkWindowImplClass();
 
-      if (impl_class->create_gl_context == NULL) {
-          g_set_error_literal (error, GDK_GL_ERROR, GDK_GL_ERROR_NOT_AVAILABLE, "The current backend does not support OpenGL");
-          return NULL;
+        if (!impl_class) {
+            g_set_error_literal (error, GDK_GL_ERROR, GDK_GL_ERROR_NOT_AVAILABLE, "ERROR: no implementation class!");
+            return NULL;
+        }
+
+        if (impl_class->create_gl_context == NULL) {
+            g_set_error_literal (error, GDK_GL_ERROR, GDK_GL_ERROR_NOT_AVAILABLE, "The current backend does not support OpenGL");
+            return NULL;
         }
 #ifdef _WIN32
-      iwindow->gl_paint_context = win32_window_create_gl_context(iwindow, TRUE, NULL, FALSE, &internal_error);
+        iwindow->gl_paint_context = win32_window_create_gl_context(iwindow, TRUE, NULL, FALSE, &internal_error);
 #else
-      iwindow->gl_paint_context = x11_window_create_gl_context ((GdkWindow*)iwindow, TRUE, NULL, FALSE, &internal_error);
+        iwindow->gl_paint_context = x11_window_create_gl_context ((GdkWindow*)iwindow, TRUE, NULL, FALSE, &internal_error);
 #endif
     }
 
-  if (internal_error != NULL) {
-      g_propagate_error (error, internal_error);
-      g_clear_object (&(iwindow->gl_paint_context));
-      return NULL;
+    if (internal_error != NULL) {
+        g_propagate_error (error, internal_error);
+        g_clear_object (&(iwindow->gl_paint_context));
+        return NULL;
     }
 
-  gdk_gl_context_realize (iwindow->gl_paint_context, &internal_error);
-  if (internal_error != NULL) {
+    gdk_gl_context_realize (iwindow->gl_paint_context, &internal_error);
+    if (internal_error != NULL) {
         printf("setting the gl_paint_context context failed!\n");
-      g_propagate_error (error, internal_error);
-      g_clear_object (&(iwindow->gl_paint_context));
-      return NULL;
-  }
+        g_propagate_error (error, internal_error);
+        g_clear_object (&(iwindow->gl_paint_context));
+        return NULL;
+    }
 
-  return iwindow->gl_paint_context;
+    return iwindow->gl_paint_context;
 }
 
 GdkGLContext* _gdk_window_create_gl_context (_GdkWindow* window, GError** error) {

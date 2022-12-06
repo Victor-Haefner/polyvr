@@ -541,12 +541,25 @@ static inline GdkGLContextPrivate* gdk_gl_context_get_instance_private(GdkGLCont
 }
 
 _GdkWindowImplClass* getGdkWindowImplClass() {
+    static _GdkWindowImplClass* windowType = 0;
+    if (windowType) return windowType;
+
+    int typeID = 0;
+    GType type = 0;
+    if (!type) { type = g_type_from_name("GdkWindowImplX11"); typeID = 1; }
+    if (!type) { type = g_type_from_name("GdkWindowImplWin32"); typeID = 2; }
+    if (!type) { type = g_type_from_name("GdkWindowImplQuartz"); typeID = 3; }
+    if (!type) { type = g_type_from_name("GdkWindowImplWayland"); typeID = 4; }
+    if (!type) { type = g_type_from_name("GdkWindowImplBroadway"); typeID = 5; }
+    windowType = g_type_class_ref(type);
+
 #ifndef _WIN32
-    GType t = g_type_from_name("GdkWindowImplX11");
+    if (typeID != 1) printf("ERROR in getGdkWindowImplClass! expected window type X11 but found %i this is not supported yet!\n", typeID);
 #else
-    GType t = g_type_from_name("GdkWindowImplWin32");
+    if (typeID != 2) printf("ERROR in getGdkWindowImplClass! expected window type Win32 but found %i this is not supported yet!\n", typeID);
 #endif
-    return g_type_class_ref(t);
+
+    return windowType;
 }
 
 
