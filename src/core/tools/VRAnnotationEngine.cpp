@@ -24,6 +24,7 @@ bool hasGS = false;
 VRAnnotationEngine::VRAnnotationEngine(string name, bool init) : VRGeometry(name) {
     type = "AnnotationEngine";
     hasGS = VRScene::getCurrent()->hasGeomShader();
+    //hasGS = false;
     if (init) initialize();
 }
 
@@ -439,7 +440,7 @@ void main( void ) {
 
 string VRAnnotationEngine::gp =
 "#version 150\n"
-"#extension GL_EXT_geometry_shader4 : enable\n"
+//"#extension GL_EXT_geometry_shader4 : enable\n"
 GLSL(
 layout (points) in;
 layout (triangle_strip, max_vertices=60) out;
@@ -460,7 +461,7 @@ out vec2 texCoord;
 out vec4 geomPos;
 out vec3 geomNorm;
 
-vec3 orientationX;
+vec3 orientationX = vec3(1,0,0);
 
 vec4 transform(in float x, in float y) {
     vec3 p = -orientationX*x + orientationUp*y;
@@ -487,7 +488,7 @@ void emitQuad(in float offset, in vec4 tc) {
     vec4 v2;
     vec4 v3;
     vec4 v4;
-    vec4 p = gl_PositionIn[0];
+    vec4 p = gl_in[0].gl_Position;
 
     if (screen_size > 0.5) {
         p.xyz = p.xyz/p.w;

@@ -362,6 +362,7 @@ class STEPLoader {
                 if (!status) { cout << "failed to read file" << endl; return; }
                 int Nroots = reader.NbRootsForTransfer();
                 cout << "Number of roots in STEP file: " << Nroots << endl;
+                if (Nroots == 0) { cout << "failed to read file, no roots" << endl; return; }
                 reader.SetNameMode(true);
                 reader.SetMatMode(true);
                 reader.SetColorMode(true);
@@ -500,6 +501,10 @@ class STEPLoader {
                 }
             } catch(exception e) {
                 cout << " STEP import failed in load: " << e.what() << endl;
+            } catch(Standard_ProgramError& e) { // TODO: this is wrong, fix error handling!
+                cout << " STEP import failed in load: Standard_ProgramError "  << endl;
+            } catch(...) {
+                cout << " STEP import failed, unknown exception! " << endl;
             }
         }
 };
