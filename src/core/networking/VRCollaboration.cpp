@@ -533,10 +533,12 @@ string VRCollaboration::userlistSite = WEBSITE(
 
  		function setUserStats(name, params) {\n
  			btn = document.getElementById(name);\n
- 			params = params.split(' ');\n
- 			var color = params[0];\n
- 			console.log('setUserStats '+name+" "+color);\n
- 			btn.style.background = color;\n
+ 			if (btn) {\n
+                params = params.split(' ');\n
+                var color = params[0];\n
+                console.log('setUserStats '+name+" "+color);\n
+                btn.style.background = color;\n
+ 			}\n
  		}\n\n
 
  		function addUser(name, uid) {\n
