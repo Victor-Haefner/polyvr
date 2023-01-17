@@ -240,6 +240,7 @@ void VRCollaboration::initUI() {
 
 	auto addWidget = [&](string name, string site, int res, float W, float H, Vec3d pos) {
 		auto w = VRSprite::create(name);
+		w->setPersistency(0);
 		cam->addChild(w);
 		w->setFrom(pos);
 		w->setSize(W,H);
@@ -291,7 +292,7 @@ bool VRCollaboration::handleUI(VRDeviceWeakPtr wdev) {
         auto data = splitString(m, '|');
         if (data.size() >= 2) {
             sendUI("usersList", "setUserStats|"+data[1]+"|#fa0");
-            string net = getSubnet();			
+            string net = getSubnet();
 #ifdef _WIN32
 			ice->send(data[1], "CONREQIwinI"+net);
 #else
