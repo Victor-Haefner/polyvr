@@ -39,7 +39,7 @@ class VRSyncNode : public VRTransform {
         VRTransformPtr avatarDeviceTransform;
         VRTransformPtr avatarDeviceAnchor;
 
-        VRSyncChangelistPtr changelist;
+        VRSyncChangefilterPtr changefilter;
 
         string UUID;
         map<UInt32, bool> container; // local containers, sub-set of containers which need to be synced for collaboration
@@ -114,7 +114,7 @@ class VRSyncNode : public VRTransform {
 
         void startInterface(int port);
         string interfaceHandler(string msg, size_t sID);
-        string handleMessage(string msg, VRSyncConnectionWeakPtr weakRemote);
+        string handleMessage(string msg, VRSyncConnectionWeakPtr weakRemote, size_t sID);
         void update();
         void broadcast(string message);
         size_t getContainerCount();

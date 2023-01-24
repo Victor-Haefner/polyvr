@@ -85,7 +85,7 @@ VRSyncNode::VRSyncNode(string name) : VRTransform(name) {
     selfNameID = att->getId();
     selfCoreID = getNode()->node->getCore()->getId();
 
-    changelist = VRSyncChangelist::create();
+    changefilter = VRSyncChangefilter::create();
     applicationThread = dynamic_cast<Thread *>(ThreadManager::getAppThread());
 	updateFkt = VRUpdateCb::create("SyncNode update", bind(&VRSyncNode::update, this));
 	VRScene::getCurrent()->addUpdateFkt(updateFkt, 100000);
@@ -120,7 +120,7 @@ string VRSyncNode::addTCPClient(VRNetworkClientPtr nclient) {
     auto remote = VRSyncConnection::create(client, uri);
     remotes[uri] = remote;
     VRSyncConnectionWeakPtr weakRemote = remote;
-    client->onMessage( bind(&VRSyncNode::handleMessage, this, std::placeholders::_1, weakRemote) );
+    client->onMessage( bind(&VRSyncNode::handleMessage, this, std::placeholders::_1, weakRemote, -1) );
 #ifndef WITHOUT_GTK
     VRConsoleWidget::get("Collaboration")->write( name+": add tcp client connected to "+uri+", connected "+toString(client->connected())+"\n");
 #endif
@@ -161,7 +161,7 @@ void VRSyncNode::reqInitState(VRSyncConnectionWeakPtr weakRemote) {
 #ifndef WITHOUT_GTK
     VRConsoleWidget::get("Collaboration")->write( name+": got request to send initial state\n");
 #endif
-    changelist->sendSceneState(ptr(), weakRemote);
+    if (auto remote = weakRemote.lock()) changefilter->sendSceneState(ptr(), weakRemote);
 }
 
 string VRSyncNode::onServerMsg(string msg) {
@@ -173,8 +173,12 @@ string VRSyncNode::onServerMsg(string msg) {
             auto remote = remotes[ouri];
             remotes.erase(ouri);
             remotes[nuri] = remote;
+            remote->setID(nuri);
             remote->send("accConnect|1", 1); // delay one frame, when started locally, syncnodes may not be setup before receiving accConnect1
             //sendTypes(remote);
+#ifndef WITHOUT_GTK
+            VRConsoleWidget::get("Collaboration")->write( name+": change remote ID from "+ouri+" to "+nuri+"\n");
+#endif
         }
     }
 
@@ -188,6 +192,10 @@ void VRSyncNode::addRemote(string host, int port) {
     if (remotes.count(uri)) return;
     auto remote = VRSyncConnection::create(host, port, serverUri);
     remotes[uri] = remote;
+
+#ifndef WITHOUT_GTK
+    VRConsoleWidget::get("Collaboration")->write( name+": addRemote "+uri+"\n");
+#endif
 
     auto client = remote->getClient();
     client->onMessage( bind(&VRSyncNode::onServerMsg, this, std::placeholders::_1) );
@@ -203,7 +211,7 @@ bool VRSyncNode::isSubContainer(const UInt32& id) {
     if (!fct) return false;
 
     UInt32 syncNodeID = getNode()->node->getId();
-    auto type = factory->findType(fct->getTypeId());
+    FieldContainerType* type = factory->findType(fct->getTypeId());
 
     auto detectCycle = [&](Node* node, Node* parent, int depth) { // TODO
         if (parent == node) return true;
@@ -228,8 +236,12 @@ bool VRSyncNode::isSubContainer(const UInt32& id) {
     if (type->isNodeCore()) {
         NodeCore* core = dynamic_cast<NodeCore*>(fct);
         if (!core) return false;
-        for (auto node : core->getParents())
+        for (FieldContainer* node : core->getParents()) {
+            if (!node) continue;
+            int cID = factory->findContainer(node); // node may be invalid, check if it is still registred
+            if (cID == -1) continue;
             if (checkAncestor(dynamic_cast<Node*>(node), 0)) return true;
+        }
         return false;
     }
 
@@ -595,22 +607,10 @@ void VRSyncNode::update() {
         if (remote.second) remote.second->keepAlive();
     }
 
-    auto localChanges = changelist->filterChanges(ptr());
+    auto localChanges = changefilter->filterChanges(ptr());
     if (!localChanges) return;
-    //if (getChildrenCount() == 0) return; // TODO: this may happen if the only child is dragged, or the only child was just deleted..
-    //cout << endl << " > > >  " << name << " VRSyncNode::update()" << endl;
 
-
-    //OSGChangeList* cl = (OSGChangeList*)applicationThread->getChangeList();
-    //changelist->printChangeList(ptr(), cl);
-
-
-    //printRegistredContainers(); // DEBUG: print registered container
-    //printSyncedContainers();
-    //changelist->printChangeList(ptr(), localChanges);
-
-    //VRConsoleWidget::get("Collaboration")->write( " Broadcast scene updates\n");
-    changelist->broadcastChangeList(ptr(), localChanges, true);
+    changefilter->broadcastChangeList(ptr(), localChanges, true);
     for (auto remote : remotes) {
         if (remote.second) remote.second->clearSyncedContainer();
     }
@@ -620,7 +620,6 @@ void VRSyncNode::update() {
 void VRSyncNode::registerContainer(FieldContainer* c) {
     UInt32 ID = c->getId();
     if (container.count(ID)) return;
-    //cout << " VRSyncNode::registerContainer " << getName() << " container: " << c->getTypeName() << " at fieldContainerId: " << ID << endl;
     container[ID] = true;
 }
 
@@ -847,7 +846,7 @@ string VRSyncNode::interfaceHandler(string msg, size_t sID) {
         string ruri = splitString(msg, '|')[2];
         clientsIDMap[sID] = uuid;
 #ifndef WITHOUT_GTK
-        VRConsoleWidget::get("Collaboration")->write( name+":  interfaceHandler, newConnect\n");
+        VRConsoleWidget::get("Collaboration")->write( name+":  interfaceHandler, newConnect, remote: "+toString(sID)+" -> "+uuid+"\n");
 #endif
         return "mapServerID|"+ruri+"|"+UUID+"TCPPVR\n";
     }
@@ -860,7 +859,12 @@ string VRSyncNode::interfaceHandler(string msg, size_t sID) {
     }
 
     string ruID = clientsIDMap[sID];
-    return handleMessage(msg, remotes[ruID]);
+    if (remotes[ruID]->getID() != ruID) {
+#ifndef WITHOUT_GTK
+        VRConsoleWidget::get("Collaboration")->write( name+":  interfaceHandler, ruID does not match key!\n", "red");
+#endif
+    }
+    return handleMessage(msg, remotes[ruID], sID);
 }
 
 void VRSyncNode::startInterface(int port) {
@@ -919,7 +923,10 @@ void VRSyncNode::handleSelfmapRequest(string msg, VRSyncConnectionWeakPtr weakRe
 #endif
 }
 
-string VRSyncNode::handleMessage(string msg, VRSyncConnectionWeakPtr weakRemote) {
+string VRSyncNode::handleMessage(string msg, VRSyncConnectionWeakPtr weakRemote, size_t sID) {
+#ifndef WITHOUT_GTK
+    VRConsoleWidget::get("Collaboration")->write( name+": handleMessage from "+toString(sID)+", "+msg+"\n");
+#endif
     VRUpdateCbPtr job = 0;
     if (startsWith(msg, "message|"));
     else if (startsWith(msg, "keepAlive"));
@@ -933,10 +940,10 @@ string VRSyncNode::handleMessage(string msg, VRSyncConnectionWeakPtr weakRemote)
     //else if (startsWith(msg, "newConnect|")) job = VRUpdateCb::create( "sync-newConnect", bind(&VRSyncNode::handleNewConnect, this, msg) );
     else if (startsWith(msg, "accConnect|")) job = VRUpdateCb::create( "sync-accConnect", bind(&VRSyncNode::accTCPConnection, this, msg, weakRemote) );
     else if (startsWith(msg, "reqInitState|")) job = VRUpdateCb::create( "sync-reqInitState", bind(&VRSyncNode::reqInitState, this, weakRemote) );
-    else if (startsWith(msg, "changelistEnd|")) job = VRUpdateCb::create( "sync-finalizeCL", bind(&VRSyncChangelist::deserializeAndApply, changelist.get(), ptr(), weakRemote) );
+    else if (startsWith(msg, "changelistEnd|")) job = VRUpdateCb::create( "sync-finalizeCL", bind(&VRSyncChangelist::deserializeAndApply, weakRemote.lock()->changelist.get(), ptr(), weakRemote, sID) );
     else if (startsWith(msg, "warn|")) job = VRUpdateCb::create( "sync-handleWarning", bind(&VRSyncNode::handleWarning, this, msg, weakRemote) );
     //else if (startsWith(msg, "warn|")) handleWarning(msg);
-    else job = VRUpdateCb::create( "sync-handleCL", bind(&VRSyncChangelist::gatherChangelistData, changelist.get(), ptr(), msg) );
+    else job = VRUpdateCb::create( "sync-handleCL", bind(&VRSyncChangelist::gatherChangelistData, weakRemote.lock()->changelist.get(), ptr(), msg) );
     if (job) VRScene::getCurrent()->queueJob( job );
     return "";
 }
