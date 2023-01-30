@@ -1,6 +1,8 @@
 #ifndef VRSYNCCONNECTION_H_INCLUDED
 #define VRSYNCCONNECTION_H_INCLUDED
 
+#include "VRSyncChangelist.h"
+
 #include "core/networking/VRNetworkingFwd.h"
 #include "core/objects/VRObjectFwd.h"
 #include "core/utils/VRUtilsFwd.h"
@@ -26,7 +28,10 @@ class VRSyncConnection {
             UInt32 localAnchorID = 0;
         };
 
+        VRSyncChangelistPtr changelist; // TODO: make it private and refactor accordingly in syncnode module
+
     private:
+
         // TODO: unused, currently handled in syncnode, needs to move here
         map<UInt32, UInt32> typeMapping;
         map<UInt32, UInt32> remoteToLocalID;
