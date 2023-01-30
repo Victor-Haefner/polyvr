@@ -2,6 +2,12 @@
 #define GLAREAWIN_H_INCLUDED
 
 
+#include <gdk/win32/gdkwin32glcontext.h>
+#include <windows.h>
+#include <windowsx.h>
+#include <dwmapi.h>
+#include <epoxy/wgl.h>
+
 typedef enum _GdkWin32ProcessDpiAwareness {
     PROCESS_DPI_UNAWARE = 0,
     PROCESS_SYSTEM_DPI_AWARE = 1,
@@ -904,42 +910,230 @@ void _gdk_win32_window_invalidate_for_new_frame(_GdkWindow* window, cairo_region
     lastRegion = extends;
 }
 
-/*static void _gdk_win32_window_set_opacity(_GdkWindow* window, gdouble opacity) {
-    printf(" +-+-+-++-- _gdk_win32_window_set_opacity %d\n", opacity);
+static void _get_dummy_window_hwnd(GdkWGLDummy* dummy) {
+    WNDCLASSEX dummy_wc;
 
-    LONG exstyle;
-    typedef BOOL(WINAPI* PFN_SetLayeredWindowAttributes) (HWND, COLORREF, BYTE, DWORD);
-    PFN_SetLayeredWindowAttributes setLayeredWindowAttributes = NULL;
+    memset(&dummy_wc, 0, sizeof(WNDCLASSEX));
 
-    g_return_if_fail(GDK_IS_WINDOW(window));
+    dummy_wc.cbSize = sizeof(WNDCLASSEX);
+    dummy_wc.style = CS_OWNDC;
+    dummy_wc.lpfnWndProc = (WNDPROC)DefWindowProc;
+    dummy_wc.cbClsExtra = 0;
+    dummy_wc.cbWndExtra = 0;
+    dummy_wc.hInstance = GetModuleHandle(NULL);
+    dummy_wc.hIcon = 0;
+    dummy_wc.hCursor = NULL;
+    dummy_wc.hbrBackground = 0;
+    dummy_wc.lpszMenuName = 0;
+    dummy_wc.lpszClassName = "dummy";
+    dummy_wc.hIconSm = 0;
 
-    if (!WINDOW_IS_TOPLEVEL(window) || GDK_WINDOW_DESTROYED(window))
-        return;
+    dummy->wc_atom = RegisterClassEx(&dummy_wc);
 
-    if (opacity < 0)
-        opacity = 0;
-    else if (opacity > 1)
-        opacity = 1;
-
-    _GdkWindowImplWin32* impl = (_GdkWindowImplWin32*)window->impl;
-
-    impl->layered_opacity = opacity;
-
-    if (impl->layered) return;
-
-    exstyle = GetWindowLong(gdk_win32_window_get_handle(window), GWL_EXSTYLE);
-
-    if (!(exstyle & WS_EX_LAYERED)) SetWindowLong(gdk_win32_window_get_handle(window), GWL_EXSTYLE, exstyle | WS_EX_LAYERED);
-
-    setLayeredWindowAttributes = (PFN_SetLayeredWindowAttributes)GetProcAddress(GetModuleHandle("user32.dll"), "SetLayeredWindowAttributes");
-
-    if (setLayeredWindowAttributes) {
-        setLayeredWindowAttributes(gdk_win32_window_get_handle(window),
+    dummy->hwnd =
+        CreateWindowEx(WS_EX_APPWINDOW,
+            MAKEINTATOM(dummy->wc_atom),
+            "",
+            WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN | WS_CLIPSIBLINGS,
             0,
-            opacity * 0xff,
-            LWA_ALPHA);
+            0,
+            0,
+            0,
+            NULL,
+            NULL,
+            GetModuleHandle(NULL),
+            NULL);
+}
+
+static void _destroy_dummy_gl_context(GdkWGLDummy dummy) {
+    if (dummy.hglrc != NULL) {
+        if (wglGetCurrentContext() == dummy.hglrc) wglMakeCurrent(NULL, NULL);
+        wglDeleteContext(dummy.hglrc);
+        dummy.hglrc = NULL;
     }
-}*/
+    if (dummy.hdc != NULL) {
+        DeleteDC(dummy.hdc);
+        dummy.hdc = NULL;
+    }
+    if (dummy.hwnd != NULL) {
+        DestroyWindow(dummy.hwnd);
+        dummy.hwnd = NULL;
+    }
+    if (dummy.wc_atom != 0) {
+        UnregisterClass(MAKEINTATOM(dummy.wc_atom), GetModuleHandle(NULL));
+        dummy.wc_atom = 0;
+    }
+    dummy.inited = FALSE;
+}
+
+#define PIXEL_ATTRIBUTES 19
+
+static gint vr_get_dummy_wgl_pfd(HDC hdc, PIXELFORMATDESCRIPTOR* pfd) {
+    printf("   get minimal GL Context\n");
+
+    pfd->nSize = sizeof(PIXELFORMATDESCRIPTOR);
+    pfd->nVersion = 1;
+    pfd->dwFlags = PFD_SUPPORT_OPENGL | PFD_DRAW_TO_WINDOW | PFD_DOUBLEBUFFER;
+    pfd->iPixelType = PFD_TYPE_RGBA;
+    pfd->cColorBits = 32;// GetDeviceCaps(hdc, BITSPIXEL);
+    pfd->cDepthBits = 24;
+    pfd->cStencilBits = 8;
+    pfd->dwLayerMask = PFD_MAIN_PLANE;
+    gint best_pf = ChoosePixelFormat(hdc, pfd);
+
+    printf("    chose minimal pixel format: %i\n", best_pf);
+    return best_pf;
+}
+
+static gint vr_get_wgl_pfd(HDC hdc, PIXELFORMATDESCRIPTOR* pfd, _GdkWin32Display* display) {
+    printf("   vr_get_wgl_pfd, get complete GL Context\n");
+    gint best_pf = 0;
+
+    pfd->nSize = sizeof(PIXELFORMATDESCRIPTOR);
+
+    if (display->hasWglARBPixelFormat) {
+        GdkWGLDummy dummy;
+        UINT num_formats;
+        gint colorbits = GetDeviceCaps(hdc, BITSPIXEL);
+
+        printf("     device colorbits: %i\n", colorbits);
+
+        // acquire and cache dummy Window (HWND & HDC) and dummy GL Context, we need it for wglChoosePixelFormatARB()
+        memset(&dummy, 0, sizeof(GdkWGLDummy));
+        best_pf = _gdk_init_dummy_context(&dummy);
+        if (best_pf == 0 || !wglMakeCurrent(dummy.hdc, dummy.hglrc)) return 0;
+
+        int pixelAttribsFull[] = {
+            WGL_DRAW_TO_WINDOW_ARB,     GL_TRUE,
+            WGL_SUPPORT_OPENGL_ARB,     GL_TRUE,
+            WGL_DOUBLE_BUFFER_ARB,      GL_TRUE,
+            WGL_ACCELERATION_ARB,       WGL_FULL_ACCELERATION_ARB,
+            WGL_PIXEL_TYPE_ARB,         WGL_TYPE_RGBA_ARB,
+            WGL_COLOR_BITS_ARB,         32,
+            //WGL_ALPHA_BITS_ARB,         8, // important, if set to 0 the window might get translucent on some systems
+            WGL_DEPTH_BITS_ARB,         24,
+            WGL_STENCIL_BITS_ARB,       8,
+            WGL_SAMPLE_BUFFERS_ARB,     1,
+            WGL_SAMPLES_ARB,            8,
+            0
+        };
+
+        printf(" --- === --- pixelAttribsFull %i %i\n", colorbits, 0);
+
+        int pixelAttribsMin[] = {
+            WGL_DRAW_TO_WINDOW_ARB,     GL_TRUE,
+            WGL_SUPPORT_OPENGL_ARB,     GL_TRUE,
+            WGL_DOUBLE_BUFFER_ARB,      GL_TRUE,
+            WGL_ACCELERATION_ARB,       WGL_FULL_ACCELERATION_ARB,
+            WGL_PIXEL_TYPE_ARB,         WGL_TYPE_RGBA_ARB,
+            WGL_COLOR_BITS_ARB,         32,
+            //WGL_ALPHA_BITS_ARB,         8, // important, if set to 0 the window might get translucent on some systems
+            WGL_DEPTH_BITS_ARB,         24,
+            WGL_STENCIL_BITS_ARB,       8,
+            0
+        };
+
+        bool validPF = wglChoosePixelFormatARB(hdc, pixelAttribsFull, NULL, 1, &best_pf, &num_formats);
+        if (!validPF) {
+            printf(" --= WARNING! full pixel attribs failed, trying without multisampling =--\n");
+            validPF = wglChoosePixelFormatARB(hdc, pixelAttribsMin, NULL, 1, &best_pf, &num_formats);
+        }
+
+        if (!validPF) {
+            printf(" --= WARNING! no working pixel attribs, get fallback GL Context! ..good luck! =--\n");
+            best_pf = vr_get_dummy_wgl_pfd(hdc, pfd);
+        }
+
+        wglMakeCurrent(NULL, NULL);
+        _destroy_dummy_gl_context(dummy);
+    } else {
+        printf(" --= WARNING! on ARB, get fallback GL Context! ..good luck! =--\n");
+        best_pf = vr_get_dummy_wgl_pfd(hdc, pfd);
+    }
+
+    printf("   chose pixel format: %i\n", best_pf);
+    return best_pf;
+}
+
+static gint _gdk_init_dummy_context(GdkWGLDummy* dummy) {
+    PIXELFORMATDESCRIPTOR pfd;
+    gboolean set_pixel_format_result = FALSE;
+    gint best_idx = 0;
+
+    _get_dummy_window_hwnd(dummy);
+
+    dummy->hdc = GetDC(dummy->hwnd);
+    memset(&pfd, 0, sizeof(PIXELFORMATDESCRIPTOR));
+
+    best_idx = vr_get_dummy_wgl_pfd(dummy->hdc, &pfd);
+
+    if (best_idx != 0) set_pixel_format_result = SetPixelFormat(dummy->hdc, best_idx, &pfd);
+    if (best_idx == 0 || !set_pixel_format_result) return 0;
+
+    dummy->hglrc = wglCreateContext(dummy->hdc);
+    if (dummy->hglrc == NULL) return 0;
+
+    dummy->inited = TRUE;
+
+    return best_idx;
+}
+
+gboolean _gdk_win32_display_init_gl(GdkDisplay* display) {
+    _GdkWin32Display* display_win32 = (_GdkWin32Display*)display;
+    gint best_idx = 0;
+    GdkWGLDummy dummy;
+
+    if (display_win32->have_wgl) return TRUE;
+
+    memset(&dummy, 0, sizeof(GdkWGLDummy));
+
+    /* acquire and cache dummy Window (HWND & HDC) and
+     * dummy GL Context, it is used to query functions
+     * and used for other stuff as well
+     */
+    best_idx = _gdk_init_dummy_context(&dummy);
+
+    if (best_idx == 0 || !wglMakeCurrent(dummy.hdc, dummy.hglrc)) return FALSE;
+
+    display_win32->have_wgl = TRUE;
+    display_win32->gl_version = epoxy_gl_version();
+
+    display_win32->hasWglARBCreateContext = epoxy_has_wgl_extension(dummy.hdc, "WGL_ARB_create_context");
+    display_win32->hasWglEXTSwapControl = epoxy_has_wgl_extension(dummy.hdc, "WGL_EXT_swap_control");
+    display_win32->hasWglOMLSyncControl = epoxy_has_wgl_extension(dummy.hdc, "WGL_OML_sync_control");
+    display_win32->hasWglARBPixelFormat = epoxy_has_wgl_extension(dummy.hdc, "WGL_ARB_pixel_format");
+    display_win32->hasWglARBmultisample = epoxy_has_wgl_extension(dummy.hdc, "WGL_ARB_multisample");
+
+    wglMakeCurrent(NULL, NULL);
+    _destroy_dummy_gl_context(dummy);
+
+    return TRUE;
+}
+
+GdkGLContext* win32_window_create_gl_context(GdkWindow* window, gboolean attached, GdkGLContext* share, gboolean full, GError** error) {
+    GdkDisplay* display = gdk_window_get_display(window);
+    _GdkWin32Display* display_win32 = (_GdkWin32Display*)display;
+    _GdkWin32GLContext* context = NULL;
+    GdkVisual* visual = gdk_window_get_visual(window);
+
+    if (!_gdk_win32_display_init_gl(display)) {
+        g_set_error_literal(error, GDK_GL_ERROR, GDK_GL_ERROR_NOT_AVAILABLE, "No GL implementation is available");
+        return NULL;
+    }
+
+    HWND hwnd = gdk_win32_window_get_handle(window);
+    HDC hdc   = GetDC(hwnd);
+
+    display_win32->gl_hdc = hdc;
+    display_win32->gl_hwnd = hwnd;
+
+    context = g_object_new(GDK_TYPE_WIN32_GL_CONTEXT, "display", display, "window", window, "shared-context", share, NULL);
+    context->gl_hdc = hdc;
+    context->is_attached = attached;
+
+    return GDK_GL_CONTEXT(context);
+}
+
 
 
 #endif // GLAREAWIN_H_INCLUDED

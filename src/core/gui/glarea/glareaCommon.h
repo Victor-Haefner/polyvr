@@ -1,7 +1,19 @@
 #ifndef GLAREACOMMON_H_INCLUDED
 #define GLAREACOMMON_H_INCLUDED
 
+#define GTK_COMPILATION
+#define GOBJECT_COMPILATION
+
 #include <gtk/gtkversion.h>
+
+#include <gtk/gtkstylecontext.h>
+#include <gtk/gtkrender.h>
+#include <gobject/gobject.h>
+//#include <gobject/gtype.h>
+#include <gobject/gvalue.h>
+#include <gobject/gsignal.h>
+
+gboolean* getGlobalInvalidate();
 
 typedef enum {
     GDK_RENDERING_MODE_SIMILAR = 0,
@@ -540,27 +552,7 @@ static inline GdkGLContextPrivate* gdk_gl_context_get_instance_private(GdkGLCont
     return (G_STRUCT_MEMBER_P(context, privOffset));
 }
 
-_GdkWindowImplClass* getGdkWindowImplClass() {
-    static _GdkWindowImplClass* windowType = 0;
-    if (windowType) return windowType;
-
-    int typeID = 0;
-    GType type = 0;
-    if (!type) { type = g_type_from_name("GdkWindowImplX11"); typeID = 1; }
-    if (!type) { type = g_type_from_name("GdkWindowImplWin32"); typeID = 2; }
-    if (!type) { type = g_type_from_name("GdkWindowImplQuartz"); typeID = 3; }
-    if (!type) { type = g_type_from_name("GdkWindowImplWayland"); typeID = 4; }
-    if (!type) { type = g_type_from_name("GdkWindowImplBroadway"); typeID = 5; }
-    windowType = g_type_class_ref(type);
-
-#ifndef _WIN32
-    if (typeID != 1) printf("ERROR in getGdkWindowImplClass! expected window type X11 but found %i this is not supported yet!\n", typeID);
-#else
-    if (typeID != 2) printf("ERROR in getGdkWindowImplClass! expected window type Win32 but found %i this is not supported yet!\n", typeID);
-#endif
-
-    return windowType;
-}
+_GdkWindowImplClass* getGdkWindowImplClass();
 
 
 #endif // GLAREACOMMON_H_INCLUDED

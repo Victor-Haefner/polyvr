@@ -223,6 +223,8 @@
 			<Add option="-lpng" />
 			<Add option="-lz" />
 			<Add option="-lXt" />
+			<Add option="-lwayland-egl" />
+			<Add option="-lwayland-client" />
 			<Add option="-lbase" />
 			<Add option="-lsdai_ap214e3" />
 			<Add option="-lstepdai" />
@@ -629,8 +631,9 @@
 		</Unit>
 		<Unit filename="src/core/gui/glarea/glarea.h" />
 		<Unit filename="src/core/gui/glarea/glareaCommon.h" />
-		<Unit filename="src/core/gui/glarea/glareaLinux.h" />
+		<Unit filename="src/core/gui/glarea/glareaWayland.h" />
 		<Unit filename="src/core/gui/glarea/glareaWin.h" />
+		<Unit filename="src/core/gui/glarea/glareaX11.h" />
 		<Unit filename="src/core/gui/glarea/glgdk.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -1142,17 +1145,17 @@
 		<Unit filename="src/core/objects/geometry/VRSpatialCollisionManager.h" />
 		<Unit filename="src/core/objects/geometry/VRStroke.cpp" />
 		<Unit filename="src/core/objects/geometry/VRStroke.h" />
- 		<Unit filename="src/core/objects/geometry/brep/VRBRepBound.cpp" />
- 		<Unit filename="src/core/objects/geometry/brep/VRBRepBound.h" />
- 		<Unit filename="src/core/objects/geometry/brep/VRBRepEdge.cpp" />
- 		<Unit filename="src/core/objects/geometry/brep/VRBRepEdge.h" />
- 		<Unit filename="src/core/objects/geometry/brep/VRBRepFwd.h" />
- 		<Unit filename="src/core/objects/geometry/brep/VRBRepSurface.cpp" />
- 		<Unit filename="src/core/objects/geometry/brep/VRBRepSurface.h" />
- 		<Unit filename="src/core/objects/geometry/brep/VRBRepUtils.cpp" />
- 		<Unit filename="src/core/objects/geometry/brep/VRBRepUtils.h" />
- 		<Unit filename="src/core/objects/geometry/brep/VRPyBRep.cpp" />
- 		<Unit filename="src/core/objects/geometry/brep/VRPyBRep.h" />
+		<Unit filename="src/core/objects/geometry/brep/VRBRepBound.cpp" />
+		<Unit filename="src/core/objects/geometry/brep/VRBRepBound.h" />
+		<Unit filename="src/core/objects/geometry/brep/VRBRepEdge.cpp" />
+		<Unit filename="src/core/objects/geometry/brep/VRBRepEdge.h" />
+		<Unit filename="src/core/objects/geometry/brep/VRBRepFwd.h" />
+		<Unit filename="src/core/objects/geometry/brep/VRBRepSurface.cpp" />
+		<Unit filename="src/core/objects/geometry/brep/VRBRepSurface.h" />
+		<Unit filename="src/core/objects/geometry/brep/VRBRepUtils.cpp" />
+		<Unit filename="src/core/objects/geometry/brep/VRBRepUtils.h" />
+		<Unit filename="src/core/objects/geometry/brep/VRPyBRep.cpp" />
+		<Unit filename="src/core/objects/geometry/brep/VRPyBRep.h" />
 		<Unit filename="src/core/objects/geometry/sprite/VRSprite.cpp" />
 		<Unit filename="src/core/objects/geometry/sprite/VRSprite.h" />
 		<Unit filename="src/core/objects/geometry/sprite/VRSpriteResizeTool.cpp" />
@@ -1524,7 +1527,7 @@
 		<Unit filename="src/core/setup/windows/VRGtkWindow.h" />
 		<Unit filename="src/core/setup/windows/VRHeadMountedDisplay.cpp" />
 		<Unit filename="src/core/setup/windows/VRHeadMountedDisplay.h" />
- 		<Unit filename="src/core/setup/windows/VRMultiWindow.cpp" />
+		<Unit filename="src/core/setup/windows/VRMultiWindow.cpp" />
 		<Unit filename="src/core/setup/windows/VRMultiWindow.h" />
 		<Unit filename="src/core/setup/windows/VRView.cpp" />
 		<Unit filename="src/core/setup/windows/VRView.h" />
