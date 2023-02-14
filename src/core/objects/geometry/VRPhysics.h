@@ -51,6 +51,32 @@ class VRCollision {
         vector<Vec4d> getTriangle2();
 };
 
+class VRBtPhysics {
+    public:
+        bool ghost = false;
+        bool soft = false;
+
+        btRigidBody* body = 0;
+        btPairCachingGhostObject* ghost_body = 0;
+        /**soft body**/
+        btSoftBody* soft_body = 0;
+        btCollisionShape* shape = 0;
+        btCollisionShape* customShape = 0;
+        btDefaultMotionState* motionState = 0;
+        btSoftRigidDynamicsWorld* world = 0;
+
+        btVector3 inertia = btVector3(0,0,0);
+        btVector3 gravity = btVector3(0,-9.8,0);
+        btVector3 constantForce = btVector3(0,0,0);
+        btVector3 constantTorque = btVector3(0,0,0);
+
+    public:
+        btRigidBody* getRigidBody();
+        btPairCachingGhostObject* getGhostBody();
+        btCollisionObject* getCollisionObject();
+        btCollisionShape* getCollisionShape();
+};
+
 class VRPhysics : public VRStorage {
     public:
         struct btCollision {
@@ -63,24 +89,15 @@ class VRPhysics : public VRStorage {
         typedef std::shared_ptr<Callback> CallbackPtr;
 
     private:
-        btRigidBody* body = 0;
-        btPairCachingGhostObject* ghost_body = 0;
-        /**soft body**/
-        btSoftBody* soft_body = 0;
+        VRBtPhysics bt;
 
-        btCollisionShape* shape = 0;
-        btCollisionShape* customShape = 0;
         float shape_param = -1;
-        btDefaultMotionState* motionState = 0;
-        btSoftRigidDynamicsWorld* world = 0;
         int activation_mode = 0;
         int collisionGroup = 1;
         int collisionMask = 1;
         bool physicalized = false;
         bool dynamic = false;
         bool paused = false;
-        bool ghost = false;
-        bool soft = false;
         bool physTree = true;
         bool useCallbacks = false;
         float mass = 1.0;
@@ -88,7 +105,6 @@ class VRPhysics : public VRStorage {
         float collisionMargin = 0.04;
         float linDamping = 0;
         float angDamping = 0;
-        btVector3 gravity = btVector3(0,-10,0);
         CallbackPtr callback;
 
         // convex decomposition parameters
@@ -108,14 +124,10 @@ class VRPhysics : public VRStorage {
         map<VRPhysics*, VRPhysicsJoint*> joints ;
         map<VRPhysics*, VRPhysicsJoint*> joints2;
 
-        btVector3 constantForce = btVector3(0,0,0);
-        btVector3 constantTorque = btVector3(0,0,0);
-
         VRTransformWeakPtr vr_obj;
         VRGeometryPtr visShape;
         VRConstraintPtr constraint = 0;
         Vec3d scale = Vec3d(1,1,1);
-        btVector3 inertia = btVector3(0,0,0);
 
         vector<VRGeometryPtr> getGeometries();
 
@@ -139,12 +151,12 @@ class VRPhysics : public VRStorage {
         VRPhysics(VRTransformWeakPtr t);
         virtual ~VRPhysics();
 
-        void prepareStep();
-
         btRigidBody* getRigidBody();
         btPairCachingGhostObject* getGhostBody();
         btCollisionObject* getCollisionObject();
         btCollisionShape* getCollisionShape();
+
+        void prepareStep();
         Vec3d getCenterOfMass();
 
         void setShape(string s, float param = -1);
