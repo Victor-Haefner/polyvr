@@ -691,7 +691,7 @@ void VRSyncNode::handleAvatar(string data, VRSyncConnectionWeakPtr weakRemote) {
     }
 
 #ifndef WITHOUT_GTK
-    VRConsoleWidget::get("Collaboration")->write( name+": Handle new remote avatar\n", "green");
+    VRConsoleWidget::get("Collaboration")->write( name+": Handle new remote avatar from "+remote->getID()+"\n", "green");
 #endif
 
     UInt32 camTrans = getTransformID( avatarHeadTransform); // local camera
@@ -925,7 +925,7 @@ void VRSyncNode::handleSelfmapRequest(string msg, VRSyncConnectionWeakPtr weakRe
 
 string VRSyncNode::handleMessage(string msg, VRSyncConnectionWeakPtr weakRemote, size_t sID) {
 #ifndef WITHOUT_GTK
-    VRConsoleWidget::get("Collaboration")->write( name+": handleMessage from "+toString(sID)+", "+msg+"\n");
+    //VRConsoleWidget::get("Collaboration")->write( name+": handleMessage from "+toString(sID)+", "+msg+"\n");
 #endif
     VRUpdateCbPtr job = 0;
     if (startsWith(msg, "message|"));

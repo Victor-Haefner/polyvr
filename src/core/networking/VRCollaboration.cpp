@@ -93,7 +93,7 @@ void VRCollaboration::setAvatarGeometry(VRTransformPtr torso, VRTransformPtr lef
     avatarScale = scale;
 }
 
-void VRCollaboration::setupAvatar(string rID, string name) {
+void VRCollaboration::setupUserAvatar(string rID, string name) {
 	auto avatar = VRTransform::create("avatar");
 	VRObject::addChild(avatar);
 
@@ -136,9 +136,6 @@ void VRCollaboration::setupAvatar(string rID, string name) {
 	auto job = bind(&VRSyncNode::addRemoteAvatar, syncNode.get(), rID, avatar, rightHandContainer, anchor);
 	VRUpdateCbPtr cb = VRUpdateCb::create("syncNode-addRemoteAvatar", job);
 	VRScene::getCurrent()->queueJob(cb);
-
-	//VR->stackCall(VR->syncNode->addRemoteAvatar, 3, [rID, avatar, rightHandContainer, anchor]);
-	//syncNode->addRemoteAvatar(rID, avatar, rightHandContainer, anchor);
 }
 
 void VRCollaboration::connectTCP(string origin, bool isWindows) {
@@ -165,7 +162,7 @@ void VRCollaboration::connectTCP(string origin, bool isWindows) {
 
 	auto rID = syncNode->addTCPClient(client);
 	auto name = ice->getUserName(origin);
-	setupAvatar(rID, name);
+	setupUserAvatar(rID, name);
 
 	auto audioClient = ice->getClient(origin, VRICEClient::AUDIO);
 	mike->startStreamingOver(audioClient);
@@ -188,12 +185,11 @@ void VRCollaboration::onIceEvent(string m) {
 
 		if (startsWith(content, "CONREQ") ) {
             string name = ice->getUserName(origin);
-			sendUI("conReq", "configMessage|"+name);
+			sendUI("conReq", "configMessage|"+name+"|"+origin);
 			connectionInWidget->show();
-			connReqOrigin = origin;
-			connReqNet = parseSubNet(content);
+			connReqNet[origin] = parseSubNet(content);
 			auto data2 = splitString(content, 'I');
-			connReqSystem = data2[1];
+			connReqSystem[origin] = data2[1];
 		}
 
 		if (startsWith(content, "CONACC") ) {
@@ -310,9 +306,11 @@ bool VRCollaboration::handleUI(VRDeviceWeakPtr wdev) {
         }
 	}
 
-	if (m == "connectionAccept" ) {
-		bool isWindows = bool(connReqSystem == "win");
-        acceptConnection(isWindows);
+	if (startsWith(m, "connectionAccept") ) {
+        auto data = splitString(m, '|');
+        auto origin = data[1];
+		bool isWindows = bool(connReqSystem[origin] == "win");
+        acceptConnection(origin, isWindows);
         connectionInWidget->hide();
 	}
 
@@ -334,12 +332,12 @@ vector<string> VRCollaboration::parseSubNet(string net) {
     return data;
 }
 
-void VRCollaboration::acceptConnection(bool isWindows) {
+void VRCollaboration::acceptConnection(string origin, bool isWindows) {
 #ifndef WITHOUT_GTK
     VRConsoleWidget::get("Collaboration")->write( "Collab: accepting incomming connection, connect ice to origin!\n");
 #endif
     string net = getSubnet();
-    for (auto node : connReqNet) {
+    for (auto node : connReqNet[origin]) {
         sendUI("usersList", "setUserStats|"+node+"|#2c4");
         ice->connectTo(node, false);
 #ifdef _WIN32
@@ -476,6 +474,7 @@ string VRCollaboration::connectionInSite = WEBSITE(
 
 <body>
 	<script>\n
+        var reqOrigin = 'unknown';\n
 		var ws = new WebSocket('ws://localhost:$PORT_server1$');\n
 		ws.onopen = function() { send('register conReq'); };\n
  		ws.onmessage = function(m) { if(m.data) handle(m.data); };\n
@@ -484,7 +483,8 @@ string VRCollaboration::connectionInSite = WEBSITE(
  		function handle(m) {\n
  			if (m.startsWith('configMessage|')) {\n
  				var data = m.split('|');\n
-                var msg = 'Accept incomming connection from '+data[1]+'?';\n
+                reqOrigin = data[2];
+                var msg = 'Accept incomming connection from '+data[1]+' ('+reqOrigin+')?';\n
                 document.getElementById('userlistContainer').innerHTML = msg;\n
  			}\n
  		};\n\n
@@ -492,7 +492,7 @@ string VRCollaboration::connectionInSite = WEBSITE(
 
 	<div id='userlistContainer'>Accept incomming connection?</div>
 	<div id='toolbar'>
-		<button onclick='send("connectionAccept")'>Yes</button>
+		<button onclick='send("connectionAccept|"+reqOrigin)'>Yes</button>
 		<button onclick='send("connectionRefuse")'>No</button>
 	</div>
 </body>

@@ -451,7 +451,7 @@ vector<Node*> oldChildren;
 vector<Node*> newChildren;
 
 bool isInside(Node* n, vector<Node*>& v) {
-    for (int i=0; i<v.size(); i++) if (v[i] == n) return true;
+    for (size_t i=0; i<v.size(); i++) if (v[i] == n) return true;
     return false;
 }
 
@@ -771,7 +771,7 @@ void VRSyncChangelist::deserializeEntries(vector<unsigned char>& data, vector<Se
 
 void VRSyncChangelist::deserializeAndApply(VRSyncNodePtr syncNode, VRSyncConnectionWeakPtr weakRemote, size_t sID) {
     if (CLdata.size() == 0) return;
-    bool verbose = true; //(CLdata.size() > 2);
+    bool verbose = false;
     if (verbose) cout << endl << "> > >  " << syncNode->getName() << " VRSyncNode::deserializeAndApply(), received data size: " << CLdata.size() << endl;
     VRSyncNodeFieldContainerMapper mapper(syncNode.get(), weakRemote);
     FieldContainerFactoryBase* factory = FieldContainerFactory::the();
@@ -1023,7 +1023,7 @@ string VRSyncChangefilter::serialize(VRSyncNodePtr syncNode, ChangeList* clist) 
 #endif
     }
 
-    bool verbose = true;
+    bool verbose = false;
     if (verbose) cout << "> > >  " << syncNode->getName() << " VRSyncNode::serialize()" << endl; //Debugging
 
     vector<unsigned char> data;
@@ -1072,7 +1072,7 @@ void VRSyncChangefilter::broadcastSceneState(VRSyncNodePtr syncNode) {
 void VRSyncChangefilter::sendSceneState(VRSyncNodePtr syncNode, VRSyncConnectionWeakPtr weakRemote) {
     auto remote = weakRemote.lock();
     if (!remote) {
-        VRConsoleWidget::get("Collaboration")->write( " Send scene state to"+remote->getID()+" failed! remote unknown!\n", "red");
+        VRConsoleWidget::get("Collaboration")->write( " Send scene state to remote failed! remote unknown!\n", "red");
         return;
     }
 
