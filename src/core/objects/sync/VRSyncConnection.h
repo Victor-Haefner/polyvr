@@ -20,15 +20,23 @@ ptrFwd(VRSyncConnection);
 class VRSyncConnection {
     public:
         struct Avatar {
+            string name;
             VRTransformPtr head;
             VRTransformPtr dev;
             VRTransformPtr anchor;
             UInt32 localHeadID = 0;
             UInt32 localDevID = 0;
             UInt32 localAnchorID = 0;
+            UInt32 remoteHeadID = 0;
+            UInt32 remoteDevID = 0;
+            UInt32 remoteAnchorID = 0;
+            UInt32 tHeadID = 0;
+            UInt32 tDevID = 0;
+            UInt32 tAnchorID = 0;
         };
 
         VRSyncChangelistPtr changelist; // TODO: make it private and refactor accordingly in syncnode module
+        vector<string> initMsgQueue;
 
     private:
 
@@ -71,7 +79,7 @@ class VRSyncConnection {
 
         Avatar& getAvatar();
         void setupDevices(UInt32 headTransform, UInt32 devTransform, UInt32 devAnchor);
-        string setupAvatar(VRTransformPtr headTransform, VRTransformPtr devTransform, VRTransformPtr devAnchor);
+        string setupAvatar(string name, VRTransformPtr headTransform, VRTransformPtr devTransform, VRTransformPtr devAnchor);
         void handleAvatar(string data);
         void updateAvatar(string data);
         UInt32 getNodeID(VRObjectPtr t);

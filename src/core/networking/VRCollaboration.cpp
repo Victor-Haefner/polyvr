@@ -81,6 +81,21 @@ void VRCollaboration::setupLocalServer() {
     setServer("http://localhost:5500/ressources/PolyServ");
 }
 
+void VRCollaboration::debugAvatars() {
+    cout << endl << " --- debugAvatars --- " << endl;
+    auto remotes = syncNode->getRemotes();
+    cout << " " << remotes.size() << " remotes" << endl;
+    for (auto rID : remotes) {
+        auto remote = syncNode->getRemote(rID);
+        auto& avatar = remote->getAvatar();
+        cout << "  remote " << rID << ", avatar: " << avatar.name << endl;
+        cout << "  avatar local dev IDs: " << avatar.localHeadID << ", " << avatar.localDevID << ", " << avatar.localAnchorID << endl;
+        cout << "  avatar local trans IDs: " << avatar.tHeadID << ", " << avatar.tDevID << ", " << avatar.tAnchorID << endl;
+        cout << "  avatar remote IDs: " << avatar.remoteHeadID << ", " << avatar.remoteDevID << ", " << avatar.remoteAnchorID << endl;
+    }
+    cout << endl;
+}
+
 void VRCollaboration::setAvatarDevices(VRTransformPtr head, VRTransformPtr hand, VRTransformPtr handGrab) {
     if (!handGrab) handGrab = hand;
 	syncNode->setAvatarBeacons(head, hand, handGrab);
@@ -133,7 +148,7 @@ void VRCollaboration::setupUserAvatar(string rID, string name) {
 	label->set(0, Vec3d(0,9,0)*avatarScale, name);
 	avatar->addChild(label);
 
-	auto job = bind(&VRSyncNode::addRemoteAvatar, syncNode.get(), rID, avatar, rightHandContainer, anchor);
+	auto job = bind(&VRSyncNode::addRemoteAvatar, syncNode.get(), rID, name, avatar, rightHandContainer, anchor);
 	VRUpdateCbPtr cb = VRUpdateCb::create("syncNode-addRemoteAvatar", job);
 	VRScene::getCurrent()->queueJob(cb);
 }

@@ -65,6 +65,8 @@ class VRCollaboration : public VRObject {
 		void setupLocalServer();
 		void setAvatarDevices(VRTransformPtr head, VRTransformPtr hand, VRTransformPtr handGrab = 0);
 		void setAvatarGeometry(VRTransformPtr torso, VRTransformPtr leftHand = 0, VRTransformPtr rightHand = 0, float scale = 1.0);
+
+		void debugAvatars(); // temporary for debugging purposes
 };
 
 OSG_END_NAMESPACE;

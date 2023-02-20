@@ -310,8 +310,7 @@ OSGChangeList* VRSyncChangefilter::filterChangeList(VRSyncNodePtr syncNode, Chan
     //if (childEvent) printChangeList(localChanges);
     if (localChanges) {
         if (localChanges->getNumCreated() == 0 && localChanges->getNumChanged() == 0) return 0;
-        if (localChanges->getNumCreated() > 0 || localChanges->getNumChanged() > 2)
-            cout <<  "  local changelist, created: " << localChanges->getNumCreated() << ", changes: " << localChanges->getNumChanged() << endl;
+        //if (localChanges->getNumCreated() > 0 || localChanges->getNumChanged() > 2) cout <<  "  local changelist, created: " << localChanges->getNumCreated() << ", changes: " << localChanges->getNumChanged() << endl;
     }
 
     return localChanges;

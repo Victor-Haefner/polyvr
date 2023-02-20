@@ -26,7 +26,6 @@ class VRSyncNode : public VRTransform {
         vector<UInt32> createdNodes; //IDs of the currently created nodes/children
 
         bool peerConnectionOk = false;
-        vector<string> initMsgQueue;
         function<void(string)> onEventCb;
 
         size_t selfNodeID = 0;
@@ -140,7 +139,7 @@ class VRSyncNode : public VRTransform {
         void addExternalContainer(UInt32 id, UInt32 mask);
         vector<UInt32> registerNode(Node* c); //returns all registered IDs
         void setAvatarBeacons(VRTransformPtr headTransform, VRTransformPtr devTransform, VRTransformPtr devAnchor);
-        void addRemoteAvatar(string remoteID, VRTransformPtr headTransform, VRTransformPtr devTransform, VRTransformPtr devAnchor);
+        void addRemoteAvatar(string remoteID, string name, VRTransformPtr headTransform, VRTransformPtr devTransform, VRTransformPtr devAnchor);
 
         map<FieldContainer*, vector<FieldContainer*>> getAllSubContainers(FieldContainer* node);
         map<UInt32, VRObjectWeakPtr> getMappedFCs();

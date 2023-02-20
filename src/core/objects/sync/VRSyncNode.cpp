@@ -148,13 +148,13 @@ void VRSyncNode::accTCPConnection(string msg, VRSyncConnectionWeakPtr weakRemote
         remote->send("reqInitState|");
     }
 
-    for (auto& msg : initMsgQueue) {
+    for (auto& msg : remote->initMsgQueue) {
 #ifndef WITHOUT_GTK
         VRConsoleWidget::get("Collaboration")->write( "  send queued init message: "+msg+"\n");
 #endif
         remote->send(msg);
     }
-    initMsgQueue.clear();
+    remote->initMsgQueue.clear();
 }
 
 void VRSyncNode::reqInitState(VRSyncConnectionWeakPtr weakRemote) {
@@ -649,7 +649,7 @@ void VRSyncNode::setAvatarBeacons(VRTransformPtr headTransform, VRTransformPtr d
     //VRConsoleWidget::get("Collaboration")->write( name+": Add avatar input, head "+head->getName()+" ("+toString(getTransformID(head))+"), hand "+device->getName()+" ("+toString(getTransformID(device))+")\n", "green");
 }
 
-void VRSyncNode::addRemoteAvatar(string remoteID, VRTransformPtr headTransform, VRTransformPtr devTransform, VRTransformPtr devAnchor) { // some geometries
+void VRSyncNode::addRemoteAvatar(string remoteID, string name, VRTransformPtr headTransform, VRTransformPtr devTransform, VRTransformPtr devAnchor) { // some geometries
     if (remoteUUIDs.count(remoteID)) remoteID = remoteUUIDs[remoteID];
     auto remote = getRemote(remoteID);
     if (!remote) {
@@ -659,7 +659,7 @@ void VRSyncNode::addRemoteAvatar(string remoteID, VRTransformPtr headTransform, 
         return;
     }
 
-    string msg = remote->setupAvatar(headTransform, devTransform, devAnchor);
+    string msg = remote->setupAvatar(name, headTransform, devTransform, devAnchor);
 
 
 
@@ -668,7 +668,7 @@ void VRSyncNode::addRemoteAvatar(string remoteID, VRTransformPtr headTransform, 
 #endif
 
     if (peerConnectionOk) remote->send(msg);
-    else initMsgQueue.push_back(msg);
+    else remote->initMsgQueue.push_back(msg);
 
 #ifndef WITHOUT_GTK
     VRConsoleWidget::get("Collaboration")->write( name+": Add avatar representation, head "+headTransform->getName()+", hand "+devTransform->getName()+"\n", "green");
