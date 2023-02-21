@@ -326,10 +326,13 @@ GtkWidget* addCheckbutton(string ID, string label) {
     return n;
 }
 
-pair<GtkWidget*,GtkWidget*> addTreeview(string ID, string mID, GtkTreeModel* m, bool hscroll = false, bool vscroll = true) {
+pair<GtkWidget*,GtkWidget*> addTreeview(string ID, string mID, GtkTreeModel* m, bool hscroll = false, bool vscroll = true, bool sortable = false) {
+    GtkTreeModel* ms = 0;
+    if (sortable) ms = gtk_tree_model_sort_new_with_model( GTK_TREE_MODEL(m) );
+
     auto f = gtk_frame_new(NULL);
     auto w = gtk_scrolled_window_new(0,0);
-    auto n = gtk_tree_view_new_with_model(m);
+    auto n = gtk_tree_view_new_with_model(ms?ms:m);
     VRGuiBuilder::get()->reg_widget(n, ID);
     VRGuiBuilder::get()->reg_object(G_OBJECT(m), mID);
     gtk_container_add(GTK_CONTAINER(f), w);
@@ -425,10 +428,11 @@ GtkTreeViewColumn* addTreecolumn(string ID, string title) {
     return c;
 }
 
-void addTreeviewTextcolumn(GtkWidget* treeview, string cName, string rID, int pos, bool editable = false) {
+void addTreeviewTextcolumn(GtkWidget* treeview, string cName, string rID, int pos, bool editable = false, bool sortable = false) {
     auto c = addTreecolumn(cName+"ID", cName);
     auto r = addCellrenderer(rID, c, editable);
     gtk_tree_view_column_add_attribute(c, r, "text", pos);
+    if (sortable) gtk_tree_view_column_set_sort_column_id(c, pos);
     gtk_tree_view_append_column(GTK_TREE_VIEW(treeview), c);
 }
 
@@ -824,7 +828,7 @@ void VRGuiBuilder::buildBaseUI() {
     auto Nchanges = addLabel("Nchanges", "0");
     auto Ncreated = addLabel("Ncreated", "0");
     auto prof_fkts = gtk_list_store_new(4, G_TYPE_STRING, G_TYPE_UINT, G_TYPE_UINT, G_TYPE_STRING);
-    auto treeview15_and_frame = addTreeview("treeview15", "prof_fkts", GTK_TREE_MODEL(prof_fkts));
+    auto treeview15_and_frame = addTreeview("treeview15", "prof_fkts", GTK_TREE_MODEL(prof_fkts), false, true, true);
     gtk_grid_attach(GTK_GRID(table31), table47, 0,0,1,1);
     gtk_grid_attach(GTK_GRID(table31), scrolledwindow1, 1,0,1,2);
     gtk_grid_attach(GTK_GRID(table31), treeview15_and_frame.second, 0,1,1,1);
@@ -844,9 +848,9 @@ void VRGuiBuilder::buildBaseUI() {
 
     auto treeview15 = treeview15_and_frame.first;
     gtk_widget_set_vexpand(treeview15, true);
-    addTreeviewTextcolumn(treeview15, "function", "cellrenderertext30", 0);
-    addTreeviewTextcolumn(treeview15, "time (μs)", "cellrenderertext48", 1);
-    addTreeviewTextcolumn(treeview15, "cpu (%)", "cellrenderertext_cpu", 2);
+    addTreeviewTextcolumn(treeview15, "function", "cellrenderertext30", 0, false, true);
+    addTreeviewTextcolumn(treeview15, "time (μs)", "cellrenderertext48", 1, false, true);
+    addTreeviewTextcolumn(treeview15, "cpu (%)", "cellrenderertext_cpu", 2, false, true);
 
     cout << " build VR Setup" << endl;
     /* ---------- VR Setup ---------------------- */
