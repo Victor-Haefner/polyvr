@@ -35,7 +35,6 @@
 #include <OpenSG/OSGNameAttachment.h>
 
 #include <OpenSG/OSGChangeList.h>
-#include <OpenSG/OSGThreadManager.h>
 
 // needed to filter GLId field masks
 #include <OpenSG/OSGSurface.h>
@@ -72,8 +71,6 @@ void printGeoGLIDs(Geometry* geo) {
         ) << endl;
 }
 
-ThreadRefPtr applicationThread;
-
 VRSyncNode::VRSyncNode(string name) : VRTransform(name) {
     enableOptimization(false);
     type = "SyncNode";
@@ -86,7 +83,6 @@ VRSyncNode::VRSyncNode(string name) : VRTransform(name) {
     selfCoreID = getNode()->node->getCore()->getId();
 
     changefilter = VRSyncChangefilter::create();
-    applicationThread = dynamic_cast<Thread *>(ThreadManager::getAppThread());
 	updateFkt = VRUpdateCb::create("SyncNode update", bind(&VRSyncNode::update, this));
 	VRScene::getCurrent()->addUpdateFkt(updateFkt, 100000);
 }
