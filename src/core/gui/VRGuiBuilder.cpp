@@ -827,7 +827,7 @@ void VRGuiBuilder::buildBaseUI() {
     auto Tframe = addLabel("Tframe", "0 ms");
     auto Nchanges = addLabel("Nchanges", "0");
     auto Ncreated = addLabel("Ncreated", "0");
-    auto prof_fkts = gtk_list_store_new(4, G_TYPE_STRING, G_TYPE_UINT, G_TYPE_UINT, G_TYPE_STRING);
+    auto prof_fkts = gtk_list_store_new(5, G_TYPE_STRING, G_TYPE_UINT, G_TYPE_UINT, G_TYPE_UINT, G_TYPE_STRING);
     auto treeview15_and_frame = addTreeview("treeview15", "prof_fkts", GTK_TREE_MODEL(prof_fkts), false, true, true);
     gtk_grid_attach(GTK_GRID(table31), table47, 0,0,1,1);
     gtk_grid_attach(GTK_GRID(table31), scrolledwindow1, 1,0,1,2);
@@ -850,7 +850,8 @@ void VRGuiBuilder::buildBaseUI() {
     gtk_widget_set_vexpand(treeview15, true);
     addTreeviewTextcolumn(treeview15, "function", "cellrenderertext30", 0, false, true);
     addTreeviewTextcolumn(treeview15, "time (μs)", "cellrenderertext48", 1, false, true);
-    addTreeviewTextcolumn(treeview15, "cpu (%)", "cellrenderertext_cpu", 2, false, true);
+    addTreeviewTextcolumn(treeview15, "cpu (%/call)", "cellrenderertext_cpu1", 2, false, true);
+    addTreeviewTextcolumn(treeview15, "cpu (%/frame)", "cellrenderertext_cpu2", 3, false, true);
 
     cout << " build VR Setup" << endl;
     /* ---------- VR Setup ---------------------- */

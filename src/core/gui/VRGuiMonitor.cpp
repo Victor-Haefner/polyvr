@@ -222,6 +222,8 @@ void VRGuiMonitor::selectFrame() {
         if (call.cpu1 != 0) fkts[call.name].C += call.cpu1 - call.cpu0;
     }
 
+    uint fT = frame.t1 - frame.t0;
+
     // update list
     GtkListStore* store = (GtkListStore*)VRGuiBuilder::get()->get_object("prof_fkts");
     gtk_list_store_clear(store);
@@ -231,15 +233,17 @@ void VRGuiMonitor::selectFrame() {
         gtk_list_store_append(store, &iter);
 
         uint T = c.second.T;
-        uint CPU = c.second.C / c.second.T * 100;
+        uint CPU1 = c.second.C / c.second.T * 100;
+        uint CPU2 = c.second.C / fT * 100;
         gtk_list_store_set(store, &iter, 0, c.first.c_str(), -1);
         gtk_list_store_set(store, &iter, 1, T, -1);
-        gtk_list_store_set(store, &iter, 2, CPU, -1);
-        gtk_list_store_set(store, &iter, 3, col.c_str(), -1);
+        gtk_list_store_set(store, &iter, 2, CPU1, -1);
+        gtk_list_store_set(store, &iter, 3, CPU2, -1);
+        gtk_list_store_set(store, &iter, 4, col.c_str(), -1);
     }
 
     setLabel("Nframe", toString(frame.fID));
-    setLabel("Tframe", toString((frame.t1 - frame.t0)/1000.0)+"ms");
+    setLabel("Tframe", toString(fT/1000.0)+"ms");
     setLabel("Nchanges", toString(frame.Nchanged));
     setLabel("Ncreated", toString(frame.Ncreated));
 
