@@ -201,17 +201,38 @@ bool compileCodeblocksProject(string path) {
     return true;
 }
 
+long long cpu_time() {
+    thread_local bool initialized(false);
+    thread_local clockid_t clock_id;
+    thread_local timespec t0;
+
+    if (!initialized) {
+        pthread_getcpuclockid(pthread_self(), &clock_id);
+        initialized = true;
+        clock_gettime(clock_id, &t0);
+    }
+
+    timespec result;
+    clock_gettime(clock_id, &result);
+    return (result.tv_nsec - t0.tv_nsec) / 1000;
+}
+
 typedef chrono::time_point<chrono::high_resolution_clock, chrono::nanoseconds> timePoint;
+typedef long long cpuTimePoint;
 timePoint globalStartTime;
 
 void initTime() {
-    timePoint tp = chrono::high_resolution_clock::now();
-    globalStartTime = tp;
+    globalStartTime = chrono::high_resolution_clock::now();
 }
 
 long long getTime() {
     auto elapsed = chrono::high_resolution_clock::now() - globalStartTime;
     return chrono::duration_cast<chrono::microseconds>(elapsed).count();
+}
+
+long long getCPUTime() { // microsecs
+    auto elapsed = cpu_time();
+    return elapsed;
 }
 
 template <typename T>

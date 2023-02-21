@@ -207,13 +207,19 @@ void VRGuiMonitor::selectFrame() {
     //f = VRGlobals::CURRENT_FRAME -f -1;
     frame = VRProfiler::get()->getFrame(f);
 
-    map<string, float> fkts;
+    struct fktTime {
+        float T = 0;
+        float C = 0;
+    };
+
+    map<string, fktTime> fkts;
     for (auto itr : frame.calls) {
         auto call = itr.second;
-        if (fkts.count(call.name) == 0) fkts[call.name] = 0;
+        //if (fkts.count(call.name) == 0) fkts[call.name] = 0;
         if (call.t0 == 0) call.t0 = call.t1;
         if (call.t1 == 0) call.t1 = call.t0;
-        fkts[call.name] += call.t1 - call.t0;
+        fkts[call.name].T += call.t1 - call.t0;
+        if (call.cpu1 != 0) fkts[call.name].C += call.cpu1 - call.cpu0;
     }
 
     // update list
@@ -224,10 +230,12 @@ void VRGuiMonitor::selectFrame() {
         GtkTreeIter iter;
         gtk_list_store_append(store, &iter);
 
-        uint T = c.second;
+        uint T = c.second.T;
+        uint CPU = c.second.C / c.second.T * 100;
         gtk_list_store_set(store, &iter, 0, c.first.c_str(), -1);
         gtk_list_store_set(store, &iter, 1, T, -1);
-        gtk_list_store_set(store, &iter, 2, col.c_str(), -1);
+        gtk_list_store_set(store, &iter, 2, CPU, -1);
+        gtk_list_store_set(store, &iter, 3, col.c_str(), -1);
     }
 
     setLabel("Nframe", toString(frame.fID));

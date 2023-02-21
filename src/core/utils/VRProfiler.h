@@ -15,12 +15,16 @@ class VRProfiler {
             string name;
             int t0 = 0;
             int t1 = 0;
+            int cpu0 = 0;
+            int cpu1 = 0;
             int thread = 0;
         };
 
         struct Frame {
             int t0 = 0;
             int t1 = 0;
+            int cpu0 = 0;
+            int cpu1 = 0;
             bool running = true;
             map<int, Call> calls;
             unsigned long int fID = 0;
