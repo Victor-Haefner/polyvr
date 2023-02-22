@@ -56,11 +56,11 @@ void VRICEClient::setName(string n, bool async) {
     name = n;
 
     if (!async) {
-        string data = broker->get(turnURL+"/regUser.php?NAME="+n)->getData();
+        string data = broker->get(turnURL+"/regUser.php?NAME="+n, 10)->getData();
         processNameset(data);
     } else {
         auto cb = VRRestCb::create("iceNameset", bind(&VRICEClient::processRespNameset, this, placeholders::_1) );
-        broker->getAsync(turnURL+"/regUser.php?NAME="+n, cb);
+        broker->getAsync(turnURL+"/regUser.php?NAME="+n, cb, 10);
     }
 }
 
@@ -72,7 +72,7 @@ void VRICEClient::removeLocalUser(string uid) {
 }
 
 void VRICEClient::removeUser(string uid) {
-    broker->getAsync(turnURL+"/remUser.php?UID="+uid, 0);
+    broker->getAsync(turnURL+"/remUser.php?UID="+uid, 0, 10);
 }
 
 string VRICEClient::getID() { return uID; }
@@ -119,7 +119,7 @@ map<string, string> VRICEClient::getUsers() { return users; }
 
 void VRICEClient::send(string otherID, string msg) {
     msg = VRRestResponse::uriEncode(msg);
-    broker->getAsync(turnURL+"/addMessage.php?ORG="+uID+"&UID="+otherID+"&MSG="+msg, 0);
+    broker->getAsync(turnURL+"/addMessage.php?ORG="+uID+"&UID="+otherID+"&MSG="+msg, 0, 10);
 #ifndef WITHOUT_GTK
     VRConsoleWidget::get("Collaboration")->write( " ICE "+name+" send to "+otherID+": '"+msg+"'\n");
 #endif
@@ -157,21 +157,21 @@ void VRICEClient::pollMessages(bool async) {
     }
 
     if (!async) {
-        string data = broker->get(turnURL+"/getMessages.php?UID="+uID)->getData();
+        string data = broker->get(turnURL+"/getMessages.php?UID="+uID, 10)->getData();
         processMessages(data);
     } else {
         auto cb = VRRestCb::create("icePollMsgs", bind(&VRICEClient::processRespMessages, this, placeholders::_1) );
-        broker->getAsync(turnURL+"/getMessages.php?UID="+uID, cb);
+        broker->getAsync(turnURL+"/getMessages.php?UID="+uID, cb, 10);
     }
 }
 
 void VRICEClient::pollUsers(bool async) {
     if (!async) {
-        string data = broker->get(turnURL+"/listUsers.php")->getData();
+        string data = broker->get(turnURL+"/listUsers.php", 10)->getData();
         processUsers(data);
     } else {
         auto cb = VRRestCb::create("icePollUsers", bind(&VRICEClient::processRespUsers, this, placeholders::_1) );
-        broker->getAsync(turnURL+"/listUsers.php", cb);
+        broker->getAsync(turnURL+"/listUsers.php", cb, 10);
     }
 }
 
@@ -284,11 +284,11 @@ void VRICEClient::connectTo(string otherID, bool async) {
     }
 
     if (!async) {
-        string data = broker->get(turnURL+"/getConnection.php?UID="+uid1+"&UID2="+uid2)->getData();
+        string data = broker->get(turnURL+"/getConnection.php?UID="+uid1+"&UID2="+uid2, 10)->getData();
         processConnect(data, uid2);
     } else {
         auto cb = VRRestCb::create("iceConnect", bind(&VRICEClient::processRespConnect, this, placeholders::_1, uid2) );
-        broker->getAsync(turnURL+"/getConnection.php?UID="+uid1+"&UID2="+uid2, cb);
+        broker->getAsync(turnURL+"/getConnection.php?UID="+uid1+"&UID2="+uid2, cb, 10);
     }
 }
 

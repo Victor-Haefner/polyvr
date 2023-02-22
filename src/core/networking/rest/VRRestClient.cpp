@@ -88,7 +88,7 @@ VRRestResponsePtr VRRestClient::get(string uri, int timeoutSecs) {
     curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, timeoutSecs);
     curl_easy_setopt(curl, CURLOPT_URL, uri.c_str());
     CURLcode c = curl_easy_perform(curl);
-    if (c != CURLE_OK) fprintf(stderr, "curl_easy_perform() failed: %s, request was: %s\n", curl_easy_strerror(c), uri.c_str());
+    if (c != CURLE_OK) fprintf(stderr, "VRRestClient::get, curl_easy_perform() failed: %s, request was: %s\n", curl_easy_strerror(c), uri.c_str());
     curl_easy_cleanup(curl);
 #endif
 
@@ -108,7 +108,7 @@ void VRRestClient::post(string uri, const string& data, int timeoutSecs) {
     curl_easy_setopt(curl, CURLOPT_URL, uri.c_str());
 
     CURLcode c = curl_easy_perform(curl);
-    if (c != CURLE_OK) fprintf(stderr, "curl_easy_perform() failed: %s, request was: %s\n", curl_easy_strerror(c), uri.c_str());
+    if (c != CURLE_OK) fprintf(stderr, "VRRestClient::post, curl_easy_perform() failed: %s, request was: %s\n", curl_easy_strerror(c), uri.c_str());
     curl_easy_cleanup(curl);
 #endif
 }
@@ -117,7 +117,7 @@ void VRRestClient::connectPort(string uri, int port, int timeoutSecs) {
     connect(uri+":"+toString(port), timeoutSecs);
 }
 
-void VRRestClient::connect(string uri, int timeoutSecs) {
+void VRRestClient::connect(string uri, int timeoutSecs) { // TODO: used? deprecated?
 #ifndef __EMSCRIPTEN__
     cout << "VRRestClient::connect " << uri << endl;
     curl = curl_easy_init();
