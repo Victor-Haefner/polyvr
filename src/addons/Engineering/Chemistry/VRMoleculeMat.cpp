@@ -44,8 +44,8 @@ void VRMoleculeMat::apply(VRGeometryPtr atoms, VRGeometryPtr bonds) {
 string VRMoleculeMat::a_fp =
 "#version 120\n"
 GLSL(
-in vec2 texCoord;
-in vec4 Color;
+varying vec2 texCoord;
+varying vec4 Color;
 
 void main( void ) {
 	vec2 p = 2* ( vec2(0.5, 0.5) - texCoord );
@@ -61,31 +61,37 @@ void main( void ) {
 string VRMoleculeMat::a_vp =
 "#version 120\n"
 GLSL(
+varying vec4 vertex;
 varying vec4 color;
 varying vec3 normal;
+varying mat4 MVP;
 
 attribute vec4 osg_Vertex;
 attribute vec4 osg_Normal;
 attribute vec4 osg_Color;
 
 void main( void ) {
+    vertex = osg_Vertex;
     color = osg_Color;
     normal = osg_Normal.xyz;
     gl_Position = gl_ModelViewProjectionMatrix*osg_Vertex;
+    MVP = gl_ModelViewProjectionMatrix;
 }
 );
 
 string VRMoleculeMat::a_gp =
 "#version 150\n"
-"#extension GL_EXT_geometry_shader4 : enable\n"
+//"#extension GL_EXT_geometry_shader4 : enable\n"
 GLSL(
 layout (points) in;
 layout (triangle_strip, max_vertices=6) out;
 
 uniform vec2 OSGViewportSize;
 
+in vec4 vertex[];
 in vec4 color[];
 in vec3 normal[];
+in mat4 MVP[];
 out vec2 texCoord;
 out vec4 Color;
 
@@ -96,7 +102,7 @@ void emitVertex(in vec4 p, in vec2 tc) {
 }
 
 void emitQuad(in float s, in vec4 tc) {
-	vec4 p = gl_PositionIn[0];
+	vec4 p = MVP[0]*vertex[0];
 
 	float a = OSGViewportSize.y/OSGViewportSize.x;
 
@@ -127,8 +133,8 @@ void main() {
 string VRMoleculeMat::b_fp =
 "#version 120\n"
 GLSL(
-in vec2 texCoord;
-in vec4 Color;
+varying vec2 texCoord;
+varying vec4 Color;
 
 void main( void ) {
 	float r = texCoord.y;
@@ -144,28 +150,34 @@ void main( void ) {
 string VRMoleculeMat::b_vp =
 "#version 120\n"
 GLSL(
+varying vec4 vertex;
 varying vec3 normal;
+varying mat4 MVP;
 
 attribute vec4 osg_Vertex;
 attribute vec4 osg_Normal;
 attribute vec4 osg_Color;
 
 void main( void ) {
+    vertex = osg_Vertex;
     normal = osg_Normal.xyz;
     gl_Position = gl_ModelViewProjectionMatrix*osg_Vertex;
+    MVP = gl_ModelViewProjectionMatrix;
 }
 );
 
 string VRMoleculeMat::b_gp =
 "#version 150\n"
-"#extension GL_EXT_geometry_shader4 : enable\n"
+//"#extension GL_EXT_geometry_shader4 : enable\n"
 GLSL(
 layout (lines) in;
 layout (triangle_strip, max_vertices=6) out;
 
 uniform vec2 OSGViewportSize;
 
+in vec4 vertex[];
 in vec3 normal[];
+in mat4 MVP[];
 out vec2 texCoord;
 out vec4 Color;
 
@@ -176,8 +188,8 @@ void emitVertex(in vec4 p, in vec2 tc) {
 }
 
 void emitQuad(in float s, in float f, in vec4 tc) {
-	vec4 pl1 = gl_PositionIn[0];
-	vec4 pl2 = gl_PositionIn[1];
+	vec4 pl1 = MVP[0]*vertex[0];
+	vec4 pl2 = MVP[0]*vertex[1];
 
 	vec3 n2 = normal[1];
 
