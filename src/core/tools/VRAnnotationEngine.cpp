@@ -266,18 +266,28 @@ void VRAnnotationEngine::setLine(int i, Vec3d p, string str, bool ascii) {
 
 #ifndef OSG_OGL_ES2
     if (hasGS) {
-        int N = ceil(l.Ngraphemes/3.0); // number of points, 3 chars per point
+        int N = ceil(l.Ngraphemes/2.0); // 3.0); // number of points, 2(3) chars per point
         resize(l,p,N + 4); // plus 4 bounding points
 
         for (int j=0; j<N; j++) {
             char c[] = {0,0,0};
-            for (int k = 0; k<3; k++) {
+
+            /*for (int k = 0; k<3; k++) { // 3 chars per vertex
                 if (j*3+k < (int)graphemes.size()) {
                     string grapheme = graphemes[j*3+k];
                     c[k] = characterIDs[grapheme];
                 }
             }
-            float f = c[0] + c[1]*256 + c[2]*256*256;
+            float f = c[0] + c[1]*256 + c[2]*256*256;*/
+
+            for (int k = 0; k<2; k++) { // 2 chars per vertex (some drivers have trouble with more..)
+                if (j*2+k < (int)graphemes.size()) {
+                    string grapheme = graphemes[j*2+k];
+                    c[k] = characterIDs[grapheme];
+                }
+            }
+            float f = c[0] + c[1]*256;
+
             int k = l.entries[j];
             data->setVert(k, p, Vec3d(f,0,j));
         }
@@ -538,13 +548,15 @@ void emitString(in float str, in float offset) {
     int stri = int(str);
     int c0 = stri;
     int c1 = c0/256;
-    int c2 = c1/256;
+    //int c2 = c1/256;
     c0 = c0%256;
     c1 = c1%256;
-    c2 = c2%256;
-    if (c0 > 0) emitChar(c0, 3*offset);
+    //c2 = c2%256;
+    if (c0 > 0) emitChar(c0, 2*offset);
+    if (c1 > 0) emitChar(c1, 2*offset + 1);
+    /*if (c0 > 0) emitChar(c0, 3*offset);
     if (c1 > 0) emitChar(c1, 3*offset + 1);
-    if (c2 > 0) emitChar(c2, 3*offset + 2);
+    if (c2 > 0) emitChar(c2, 3*offset + 2);*/
 }
 
 void main() {
