@@ -236,7 +236,7 @@ long long getCPUTime() { // microsecs
 }
 
 template <typename T>
-using duration = std::chrono::duration<T, std::milli>;
+using duration = std::chrono::duration<T, std::micro>;
 
 void doFrameSleep(double tFrame, double fps) {
     double fT = 1000.0 / fps;             // target frame duration in ms
@@ -244,22 +244,22 @@ void doFrameSleep(double tFrame, double fps) {
     if (sT <= 0) return;
 
     // efficient sleep
-    double precisionBuffer = 1.5;
+    double precisionBuffer = 0;//1.5;
     if (sT-precisionBuffer > 0) {
         VRTimer timer;
         timer.start();
-        duration<double> T(sT-precisionBuffer);
+        duration<double> T((sT-precisionBuffer)*1000);
         std::this_thread::sleep_for(T);
         sT = max(fT - tFrame - timer.stop(), 0.0); // remaining time to sleep
         if (sT <= 0) return;
     }
 
     // precision sleep
-    static constexpr duration<double> MinSleepDuration(0);
+    /*static constexpr duration<double> MinSleepDuration(0);
     std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
     while (duration<double>(std::chrono::high_resolution_clock::now() - start).count() < sT) {
         std::this_thread::sleep_for(MinSleepDuration);
-    }
+    }*/
 }
 
 void fileReplaceStrings(string filePath, string oldString, string newString) {
