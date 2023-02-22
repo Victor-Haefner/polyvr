@@ -36,7 +36,6 @@ class VRRestClient : public VRNetworkClient {
 		void connect(string uri, int timeoutSecs = 2);
 		void connectPort(string uri, int port, int timeoutSecs = 2);
 		bool connected();
-		void post(const string& data);
 
 		void test();
 };

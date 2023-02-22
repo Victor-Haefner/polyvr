@@ -135,18 +135,6 @@ void VRRestClient::connect(string uri, int timeoutSecs) {
 
 bool VRRestClient::connected() { return isConnected; }
 
-void VRRestClient::post(const string& data) {
-#ifndef __EMSCRIPTEN__
-    cout << "VRRestClient::post " << data.size() << endl;
-    curl_easy_setopt(curl, CURLOPT_NOBODY, 0);
-    curl_easy_setopt(curl, CURLOPT_POSTFIELDS, data.c_str());
-    curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, data.size());
-    CURLcode c = curl_easy_perform(curl);
-    if (c != CURLE_OK) fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(c));
-    else fprintf(stderr, "curl_easy_perform() success\n");
-#endif
-}
-
 void VRRestClient::getAsync(string uri, VRRestCbPtr cb, int timeoutSecs) { // TODO: implement correctly for wasm
 #ifdef __EMSCRIPTEN__
     auto res = get(uri, timeoutSecs);
