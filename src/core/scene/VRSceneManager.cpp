@@ -156,6 +156,7 @@ void VRSceneManager::newEmptyScene(string path) {
     scene->setPath(path);
     setWorkdir(scene->getWorkdir());
     scene->setName(scene->getFileName());
+    scene->setNavigationState("Orbit", true);
     current = scene;
     cout << " VRSceneManager::newEmptyScene done" << endl;
 }
