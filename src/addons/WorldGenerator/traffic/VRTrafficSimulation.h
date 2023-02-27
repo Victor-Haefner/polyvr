@@ -8,6 +8,7 @@
 #include "core/math/pose.h"
 #include "core/math/partitioning/graph.h"
 #include "core/objects/object/VRObject.h"
+#include "core/objects/material/VRMaterialFwd.h"
 #include "core/tools/VRProjectManager.h"
 #ifndef WITHOUT_BULLET
 #include "addons/Bullet/CarDynamics/CarDynamics.h"

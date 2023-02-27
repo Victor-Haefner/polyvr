@@ -7,7 +7,7 @@
 #include <OpenSG/OSGImage.h>
 
 #include "core/objects/object/VRObject.h"
-#include "core/objects/VRObjectFwd.h"
+#include "VRMaterialFwd.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;

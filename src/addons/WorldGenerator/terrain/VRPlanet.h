@@ -2,6 +2,7 @@
 #define VRPLANET_H_INCLUDED
 
 #include "core/objects/VRTransform.h"
+#include "core/objects/material/VRMaterialFwd.h"
 #include "addons/WorldGenerator/VRWorldGeneratorFwd.h"
 #include "addons/WorldGenerator/GIS/OSMMap.h"
 

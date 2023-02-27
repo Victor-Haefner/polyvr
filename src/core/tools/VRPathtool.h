@@ -8,6 +8,7 @@
 #include <map>
 
 #include "core/objects/VRObjectFwd.h"
+#include "core/objects/material/VRMaterialFwd.h"
 #include "core/utils/VRFunctionFwd.h"
 #include "core/tools/VRToolsFwd.h"
 #include "core/objects/VRTransform.h"

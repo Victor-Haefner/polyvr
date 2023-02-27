@@ -7,6 +7,7 @@
 #include <string>
 #include <map>
 #include "core/objects/VRObjectFwd.h"
+#include "core/objects/material/VRMaterialFwd.h"
 #include "VRSelection.h"
 #include "VRSelectionFwd.h"
 

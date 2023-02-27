@@ -4,6 +4,7 @@
 #include <OpenSG/OSGConfig.h>
 #include <OpenSG/OSGColor.h>
 #include "core/objects/VRObjectFwd.h"
+#include "core/objects/material/VRMaterialFwd.h"
 #include "core/scene/VRSceneFwd.h"
 #include "core/setup/VRSetupFwd.h"
 #include "core/utils/VRStorage.h"

@@ -29,7 +29,6 @@ ptrFwd(VRSprite);
 ptrFwd(VRSpriteResizeTool);
 ptrFwd(VRMultiGrid);
 ptrFwd(VRStroke);
-ptrFwd(VRMaterial);
 ptrFwd(VRLight);
 ptrFwd(VRLightBeacon);
 ptrFwd(VRGroup);
@@ -43,10 +42,6 @@ ptrFwd(VRSyncNode);
 // other
 ptrFwd(VRBackground);
 ptrFwd(VRBackgroundBase);
-ptrFwd(VRTexture);
-ptrFwd(VRTextureGenerator);
-ptrFwd(VRTextureMosaic);
-ptrFwd(VRVideo);
 ptrFwd(VRConstraint);
 ptrFwd(VRAnimation);
 ptrFwd(VRKeyFrameAnimation);

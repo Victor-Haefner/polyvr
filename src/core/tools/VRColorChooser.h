@@ -4,6 +4,7 @@
 #include <OpenSG/OSGColor.h>
 #include "core/utils/VRDeviceFwd.h"
 #include "core/objects/VRObjectFwd.h"
+#include "core/objects/material/VRMaterialFwd.h"
 #include "VRToolsFwd.h"
 
 OSG_BEGIN_NAMESPACE;

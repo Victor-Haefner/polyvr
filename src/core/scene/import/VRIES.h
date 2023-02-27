@@ -3,6 +3,7 @@
 
 #include "core/math/OSGMathFwd.h"
 #include "core/objects/VRObjectFwd.h"
+#include "core/objects/material/VRMaterialFwd.h"
 #include <vector>
 #include <string>
 

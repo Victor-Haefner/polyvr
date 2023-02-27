@@ -6,6 +6,7 @@
 #include <map>
 
 #include "core/objects/object/VRObject.h"
+#include "core/objects/material/VRMaterialFwd.h"
 #include "core/scene/VRSceneFwd.h"
 #include "core/utils/VRFunctionFwd.h"
 #include "core/networking/VRNetworkingFwd.h"

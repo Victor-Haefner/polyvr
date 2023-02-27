@@ -2,6 +2,7 @@
 #define VRPOINTCLOUD_H_INCLUDED
 
 #include "core/objects/VRTransform.h"
+#include "core/objects/material/VRMaterialFwd.h"
 #include "core/scene/import/VRImport.h"
 #include "core/utils/VRMutex.h"
 
