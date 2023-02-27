@@ -17,6 +17,8 @@ class VRShaderFactory {
     public:
         VRShaderFactory();
         ~VRShaderFactory();
+
+        int computeGLSLVersion(string& code);
 };
 
 OSG_END_NAMESPACE;
