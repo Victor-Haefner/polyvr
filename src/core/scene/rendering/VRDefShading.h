@@ -94,7 +94,7 @@ class VRDefShading {
         void addDSLight(VRLightPtr light);
         void updateLight(VRLightPtr l);
         void subLight(int ID);
-        void setBackground(BackgroundRecPtr bg);
+        void setBackground(BackgroundMTRecPtr bg);
 
         const std::string &getLightVPFile(LightTypeE lightType);
         const std::string &getLightFPFile(LightTypeE lightType, ShadowTypeE shadowType);

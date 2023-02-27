@@ -191,7 +191,7 @@ void VRDefShading::setDSCamera(OSGCameraPtr cam) {
     if (initiated) dsStage->setCamera(cam->cam);
 }
 
-void VRDefShading::setBackground(BackgroundRecPtr bg) {
+void VRDefShading::setBackground(BackgroundMTRecPtr bg) {
     if (initiated) dsStage->setBackground(bg);
 }
 
