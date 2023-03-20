@@ -6,6 +6,7 @@
 #include "core/objects/VRObjectFwd.h"
 #include "core/tools/VRToolsFwd.h"
 #include "core/objects/object/VRObject.h"
+#include "core/objects/material/VRMaterialFwd.h"
 #include "core/networking/VRNetworkingFwd.h"
 #include "core/utils/VRMutex.h"
 

@@ -4,6 +4,7 @@
 #include <OpenSG/OSGConfig.h>
 #include <string>
 #include "core/objects/VRObjectFwd.h"
+#include "core/objects/material/VRMaterialFwd.h"
 #include "core/scene/VRSceneFwd.h"
 
 OSG_BEGIN_NAMESPACE;
@@ -17,7 +18,7 @@ class VRDeferredRenderStage {
         VRGeometryPtr layer;
         VRMaterialPtr mat;
         shared_ptr<VRDefShading> defRendering;
-        shared_ptr<VRDeferredRenderStage> child;
+        VRDeferredRenderStagePtr child;
 
         VRMaterialPtr setupRenderLayer(string name);
 
@@ -37,7 +38,7 @@ class VRDeferredRenderStage {
         void initDeferred();
         shared_ptr<VRDefShading> getRendering();
         void setActive(bool da, bool la);
-        void insert(shared_ptr<VRDeferredRenderStage> stage);
+        void insert(VRDeferredRenderStagePtr stage);
 };
 
 OSG_END_NAMESPACE;

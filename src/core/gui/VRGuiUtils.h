@@ -6,6 +6,7 @@
 #include <OpenSG/OSGConfig.h>
 #include <OpenSG/OSGColor.h>
 #include "core/objects/VRObjectFwd.h"
+#include "core/objects/material/VRMaterialFwd.h"
 
 struct _GtkWidget;
 #if GTK_MAJOR_VERSION == 2

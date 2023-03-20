@@ -27,7 +27,7 @@ class UDPClient {
         bool stop = false;
         bool broken = false;
         function<string (string)> onMessageCb;
-        boost::array<char, 1024> buffer;
+        boost::array<char, 32768> buffer;
 
         vector<boost::asio::ip::udp::endpoint> uriToEndpoints(const string& uri) {
             boost::asio::ip::udp::resolver resolver(io_service);
@@ -47,7 +47,11 @@ class UDPClient {
 
             if (ec) { cout << "UDPClient receive failed: " << ec.message() << "\n"; broken = true; return false; }
             string msg(buffer.begin(), buffer.begin()+N);
-            //cout << "Received: '" << msg << "' (" << ec.message() << ")\n";
+            if (N == buffer.size()) {
+                cout << "Warning in UDPClient::read_handler: message reached buffer size, data loss probable!" << endl;
+            }
+            //cout << "Received: " << N << "\n";
+            //cout << "Received: " << N << " (" << ec.message() << ")\n";
             if (onMessageCb) {
                 string res = onMessageCb(msg);
                 if (res != "") {
@@ -66,7 +70,7 @@ class UDPClient {
 #endif
             if (broken) return false;
 
-            auto onRead = [this](boost::system::error_code ec, size_t N) {
+            auto onRead = [this](const boost::system::error_code& ec, size_t N) {
                 read_handler(ec, N);
                 read();
             };

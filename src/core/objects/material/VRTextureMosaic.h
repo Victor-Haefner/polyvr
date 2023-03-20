@@ -3,7 +3,7 @@
 
 #include <OpenSG/OSGConfig.h>
 #include "core/math/OSGMathFwd.h"
-#include "core/objects/VRObjectFwd.h"
+#include "VRMaterialFwd.h"
 #include "core/objects/material/VRTexture.h"
 
 using namespace std;

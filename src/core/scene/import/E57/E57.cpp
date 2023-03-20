@@ -389,14 +389,7 @@ void OSG::loadPCB(string path, VRTransformPtr res, map<string, string> importOpt
     auto bounds = extractRegionBounds(path, region);
 
     auto params = VRPointCloud::readPCBHeader(path);
-
-#if !defined _WIN32 && !defined __EMSCRIPTEN__
-    int fileDescr = fileno(::fopen(path.c_str(), "rb"));
-    __gnu_cxx::stdio_filebuf<char> filebuf(fileDescr, std::ios::in);
-    istream stream(&filebuf);
-#else
     ifstream stream(path);
-#endif
 
     int hL = toInt(params["headerLength"]);
     stream.seekg(hL);
@@ -405,6 +398,7 @@ void OSG::loadPCB(string path, VRTransformPtr res, map<string, string> importOpt
     auto cN = toValue<size_t>(params["N_points"]);
     bool hasCol = contains( params["format"], "r");
     bool hasSpl = contains( params["format"], "u");
+    bool hasOct = params.count("partitionStructure");
     //double binSize = toValue<double>(params["binarySize"]);
     cout << "  scan contains " << cN << " points" << endl;
 
@@ -421,24 +415,6 @@ void OSG::loadPCB(string path, VRTransformPtr res, map<string, string> importOpt
     if (hasSpl) cout << "   scan has splats\n";
     else cout << "   scan has no splats\n";
 
-    //VRTransform("tmp"); // to add tmp to the name pool!
-    //VRPointCloud::create("tmp");
-
-    //MemMonitor::enable();
-
-    if (0) { // no memleaks here :D
-        auto i = shared_ptr<int>(new int(5));
-        auto o = VRObject::create("tmp");
-        auto t = VRTransform::create("tmp");
-        auto m = VRMaterial::create("tmp", false);
-        auto p = VRPointCloud::create("tmp");
-        p->applySettings(importOptions);
-        for (int i=0; i<500; i++) p->addPoint( Vec3d(i*0.17347,0.5001,0.5001), Vec3ub(100,101,102) );
-    }
-
-    //MemMonitor::disable();
-    //MemMonitor::enable();
-
     auto pointcloud = VRPointCloud::create("pointcloud");
     pointcloud->applySettings(importOptions);
 
@@ -451,60 +427,65 @@ void OSG::loadPCB(string path, VRTransformPtr res, map<string, string> importOpt
     if (hasSpl) N = VRPointCloud::Splat::size;
     VRPointCloud::Splat pnt;
 
-    auto skip = [&](size_t Nskip) {
+    auto skipBin = [&](size_t Nskip) { // skip N bytes
+        if (Nskip < 50) stream.ignore(Nskip, EOF); // ignore processes all chars
+        else stream.seekg(Nskip, ios::cur); // seek jumps directly, better with increasing jump length
+    };
+
+    auto skip = [&](size_t Nskip) { // skip N points
         size_t Nprocessed = min(Nskip, progress->left());
         if (Nprocessed == 0) return;
-        if (Nprocessed < 10) stream.ignore(N*Nprocessed, EOF); // ignore processes all chars
-        else stream.seekg(N*Nprocessed, ios::cur); // seek jumps directly, better with increasing jump length
+        skipBin(N*Nprocessed);
         progress->update( Nprocessed );
     };
 
-    int boundsID = 0;
-    int Nbounds = bounds.size()*0.5;
-    if (Nbounds > 0 && bounds[0] > 0) skip(bounds[0]);
+    if (hasOct) {
+        // TODO: read octree
+        cout << "---- got octree at " << stream.tellg() << endl;
+        size_t ocBinSize = toInt( params["ocNodeCount"] ) * sizeof(ocSerialNode);
+        skipBin(ocBinSize);
+        cout << "---- skipped octree to " << stream.tellg() << endl;
 
-    // try to optimize file access
-    /**
-    POSIX_FADV_NORMAL Indicates that the application has no advice to give about its access pattern for the specified data. If no advice is given for an open file, this is the default assumption.
-    POSIX_FADV_SEQUENTIAL The application expects to access the specified data sequentially (with lower offsets read before higher ones).
-    POSIX_FADV_RANDOM The specified data will be accessed in random order.
-    POSIX_FADV_NOREUSE The specified data will be accessed only once.
-    POSIX_FADV_WILLNEED The specified data will be accessed in the near future.
-    POSIX_FADV_DONTNEED The specified data will not be accessed in the near future.
-    */
-    //posix_fadvise(fileDescr, 0, 0, POSIX_FADV_RANDOM); // meh, doesn't really improve anything!
+        //TODO:
+        // - add LODs as chunks in VRPointCloud::externalPartition
+        // - read first LOD and pass to pointcloud without it using a octree
+        // - setup pointcloud LOD tree? or somehow add the chunk positions to be loaded
+    }
 
+    if (!hasOct) { // read from a sorted PC
+        int boundsID = 0;
+        int Nbounds = bounds.size()*0.5;
+        if (Nbounds > 0 && bounds[0] > 0) skip(bounds[0]);
 
-    while (stream.read((char*)&pnt, N)) {
-        Vec3d  pos = pnt.p;
-        Vec3ub rgb = pnt.c;
-        if (hasSpl) pointcloud->addPoint(pos, pnt);
-        else pointcloud->addPoint(pos, rgb);
-        progress->update( 1 );
-        if (Nskip>0) skip(Nskip);
+        size_t pointsRead = 0;
+        Vec3d pSum;
+        while (stream.read((char*)&pnt, N)) {
+            Vec3d  pos = pnt.p;
+            if (pos.length() < 1e-6) continue; // ignore zeros..
+            Vec3ub rgb = pnt.c;
+            if (hasSpl) pointcloud->addPoint(pos, pnt);
+            else pointcloud->addPoint(pos, rgb);
+            pointsRead += 1;
+            pSum += pos;
+            progress->update( 1 );
+            if (Nskip>0) skip(Nskip);
 
-        if (boundsID < Nbounds) {
-            size_t upperBound = bounds[boundsID*2+1];
-            if ( upperBound > 0 && progress->current() >= upperBound) {
-                boundsID++;
-                if (boundsID < Nbounds) {
-                    size_t nextLowerBound = bounds[boundsID*2];
-                    skip(nextLowerBound-upperBound);
-                } else break;
+            if (boundsID < Nbounds) {
+                size_t upperBound = bounds[boundsID*2+1];
+                if ( upperBound > 0 && progress->current() >= upperBound) {
+                    boundsID++;
+                    if (boundsID < Nbounds) {
+                        size_t nextLowerBound = bounds[boundsID*2];
+                        skip(nextLowerBound-upperBound);
+                    } else break;
+                }
             }
         }
     }
 
     pointcloud->setupLODs();
     res->addChild(pointcloud); // TODO: threading -> problems with states, re-adding it as child in main thread fixes issue!
-#if !defined _WIN32 && !defined __EMSCRIPTEN__
-    close(fileDescr);
-#else
     stream.close();
-#endif
-
-    //pointcloud.reset();
-    //MemMonitor::disable();
 }
 
 void OSG::loadXYZ(string path, VRTransformPtr res, map<string, string> importOptions) {

@@ -2,6 +2,7 @@
 #define VRGRASSPATCH_H_INCLUDED
 
 #include "core/math/OSGMathFwd.h"
+#include "core/objects/material/VRMaterialFwd.h"
 #include <OpenSG/OSGColor.h>
 #include "core/objects/VRTransform.h"
 #include "addons/WorldGenerator/VRWorldGeneratorFwd.h"

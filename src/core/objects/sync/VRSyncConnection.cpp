@@ -109,6 +109,7 @@ vector<BYTE> VRSyncConnection::base64_decode(string const& encoded_string) {
 
 VRSyncConnection::VRSyncConnection(string host, int port, string localUri) : localUri(localUri) {
     timer = VRTimer::create();
+    changelist = VRSyncChangelist::create();
     client = VRTCPClient::create("syncCli");
     client->setGuard("TCPPVR\n");
     uri = host+":"+toString(port);
@@ -117,6 +118,7 @@ VRSyncConnection::VRSyncConnection(string host, int port, string localUri) : loc
 
 VRSyncConnection::VRSyncConnection(VRTCPClientPtr client, string localUri) : localUri(localUri), client(client) {
     timer = VRTimer::create();
+    changelist = VRSyncChangelist::create();
     uri = client->getConnectedUri();
 }
 
@@ -191,41 +193,49 @@ UInt32 VRSyncConnection::getTransformID(VRTransformPtr t) {
     return t->getOSGTransformPtr()->trans->getId();
 }
 
-string VRSyncConnection::setupAvatar(VRTransformPtr headTransform, VRTransformPtr devTransform, VRTransformPtr devAnchor) { // some geometries
+string VRSyncConnection::setupAvatar(string name, VRTransformPtr headTransform, VRTransformPtr devTransform, VRTransformPtr devAnchor) { // some geometries
     avatar.head = headTransform;
     avatar.dev = devTransform;
     avatar.anchor = devAnchor;
+    avatar.name = name;
 
     headTransform->enableOptimization(false);
     devTransform->enableOptimization(false);
     devAnchor->enableOptimization(false);
 
-    UInt32 headTransID = getTransformID(headTransform);
-    UInt32 deviceTransID = getTransformID(devTransform);
-    UInt32 deviceAnchorID = getNodeID(devAnchor);
-    string msg = "addAvatar|"+toString(headTransID)+":"+toString(deviceTransID)+":"+toString(deviceAnchorID);
+    avatar.tHeadID = getTransformID(headTransform);
+    avatar.tDevID = getTransformID(devTransform);
+    avatar.tAnchorID = getNodeID(devAnchor);
+    string msg = "addAvatar|"+toString(avatar.tHeadID)+":"+toString(avatar.tDevID)+":"+toString(avatar.tAnchorID);
+#ifndef WITHOUT_GTK
+    VRConsoleWidget::get("Collaboration")->write( "setupAvatar " + name + ", "+msg+"\n", "green");
+#endif
     return msg;
 }
 
-void VRSyncConnection::updateAvatar(string data) {
+void VRSyncConnection::updateAvatar(string data) { // triggered by updateAvatar message
     PosePtr p = toValue<PosePtr>(splitString(data, '|')[1]);
     if (avatar.head) avatar.head->setPose(p);
 }
 
-void VRSyncConnection::handleAvatar(string data) {
+void VRSyncConnection::handleAvatar(string data) { // triggered by addAvatar message
+#ifndef WITHOUT_GTK
+    VRConsoleWidget::get("Collaboration")->write( "handleAvatar " + data + "\n", "green");
+#endif
+
     if (!avatar.localHeadID) return;
     if (!avatar.localDevID) return;
     if (!avatar.localAnchorID) return;
 
     auto IDs = splitString( splitString(data, '|')[1], ':');
-    UInt32 headTransID = toInt(IDs[0]); // remote geometry
-    UInt32 deviceTransID = toInt(IDs[1]); // remote geometry
-    UInt32 deviceAnchorID = toInt(IDs[2]); // remote geometry
+    avatar.remoteHeadID = toInt(IDs[0]); // remote geometry
+    avatar.remoteDevID = toInt(IDs[1]); // remote geometry
+    avatar.remoteAnchorID = toInt(IDs[2]); // remote geometry
 
     string mapping = "mapping";
-    mapping += "|"+toString(headTransID)+":"+toString(avatar.localHeadID);
-    mapping += "|"+toString(deviceTransID)+":"+toString(avatar.localDevID);
-    mapping += "|"+toString(deviceAnchorID)+":"+toString(avatar.localAnchorID);
+    mapping += "|"+toString(avatar.remoteHeadID)+":"+toString(avatar.localHeadID);
+    mapping += "|"+toString(avatar.remoteDevID)+":"+toString(avatar.localDevID);
+    mapping += "|"+toString(avatar.remoteAnchorID)+":"+toString(avatar.localAnchorID);
     send(mapping);
 }
 
@@ -260,7 +270,7 @@ void VRSyncConnection::handleRemoteMapping(string mappingData, VRSyncNodePtr syn
         UInt32 oID = toInt(IDs[0]);
         UInt32 rID = toInt(IDs[1]);
         UInt32 lID = origin->getLocalID(oID);
-        cout << "  oID, rID, lID " << Vec3i(oID, rID, lID) << endl;
+        //cout << "  oID, rID, lID " << Vec3i(oID, rID, lID) << endl;
         if (lID != 0) {
             addRemoteMapping(lID, rID);
             mappingData += "|" + toString(rID) + ":" + toString(lID);

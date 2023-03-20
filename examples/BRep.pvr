@@ -138,7 +138,7 @@
   <Background color="0.24303 0.24303 0.24303" format=".png" path="" persistency="666" type="0"/>
   <Navigation persistency="666">
     <presetStates>
-      <Orbit>0</Orbit>
+      <Orbit>1</Orbit>
     </presetStates>
   </Navigation>
   <Materials persistency="666"/>

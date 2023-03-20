@@ -1,4 +1,7 @@
 #include "VRMaterial.h"
+#include "VRTexture.h"
+#include "VRShaderFactory.h"
+
 #include "OSGMaterial.h"
 #ifndef WITHOUT_GTK
 #include "core/gui/VRGuiManager.h"
@@ -9,7 +12,6 @@
 #include "core/objects/VRLightBeacon.h"
 #include "core/objects/object/OSGCore.h"
 #include "core/objects/OSGObject.h"
-#include "core/objects/material/VRTexture.h"
 #include "core/utils/toString.h"
 #include "core/utils/VRUndoInterfaceT.h"
 #include "core/scene/VRScene.h"

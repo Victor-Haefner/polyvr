@@ -25,7 +25,11 @@ float lerp(float f1, float f2, float f3) {
     return (f2-f1)*f3;
 }
 
-void VRSSAO::setSSAOparams(float radius, int kernelSize, int noiseSize) {
+void VRSSAO::setSSAOparams(float r, int k, int n) {
+    radius = r;
+    kernelSize = k;
+    noiseSize = n;
+
     if (ssao_mat) {
         int kernelSize2 = kernelSize*kernelSize;
         int noiseSize2 = noiseSize*noiseSize;
@@ -116,6 +120,44 @@ void VRSSAO::initBlur(VRMaterialPtr matX, VRMaterialPtr matY) {
     blur_matY->setShaderParameter<int>("texBufDiff", 2);
     blur_matY->setShaderParameter<Vec2f>("direction", Vec2f(0,1));
     setSSAOparams(0.02, 6, 6);
+}
+
+void VRSSAO::updateShader() {
+    string shdrDir = VRSceneManager::get()->getOriginalWorkdir() + "/shader/DeferredShading/";
+
+    // ssao material pass
+    if (ssao_mat) {
+        ssao_mat->setLit(false);
+        ssao_mat->readVertexShader(shdrDir + "SSAOAmbient.vp.glsl");
+        ssao_mat->readFragmentShader(shdrDir + "SSAOAmbient.fp.glsl", true);
+        ssao_mat->setShaderParameter<int>("texBufPos", 0);
+        ssao_mat->setShaderParameter<int>("texBufNorm", 1);
+        ssao_mat->setShaderParameter<int>("texBufDiff", 2);
+        ssao_mat->setShaderParameter<int>("uTexKernel", 3); // kernel texture
+        ssao_mat->setShaderParameter<int>("uTexNoise", 4); // noise texture
+    }
+
+    // ssao blur material
+    if (blur_matX) {
+        blur_matX->readVertexShader(shdrDir + "blur.vp.glsl");
+        blur_matX->readFragmentShader(shdrDir + "blur.fp.glsl", true);
+        blur_matX->setShaderParameter<int>("texBufPos", 0);
+        blur_matX->setShaderParameter<int>("texBufNorm", 1);
+        blur_matX->setShaderParameter<int>("texBufDiff", 2);
+        blur_matX->setShaderParameter<Vec2f>("direction", Vec2f(1,0));
+    }
+
+    if (blur_matY) {
+        blur_matY->readVertexShader(shdrDir + "blur.vp.glsl");
+        blur_matY->readFragmentShader(shdrDir + "blur.fp.glsl", true);
+        blur_matY->setShaderParameter<int>("texBufPos", 0);
+        blur_matY->setShaderParameter<int>("texBufNorm", 1);
+        blur_matY->setShaderParameter<int>("texBufDiff", 2);
+        blur_matY->setShaderParameter<Vec2f>("direction", Vec2f(0,1));
+    }
+
+    // parameters
+    setSSAOparams(radius, kernelSize, noiseSize);
 }
 
 OSG_END_NAMESPACE;

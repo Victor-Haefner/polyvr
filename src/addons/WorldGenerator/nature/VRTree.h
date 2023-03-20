@@ -2,6 +2,7 @@
 #define VRTREE_H_INCLUDED
 
 #include "core/objects/VRTransform.h"
+#include "core/objects/material/VRMaterialFwd.h"
 #include <OpenSG/OSGColor.h>
 
 OSG_BEGIN_NAMESPACE;

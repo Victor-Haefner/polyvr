@@ -20,6 +20,7 @@
 #include "core/utils/VRFunction.h"
 #include "core/utils/VRVisualLayer.h"
 #include "core/utils/system/VRSystem.h"
+#include "core/utils/VRProfiler.h"
 #include "VRThreadManager.h"
 #include "core/objects/geometry/VRPrimitive.h"
 
@@ -112,6 +113,7 @@ void VRPhysicsManager::updatePhysics( VRThreadWeakPtr wthread) {
     t1 = getTime();
     auto thread = wthread.lock();
 
+    auto prof_id = VRProfiler::get()->regStart("physics simulation");
     if (active && thread && dynamicsWorld) {
         t0 = thread->t_last;
         thread->t_last = t1;
@@ -126,7 +128,10 @@ void VRPhysicsManager::updatePhysics( VRThreadWeakPtr wthread) {
             for (auto f : updateFktsPost) (*(f.lock()))();
         }
     }
+    VRProfiler::get()->regStop(prof_id);
 
+
+    prof_id = VRProfiler::get()->regStart("physics sleep");
     //t2 = getTime();
     //dt = t2-t1;
    // if (dt < 0) dt = 0;
@@ -141,6 +146,7 @@ void VRPhysicsManager::updatePhysics( VRThreadWeakPtr wthread) {
         VRLock lock(*mtx);
         if (t3-t1 > 0) fps = 1e6/(t3-t1);
     }
+    VRProfiler::get()->regStop(prof_id);
 }
 
 void VRPhysicsManager::addPhysicsUpdateFunction(VRUpdateCbPtr fkt, bool after) {

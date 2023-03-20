@@ -669,7 +669,7 @@ void OSG::writeCollada(VRObjectPtr root, string path, map<string, string> option
             }
             stream << "</float_array>" << endl;
             stream << "\t\t\t\t\t<technique_common>" << endl;
-            stream << "\t\t\t\t\t\t<accessor source=\"#" << name << "_normals_array\" count=\"" << Ncols << "\" stride=\"" << Nchannels << "\">" << endl;
+            stream << "\t\t\t\t\t\t<accessor source=\"#" << name << "_colors_array\" count=\"" << Ncols << "\" stride=\"" << Nchannels << "\">" << endl;
             stream << "\t\t\t\t\t\t\t<param name=\"R\" type=\"float\"/>" << endl;
             stream << "\t\t\t\t\t\t\t<param name=\"G\" type=\"float\"/>" << endl;
             stream << "\t\t\t\t\t\t\t<param name=\"B\" type=\"float\"/>" << endl;
@@ -703,9 +703,9 @@ void OSG::writeCollada(VRObjectPtr root, string path, map<string, string> option
 		stream << "\t\t\t\t</vertices>" << endl;
 
 		size_t N0 = 0;
-        for (int i=0; i<data.getNTypes(); i++) {
-            int type = data.getType(i);
-            int length = data.getLength(i);
+        for (int j=0; j<data.getNTypes(); j++) {
+            int type = data.getType(j);
+            int length = data.getLength(j);
 
             int faceCount = length/3;
             string typeName = "triangles";

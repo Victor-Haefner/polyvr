@@ -4,6 +4,7 @@
 #include "../VRWorldModule.h"
 #include "core/scene/VRObjectManager.h"
 #include "core/objects/object/VRObject.h"
+#include "core/objects/material/VRMaterialFwd.h"
 #include "core/math/VRMathFwd.h"
 #include "core/math/partitioning/Octree.h"
 

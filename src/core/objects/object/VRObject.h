@@ -105,6 +105,7 @@ class VRObject : public std::enable_shared_from_this<VRObject>, public VRName, p
         virtual void setVolumeCheck(bool b, bool recursive = false);
         void setSiblingPosition(int i);
 
+        bool hasChild(VRObjectPtr child, int place = -1);
         virtual void addChild(VRObjectPtr child, bool osg = true, int place = -1);
         virtual void subChild(VRObjectPtr child, bool osg = true);
         VRObjectPtr getLink(int i);

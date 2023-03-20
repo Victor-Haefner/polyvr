@@ -1,7 +1,7 @@
 #ifndef VRVIDEO_H_INCLUDED
 #define VRVIDEO_H_INCLUDED
 
-#include "core/objects/VRObjectFwd.h"
+#include "VRMaterialFwd.h"
 #include "core/utils/VRStorage.h"
 #include "core/scene/sound/VRSoundFwd.h"
 #include <OpenSG/OSGConfig.h>

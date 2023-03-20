@@ -8,6 +8,7 @@
 #include "addons/WorldGenerator/VRWorldGeneratorFwd.h"
 #include "core/math/VRMathFwd.h"
 #include "core/objects/VRTransform.h"
+#include "core/objects/material/VRMaterialFwd.h"
 #include "addons/Bullet/VRPhysicsFwd.h"
 
 using namespace std;

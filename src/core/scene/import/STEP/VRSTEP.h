@@ -19,6 +19,7 @@ class SingleLinkNode;
 #include "core/math/OSGMathFwd.h"
 #include <OpenSG/OSGLine.h>
 #include "core/objects/VRObjectFwd.h"
+#include "core/objects/material/VRMaterialFwd.h"
 #include "core/utils/VRFunctionFwd.h"
 #include "core/utils/VRUtilsFwd.h"
 #include "core/math/field.h"

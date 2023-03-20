@@ -24,6 +24,7 @@ bool hasGS = false;
 VRAnnotationEngine::VRAnnotationEngine(string name, bool init) : VRGeometry(name) {
     type = "AnnotationEngine";
     hasGS = VRScene::getCurrent()->hasGeomShader();
+    //hasGS = false;
     if (init) initialize();
 }
 
@@ -265,18 +266,28 @@ void VRAnnotationEngine::setLine(int i, Vec3d p, string str, bool ascii) {
 
 #ifndef OSG_OGL_ES2
     if (hasGS) {
-        int N = ceil(l.Ngraphemes/3.0); // number of points, 3 chars per point
+        int N = ceil(l.Ngraphemes/2.0); // 3.0); // number of points, 2(3) chars per point
         resize(l,p,N + 4); // plus 4 bounding points
 
         for (int j=0; j<N; j++) {
             char c[] = {0,0,0};
-            for (int k = 0; k<3; k++) {
+
+            /*for (int k = 0; k<3; k++) { // 3 chars per vertex
                 if (j*3+k < (int)graphemes.size()) {
                     string grapheme = graphemes[j*3+k];
                     c[k] = characterIDs[grapheme];
                 }
             }
-            float f = c[0] + c[1]*256 + c[2]*256*256;
+            float f = c[0] + c[1]*256 + c[2]*256*256;*/
+
+            for (int k = 0; k<2; k++) { // 2 chars per vertex (some drivers have trouble with more..)
+                if (j*2+k < (int)graphemes.size()) {
+                    string grapheme = graphemes[j*2+k];
+                    c[k] = characterIDs[grapheme];
+                }
+            }
+            float f = c[0] + c[1]*256;
+
             int k = l.entries[j];
             data->setVert(k, p, Vec3d(f,0,j));
         }
@@ -439,7 +450,7 @@ void main( void ) {
 
 string VRAnnotationEngine::gp =
 "#version 150\n"
-"#extension GL_EXT_geometry_shader4 : enable\n"
+//"#extension GL_EXT_geometry_shader4 : enable\n"
 GLSL(
 layout (points) in;
 layout (triangle_strip, max_vertices=60) out;
@@ -460,7 +471,7 @@ out vec2 texCoord;
 out vec4 geomPos;
 out vec3 geomNorm;
 
-vec3 orientationX;
+vec3 orientationX = vec3(1,0,0);
 
 vec4 transform(in float x, in float y) {
     vec3 p = -orientationX*x + orientationUp*y;
@@ -487,7 +498,7 @@ void emitQuad(in float offset, in vec4 tc) {
     vec4 v2;
     vec4 v3;
     vec4 v4;
-    vec4 p = gl_PositionIn[0];
+    vec4 p = gl_in[0].gl_Position;
 
     if (screen_size > 0.5) {
         p.xyz = p.xyz/p.w;
@@ -537,13 +548,15 @@ void emitString(in float str, in float offset) {
     int stri = int(str);
     int c0 = stri;
     int c1 = c0/256;
-    int c2 = c1/256;
+    //int c2 = c1/256;
     c0 = c0%256;
     c1 = c1%256;
-    c2 = c2%256;
-    if (c0 > 0) emitChar(c0, 3*offset);
+    //c2 = c2%256;
+    if (c0 > 0) emitChar(c0, 2*offset);
+    if (c1 > 0) emitChar(c1, 2*offset + 1);
+    /*if (c0 > 0) emitChar(c0, 3*offset);
     if (c1 > 0) emitChar(c1, 3*offset + 1);
-    if (c2 > 0) emitChar(c2, 3*offset + 2);
+    if (c2 > 0) emitChar(c2, 3*offset + 2);*/
 }
 
 void main() {

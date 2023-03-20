@@ -3,6 +3,7 @@
 
 #include <OpenSG/OSGSimpleTexturedMaterial.h>
 #include "core/objects/VRObjectFwd.h"
+#include "core/objects/material/VRMaterialFwd.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;

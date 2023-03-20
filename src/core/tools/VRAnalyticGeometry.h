@@ -7,6 +7,7 @@
 #include <string>
 
 #include "core/objects/VRObjectFwd.h"
+#include "core/objects/material/VRMaterialFwd.h"
 #include "core/tools/VRToolsFwd.h"
 #include "core/objects/VRTransform.h"
 

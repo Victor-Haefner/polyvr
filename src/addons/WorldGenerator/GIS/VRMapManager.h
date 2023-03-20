@@ -7,6 +7,7 @@
 #include "core/networking/VRNetworkingFwd.h"
 #include "core/utils/VRFunctionFwd.h"
 #include "core/objects/VRObjectFwd.h"
+#include "core/objects/material/VRMaterialFwd.h"
 #include "GISFwd.h"
 
 using namespace std;

@@ -33,17 +33,16 @@ class VRCollaboration : public VRObject {
 	    map<string, int> gui_sites;
 
 	    string userName;
-	    string connReqOrigin;
-	    string connReqSystem;
-	    vector<string> connReqNet;
+	    map<string, string> connReqSystem;
+	    map<string, vector<string> > connReqNet;
 
 	    void init();
 	    string getSubnet();
 	    vector<string> parseSubNet(string net);
 	    void connectTCP(string origin, bool isWindows);
-	    void acceptConnection(bool isWindows);
+	    void acceptConnection(string origin, bool isWindows);
 	    void finishConnection(string origin, bool isWindows, vector<string> net);
-	    void setupAvatar(string rID, string name);
+	    void setupUserAvatar(string rID, string name);
 	    void onIceEvent(string m);
 	    void onSyncNodeEvent(string e);
 
@@ -66,6 +65,8 @@ class VRCollaboration : public VRObject {
 		void setupLocalServer();
 		void setAvatarDevices(VRTransformPtr head, VRTransformPtr hand, VRTransformPtr handGrab = 0);
 		void setAvatarGeometry(VRTransformPtr torso, VRTransformPtr leftHand = 0, VRTransformPtr rightHand = 0, float scale = 1.0);
+
+		void debugAvatars(); // temporary for debugging purposes
 };
 
 OSG_END_NAMESPACE;

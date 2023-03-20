@@ -7,6 +7,7 @@
 #include <OpenSG/OSGImage.h>
 #include <OpenSG/OSGLightEngine.h>
 #include "core/objects/VRObjectFwd.h"
+#include "core/objects/material/VRMaterialFwd.h"
 #include "core/scene/VRSceneFwd.h"
 
 OSG_BEGIN_NAMESPACE;

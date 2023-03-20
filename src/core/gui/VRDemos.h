@@ -40,7 +40,9 @@ class VRAppManager {
         void updateTable(string t);
 
         void setGuiState(VRAppLauncherPtr e);
+        void setCurrentGuiState(bool b);
         VRAppLauncherPtr addEntry(string path, string table, bool running, string timestamp = "", bool recent = false);
+        VRAppLauncherPtr getEntry(string path);
 
         void updatePixmap(VRAppLauncherPtr e, _GtkImage* img_pxb, int w, int h);
         bool update();

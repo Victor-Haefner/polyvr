@@ -3,6 +3,7 @@
 
 #include <OpenSG/OSGConfig.h>
 #include "core/objects/object/VRObject.h"
+#include "core/objects/material/VRMaterialFwd.h"
 #include "VRGuiContextMenu.h"
 #include "VRGuiVectorEntry.h"
 

@@ -1,6 +1,7 @@
 #ifndef VRBRICKS_H_INCLUDED
 #define VRBRICKS_H_INCLUDED
 
+#include "VRMaterialFwd.h"
 #include "core/math/OSGMathFwd.h"
 #include <OpenSG/OSGColor.h>
 

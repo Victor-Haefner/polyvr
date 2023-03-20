@@ -242,10 +242,10 @@ void VRImport::LoadJob::load(VRThreadWeakPtr tw) {
         if (ext == ".vtk") { loadVtk(path, res); return; }
 #endif
 #ifndef WITHOUT_GDAL
-        if (ext == ".pdf") { loadPDF(path, res); return; }
-        if (ext == ".shp") { loadSHP(path, res); return; }
-        if (ext == ".tiff" || ext == ".tif") { loadTIFF(path, res); return; }
-        if (ext == ".hgt") { loadTIFF(path, res); return; }
+        if (ext == ".pdf") { loadPDF(path, res, options); return; }
+        if (ext == ".shp") { loadSHP(path, res, options); return; }
+        if (ext == ".tiff" || ext == ".tif") { loadTIFF(path, res, options); return; }
+        if (ext == ".hgt") { loadTIFF(path, res, options); return; }
 #endif
 #ifndef WITHOUT_DWG
         if (ext == ".dwg" || ext == ".dxf" || ext == ".DWG" || ext == ".DXF") {

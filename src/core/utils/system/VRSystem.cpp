@@ -201,12 +201,28 @@ bool compileCodeblocksProject(string path) {
     return true;
 }
 
+long long cpu_time() {
+    thread_local bool initialized(false);
+    thread_local clockid_t clock_id;
+    thread_local timespec t0;
+
+    if (!initialized) {
+        pthread_getcpuclockid(pthread_self(), &clock_id);
+        initialized = true;
+        clock_gettime(clock_id, &t0);
+    }
+
+    timespec result;
+    clock_gettime(clock_id, &result);
+    return (result.tv_nsec - t0.tv_nsec) / 1000;
+}
+
 typedef chrono::time_point<chrono::high_resolution_clock, chrono::nanoseconds> timePoint;
+typedef long long cpuTimePoint;
 timePoint globalStartTime;
 
 void initTime() {
-    timePoint tp = chrono::high_resolution_clock::now();
-    globalStartTime = tp;
+    globalStartTime = chrono::high_resolution_clock::now();
 }
 
 long long getTime() {
@@ -214,8 +230,13 @@ long long getTime() {
     return chrono::duration_cast<chrono::microseconds>(elapsed).count();
 }
 
+long long getCPUTime() { // microsecs
+    auto elapsed = cpu_time();
+    return elapsed;
+}
+
 template <typename T>
-using duration = std::chrono::duration<T, std::milli>;
+using duration = std::chrono::duration<T, std::micro>;
 
 void doFrameSleep(double tFrame, double fps) {
     double fT = 1000.0 / fps;             // target frame duration in ms
@@ -223,22 +244,22 @@ void doFrameSleep(double tFrame, double fps) {
     if (sT <= 0) return;
 
     // efficient sleep
-    double precisionBuffer = 1.5;
+    double precisionBuffer = 0;//1.5;
     if (sT-precisionBuffer > 0) {
         VRTimer timer;
         timer.start();
-        duration<double> T(sT-precisionBuffer);
+        duration<double> T((sT-precisionBuffer)*1000);
         std::this_thread::sleep_for(T);
         sT = max(fT - tFrame - timer.stop(), 0.0); // remaining time to sleep
         if (sT <= 0) return;
     }
 
     // precision sleep
-    static constexpr duration<double> MinSleepDuration(0);
+    /*static constexpr duration<double> MinSleepDuration(0);
     std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
     while (duration<double>(std::chrono::high_resolution_clock::now() - start).count() < sT) {
         std::this_thread::sleep_for(MinSleepDuration);
-    }
+    }*/
 }
 
 void fileReplaceStrings(string filePath, string oldString, string newString) {

@@ -4,6 +4,7 @@
 
 
 #include "core/objects/VRObjectFwd.h"
+#include "core/objects/material/VRMaterialFwd.h"
 #include "core/tools/selection/VRSelectionFwd.h"
 #include "../VRTransform.h"
 

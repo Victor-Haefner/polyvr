@@ -5,6 +5,7 @@
 #include "core/math/OSGMathFwd.h"
 #include "VRRoadBase.h"
 #include "core/objects/VRObjectFwd.h"
+#include "core/objects/material/VRMaterialFwd.h"
 #include "core/objects/VRTransform.h"
 #include "addons/Semantics/VRSemanticsFwd.h"
 #include "addons/WorldGenerator/VRWorldGeneratorFwd.h"

@@ -7,6 +7,7 @@
 
 #include "core/utils/VRFunctionFwd.h"
 #include "core/objects/VRObjectFwd.h"
+#include "core/objects/material/VRMaterialFwd.h"
 #include "core/setup/VRSetupFwd.h"
 
 class AVCodec;

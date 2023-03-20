@@ -4,7 +4,7 @@
 #include "core/math/OSGMathFwd.h"
 #include <OpenSG/OSGColor.h>
 
-#include "core/objects/VRObjectFwd.h"
+#include "VRMaterialFwd.h"
 #include "core/math/VRMathFwd.h"
 
 OSG_BEGIN_NAMESPACE;

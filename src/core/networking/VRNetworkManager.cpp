@@ -26,7 +26,7 @@ void VRNetworkManager::regNetworkClient(VRNetworkClientPtr client) {
 
 void VRNetworkManager::subNetworkClient(VRNetworkClient* client) {
     if (networkClients.count(client)) networkClients.erase(client);
-    else cout << "Warning in VRNetworkManager::subTCPClient, client not registred!" << endl;
+    else cout << "Warning in VRNetworkManager::subNetworkClient, client not registred!" << endl;
 }
 
 void VRNetworkManager::regNetworkServer(VRNetworkServerPtr server) {

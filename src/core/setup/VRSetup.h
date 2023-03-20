@@ -87,7 +87,6 @@ class VRSetup : public VRViewManager, public VRWindowManager, public VRDeviceMan
 
         Vec3d getDisplaysOffset();
         void setDisplaysOffset(Vec3d o);
-        void setupLESCCAVELights(VRScenePtr scene); // TODO: temporary until scripts for VRSetup implemented!
 
         void makeTestCube();
         static void sendToBrowser(const string& msg);

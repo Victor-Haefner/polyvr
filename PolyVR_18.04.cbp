@@ -1104,6 +1104,7 @@
 		<Unit filename="src/core/objects/material/VRBricks.h" />
 		<Unit filename="src/core/objects/material/VRMaterial.cpp" />
 		<Unit filename="src/core/objects/material/VRMaterial.h" />
+		<Unit filename="src/core/objects/material/VRMaterialFwd.h" />
 		<Unit filename="src/core/objects/material/VRMaterialT.h" />
 		<Unit filename="src/core/objects/material/VRNormalmap.cpp" />
 		<Unit filename="src/core/objects/material/VRNormalmap.h" />
@@ -1111,6 +1112,8 @@
 		<Unit filename="src/core/objects/material/VRPerlin.h" />
 		<Unit filename="src/core/objects/material/VRShader.cpp" />
 		<Unit filename="src/core/objects/material/VRShader.h" />
+		<Unit filename="src/core/objects/material/VRShaderFactory.cpp" />
+		<Unit filename="src/core/objects/material/VRShaderFactory.h" />
 		<Unit filename="src/core/objects/material/VRTexture.cpp" />
 		<Unit filename="src/core/objects/material/VRTexture.h" />
 		<Unit filename="src/core/objects/material/VRTextureGenerator.cpp" />

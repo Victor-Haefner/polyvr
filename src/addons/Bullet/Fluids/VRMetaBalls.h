@@ -1,8 +1,8 @@
 #ifndef VRMETABALLS_H_INCLUDED
 #define VRMETABALLS_H_INCLUDED
 
-#include "core/objects/VRObjectFwd.h"
 #include "core/objects/object/VRObject.h"
+#include "core/objects/material/VRMaterialFwd.h"
 
 using namespace std;
 OSG_BEGIN_NAMESPACE;

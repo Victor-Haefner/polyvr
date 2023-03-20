@@ -20,7 +20,7 @@ PyMethodDef VRPySyncNode::methods[] = {
     {"addOwnedObject", PyWrap(SyncNode, addOwnedObject, "addOwnedObject ( objectName )", void, string) },
     {"setDoWrapping", PyWrap(SyncNode, setDoWrapping, "Set if doing OSG wrapping", void, bool) },
     {"setAvatarBeacons", PyWrap(SyncNode, setAvatarBeacons, "Set own avatar beacons, usually camera, mouse beacon, mouse beacon", void, VRTransformPtr, VRTransformPtr, VRTransformPtr) },
-    {"addRemoteAvatar", PyWrap(SyncNode, addRemoteAvatar, "Add avatar components, a geometry for the head, another for the hand, and a transform attached to the hand for DnD", void, string, VRTransformPtr, VRTransformPtr, VRTransformPtr) },
+    {"addRemoteAvatar", PyWrap(SyncNode, addRemoteAvatar, "Add avatar components, a geometry for the head, another for the hand, and a transform attached to the hand for DnD", void, string, string, VRTransformPtr, VRTransformPtr, VRTransformPtr) },
     {"getConnectionLink", PyWrap(SyncNode, getConnectionLink, "Get Connection Link", string) },
     {"getConnectionStatus", PyWrap(SyncNode, getConnectionStatus, "Set syncNode callback", string) },
     {"getRemotes", PyWrap(SyncNode, getRemotes, "Get list with uris of remotes", vector<string>) },
