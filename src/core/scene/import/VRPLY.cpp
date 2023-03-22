@@ -236,7 +236,10 @@ void loadPly(string filename, VRTransformPtr res) {
 }
 
 void writePly(VRGeometryPtr geo, string path) {
-	if (!geo) return;
+	if (!geo) {
+        cout << "Error in writePly: '" << geo->getName() << "' is not a geometry!" << endl;
+        return;
+	}
 
 	auto pos = geo->getMesh()->geo->getPositions();
 	auto norms = geo->getMesh()->geo->getNormals();
@@ -253,7 +256,10 @@ void writePly(VRGeometryPtr geo, string path) {
 	int Nl = lengths->size();
     int Nfaces = 0;
 
-	if (Np == 0) return;
+	if (Np == 0) {
+        cout << "Error in writePly: no positions!" << endl;
+        return;
+	}
 
 	auto writeVertices = [&]() {
 		string data;
