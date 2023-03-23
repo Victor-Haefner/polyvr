@@ -40,7 +40,9 @@ string toString(ALenum error) {
 
 VRSoundContext::VRSoundContext() {
     cout << " create new sound context!" << endl;
+#ifndef _WIN32
     av_register_all();
+#endif
     device = alcOpenDevice(NULL);
     if (!device) { cout << "VRSoundContext() > alcOpenDevice failed!\n"; return; }
 

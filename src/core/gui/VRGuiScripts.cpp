@@ -1,3 +1,5 @@
+#include <OpenSG/OSGRenderAction.h>
+
 #include <gtk/gtk.h>
 #include "VRGuiScripts.h"
 #include "VRGuiUtils.h"
@@ -1381,20 +1383,6 @@ VRGuiScripts::VRGuiScripts() {
     GtkScrolledWindow* sw2 = (GtkScrolledWindow*)gtk_scrolled_window_new(0,0);
     import_treeview1 = (GtkTreeView*)gtk_tree_view_new();
     import_treeview2 = (GtkTreeView*)gtk_tree_view_new();
-
-/*class VRGuiScripts_ModelColumns : public Gtk::TreeModelColumnRecord {
-    public:
-        VRGuiScripts_ModelColumns() { add(script); add(fg); add(bg); add(time); add(tfg); add(tbg); add(icon); add(Nfound); add(type); }
-        Gtk::TreeModelColumn<Glib::ustring> script; 0
-        Gtk::TreeModelColumn<Glib::ustring> fg;     1
-        Gtk::TreeModelColumn<Glib::ustring> bg;     2
-        Gtk::TreeModelColumn<Glib::ustring> time;   3
-        Gtk::TreeModelColumn<Glib::ustring> tfg;    4
-        Gtk::TreeModelColumn<Glib::ustring> tbg;    5
-        Gtk::TreeModelColumn<Glib::ustring> icon;   6
-        Gtk::TreeModelColumn<Glib::ustring> Nfound; 7
-        Gtk::TreeModelColumn<gint> type;            8
-};*/
 
     import_liststore1 = gtk_list_store_new(9, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_INT);
     import_liststore2 = gtk_list_store_new(9, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_INT);

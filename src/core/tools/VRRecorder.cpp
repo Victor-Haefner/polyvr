@@ -32,7 +32,7 @@ class VRFrame {
 
         int valid = 0;
         int pktSize = 0;
-        char* pktData = 0;
+        vector<char> pktData;
 
         int width = 0;
         int height = 0;
@@ -40,9 +40,9 @@ class VRFrame {
         Vec3d f,a,u; // from at up
 
         VRFrame() {}
-        ~VRFrame() { if (pktData) delete pktData; }
+        ~VRFrame() {}
 
-        void transcode(AVFrame *frame, AVCodecContext* codec_context, SwsContext* sws_context, int i) {
+        void transcode(AVFrame* frame, AVCodecContext* codec_context, SwsContext* sws_context, int i) {
             valid = 0;
             if (!capture) return;
 
@@ -59,26 +59,39 @@ class VRFrame {
 
             /* encode the image */
             frame->pts = i;
-            int ret = avcodec_encode_video2(codec_context, &pkt, frame, &valid);
+            int ret = avcodec_send_frame(codec_context, frame);
+            //int ret = avcodec_encode_video2(codec_context, &pkt, frame, valid);
             if (ret < 0) { fprintf(stderr, "Error encoding frame\n"); return; }
 
-            pktSize = pkt.size;
-            pktData = new char[pktSize];
-            memcpy(pktData, pkt.data, pktSize);
+            while (ret >= 0) {
+                ret = avcodec_receive_packet(codec_context, &pkt);
+                //if (ret == AVERROR(EAGAIN)) break;
+                if (ret < 0) return;
 
-            av_packet_unref(&pkt);
+
+                pktSize += pkt.size;
+                pktData.resize(pktSize);
+                memcpy(&pktData[pktSize - pkt.size], pkt.data, pkt.size);
+
+                av_packet_unref(&pkt);
+
+                if (ret == AVERROR_EOF) break;
+            }
+
             capture = 0;
         }
 
         void write(FILE* f) {
-            if (valid) fwrite(pktData, 1, pktSize, f);
+            if (valid) fwrite(&pktData[0], 1, pktSize, f);
         }
 };
 }
 
 VRRecorder::VRRecorder() {
+#ifndef _WIN32
     av_register_all();
     avcodec_register_all();
+#endif
 
     toggleCallback = VRFunction<bool>::create("recorder toggle", bind(&VRRecorder::setRecording, this, _1));
     updateCallback = VRUpdateCb::create("recorder update", bind(&VRRecorder::capture, this));
@@ -193,7 +206,7 @@ string VRRecorder::getCodec() { return codecName; }
 void VRRecorder::initCodec() {
     if (captures.size() == 0) { fprintf(stderr, "No initial capture for CODEC init!\n"); return; }
     AVCodecID codec_id = (AVCodecID)codecs[codecName];
-    codec = avcodec_find_encoder(codec_id);
+    codec = (AVCodec*)avcodec_find_encoder(codec_id);
     if (!codec) { fprintf(stderr, "Codec not found\n"); return; }
 
     codec_context = avcodec_alloc_context3(codec);
@@ -255,17 +268,17 @@ void VRRecorder::closeFrame() {
 }
 
 void VRRecorder::writeHeader(string path) {
-    AVFormatContext* ofmt_ctx;
-    AVOutputFormat* ofmt = av_guess_format("avi", path.c_str(), NULL);
+    AVFormatContext* ofmt_ctx = 0;
+    const AVOutputFormat* ofmt = av_guess_format("avi", path.c_str(), NULL);
     auto status = avformat_alloc_output_context2(&ofmt_ctx, ofmt, "avi", path.c_str());
     if (status < 0) std::cerr << "could not allocate output format" << std::endl;
     AVStream* stream = avformat_new_stream(ofmt_ctx, codec);
     ofmt_ctx->duration = 60*1000000; // 60 sec
-    stream->codec = codec_context;
-    stream->time_base = stream->codec->time_base;
+    //stream->codec = codec_context;
+    stream->time_base = codec_context->time_base;
     stream->duration = ofmt_ctx->duration;
     stream->avg_frame_rate = av_make_q(60,1);
-    avcodec_parameters_from_context(stream->codecpar, stream->codec);
+    avcodec_parameters_from_context(stream->codecpar, codec_context);
 #if LIBAVFORMAT_VERSION_MAJOR < 58
     stream->display_aspect_ratio = av_make_q(stream->codec->width, stream->codec->height);
 #endif
@@ -297,7 +310,7 @@ void VRRecorder::compile(string path) {
     for (int i=0; i<(int)captures.size(); i++) captures[i]->write(f);
 
     /* get the delayed frames */
-    for (int got_output = 1; got_output;) {
+    /*for (int got_output = 1; got_output;) {
         fflush(stdout);
 
         AVPacket pkt;
@@ -311,7 +324,7 @@ void VRRecorder::compile(string path) {
             fwrite(pkt.data, 1, pkt.size, f);
             av_packet_unref(&pkt);
         }
-    }
+    }*/
 
     /* add sequence end code to have a real mpeg file */
     uint8_t endcode[] = { 0, 0, 1, 0xb7 };

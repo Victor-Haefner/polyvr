@@ -1,3 +1,5 @@
+#include <OpenSG/OSGRenderAction.h>
+
 #include <gtk/gtk.h>
 #include "VRGuiScene.h"
 

@@ -1,11 +1,12 @@
 #include "CEF.h"
-#include "CEFWindowsKey.h"
 
+#include <OpenSG/OSGGeoProperties.h>
 #include <OpenSG/OSGTextureEnvChunk.h>
 #include <OpenSG/OSGTextureObjChunk.h>
 #include <OpenSG/OSGGeometry.h>
-#include <OpenSG/OSGGeoProperties.h>
 #include <OpenSG/OSGImage.h>
+
+#include "CEFWindowsKey.h" // call after OpenSG includes because of strange windows boost issue
 
 #include "core/scene/VRSceneManager.h"
 #include "core/scene/VRScene.h"
@@ -215,7 +216,7 @@ void CEF::global_initiate() {
     cmdArgs.push_back("--use-fake-ui-for-media-stream=1");
     CefMainArgs args(cmdArgs.size(), (char**)cmdArgs.data());
 #endif
-    CefInitialize(args, settings, 0, 0);
+    CefInitialize(args, settings, nullptr, 0);
 }
 
 void CEF::initiate() {
@@ -233,7 +234,7 @@ void CEF::initiate() {
 
 #ifdef _WIN32
     //requestContext = CefRequestContext::CreateContext(handler.get());
-    browser = CefBrowserHost::CreateBrowserSync(win, client, "", browser_settings, 0, 0);
+    browser = CefBrowserHost::CreateBrowserSync(win, client, "", browser_settings, nullptr, nullptr);
     browser->GetHost()->WasResized();
 #else
     browser = CefBrowserHost::CreateBrowserSync(win, client, "", browser_settings, 0);
@@ -395,9 +396,15 @@ bool CEF::mouse(int lb, int rb, int wu, int wd, VRDeviceWeakPtr d) {
     if (!browser) return true;
     auto host = browser->GetHost();
     if (!host) return true;
+#ifdef _WIN32
+    if (!ins->hit) { host->SetFocus(false); focus = false; return true; }
+    if (iobj != geo) { host->SetFocus(false); focus = false; return true; }
+    host->SetFocus(true); focus = true;
+#else
     if (!ins->hit) { host->SendFocusEvent(false); focus = false; return true; }
     if (iobj != geo) { host->SendFocusEvent(false); focus = false; return true; }
     host->SendFocusEvent(true); focus = true;
+#endif
 
     int width = resolution;
     int height = resolution/aspect;
@@ -483,9 +490,17 @@ bool CEF::keyboard(VRDeviceWeakPtr d) {
     return false;
 }
 
+#ifdef _WIN32
+bool CEF_handler::OnFileDialog(CefRefPtr< CefBrowser > browser, CefDialogHandler::FileDialogMode mode, const CefString& title, const CefString& default_file_path, const std::vector< CefString >& accept_filters, CefRefPtr< CefFileDialogCallback > callback) {
+#else
 bool CEF_handler::OnFileDialog( CefRefPtr< CefBrowser > browser, CefDialogHandler::FileDialogMode mode, const CefString& title, const CefString& default_file_path, const std::vector< CefString >& accept_filters, int selected_accept_filter, CefRefPtr< CefFileDialogCallback > callback ) {
+#endif
     auto onAccept = [callback](){
-        callback->Continue( 0, { VRGuiFile::getPath() } );
+#ifdef _WIN32
+        callback->Continue( { VRGuiFile::getPath() } );
+#else
+        callback->Continue(0, { VRGuiFile::getPath() });
+#endif
     };
 
     auto onCancel = [callback](){

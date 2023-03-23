@@ -135,6 +135,7 @@ PosePtr extractPose(e57::StructureNode& node) {
     q[2] = e57::FloatNode(rn.get("z")).value();
     q[3] = e57::FloatNode(rn.get("w")).value();
 
+    Matrix4d m;
     m.setTranslate(p);
     m.setRotate(q);
     return Pose::create(m);

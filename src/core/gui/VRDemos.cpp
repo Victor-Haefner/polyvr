@@ -1,3 +1,5 @@
+#include <OpenSG/OSGRenderAction.h>
+
 #include "VRDemos.h"
 #include "widgets/VRAppPanel.h"
 #include "widgets/VRAppLauncher.h"

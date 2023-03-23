@@ -391,9 +391,10 @@ static gint _gdk_init_dummy_context(GdkWGLDummy* dummy) {
 gboolean _gdk_win32_display_init_gl(GdkDisplay* display) {
     _GdkWin32Display* display_win32 = (_GdkWin32Display*)display;
     gint best_idx = 0;
+    gboolean disable_wgl = FALSE;
     GdkWGLDummy dummy;
 
-    if (display_win32->have_wgl) return TRUE;
+    if (display_win32->gl_type == GDK_WIN32_GL_WGL || display_win32->gl_type == GDK_WIN32_GL_EGL) return FALSE;
 
     memset(&dummy, 0, sizeof(GdkWGLDummy));
 
@@ -405,8 +406,8 @@ gboolean _gdk_win32_display_init_gl(GdkDisplay* display) {
 
     if (best_idx == 0 || !wglMakeCurrent(dummy.hdc, dummy.hglrc)) return FALSE;
 
-    display_win32->have_wgl = TRUE;
     display_win32->gl_version = epoxy_gl_version();
+    //display_win32->gl_type == GDK_WIN32_GL_WGL;
 
     display_win32->hasWglARBCreateContext = epoxy_has_wgl_extension(dummy.hdc, "WGL_ARB_create_context");
     display_win32->hasWglEXTSwapControl = epoxy_has_wgl_extension(dummy.hdc, "WGL_EXT_swap_control");
@@ -421,6 +422,7 @@ gboolean _gdk_win32_display_init_gl(GdkDisplay* display) {
 }
 
 GdkGLContext* win32_window_create_gl_context(GdkWindow* window, gboolean attached, GdkGLContext* share, gboolean full, GError** error) {
+    printf("win32_window_create_gl_context\n");
     GdkDisplay* display = gdk_window_get_display(window);
     _GdkWin32Display* display_win32 = (_GdkWin32Display*)display;
     _GdkWin32GLContext* context = NULL;
@@ -434,13 +436,15 @@ GdkGLContext* win32_window_create_gl_context(GdkWindow* window, gboolean attache
     HWND hwnd = gdk_win32_window_get_handle(window);
     HDC hdc   = GetDC(hwnd);
 
-    display_win32->gl_hdc = hdc;
-    display_win32->gl_hwnd = hwnd;
+    //display_win32->gl_hdc = hdc;
+    //display_win32->gl_hwnd = hwnd;
+    display_win32->hdc_egl_temp = hdc;
 
     context = g_object_new(GDK_TYPE_WIN32_GL_CONTEXT, "display", display, "window", window, "shared-context", share, NULL);
     context->gl_hdc = hdc;
     context->is_attached = attached;
 
+    printf("win32_window_create_gl_context done\n");
     return GDK_GL_CONTEXT(context);
 }
 
@@ -669,10 +673,12 @@ GdkGLContext* gdk_window_get_paint_gl_context(_GdkWindow* window, GError** error
         return NULL;
     }
 
+    printf(" gdk_window_get_paint_gl_context done\n");
     return iwindow->gl_paint_context;
 }
 
 GdkGLContext* _gdk_window_create_gl_context (_GdkWindow* window, GError** error) {
+  printf("_gdk_window_create_gl_context\n");
   g_return_val_if_fail (GDK_IS_WINDOW (window), NULL);
   g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
@@ -684,6 +690,7 @@ GdkGLContext* _gdk_window_create_gl_context (_GdkWindow* window, GError** error)
 #else
   return x11_window_create_gl_context(window->impl_window, TRUE, NULL, TRUE, error);
 #endif
+  printf("_gdk_window_create_gl_context done\n");
 }
 
 static GdkGLContext* gl_area_real_create_context(GLArea *area) {
@@ -725,6 +732,7 @@ static GdkGLContext* gl_area_real_create_context(GLArea *area) {
 
     gdk_gl_context_make_current(context);
 
+    printf("gl_area_real_create_context done\n");
     return context;
 }
 

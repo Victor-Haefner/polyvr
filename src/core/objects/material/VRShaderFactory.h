@@ -5,6 +5,7 @@
 #include "VRMaterialFwd.h"
 #include <OpenSG/OSGConfig.h>
 #include <map>
+#include <string>
 
 using namespace std;
 

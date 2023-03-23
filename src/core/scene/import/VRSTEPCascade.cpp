@@ -237,8 +237,10 @@ class STEPLoader {
                 catch(exception& e) { cout << endl << "ERROR: unexpected exception " << e.what() << endl; break; }
                 catch(...) {
                     cout << " Warning in STEP convertGeo: unknown exception" << endl;
+#ifndef _WIN32
                     std::exception_ptr p = std::current_exception();
                     cout << (p ? p.__cxa_exception_type()->name() : "null") << endl;
+#endif
                     break;
                 }
 

@@ -1,3 +1,5 @@
+#include <OpenSG/OSGImage.h>
+
 #include <gtk/gtk.h>
 
 #include "VRGuiUtils.h"
@@ -11,7 +13,6 @@
 #include "core/utils/system/VRSystem.h"
 #include "core/utils/xml.h"
 
-#include <OpenSG/OSGImage.h>
 
 #include <iostream>
 #include <functional>

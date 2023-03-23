@@ -1,3 +1,5 @@
+#include <OpenSG/OSGRenderAction.h>
+
 #include <gtk/gtk.h>
 #include "VRGuiSetup.h"
 #include "VRGuiUtils.h"
@@ -24,7 +26,9 @@
 #endif
 #include "core/setup/devices/VRServer.h"
 #include "core/setup/devices/VRMouse.h"
+#ifndef WITHOUT_PRESENTER
 #include "core/setup/devices/VRPresenter.h"
+#endif
 #ifndef WITHOUT_MTOUCH
 #include "core/setup/devices/VRMultiTouch.h"
 #endif
@@ -1241,7 +1245,9 @@ VRGuiSetup::VRGuiSetup() {
     menu->appendMenu("SM_AddMenu", "Device", "SM_AddDevMenu");
     menu->appendMenu("SM_AddMenu", "VRPN", "SM_AddVRPNMenu");
     menu->appendItem("SM_AddDevMenu", "Mouse", bind( &VRGuiSetup::on_menu_add_device<VRMouse>, this) );
+#ifndef WITHOUT_PRESENTER
     menu->appendItem("SM_AddDevMenu", "Presenter", bind( &VRGuiSetup::on_menu_add_device<VRPresenter>, this) );
+#endif
 #ifndef WITHOUT_MTOUCH
     menu->appendItem("SM_AddDevMenu", "MultiTouch", bind( &VRGuiSetup::on_menu_add_device<VRMultiTouch>, this) );
 #endif

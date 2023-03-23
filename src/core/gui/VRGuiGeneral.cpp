@@ -1,9 +1,11 @@
+#include <OpenSG/OSGRenderAction.h>
+#include <OpenSG/OSGSceneFileHandler.h>
+
 #include <gtk/gtk.h>
 #include "VRGuiGeneral.h"
 #include "VRGuiUtils.h"
 #include "VRGuiFile.h"
 
-#include <OpenSG/OSGSceneFileHandler.h>
 #include "core/scene/VRScene.h"
 #include "core/setup/VRSetup.h"
 #include "core/setup/windows/VRView.h"

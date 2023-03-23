@@ -49,7 +49,12 @@ class CEF_handler : public CefRenderHandler, public CefLoadHandler, public CefCo
         void OnLoadError( CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, ErrorCode errorCode, const CefString& errorText, const CefString& failedUrl ) override;
         void OnLoadStart( CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, TransitionType transition_type ) override;
 
+#ifdef _WIN32
+        bool OnFileDialog( CefRefPtr< CefBrowser > browser, CefDialogHandler::FileDialogMode mode, const CefString& title, const CefString& default_file_path, const std::vector< CefString >& accept_filters, CefRefPtr< CefFileDialogCallback > callback) override;
+#else
         bool OnFileDialog( CefRefPtr< CefBrowser > browser, CefDialogHandler::FileDialogMode mode, const CefString& title, const CefString& default_file_path, const std::vector< CefString >& accept_filters, int selected_accept_filter, CefRefPtr< CefFileDialogCallback > callback ) override;
+#endif
+
 
         void on_link_clicked(string source, int line, string s);
         bool OnConsoleMessage( CefRefPtr< CefBrowser > browser, cef_log_severity_t level, const CefString& message, const CefString& source, int line ) override;
