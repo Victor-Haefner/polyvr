@@ -1,6 +1,5 @@
 #include <OpenSG/OSGRenderAction.h>
 
-#include <gtk/gtk.h>
 #include "VRGuiSetup.h"
 #include "VRGuiUtils.h"
 #include "VRGuiBuilder.h"
@@ -414,7 +413,7 @@ void VRGuiSetup::on_save_as_clicked() {
     VRGuiFile::gotoPath( setupDir() );
     VRGuiFile::setFile( "mySetup.pvr" );
     VRGuiFile::clearFilter();
-    VRGuiFile::open( "Save As..", GTK_FILE_CHOOSER_ACTION_SAVE, "Save Setup As.." );
+    VRGuiFile::open( "Save As..", "save", "Save Setup As.." );
 }
 
 // setup list

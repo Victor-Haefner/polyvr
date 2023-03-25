@@ -6,7 +6,6 @@
 
 #include <string>
 #include <iostream>
-#include <gtk/gtk.h>
 
 #include "core/scene/VRSceneLoader.h"
 #include "core/scene/VRSceneManager.h"
@@ -268,7 +267,7 @@ void VRAppManager::on_saveas_clicked() {
     VRGuiFile::clearFilter();
     VRGuiFile::addFilter("Project", 3, "*.xml", "*.pvr", "*.pvc");
     VRGuiFile::addFilter("All", 1, "*");
-    VRGuiFile::open( "Save", GTK_FILE_CHOOSER_ACTION_SAVE, "Save project as.." );
+    VRGuiFile::open( "Save", "save", "Save project as.." );
     VRGuiFile::setSaveasWidget( bind( &VRAppManager::on_toggle_encryption, this, placeholders::_1 ) );
     VRGuiFile::setFile( scene->getFile() );
 }
@@ -327,7 +326,7 @@ void VRAppManager::on_load_clicked() {
     VRGuiFile::addFilter("Project", 3, "*.xml", "*.pvr", "*.pvc");
     VRGuiFile::addFilter("Model", 19, "*.dae", "*.wrl", "*.obj", "*.3ds", "*.3DS", "*.ply", "*.hgt", "*.tif", "*.tiff", "*.pdf", "*.shp", "*.e57", "*.xyz", "*.STEP", "*.STP", "*.step", "*.stp", "*.ifc", "*.dxf");
     VRGuiFile::addFilter("All", 1, "*");
-    VRGuiFile::open( "Load", GTK_FILE_CHOOSER_ACTION_OPEN, "Load project" );
+    VRGuiFile::open( "Load", "open", "Load project" );
 }
 
 void VRAppManager::writeGitignore(string path) {
@@ -359,7 +358,7 @@ void VRAppManager::on_new_clicked() {
     VRGuiFile::gotoPath( g_get_home_dir() );
     VRGuiFile::setFile( "myApp.pvr" );
     VRGuiFile::clearFilter();
-    VRGuiFile::open( "Create", GTK_FILE_CHOOSER_ACTION_SAVE, "Create new project" );
+    VRGuiFile::open( "Create", "save", "Create new project" );
 }
 
 void VRAppManager::on_search() {

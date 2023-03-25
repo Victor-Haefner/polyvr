@@ -1,7 +1,6 @@
 #include <OpenSG/OSGRenderAction.h>
 #include <OpenSG/OSGSceneFileHandler.h>
 
-#include <gtk/gtk.h>
 #include "VRGuiGeneral.h"
 #include "VRGuiUtils.h"
 #include "VRGuiFile.h"
@@ -59,7 +58,7 @@ void VRGuiGeneral::on_bg_path_choose() {
 void VRGuiGeneral::openBGpath() {
     VRGuiFile::gotoPath("./");
     VRGuiFile::setCallbacks(bind(&VRGuiGeneral::on_bg_path_choose, this));
-    VRGuiFile::open("Open", GTK_FILE_CHOOSER_ACTION_OPEN, "Choose image");
+    VRGuiFile::open("Open", "open", "Choose image");
 }
 
 void VRGuiGeneral::on_tfps_changed() {

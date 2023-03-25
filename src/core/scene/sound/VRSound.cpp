@@ -446,7 +446,7 @@ void add_audio_stream(OutputStream *ost, AVFormatContext *oc, enum AVCodecID cod
 
     /* put sample parameters */
 	c->sample_rate    = codec->supported_samplerates ? codec->supported_samplerates[0] : 44100;
-    c->channel_layout = codec->channel_layouts       ? codec->channel_layouts[0]       : AV_CH_LAYOUT_STEREO;    
+    c->channel_layout = codec->channel_layouts       ? codec->channel_layouts[0]       : AV_CH_LAYOUT_STEREO;
     c->sample_fmt     = codec->sample_fmts           ? codec->sample_fmts[0]           : AV_SAMPLE_FMT_S16;
 	c->channels       = av_get_channel_layout_nb_channels(c->channel_layout);
     c->bit_rate       = 64000;
@@ -497,10 +497,10 @@ bool open_audio(AVFormatContext *oc, OutputStream *ost) {
     int nb_samples, ret;
 
     AVCodecContext* c = ost->enc;
-	
+
 	const AVCodec* codec = avcodec_find_encoder(oc->oformat->audio_codec);
 	cout << " --- open_audio, found codec: " << codec->name << endl;
-	
+
 	//AVCodec* codec = avcodec_find_encoder(c->codec_id);
     if (codec == NULL) { fprintf(stderr, "could not find codec\n"); return false; }
 
@@ -513,7 +513,7 @@ bool open_audio(AVFormatContext *oc, OutputStream *ost) {
 			break;
 		}
 	}
-	
+
 	if (r < 0) {
 		fprintf(stderr, "Could not open codec!\n");
 		return false;
@@ -542,7 +542,7 @@ bool open_audio(AVFormatContext *oc, OutputStream *ost) {
 AVFrame* get_audio_frame(OutputStream *ost, VRSoundBufferPtr buffer) {
     AVFrame* frame = ost->tmp_frame;
     if (!frame || !buffer) return 0;
-	
+
     int16_t* src = (int16_t*)buffer->data;
     int16_t* dst = (int16_t*)frame->data[0];
 
@@ -572,7 +572,7 @@ void setupMP3Decoder(AVCodecContext** ctx, AVFormatContext** fmtctx) {
 
     auto fmtcontext = avformat_alloc_context();
     *fmtctx = fmtcontext;
-    fmtcontext->iformat = fmt;
+    fmtcontext->iformat = (AVInputFormat*)fmt;
 
 
     AVStream* stream = avformat_new_stream(fmtcontext, NULL);
@@ -636,8 +636,8 @@ void encode_audio_frame(AVFormatContext *oc, OutputStream *ost, AVFrame *frame) 
 void VRSound::write_buffer(AVFormatContext *oc, OutputStream *ost, VRSoundBufferPtr buffer) {
     //cout << "  get audio frame" << endl;
     AVFrame* frame = get_audio_frame(ost, buffer);
-    if (!frame) return;	
-	
+    if (!frame) return;
+
     //cout << "  resample convert " << frame->linesize[0] << " " << frame->nb_samples << endl;
     int ret = swr_convert(ost->avr, NULL, 0, (const uint8_t **)frame->extended_data, frame->nb_samples);
     if (ret < 0) { fprintf(stderr, "Error feeding audio data to the resampler\n"); return; }
@@ -688,7 +688,7 @@ void VRSound::exportToFile(string path) {
 
 	cout << "sound exportToFile: " << filename << endl;
 
-    const AVOutputFormat* fmt = av_guess_format(NULL, filename, NULL);
+    auto fmt = av_guess_format(NULL, filename, NULL);
     if (!fmt) {
         printf("Could not deduce output format from file extension: using MPEG.\n");
         fmt = av_guess_format("mpeg", NULL, NULL);
@@ -764,7 +764,7 @@ bool VRSound::addOutStreamClient(VRNetworkClientPtr client) {
 #endif
 
     //AVOutputFormat* fmt = av_guess_format("opus", NULL, NULL);
-    const AVOutputFormat* fmt = av_guess_format("mp3", NULL, NULL);
+    auto fmt = av_guess_format("mp3", NULL, NULL);
     //AVOutputFormat* fmt = av_guess_format("matroska", "test.mkv", NULL);
     if (!fmt) { fprintf(stderr, "Could not find suitable output format\n"); return false; }
 
@@ -848,7 +848,7 @@ string VRSound::onStreamData(string data, bool stereo) {
         if (!initiated) initiate();
         audio_ist = new InputStream(data);
 
-        const AVInputFormat* fmt = av_find_input_format("mp3");
+        auto fmt = av_find_input_format("mp3");
         auto codec = avcodec_find_decoder(AV_CODEC_ID_MP3);
         al->codec = avcodec_alloc_context3(codec);
 
@@ -1147,7 +1147,7 @@ void VRSound::synthBufferOnChannels(vector<vector<Vec2d>> freqs1, vector<vector<
 
 double simTime = 0;
 double simPhase = 0;
-	
+
 VRSoundBufferPtr test_genPacket(double T) {
     // tone parameters
     float Ac = 32760;
@@ -1186,25 +1186,25 @@ void VRSound::testMP3Write() {
 	cout << " AV versions: " << endl;
 	cout << " codec:  " << AV_VERSION_MAJOR(LIBAVCODEC_VERSION_INT) << "." << AV_VERSION_MINOR(LIBAVCODEC_VERSION_INT) << endl;
 	cout << " format: " << AV_VERSION_MAJOR(LIBAVFORMAT_VERSION_INT) << "." << AV_VERSION_MINOR(LIBAVFORMAT_VERSION_INT) << endl;
-	
+
 	// create data
 	simTime = 0;
 	simPhase = 0;
 	for (int i=0; i<10; i++) {
 		ownedBuffer.push_back( test_genPacket(0.3) );
 	}
-	
+
 	string path = "test.mp3";
-	
+
     OutputStream audio_st = { 0 };
     const char *filename = path.c_str();
 #ifndef _WIN32
     av_register_all();
 #endif
-	
+
 	cout << "sound exportToFile: " << filename << endl;
 
-    const AVOutputFormat* fmt = av_guess_format(NULL, filename, NULL);
+    auto fmt = av_guess_format(NULL, filename, NULL);
     if (!fmt) { fprintf(stderr, "Could not find suitable output format\n"); return; }
 
     AVFormatContext* oc = avformat_alloc_context();
@@ -1248,7 +1248,7 @@ void VRSound::testMP3Write() {
     if (!(fmt->flags & AVFMT_NOFILE)) avio_close(oc->pb);
 	cout << "  free context" << endl;
     avformat_free_context(oc);
-	
+
 	cout << "av mp3 write test success!" << endl;
 }
 

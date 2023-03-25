@@ -257,7 +257,6 @@ void VRGuiManager::getScriptFocus(VRScriptPtr& script, int& line, int& column) {
 }
 
 void VRGuiManager::broadcast(string sig) {
-    if (get()->nogtk) return;
     VRGuiSignals::get()->getSignal(sig)->triggerAll<VRDevice>();
 }
 

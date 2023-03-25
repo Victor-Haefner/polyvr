@@ -218,9 +218,9 @@ void VRWindowManager::updateWindows() {
             if (auto win = dynamic_pointer_cast<VRGlutWindow>(w.second)) win->render();
 #ifndef WITHOUT_GTK
             if (auto win = dynamic_pointer_cast<VRGtkWindow>(w.second)) win->render();
+#endif
 #ifndef WITHOUT_OPENVR
             if (auto win = dynamic_pointer_cast<VRHeadMountedDisplay>(w.second)) win->render();
-#endif
 #endif
         }
 #else
@@ -229,6 +229,7 @@ void VRWindowManager::updateWindows() {
         auto clist = Thread::getCurrentChangeList();
         VRGlobals::NCHANGED = clist->getNumChanged();
         VRGlobals::NCREATED = clist->getNumCreated();
+        // WASM rendering
         for (auto w : getWindows() ) if (auto win = dynamic_pointer_cast<VRGlutWindow>(w.second)) win->render();
 #endif
         clist->clear();

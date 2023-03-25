@@ -1,4 +1,3 @@
-#include <gtk/gtk.h>
 #include "VRGuiSemantics.h"
 #include "VRGuiUtils.h"
 #include "VRGuiBuilder.h"
@@ -103,7 +102,7 @@ void VRGuiSemantics::on_open_clicked() {
     VRGuiFile::clearFilter();
     VRGuiFile::addFilter("Ontology", 1, "*.owl");
     VRGuiFile::addFilter("All", 1, "*");
-    VRGuiFile::open( "Load", GTK_FILE_CHOOSER_ACTION_OPEN, "Load ontology" );
+    VRGuiFile::open( "Load", "open", "Load ontology" );
 }
 
 void VRGuiSemantics::setOntology(string name) {

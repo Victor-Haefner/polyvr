@@ -269,7 +269,7 @@ void VRRecorder::closeFrame() {
 
 void VRRecorder::writeHeader(string path) {
     AVFormatContext* ofmt_ctx = 0;
-    const AVOutputFormat* ofmt = av_guess_format("avi", path.c_str(), NULL);
+    auto ofmt = av_guess_format("avi", path.c_str(), NULL);
     auto status = avformat_alloc_output_context2(&ofmt_ctx, ofmt, "avi", path.c_str());
     if (status < 0) std::cerr << "could not allocate output format" << std::endl;
     AVStream* stream = avformat_new_stream(ofmt_ctx, codec);

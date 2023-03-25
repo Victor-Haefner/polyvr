@@ -12,9 +12,6 @@
 #include "VRPyNavigator.h"
 #include "VRPyRendering.h"
 #include "VRPyTypeCaster.h"
-#ifndef WITHOUT_GTK
-#include <gtk/gtk.h>
-#endif
 #include "VRPyProgress.h"
 #include "VRPySky.h"
 #ifndef WITHOUT_AV
@@ -407,8 +404,8 @@ PyObject* VRSceneGlobals::openFileDialog(VRSceneGlobals* self, PyObject *args) {
     VRGuiFile::setCallbacks( bind(on_py_file_diag_cb, cb) );
 
     string m = PyString_AsString(mode);
-    GtkFileChooserAction action = GTK_FILE_CHOOSER_ACTION_OPEN;
-    if (m == "Save" || m == "New" || m == "Create") action = GTK_FILE_CHOOSER_ACTION_SAVE;
+    string action = "open";
+    if (m == "Save" || m == "New" || m == "Create") action = "save";
     else VRGuiFile::setGeoLoadWidget();
     VRGuiFile::open( m, action, PyString_AsString(title) );
 #endif

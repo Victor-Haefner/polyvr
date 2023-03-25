@@ -1,6 +1,5 @@
 #include <OpenSG/OSGRenderAction.h>
 
-#include <gtk/gtk.h>
 #include "VRGuiScripts.h"
 #include "VRGuiUtils.h"
 #include "VRGuiBuilder.h"
@@ -198,7 +197,7 @@ void VRGuiScripts::on_import_clicked() {
     VRGuiFile::addFilter("All", 1, "*");
     VRGuiFile::setWidget(scriptImportWidget, true, true);
     VRGuiFile::setCallbacks( bind(&VRGuiScripts::on_diag_import, this), function<void()>(), bind(&VRGuiScripts::on_diag_import_select, this));
-    VRGuiFile::open("Import", GTK_FILE_CHOOSER_ACTION_OPEN, "Import script");
+    VRGuiFile::open("Import", "open", "Import script");
 }
 
 void VRGuiScripts::on_diag_import_select() {
