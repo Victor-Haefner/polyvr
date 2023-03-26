@@ -310,7 +310,6 @@ void VRSceneManager::update() {
         VRTimer t1; t1.start();
 #ifndef WITHOUT_GTK
         VRSetup::getCurrent()->updateGtkDevices();
-        //VRGuiManager::get()->updateGtk();
 #endif
         VRGlobals::GTK1_FRAME_RATE.update(t1);
         VRGlobals::UPDATE_LOOP1.update(timer);
@@ -375,7 +374,7 @@ void VRSceneManager::update() {
             int pID31 = profiler->regStart("frame gtk update");
 #endif
 #ifndef WITHOUT_GTK
-            VRGuiManager::get()->updateGtk();
+            //VRGuiManager::get()->updateGtk();
 #endif
 #ifndef WASM
             profiler->regStop(pID31);
@@ -411,7 +410,7 @@ void VRSceneManager::update() {
     };
 
     setupProfiling();
-    doGTKUpdate();
+    //doGTKUpdate();
     doCallbacks(); // Warning, CEF may call g_main_context_iteration
     doSetupUpdate();
     doSceneUpdate();

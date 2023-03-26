@@ -59,7 +59,7 @@ string VRWindow::getMSAA() { return msaa; }
 
 void VRWindow::stop() { stopping = true; }
 void VRWindow::setAction(RenderActionRefPtr ract) { this->ract = ract; }
-bool VRWindow::hasType(int i) { return (i == type); }
+bool VRWindow::hasType(string i) { return (i == type); }
 Vec2i VRWindow::getSize() { return Vec2i(width, height); }
 void VRWindow::render(bool fromThread) { if(_win) _win->render(ract); }
 void VRWindow::sync(bool fromThread) { ; }

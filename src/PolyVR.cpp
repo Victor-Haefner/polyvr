@@ -289,10 +289,11 @@ void PolyVR::update() {
 #endif
     if (VRGlobals::CURRENT_FRAME == appInitFrame) {
         string app = options->getOption<string>("application");
+        app = "/home/victor/Projects/polyvr/examples/CEF.xml";
         string dcy = options->getOption<string>("decryption");
         string key;
         if (startsWith(dcy, "key:")) key = subString(dcy, 4, dcy.size()-4);
-        if (startsWith(dcy, "serial:")) key = "123"; // TODO: access serial connection to retreive key
+        if (startsWith(dcy, "serial:")) key = "123"; // TODO: access serial connection to retrieve key
         if (app != "") VRSceneManager::get()->loadScene(app, false, key);
     }
 }

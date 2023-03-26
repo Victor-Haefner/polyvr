@@ -10,6 +10,7 @@ ptrFwd(VRView);
 ptrFwd(VRWindow);
 ptrFwd(VRGtkWindow);
 ptrFwd(VRGlutWindow);
+ptrFwd(VRGlutEditor);
 ptrFwd(VRMultiWindow);
 ptrFwd(VRHeadMountedDisplay);
 ptrFwd(VRWebXR);

@@ -66,7 +66,9 @@ void VRNavPreset::setDevice(VRDevicePtr _dev) {
 
 void VRNavPreset::setTarget(VRTransformPtr _target) { target = _target; if (dev) dev->setTarget(_target); }
 
-void VRNavPreset::setActive(bool b) { if (b) activate(); else deactivate(); }
+void VRNavPreset::setActive(bool b) {
+    cout << "VRNavPreset::setActive " << name << ", " << b << endl;
+    if (b) activate(); else deactivate(); }
 bool VRNavPreset::isActive() { return active; }
 
 void VRNavPreset::activate() {
@@ -160,6 +162,7 @@ map<string, VRDeviceCbPtr>& VRNavigator_base::getNavigationCallbacks() { return 
 
 
 VRNavigator::VRNavigator() {
+    cout << "VRNavigator::VRNavigator" << endl;
     setStorageType("Navigation");
     auto addNavCb = [&](string name, boost::function<bool(VRDeviceWeakPtr)> fkt) {
         storeNavigationCallback( VRDeviceCb::create(name, fkt) );
@@ -419,6 +422,7 @@ void VRNavigator::initWalk(VRTransformPtr target, VRDevicePtr dev) {
 }
 
 void VRNavigator::initOrbit(VRTransformPtr target, VRDevicePtr dev) {
+    cout << "VRNavigator::initOrbit" << endl;
     auto preset = VRNavPreset::create();
     preset->setDevice(dev);
     preset->setTarget(target);

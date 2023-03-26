@@ -155,7 +155,7 @@ void VRSetup::setScene(VRScenePtr scene) {
     for (auto w : getWindows()) w.second->setContent(true);
     for (auto s : scripts) scene->addScript(s.second);
 #ifndef WITHOUT_GTK
-    getEditorWindow()->doResize();
+    if (auto w = getEditorWindow()) w->doResize();
 #endif
     //scene->initDevices();
 }

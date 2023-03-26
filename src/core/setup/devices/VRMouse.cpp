@@ -32,7 +32,7 @@ VRMousePtr VRMouse::ptr() { return static_pointer_cast<VRMouse>( shared_from_thi
 void VRMouse::setCursor(string c) {
     auto s = VRSetup::getCurrent();
     for (auto w : s->getWindows()) {
-        if (!w.second->hasType(2)) continue; // not a gtk window
+        if (!w.second->hasType("gtk")) continue; // not a gtk window
 #ifndef WITHOUT_GTK
         auto win = dynamic_pointer_cast<VRGtkWindow>(w.second);
         win->setCursor(c);
@@ -232,6 +232,7 @@ void VRMouse::updatePosition(int x, int y) {
 * @param y: y coordinate of mouse pointer on screen
 */
 void VRMouse::mouse(int button, int state, int x, int y, bool delayed) {
+    cout << "VRMouse::mouse " << Vec4i(button, state, x, y) << ", delayed " << delayed << endl;
 #ifndef WITHOUT_GTK
     if (delayed) {
         delayedEvents.push_back( {button,state,x,y} );
@@ -240,13 +241,12 @@ void VRMouse::mouse(int button, int state, int x, int y, bool delayed) {
 #endif
 
     motion(x,y,false);
-    //cout << "VRMouse::mouse " << Vec4i(button, state, x, y) << endl;
     bool pressed = bool(state == 0);
     change_button(button, pressed);
 }
 
 void VRMouse::motion(int x, int y, bool delayed) {
-    //cout << VRGlobals::CURRENT_FRAME << " VRMouse::motion " << x << " " << y << endl;
+    cout << VRGlobals::CURRENT_FRAME << " VRMouse::motion " << x << " " << y << endl;
 #ifndef WITHOUT_GTK
     if (delayed) {
         delayedEvents.push_back( {x,y} );

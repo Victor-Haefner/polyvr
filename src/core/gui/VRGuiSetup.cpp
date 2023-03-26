@@ -118,8 +118,8 @@ void VRGuiSetup::updateObjectData() {
             }
         }
 
-        if (win->hasType(1)) setWidgetVisibility("expander23", true, true);
-        if (win->hasType(2)) setWidgetVisibility("expander22", true, true); // GTK
+        if (win->hasType("glut")) setWidgetVisibility("expander23", true, true);
+        if (win->hasType("gtk")) setWidgetVisibility("expander22", true, true); // GTK
 
         // mouse
         string name = "None";

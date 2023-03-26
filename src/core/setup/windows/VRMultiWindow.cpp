@@ -23,7 +23,7 @@ using namespace std;
 
 
 VRMultiWindow::VRMultiWindow() {
-    type = 0;
+    type = "distributed";
 }
 
 VRMultiWindow::~VRMultiWindow() {

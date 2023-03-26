@@ -27,6 +27,7 @@
 
 #include "VRView.h"
 #include "VRGlutWindow.h"
+#include "VRGlutEditor.h"
 #ifndef WASM
 #include "VRMultiWindow.h"
 #include "VRHeadMountedDisplay.h"
@@ -46,6 +47,7 @@ VRConsoleWidget::get( "Errors" )->write( x+"\n" );
 cout << x << endl;
 #endif
 
+#include <GL/freeglut.h>
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -69,6 +71,14 @@ RenderActionRefPtr VRWindowManager::getRenderAction() { return ract; }
 
 VRWindowPtr VRWindowManager::addGlutWindow(string name) {
     VRGlutWindowPtr win = VRGlutWindow::create();
+    win->setName(name);
+    win->setAction(ract);
+    windows[win->getName()] = win;
+    return win;
+}
+
+VRWindowPtr VRWindowManager::addGlutEditor(string name) {
+    VRGlutEditorPtr win = VRGlutEditor::create();
     win->setName(name);
     win->setAction(ract);
     windows[win->getName()] = win;
@@ -214,7 +224,9 @@ void VRWindowManager::updateWindows() {
         if (!wait()) return false;
         // let the windows merge the change lists, sync and clear
         if (!wait()) return false;
+        glutMainLoopEvent();
         for (auto w : getWindows()) {
+            if (auto win = dynamic_pointer_cast<VRGlutEditor>(w.second)) win->render();
             if (auto win = dynamic_pointer_cast<VRGlutWindow>(w.second)) win->render();
 #ifndef WITHOUT_GTK
             if (auto win = dynamic_pointer_cast<VRGtkWindow>(w.second)) win->render();
@@ -309,17 +321,22 @@ void VRWindowManager::load(XMLElementPtr node) {
         //el->print();
         VRWindowPtr win = 0;
 
-        if (type == "0") {
+        if (type == "0" || type == "distributed") {
             win = addMultiWindow(name);
             win->load(el);
         }
 
-        if (type == "1") {
+        if (type == "1" || type == "glut") {
             win = addGlutWindow(name);
             win->load(el);
         }
 
-        if (type == "2") {
+        if (type == "glutEditor") {
+            win = addGlutEditor(name);
+            win->load(el);
+        }
+
+        if (type == "2" || type == "gtk") {
             win = addGtkWindow(name, "glarea", msaa);
             win->load(el);
         }

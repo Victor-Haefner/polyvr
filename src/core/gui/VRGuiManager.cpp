@@ -83,6 +83,11 @@ void VRGuiManager::setWindowTitle(string title) {
 }
 
 VRGuiManager::VRGuiManager() {
+
+    VRSetupManager::get()->load("Desktop", "setup/Desktop.xml");
+    return;
+
+
     cout << "Init VRGuiManager.." << endl;
     mtx = new VRMutex();
     nogtk = VROptions::get()->getOption<bool>("nogtk");

@@ -23,7 +23,7 @@ class VRWindow : public std::enable_shared_from_this<VRWindow>, public VRName {
         bool waitingAtBarrier = false;
         bool stopping = false;
         string msaa = "x4";
-        int type = -1;
+        string type = "window";
         WindowMTRecPtr _win;
         RenderActionRefPtr ract;
         vector<VRViewWeakPtr> views;
@@ -46,7 +46,7 @@ class VRWindow : public std::enable_shared_from_this<VRWindow>, public VRName {
         static VRWindowPtr create();
         VRWindowPtr ptr();
 
-        bool hasType(int i);
+        bool hasType(string i);
         void resize(int w, int h);
         Vec2i getSize();
 

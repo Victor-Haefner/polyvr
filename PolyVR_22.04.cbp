@@ -122,6 +122,7 @@
 			<Add directory="/usr/include/python2.7" />
 			<Add directory="/usr/include/jsoncpp" />
 			<Add directory="/usr/include/openvr" />
+			<Add directory="/usr/include/imgui" />
 		</Compiler>
 		<Linker>
 			<Add option="-lTKV3d" />
@@ -210,6 +211,8 @@
 			<Add option="-lICE" />
 			<Add option="-lX11" />
 			<Add option="-lXext" />
+			<Add option="-limgui" />
+			<Add option="-lstb" />
 			<Add option="-lglut" />
 			<Add option="-lXmu" />
 			<Add option="-lXi" />
@@ -949,6 +952,8 @@
 		<Unit filename="src/core/gui/gtksourceview/gtksourceview.gresource.xml" />
 		<Unit filename="src/core/gui/gtksourceview/gtksourceview.h" />
 		<Unit filename="src/core/gui/gtksourceview/gtktextregion.h" />
+		<Unit filename="src/core/gui/imgui/VRImguiEditor.cpp" />
+		<Unit filename="src/core/gui/imgui/VRImguiEditor.h" />
 		<Unit filename="src/core/gui/widgets/VRAppLauncher.cpp" />
 		<Unit filename="src/core/gui/widgets/VRAppLauncher.h" />
 		<Unit filename="src/core/gui/widgets/VRAppPanel.cpp" />
@@ -1521,6 +1526,8 @@
 		<Unit filename="src/core/setup/tracking/VRPN.h" />
 		<Unit filename="src/core/setup/tracking/Vive.cpp" />
 		<Unit filename="src/core/setup/tracking/Vive.h" />
+		<Unit filename="src/core/setup/windows/VRGlutEditor.cpp" />
+		<Unit filename="src/core/setup/windows/VRGlutEditor.h" />
 		<Unit filename="src/core/setup/windows/VRGlutWindow.cpp" />
 		<Unit filename="src/core/setup/windows/VRGlutWindow.h" />
 		<Unit filename="src/core/setup/windows/VRGtkWindow.cpp" />
