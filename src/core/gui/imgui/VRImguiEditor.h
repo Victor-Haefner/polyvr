@@ -121,7 +121,6 @@ class Imgui {
         ImWidget sidePannel = ImWidget("SidePannel", {0,0.3,0,0.95});
         ImWidget consoles = ImWidget("Consoles", {0.3,1.0,0,0.3});
         ImWidget glArea = ImWidget("glArea", {0.3,1,0.3,0.95});
-        Surface glAreaWindow;
         //TextEditor editor;
 
         void resolveResize(const string& name, const ResizeEvent& resizer);
@@ -137,7 +136,6 @@ class Imgui {
         void render();
         void renderGLArea();
         void resizeUI(const Surface& parent);
-        void resizeGL(const Surface& parent);
         void resize(const Surface& parent);
         void onWidgetResize(map<string,string> options);
 };

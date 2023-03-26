@@ -155,10 +155,6 @@ void Imgui::resizeUI(const Surface& parent) {
     if (resizeSignal) resizeSignal("glAreaResize", glArea.surface);
 }
 
-void Imgui::resizeGL(const Surface& parent) { // on resize
-    glAreaWindow = parent;
-}
-
 void Imgui::onWidgetResize(map<string,string> options) {
     string name = options["name"];
     char edge = options["edge"][0];
@@ -171,7 +167,7 @@ ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
 void Imgui::render() {
     ImGuiIO& io = ImGui::GetIO();
-    cout << "  Imgui::render " << io.DisplaySize.x << ", " << io.DisplaySize.y << endl;
+    //cout << "  Imgui::render " << io.DisplaySize.x << ", " << io.DisplaySize.y << endl;
     if (io.DisplaySize.x < 0 || io.DisplaySize.y < 0) return;
 
     // Start the Dear ImGui frame

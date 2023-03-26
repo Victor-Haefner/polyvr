@@ -11,7 +11,7 @@ void Editor::setupCallbacks() {
     addCallback("glutRenderUI", [&](Options){ imgui.render(); return true; } );
     //addCallback("glutRenderGL", [&](Options){ imgui.renderGLArea(); return true; } );
     addResizeCallback("glutResizeUI", [&](Surface s){ imgui.resizeUI(s); return true; } );
-    addResizeCallback("glutResizeGL", [&](Surface s){ imgui.resizeGL(s); return true; } );
+    //addResizeCallback("glutResizeGL", [&](Surface s){ imgui.resizeGL(s); return true; } );
     addCallback("widgetResize", [&](Options o){ imgui.onWidgetResize(o); return true; } );
     addResizeCallback("glutResize", [&](Surface s){ imgui.resizeUI(s); return true; } );
 
@@ -49,15 +49,12 @@ void Editor::addResizeCallback(string name, ResizeCallback callback) {
 }
 
 bool Editor::trigger(string name, Options options) {
-    cout << "Editor::trigger " << name << ", " << callbacks.count(name) << ", " << verbose << endl;
     if (!callbacks.count(name)) {
         if (verbose) cout << " ..no callbacks, skip " << name << endl;
         return false;
     }
 
-    cout << "Editor::trigger " << name << ", " << callbacks[name].size() << endl;
     for (auto& callback : callbacks[name]) {
-        cout << " trigger.. " << callbacks[name].size() << endl;
         bool b = callback(options);
         if (!b) break;
     }

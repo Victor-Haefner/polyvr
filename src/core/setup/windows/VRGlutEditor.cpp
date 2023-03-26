@@ -24,9 +24,8 @@ void onMainReshape(int w, int h) { getCurrentEditor()->on_resize_window(w,h); }
 void onUIDisplay() { getCurrentEditor()->on_ui_display(); }
 void onGLDisplay() { getCurrentEditor()->on_gl_display(); }
 void onUIReshape(int w, int h) { getCurrentEditor()->on_ui_resize(w, h); }
-void onGLReshape(int w, int h) { getCurrentEditor()->on_gl_resize(w, h); }
 
-void glutEResize(int w, int h) { getCurrentEditor()->resize(w, h); }
+void glutEResize(int w, int h) { getCurrentEditor()->on_gl_resize(w, h); }
 void glutEMouse(int b, int s, int x, int y) { getCurrentEditor()->onMouse(b ,s ,x ,y); }
 void glutEMotion(int x, int y) { getCurrentEditor()->onMotion(x, y); }
 void glutEKeyboard(unsigned char k, int x, int y) { getCurrentEditor()->onKeyboard(k, 1, x, y); }
@@ -64,8 +63,6 @@ VRGlutEditor::VRGlutEditor() {
     glutSetWindow(topWin);
     winGL = glutCreateSubWindow(topWin, 0,0,width*0.6, height*0.6);
     glutEditors[winGL] = this;
-    //glutDisplayFunc( onGLDisplay );
-    //glutReshapeFunc( onGLReshape );
 
 
     cout << " Glut create window" << endl;
@@ -77,6 +74,7 @@ VRGlutEditor::VRGlutEditor() {
     cout << "  init OpenSG GLUT window" << endl;
     win->init();
 
+    glutDisplayFunc( onGLDisplay );
     glutReshapeFunc(glutEResize);
     glutKeyboardFunc(glutEKeyboard);
     glutSpecialFunc(glutESpecial);
@@ -142,7 +140,9 @@ void VRGlutEditor::onKeyboard_special(int c, int s, int x, int y) {
 
 void VRGlutEditor::render(bool fromThread) {
     if (fromThread) return;
-    VRWindow::render();
+    glutSetWindow(winGL);
+    glutPostRedisplay();
+    //VRWindow::render();
 
     glutSetWindow(winUI);
     glutPostRedisplay();
@@ -155,20 +155,29 @@ void VRGlutEditor::render(bool fromThread) {
     glutSwapBuffers();
 }
 
+void VRGlutEditor::on_gl_resize(int w, int h) {
+    cout << "  Glut::on_gl_resize " << w << ", " << h << endl;
+    if (winGL < 0) return;
+    glutSetWindow(winGL);
+    int ww = glutGet(GLUT_WINDOW_WIDTH); // calling glutGet somehow magically fixes the resize glitches..
+    int hh = glutGet(GLUT_WINDOW_HEIGHT);
+    if (resizeSignal) resizeSignal( "glutResizeGL", 0,0,w,h ); // tell imgui the new size
+}
+
 void VRGlutEditor::resizeGLWindow(int x, int y, int w, int h) { // glArea.surface
-    //cout << "     Glut::updateGLWindow " << surface << endl;
+    cout << "     Glut::updateGLWindow " << x << ", " << y << ", " << w << ", " << h << endl;
     if (winGL < 0) return;
     glutSetWindow(winGL);
     glutPositionWindow(x, y);
-    glutReshapeWindow(w, h);
     resize(w, h);
+    glutReshapeWindow(w, h);
 }
 
 void VRGlutEditor::on_resize_window(int w, int h) { // resize top window
     if (winUI < 0) return;
     glutSetWindow(winUI);
     glutReshapeWindow(w,h);
-    //if (resizeSignal) resizeSignal("glutResize", 0,0,w,h);
+    if (resizeSignal) resizeSignal("glutResize", 0,0,w,h);
 }
 
 void VRGlutEditor::on_gl_display() {
@@ -177,7 +186,8 @@ void VRGlutEditor::on_gl_display() {
     glutSetWindow(winGL);
     int w = glutGet(GLUT_WINDOW_WIDTH); // calling glutGet somehow magically fixes the resize glitches..
     int h = glutGet(GLUT_WINDOW_HEIGHT);
-    if (signal) signal( "glutRenderGL", {} );
+    //if (signal) signal( "glutRenderGL", {} );
+    VRWindow::render();
 }
 
 void VRGlutEditor::on_ui_display() {
@@ -185,13 +195,6 @@ void VRGlutEditor::on_ui_display() {
     if (winUI < 0) return;
     glutSetWindow(winUI);
     if (signal) signal( "glutRenderUI", {} );
-}
-
-void VRGlutEditor::on_gl_resize(int w, int h) {
-    //cout << "  Glut::on_gl_resize " << w << ", " << h << endl;
-    if (winGL < 0) return;
-    glutSetWindow(winGL);
-    if (resizeSignal) resizeSignal( "glutResizeGL", 0,0,w,h );
 }
 
 void VRGlutEditor::on_ui_resize(int w, int h) {
