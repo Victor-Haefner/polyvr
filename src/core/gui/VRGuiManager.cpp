@@ -59,35 +59,27 @@ VRGuiManager::~VRGuiManager() {
 }
 
 void VRGuiManager::init() {
-    imguiMgr = new VRImguiManager();
-    VRSetupManager::get()->load("Desktop", "setup/Desktop.xml");
-    return;
-
     cout << "Init VRGuiManager.." << endl;
     mtx = new VRMutex();
     standalone = VROptions::get()->getOption<bool>("standalone") || nogtk;
 
     //VRGuiBuilder::get(standalone);
-
-    gtkUpdateCb = VRThreadCb::create("gtk update", bind(&VRGuiManager::updateGtkThreaded, this, placeholders::_1));
-
     if (standalone) {
         cout << " start in standalone mode\n";
-        VRSetupManager::get()->load("Desktop", "setup/Desktop.xml");
-
+        VRSetupManager::get()->load("Desktop", "setup/DesktopMin.xml");
         updatePtr = VRUpdateCb::create("GUI_updateManager", bind(&VRGuiManager::update, this) );
         VRSceneManager::get()->addUpdateFkt(updatePtr, 1);
-
         g_bits = new VRGuiBits();
-
-        GtkWindow* top = (GtkWindow*)VRGuiBuilder::get()->get_widget("window1");
-        gtk_window_maximize(top);
-        gtk_widget_show_all((GtkWidget*)top);
         return;
     }
 
-    //gtk_rc_parse("gui/gtkrc");
+    imguiMgr = new VRImguiManager();
+    VRSetupManager::get()->load("Desktop", "setup/Desktop.xml");
+
     g_demos = new VRAppManager();
+    return;
+
+    //gtk_rc_parse("gui/gtkrc");
     g_bits = new VRGuiBits();
     g_mon = new VRGuiMonitor();
     g_sc = new VRGuiScripts();

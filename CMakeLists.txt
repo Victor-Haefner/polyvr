@@ -803,7 +803,7 @@ if(NOT WITHOUT_GTK)
 target_sources(polyvr PRIVATE src/core/setup/windows/VRGtkWindow.cpp) # needs GTK
 target_sources(polyvr PRIVATE src/core/setup/windows/VRMultiWindow.cpp)
 
-target_sources(polyvr PRIVATE src/core/gui/VRDemos.cpp)              
+target_sources(polyvr PRIVATE src/core/gui/VRAppManager.cpp)              
 target_sources(polyvr PRIVATE src/core/gui/VRGuiConsole.cpp)      
 target_sources(polyvr PRIVATE src/core/gui/VRGuiFile.cpp)     
 target_sources(polyvr PRIVATE src/core/gui/VRGuiMonitor.cpp)  
