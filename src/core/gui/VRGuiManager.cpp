@@ -1,5 +1,6 @@
 #include "VRGuiManager.h"
 #include "VRGuiBuilder.h"
+#include "imgui/VRImguiManager.h"
 #include "core/scene/VRSceneManager.h"
 #include "core/setup/VRSetupManager.h"
 #include "core/scripting/VRScript.h"
@@ -22,33 +23,8 @@
 
 #include "glarea/glgdk.h"
 #include "glarea/glarea.h"
-#include <gtk/gtk.h>
 
 #include "core/utils/VRMutex.h"
-
-
-#include <GL/glu.h>
-
-#define CHECK_GL_ERROR(msg) \
-{ \
-    GLenum err = glGetError(); \
-    if (err != GL_NO_ERROR) { \
-        static int i=0; i++; \
-        if (i <= 4) printf(" gl error on %s: %s\n", msg, gluErrorString(err)); \
-        if (i == 4) printf("  ..ignoring further errors\n"); \
-    } \
-}
-
-#define CHECK_GL_ERROR2(msg) \
-{ \
-    GLenum err = glGetError(); \
-    if (err != GL_NO_ERROR) { \
-        printf(" gl error on %s: %s\n", msg, gluErrorString(err)); \
-        GtkWidget* w = gtk_get_event_widget(e); \
-        cout << "  got gdk event: " << e->type << " " << w << endl; \
-        if (w) cout << "  " << gtk_widget_get_name(w) << endl; \
-    } \
-}
 
 
 OSG_BEGIN_NAMESPACE;
@@ -65,68 +41,33 @@ VRGuiSemantics* g_sem = 0;
 VRGuiGeneral* g_gen = 0;
 VRGuiMonitor* g_mon = 0;
 
-void addIconsPath(string p) {
-    string icons = VRSceneManager::get()->getOriginalWorkdir() + "/" + p;
-    gtk_icon_theme_add_resource_path(gtk_icon_theme_get_default(), icons.c_str());
-    gtk_icon_theme_append_search_path(gtk_icon_theme_get_default(), icons.c_str());
+VRImguiManager* imguiMgr = 0;
+
+VRGuiManager::VRGuiManager() {}
+
+VRGuiManager::~VRGuiManager() {
+    cout << "VRGuiManager::~VRGuiManager" << endl;
+    if (g_scene) delete g_scene;
+    if (g_bits) delete g_bits;
+    if (g_demos) delete g_demos;
+    if (g_nav) delete g_nav;
+    if (g_net) delete g_net;
+    if (g_sem) delete g_sem;
+    if (g_sc) delete g_sc;
+    if (g_di) delete g_di;
+    if (mtx) delete mtx;
 }
 
-void addSchemaPath(string p) {
-    string schemas = VRSceneManager::get()->getOriginalWorkdir() + "/" + p;
-    // TODO;
-}
-
-void VRGuiManager::setWindowTitle(string title) {
-    if (nogtk) return;
-    GtkWindow* top = (GtkWindow*)VRGuiBuilder::get()->get_widget("window1");
-    gtk_window_set_title(top, title.c_str());
-}
-
-VRGuiManager::VRGuiManager() {
-
+void VRGuiManager::init() {
+    imguiMgr = new VRImguiManager();
     VRSetupManager::get()->load("Desktop", "setup/Desktop.xml");
     return;
 
-
     cout << "Init VRGuiManager.." << endl;
     mtx = new VRMutex();
-    nogtk = VROptions::get()->getOption<bool>("nogtk");
     standalone = VROptions::get()->getOption<bool>("standalone") || nogtk;
 
-    if (nogtk) {
-        cout << " start in nogtk mode\n";
-        VRSetupManager::get()->load("Glut", "setup/Glut.xml");
-        return;
-    }
-
-    int argc = 0;
-    gtk_disable_setlocale();
-#ifndef _WIN32
-    setenv("GDK_GL", "legacy", 1); // linux legacy gl
-#endif
-    gtk_init_check(&argc, 0);
-#ifndef _WIN32
-    replace_gl_visuals();
-#else
-    override_win32_gl_context_realize();
-#endif
-
-    GdkDisplay* display = gdk_display_get_default();
-    GdkScreen* screen = gdk_display_get_default_screen(display);
-    GdkVisual* visual = gdk_screen_get_system_visual(screen);
-    int depth = gdk_visual_get_depth(visual);
-
-    /*int depth_size = 0;
-    glXGetConfig(dpy, visinfo, GLX_DEPTH_SIZE, &depth_size);*/
-    cout << " gdk system visual: depth size " << depth << endl;
-
-    //gtk_window_set_interactive_debugging(true);
-
-    addIconsPath("ressources/gui/icons");
-    addSchemaPath("ressources/gui/schemas");
-
-    //gtk_gl_init(&argc, NULL);
-    VRGuiBuilder::get(standalone);
+    //VRGuiBuilder::get(standalone);
 
     gtkUpdateCb = VRThreadCb::create("gtk update", bind(&VRGuiManager::updateGtkThreaded, this, placeholders::_1));
 
@@ -211,17 +152,14 @@ VRGuiManager::VRGuiManager() {
     cout << " done" << endl;
 }
 
-VRGuiManager::~VRGuiManager() {
-    cout << "VRGuiManager::~VRGuiManager" << endl;
-    if (g_scene) delete g_scene;
-    if (g_bits) delete g_bits;
-    if (g_demos) delete g_demos;
-    if (g_nav) delete g_nav;
-    if (g_net) delete g_net;
-    if (g_sem) delete g_sem;
-    if (g_sc) delete g_sc;
-    if (g_di) delete g_di;
-    if (mtx) delete mtx;
+void VRGuiManager::initImgui() {
+    imguiMgr->setupCallbacks();
+    imguiMgr->initImgui();
+}
+
+void VRGuiManager::setWindowTitle(string title) {
+    GtkWindow* top = (GtkWindow*)VRGuiBuilder::get()->get_widget("window1");
+    gtk_window_set_title(top, title.c_str());
 }
 
 void VRGuiManager::selectObject(VRObjectPtr obj) {
@@ -234,12 +172,6 @@ void VRGuiManager::openHelp(string search) {
 
 void VRGuiManager::updateSystemInfo() {
     if (g_mon) g_mon->updateSystemInfo();
-}
-
-void VRGuiManager::startThreadedUpdate() {
-    if (gtkUpdateThreadID != -1) return;
-    updateGtk();
-    gtkUpdateThreadID = VRSceneManager::get()->initThread(gtkUpdateCb, "gtk update", true, 1);
 }
 
 VRMutex& VRGuiManager::guiMutex() { return *mtx; }
@@ -265,6 +197,14 @@ void VRGuiManager::broadcast(string sig) {
     VRGuiSignals::get()->getSignal(sig)->triggerAll<VRDevice>();
 }
 
+bool VRGuiManager::trigger(string name, VRGuiSignals::Options options) {
+    return VRGuiSignals::get()->trigger(name, options);
+}
+
+bool VRGuiManager::triggerResize(string name, int x, int y, int w, int h) {
+    return VRGuiSignals::get()->triggerResize(name, x,y,w,h);
+}
+
 void VRGuiManager::wakeWindow() {
     setWidgetSensitivity("vpaned1", true);
     setWidgetSensitivity("notebook3", true);
@@ -273,36 +213,6 @@ void VRGuiManager::wakeWindow() {
 VRConsoleWidgetPtr VRGuiManager::getConsole(string t) {
     if (standalone || !g_bits) return 0;
     return g_bits->getConsole(t);
-}
-
-void vr_gtk_main_do_event(GdkEvent* e) {
-
-    /*if (e->type == GDK_EXPOSE) {
-        auto ew = gtk_get_event_widget(e);
-        if (e->any.window) gtk_widget_render(ew, e->any.window, e->expose.region);
-    } else */
-
-    CHECK_GL_ERROR2("vr_gtk_main_do_event A1");
-    gtk_main_do_event(e);
-    CHECK_GL_ERROR2("vr_gtk_main_do_event A2");
-}
-
-void VRGuiManager::updateGtk() {
-    if (nogtk) return;
-    //cout << VRGlobals::CURRENT_FRAME << "VRGuiManager::updateGtk" << endl;
-    gdk_event_handler_set((GdkEventFunc)vr_gtk_main_do_event, NULL, NULL);
-
-    VRLock lock( guiMutex() );
-    CHECK_GL_ERROR("VRGuiManager::updateGtk A1");
-    while( gtk_events_pending() ) gtk_main_iteration_do(false); // non blocking, may fail to catch the rendering event!
-    //while( gtk_events_pending() || VRGlobals::GTK_LAST_RENDER < VRGlobals::CURRENT_FRAME)
-    //    gtk_main_iteration_do(true); // blocking, this should wait for the rendering event
-    //gtk_main_iteration(); // blocking, this should wait for the rendering event
-    CHECK_GL_ERROR("VRGuiManager::updateGtk A2");
-}
-
-void VRGuiManager::updateGtkThreaded(VRThreadWeakPtr t) {
-    updateGtk();
 }
 
 void VRGuiManager::update() {
@@ -314,13 +224,10 @@ GtkWindow* VRGuiManager::newWindow() {
     GtkWindow* w = (GtkWindow*)gtk_window_new(GTK_WINDOW_TOPLEVEL);
     gtk_window_set_default_size(w, 200, 200);
     gtk_widget_show_all((GtkWidget*)w);
-    windows[w] = w;
     return w;
 }
 
 void VRGuiManager::remWindow(GtkWindow* w) {
-    if (!windows.count(w)) return;
-    windows.erase(w);
 }
 
 OSG_END_NAMESPACE;

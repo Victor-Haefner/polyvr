@@ -240,6 +240,7 @@ void PolyVR::initUI() {
 
 #ifndef WITHOUT_GTK
     gui_mgr = shared_ptr<VRGuiManager>(VRGuiManager::get());
+    gui_mgr->init();
     gui_mgr->updateSystemInfo();
 #endif
 

@@ -6,13 +6,21 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <functional>
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
 class VRGuiSignals {
+    public:
+        typedef map<string, string> Options;
+        typedef function< bool(Options) > Callback;
+        typedef function< bool(int,int,int,int) > ResizeCallback;
+
     private:
         map<string, VRSignalPtr> signals;
+        map<string, vector<Callback>> callbacks;
+        map<string, vector<ResizeCallback>> resizeCallbacks;
 
         VRGuiSignals();
 
@@ -21,6 +29,11 @@ class VRGuiSignals {
 
         vector<string> getSignals();
         VRSignalPtr getSignal(string name);
+
+        void addCallback(string name, Callback callback);
+        void addResizeCallback(string name, ResizeCallback callback);
+        bool trigger(string name, Options options = {});
+        bool triggerResize(string name, int,int,int,int);
 
         void clear();
 };

@@ -5,11 +5,13 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <functional>
 #include "core/utils/VRFunctionFwd.h"
 #include "core/utils/VRUtilsFwd.h"
 #include "core/scripting/VRScriptFwd.h"
 #include "core/objects/VRObjectFwd.h"
 #include "VRGuiFwd.h"
+#include "VRGuiSignals.h"
 
 struct _GtkWindow;
 
@@ -25,27 +27,28 @@ class VRGuiManager {
 	    VRUpdateCbPtr updatePtr;
         VRThreadCbPtr gtkUpdateCb;
         int gtkUpdateThreadID = -1;
-	    vector<VRDeviceCbPtr> guiSignalCbs;
         VRMutex* mtx = 0;
-
-	    map<_GtkWindow*, _GtkWindow*> windows;
+	    vector<VRDeviceCbPtr> guiSignalCbs;
 
         VRGuiManager();
-
         void update();
 
     public:
         static VRGuiManager* get(bool init = true);
         ~VRGuiManager();
 
-        static void broadcast(string sig);
+        void init();
+        void initImgui();
+
+        static void broadcast(string name);
+        static bool trigger(string name, VRGuiSignals::Options options = {});
+        static bool triggerResize(string name, int,int,int,int);
 
         VRConsoleWidgetPtr getConsole(string t);
         void focusScript(string name, int line, int column);
         void getScriptFocus(VRScriptPtr& script, int& line, int& column);
         void updateGtk();
         void updateGtkThreaded(VRThreadWeakPtr t);
-        void startThreadedUpdate();
         void wakeWindow();
 
         void openHelp(string search = "");

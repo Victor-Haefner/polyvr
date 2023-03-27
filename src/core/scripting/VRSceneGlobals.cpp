@@ -414,7 +414,7 @@ PyObject* VRSceneGlobals::openFileDialog(VRSceneGlobals* self, PyObject *args) {
 
 PyObject* VRSceneGlobals::updateGui(VRSceneGlobals* self) {
 #ifndef WITHOUT_GTK
-    VRGuiManager::get()->updateGtk();
+    //VRGuiManager::get()->updateGtk(); // TODO
 #endif
     Py_RETURN_TRUE;
 }
@@ -423,7 +423,7 @@ PyObject* VRSceneGlobals::render(VRSceneGlobals* self) {
     VRSceneManager::get()->updateScene();
     VRSetup::getCurrent()->updateWindows();
 #ifndef WITHOUT_GTK
-    VRGuiManager::get()->updateGtk();
+    //VRGuiManager::get()->updateGtk(); // TODO
 #endif
     Py_RETURN_TRUE;
 }

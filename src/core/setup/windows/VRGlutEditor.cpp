@@ -9,6 +9,7 @@
 #include "core/setup/VRSetup.h"
 #include "core/setup/VRWebXR.h"
 
+#include "core/gui/VRGuiManager.h"
 #include "core/gui/imgui/VRImguiManager.h"
 
 OSG_BEGIN_NAMESPACE;
@@ -37,10 +38,10 @@ VRGlutEditor::VRGlutEditor() {
     cout << "Glut: New Editor" << endl;
     type = "glutEditor";
 
-    int width = 800;//20;
-    int height = 600;//10;
-
     initGlut();
+
+    int width = glutGet(GLUT_SCREEN_WIDTH);
+    int height = glutGet(GLUT_SCREEN_HEIGHT);
 
     cout << " Glut create editor" << endl;
     glutInitWindowSize(width, height);
@@ -52,18 +53,17 @@ VRGlutEditor::VRGlutEditor() {
     glutEditors[winUI] = this;
     glutDisplayFunc( onUIDisplay );
     glutReshapeFunc( onUIReshape );
-    // TODO: move somewhere else!
-    static Editor editor;
-    editor.setupCallbacks();
-    editor.initImgui();
-    editor.addResizeCallback("glAreaResize", [&](Surface s){ resizeGLWindow(s.x, s.y, s.width, s.height); return true; } );
-    signal = [&](string name, map<string,string> opts) -> bool { return editor.trigger(name,opts); };
-    resizeSignal = [&](string name, int x, int y, int w, int h) -> bool { return editor.triggerResize(name,{x,y,w,h}); };
+
+    //VRGuiManager::trigger("initGLEditor"); // TODO: use this signal to trigger initImgui below!
+    VRGuiManager::get()->initImgui();
+    VRGuiSignals::get()->addResizeCallback("glAreaResize", [&](int x, int y, int w, int h){ resizeGLWindow(x, y, w, h); return true; } );
+    signal = [&](string name, map<string,string> opts) -> bool { return VRGuiManager::trigger(name,opts); };
+    resizeSignal = [&](string name, int x, int y, int w, int h) -> bool { return VRGuiManager::triggerResize(name,x,y,w,h); };
+
 
     glutSetWindow(topWin);
     winGL = glutCreateSubWindow(topWin, 0,0,width*0.6, height*0.6);
     glutEditors[winGL] = this;
-
 
     cout << " Glut create window" << endl;
     cout << "  window ID: " << winGL << endl;

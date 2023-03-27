@@ -954,6 +954,8 @@
 		<Unit filename="src/core/gui/gtksourceview/gtktextregion.h" />
 		<Unit filename="src/core/gui/imgui/VRImguiEditor.cpp" />
 		<Unit filename="src/core/gui/imgui/VRImguiEditor.h" />
+		<Unit filename="src/core/gui/imgui/VRImguiManager.cpp" />
+		<Unit filename="src/core/gui/imgui/VRImguiManager.h" />
 		<Unit filename="src/core/gui/widgets/VRAppLauncher.cpp" />
 		<Unit filename="src/core/gui/widgets/VRAppLauncher.h" />
 		<Unit filename="src/core/gui/widgets/VRAppPanel.cpp" />
