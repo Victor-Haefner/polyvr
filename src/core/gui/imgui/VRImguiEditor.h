@@ -8,6 +8,7 @@
 
 //#include "imEditor/TextEditor.h"
 #include <imgui.h>
+#include <core/utils/VRFwdDeclTemplate.h>
 
 using namespace std;
 
@@ -27,18 +28,6 @@ struct Surface {
     void compute(const Surface& parent, const Rectangle& area);
 };
 
-class Widget {
-    public:
-        string name;
-        Rectangle layout;
-        Surface surface;
-        Surface parentSurface;
-
-        Widget(string n, Rectangle r) : name(n), layout(r) {}
-
-        void updateLayout(const Surface& newSize);
-};
-
 struct ResizeEvent {
     ImVec2 size;
     ImVec2 pos;
@@ -49,17 +38,61 @@ struct ResizeEvent {
 typedef function<void(string, map<string, string>)> Signal;
 typedef function<void(string, Surface)> ResizeSignal;
 
-class ImWidget : public Widget {
+ptrFwd(ImWidget);
+
+class ImWidget {
     public:
+        string name;
         Signal signal;
+        vector<ImWidgetPtr> children;
+
+        ImWidget(string n);
+        virtual ~ImWidget();
+
+        void render();
+        virtual void begin() = 0;
+        void end();
+};
+
+class ImSection : public ImWidget {
+    public:
+        Rectangle layout;
+        Surface surface;
+        Surface parentSurface;
         ResizeEvent resizer;
         ImGuiWindowFlags flags = 0;
 
-        ImWidget(string n, Rectangle r);
-
-        void begin();
-        void end();
+        ImSection(string n, Rectangle r);
         void resize(const Surface& parent);
+        void updateLayout(const Surface& newSize);
+
+        void begin() override;
+};
+
+class ImAppManager : public ImWidget {
+    public:
+        ImAppManager();
+        void begin() override;
+};
+
+class ImToolbar : public ImSection {
+    public:
+        ImToolbar(Rectangle r);
+};
+
+class ImSidePanel : public ImSection {
+    public:
+        ImSidePanel(Rectangle r);
+};
+
+class ImConsoles : public ImSection {
+    public:
+        ImConsoles(Rectangle r);
+};
+
+class ImGLArea : public ImSection {
+    public:
+        ImGLArea(Rectangle r);
 };
 
 class Imgui {
@@ -67,15 +100,14 @@ class Imgui {
         Signal signal;
         ResizeSignal resizeSignal;
 
-        ImWidget toolbar = ImWidget("Toolbar", {0,1,0.95,1});
-        ImWidget sidePannel = ImWidget("SidePannel", {0,0.3,0,0.95});
-        ImWidget consoles = ImWidget("Consoles", {0.3,1.0,0,0.3});
-        ImWidget glArea = ImWidget("glArea", {0.3,1,0.3,0.95});
-        //TextEditor editor;
+        ImToolbar toolbar = ImToolbar({0,1,0.95,1});
+        ImSidePanel sidePanel = ImSidePanel({0,0.3,0,0.95});
+        ImConsoles consoles = ImConsoles({0.3,1.0,0,0.3});
+        ImGLArea glArea = ImGLArea({0.3,1,0.3,0.95});
 
         void resolveResize(const string& name, const ResizeEvent& resizer);
 
-        void renderSidePannel();
+        void renderSidePanel();
         void renderToolbar();
         void renderConsoles();
 

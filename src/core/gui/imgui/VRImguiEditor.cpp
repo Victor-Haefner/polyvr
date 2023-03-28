@@ -53,18 +53,21 @@ vector<char> ResizeEvent::changed() {
     return edges;
 }
 
-void Widget::updateLayout(const Surface& newSize) {
-    //cout << " updateLayout " << newSize.y + newSize.height << "/800?   " << layout << ", parentSurface: " << parentSurface;
-    layout.left  = float(newSize.x - parentSurface.x) / parentSurface.width;
-    layout.right = float(newSize.x + newSize.width - parentSurface.x) / parentSurface.width;
-    layout.top    = 1.0 - float(newSize.y - parentSurface.y) / parentSurface.height;
-    layout.bottom = 1.0 - float(newSize.y + newSize.height - parentSurface.y) / parentSurface.height;
-    surface.compute(parentSurface, layout);
-    //cout << ", new size: " << newSize << " -> " << layout << endl;
+
+ImWidget::ImWidget(string n) : name(n) {}
+ImWidget::~ImWidget() {}
+
+void ImWidget::end() {
+    ImGui::End();
 }
 
+void ImWidget::render() {
+    begin();
+    end();
+    for (auto& child : children) child->render();
+}
 
-ImWidget::ImWidget(string n, Rectangle r) : Widget(n,r) {
+ImSection::ImSection(string n, Rectangle r) : ImWidget(n), layout(r) {
     resize({0,0,800,800});
 
     flags |= ImGuiWindowFlags_NoTitleBar;
@@ -79,7 +82,7 @@ ImWidget::ImWidget(string n, Rectangle r) : Widget(n,r) {
     //flags |= ImGuiWindowFlags_UnsavedDocument;
 }
 
-void ImWidget::begin() {
+void ImSection::begin() {
     //cout << " place widget " << surface << endl;
     ImGui::SetNextWindowPos(ImVec2(surface.x, surface.y)); // ImGuiCond_FirstUseEver
     ImGui::SetNextWindowSize(ImVec2(surface.width, surface.height));
@@ -95,17 +98,40 @@ void ImWidget::begin() {
     }
 }
 
-void ImWidget::end() {
-    ImGui::End();
+void ImSection::updateLayout(const Surface& newSize) {
+    //cout << " updateLayout " << newSize.y + newSize.height << "/800?   " << layout << ", parentSurface: " << parentSurface;
+    layout.left  = float(newSize.x - parentSurface.x) / parentSurface.width;
+    layout.right = float(newSize.x + newSize.width - parentSurface.x) / parentSurface.width;
+    layout.top    = 1.0 - float(newSize.y - parentSurface.y) / parentSurface.height;
+    layout.bottom = 1.0 - float(newSize.y + newSize.height - parentSurface.y) / parentSurface.height;
+    surface.compute(parentSurface, layout);
+    //cout << ", new size: " << newSize << " -> " << layout << endl;
 }
 
-void ImWidget::resize(const Surface& parent) {
+void ImSection::resize(const Surface& parent) {
     parentSurface = parent;
     surface.compute(parent, layout);
     resizer.pos = ImVec2(surface.x, surface.y);
     resizer.size = ImVec2(surface.width, surface.height);
 }
 
+ImToolbar::ImToolbar(Rectangle r) : ImSection("Toolbar", r) {}
+
+ImSidePanel::ImSidePanel(Rectangle r) : ImSection("SidePanel", r) {
+    auto appMgr = new ImAppManager();
+    children.push_back(ImWidgetPtr(appMgr));
+}
+
+ImConsoles::ImConsoles(Rectangle r) : ImSection("Consoles", r) {}
+ImGLArea::ImGLArea(Rectangle r) : ImSection("glArea", r) {}
+
+ImAppManager::ImAppManager() : ImWidget("AppManager") {
+    ;
+}
+
+void ImAppManager::begin() {
+    ;
+}
 
 void Imgui::init(Signal signal, ResizeSignal resizeSignal) {
     this->signal = signal;
@@ -124,7 +150,7 @@ void Imgui::init(Signal signal, ResizeSignal resizeSignal) {
     ImGui_ImplGLUT_InstallFuncs();
 
     toolbar.signal = signal;
-    sidePannel.signal = signal;
+    sidePanel.signal = signal;
     consoles.signal = signal;
     glArea.signal = signal;
 }
@@ -137,22 +163,22 @@ void Imgui::close() {
 
 void Imgui::resolveResize(const string& name, const ResizeEvent& resizer) {
     //cout << "     resolveResize " << name << ", " << resizer << endl;
-    if (name == "SidePannel") {
-        sidePannel.updateLayout({ resizer.pos.x, resizer.pos.y, resizer.size.x, resizer.size.y });
-        consoles.layout.left = sidePannel.layout.right;
+    if (name == "SidePanel") {
+        sidePanel.updateLayout({ resizer.pos.x, resizer.pos.y, resizer.size.x, resizer.size.y });
+        consoles.layout.left = sidePanel.layout.right;
         consoles.resize(consoles.parentSurface);
-        toolbar.layout.bottom = sidePannel.layout.top;
+        toolbar.layout.bottom = sidePanel.layout.top;
         toolbar.resize(toolbar.parentSurface);
-        glArea.layout.left = sidePannel.layout.right;
-        glArea.layout.top = sidePannel.layout.top;
+        glArea.layout.left = sidePanel.layout.right;
+        glArea.layout.top = sidePanel.layout.top;
         glArea.resize(glArea.parentSurface);
         resizeSignal("glAreaResize", glArea.surface);
     }
 
     if (name == "Consoles") {
         consoles.updateLayout({ resizer.pos.x, resizer.pos.y, resizer.size.x, resizer.size.y });
-        sidePannel.layout.right = consoles.layout.left;
-        sidePannel.resize(sidePannel.parentSurface);
+        sidePanel.layout.right = consoles.layout.left;
+        sidePanel.resize(sidePanel.parentSurface);
         glArea.layout.left = consoles.layout.left;
         glArea.layout.bottom = consoles.layout.top;
         glArea.resize(glArea.parentSurface);
@@ -160,8 +186,8 @@ void Imgui::resolveResize(const string& name, const ResizeEvent& resizer) {
     }
 }
 
-void Imgui::renderSidePannel() {
-    sidePannel.begin();
+void Imgui::renderSidePanel() {
+    sidePanel.begin();
     ImGuiTabBarFlags tab_bar_flags = ImGuiTabBarFlags_None;
     if (ImGui::BeginTabBar("MyTabBar", tab_bar_flags)) {
         if (ImGui::BeginTabItem("Apps")) {
@@ -179,7 +205,7 @@ void Imgui::renderSidePannel() {
         ImGui::EndTabBar();
     }
 
-    sidePannel.end();
+    sidePanel.end();
 }
 
 void Imgui::renderToolbar() {
@@ -209,7 +235,7 @@ void Imgui::renderConsoles() {
 
 void Imgui::resizeUI(const Surface& parent) {
     toolbar.resize(parent);
-    sidePannel.resize(parent);
+    sidePanel.resize(parent);
     consoles.resize(parent);
     glArea.resize(parent);
     if (resizeSignal) resizeSignal("glAreaResize", glArea.surface);
@@ -219,7 +245,7 @@ void Imgui::onSectionResize(map<string,string> options) {
     string name = options["name"];
     char edge = options["edge"][0];
     if (name == "Toolbar" && edge == 'B') resolveResize(name, toolbar.resizer);
-    if (name == "SidePannel" && (edge == 'T' || edge == 'R')) resolveResize(name, sidePannel.resizer);
+    if (name == "SidePanel" && (edge == 'T' || edge == 'R')) resolveResize(name, sidePanel.resizer);
     if (name == "Consoles" && (edge == 'T' || edge == 'L')) resolveResize(name, consoles.resizer);
 }
 
@@ -235,7 +261,7 @@ void Imgui::render() {
     ImGui_ImplGLUT_NewFrame();
 
     renderToolbar();
-    renderSidePannel();
+    renderSidePanel();
     renderConsoles();
 
     //ImGui::ShowDemoWindow(0);
