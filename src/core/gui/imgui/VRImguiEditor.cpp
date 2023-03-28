@@ -56,15 +56,12 @@ vector<char> ResizeEvent::changed() {
 
 ImWidget::ImWidget(string n) : name(n) {}
 ImWidget::~ImWidget() {}
-
-void ImWidget::end() {
-    ImGui::End();
-}
+void ImWidget::end() {}
 
 void ImWidget::render() {
     begin();
-    end();
     for (auto& child : children) child->render();
+    end();
 }
 
 ImSection::ImSection(string n, Rectangle r) : ImWidget(n), layout(r) {
@@ -98,6 +95,10 @@ void ImSection::begin() {
     }
 }
 
+void ImSection::end() {
+    ImGui::End();
+}
+
 void ImSection::updateLayout(const Surface& newSize) {
     //cout << " updateLayout " << newSize.y + newSize.height << "/800?   " << layout << ", parentSurface: " << parentSurface;
     layout.left  = float(newSize.x - parentSurface.x) / parentSurface.width;
@@ -122,8 +123,27 @@ ImSidePanel::ImSidePanel(Rectangle r) : ImSection("SidePanel", r) {
     children.push_back(ImWidgetPtr(appMgr));
 }
 
+void ImSidePanel::begin() {
+    ImSection::begin();
+    ImGuiTabBarFlags tab_bar_flags = ImGuiTabBarFlags_None;
+    if (ImGui::BeginTabBar("MyTabBar", tab_bar_flags)) {
+        if (ImGui::BeginTabItem("Apps")) {
+            ImGui::EndTabItem();
+        }
+
+        if (ImGui::BeginTabItem("Setup")) {
+            ImGui::EndTabItem();
+        }
+
+        if (ImGui::BeginTabItem("Scene")) {
+            //editor.Render("Editor");
+            ImGui::EndTabItem();
+        }
+        ImGui::EndTabBar();
+    }
+}
+
 ImConsoles::ImConsoles(Rectangle r) : ImSection("Consoles", r) {}
-ImGLArea::ImGLArea(Rectangle r) : ImSection("glArea", r) {}
 
 ImAppManager::ImAppManager() : ImWidget("AppManager") {
     ;
@@ -187,29 +207,11 @@ void Imgui::resolveResize(const string& name, const ResizeEvent& resizer) {
 }
 
 void Imgui::renderSidePanel() {
-    sidePanel.begin();
-    ImGuiTabBarFlags tab_bar_flags = ImGuiTabBarFlags_None;
-    if (ImGui::BeginTabBar("MyTabBar", tab_bar_flags)) {
-        if (ImGui::BeginTabItem("Apps")) {
-            ImGui::EndTabItem();
-        }
-
-        if (ImGui::BeginTabItem("Setup")) {
-            ImGui::EndTabItem();
-        }
-
-        if (ImGui::BeginTabItem("Scene")) {
-            //editor.Render("Editor");
-            ImGui::EndTabItem();
-        }
-        ImGui::EndTabBar();
-    }
-
-    sidePanel.end();
+    sidePanel.render();
 }
 
-void Imgui::renderToolbar() {
-    toolbar.begin();
+void ImToolbar::begin() {
+    ImSection::begin();
     if (ImGui::Button("New"));
     ImGui::SameLine();
     if (ImGui::Button("Open"));
@@ -225,12 +227,10 @@ void Imgui::renderToolbar() {
     if (ImGui::Button("About"));
     ImGui::SameLine();
     if (ImGui::Button("Stats"));
-    toolbar.end();
 }
 
-void Imgui::renderConsoles() {
-    consoles.begin();
-    consoles.end();
+void ImConsoles::begin() {
+    ImSection::begin();
 }
 
 void Imgui::resizeUI(const Surface& parent) {
@@ -253,28 +253,23 @@ ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
 void Imgui::render() {
     ImGuiIO& io = ImGui::GetIO();
-    //cout << "  Imgui::render " << io.DisplaySize.x << ", " << io.DisplaySize.y << endl;
     if (io.DisplaySize.x < 0 || io.DisplaySize.y < 0) return;
 
     // Start the Dear ImGui frame
     ImGui_ImplOpenGL2_NewFrame();
     ImGui_ImplGLUT_NewFrame();
 
-    renderToolbar();
-    renderSidePanel();
-    renderConsoles();
+    toolbar.render();
+    sidePanel.render();
+    consoles.render();
 
     //ImGui::ShowDemoWindow(0);
 
     // Rendering
     ImGui::Render();
     glViewport(0, 0, (GLsizei)io.DisplaySize.x, (GLsizei)io.DisplaySize.y);
-
     glClearColor(clear_color.x * clear_color.w, clear_color.y * clear_color.w, clear_color.z * clear_color.w, clear_color.w);
     glClear(GL_COLOR_BUFFER_BIT);
-    //glUseProgram(0); // You may want this if using this code in an OpenGL 3+ context where shaders may be bound, but prefer using the GL3+ code.
     ImGui_ImplOpenGL2_RenderDrawData(ImGui::GetDrawData());
-
-    //cout << " Imgui::render " << (GLsizei)io.DisplaySize.x << ", " << (GLsizei)io.DisplaySize.y << endl;
 }
 

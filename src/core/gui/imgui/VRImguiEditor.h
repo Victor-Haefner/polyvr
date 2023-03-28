@@ -51,7 +51,7 @@ class ImWidget {
 
         void render();
         virtual void begin() = 0;
-        void end();
+        virtual void end();
 };
 
 class ImSection : public ImWidget {
@@ -67,6 +67,7 @@ class ImSection : public ImWidget {
         void updateLayout(const Surface& newSize);
 
         void begin() override;
+        void end() override;
 };
 
 class ImAppManager : public ImWidget {
@@ -78,21 +79,19 @@ class ImAppManager : public ImWidget {
 class ImToolbar : public ImSection {
     public:
         ImToolbar(Rectangle r);
+        void begin() override;
 };
 
 class ImSidePanel : public ImSection {
     public:
         ImSidePanel(Rectangle r);
+        void begin() override;
 };
 
 class ImConsoles : public ImSection {
     public:
         ImConsoles(Rectangle r);
-};
-
-class ImGLArea : public ImSection {
-    public:
-        ImGLArea(Rectangle r);
+        void begin() override;
 };
 
 class Imgui {
@@ -103,7 +102,7 @@ class Imgui {
         ImToolbar toolbar = ImToolbar({0,1,0.95,1});
         ImSidePanel sidePanel = ImSidePanel({0,0.3,0,0.95});
         ImConsoles consoles = ImConsoles({0.3,1.0,0,0.3});
-        ImGLArea glArea = ImGLArea({0.3,1,0.3,0.95});
+        ImSection glArea = ImSection("glArea", {0.3,1,0.3,0.95});
 
         void resolveResize(const string& name, const ResizeEvent& resizer);
 
