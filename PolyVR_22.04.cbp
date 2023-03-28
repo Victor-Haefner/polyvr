@@ -583,7 +583,6 @@
 		<Unit filename="src/addons/WorldGenerator/weather/VRRainCarWindshield.h" />
 		<Unit filename="src/core/gui/VRAppManager.cpp" />
 		<Unit filename="src/core/gui/VRAppManager.h" />
-		<Unit filename="src/core/gui/VRDemos.cpp" />
 		<Unit filename="src/core/gui/VRDemos.h" />
 		<Unit filename="src/core/gui/VRGuiBits.cpp" />
 		<Unit filename="src/core/gui/VRGuiBits.h" />

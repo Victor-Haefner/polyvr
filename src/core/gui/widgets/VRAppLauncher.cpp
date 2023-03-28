@@ -1,79 +1,69 @@
-#include <gtk/gtk.h>
 #include "VRAppLauncher.h"
-#include "../VRDemos.h"
-#include "../VRGuiUtils.h"
+#include "../VRAppManager.h"
 
 #include "core/utils/system/VRSystem.h"
 #include "core/utils/VRFunction.h"
 #include "core/scene/VRSceneManager.h"
 #include "core/scene/VRScene.h"
-#include "core/gui/VRGuiSignals.h"
-#include "core/gui/VRGuiContextMenu.h"
+#include "core/gui/VRGuiManager.h"
 
 #include <iostream>
 
+#define signal(m,...) VRGuiManager::trigger(m,##__VA_ARGS__)
+
 using namespace OSG;
 
-VRAppLauncher::VRAppLauncher(VRAppPanelPtr s) : section(s) {}
+VRAppLauncher::VRAppLauncher(VRAppPanelPtr s) : section(s) { signal("newAppLauncher", {{"ID",ID}}); }
 VRAppLauncher::~VRAppLauncher() {}
 
 VRAppLauncherPtr VRAppLauncher::create(VRAppPanelPtr s) { return VRAppLauncherPtr( new VRAppLauncher(s) ); }
 
-void VRAppLauncher::show() { gtk_widget_show((GtkWidget*)widget); }
-void VRAppLauncher::hide() { gtk_widget_hide((GtkWidget*)widget); }
+void VRAppLauncher::show() { signal("setVisible", {{"ID",ID},{"visible","1"}}); }
+void VRAppLauncher::hide() { signal("setVisible", {{"ID",ID},{"visible","0"}}); }
 
 bool VRAppLauncher::updatePixmap() {
-    if (imgScene == 0) return true;
     if ( !exists( pxm_path ) ) return true;
-    try {
-        loadGTKIcon(imgScene, pxm_path, 100, 60);
-    } catch (...) { cout << "Warning: Caught exception in VRAppManager::updatePixmap, ignoring.."; }
+    signal("updateAppLauncherPixmap", {{"ID",ID},{"path",pxm_path}}); // loadGTKIcon(imgScene, pxm_path, 100, 60);
     return true;
 }
 
 void VRAppLauncher::setState(int state) {
-    bool running = false;
-    bool sensitive = true;
-    const char* stock_id = "media-playback-start";
+    string running = "0";
+    string sensitive = "1";
 
-    if (state == 0) {} // default state, launcher is ready to start an app
+    if (state == 0) ; // default state, launcher is ready to start an app
+    if (state == 1) sensitive = "0"; // launcher is disabled
+    if (state == 2) running = "1"; // launcher is ready to stop application
 
-    if (state == 1) sensitive = false; // launcher is disabled
+    this->running = (running=="1");
+    signal("setAppLauncherState", {{"ID",ID},{"sensitive",sensitive},{"running",running}});
 
-    if (state == 2) { // launcher is ready to stop application
-        running = true;
-        stock_id = "media-playback-stop";
-    }
-
-    this->running = running;
-    if (widget) gtk_widget_set_sensitive((GtkWidget*)widget, sensitive);
-    if (imgPlay) gtk_image_set_from_icon_name(imgPlay, stock_id, GTK_ICON_SIZE_BUTTON);
+    //if (widget) gtk_widget_set_sensitive((GtkWidget*)widget, sensitive);
+    //if (imgPlay) gtk_image_set_from_icon_name(imgPlay, stock_id, GTK_ICON_SIZE_BUTTON); // stock id is play/stop according to running
 }
 
 void VRAppLauncher::toggle_lock() {
     write_protected = !write_protected;
+    signal("setAppLauncherProtection", {{"ID",ID},{"write_protected",write_protected?"1":"0"}});
 
-    if (write_protected) {
+    /*if (write_protected) {
         gtk_container_remove((GtkContainer*)butLock, (GtkWidget*)imgUnlock);
         gtk_container_add((GtkContainer*)butLock, (GtkWidget*)imgLock);
     } else {
         gtk_container_remove((GtkContainer*)butLock, (GtkWidget*)imgLock);
         gtk_container_add((GtkContainer*)butLock, (GtkWidget*)imgUnlock);
-    }
-
-    gtk_widget_show_all((GtkWidget*)butLock);
+    }*/
 
     auto scene = VRScene::getCurrent();
     if (scene) scene->setFlag("write_protected", write_protected);
 }
 
-void VRAppLauncher::setup(VRGuiContextMenu* menu, VRAppManager* mgr) {
-    g_object_set(gtk_settings_get_default(), "gtk-button-images", FALSE, NULL);
-
+void VRAppLauncher::setup(VRAppManager* mgr) {
     string rpath = VRSceneManager::get()->getOriginalWorkdir();
+    signal("setupAppLauncher", {{"ID",ID}});
 
     // prep icons
-    imgPlay = (GtkImage*)gtk_image_new_from_icon_name("media-playback-start", GTK_ICON_SIZE_BUTTON);
+    /*imgPlay = (GtkImage*)gtk_image_new_from_icon_name("media-playback-start", GTK_ICON_SIZE_BUTTON);
     imgOpts = loadGTKIcon(0, rpath+"/ressources/gui/opts20.png", 20, 20);
     imgScene = loadGTKIcon(0, rpath+"/ressources/gui/default_scene.png", 100, 60);
     imgLock = loadGTKIcon(0, rpath+"/ressources/gui/lock20.png", 20, 20);
@@ -120,13 +110,13 @@ void VRAppLauncher::setup(VRGuiContextMenu* menu, VRAppManager* mgr) {
     if (write_protected) gtk_container_add((GtkContainer*)butLock, (GtkWidget*)imgLock);
     else gtk_container_add((GtkContainer*)butLock, (GtkWidget*)imgUnlock);
 
-    updatePixmap();
+    updatePixmap();*/
 
     // events
     uPixmap = VRDeviceCb::create("GUI_addDemoEntry", bind(&VRAppLauncher::updatePixmap, this) );
     VRGuiSignals::get()->getSignal("onSaveScene")->add( uPixmap );
 
-    menu->connectWidget("DemoMenu", (GtkWidget*)ebox);
+    /*menu->connectWidget("DemoMenu", (GtkWidget*)ebox);
     //ebox->signal_event().connect( sigc::bind<VRAppLauncherPtr>( sigc::mem_fun(*mgr, &VRAppManager::on_any_event), e) );
     function<void(GdkEvent*)> f = bind(&VRAppManager::on_any_event, mgr, placeholders::_1, shared_from_this());
     connect_signal((GtkWidget*)ebox, f, "event" );
@@ -137,5 +127,5 @@ void VRAppLauncher::setup(VRGuiContextMenu* menu, VRAppManager* mgr) {
     connect_signal((GtkWidget*)butPlay, f1, "clicked" );
     connect_signal((GtkWidget*)butOpts, f2, "clicked" );
     connect_signal((GtkWidget*)butLock, f3, "clicked" );
-    gtk_widget_show_all((GtkWidget*)widget);
+    gtk_widget_show_all((GtkWidget*)widget);*/
 }

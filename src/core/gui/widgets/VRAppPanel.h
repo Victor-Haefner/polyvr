@@ -5,9 +5,6 @@
 #include "core/utils/VRFwdDeclTemplate.h"
 #include "core/utils/VRName.h"
 
-class VRGuiContextMenu;
-struct _GtkWidget;
-
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
@@ -17,18 +14,15 @@ ptrFwd(VRAppManager);
 
 class VRAppPanel : public std::enable_shared_from_this<VRAppPanel>, public VRName {
     private:
-        _GtkWidget* table = 0;
         map<string, VRAppLauncherPtr> apps;
 
     public:
-        VRAppPanel(string name, _GtkWidget* table);
+        VRAppPanel(string name);
         ~VRAppPanel();
-        static VRAppPanelPtr create(string name, _GtkWidget* table);
+        static VRAppPanelPtr create(string name);
         VRAppPanelPtr ptr();
 
-        _GtkWidget* getTable();
-
-        VRAppLauncherPtr addLauncher(string path, string timestamp, VRGuiContextMenu* menu, VRAppManager* mgr, bool write_protected, bool favorite, string table);
+        VRAppLauncherPtr addLauncher(string path, string timestamp, VRAppManager* mgr, bool write_protected, bool favorite, string table);
         void remLauncher(string path);
         VRAppLauncherPtr getLauncher(string path);
         map<string, VRAppLauncherPtr> getLaunchers();

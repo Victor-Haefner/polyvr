@@ -5,7 +5,7 @@
 #include "core/setup/VRSetupManager.h"
 #include "core/scripting/VRScript.h"
 #include "VRGuiUtils.h"
-#include "VRDemos.h"
+#include "VRAppManager.h"
 #include "VRGuiScene.h"
 #include "VRGuiBits.h"
 #include "VRGuiNav.h"

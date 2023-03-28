@@ -201,7 +201,7 @@ void VRGlutEditor::on_ui_resize(int w, int h) {
     cout << "  Glut::on_ui_resize " << w << ", " << h << endl;
     if (winUI < 0) return;
     glutSetWindow(winUI);
-    if (resizeSignal) resizeSignal( "glutResizeUI", 0,0,w,h );
+    if (resizeSignal) resizeSignal( "glutResize", 0,0,w,h );
 }
 
 OSG_END_NAMESPACE;

@@ -37,6 +37,22 @@ void Surface::compute(const Surface& parent, const Rectangle& area) {
     //cout << " compute surface " << width << ", " << height << ", " << x << ", " << y << endl;
 }
 
+vector<char> ResizeEvent::changed() {
+    vector<char> edges;
+    ImVec2 s = ImGui::GetWindowSize();
+    ImVec2 p = ImGui::GetWindowPos();
+    if (s.x == size.x && s.y == size.y) return edges;
+
+    if (p.x != pos.x && s.x != size.x) edges.push_back('L');
+    if (p.x == pos.x && s.x != size.x) edges.push_back('R');
+    if (p.y != pos.y && s.y != size.y) edges.push_back('T');
+    if (p.y == pos.y && s.y != size.y) edges.push_back('B');
+
+    size = s;
+    pos = p;
+    return edges;
+}
+
 void Widget::updateLayout(const Surface& newSize) {
     //cout << " updateLayout " << newSize.y + newSize.height << "/800?   " << layout << ", parentSurface: " << parentSurface;
     layout.left  = float(newSize.x - parentSurface.x) / parentSurface.width;
@@ -46,6 +62,50 @@ void Widget::updateLayout(const Surface& newSize) {
     surface.compute(parentSurface, layout);
     //cout << ", new size: " << newSize << " -> " << layout << endl;
 }
+
+
+ImWidget::ImWidget(string n, Rectangle r) : Widget(n,r) {
+    resize({0,0,800,800});
+
+    flags |= ImGuiWindowFlags_NoTitleBar;
+    flags |= ImGuiWindowFlags_NoScrollbar;
+    //flags |= ImGuiWindowFlags_MenuBar;
+    flags |= ImGuiWindowFlags_NoMove;
+    //flags |= ImGuiWindowFlags_NoResize;
+    flags |= ImGuiWindowFlags_NoCollapse;
+    flags |= ImGuiWindowFlags_NoNav;
+    //flags |= ImGuiWindowFlags_NoBackground;
+    //flags |= ImGuiWindowFlags_NoBringToFrontOnFocus;
+    //flags |= ImGuiWindowFlags_UnsavedDocument;
+}
+
+void ImWidget::begin() {
+    //cout << " place widget " << surface << endl;
+    ImGui::SetNextWindowPos(ImVec2(surface.x, surface.y)); // ImGuiCond_FirstUseEver
+    ImGui::SetNextWindowSize(ImVec2(surface.width, surface.height));
+    ImGui::Begin(name.c_str(), NULL, flags);   // Pass a pointer to our bool variable (the window will have a closing button that will clear the bool when clicked)
+
+    ImGuiIO& io = ImGui::GetIO();
+    io.ConfigWindowsResizeFromEdges = true;
+    io.MouseDragThreshold = 30;
+
+    for (char edge: resizer.changed()) {
+        string sedge = string( 1, edge );
+        signal("uiSectionResize", {{"name",name},{"edge",sedge}} );
+    }
+}
+
+void ImWidget::end() {
+    ImGui::End();
+}
+
+void ImWidget::resize(const Surface& parent) {
+    parentSurface = parent;
+    surface.compute(parent, layout);
+    resizer.pos = ImVec2(surface.x, surface.y);
+    resizer.size = ImVec2(surface.width, surface.height);
+}
+
 
 void Imgui::init(Signal signal, ResizeSignal resizeSignal) {
     this->signal = signal;
@@ -155,7 +215,7 @@ void Imgui::resizeUI(const Surface& parent) {
     if (resizeSignal) resizeSignal("glAreaResize", glArea.surface);
 }
 
-void Imgui::onWidgetResize(map<string,string> options) {
+void Imgui::onSectionResize(map<string,string> options) {
     string name = options["name"];
     char edge = options["edge"][0];
     if (name == "Toolbar" && edge == 'B') resolveResize(name, toolbar.resizer);

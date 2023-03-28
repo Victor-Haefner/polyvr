@@ -1,6 +1,6 @@
 #include <OpenSG/OSGRenderAction.h>
 
-#include "VRDemos.h"
+#include "VRAppManager.h"
 #include "widgets/VRAppPanel.h"
 #include "widgets/VRAppLauncher.h"
 
@@ -29,14 +29,17 @@ OSG_BEGIN_NAMESPACE;
 using namespace std;
 
 VRAppManager::VRAppManager() {
-    initMenu();
+    //menu->appendItem("DemoMenu", "Unpin", bind(&VRAppManager::on_launcher_unpin, this));
+    //menu->appendItem("DemoMenu", "Delete", bind(&VRAppManager::on_launcher_delete, this));
+    //menu->appendItem("DemoMenu", "Advanced..", bind(&VRAppManager::on_menu_advanced, this, VRAppLauncherPtr(0)));
+    //setButtonCallback("button26", bind(&VRAppManager::on_advanced_start, this));
 
-    auto examplesSection = addSection("examples", "examples_tab");
-    auto favoritesSection = addSection("favorites", "favorites_tab");
-    auto recentsSection = addSection("recents", "favorites_tab");
+    auto examplesSection = addSection("examples");
+    auto favoritesSection = addSection("favorites");
+    auto recentsSection = addSection("recents");
 
     auto examples = VRSceneManager::get()->getExamplePaths();
-    for (auto p : examples->getPaths() ) examplesSection->addLauncher(p, "", menu, this, true, false, "examples_tab");
+    for (auto p : examples->getPaths() ) examplesSection->addLauncher(p, "", this, true, false, "examples_tab");
     updateTable("examples_tab");
 
     auto favorites = VRSceneManager::get()->getFavoritePaths();
@@ -55,35 +58,31 @@ VRAppManager::VRAppManager() {
     updateCb = VRFunction<VRDeviceWeakPtr, bool>::create("GUI_updateDemos", bind(&VRAppManager::update, this) );
     VRGuiSignals::get()->getSignal("scene_changed")->add( updateCb );
 
-    setToolButtonCallback("toolbutton1", bind(&VRAppManager::on_new_clicked, this));
-    setToolButtonCallback("toolbutton5", bind(&VRAppManager::on_saveas_clicked, this));
-    setToolButtonCallback("toolbutton28", bind(&VRAppManager::on_stop_clicked, this));
-    setToolButtonCallback("toolbutton21", bind(&VRAppManager::on_load_clicked, this));
+    //setToolButtonCallback("toolbutton1", bind(&VRAppManager::on_new_clicked, this));
+    //setToolButtonCallback("toolbutton5", bind(&VRAppManager::on_saveas_clicked, this));
+    //setToolButtonCallback("toolbutton28", bind(&VRAppManager::on_stop_clicked, this));
+    //setToolButtonCallback("toolbutton21", bind(&VRAppManager::on_load_clicked, this));
 
-    setWidgetSensitivity("toolbutton4", false); // disable 'save' button on startup
-    setWidgetSensitivity("toolbutton5", false); // disable 'save as' button on startup
-    setWidgetSensitivity("toolbutton50", false); // disable 'web export' button on startup
-    setWidgetSensitivity("toolbutton28", false); // disable 'stop' button on startup
+    //setWidgetSensitivity("toolbutton4", false); // disable 'save' button on startup
+    //setWidgetSensitivity("toolbutton5", false); // disable 'save as' button on startup
+    //setWidgetSensitivity("toolbutton50", false); // disable 'web export' button on startup
+    //setWidgetSensitivity("toolbutton28", false); // disable 'stop' button on startup
 
-    setEntryCallback("appSearch", bind(&VRAppManager::on_search, this), true); // app search
+    //setEntryCallback("appSearch", bind(&VRAppManager::on_search, this), true); // app search
 }
 
 VRAppManager::~VRAppManager() {}
 
 VRAppManagerPtr VRAppManager::create() { return VRAppManagerPtr( new VRAppManager() ); }
 
-VRAppPanelPtr VRAppManager::addSection(string name, string t) {
-    auto tab = VRGuiBuilder::get()->get_widget(t);
-    tables[t] = tab;
-
-    auto s = VRAppPanel::create(name, tables[t]);
+VRAppPanelPtr VRAppManager::addSection(string name) {
+    auto s = VRAppPanel::create(name);
     sections[name] = s;
     return s;
 }
 
-bool VRAppManager::on_any_event(GdkEvent* event, VRAppLauncherPtr entry) {
-    if (event->type == GDK_BUTTON_PRESS) current_demo = entry;
-    return false;
+void VRAppManager::setCurrentApp(VRAppLauncherPtr e) {
+    current_demo = e;
 }
 
 void VRAppManager::on_lock_toggle(VRAppLauncherPtr e) {
@@ -116,8 +115,8 @@ void VRAppManager::clearTable(string t) {
 
 void VRAppManager::setGuiState(VRAppLauncherPtr e) {
     bool running = (e == 0) ? noLauncherScene : e->running;
-    setWidgetSensitivity("vpaned1", running);
-    setWidgetSensitivity("notebook3", running);
+    //setWidgetSensitivity("vpaned1", running);
+    //setWidgetSensitivity("notebook3", running);
 
     for (auto section : sections) section.second->setGuiState(e, running, noLauncherScene);
 
@@ -126,10 +125,10 @@ void VRAppManager::setGuiState(VRAppLauncherPtr e) {
         else e->setState(0);
     }
 
-    setWidgetSensitivity("toolbutton4", running); // toggle 'save' button availability
-    setWidgetSensitivity("toolbutton5", running); // toggle 'save as' button availability
-    setWidgetSensitivity("toolbutton50", running); // toggle 'web export' button availability
-    setWidgetSensitivity("toolbutton28", running); // toggle 'stop' button availability
+    //setWidgetSensitivity("toolbutton4", running); // toggle 'save' button availability
+    //setWidgetSensitivity("toolbutton5", running); // toggle 'save as' button availability
+    //setWidgetSensitivity("toolbutton50", running); // toggle 'web export' button availability
+    //setWidgetSensitivity("toolbutton28", running); // toggle 'stop' button availability
 }
 
 VRAppLauncherPtr VRAppManager::addEntry(string path, string table, bool running, string timestamp, bool recent) {
@@ -137,30 +136,20 @@ VRAppLauncherPtr VRAppManager::addEntry(string path, string table, bool running,
     clearTable(table);
 
     VRAppLauncherPtr e = 0;
-    if (table == "examples_tab") e = sections["examples"]->addLauncher(path, timestamp, menu, this, true, false, table);
-    if (table == "favorites_tab" &&  recent) e = sections["recents"]->addLauncher(path, timestamp, menu, this, false, true, table);
-    if (table == "favorites_tab" && !recent) e = sections["favorites"]->addLauncher(path, timestamp, menu, this, false, true, table);
+    if (table == "examples_tab") e = sections["examples"]->addLauncher(path, timestamp, this, true, false, table);
+    if (table == "favorites_tab" &&  recent) e = sections["recents"]->addLauncher(path, timestamp, this, false, true, table);
+    if (table == "favorites_tab" && !recent) e = sections["favorites"]->addLauncher(path, timestamp, this, false, true, table);
     if (!e) return 0;
 
     e->running = running;
 
     updateTable(table);
     setGuiState(e);
-    setNotebookPage("notebook2", 0);
+    //setNotebookPage("notebook2", 0);
     return e;
 }
 
-void VRAppManager::initMenu() {
-    menu = new VRGuiContextMenu("DemoMenu");
-    menu->appendItem("DemoMenu", "Unpin", bind(&VRAppManager::on_menu_unpin, this));
-    menu->appendItem("DemoMenu", "Delete", bind(&VRAppManager::on_menu_delete, this));
-    menu->appendItem("DemoMenu", "Advanced..", bind(&VRAppManager::on_menu_advanced, this, VRAppLauncherPtr(0)));
-
-    setButtonCallback("button10", bind(&VRAppManager::on_advanced_cancel, this));
-    setButtonCallback("button26", bind(&VRAppManager::on_advanced_start, this));
-}
-
-void VRAppManager::on_menu_delete() {
+void VRAppManager::on_launcher_delete() {
     VRAppLauncherPtr d = current_demo;
     if (!d) return;
     if (d->write_protected == true) return;
@@ -181,7 +170,7 @@ void VRAppManager::on_menu_delete() {
     VRSceneManager::get()->remFavorite(path);
 }
 
-void VRAppManager::on_menu_unpin() {
+void VRAppManager::on_launcher_unpin() {
     VRAppLauncherPtr d = current_demo;
     if (!d) return;
     if (d->write_protected == true) return;
@@ -199,17 +188,6 @@ void VRAppManager::on_menu_unpin() {
     current_demo.reset();
     updateTable(table);
     VRSceneManager::get()->remFavorite(path);
-}
-
-void VRAppManager::on_menu_advanced(VRAppLauncherPtr e) {
-    if (e) current_demo = e;
-    setToggleButton("checkbutton34", false);
-    setToggleButton("checkbutton36", false);
-    showDialog("advanced_start");
-}
-
-void VRAppManager::on_advanced_cancel() {
-    hideDialog("advanced_start");
 }
 
 void VRAppManager::on_advanced_start() {
@@ -234,8 +212,8 @@ void VRAppManager::normFileName(string& path) {
 }
 
 string encryptionKey;
-void VRAppManager::on_toggle_encryption(GtkCheckButton* b) {
-    bool doEncryption = gtk_toggle_button_get_active((GtkToggleButton*)b);
+void VRAppManager::on_toggle_encryption(bool b) {
+    bool doEncryption = b;
     encryptionKey = "";
     if (!doEncryption) return;
     encryptionKey = askUserPass("Please enter an encryption key");

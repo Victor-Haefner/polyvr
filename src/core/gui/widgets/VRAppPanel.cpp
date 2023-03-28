@@ -1,24 +1,27 @@
 #include "VRAppPanel.h"
 #include "VRAppLauncher.h"
 
+#include "core/gui/VRGuiManager.h"
 #include "core/utils/system/VRSystem.h"
+#include "core/utils/toString.h"
 #include "core/scene/VRSceneManager.h"
 
-#include <gtk/gtk.h>
+#define signal(m,...) VRGuiManager::trigger(m,##__VA_ARGS__)
 
 using namespace OSG;
 
-VRAppPanel::VRAppPanel(string name, _GtkWidget* t) : table(t) {
+VRAppPanel::VRAppPanel(string name) {
+    signal("newAppPanel", {{"name",name}});
     setNameSpace("__system_apps__");
     setName(name);
 }
 
 VRAppPanel::~VRAppPanel() {}
 
-VRAppPanelPtr VRAppPanel::create(string name, _GtkWidget* table) { return VRAppPanelPtr( new VRAppPanel(name, table) ); }
+VRAppPanelPtr VRAppPanel::create(string name) { return VRAppPanelPtr( new VRAppPanel(name) ); }
 VRAppPanelPtr VRAppPanel::ptr() { return shared_from_this(); }
 
-VRAppLauncherPtr VRAppPanel::addLauncher(string path, string timestamp, VRGuiContextMenu* menu, VRAppManager* mgr, bool write_protected, bool favorite, string table) {
+VRAppLauncherPtr VRAppPanel::addLauncher(string path, string timestamp, VRAppManager* mgr, bool write_protected, bool favorite, string table) {
     if (!exists(path)) return 0;
     if (auto l = getLauncher(path)) return l;
     auto app = VRAppLauncher::create(ptr());
@@ -31,36 +34,25 @@ VRAppLauncherPtr VRAppPanel::addLauncher(string path, string timestamp, VRGuiCon
     app->favorite = favorite;
     app->table = table;
     apps[path] = app;
-    app->setup(menu, mgr);
+    app->setup(mgr);
     return app;
 }
 
 int VRAppPanel::getSize() { return apps.size(); }
-_GtkWidget* VRAppPanel::getTable() { return table; }
 
 void VRAppPanel::fillTable(string t, int& i) {
-    int x,y;
     for (auto d : apps) {
         if (d.second->table != t) continue;
-        if (d.second->widget == 0) continue;
-
-        GtkWidget* w = (GtkWidget*)d.second->widget;
-        x = i%2;
-        y = i/2;
-        gtk_grid_attach(GTK_GRID(table), w, x, y, 1, 1);
+        int x = i%2;
+        int y = i/2;
+        signal("addAppLauncher", {{"name",name},{"ID",d.second->ID},{"table",t},{"position",toString(x)+":"+toString(y)}});
+        //gtk_grid_attach(GTK_GRID(table), w, x, y, 1, 1);
         i++;
     }
-    gtk_widget_show(table);
 }
 
 void VRAppPanel::clearTable(string t) {
-    for (auto d : apps) {
-        if (d.second->table != t) continue;
-
-        GtkWidget* w = (GtkWidget*)d.second->widget;
-        if (w == 0) continue;
-        gtk_container_remove((GtkContainer*)table, w);
-    }
+    signal("clearAppPanel", {{"name",name}});
 }
 
 void VRAppPanel::setGuiState(VRAppLauncherPtr e, bool running, bool noLauncherScene) {
