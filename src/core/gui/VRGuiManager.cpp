@@ -58,6 +58,15 @@ VRGuiManager::~VRGuiManager() {
     if (mtx) delete mtx;
 }
 
+string VRGuiManager::genUUID() {
+    int len = 16;
+    static const char alphanum[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+    string s;
+    s.reserve(len);
+    for (int i = 0; i < len; ++i) s += alphanum[rand() % (sizeof(alphanum) - 1)];
+    return s;
+}
+
 void VRGuiManager::init() {
     cout << "Init VRGuiManager.." << endl;
     mtx = new VRMutex();

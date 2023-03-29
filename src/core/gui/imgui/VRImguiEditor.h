@@ -44,7 +44,6 @@ class ImWidget {
     public:
         string name;
         Signal signal;
-        vector<ImWidgetPtr> children;
 
         ImWidget(string n);
         virtual ~ImWidget();
@@ -70,8 +69,24 @@ class ImSection : public ImWidget {
         void end() override;
 };
 
+class ImAppLauncher {
+    public:
+        string ID;
+        string name;
+
+        ImAppLauncher() {}
+        ImAppLauncher(string ID);
+        void render();
+};
+
 class ImAppManager : public ImWidget {
     public:
+        map<string,ImAppLauncher> launchers;
+
+        void newAppLauncher(string ID);
+        void setAppLauncher(string ID, string name);
+
+        void renderLauncher(string name);
         ImAppManager();
         void begin() override;
 };
@@ -84,6 +99,8 @@ class ImToolbar : public ImSection {
 
 class ImSidePanel : public ImSection {
     public:
+        ImWidgetPtr appManager;
+
         ImSidePanel(Rectangle r);
         void begin() override;
 };
@@ -105,10 +122,6 @@ class Imgui {
         ImSection glArea = ImSection("glArea", {0.3,1,0.3,0.95});
 
         void resolveResize(const string& name, const ResizeEvent& resizer);
-
-        void renderSidePanel();
-        void renderToolbar();
-        void renderConsoles();
 
     public:
         void init(Signal signal, ResizeSignal resizeSignal);

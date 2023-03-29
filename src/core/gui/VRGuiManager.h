@@ -40,6 +40,8 @@ class VRGuiManager {
         void init();
         void initImgui();
 
+        static string genUUID();
+
         static void broadcast(string name);
         static bool trigger(string name, VRGuiSignals::Options options = {});
         static bool triggerResize(string name, int,int,int,int);

@@ -13,7 +13,11 @@
 
 using namespace OSG;
 
-VRAppLauncher::VRAppLauncher(VRAppPanelPtr s) : section(s) { signal("newAppLauncher", {{"ID",ID}}); }
+VRAppLauncher::VRAppLauncher(VRAppPanelPtr s) : section(s) {
+    ID = VRGuiManager::genUUID();
+    signal("newAppLauncher", {{"ID",ID}});
+}
+
 VRAppLauncher::~VRAppLauncher() {}
 
 VRAppLauncherPtr VRAppLauncher::create(VRAppPanelPtr s) { return VRAppLauncherPtr( new VRAppLauncher(s) ); }
@@ -60,7 +64,7 @@ void VRAppLauncher::toggle_lock() {
 
 void VRAppLauncher::setup(VRAppManager* mgr) {
     string rpath = VRSceneManager::get()->getOriginalWorkdir();
-    signal("setupAppLauncher", {{"ID",ID}});
+    signal("setupAppLauncher", {{"ID",ID},{"name",path}});
 
     // prep icons
     /*imgPlay = (GtkImage*)gtk_image_new_from_icon_name("media-playback-start", GTK_ICON_SIZE_BUTTON);

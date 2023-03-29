@@ -5,7 +5,11 @@
 #include <GL/glew.h>
 
 #include <backends/imgui_impl_glut.h>
-#include <backends/imgui_impl_opengl2.h>
+#include <backends/imgui_impl_opengl3.h>
+
+#include <core/gui/VRGuiSignals.h>
+#include <core/utils/toString.h>
+
 
 ostream& operator<<(ostream& os, const ResizeEvent& s) {
     os << "[" << s.pos.x << ", " << s.pos.y << ", " << s.size.x << ", " << s.size.y << "]";
@@ -60,7 +64,6 @@ void ImWidget::end() {}
 
 void ImWidget::render() {
     begin();
-    for (auto& child : children) child->render();
     end();
 }
 
@@ -120,7 +123,7 @@ ImToolbar::ImToolbar(Rectangle r) : ImSection("Toolbar", r) {}
 
 ImSidePanel::ImSidePanel(Rectangle r) : ImSection("SidePanel", r) {
     auto appMgr = new ImAppManager();
-    children.push_back(ImWidgetPtr(appMgr));
+    appManager = ImWidgetPtr(appMgr);
 }
 
 void ImSidePanel::begin() {
@@ -128,6 +131,7 @@ void ImSidePanel::begin() {
     ImGuiTabBarFlags tab_bar_flags = ImGuiTabBarFlags_None;
     if (ImGui::BeginTabBar("MyTabBar", tab_bar_flags)) {
         if (ImGui::BeginTabItem("Apps")) {
+            appManager->render();
             ImGui::EndTabItem();
         }
 
@@ -145,12 +149,85 @@ void ImSidePanel::begin() {
 
 ImConsoles::ImConsoles(Rectangle r) : ImSection("Consoles", r) {}
 
+ImAppLauncher::ImAppLauncher(string ID) : ID(ID), name(ID) {}
+
+void ImAppLauncher::render() {
+    //ImGui::BeginChild(name.c_str(), ImVec2(0, -ImGui::GetContentRegionAvail().y), true);
+    ImGui::BeginGroup();
+    if (ImGui::Button(("Run##"+ID).c_str()));
+    ImGui::SameLine();
+    string label = name;
+    if (label.length() > 25) label = ".." + subString(label, label.length()-23, 23);
+    ImGui::Text(label.c_str());
+    ImGui::SameLine();
+    ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_SpanAvailWidth;
+    if (ImGui::CollapsingHeader(("advanced##"+ID).c_str(), flags)) {
+        if (ImGui::Button(("Run without scripts##"+ID).c_str()));
+    }
+    ImGui::EndGroup();
+    ImVec2 p2 = ImGui::GetItemRectMax();
+    p2.x = ImGui::GetContentRegionAvail().x;
+    ImGui::GetWindowDrawList()->AddRect(ImGui::GetItemRectMin(), p2, IM_COL32(255, 255, 255, 255));
+    //ImGui::EndChild();
+}
+
 ImAppManager::ImAppManager() : ImWidget("AppManager") {
-    ;
+    auto mgr = OSG::VRGuiSignals::get();
+    mgr->addCallback("newAppLauncher", [&](OSG::VRGuiSignals::Options o){ newAppLauncher(o["ID"]); return true; } );
+    mgr->addCallback("setupAppLauncher", [&](OSG::VRGuiSignals::Options o){ setAppLauncher(o["ID"], o["name"]); return true; } );
+}
+
+void ImAppManager::newAppLauncher(string ID) {
+    launchers[ID] = ImAppLauncher(ID);
+}
+
+void ImAppManager::setAppLauncher(string ID, string name) {
+    if (!launchers.count(ID)) return;
+    launchers[ID].name = name;
 }
 
 void ImAppManager::begin() {
-    ;
+    for (auto& l : launchers) l.second.render();
+}
+
+void ImToolbar::begin() {
+    ImSection::begin();
+    if (ImGui::Button("New"));
+    ImGui::SameLine();
+    if (ImGui::Button("Open"));
+    ImGui::SameLine();
+    if (ImGui::Button("Save"));
+    ImGui::SameLine();
+    if (ImGui::Button("Save.."));
+    ImGui::SameLine();
+    if (ImGui::Button("Close"));
+    ImGui::SameLine();
+    if (ImGui::Button("Exit"));
+    ImGui::SameLine();
+    if (ImGui::Button("About"));
+    ImGui::SameLine();
+    if (ImGui::Button("Stats"));
+}
+
+void ImConsoles::begin() {
+    ImSection::begin();
+}
+
+
+void Imgui::resizeUI(const Surface& parent) {
+    toolbar.resize(parent);
+    sidePanel.resize(parent);
+    consoles.resize(parent);
+    glArea.resize(parent);
+    if (resizeSignal) resizeSignal("glAreaResize", glArea.surface);
+}
+
+void Imgui::onSectionResize(map<string,string> options) {
+    string name = options["name"];
+    char edge = options["edge"][0];
+    if (name == "Toolbar" && edge == 'B') resolveResize(name, toolbar.resizer);
+    if (name == "SidePanel" && (edge == 'T' || edge == 'R')) resolveResize(name, sidePanel.resizer);
+    if (name == "Consoles" && (edge == 'T' || edge == 'L')) resolveResize(name, consoles.resizer);
 }
 
 void Imgui::init(Signal signal, ResizeSignal resizeSignal) {
@@ -162,7 +239,7 @@ void Imgui::init(Signal signal, ResizeSignal resizeSignal) {
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     // Setup Platform/Renderer bindings
-    ImGui_ImplOpenGL2_Init();
+    ImGui_ImplOpenGL3_Init();
     // Setup Dear ImGui style
     ImGui::StyleColorsDark();
 
@@ -177,7 +254,7 @@ void Imgui::init(Signal signal, ResizeSignal resizeSignal) {
 
 void Imgui::close() {
     cout << "Imgui::close" << endl;
-    ImGui_ImplOpenGL2_Shutdown();
+    ImGui_ImplOpenGL3_Shutdown();
     ImGui::DestroyContext();
 }
 
@@ -206,49 +283,6 @@ void Imgui::resolveResize(const string& name, const ResizeEvent& resizer) {
     }
 }
 
-void Imgui::renderSidePanel() {
-    sidePanel.render();
-}
-
-void ImToolbar::begin() {
-    ImSection::begin();
-    if (ImGui::Button("New"));
-    ImGui::SameLine();
-    if (ImGui::Button("Open"));
-    ImGui::SameLine();
-    if (ImGui::Button("Save"));
-    ImGui::SameLine();
-    if (ImGui::Button("Save.."));
-    ImGui::SameLine();
-    if (ImGui::Button("Close"));
-    ImGui::SameLine();
-    if (ImGui::Button("Exit"));
-    ImGui::SameLine();
-    if (ImGui::Button("About"));
-    ImGui::SameLine();
-    if (ImGui::Button("Stats"));
-}
-
-void ImConsoles::begin() {
-    ImSection::begin();
-}
-
-void Imgui::resizeUI(const Surface& parent) {
-    toolbar.resize(parent);
-    sidePanel.resize(parent);
-    consoles.resize(parent);
-    glArea.resize(parent);
-    if (resizeSignal) resizeSignal("glAreaResize", glArea.surface);
-}
-
-void Imgui::onSectionResize(map<string,string> options) {
-    string name = options["name"];
-    char edge = options["edge"][0];
-    if (name == "Toolbar" && edge == 'B') resolveResize(name, toolbar.resizer);
-    if (name == "SidePanel" && (edge == 'T' || edge == 'R')) resolveResize(name, sidePanel.resizer);
-    if (name == "Consoles" && (edge == 'T' || edge == 'L')) resolveResize(name, consoles.resizer);
-}
-
 ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
 void Imgui::render() {
@@ -256,8 +290,9 @@ void Imgui::render() {
     if (io.DisplaySize.x < 0 || io.DisplaySize.y < 0) return;
 
     // Start the Dear ImGui frame
-    ImGui_ImplOpenGL2_NewFrame();
+    ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGLUT_NewFrame();
+    ImGui::GetStyle().TouchExtraPadding = ImVec2(6, 6); // make DnD of section borders easier
 
     toolbar.render();
     sidePanel.render();
@@ -270,6 +305,6 @@ void Imgui::render() {
     glViewport(0, 0, (GLsizei)io.DisplaySize.x, (GLsizei)io.DisplaySize.y);
     glClearColor(clear_color.x * clear_color.w, clear_color.y * clear_color.w, clear_color.z * clear_color.w, clear_color.w);
     glClear(GL_COLOR_BUFFER_BIT);
-    ImGui_ImplOpenGL2_RenderDrawData(ImGui::GetDrawData());
+    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
 
