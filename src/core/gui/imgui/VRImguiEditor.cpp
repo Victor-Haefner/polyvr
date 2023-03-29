@@ -6,10 +6,13 @@
 
 #include <backends/imgui_impl_glut.h>
 #include <backends/imgui_impl_opengl3.h>
+//(#include <imgui_internal.h>
 
 #include <core/gui/VRGuiSignals.h>
+#include <core/gui/VRGuiManager.h>
 #include <core/utils/toString.h>
 
+#define signal(m,...) OSG::VRGuiManager::trigger(m,##__VA_ARGS__)
 
 ostream& operator<<(ostream& os, const ResizeEvent& s) {
     os << "[" << s.pos.x << ", " << s.pos.y << ", " << s.size.x << ", " << s.size.y << "]";
@@ -152,9 +155,14 @@ ImConsoles::ImConsoles(Rectangle r) : ImSection("Consoles", r) {}
 ImAppLauncher::ImAppLauncher(string ID) : ID(ID), name(ID) {}
 
 void ImAppLauncher::render() {
-    //ImGui::BeginChild(name.c_str(), ImVec2(0, -ImGui::GetContentRegionAvail().y), true);
+    if (!sensitive) ImGui::BeginDisabled();
+
     ImGui::BeginGroup();
-    if (ImGui::Button(("Run##"+ID).c_str()));
+    if (!running) {
+        if (ImGui::Button(("Run##"+ID).c_str())) signal("on_toggle_app", {{"ID",ID}});
+    } else {
+        if (ImGui::Button(("Stop##"+ID).c_str())) signal("on_toggle_app", {{"ID",ID}});
+    }
     ImGui::SameLine();
     string label = name;
     if (label.length() > 25) label = ".." + subString(label, label.length()-23, 23);
@@ -162,26 +170,34 @@ void ImAppLauncher::render() {
     ImGui::SameLine();
     ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_SpanAvailWidth;
     if (ImGui::CollapsingHeader(("advanced##"+ID).c_str(), flags)) {
-        if (ImGui::Button(("Run without scripts##"+ID).c_str()));
+        if (ImGui::Button(("Run without scripts##"+ID).c_str())) signal("on_toggle_app_no_scripts", {{"ID",ID}});
     }
     ImGui::EndGroup();
     ImVec2 p2 = ImGui::GetItemRectMax();
     p2.x = ImGui::GetContentRegionAvail().x;
     ImGui::GetWindowDrawList()->AddRect(ImGui::GetItemRectMin(), p2, IM_COL32(255, 255, 255, 255));
-    //ImGui::EndChild();
+
+    if (!sensitive) ImGui::EndDisabled();
 }
 
 ImAppManager::ImAppManager() : ImWidget("AppManager") {
     auto mgr = OSG::VRGuiSignals::get();
     mgr->addCallback("newAppLauncher", [&](OSG::VRGuiSignals::Options o){ newAppLauncher(o["ID"]); return true; } );
-    mgr->addCallback("setupAppLauncher", [&](OSG::VRGuiSignals::Options o){ setAppLauncher(o["ID"], o["name"]); return true; } );
+    mgr->addCallback("setupAppLauncher", [&](OSG::VRGuiSignals::Options o){ setupAppLauncher(o["ID"], o["name"]); return true; } );
+    mgr->addCallback("setAppLauncherState", [&](OSG::VRGuiSignals::Options o){ setAppLauncherState(o["ID"], toBool(o["running"]), toBool(o["sensitive"])); return true; } );
+}
+
+void ImAppManager::setAppLauncherState(string ID, bool running, bool sensitive) {
+    if (!launchers.count(ID)) return;
+    launchers[ID].running = running;
+    launchers[ID].sensitive = sensitive;
 }
 
 void ImAppManager::newAppLauncher(string ID) {
     launchers[ID] = ImAppLauncher(ID);
 }
 
-void ImAppManager::setAppLauncher(string ID, string name) {
+void ImAppManager::setupAppLauncher(string ID, string name) {
     if (!launchers.count(ID)) return;
     launchers[ID].name = name;
 }

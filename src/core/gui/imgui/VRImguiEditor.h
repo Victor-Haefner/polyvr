@@ -73,6 +73,8 @@ class ImAppLauncher {
     public:
         string ID;
         string name;
+        bool running = false;
+        bool sensitive = true;
 
         ImAppLauncher() {}
         ImAppLauncher(string ID);
@@ -84,7 +86,8 @@ class ImAppManager : public ImWidget {
         map<string,ImAppLauncher> launchers;
 
         void newAppLauncher(string ID);
-        void setAppLauncher(string ID, string name);
+        void setupAppLauncher(string ID, string name);
+        void setAppLauncherState(string ID, bool running, bool sensitive);
 
         void renderLauncher(string name);
         ImAppManager();

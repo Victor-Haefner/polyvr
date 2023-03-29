@@ -119,6 +119,7 @@ template<class T>    T   toValue(string s) { T t; toValue(s,t); return t; }
 
 int   toInt  (string s);
 float toFloat(string s);
+bool  toBool (string s);
 
 bool isNumber(string s);
 

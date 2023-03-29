@@ -290,7 +290,7 @@ void PolyVR::update() {
 #endif
     if (VRGlobals::CURRENT_FRAME == appInitFrame) {
         string app = options->getOption<string>("application");
-        app = "/home/victor/Projects/polyvr/examples/CEF.xml";
+        //app = "/home/victor/Projects/polyvr/examples/CEF.xml";
         string dcy = options->getOption<string>("decryption");
         string key;
         if (startsWith(dcy, "key:")) key = subString(dcy, 4, dcy.size()-4);

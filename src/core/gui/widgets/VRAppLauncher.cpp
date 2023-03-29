@@ -66,6 +66,9 @@ void VRAppLauncher::setup(VRAppManager* mgr) {
     string rpath = VRSceneManager::get()->getOriginalWorkdir();
     signal("setupAppLauncher", {{"ID",ID},{"name",path}});
 
+    auto sigs = OSG::VRGuiSignals::get();
+    sigs->addCallback("on_toggle_app", [&](OSG::VRGuiSignals::Options o) { if (o["ID"] == ID) mgr->toggleDemo( shared_from_this() ); return true; } );
+
     // prep icons
     /*imgPlay = (GtkImage*)gtk_image_new_from_icon_name("media-playback-start", GTK_ICON_SIZE_BUTTON);
     imgOpts = loadGTKIcon(0, rpath+"/ressources/gui/opts20.png", 20, 20);
@@ -125,11 +128,8 @@ void VRAppLauncher::setup(VRAppManager* mgr) {
     function<void(GdkEvent*)> f = bind(&VRAppManager::on_any_event, mgr, placeholders::_1, shared_from_this());
     connect_signal((GtkWidget*)ebox, f, "event" );
 
-    function<void()> f1 = bind(&VRAppManager::toggleDemo, mgr, shared_from_this());
     function<void()> f2 = bind(&VRAppManager::on_menu_advanced, mgr, shared_from_this());
     function<void()> f3 = bind(&VRAppManager::on_lock_toggle, mgr, shared_from_this());
-    connect_signal((GtkWidget*)butPlay, f1, "clicked" );
     connect_signal((GtkWidget*)butOpts, f2, "clicked" );
-    connect_signal((GtkWidget*)butLock, f3, "clicked" );
-    gtk_widget_show_all((GtkWidget*)widget);*/
+    connect_signal((GtkWidget*)butLock, f3, "clicked" );*/
 }
