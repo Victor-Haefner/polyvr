@@ -430,9 +430,7 @@ VRGuiBits::VRGuiBits() {
     //terminal = (GtkNotebook*)gtk_notebook_new();
     auto addTermTab = [&](string name) {
         auto c = VRConsoleWidgetPtr( new VRConsoleWidget() );
-        /*GtkLabel* label = (GtkLabel*)gtk_label_new(name.c_str());
-        gtk_notebook_append_page(terminal, (GtkWidget*)c->getWindow(), (GtkWidget*)label);*/
-        //c->setLabel( label );
+        c->setLabel( name );
         consoles[name] = c;
         return c;
     };

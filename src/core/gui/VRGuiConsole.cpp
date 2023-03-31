@@ -13,6 +13,8 @@ VRMutex mtx;
 VRConsoleWidget::message::message(string m, string s, shared_ptr< VRFunction<string> > l) : msg(m), style(s), link(l) {}
 
 VRConsoleWidget::VRConsoleWidget() {
+    ID = VRGuiManager::genUUID();
+    uiSignal("newConsole", {{"ID",ID}});
     /*buffer = gtk_text_buffer_new(0);
     GtkTextView* term_view = (GtkTextView*)gtk_text_view_new_with_buffer(buffer);
     PangoFontDescription* fdesc = pango_font_description_new();
@@ -46,6 +48,7 @@ VRConsoleWidgetPtr VRConsoleWidget::get(string name) {
 }
 
 void VRConsoleWidget::write(string msg, string style, shared_ptr< VRFunction<string> > link) {
+    cout << " - - - - - - - VRConsoleWidget::write " << msg << endl;
     VRLock lock(mtx);
 
     if (style == "" && msg.find('\033') != string::npos) { // check for style tags
@@ -84,13 +87,18 @@ void VRConsoleWidget::write(string msg, string style, shared_ptr< VRFunction<str
 void VRConsoleWidget::clear() {
     VRLock lock(mtx);
     std::queue<message>().swap(msg_queue);
-    //gtk_text_buffer_set_text(buffer, "", 0);
+    uiSignal("clearConsole", {{"ID",ID}});
     resetColor();
 }
 
 string VRConsoleWidget::getWindow() { return swin; }
 void VRConsoleWidget::pause() { paused = getToggleToolButtonState("pause_terminal"); }
-void VRConsoleWidget::setLabel(string lbl) { label = lbl; }
+
+void VRConsoleWidget::setLabel(string lbl) {
+    label = lbl;
+    uiSignal("setupConsole", {{"ID",ID}, {"name",lbl}});
+}
+
 void VRConsoleWidget::setOpen(bool b) {
     isOpen = b;
     if (!b) resetColor();
@@ -152,9 +160,11 @@ bool VRConsoleWidget::on_link_activate(string object, string event, string itr) 
 
 void VRConsoleWidget::update() {
     VRLock lock(mtx);
+    if (msg_queue.size() > 0) cout << "VRConsoleWidget::update " << msg_queue.size() << endl;
     while(!msg_queue.empty()) {
         if (!isOpen) setColor(notifyColor);
         auto& msg = msg_queue.front();
+    cout << " - - - - - - - VRConsoleWidget::update " << msg.msg << endl;
         //cout << "VRConsoleWidget::update message: '" << msg.msg << "'" << endl;
         /*GtkTextIter itr;
         if (styles.count( msg.style )) {
@@ -168,6 +178,8 @@ void VRConsoleWidget::update() {
             gtk_text_buffer_get_end_iter(buffer, &itr);
             gtk_text_buffer_insert(buffer, &itr, msg.msg.c_str(), msg.msg.size());
         }*/
+
+        uiSignal("pushConsole", {{"ID",ID}, {"string",msg.msg}});
 		msg_queue.pop();
     }
 }

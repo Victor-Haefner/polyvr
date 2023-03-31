@@ -87,6 +87,16 @@ void VRGuiManager::init() {
 
     g_demos = new VRAppManager();
     g_bits = new VRGuiBits();
+
+    VRDeviceCbPtr fkt; // TODO: all those signals are not properly connected to, the fkt binding is destroyed when going out of scope
+
+    fkt = VRDeviceCb::create("GUI_updateBits", bind(&VRGuiBits::update, g_bits) );
+    //VRGuiSignals::get()->getSignal("scene_changed")->add( fkt );
+    //VRGuiSignals::get()->getSignal("camera_added")->add( fkt );
+    guiSignalCbs.push_back(fkt);
+
+    updatePtr = VRUpdateCb::create("GUI_updateManager", bind(&VRGuiManager::update, this) );
+    VRSceneManager::get()->addUpdateFkt(updatePtr, 1);
     return;
 
     //gtk_rc_parse("gui/gtkrc");
@@ -101,7 +111,6 @@ void VRGuiManager::init() {
     g_scene->updateTreeView();
 
 
-    VRDeviceCbPtr fkt; // TODO: all those signals are not properly connected to, the fkt binding is destroyed when going out of scope
 
     auto editor = g_sc->getEditor();
     editor->addKeyBinding("wipe", VRUpdateCb::create("wipeCb", bind(&VRGuiBits::wipeConsoles, g_bits)));
@@ -110,11 +119,6 @@ void VRGuiManager::init() {
     VRGuiSignals::get()->getSignal("scene_modified")->add( fkt );
     VRGuiSignals::get()->getSignal("scene_changed")->add( fkt );
     VRGuiSignals::get()->getSignal("camera_changed")->add(fkt);
-    guiSignalCbs.push_back(fkt);
-
-    fkt = VRDeviceCb::create("GUI_updateBits", bind(&VRGuiBits::update, g_bits) );
-    VRGuiSignals::get()->getSignal("scene_changed")->add( fkt );
-    VRGuiSignals::get()->getSignal("camera_added")->add( fkt );
     guiSignalCbs.push_back(fkt);
 
     fkt = VRDeviceCb::create("GUI_updateNav", bind(&VRGuiNav::update, g_nav) );
@@ -137,8 +141,6 @@ void VRGuiManager::init() {
     VRGuiSignals::get()->getSignal("scene_changed")->add( fkt );
     guiSignalCbs.push_back(fkt);
 
-    updatePtr = VRUpdateCb::create("GUI_updateManager", bind(&VRGuiManager::update, this) );
-    VRSceneManager::get()->addUpdateFkt(updatePtr, 1);
 
     GtkWindow* top = (GtkWindow*)VRGuiBuilder::get()->get_widget("window1");
     gtk_window_maximize(top);

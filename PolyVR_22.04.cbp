@@ -953,10 +953,16 @@
 		<Unit filename="src/core/gui/gtksourceview/gtksourceview.gresource.xml" />
 		<Unit filename="src/core/gui/gtksourceview/gtksourceview.h" />
 		<Unit filename="src/core/gui/gtksourceview/gtktextregion.h" />
+		<Unit filename="src/core/gui/imgui/VRImguiApps.cpp" />
+		<Unit filename="src/core/gui/imgui/VRImguiApps.h" />
+		<Unit filename="src/core/gui/imgui/VRImguiConsoles.cpp" />
+		<Unit filename="src/core/gui/imgui/VRImguiConsoles.h" />
 		<Unit filename="src/core/gui/imgui/VRImguiEditor.cpp" />
 		<Unit filename="src/core/gui/imgui/VRImguiEditor.h" />
 		<Unit filename="src/core/gui/imgui/VRImguiManager.cpp" />
 		<Unit filename="src/core/gui/imgui/VRImguiManager.h" />
+		<Unit filename="src/core/gui/imgui/VRImguiUtils.cpp" />
+		<Unit filename="src/core/gui/imgui/VRImguiUtils.h" />
 		<Unit filename="src/core/gui/widgets/VRAppLauncher.cpp" />
 		<Unit filename="src/core/gui/widgets/VRAppLauncher.h" />
 		<Unit filename="src/core/gui/widgets/VRAppPanel.cpp" />

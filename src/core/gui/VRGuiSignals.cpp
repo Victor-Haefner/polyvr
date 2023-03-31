@@ -33,7 +33,7 @@ void VRGuiSignals::addResizeCallback(string name, ResizeCallback c) { resizeCall
 
 bool VRGuiSignals::trigger(string name, Options options) {
     if (!callbacks.count(name)) {
-        cout << " ..no callbacks, skip " << name << endl;
+        //cout << " ..no callbacks, skip " << name << endl;
         return false;
     }
 
@@ -47,7 +47,7 @@ bool VRGuiSignals::trigger(string name, Options options) {
 
 bool VRGuiSignals::triggerResize(string name, int x, int y, int w, int h) {
     if (!resizeCallbacks.count(name)) {
-        cout << " ..no resize callbacks, skip " << name << endl;
+        //cout << " ..no resize callbacks, skip " << name << endl;
         return false;
     }
 

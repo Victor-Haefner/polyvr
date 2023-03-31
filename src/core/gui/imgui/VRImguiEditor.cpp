@@ -13,6 +13,7 @@
 #include <core/utils/toString.h>
 
 #include "VRImguiApps.h"
+#include "VRImguiConsoles.h"
 
 ImSection::ImSection(string n, Rectangle r) : ImWidget(n), layout(r) {
     resize({0,0,800,800});
@@ -94,7 +95,9 @@ void ImSidePanel::begin() {
     }
 }
 
-ImConsoles::ImConsoles(Rectangle r) : ImSection("Consoles", r) {}
+ImConsolesSection::ImConsolesSection(Rectangle r) : ImSection("Consoles", r) {
+    consoles = ImWidgetPtr(new ImConsoles());
+}
 
 void ImToolbar::begin() {
     ImSection::begin();
@@ -109,8 +112,9 @@ void ImToolbar::begin() {
     ImGui::SameLine(); if (ImGui::Button("Fullscreen")) uiSignal("toolbar_fullscreen");
 }
 
-void ImConsoles::begin() {
+void ImConsolesSection::begin() {
     ImSection::begin();
+    consoles->render();
 }
 
 

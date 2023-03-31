@@ -25,6 +25,7 @@ class VRConsoleWidget {
         };
 
     private:
+        string ID;
         string buffer;
         map<string, string> styles;
         map<string, message> links;

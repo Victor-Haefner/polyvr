@@ -69,7 +69,7 @@ void ImAppManager::setupAppLauncher(string ID, string name) {
 }
 
 void ImAppManager::begin() {
-    if (ImGui::BeginTabBar("MyTabBar", ImGuiTabBarFlags_None)) {
+    if (ImGui::BeginTabBar("AppPanelsTabBar", ImGuiTabBarFlags_None)) {
         if (ImGui::BeginTabItem("Projects")) {
             ImGui::Spacing();
             ImGuiWindowFlags flags = ImGuiWindowFlags_None;

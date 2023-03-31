@@ -42,9 +42,11 @@ class ImSidePanel : public ImSection {
         void begin() override;
 };
 
-class ImConsoles : public ImSection {
+class ImConsolesSection : public ImSection {
     public:
-        ImConsoles(Rectangle r);
+        ImWidgetPtr consoles;
+
+        ImConsolesSection(Rectangle r);
         void begin() override;
 };
 
@@ -55,7 +57,7 @@ class VRImguiEditor {
 
         ImToolbar toolbar = ImToolbar({0,1,0.95,1});
         ImSidePanel sidePanel = ImSidePanel({0,0.3,0,0.95});
-        ImConsoles consoles = ImConsoles({0.3,1.0,0,0.3});
+        ImConsolesSection consoles = ImConsolesSection({0.3,1.0,0,0.3});
         ImSection glArea = ImSection("glArea", {0.3,1,0.3,0.95});
 
         void resolveResize(const string& name, const ResizeEvent& resizer);
