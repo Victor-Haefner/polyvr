@@ -10,11 +10,6 @@
 #include "VRGuiRecWidget.h"
 #include "VRGuiFwd.h"
 
-struct _GtkNotebook;
-struct _GtkToggleToolButton;
-struct _GtkWidget;
-struct _GdkEventKey;
-
 const char* getVersionString();
 
 OSG_BEGIN_NAMESPACE;
@@ -24,7 +19,7 @@ class VRGuiBits {
     private:
         bool update_ward = false;
         VRConsoleWidgetPtr openConsole;
-        _GtkNotebook* terminal;
+        string terminal;
         map<string, VRConsoleWidgetPtr> consoles;
 
 	    VRUpdateCbPtr updatePtr;
@@ -35,12 +30,12 @@ class VRGuiBits {
 
         void hideAbout(int i);
         void updateVisualLayer();
-        void on_view_option_toggle(VRVisualLayer* l, _GtkToggleToolButton* tb);
+        void on_view_option_toggle(VRVisualLayer* l, bool b);
         void toggleVerbose(string s);
 
         void on_camera_changed();
-        void on_navigation_clicked();
-        void on_navigation_toggled(VRNavPresetWeakPtr np, _GtkWidget* cb);
+        void on_navigation_clicked(bool b);
+        void on_navigation_toggled(VRNavPresetWeakPtr np, bool b);
 
         void on_save_clicked();
         void on_web_export_clicked();
@@ -50,11 +45,11 @@ class VRGuiBits {
         void on_fullscreen_clicked();
 
         void on_internal_close_clicked();
-        void on_console_switch(_GtkWidget* page, unsigned int page_num);
+        void on_console_switch(string name);
 
         void updateWebPortRessources();
-        void on_wed_cancel();
-        void on_wed_start();
+        void on_web_cancel();
+        void on_web_start();
 
     public:
         VRGuiBits();
@@ -64,11 +59,11 @@ class VRGuiBits {
         VRConsoleWidgetPtr getConsole(string t);
         void update_terminals();
 
-        void toggleDock();
+        void toggleDock(bool b);
         void toggleFullscreen();
         void toggleWidgets();
         void toggleStereo();
-        bool pressFKey(_GdkEventKey* k);
+        bool pressFKey(int k);
 
         bool update();
         void wipeConsoles();

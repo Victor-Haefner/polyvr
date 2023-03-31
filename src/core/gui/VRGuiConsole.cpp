@@ -3,8 +3,6 @@
 #include "core/utils/VRFunction.h"
 #include "core/utils/VRMutex.h"
 
-#include <gtk/gtk.h>
-#include <pango/pango-font.h>
 #include "core/utils/VRMutex.h"
 #include "VRGuiUtils.h"
 
@@ -15,7 +13,7 @@ VRMutex mtx;
 VRConsoleWidget::message::message(string m, string s, shared_ptr< VRFunction<string> > l) : msg(m), style(s), link(l) {}
 
 VRConsoleWidget::VRConsoleWidget() {
-    buffer = gtk_text_buffer_new(0);
+    /*buffer = gtk_text_buffer_new(0);
     GtkTextView* term_view = (GtkTextView*)gtk_text_view_new_with_buffer(buffer);
     PangoFontDescription* fdesc = pango_font_description_new();
     pango_font_description_set_family(fdesc, "monospace");
@@ -33,7 +31,7 @@ VRConsoleWidget::VRConsoleWidget() {
 
     setToolButtonCallback("toolbutton24", bind(&VRConsoleWidget::clear, this));
     setToolButtonCallback("toolbutton25", bind(&VRConsoleWidget::forward, this));
-    setToolButtonCallback("pause_terminal", bind(&VRConsoleWidget::pause, this));
+    setToolButtonCallback("pause_terminal", bind(&VRConsoleWidget::pause, this));*/
 
     addStyle( "console91", "#ff3311", "#ffffff", false, false, false, true );
     addStyle( "console92", "#11ff33", "#ffffff", false, false, false, true );
@@ -86,34 +84,34 @@ void VRConsoleWidget::write(string msg, string style, shared_ptr< VRFunction<str
 void VRConsoleWidget::clear() {
     VRLock lock(mtx);
     std::queue<message>().swap(msg_queue);
-    gtk_text_buffer_set_text(buffer, "", 0);
+    //gtk_text_buffer_set_text(buffer, "", 0);
     resetColor();
 }
 
-GtkScrolledWindow* VRConsoleWidget::getWindow() { return swin; }
+string VRConsoleWidget::getWindow() { return swin; }
 void VRConsoleWidget::pause() { paused = getToggleToolButtonState("pause_terminal"); }
-void VRConsoleWidget::setLabel(GtkLabel* lbl) { label = lbl; }
+void VRConsoleWidget::setLabel(string lbl) { label = lbl; }
 void VRConsoleWidget::setOpen(bool b) {
     isOpen = b;
     if (!b) resetColor();
 }
 
 void VRConsoleWidget::setColor(string colorStr) {
-    GdkColor color;
+    /*GdkColor color;
     gdk_color_parse(colorStr.c_str(), &color);
     gtk_widget_modify_fg((GtkWidget*)label, GTK_STATE_ACTIVE , &color );
-    gtk_widget_modify_fg((GtkWidget*)label, GTK_STATE_NORMAL , &color );
+    gtk_widget_modify_fg((GtkWidget*)label, GTK_STATE_NORMAL , &color );*/
 }
 
 void VRConsoleWidget::configColor( string c ) { notifyColor = c; }
 
 void VRConsoleWidget::resetColor() {
-    gtk_widget_modify_fg((GtkWidget*)label, GTK_STATE_ACTIVE , 0 );
-    gtk_widget_modify_fg((GtkWidget*)label, GTK_STATE_NORMAL , 0 );
+    //gtk_widget_modify_fg((GtkWidget*)label, GTK_STATE_ACTIVE , 0 );
+    //gtk_widget_modify_fg((GtkWidget*)label, GTK_STATE_NORMAL , 0 );
 }
 
 void VRConsoleWidget::addStyle( string style, string fg, string bg, bool italic, bool bold, bool underlined, bool editable ) {
-    GtkTextTag* tag = gtk_text_buffer_create_tag(buffer, NULL, NULL);
+    /*GtkTextTag* tag = gtk_text_buffer_create_tag(buffer, NULL, NULL);
     function<bool(GObject*, GdkEvent*, GtkTextIter*)> sig = bind(&VRConsoleWidget::on_link_activate, this, placeholders::_1, placeholders::_2, placeholders::_3);
     connect_signal((GtkWidget*)tag, sig, "event");
     g_object_set(tag, "editable", editable, NULL);
@@ -122,11 +120,11 @@ void VRConsoleWidget::addStyle( string style, string fg, string bg, bool italic,
     if (underlined) g_object_set(tag, "underline", PANGO_UNDERLINE_SINGLE, NULL);
     if (italic) g_object_set(tag, "style", PANGO_STYLE_ITALIC, NULL);
     if (bold) g_object_set(tag, "weight", PANGO_WEIGHT_BOLD, NULL);
-    styles[style] = tag;
+    styles[style] = tag;*/
 }
 
-bool VRConsoleWidget::on_link_activate(GObject* object, GdkEvent* event, GtkTextIter* itr) {
-    GdkEventButton* event_btn = (GdkEventButton*)event;
+bool VRConsoleWidget::on_link_activate(string object, string event, string itr) {
+    /*GdkEventButton* event_btn = (GdkEventButton*)event;
     if (event->type == GDK_BUTTON_PRESS && event_btn->button == 1) {
         GtkTextIter markItr, tagToggle, lineEnd;
         tagToggle = *itr;
@@ -148,7 +146,7 @@ bool VRConsoleWidget::on_link_activate(GObject* object, GdkEvent* event, GtkText
         }
         g_slist_free(marks);
         return true;
-    }
+    }*/
     return false;
 }
 
@@ -158,7 +156,7 @@ void VRConsoleWidget::update() {
         if (!isOpen) setColor(notifyColor);
         auto& msg = msg_queue.front();
         //cout << "VRConsoleWidget::update message: '" << msg.msg << "'" << endl;
-        GtkTextIter itr;
+        /*GtkTextIter itr;
         if (styles.count( msg.style )) {
             auto tag = styles[msg.style];
             gtk_text_buffer_get_end_iter(buffer, &itr);
@@ -169,17 +167,17 @@ void VRConsoleWidget::update() {
         else {
             gtk_text_buffer_get_end_iter(buffer, &itr);
             gtk_text_buffer_insert(buffer, &itr, msg.msg.c_str(), msg.msg.size());
-        }
+        }*/
 		msg_queue.pop();
     }
 }
 
 void VRConsoleWidget::forward() {
-    if (swin == 0) return;
+    //if (swin == 0) return;
     if (paused) return;
-    GtkAdjustment* a = gtk_scrolled_window_get_vadjustment(swin);
+    /*GtkAdjustment* a = gtk_scrolled_window_get_vadjustment(swin);
     int p = gtk_adjustment_get_upper(a) - gtk_adjustment_get_page_size(a);
-    gtk_adjustment_set_value(a, p);
+    gtk_adjustment_set_value(a, p);*/
 }
 
 

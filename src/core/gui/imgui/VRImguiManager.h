@@ -11,7 +11,7 @@ using namespace std;
 
 class VRImguiManager {
     private:
-        Imgui imgui;
+        VRImguiEditor imgui;
 
     public:
         VRImguiManager();

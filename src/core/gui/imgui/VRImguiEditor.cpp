@@ -12,63 +12,7 @@
 #include <core/gui/VRGuiManager.h>
 #include <core/utils/toString.h>
 
-#define signal(m,...) OSG::VRGuiManager::trigger(m,##__VA_ARGS__)
-
-ostream& operator<<(ostream& os, const ResizeEvent& s) {
-    os << "[" << s.pos.x << ", " << s.pos.y << ", " << s.size.x << ", " << s.size.y << "]";
-    return os;
-}
-
-ostream& operator<<(ostream& os, const ImVec2& s) {
-    os << "[" << s.x << ", " << s.y << "]";
-    return os;
-}
-
-ostream& operator<<(ostream& os, const Rectangle& s) {
-    os << "[" << s.left << ", " << s.right << ", " << s.top << ", " << s.bottom << "]";
-    return os;
-}
-
-ostream& operator<<(ostream& os, const Surface& s) {
-    os << "[" << s.x << ", " << s.y << ", " << s.width << ", " << s.height << "]";
-    return os;
-}
-
-void Surface::compute(const Surface& parent, const Rectangle& area) {
-    width  = round( parent.width * (area.right - area.left) );
-    height = round( parent.height * (area.top - area.bottom) );
-    width = max(width, 10);
-    height = max(height, 10);
-    x = round( parent.width * area.left );
-    y = round( parent.height * (1.0 - area.top) );
-    //cout << " compute surface " << width << ", " << height << ", " << x << ", " << y << endl;
-}
-
-vector<char> ResizeEvent::changed() {
-    vector<char> edges;
-    ImVec2 s = ImGui::GetWindowSize();
-    ImVec2 p = ImGui::GetWindowPos();
-    if (s.x == size.x && s.y == size.y) return edges;
-
-    if (p.x != pos.x && s.x != size.x) edges.push_back('L');
-    if (p.x == pos.x && s.x != size.x) edges.push_back('R');
-    if (p.y != pos.y && s.y != size.y) edges.push_back('T');
-    if (p.y == pos.y && s.y != size.y) edges.push_back('B');
-
-    size = s;
-    pos = p;
-    return edges;
-}
-
-
-ImWidget::ImWidget(string n) : name(n) {}
-ImWidget::~ImWidget() {}
-void ImWidget::end() {}
-
-void ImWidget::render() {
-    begin();
-    end();
-}
+#include "VRImguiApps.h"
 
 ImSection::ImSection(string n, Rectangle r) : ImWidget(n), layout(r) {
     resize({0,0,800,800});
@@ -152,77 +96,17 @@ void ImSidePanel::begin() {
 
 ImConsoles::ImConsoles(Rectangle r) : ImSection("Consoles", r) {}
 
-ImAppLauncher::ImAppLauncher(string ID) : ID(ID), name(ID) {}
-
-void ImAppLauncher::render() {
-    if (!sensitive) ImGui::BeginDisabled();
-
-    ImGui::BeginGroup();
-    if (!running) {
-        if (ImGui::Button(("Run##"+ID).c_str())) signal("on_toggle_app", {{"ID",ID}});
-    } else {
-        if (ImGui::Button(("Stop##"+ID).c_str())) signal("on_toggle_app", {{"ID",ID}});
-    }
-    ImGui::SameLine();
-    string label = name;
-    if (label.length() > 25) label = ".." + subString(label, label.length()-23, 23);
-    ImGui::Text(label.c_str());
-    ImGui::SameLine();
-    ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_SpanAvailWidth;
-    if (ImGui::CollapsingHeader(("advanced##"+ID).c_str(), flags)) {
-        if (ImGui::Button(("Run without scripts##"+ID).c_str())) signal("on_toggle_app_no_scripts", {{"ID",ID}});
-    }
-    ImGui::EndGroup();
-    ImVec2 p2 = ImGui::GetItemRectMax();
-    p2.x = ImGui::GetContentRegionAvail().x;
-    ImGui::GetWindowDrawList()->AddRect(ImGui::GetItemRectMin(), p2, IM_COL32(255, 255, 255, 255));
-
-    if (!sensitive) ImGui::EndDisabled();
-}
-
-ImAppManager::ImAppManager() : ImWidget("AppManager") {
-    auto mgr = OSG::VRGuiSignals::get();
-    mgr->addCallback("newAppLauncher", [&](OSG::VRGuiSignals::Options o){ newAppLauncher(o["ID"]); return true; } );
-    mgr->addCallback("setupAppLauncher", [&](OSG::VRGuiSignals::Options o){ setupAppLauncher(o["ID"], o["name"]); return true; } );
-    mgr->addCallback("setAppLauncherState", [&](OSG::VRGuiSignals::Options o){ setAppLauncherState(o["ID"], toBool(o["running"]), toBool(o["sensitive"])); return true; } );
-}
-
-void ImAppManager::setAppLauncherState(string ID, bool running, bool sensitive) {
-    if (!launchers.count(ID)) return;
-    launchers[ID].running = running;
-    launchers[ID].sensitive = sensitive;
-}
-
-void ImAppManager::newAppLauncher(string ID) {
-    launchers[ID] = ImAppLauncher(ID);
-}
-
-void ImAppManager::setupAppLauncher(string ID, string name) {
-    if (!launchers.count(ID)) return;
-    launchers[ID].name = name;
-}
-
-void ImAppManager::begin() {
-    for (auto& l : launchers) l.second.render();
-}
-
 void ImToolbar::begin() {
     ImSection::begin();
-    if (ImGui::Button("New"));
-    ImGui::SameLine();
-    if (ImGui::Button("Open"));
-    ImGui::SameLine();
-    if (ImGui::Button("Save"));
-    ImGui::SameLine();
-    if (ImGui::Button("Save.."));
-    ImGui::SameLine();
-    if (ImGui::Button("Close"));
-    ImGui::SameLine();
-    if (ImGui::Button("Exit"));
-    ImGui::SameLine();
-    if (ImGui::Button("About"));
-    ImGui::SameLine();
-    if (ImGui::Button("Stats"));
+    if (ImGui::Button("New")) uiSignal("toolbar_new");
+    ImGui::SameLine(); if (ImGui::Button("Open")) uiSignal("toolbar_open");
+    ImGui::SameLine(); if (ImGui::Button("Save")) uiSignal("toolbar_save");
+    ImGui::SameLine(); if (ImGui::Button("Save..")) uiSignal("toolbar_saveas");
+    ImGui::SameLine(); if (ImGui::Button("Close")) uiSignal("toolbar_close");
+    ImGui::SameLine(); if (ImGui::Button("Exit")) uiSignal("toolbar_exit");
+    ImGui::SameLine(); if (ImGui::Button("About")) uiSignal("toolbar_about");
+    ImGui::SameLine(); if (ImGui::Button("Profiler")) uiSignal("toolbar_profiler");
+    ImGui::SameLine(); if (ImGui::Button("Fullscreen")) uiSignal("toolbar_fullscreen");
 }
 
 void ImConsoles::begin() {
@@ -230,7 +114,7 @@ void ImConsoles::begin() {
 }
 
 
-void Imgui::resizeUI(const Surface& parent) {
+void VRImguiEditor::resizeUI(const Surface& parent) {
     toolbar.resize(parent);
     sidePanel.resize(parent);
     consoles.resize(parent);
@@ -238,7 +122,7 @@ void Imgui::resizeUI(const Surface& parent) {
     if (resizeSignal) resizeSignal("glAreaResize", glArea.surface);
 }
 
-void Imgui::onSectionResize(map<string,string> options) {
+void VRImguiEditor::onSectionResize(map<string,string> options) {
     string name = options["name"];
     char edge = options["edge"][0];
     if (name == "Toolbar" && edge == 'B') resolveResize(name, toolbar.resizer);
@@ -246,7 +130,7 @@ void Imgui::onSectionResize(map<string,string> options) {
     if (name == "Consoles" && (edge == 'T' || edge == 'L')) resolveResize(name, consoles.resizer);
 }
 
-void Imgui::init(Signal signal, ResizeSignal resizeSignal) {
+void VRImguiEditor::init(Signal signal, ResizeSignal resizeSignal) {
     this->signal = signal;
     this->resizeSignal = resizeSignal;
 
@@ -268,13 +152,13 @@ void Imgui::init(Signal signal, ResizeSignal resizeSignal) {
     glArea.signal = signal;
 }
 
-void Imgui::close() {
+void VRImguiEditor::close() {
     cout << "Imgui::close" << endl;
     ImGui_ImplOpenGL3_Shutdown();
     ImGui::DestroyContext();
 }
 
-void Imgui::resolveResize(const string& name, const ResizeEvent& resizer) {
+void VRImguiEditor::resolveResize(const string& name, const ResizeEvent& resizer) {
     //cout << "     resolveResize " << name << ", " << resizer << endl;
     if (name == "SidePanel") {
         sidePanel.updateLayout({ resizer.pos.x, resizer.pos.y, resizer.size.x, resizer.size.y });
@@ -301,7 +185,7 @@ void Imgui::resolveResize(const string& name, const ResizeEvent& resizer) {
 
 ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
-void Imgui::render() {
+void VRImguiEditor::render() {
     ImGuiIO& io = ImGui::GetIO();
     if (io.DisplaySize.x < 0 || io.DisplaySize.y < 0) return;
 

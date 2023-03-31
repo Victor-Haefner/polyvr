@@ -8,6 +8,8 @@
 #include <map>
 #include <functional>
 
+#define uiSignal(m,...) OSG::VRGuiManager::trigger(m,##__VA_ARGS__)
+
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 

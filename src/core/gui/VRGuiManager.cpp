@@ -86,10 +86,10 @@ void VRGuiManager::init() {
     VRSetupManager::get()->load("Desktop", "setup/Desktop.xml");
 
     g_demos = new VRAppManager();
+    g_bits = new VRGuiBits();
     return;
 
     //gtk_rc_parse("gui/gtkrc");
-    g_bits = new VRGuiBits();
     g_mon = new VRGuiMonitor();
     g_sc = new VRGuiScripts();
     g_scene = new VRGuiScene();

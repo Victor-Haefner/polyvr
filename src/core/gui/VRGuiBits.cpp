@@ -14,7 +14,6 @@
 #include "core/scene/VRSceneLoader.h"
 #include "core/scripting/VRScript.h"
 #include "VRGuiUtils.h"
-#include "VRGuiBuilder.h"
 #include "VRGuiSignals.h"
 #include "VRGuiFile.h"
 #include "core/setup/VRSetup.h"
@@ -27,7 +26,6 @@
 #include "VRGuiManager.h"
 
 #include <iostream>
-#include <gtk/gtk.h>
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -36,9 +34,8 @@ using namespace std;
 // ---------SIGNALS----------
 // --------------------------
 
-void VRGuiBits::on_view_option_toggle(VRVisualLayer* l, GtkToggleToolButton* tb) {
-    bool b = gtk_toggle_tool_button_get_active(tb);
-    l->setVisibility( b );
+void VRGuiBits::on_view_option_toggle(VRVisualLayer* l, bool b) {
+    if (l) l->setVisibility( b );
 }
 
 void VRGuiBits::on_camera_changed() {
@@ -49,18 +46,15 @@ void VRGuiBits::on_camera_changed() {
     VRGuiManager::broadcast("camera_changed");
 }
 
-void VRGuiBits::on_navigation_clicked() {
-    auto tb = VRGuiBuilder::get()->get_widget("navButton");
-    bool v = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(tb));
-    setWidgetVisibility("navOverlay", v);
+void VRGuiBits::on_navigation_clicked(bool b) {
+    setWidgetVisibility("navOverlay", b);
 }
 
-void VRGuiBits::on_navigation_toggled(VRNavPresetWeakPtr np, GtkWidget* cb) {
-    bool v = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cb));
+void VRGuiBits::on_navigation_toggled(VRNavPresetWeakPtr np, bool b) {
     auto npreset = np.lock();
     //npreset->setActive(v);
     auto scene = VRScene::getCurrent();
-    if (scene) scene->setNavigationState(npreset->getName(), v);
+    if (scene) scene->setNavigationState(npreset->getName(), b);
 }
 
 void VRGuiBits::on_save_clicked() {
@@ -223,24 +217,20 @@ void VRGuiBits::updateWebPortRessources() {
 }
 
 void VRGuiBits::on_web_export_clicked() {
-    auto diag = VRGuiBuilder::get()->get_widget("webExportDialog");
-    gtk_widget_show_all(diag);
+    uiSignal("toolbar_export");
 }
 
-void VRGuiBits::on_wed_cancel() {
-    GtkWidget* diag = VRGuiBuilder::get()->get_widget("webExportDialog");
-    gtk_widget_hide(diag);
+void VRGuiBits::on_web_cancel() {
+    uiSignal("dialog_export_cancel");
 }
 
-void VRGuiBits::on_wed_start() {
-    GtkWidget* diag = VRGuiBuilder::get()->get_widget("webExportDialog");
-    gtk_widget_hide(diag);
+void VRGuiBits::on_web_start() {
+    uiSignal("dialog_export_start");
     updateWebPortRessources();
 }
 
 void VRGuiBits::on_about_clicked() {
-    GtkDialog* diag = (GtkDialog*)VRGuiBuilder::get()->get_widget("aboutdialog1");
-    gtk_dialog_run(diag);
+    uiSignal("toolbar_about");
 }
 
 void VRGuiBits::on_fullscreen_clicked() {
@@ -250,17 +240,17 @@ void VRGuiBits::on_fullscreen_clicked() {
 }
 
 void VRGuiBits::on_internal_clicked() {
-    auto diag = VRGuiBuilder::get()->get_widget("dialog2");
-    gtk_widget_show_all(diag);
+    uiSignal("toolbar_profiler");
 }
 
 void VRGuiBits::on_internal_close_clicked() {
-    GtkWidget* diag = VRGuiBuilder::get()->get_widget("dialog2");
-    gtk_widget_hide(diag);
+    uiSignal("dialog_profiler_close");
 }
 
 void VRGuiBits_on_internal_update() {
-    GtkWidget* diag = VRGuiBuilder::get()->get_widget("dialog2");
+    uiSignal("dialog_profiler_update");
+
+    /*GtkWidget* diag = VRGuiBuilder::get()->get_widget("dialog2");
     if (!gtk_widget_is_visible(diag)) return;
 
     VRInternalMonitor* mnr = VRInternalMonitor::get();
@@ -272,7 +262,7 @@ void VRGuiBits_on_internal_update() {
         gtk_list_store_append(store, &itr);
         gtk_list_store_set(store, &itr, 0, var.first.c_str(), -1);
         gtk_list_store_set(store, &itr, 1, var.second.c_str(), -1);
-    }
+    }*/
 }
 
 // --------------------------
@@ -286,15 +276,15 @@ void VRGuiBits::update_terminals() {
 VRConsoleWidgetPtr VRGuiBits::getConsole(string t) { return consoles[t]; }
 
 void VRGuiBits::hideAbout(int i) {
-    GtkWidget* diag = VRGuiBuilder::get()->get_widget("aboutdialog1");
-    gtk_widget_hide(diag);
+    uiSignal("dialog_about_close");
 }
 
 void VRGuiBits::toggleWidgets() {
     static bool fs = false;
     fs = !fs;
+    uiSignal("set_editor_widgets_visibility", {{"visibility",toString(fs)}});
 
-    GtkWidget* win = VRGuiBuilder::get()->get_widget("window1");
+    /*GtkWidget* win = VRGuiBuilder::get()->get_widget("window1");
     GtkWidget* hs1 = VRGuiBuilder::get()->get_widget("hseparator1");
     GtkWidget* tab = VRGuiBuilder::get()->get_widget("table20");
     GtkWidget* hb1 = VRGuiBuilder::get()->get_widget("hbox1");
@@ -320,15 +310,16 @@ void VRGuiBits::toggleWidgets() {
         gtk_paned_set_wide_handle(GTK_PANED(hp1), true);
         gtk_paned_set_wide_handle(GTK_PANED(hp2), true);
         gtk_widget_show_all(win);
-    }
+    }*/
 }
 
 void VRGuiBits::toggleFullscreen() {
     static bool fs = false;
     fs = !fs;
-    GtkWindow* win = (GtkWindow*)VRGuiBuilder::get()->get_widget("window1");
+    uiSignal("set_editor_fullscreen", {{"fullscreen",toString(fs)}});
+    /*GtkWindow* win = (GtkWindow*)VRGuiBuilder::get()->get_widget("window1");
     if (fs) gtk_window_fullscreen(win);
-    else gtk_window_unfullscreen(win);
+    else gtk_window_unfullscreen(win);*/
 }
 
 void VRGuiBits::toggleStereo() {
@@ -340,18 +331,17 @@ void VRGuiBits::toggleStereo() {
     }
 }
 
-bool VRGuiBits::pressFKey(GdkEventKey* k) {
-    if (k->keyval == 65479) toggleStereo();
-    if (k->keyval == 65480) toggleFullscreen();
-    if (k->keyval == 65481) toggleWidgets();
-
-    GtkWindow* win = (GtkWindow*)VRGuiBuilder::get()->get_widget("window1");
-    gtk_window_propagate_key_event(GTK_WINDOW(win), k);
+bool VRGuiBits::pressFKey(int k) {
+    if (k == 65479) toggleStereo();
+    if (k == 65480) toggleFullscreen();
+    if (k == 65481) toggleWidgets();
     return true;
 }
 
-void VRGuiBits::toggleDock() { // TODO: redesign
-    GtkToggleButton* tbut = (GtkToggleButton*)VRGuiBuilder::get()->get_widget("togglebutton1");
+void VRGuiBits::toggleDock(bool b) {
+    uiSignal("ui_toggle_dock", {{"docking",toString(b)}});
+
+    /*GtkToggleButton* tbut = (GtkToggleButton*)VRGuiBuilder::get()->get_widget("togglebutton1");
     bool a = gtk_toggle_button_get_active(tbut);
 
     static GtkWindow* win = 0;
@@ -368,7 +358,7 @@ void VRGuiBits::toggleDock() { // TODO: redesign
         gtk_widget_reparent((GtkWidget*)box, (GtkWidget*)pan);
         gtk_widget_show_all((GtkWidget*)pan);
         delete win;
-    }
+    }*/
 
     //TODO: reset changelist to redraw everything!
 }
@@ -378,15 +368,15 @@ void VRGuiBits::toggleVerbose(string s) {
 }
 
 VRGuiBits::VRGuiBits() {
-    bool standalone = VROptions::get()->getOption<bool>("standalone");
+    /*bool standalone = VROptions::get()->getOption<bool>("standalone");
     if (standalone) {
         GtkWidget* win = VRGuiBuilder::get()->get_widget("window1");
         connect_signal<bool, GdkEventKey*>(win, bind(&VRGuiBits::pressFKey, this, placeholders::_1), "key_press_event");
         connect_signal<void>(win, bind(&VRGuiBits::on_quit_clicked, this), "destroy");
         return;
-    }
+    }*/
 
-    setComboboxCallback("combobox4", bind(&VRGuiBits::on_camera_changed, this));
+    /*setComboboxCallback("combobox4", bind(&VRGuiBits::on_camera_changed, this));
     setToggleButtonCallback("navButton", bind(&VRGuiBits::on_navigation_clicked, this));
 
     setToolButtonCallback("toolbutton4", bind(&VRGuiBits::on_save_clicked, this));
@@ -408,7 +398,7 @@ VRGuiBits::VRGuiBits() {
     //setLabel("lblversion", getVersionString()); // in about dialog
 
     disableDestroyDiag("aboutdialog1");
-    disableDestroyDiag("dialog2");
+    disableDestroyDiag("dialog2");*/
 
     // recorder
     recorder_visual_layer = VRVisualLayer::getLayer("Recorder", "recorder.png", 1);
@@ -416,16 +406,14 @@ VRGuiBits::VRGuiBits() {
     recorder_visual_layer->setCallback( recToggleCb );
 
     // About Dialog
-    GtkAboutDialog* diag = (GtkAboutDialog*)VRGuiBuilder::get()->get_widget("aboutdialog1");
+    /*GtkAboutDialog* diag = (GtkAboutDialog*)VRGuiBuilder::get()->get_widget("aboutdialog1");
     function<void(int)> sig = bind(&VRGuiBits::hideAbout, this, placeholders::_1);
-    connect_signal((GtkWidget*)diag, sig, "response");
+    connect_signal((GtkWidget*)diag, sig, "response");*/
     ifstream f("ressources/gui/authors");
-
     vector<string> authors;
     for (string line; getline(f, line); ) authors.push_back(line);
     f.close();
-
-    const gchar** auths = (const gchar**)malloc((authors.size()+1)*sizeof(gchar*));
+    /*const gchar** auths = (const gchar**)malloc((authors.size()+1)*sizeof(gchar*));
     for (int i = 0; i<authors.size(); i++) auths[i] = authors[i].c_str();
     auths[authors.size()] = NULL;
     gtk_about_dialog_set_authors(diag, auths);
@@ -436,15 +424,15 @@ VRGuiBits::VRGuiBits() {
     // window fullscreen
     GtkWidget* win = VRGuiBuilder::get()->get_widget("window1");
     connect_signal<bool,GdkEventKey*>(win, bind(&VRGuiBits::pressFKey, this, placeholders::_1), "key_press_event");
-    connect_signal<void>(win, bind(&VRGuiBits::on_quit_clicked, this), "destroy");
+    connect_signal<void>(win, bind(&VRGuiBits::on_quit_clicked, this), "destroy");*/
 
     // TERMINAL
-    terminal = (GtkNotebook*)gtk_notebook_new();
+    //terminal = (GtkNotebook*)gtk_notebook_new();
     auto addTermTab = [&](string name) {
         auto c = VRConsoleWidgetPtr( new VRConsoleWidget() );
-        GtkLabel* label = (GtkLabel*)gtk_label_new(name.c_str());
-        gtk_notebook_append_page(terminal, (GtkWidget*)c->getWindow(), (GtkWidget*)label);
-        c->setLabel( label );
+        /*GtkLabel* label = (GtkLabel*)gtk_label_new(name.c_str());
+        gtk_notebook_append_page(terminal, (GtkWidget*)c->getWindow(), (GtkWidget*)label);*/
+        //c->setLabel( label );
         consoles[name] = c;
         return c;
     };
@@ -465,10 +453,10 @@ VRGuiBits::VRGuiBits() {
     openConsole = consoles["Console"];
     openConsole->setOpen(true);
 
-    GtkWidget* box = VRGuiBuilder::get()->get_widget("hbox15");
+    /*GtkWidget* box = VRGuiBuilder::get()->get_widget("hbox15");
     gtk_box_pack_start((GtkBox*)box, (GtkWidget*)terminal, true, true, 0);
     gtk_widget_show_all(box);
-    connect_signal<void, GtkWidget*, guint>(terminal, bind(&VRGuiBits::on_console_switch, this, placeholders::_1, placeholders::_2), "switch_page");
+    connect_signal<void, GtkWidget*, guint>(terminal, bind(&VRGuiBits::on_console_switch, this, placeholders::_1, placeholders::_2), "switch_page");*/
 
     updatePtr = VRUpdateCb::create( "IntMonitor_guiUpdate", VRGuiBits_on_internal_update );
     VRSceneManager::get()->addUpdateFkt(updatePtr);
@@ -476,25 +464,25 @@ VRGuiBits::VRGuiBits() {
     updateVisualLayer();
 }
 
-void VRGuiBits::on_console_switch(GtkWidget* page, guint page_num) {
-    auto p = gtk_notebook_get_nth_page(terminal, page_num);
-    string name = gtk_notebook_get_tab_label_text(terminal, p);
+void VRGuiBits::on_console_switch(string name) {
+    //auto p = gtk_notebook_get_nth_page(terminal, page_num);
+    //string name = gtk_notebook_get_tab_label_text(terminal, p);
     openConsole->setOpen(false);
     openConsole = consoles[name];
     openConsole->setOpen(true);
 }
 
 void VRGuiBits::updateVisualLayer() {
-    auto bar = VRGuiBuilder::get()->get_widget("toolbar6");
-    clearContainer(bar);
+    //auto bar = VRGuiBuilder::get()->get_widget("toolbar6");
+    //clearContainer(bar);
 
     for (auto l : VRVisualLayer::getLayers()) {
         auto lay = VRVisualLayer::getLayer(l).get();
-        GtkToolItem* ttb = 0;
+        //GtkToolItem* ttb = 0;
 
         string icon_path = VRSceneManager::get()->getOriginalWorkdir() + "/ressources/gui/" + lay->getIconName();
         if (exists(icon_path)) {
-            ttb = gtk_toggle_tool_button_new();
+            /*ttb = gtk_toggle_tool_button_new();
             auto icon = gtk_image_new();
             gtk_image_set_from_file((GtkImage*)icon, icon_path.c_str());
             auto pbuf = gtk_image_get_pixbuf((GtkImage*)icon);
@@ -502,18 +490,18 @@ void VRGuiBits::updateVisualLayer() {
                 pbuf = gdk_pixbuf_scale_simple((GdkPixbuf*)pbuf, 24, 24, GDK_INTERP_BILINEAR);
                 gtk_image_set_from_pixbuf((GtkImage*)icon, pbuf);
                 gtk_tool_button_set_icon_widget((GtkToolButton*)ttb, icon);
-            }
+            }*/
         } else { // try stock image
-            ttb = gtk_toggle_tool_button_new_from_stock(lay->getIconName().c_str());
+            //ttb = gtk_toggle_tool_button_new_from_stock(lay->getIconName().c_str());
         }
 
-        gtk_tool_item_set_tooltip_markup(ttb, l.c_str());
+        /*gtk_tool_item_set_tooltip_markup(ttb, l.c_str());
         gtk_toolbar_insert((GtkToolbar*)bar, (GtkToolItem*)ttb, -1);
 
-        connect_signal<void>(ttb, bind(&VRGuiBits::on_view_option_toggle, this, lay, (GtkToggleToolButton*)ttb), "toggled");
+        connect_signal<void>(ttb, bind(&VRGuiBits::on_view_option_toggle, this, lay, (GtkToggleToolButton*)ttb), "toggled");*/
     }
 
-    gtk_widget_show_all(bar);
+    //gtk_widget_show_all(bar);
 }
 
 bool VRGuiBits::update() { // scene changed
@@ -536,10 +524,10 @@ bool VRGuiBits::update() { // scene changed
     update_ward = false;
     cout << " VRGuiBits::update done" << endl;
 
-    auto navOverlay = VRGuiBuilder::get()->get_widget("navOverlay");
-    clearContainer(navOverlay);
+    /*auto navOverlay = VRGuiBuilder::get()->get_widget("navOverlay");
+    clearContainer(navOverlay);*/
     for (auto nav : scene->getNavigations()) {
-        auto row = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
+        /*auto row = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
         auto cb = gtk_check_button_new_with_label(nav.second->getBaseName().c_str());
         gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cb), nav.second->isActive());
         setTooltip(cb, scene->getNavigationTip(nav.first) );
@@ -547,7 +535,7 @@ bool VRGuiBits::update() { // scene changed
 
         gtk_box_pack_start(GTK_BOX(row), cb, false, true, 0);
         gtk_box_pack_start(GTK_BOX(navOverlay), row, false, true, 0);
-        gtk_widget_show_all(row);
+        gtk_widget_show_all(row);*/
     }
 
     return true;

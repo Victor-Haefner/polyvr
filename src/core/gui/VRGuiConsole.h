@@ -9,14 +9,6 @@
 #include "core/utils/VRDeviceFwd.h"
 #include "VRGuiFwd.h"
 
-struct _GtkTextBuffer;
-struct _GtkTextTag;
-struct _GtkTextMark;
-struct _GtkScrolledWindow;
-struct _GtkLabel;
-struct _GtkTextIter;
-struct _GObject;
-union _GdkEvent;
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -33,31 +25,29 @@ class VRConsoleWidget {
         };
 
     private:
-        _GtkTextBuffer* buffer;
-        map<string, _GtkTextTag*> styles;
-        map<_GtkTextMark*, message> links;
-        _GtkScrolledWindow* swin = 0;
-        _GtkLabel* label = 0;
+        string buffer;
+        map<string, string> styles;
+        map<string, message> links;
+        string swin;
+        string label;
         std::queue<message> msg_queue;
         bool paused = 0;
         bool isOpen = 0;
         string notifyColor = "#006fe0";
 
-        bool on_link_activate(_GObject* object, _GdkEvent* event, _GtkTextIter* itr);
-        //bool on_link_activate(const Glib::RefPtr<Glib::Object>& obj, GdkEvent* event, const Gtk::TextIter& itr);
-        //bool on_link_activate(GdkEvent* event);
+        bool on_link_activate(string object, string event, string itr);
 
     public:
         VRConsoleWidget();
         ~VRConsoleWidget();
 
         static VRConsoleWidgetPtr get(string name);
-        _GtkScrolledWindow* getWindow();
+        string getWindow();
 
         void clear();
         void pause();
         void setOpen(bool b);
-        void setLabel(_GtkLabel* lbl);
+        void setLabel(string lbl);
         void setColor(string color);
         void configColor(string color);
         void resetColor();

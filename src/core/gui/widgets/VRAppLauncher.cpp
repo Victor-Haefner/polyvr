@@ -1,4 +1,5 @@
 #include "VRAppLauncher.h"
+#include "VRAppPanel.h"
 #include "../VRAppManager.h"
 
 #include "core/utils/system/VRSystem.h"
@@ -9,25 +10,23 @@
 
 #include <iostream>
 
-#define signal(m,...) VRGuiManager::trigger(m,##__VA_ARGS__)
-
 using namespace OSG;
 
 VRAppLauncher::VRAppLauncher(VRAppPanelPtr s) : section(s) {
     ID = VRGuiManager::genUUID();
-    signal("newAppLauncher", {{"ID",ID}});
+    uiSignal("newAppLauncher", {{"panel",s->getName()}, {"ID",ID}});
 }
 
 VRAppLauncher::~VRAppLauncher() {}
 
 VRAppLauncherPtr VRAppLauncher::create(VRAppPanelPtr s) { return VRAppLauncherPtr( new VRAppLauncher(s) ); }
 
-void VRAppLauncher::show() { signal("setVisible", {{"ID",ID},{"visible","1"}}); }
-void VRAppLauncher::hide() { signal("setVisible", {{"ID",ID},{"visible","0"}}); }
+void VRAppLauncher::show() { uiSignal("setVisible", {{"ID",ID},{"visible","1"}}); }
+void VRAppLauncher::hide() { uiSignal("setVisible", {{"ID",ID},{"visible","0"}}); }
 
 bool VRAppLauncher::updatePixmap() {
     if ( !exists( pxm_path ) ) return true;
-    signal("updateAppLauncherPixmap", {{"ID",ID},{"path",pxm_path}}); // loadGTKIcon(imgScene, pxm_path, 100, 60);
+    uiSignal("updateAppLauncherPixmap", {{"ID",ID},{"path",pxm_path}}); // loadGTKIcon(imgScene, pxm_path, 100, 60);
     return true;
 }
 
@@ -40,7 +39,7 @@ void VRAppLauncher::setState(int state) {
     if (state == 2) running = "1"; // launcher is ready to stop application
 
     this->running = (running=="1");
-    signal("setAppLauncherState", {{"ID",ID},{"sensitive",sensitive},{"running",running}});
+    uiSignal("setAppLauncherState", {{"ID",ID},{"sensitive",sensitive},{"running",running}});
 
     //if (widget) gtk_widget_set_sensitive((GtkWidget*)widget, sensitive);
     //if (imgPlay) gtk_image_set_from_icon_name(imgPlay, stock_id, GTK_ICON_SIZE_BUTTON); // stock id is play/stop according to running
@@ -48,7 +47,7 @@ void VRAppLauncher::setState(int state) {
 
 void VRAppLauncher::toggle_lock() {
     write_protected = !write_protected;
-    signal("setAppLauncherProtection", {{"ID",ID},{"write_protected",write_protected?"1":"0"}});
+    uiSignal("setAppLauncherProtection", {{"ID",ID},{"write_protected",write_protected?"1":"0"}});
 
     /*if (write_protected) {
         gtk_container_remove((GtkContainer*)butLock, (GtkWidget*)imgUnlock);
@@ -64,7 +63,7 @@ void VRAppLauncher::toggle_lock() {
 
 void VRAppLauncher::setup(VRAppManager* mgr) {
     string rpath = VRSceneManager::get()->getOriginalWorkdir();
-    signal("setupAppLauncher", {{"ID",ID},{"name",path}});
+    uiSignal("setupAppLauncher", {{"ID",ID},{"name",path}});
 
     auto sigs = OSG::VRGuiSignals::get();
     sigs->addCallback("on_toggle_app", [&](OSG::VRGuiSignals::Options o) { if (o["ID"] == ID) mgr->toggleDemo( shared_from_this() ); return true; } );

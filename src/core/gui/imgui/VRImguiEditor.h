@@ -6,52 +6,11 @@
 #include <map>
 #include <vector>
 
-//#include "imEditor/TextEditor.h"
+#include "VRImguiUtils.h"
 #include <imgui.h>
 #include <core/utils/VRFwdDeclTemplate.h>
 
 using namespace std;
-
-struct Rectangle {
-    float left = 0;
-    float right = 1;
-    float bottom = 0;
-    float top = 1;
-};
-
-struct Surface {
-    int x = 0;
-    int y = 0;
-    int width = 10;
-    int height = 10;
-
-    void compute(const Surface& parent, const Rectangle& area);
-};
-
-struct ResizeEvent {
-    ImVec2 size;
-    ImVec2 pos;
-
-    vector<char> changed();
-};
-
-typedef function<void(string, map<string, string>)> Signal;
-typedef function<void(string, Surface)> ResizeSignal;
-
-ptrFwd(ImWidget);
-
-class ImWidget {
-    public:
-        string name;
-        Signal signal;
-
-        ImWidget(string n);
-        virtual ~ImWidget();
-
-        void render();
-        virtual void begin() = 0;
-        virtual void end();
-};
 
 class ImSection : public ImWidget {
     public:
@@ -67,31 +26,6 @@ class ImSection : public ImWidget {
 
         void begin() override;
         void end() override;
-};
-
-class ImAppLauncher {
-    public:
-        string ID;
-        string name;
-        bool running = false;
-        bool sensitive = true;
-
-        ImAppLauncher() {}
-        ImAppLauncher(string ID);
-        void render();
-};
-
-class ImAppManager : public ImWidget {
-    public:
-        map<string,ImAppLauncher> launchers;
-
-        void newAppLauncher(string ID);
-        void setupAppLauncher(string ID, string name);
-        void setAppLauncherState(string ID, bool running, bool sensitive);
-
-        void renderLauncher(string name);
-        ImAppManager();
-        void begin() override;
 };
 
 class ImToolbar : public ImSection {
@@ -114,7 +48,7 @@ class ImConsoles : public ImSection {
         void begin() override;
 };
 
-class Imgui {
+class VRImguiEditor {
     private:
         Signal signal;
         ResizeSignal resizeSignal;
