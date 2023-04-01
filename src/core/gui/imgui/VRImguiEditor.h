@@ -37,6 +37,8 @@ class ImToolbar : public ImSection {
 class ImSidePanel : public ImSection {
     public:
         ImWidgetPtr appManager;
+        ImWidgetPtr setupManager;
+        ImWidgetPtr sceneEditor;
 
         ImSidePanel(Rectangle r);
         void begin() override;

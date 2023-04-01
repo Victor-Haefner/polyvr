@@ -70,9 +70,10 @@ void ImAppManager::setupAppLauncher(string ID, string name) {
 
 void ImAppManager::begin() {
     if (ImGui::BeginTabBar("AppPanelsTabBar", ImGuiTabBarFlags_None)) {
+        ImGuiWindowFlags flags = ImGuiWindowFlags_None;
+
         if (ImGui::BeginTabItem("Projects")) {
             ImGui::Spacing();
-            ImGuiWindowFlags flags = ImGuiWindowFlags_None;
             ImGui::BeginChild("Panel1", ImGui::GetContentRegionAvail(), false, flags);
             recents.render();
             ImGui::Spacing();
@@ -85,8 +86,7 @@ void ImAppManager::begin() {
 
         if (ImGui::BeginTabItem("Examples")) {
             ImGui::Spacing();
-            ImGuiWindowFlags flags = ImGuiWindowFlags_None;
-            ImGui::BeginChild("Panel2", ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y), false, flags);
+            ImGui::BeginChild("Panel2", ImGui::GetContentRegionAvail(), false, flags);
             examples.render();
             ImGui::EndChild();
             ImGui::EndTabItem();

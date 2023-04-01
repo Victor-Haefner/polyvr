@@ -6,7 +6,6 @@
 
 #include <backends/imgui_impl_glut.h>
 #include <backends/imgui_impl_opengl3.h>
-//(#include <imgui_internal.h>
 
 #include <core/gui/VRGuiSignals.h>
 #include <core/gui/VRGuiManager.h>
@@ -14,6 +13,8 @@
 
 #include "VRImguiApps.h"
 #include "VRImguiConsoles.h"
+#include "VRImguiSetup.h"
+#include "VRImguiScene.h"
 
 ImSection::ImSection(string n, Rectangle r) : ImWidget(n), layout(r) {
     resize({0,0,800,800});
@@ -70,8 +71,9 @@ void ImSection::resize(const Surface& parent) {
 ImToolbar::ImToolbar(Rectangle r) : ImSection("Toolbar", r) {}
 
 ImSidePanel::ImSidePanel(Rectangle r) : ImSection("SidePanel", r) {
-    auto appMgr = new ImAppManager();
-    appManager = ImWidgetPtr(appMgr);
+    appManager = ImWidgetPtr(new ImAppManager());
+    setupManager = ImWidgetPtr(new ImSetupManager());
+    sceneEditor = ImWidgetPtr(new ImSceneEditor());
 }
 
 void ImSidePanel::begin() {
@@ -84,11 +86,12 @@ void ImSidePanel::begin() {
         }
 
         if (ImGui::BeginTabItem("Setup")) {
+            setupManager->render();
             ImGui::EndTabItem();
         }
 
         if (ImGui::BeginTabItem("Scene")) {
-            //editor.Render("Editor");
+            sceneEditor->render();
             ImGui::EndTabItem();
         }
         ImGui::EndTabBar();
