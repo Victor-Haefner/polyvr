@@ -4,33 +4,29 @@
 #include <OpenSG/OSGConfig.h>
 #include "core/utils/VRFunctionFwd.h"
 
-struct _GtkWidget;
-struct _GtkSourceLanguage;
-struct _GtkSourceBuffer;
-struct _GtkTextBuffer;
-struct _GtkTextTag;
-struct _GdkEventKey;
-
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
 class VRGuiEditor {
     private:
-        _GtkWidget* editor = 0;
+        /*_GtkWidget* editor = 0;
         _GtkSourceBuffer* sourceBuffer = 0;
         _GtkSourceLanguage* python = 0;
         _GtkSourceLanguage* web = 0;
         _GtkSourceLanguage* glsl = 0;
-        _GtkTextBuffer* editorBuffer = 0;
+        _GtkTextBuffer* editorBuffer = 0;*/
+        string buffer;
 	    map<string, VRUpdateCbPtr> keyBindings;
 
 	    string selection;
 
-        map<string, _GtkTextTag*> editorStyles;
+        //map<string, _GtkTextTag*> editorStyles;
         map<string, bool> styleStates;
 
+        void onCoreUpdate(string& data);
+
         void printViewerLanguages();
-        bool on_editor_shortkey( _GdkEventKey* e );
+        //bool on_editor_shortkey( _GdkEventKey* e );
         void addStyle( string style, string fg, string bg, bool italiq, bool bold, bool underlined );
 
     public:
@@ -47,8 +43,8 @@ class VRGuiEditor {
         void getCursorPosition(int& line, int& column);
         void setSelection(string s);
         string getSelection();
-        _GtkWidget* getEditor();
-        _GtkSourceBuffer* getSourceBuffer();
+        //_GtkWidget* getEditor();
+        //_GtkSourceBuffer* getSourceBuffer();
 };
 
 OSG_END_NAMESPACE

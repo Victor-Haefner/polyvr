@@ -153,7 +153,6 @@ void setColorChooserColor(GtkWidget* drawable, OSG::Color3f col);
 _GtkImage* loadGTKIcon(_GtkImage* img, string path, int w, int h);
 
 OSG::VRTexturePtr takeSnapshot(bool swapY = false);
-void saveScene(string path = "", bool saveas = false, string encryptionKey = "");
 
 void showDialog(string d);
 void hideDialog(string d);

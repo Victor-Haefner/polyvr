@@ -20,6 +20,8 @@ namespace boost { class recursive_mutex; }
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
+void saveScene(string path = "", bool saveas = false, string encryptionKey = "");
+
 class VRGuiManager {
     private:
         bool nogtk = false;

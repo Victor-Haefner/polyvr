@@ -1,6 +1,8 @@
 #include "VRGuiManager.h"
 #include "VRGuiBuilder.h"
 #include "imgui/VRImguiManager.h"
+#include "core/scene/VRScene.h"
+#include "core/scene/VRSceneLoader.h"
 #include "core/scene/VRSceneManager.h"
 #include "core/setup/VRSetupManager.h"
 #include "core/scripting/VRScript.h"
@@ -29,6 +31,17 @@
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
+
+void saveScene(string path, bool saveas, string encryptionKey) {
+    auto scene = OSG::VRScene::getCurrent();
+    if (scene == 0) return;
+    if (scene->getFlag("write_protected") && !saveas) return;
+    scene->setFlag("write_protected", false);
+    if (path == "") path = scene->getPath();
+    OSG::VRSceneLoader::get()->saveScene(path, 0, encryptionKey);
+    //saveSnapshot( scene->getIcon() );
+    OSG::VRGuiSignals::get()->getSignal("onSaveScene")->triggerAll<OSG::VRDevice>();
+}
 
 VRGuiScene* g_scene = 0;
 VRGuiBits* g_bits = 0;
@@ -87,6 +100,7 @@ void VRGuiManager::init() {
 
     g_demos = new VRAppManager();
     g_bits = new VRGuiBits();
+    g_sc = new VRGuiScripts();
 
     VRDeviceCbPtr fkt; // TODO: all those signals are not properly connected to, the fkt binding is destroyed when going out of scope
 
@@ -97,11 +111,15 @@ void VRGuiManager::init() {
 
     updatePtr = VRUpdateCb::create("GUI_updateManager", bind(&VRGuiManager::update, this) );
     VRSceneManager::get()->addUpdateFkt(updatePtr, 1);
+
+    fkt = VRDeviceCb::create("GUI_updateScripts", bind(&VRGuiScripts::updateList, g_sc) );
+    VRGuiSignals::get()->getSignal("scene_changed")->add( fkt );
+    VRGuiSignals::get()->getSignal("scriptlist_changed")->add( fkt );
+    guiSignalCbs.push_back(fkt);
     return;
 
     //gtk_rc_parse("gui/gtkrc");
     g_mon = new VRGuiMonitor();
-    g_sc = new VRGuiScripts();
     g_scene = new VRGuiScene();
     g_nav = new VRGuiNav();
     g_net = new VRGuiNetwork();
@@ -131,11 +149,6 @@ void VRGuiManager::init() {
         VRGuiSignals::get()->getSignal("scene_changed")->add( fkt );
         guiSignalCbs.push_back(fkt);
     }
-
-    fkt = VRDeviceCb::create("GUI_updateScripts", bind(&VRGuiScripts::updateList, g_sc) );
-    VRGuiSignals::get()->getSignal("scene_changed")->add( fkt );
-    VRGuiSignals::get()->getSignal("scriptlist_changed")->add( fkt );
-    guiSignalCbs.push_back(fkt);
 
     fkt = VRDeviceCb::create("GUI_updateBackground", bind(&VRGuiGeneral::updateScene, g_gen) );
     VRGuiSignals::get()->getSignal("scene_changed")->add( fkt );

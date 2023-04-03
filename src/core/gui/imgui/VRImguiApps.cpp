@@ -6,31 +6,34 @@
 ImAppLauncher::ImAppLauncher(string ID) : ID(ID), name(ID) {}
 
 void ImAppLauncher::render() {
+    string label = name;
+    if (label.length() > 25) label = ".." + subString(label, label.length()-23, 23);
+    ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_CollapsingHeader;
+
     if (!sensitive) ImGui::BeginDisabled();
 
     ImGui::BeginGroup();
-    ImGui::Spacing();
-    ImGui::Indent(5.0);
-    if (!running) {
-        if (ImGui::Button(("Run##"+ID).c_str())) uiSignal("on_toggle_app", {{"ID",ID}});
-    } else {
-        if (ImGui::Button(("Stop##"+ID).c_str())) uiSignal("on_toggle_app", {{"ID",ID}});
-    }
-    ImGui::SameLine();
-    string label = name;
-    if (label.length() > 25) label = ".." + subString(label, label.length()-23, 23);
-    ImGui::Text(label.c_str());
-    ImGui::SameLine();
-    ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_CollapsingHeader;
-    if (ImGui::CollapsingHeader(("advanced##"+ID).c_str(), flags) && sensitive) {
-        if (ImGui::Button(("Run without scripts##"+ID).c_str())) uiSignal("on_toggle_app_no_scripts", {{"ID",ID}});
-    }
-    ImGui::Spacing();
+        ImGui::Spacing();
+        ImGui::Indent(5.0);
+        ImGui::Columns(2);
+            if (ImGui::CollapsingHeader(("advanced##"+ID).c_str(), flags) && sensitive) {
+                if (ImGui::Button(("Run without scripts##"+ID).c_str())) uiSignal("on_toggle_app_no_scripts", {{"ID",ID}});
+            }
+            ImGui::NextColumn();
+            ImGui::Text(label.c_str());
+            ImGui::SameLine();
+            if (!running) {
+                if (ImGui::Button(("Run##"+ID).c_str())) uiSignal("on_toggle_app", {{"ID",ID}});
+            } else {
+                if (ImGui::Button(("Stop##"+ID).c_str())) uiSignal("on_toggle_app", {{"ID",ID}});
+            }
+        ImGui::Columns(1);
+        ImGui::Spacing();
     ImGui::EndGroup();
 
     ImVec2 p1 = ImGui::GetItemRectMin();
     ImVec2 p2 = ImGui::GetItemRectMax();
-    p2.x = ImGui::GetContentRegionAvail().x+8;
+    p2.x = ImGui::GetContentRegionAvail().x;
     ImGui::GetWindowDrawList()->AddRect(p1, p2, IM_COL32(255, 255, 255, 255));
 
     if (!sensitive) ImGui::EndDisabled();

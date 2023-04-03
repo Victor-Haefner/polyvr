@@ -6,7 +6,22 @@
 
 using namespace std;
 
+struct ImScriptGroup {
+    vector<string> scripts;
+    string name;
+    ImScriptGroup() {}
+    ImScriptGroup(string name);
+};
+
 class ImScriptList {
+    private:
+        map<string, ImScriptGroup> groups;
+        vector<string> groupsList;
+
+        void clear();
+        void addGroup(string name, string ID);
+        void addScript(string name, string groupID);
+
     public:
         ImScriptList();
         void render();
@@ -15,6 +30,7 @@ class ImScriptList {
 class ImScriptEditor {
     private:
         TextEditor imEditor;
+        void setBuffer(string data);
 
     public:
         ImScriptEditor();

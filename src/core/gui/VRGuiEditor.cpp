@@ -1,4 +1,3 @@
-#include <gtk/gtk.h>
 #include "VRGuiEditor.h"
 #include "VRGuiUtils.h"
 #include "VRGuiBuilder.h"
@@ -7,16 +6,10 @@
 #include "core/scene/VRSceneManager.h"
 #include "core/scripting/VRScript.h"
 #include "core/utils/VRFunction.h"
+#include "core/utils/toString.h"
 
 #include <iostream>
 
-#if GTK_MAJOR_VERSION == 2
-#include <gtksourceview/gtksourceview.h>
-#include <gtksourceview/gtksourcelanguagemanager.h>
-#include <gtksourceview/gtksourcecompletionprovider.h>
-#else
-#include "gtksourceview/gtksource.h"
-#endif
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -24,22 +17,19 @@ using namespace std;
 string padding = "\n\n\n\n\n\n\n\n\n";
 
 void VRGuiEditor::setCore(string core) {
-    gtk_source_buffer_begin_not_undoable_action(sourceBuffer);
     string data = core+padding;
-    gtk_text_buffer_set_text(GTK_TEXT_BUFFER(sourceBuffer), data.c_str(), data.size());
-    gtk_source_buffer_end_not_undoable_action(sourceBuffer);
+    uiSignal("script_editor_set_buffer", {{"data", data}});
 }
 
 string VRGuiEditor::getCore(int i) {
-    GtkTextIter itr_s, itr_e;
-    gtk_text_buffer_get_start_iter(GTK_TEXT_BUFFER(sourceBuffer), &itr_s);
-    gtk_text_buffer_get_end_iter(GTK_TEXT_BUFFER(sourceBuffer), &itr_e);
-    for (int j=0; j<i; j++) gtk_text_iter_forward_line(&itr_s); // skip head
-    auto txt = gtk_text_buffer_get_text( GTK_TEXT_BUFFER(sourceBuffer), &itr_s, &itr_e, true);
-    string data;
-    if (txt) data = string( txt );
-    while(data.size() > 0 && data.back() == '\n') data.pop_back();
-    return data;
+    uiSignal("script_editor_request_buffer", {{"skipLines", toString(i)}});
+    // onCoreUpdate will be called and buffer updated
+    return buffer;
+}
+
+void VRGuiEditor::onCoreUpdate(string& data) {
+    buffer = data;
+    while(buffer.size() > 0 && buffer.back() == '\n') buffer.pop_back();
 }
 
 void VRGuiEditor::focus(int line, int column) {
@@ -50,9 +40,10 @@ void VRGuiEditor::focus(int line, int column) {
 void VRGuiEditor::setCursorPosition(int line, int column) {
     if (line <= 0) line = 1;
     if (column <= 0) column = 1;
+    uiSignal("script_editor_set_cursor", {{"line", toString(line)}, {"column", toString(column)}});
 
     // get iterator at line and column and set cursor to iterator
-    GtkTextIter itr;
+    /*GtkTextIter itr;
     GtkTextBuffer* buffer = gtk_text_view_get_buffer((GtkTextView*)editor);
     gtk_text_buffer_get_iter_at_line(buffer, &itr, line-1);
     gtk_text_iter_forward_chars(&itr, max(column-1, 0));
@@ -62,20 +53,20 @@ void VRGuiEditor::setCursorPosition(int line, int column) {
     gtk_text_iter_set_line_offset(&itr, 0);
     GtkTextMark* mark = gtk_text_buffer_create_mark(buffer, 0, &itr, false);
     gtk_text_view_scroll_to_mark((GtkTextView*)editor, mark, 0.25, false, 0, 0);
-    cout << " VRGuiEditor::setCursorPosition l: " << line << " c: " << column << " m: " << gtk_text_iter_get_line(&itr) << endl;
+    cout << " VRGuiEditor::setCursorPosition l: " << line << " c: " << column << " m: " << gtk_text_iter_get_line(&itr) << endl;*/
 }
 
 void VRGuiEditor::getCursorPosition(int& line, int& column) {
-    GtkTextIter itr;
+    /*GtkTextIter itr;
     GtkTextBuffer* buffer = gtk_text_view_get_buffer((GtkTextView*)editor);
     gtk_text_buffer_get_iter_at_mark(buffer, &itr, gtk_text_buffer_get_insert(buffer));
     line = gtk_text_iter_get_line(&itr);
     column = gtk_text_iter_get_line_offset(&itr);
-    cout << " VRGuiEditor::getCursorPosition l: " << line << " c: " << column << " m: " << gtk_text_iter_get_line(&itr) << endl;
+    cout << " VRGuiEditor::getCursorPosition l: " << line << " c: " << column << " m: " << gtk_text_iter_get_line(&itr) << endl;*/
 }
 
 void VRGuiEditor::printViewerLanguages() {
-	cout << "VRGuiEditor::printViewerLanguages" << endl;
+	/*cout << "VRGuiEditor::printViewerLanguages" << endl;
     GtkSourceLanguageManager* langMgr = gtk_source_language_manager_get_default();
 	cout << " langMgr: " << langMgr << endl;
     const gchar* const* ids = gtk_source_language_manager_get_language_ids(langMgr);
@@ -84,10 +75,10 @@ void VRGuiEditor::printViewerLanguages() {
 		for (auto id = ids; *id != NULL; ++id)
 			if (ids != NULL) cout << "  LID " << *id << endl;
 	} else cout << "  WARNING! no languages found for source highlighting!" << endl;
-	cout << " VRGuiEditor::printViewerLanguages done" << endl;
+	cout << " VRGuiEditor::printViewerLanguages done" << endl;*/
 }
 
-bool VRGuiEditor::on_editor_shortkey( GdkEventKey* e ) {
+/*bool VRGuiEditor::on_editor_shortkey( GdkEventKey* e ) {
     //cout << "VRGuiEditor::on_editor_shortkey " << e->keyval << endl;
     if ( !(e->state & GDK_CONTROL_MASK) ) return false;
 
@@ -190,12 +181,12 @@ bool VRGuiEditor::on_editor_shortkey( GdkEventKey* e ) {
     }
 
     return false;
-}
+}*/
 
 string VRGuiEditor::getSelection() { return selection; }
 
 void VRGuiEditor::addStyle( string style, string fg, string bg, bool italic, bool bold, bool underlined ) {
-    GtkTextTag* tag = gtk_text_buffer_create_tag(editorBuffer, NULL, NULL);
+    /*GtkTextTag* tag = gtk_text_buffer_create_tag(editorBuffer, NULL, NULL);
     g_object_set(tag, "foreground", fg.c_str(), NULL);
     g_object_set(tag, "background", bg.c_str(), NULL);
 
@@ -204,17 +195,18 @@ void VRGuiEditor::addStyle( string style, string fg, string bg, bool italic, boo
     if (bold) g_object_set(tag, "weight", PANGO_WEIGHT_BOLD, NULL);
 
     editorStyles[style] = tag;
-    styleStates[style] = false;
+    styleStates[style] = false;*/
 }
 
 void VRGuiEditor::grabFocus() {
-    gtk_widget_grab_focus(editor);
+    //gtk_widget_grab_focus(editor);
 }
 
 void VRGuiEditor::addKeyBinding(string name, VRUpdateCbPtr cb) { keyBindings[name] = cb; }
 
 void VRGuiEditor::highlightStrings(string search, string style) {
-    auto tag = editorStyles[style];
+    uiSignal("script_editor_highlight", {{"string", search}, {"style", style}});
+    /*auto tag = editorStyles[style];
     GtkTextIter start, end;
     gtk_text_buffer_get_bounds(editorBuffer, &start, &end);
     gtk_text_buffer_remove_tag(editorBuffer, tag, &start, &end);
@@ -251,7 +243,7 @@ void VRGuiEditor::highlightStrings(string search, string style) {
             gtk_text_buffer_apply_tag(editorBuffer, tag, &A, &B);
             styleStates[style] = true;
         }
-    }
+    }*/
 }
 
 void VRGuiEditor::setSelection(string s) {
@@ -260,7 +252,7 @@ void VRGuiEditor::setSelection(string s) {
 }
 
 bool VRGuiEditor_on_editor_select(GtkWidget* widget, GdkEvent* event, VRGuiEditor* self) {
-    GdkEventButton* event_btn = (GdkEventButton*)event;
+    /*GdkEventButton* event_btn = (GdkEventButton*)event;
 
     if (event->type == GDK_BUTTON_RELEASE && event_btn->button == 1) {
         auto editor = GTK_TEXT_VIEW(widget);
@@ -278,23 +270,24 @@ bool VRGuiEditor_on_editor_select(GtkWidget* widget, GdkEvent* event, VRGuiEdito
     if (event->type == GDK_KEY_RELEASE || event->type == GDK_BUTTON_RELEASE) { // remove selection on any key or button
         self->setSelection("");
         return false;
-    }
+    }*/
 
     return false;
 }
 
 void VRGuiEditor::setLanguage(string lang) {
-    if (lang == "Python") gtk_source_buffer_set_language(sourceBuffer, python);
+    uiSignal("script_editor_set_lang", {{"lang", lang}});
+    /*if (lang == "Python") gtk_source_buffer_set_language(sourceBuffer, python);
     if (lang == "GLSL") gtk_source_buffer_set_language(sourceBuffer, glsl);
-    if (lang == "HTML") gtk_source_buffer_set_language(sourceBuffer, web);
+    if (lang == "HTML") gtk_source_buffer_set_language(sourceBuffer, web);*/
 }
 
-_GtkSourceBuffer* VRGuiEditor::getSourceBuffer() { return sourceBuffer; }
-_GtkWidget* VRGuiEditor::getEditor() { return editor; }
+//_GtkSourceBuffer* VRGuiEditor::getSourceBuffer() { return sourceBuffer; }
+//_GtkWidget* VRGuiEditor::getEditor() { return editor; }
 
 VRGuiEditor::VRGuiEditor(string window) {
     // init source view editor
-    GtkSourceLanguageManager* langMgr = gtk_source_language_manager_get_default();
+    /*GtkSourceLanguageManager* langMgr = gtk_source_language_manager_get_default();
     static bool onInitLangMgr = true;
     string langPath = VRSceneManager::get()->getOriginalWorkdir() + "/ressources/gui/gtksv";
     char** new_langs = g_new(char*, 2);
@@ -364,7 +357,7 @@ VRGuiEditor::VRGuiEditor(string window) {
         g_error_free(error);
     }
 
-    addStyle( "asSelected", "#000", "#FF0", false, false, false);
+    addStyle( "asSelected", "#000", "#FF0", false, false, false);*/
 	cout << " VRGuiEditor::VRGuiEditor done" << endl;
 }
 

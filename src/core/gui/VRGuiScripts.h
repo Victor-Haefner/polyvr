@@ -8,16 +8,6 @@
 #include "core/utils/VRFunctionFwd.h"
 #include "core/scripting/VRScriptFwd.h"
 
-struct _GtkSourceLanguage;
-struct _GtkGrid;
-struct _GtkTreeView;
-struct _GtkListStore;
-struct _GdkEventKey;
-struct _GtkTreeIter;
-struct _GtkTreePath;
-struct _GtkTreeViewColumn;
-union _GdkEvent;
-
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
@@ -52,13 +42,13 @@ class VRGuiScripts {
 	    VRDeviceCbPtr sceneChangedCb;
 	    string selected;
 
-        _GtkGrid* scriptImportWidget = 0;
+        /*_GtkGrid* scriptImportWidget = 0;
         _GtkTreeView* import_treeview1 = 0;
         _GtkTreeView* import_treeview2 = 0;
         _GtkListStore* import_liststore1;
-        _GtkListStore* import_liststore2;
+        _GtkListStore* import_liststore2;*/
         map<string, VRScriptPtr> import_scripts;
-        vector<pair<VRScriptWeakPtr, _GtkTreeIter>> scriptRows;
+        //vector<pair<VRScriptWeakPtr, _GtkTreeIter>> scriptRows;
 
         string docs_filter;
         string templ_filter;
@@ -66,8 +56,8 @@ class VRGuiScripts {
 
         void initEditor();
         void printViewerLanguages();
-        void setGroupListRow(_GtkTreeIter* itr, group& g);
-        void setScriptListRow(_GtkTreeIter* itr, VRScriptPtr script, bool onlyTime = false);
+        //void setGroupListRow(_GtkTreeIter* itr, group& g);
+        //void setScriptListRow(_GtkTreeIter* itr, VRScriptPtr script, bool onlyTime = false);
 
         void on_new_clicked();
         void on_template_clicked();
@@ -76,26 +66,26 @@ class VRGuiScripts {
         void on_exec_clicked();
         void on_del_clicked();
         void on_import_clicked();
-        void on_perf_toggled();
-        void on_pause_toggled();
+        void on_perf_toggled(bool b);
+        void on_pause_toggled(bool b);
 
-        void on_select_script();
+        void on_select_script(string script);
         void on_buffer_changed();
-        void on_focus_out_changed(_GdkEvent*);
+        //void on_focus_out_changed(_GdkEvent*);
         void on_change_script_type();
         void on_change_group();
         void on_change_server();
         void on_name_edited(const char* path, const char* new_name);
         void on_script_changed();
-        bool on_any_key_event(_GdkEventKey*);
-        void on_any_event(_GdkEvent*);
+        //bool on_any_key_event(_GdkEventKey*);
+        //void on_any_event(_GdkEvent*);
 
         void on_select_trigger();
-        void on_trigger_edited(const char* new_name, _GtkTreeIter* new_iter);
-        void on_trigdev_edited(const char* new_name, _GtkTreeIter* new_iter);
+        //void on_trigger_edited(const char* new_name, _GtkTreeIter* new_iter);
+        //void on_trigdev_edited(const char* new_name, _GtkTreeIter* new_iter);
         void on_trigparam_edited(const char* path, const char* new_name);
         void on_trigkey_edited(const char* path, const char* new_name);
-        void on_trigstate_edited(const char* new_name, _GtkTreeIter* new_iter);
+        //void on_trigstate_edited(const char* new_name, _GtkTreeIter* new_iter);
         void on_trigadd_clicked();
         void on_trigrem_clicked();
 
@@ -104,11 +94,11 @@ class VRGuiScripts {
         void on_help_clicked();
         void on_help_close_clicked();
         void on_doc_filter_edited();
-        bool on_help_close_frame_clicked(_GdkEvent* event);
+        //bool on_help_close_frame_clicked(_GdkEvent* event);
 
         void updateTemplates();
         void on_select_templ();
-        void on_doubleclick_templ(_GtkTreePath*, _GtkTreeViewColumn*);
+        //void on_doubleclick_templ(_GtkTreePath*, _GtkTreeViewColumn*);
         void on_templ_close_clicked();
         void on_templ_import_clicked();
         void on_templ_filter_edited();
@@ -117,7 +107,7 @@ class VRGuiScripts {
         void on_argrem_clicked();
         void on_argname_edited(const char* path, const char* new_name);
         void on_argval_edited(const char* path, const char* new_name);
-        void on_argtype_edited(const char* new_name, _GtkTreeIter* new_iter);
+        //void on_argtype_edited(const char* new_name, _GtkTreeIter* new_iter);
 
         void on_diag_import_select_1();
         void on_diag_import_select_2();

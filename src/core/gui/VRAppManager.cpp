@@ -17,6 +17,7 @@
 #include "core/scene/VRProjectsList.h"
 #include "core/setup/devices/VRSignal.h"
 #include "core/utils/system/VRSystem.h"
+#include "core/gui/VRGuiManager.h"
 
 #include "VRGuiUtils.h"
 #include "VRGuiBuilder.h"
