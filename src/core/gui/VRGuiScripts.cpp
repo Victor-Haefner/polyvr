@@ -1175,7 +1175,6 @@ bool VRGuiScripts::updateList() {
     auto scene = VRScene::getCurrent();
     if (scene == 0) return true;
 
-	cout << " - - - VRGuiScripts::updateList clear" << endl;
     uiSignal("scripts_list_clear");
 
     auto oldpages = pages;
@@ -1183,8 +1182,7 @@ bool VRGuiScripts::updateList() {
 
     map<string, int> grpIter;
     auto addGroupRow = [&](group& g) {
-	cout << " - - - VRGuiScripts::updateList add group " << g.name << endl;
-        uiSignal("scripts_list_add_group", {{"group",g.name},{"ID",toString(g.ID)}});
+        uiSignal("scripts_list_add_group", {{"name",g.name},{"ID",toString(g.ID)}});
         grpIter[g.name] = g.ID;
         g.scripts.clear();
     };
@@ -1206,7 +1204,6 @@ bool VRGuiScripts::updateList() {
         auto k = script.second.get();
         string grp = script.second->getGroup();
         string name = script.second->getName();
-	cout << " - - - VRGuiScripts::updateList add script " << name << endl;
         if (!grpIter.count(grp)) uiSignal("scripts_list_add_script", {{"name",name},{"group",""}});
         else {
             auto& g = groups[grpIter[grp]];

@@ -21,6 +21,7 @@ void ImScriptList::clear() {
 }
 
 void ImScriptList::addGroup(string name, string ID) {
+    if (groups.count(ID)) return;
     groups[ID] = ImScriptGroup(name);
     groupsList.push_back(ID);
 }
@@ -31,24 +32,40 @@ void ImScriptList::addScript(string name, string groupID) {
 }
 
 void ImScriptList::render() {
-    //cout << "ImScriptList::render " << groupsList.size() << endl;
+    ImVec4 colorGroup(0.3f, 0.3f, 0.3f, 1.0f);
+    ImVec4 colorScript(0.5f, 0.5f, 0.5f, 1.0f);
+
+    ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_CollapsingHeader;
+    ImGui::PushStyleColor(ImGuiCol_Header, colorGroup);
+    ImGui::PushStyleColor(ImGuiCol_Button, colorScript);
+
     for (auto groupID : groupsList) {
         if (groupID == "__default__") continue;
         string group = groups[groupID].name;
-        if (ImGui::Button(group.c_str())) uiSignal("select_group", {{"group",group}});
-        for (auto script : groups[groupID].scripts) {
-            if (ImGui::Button(script.c_str())) uiSignal("select_script", {{"script",script}});
+
+        if (ImGui::CollapsingHeader((group+"##"+groupID).c_str(), flags)) {
+
+            ImGui::Indent();
+            for (auto script : groups[groupID].scripts) {
+                if (ImGui::Button(script.c_str())) uiSignal("select_script", {{"script",script}});
+            }
+            ImGui::Unindent();
+
         }
     }
 
     for (auto script : groups["__default__"].scripts) {
         if (ImGui::Button(script.c_str())) uiSignal("select_script", {{"script",script}});
     }
+
+    ImGui::PopStyleColor();
+    ImGui::PopStyleColor();
 }
 
 ImScriptEditor::ImScriptEditor() {
     auto mgr = OSG::VRGuiSignals::get();
     mgr->addCallback("script_editor_set_buffer", [&](OSG::VRGuiSignals::Options o){ setBuffer(o["data"]); return true; } );
+    imEditor.SetShowWhitespaces(false); // TODO: add as feature!
 }
 
 void ImScriptEditor::setBuffer(string data) {
