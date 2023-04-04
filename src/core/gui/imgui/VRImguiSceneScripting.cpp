@@ -2,6 +2,7 @@
 #include "core/gui/VRGuiManager.h"
 
 #include <iostream>
+#include "core/utils/toString.h"
 
 using namespace std;
 
@@ -65,7 +66,16 @@ void ImScriptList::render() {
 ImScriptEditor::ImScriptEditor() {
     auto mgr = OSG::VRGuiSignals::get();
     mgr->addCallback("script_editor_set_buffer", [&](OSG::VRGuiSignals::Options o){ setBuffer(o["data"]); return true; } );
+    mgr->addCallback("script_editor_request_buffer", [&](OSG::VRGuiSignals::Options o){ getBuffer(toInt(o["skipLines"])); return true; } );
     imEditor.SetShowWhitespaces(false); // TODO: add as feature!
+}
+
+void ImScriptEditor::getBuffer(int skipLines) {
+    string core = imEditor.GetText();
+    int begin = 0;
+    for (int i=0; i<skipLines; i++) begin = core.find('\n', begin) + 1;
+    core = subString(core, begin);
+    uiSignal("script_editor_transmit_core", {{"core",core}});
 }
 
 void ImScriptEditor::setBuffer(string data) {
@@ -85,17 +95,17 @@ void ImScripting::render() {
     ImGui::Spacing();
     ImGui::Indent(5);  if (ImGui::Button("New")) uiSignal("scripts_toolbar_new");
     ImGui::SameLine(); if (ImGui::Button("Template")) uiSignal("scripts_toolbar_template");
-    ImGui::SameLine(); if (ImGui::Button("Group")) uiSignal("scripts_toolbar_new");
-    ImGui::SameLine(); if (ImGui::Button("Import")) uiSignal("scripts_toolbar_new");
-    ImGui::SameLine(); if (ImGui::Button("Delete")) uiSignal("scripts_toolbar_new");
-    ImGui::SameLine(); if (ImGui::Checkbox("Pause Scripts", &pause)) uiSignal("scripts_toolbar_new");
-    ImGui::SameLine(); if (ImGui::Button("CPP")) uiSignal("scripts_toolbar_new");
+    ImGui::SameLine(); if (ImGui::Button("Group")) uiSignal("scripts_toolbar_group");
+    ImGui::SameLine(); if (ImGui::Button("Import")) uiSignal("scripts_toolbar_import");
+    ImGui::SameLine(); if (ImGui::Button("Delete")) uiSignal("scripts_toolbar_delete");
+    ImGui::SameLine(); if (ImGui::Checkbox("Pause Scripts", &pause)) uiSignal("scripts_toolbar_pause", {{"state",toString(pause)}});
+    ImGui::SameLine(); if (ImGui::Button("CPP")) uiSignal("scripts_toolbar_cpp");
 
-                       if (ImGui::Button("Save")) uiSignal("scripts_toolbar_new");
-    ImGui::SameLine(); if (ImGui::Button("Execute")) uiSignal("scripts_toolbar_new");
-    ImGui::SameLine(); if (ImGui::Button("Search")) uiSignal("scripts_toolbar_new");
-    ImGui::SameLine(); if (ImGui::Button("Documentation")) uiSignal("scripts_toolbar_new");
-    ImGui::SameLine(); if (ImGui::Checkbox("Performance", &perf)) uiSignal("scripts_toolbar_new");
+                       if (ImGui::Button("Save")) uiSignal("scripts_toolbar_save");
+    ImGui::SameLine(); if (ImGui::Button("Execute")) uiSignal("scripts_toolbar_execute");
+    ImGui::SameLine(); if (ImGui::Button("Search")) uiSignal("scripts_toolbar_search");
+    ImGui::SameLine(); if (ImGui::Button("Documentation")) uiSignal("scripts_toolbar_documentation");
+    ImGui::SameLine(); if (ImGui::Checkbox("Performance", &perf)) uiSignal("scripts_toolbar_performance", {{"state",toString(perf)}});
     ImGui::Unindent();
 
     ImGui::Spacing();

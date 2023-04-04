@@ -31,6 +31,7 @@ class ImScriptEditor {
     private:
         TextEditor imEditor;
         void setBuffer(string data);
+        void getBuffer(int skipLines);
 
     public:
         ImScriptEditor();

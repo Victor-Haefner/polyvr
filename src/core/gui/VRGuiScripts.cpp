@@ -1266,7 +1266,19 @@ namespace PL = std::placeholders;
 
 VRGuiScripts::VRGuiScripts() {
     auto mgr = OSG::VRGuiSignals::get();
-    mgr->addCallback("select_script", [&](OSG::VRGuiSignals::Options o){ on_select_script(o["script"]); return true; } );
+    mgr->addCallback("select_script", [&](OSG::VRGuiSignals::Options o) { on_select_script(o["script"]); return true; } );
+    mgr->addCallback("scripts_toolbar_new", [&](OSG::VRGuiSignals::Options o) { on_new_clicked(); return true; } );
+    mgr->addCallback("scripts_toolbar_template", [&](OSG::VRGuiSignals::Options o) { on_template_clicked(); return true; } );
+    mgr->addCallback("scripts_toolbar_group", [&](OSG::VRGuiSignals::Options o) { on_addSep_clicked(); return true; } );
+    mgr->addCallback("scripts_toolbar_import", [&](OSG::VRGuiSignals::Options o) { on_import_clicked(); return true; } );
+    mgr->addCallback("scripts_toolbar_delete", [&](OSG::VRGuiSignals::Options o) { on_del_clicked(); return true; } );
+    mgr->addCallback("scripts_toolbar_pause", [&](OSG::VRGuiSignals::Options o) { on_pause_toggled(toBool(o["state"])); return true; } );
+    //mgr->addCallback("scripts_toolbar_cpp", [&](OSG::VRGuiSignals::Options o) { on_exec_clicked(); return true; } );
+    mgr->addCallback("scripts_toolbar_save", [&](OSG::VRGuiSignals::Options o) { on_save_clicked(); return true; }, true );
+    mgr->addCallback("scripts_toolbar_execute", [&](OSG::VRGuiSignals::Options o) { on_exec_clicked(); return true; }, true );
+    //mgr->addCallback("scripts_toolbar_search", [&](OSG::VRGuiSignals::Options o) { on_exec_clicked(); return true; } );
+    //mgr->addCallback("scripts_toolbar_documentation", [&](OSG::VRGuiSignals::Options o) { on_exec_clicked(); return true; } );
+    mgr->addCallback("scripts_toolbar_performance", [&](OSG::VRGuiSignals::Options o) { on_perf_toggled(toBool(o["state"])); return true; } );
 
     /*disableDestroyDiag("pybindings-docs");
     disableDestroyDiag("find_dialog");
@@ -1311,14 +1323,14 @@ VRGuiScripts::VRGuiScripts() {
     setTreeviewSelectCallback("treeview5", bind(&VRGuiScripts::on_select_script, this) );
     setTreeviewSelectCallback("treeview3", bind(&VRGuiScripts::on_select_help, this) );
     setTreeviewSelectCallback("ttreeview1", bind(&VRGuiScripts::on_select_templ, this) );
-    setTreeviewDoubleclickCallback("ttreeview1", bind(&VRGuiScripts::on_doubleclick_templ, this, PL::_1, PL::_2) );
+    setTreeviewDoubleclickCallback("ttreeview1", bind(&VRGuiScripts::on_doubleclick_templ, this, PL::_1, PL::_2) );*/
 
     editor = shared_ptr<VRGuiEditor>( new VRGuiEditor("scrolledwindow4") );
     editor->addKeyBinding("find", VRUpdateCb::create("findCb", bind(&VRGuiScripts::on_find_clicked, this)));
     editor->addKeyBinding("help", VRUpdateCb::create("helpCb", bind(&VRGuiScripts::on_help_clicked, this)));
     editor->addKeyBinding("save", VRUpdateCb::create("saveCb", bind(&VRGuiScripts::on_save_clicked, this)));
     editor->addKeyBinding("exec", VRUpdateCb::create("execCb", bind(&VRGuiScripts::on_exec_clicked, this)));
-    connect_signal<void>(editor->getSourceBuffer(), bind(&VRGuiScripts::on_buffer_changed, this), "changed");
+    /*connect_signal<void>(editor->getSourceBuffer(), bind(&VRGuiScripts::on_buffer_changed, this), "changed");
     //connect_signal<void, GdkEvent*>(editor->getEditor(), bind(&VRGuiScripts::on_focus_out_changed, this, PL::_1), "focus-out-event");
 
     setEntryCallback("entry10", bind(&VRGuiScripts::on_find_diag_find_clicked, this), false, false);

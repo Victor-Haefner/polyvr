@@ -1,5 +1,6 @@
 #include "VRGuiSignals.h"
 #include "core/setup/devices/VRSignal.h"
+#include "core/scene/VRScene.h"
 
 #include <iostream>
 
@@ -28,18 +29,34 @@ void VRGuiSignals::clear() {
     signals.clear();
 }
 
-void VRGuiSignals::addCallback(string name, Callback c) { callbacks[name].push_back(c); }
+void VRGuiSignals::addCallback(string name, Callback c, bool deferred) {
+    if (!deferred) callbacks[name].push_back(c);
+    else deferredCallbacks[name].push_back(c);
+}
+
 void VRGuiSignals::addResizeCallback(string name, ResizeCallback c) { resizeCallbacks[name].push_back(c); }
 
 bool VRGuiSignals::trigger(string name, Options options) {
-    if (!callbacks.count(name)) {
+    if (!callbacks.count(name) && !deferredCallbacks.count(name)) {
         //cout << " ..no callbacks, skip " << name << endl;
         return false;
     }
 
-    for (auto& callback : callbacks[name]) {
-        bool b = callback(options);
-        if (!b) break;
+    if (deferredCallbacks.count(name)) { // to be executed in main thread!
+        auto scene = VRScene::getCurrent();
+        if (scene) {
+            for (auto& callback : deferredCallbacks[name]) {
+                auto fkt = VRUpdateCb::create("deferredCb", bind(callback, options));
+                scene->queueJob(fkt);
+            }
+        }
+    }
+
+    if (callbacks.count(name)) {
+        for (auto& callback : callbacks[name]) {
+            bool b = callback(options);
+            if (!b) break;
+        }
     }
 
     return true;

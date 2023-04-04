@@ -22,6 +22,7 @@ class VRGuiSignals {
     private:
         map<string, VRSignalPtr> signals;
         map<string, vector<Callback>> callbacks;
+        map<string, vector<Callback>> deferredCallbacks;
         map<string, vector<ResizeCallback>> resizeCallbacks;
 
         VRGuiSignals();
@@ -32,7 +33,7 @@ class VRGuiSignals {
         vector<string> getSignals();
         VRSignalPtr getSignal(string name);
 
-        void addCallback(string name, Callback callback);
+        void addCallback(string name, Callback callback, bool deferred = false);
         void addResizeCallback(string name, ResizeCallback callback);
         bool trigger(string name, Options options = {});
         bool triggerResize(string name, int,int,int,int);

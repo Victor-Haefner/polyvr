@@ -286,6 +286,8 @@ void VRGuiEditor::setLanguage(string lang) {
 //_GtkWidget* VRGuiEditor::getEditor() { return editor; }
 
 VRGuiEditor::VRGuiEditor(string window) {
+    auto mgr = OSG::VRGuiSignals::get();
+    mgr->addCallback("script_editor_transmit_core", [&](OSG::VRGuiSignals::Options o) { onCoreUpdate(o["core"]); return true; } );
     // init source view editor
     /*GtkSourceLanguageManager* langMgr = gtk_source_language_manager_get_default();
     static bool onInitLangMgr = true;
