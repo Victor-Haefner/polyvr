@@ -30,8 +30,16 @@ class ImScriptList {
 class ImScriptEditor {
     private:
         TextEditor imEditor;
+        int current_type = 0;
+        int current_group = 0;
+        map<string, string> groups;
+        vector<const char*> tmpGroupList;
+
         void setBuffer(string data);
         void getBuffer(int skipLines);
+
+        void clear();
+        void addGroup(string name, string ID);
 
     public:
         ImScriptEditor();

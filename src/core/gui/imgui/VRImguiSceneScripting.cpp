@@ -67,6 +67,8 @@ ImScriptEditor::ImScriptEditor() {
     auto mgr = OSG::VRGuiSignals::get();
     mgr->addCallback("script_editor_set_buffer", [&](OSG::VRGuiSignals::Options o){ setBuffer(o["data"]); return true; } );
     mgr->addCallback("script_editor_request_buffer", [&](OSG::VRGuiSignals::Options o){ getBuffer(toInt(o["skipLines"])); return true; } );
+    mgr->addCallback("scripts_list_clear", [&](OSG::VRGuiSignals::Options o){ clear(); return true; } );
+    mgr->addCallback("scripts_list_add_group", [&](OSG::VRGuiSignals::Options o){ addGroup(o["name"], o["ID"]); return true; } );
     imEditor.SetShowWhitespaces(false); // TODO: add as feature!
 }
 
@@ -82,7 +84,35 @@ void ImScriptEditor::setBuffer(string data) {
     imEditor.SetText(data);
 }
 
+void ImScriptEditor::clear() {
+    groups.clear();
+    tmpGroupList.clear();
+}
+
+void ImScriptEditor::addGroup(string name, string ID) {
+    groups[ID] = name;
+    tmpGroupList.clear();
+    tmpGroupList.push_back("no group");
+    for (auto& g : groups) tmpGroupList.push_back((g.second + "##" + g.first).c_str());
+}
+
+
 void ImScriptEditor::render() {
+    ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_CollapsingHeader;
+    if (ImGui::CollapsingHeader("Options", flags)) {
+        ImGui::Text("Type: ");
+        ImGui::SameLine();
+        const char* types[] = {"Logic (Python)", "Shader (GLSL)", "Web (HTML/JS/CSS)"};
+        ImGui::Combo("", &current_type, types, 3);
+
+        ImGui::Text("Group:");
+        ImGui::SameLine();
+        ImGui::Combo("", &current_group, &tmpGroupList[0], tmpGroupList.size());
+    }
+    if (ImGui::CollapsingHeader("Triggers", flags)) {
+    }
+    if (ImGui::CollapsingHeader("Arguments", flags)) {
+    }
     imEditor.Render("Editor");
 }
 

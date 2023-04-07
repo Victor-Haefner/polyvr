@@ -1267,7 +1267,7 @@ namespace PL = std::placeholders;
 VRGuiScripts::VRGuiScripts() {
     auto mgr = OSG::VRGuiSignals::get();
     mgr->addCallback("select_script", [&](OSG::VRGuiSignals::Options o) { on_select_script(o["script"]); return true; } );
-    mgr->addCallback("scripts_toolbar_new", [&](OSG::VRGuiSignals::Options o) { on_new_clicked(); return true; } );
+    mgr->addCallback("scripts_toolbar_new", [&](OSG::VRGuiSignals::Options o) { on_new_clicked(); return true; }, true );
     mgr->addCallback("scripts_toolbar_template", [&](OSG::VRGuiSignals::Options o) { on_template_clicked(); return true; } );
     mgr->addCallback("scripts_toolbar_group", [&](OSG::VRGuiSignals::Options o) { on_addSep_clicked(); return true; } );
     mgr->addCallback("scripts_toolbar_import", [&](OSG::VRGuiSignals::Options o) { on_import_clicked(); return true; } );
