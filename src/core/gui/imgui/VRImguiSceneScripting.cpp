@@ -49,6 +49,7 @@ void ImScriptList::renderListEntry(string& script) {
             script = string(str0);
             selected = script;
             uiSignal("rename_script", {{"name",string(str0)}});
+            uiSignal("select_script", {{"script",script}});
         }
     }
     if (isSelected) ImGui::PopStyleColor();

@@ -163,6 +163,7 @@ void VRGuiScripts::on_addSep_clicked() {
 }
 
 void VRGuiScripts::on_save_clicked() {
+    cout << "VRGuiScripts::on_save_clicked " << endl;
     VRScriptPtr script = getSelectedScript();
     if (script == 0) return;
 
@@ -433,7 +434,7 @@ void VRGuiScripts::on_rename_script(string new_name) {
     if (script == 0) return;
     auto s = scene->changeScriptName(selected, new_name);
     new_name = s->getName();
-    editor->setCore(script->getScript()); // update the editor to show the new function header
+    //editor->setCore(script->getScript()); // update the editor to show the new function header
 }
 
 void VRGuiScripts::on_rename_group(string new_name) { // TODO
