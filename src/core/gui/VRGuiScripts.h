@@ -75,7 +75,8 @@ class VRGuiScripts {
         void on_change_script_type();
         void on_change_group();
         void on_change_server();
-        void on_name_edited(const char* path, const char* new_name);
+        void on_rename_script(string new_name);
+        void on_rename_group(string new_name);
         void on_script_changed();
         //bool on_any_key_event(_GdkEventKey*);
         //void on_any_event(_GdkEvent*);

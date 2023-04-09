@@ -17,10 +17,12 @@ class ImScriptList {
     private:
         map<string, ImScriptGroup> groups;
         vector<string> groupsList;
+        string selected;
 
         void clear();
         void addGroup(string name, string ID);
         void addScript(string name, string groupID);
+        void renderListEntry(string& script);
 
     public:
         ImScriptList();

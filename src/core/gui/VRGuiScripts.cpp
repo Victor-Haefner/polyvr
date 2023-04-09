@@ -426,37 +426,22 @@ void VRGuiScripts::on_any_event(GdkEvent* event) {
     if (event->type == GDK_KEY_PRESS) on_any_key_event((GdkEventKey*)event);
 }*/
 
-void VRGuiScripts::on_name_edited(const char* path, const char* new_name) {
-    /*VRGuiTreeView tree_view("treeview5");
-    if (!tree_view.hasSelection()) return;
+void VRGuiScripts::on_rename_script(string new_name) {
+    auto scene = VRScene::getCurrent();
+    if (scene == 0) return;
+    auto script = scene->getScript(selected);
+    if (script == 0) return;
+    auto s = scene->changeScriptName(selected, new_name);
+    new_name = s->getName();
+    editor->setCore(script->getScript()); // update the editor to show the new function header
+}
 
-    // set the cell with new name
-    string name = tree_view.getSelectedStringValue(0);
-    tree_view.setSelectedStringValue(0, new_name);
+void VRGuiScripts::on_rename_group(string new_name) { // TODO
+    /*groups[type].name = new_name;
+    for (auto& sw : groups[type].scripts) if (auto s = sw.lock()) s->setGroup(new_name);
 
-    // update data
-    int type = tree_view.getSelectedIntValue(8);
-    if (type == -1) { // change script name
-        auto scene = VRScene::getCurrent();
-        if (scene == 0) return;
-        auto s = scene->changeScriptName(name, new_name);
-        new_name = s->getName().c_str();
-        int l,c;
-        getLineFocus(l,c);
-        updateList();
-        focusScript(new_name, l,c);
-    } else { // change group name
-        groups[type].name = new_name;
-        for (auto& sw : groups[type].scripts) if (auto s = sw.lock()) s->setGroup(new_name);
-
-        updateList();
-        on_select_script();
-
-        auto tree_view = (GtkTreeView*)VRGuiBuilder::get()->get_widget("treeview5");
-        GtkTreePath* tpath = gtk_tree_path_new_from_string(path);
-        gtk_tree_view_expand_row(tree_view, tpath, true);
-        gtk_tree_path_free(tpath);
-    }*/
+    updateList();
+    on_select_script();*/
 }
 
 void VRGuiScripts::on_buffer_changed() {
@@ -1267,6 +1252,7 @@ namespace PL = std::placeholders;
 VRGuiScripts::VRGuiScripts() {
     auto mgr = OSG::VRGuiSignals::get();
     mgr->addCallback("select_script", [&](OSG::VRGuiSignals::Options o) { on_select_script(o["script"]); return true; } );
+    mgr->addCallback("rename_script", [&](OSG::VRGuiSignals::Options o) { on_rename_script(o["name"]); return true; } );
     mgr->addCallback("scripts_toolbar_new", [&](OSG::VRGuiSignals::Options o) { on_new_clicked(); return true; }, true );
     mgr->addCallback("scripts_toolbar_template", [&](OSG::VRGuiSignals::Options o) { on_template_clicked(); return true; } );
     mgr->addCallback("scripts_toolbar_group", [&](OSG::VRGuiSignals::Options o) { on_addSep_clicked(); return true; } );

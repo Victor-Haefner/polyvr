@@ -32,6 +32,28 @@ void ImScriptList::addScript(string name, string groupID) {
     groups[groupID].scripts.push_back(name);
 }
 
+void ImScriptList::renderListEntry(string& script) {
+    ImVec4 colorSelected(0.3f, 0.5f, 1.0f, 1.0f);
+    bool isSelected = bool(selected == script);
+    if (isSelected) ImGui::PushStyleColor(ImGuiCol_Button, colorSelected);
+    if (!isSelected) {
+        if (ImGui::Button(script.c_str())) {
+            selected = script;
+            uiSignal("select_script", {{"script",script}});
+        }
+    } else {
+        static char str0[128] = "Script0";
+        memcpy(str0, script.c_str(), script.size());
+        str0[script.size()] = 0;
+        if (ImGui::InputText("##renameScript", str0, 128, ImGuiInputTextFlags_EnterReturnsTrue) ) {
+            script = string(str0);
+            selected = script;
+            uiSignal("rename_script", {{"name",string(str0)}});
+        }
+    }
+    if (isSelected) ImGui::PopStyleColor();
+}
+
 void ImScriptList::render() {
     ImVec4 colorGroup(0.3f, 0.3f, 0.3f, 1.0f);
     ImVec4 colorScript(0.5f, 0.5f, 0.5f, 1.0f);
@@ -47,17 +69,13 @@ void ImScriptList::render() {
         if (ImGui::CollapsingHeader((group+"##"+groupID).c_str(), flags)) {
 
             ImGui::Indent();
-            for (auto script : groups[groupID].scripts) {
-                if (ImGui::Button(script.c_str())) uiSignal("select_script", {{"script",script}});
-            }
+            for (auto& script : groups[groupID].scripts) renderListEntry(script);
             ImGui::Unindent();
 
         }
     }
 
-    for (auto script : groups["__default__"].scripts) {
-        if (ImGui::Button(script.c_str())) uiSignal("select_script", {{"script",script}});
-    }
+    for (auto& script : groups["__default__"].scripts) renderListEntry(script);
 
     ImGui::PopStyleColor();
     ImGui::PopStyleColor();

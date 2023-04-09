@@ -8,6 +8,7 @@
 #include "../devices/VRKeyboard.h"
 #include "core/setup/VRSetup.h"
 #include "core/setup/VRWebXR.h"
+#include "core/scene/VRScene.h"
 
 #include "core/gui/VRGuiManager.h"
 #include "core/gui/imgui/VRImguiManager.h"
