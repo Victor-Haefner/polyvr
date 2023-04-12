@@ -50,6 +50,7 @@ VRGlutEditor::VRGlutEditor() {
     glutEditors[topWin] = this;
     glutReshapeFunc( onMainReshape );
 
+    /** IDE Window **/
     winUI = glutCreateSubWindow(topWin, 0, 0, width, height);
     glutEditors[winUI] = this;
     glutDisplayFunc( onUIDisplay );
@@ -61,7 +62,7 @@ VRGlutEditor::VRGlutEditor() {
     signal = [&](string name, map<string,string> opts) -> bool { return VRGuiManager::trigger(name,opts); };
     resizeSignal = [&](string name, int x, int y, int w, int h) -> bool { return VRGuiManager::triggerResize(name,x,y,w,h); };
 
-
+    /** OpenSG Window **/
     glutSetWindow(topWin);
     winGL = glutCreateSubWindow(topWin, 0,0,width*0.6, height*0.6);
     glutEditors[winGL] = this;

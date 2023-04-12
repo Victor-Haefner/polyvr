@@ -122,11 +122,11 @@ void ImScriptEditor::render() {
         ImGui::Text("Type: ");
         ImGui::SameLine();
         const char* types[] = {"Logic (Python)", "Shader (GLSL)", "Web (HTML/JS/CSS)"};
-        ImGui::Combo("", &current_type, types, 3);
+        ImGui::Combo("##scriptTypesCombo", &current_type, types, 3);
 
         ImGui::Text("Group:");
         ImGui::SameLine();
-        ImGui::Combo("", &current_group, &tmpGroupList[0], tmpGroupList.size());
+        ImGui::Combo("##groupsCombo", &current_group, &tmpGroupList[0], tmpGroupList.size());
     }
     if (ImGui::CollapsingHeader("Triggers", flags)) {
     }
