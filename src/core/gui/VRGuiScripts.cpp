@@ -167,7 +167,7 @@ void VRGuiScripts::on_save_clicked() {
     VRScriptPtr script = getSelectedScript();
     if (script == 0) return;
 
-    string core = editor->getCore(script->getHeadSize());
+    string core = editor->getCore();
     auto scene = VRScene::getCurrent();
     if (scene == 0) return;
     scene->updateScript(script->getName(), core);
@@ -327,7 +327,7 @@ void VRGuiScripts::on_select_script(string scriptName) { // selected a script
     //setCombobox("combobox10", getListStorePos("liststore10", script->getGroup()));
 
     // update editor content
-    editor->setCore(script->getScript());
+    editor->setCore(script->getScript(), script->getHeadSize());
 
     // update arguments liststore
     /*auto args = (GtkListStore*)VRGuiBuilder::get()->get_object("liststore2");
@@ -455,7 +455,7 @@ void VRGuiScripts::on_buffer_changed() {
     // get in which line the changed occured
     // negate change if in line 0
 
-    string core = editor->getCore(script->getHeadSize());
+    string core = editor->getCore();
     auto scene = VRScene::getCurrent();
     if (scene == 0) return;
     scene->updateScript(script->getName(), core, false);
@@ -1266,6 +1266,7 @@ VRGuiScripts::VRGuiScripts() {
     //mgr->addCallback("scripts_toolbar_search", [&](OSG::VRGuiSignals::Options o) { on_exec_clicked(); return true; } );
     //mgr->addCallback("scripts_toolbar_documentation", [&](OSG::VRGuiSignals::Options o) { on_exec_clicked(); return true; } );
     mgr->addCallback("scripts_toolbar_performance", [&](OSG::VRGuiSignals::Options o) { on_perf_toggled(toBool(o["state"])); return true; } );
+    mgr->addCallback("script_editor_text_changed", [&](OSG::VRGuiSignals::Options o) { on_buffer_changed(); return true; } );
 
     /*disableDestroyDiag("pybindings-docs");
     disableDestroyDiag("find_dialog");
@@ -1317,8 +1318,7 @@ VRGuiScripts::VRGuiScripts() {
     editor->addKeyBinding("help", VRUpdateCb::create("helpCb", bind(&VRGuiScripts::on_help_clicked, this)));
     editor->addKeyBinding("save", VRUpdateCb::create("saveCb", bind(&VRGuiScripts::on_save_clicked, this)));
     editor->addKeyBinding("exec", VRUpdateCb::create("execCb", bind(&VRGuiScripts::on_exec_clicked, this)));
-    /*connect_signal<void>(editor->getSourceBuffer(), bind(&VRGuiScripts::on_buffer_changed, this), "changed");
-    //connect_signal<void, GdkEvent*>(editor->getEditor(), bind(&VRGuiScripts::on_focus_out_changed, this, PL::_1), "focus-out-event");
+    /*connect_signal<void, GdkEvent*>(editor->getEditor(), bind(&VRGuiScripts::on_focus_out_changed, this, PL::_1), "focus-out-event");
 
     setEntryCallback("entry10", bind(&VRGuiScripts::on_find_diag_find_clicked, this), false, false);
 

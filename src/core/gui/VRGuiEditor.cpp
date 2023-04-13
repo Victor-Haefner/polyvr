@@ -16,13 +16,14 @@ using namespace std;
 
 string padding = "\n\n\n\n\n\n\n\n\n";
 
-void VRGuiEditor::setCore(string core) {
-    string data = core+padding;
-    uiSignal("script_editor_set_buffer", {{"data", data}});
+void VRGuiEditor::setCore(string core, int i) {
+    buffer = core+padding;
+    headerLines = i;
+    uiSignal("script_editor_set_buffer", {{"data", buffer}});
 }
 
-string VRGuiEditor::getCore(int i) {
-    uiSignal("script_editor_request_buffer", {{"skipLines", toString(i)}});
+string VRGuiEditor::getCore() {
+    uiSignal("script_editor_request_buffer", {{"skipLines", toString(headerLines)}});
     // onCoreUpdate will be called and buffer updated
     return buffer;
 }

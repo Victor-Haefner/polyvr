@@ -132,7 +132,9 @@ void ImScriptEditor::render() {
     }
     if (ImGui::CollapsingHeader("Arguments", flags)) {
     }
+
     imEditor.Render("Editor");
+    if (imEditor.IsTextChanged()) uiSignal("script_editor_text_changed");
 }
 
 

@@ -16,6 +16,7 @@ class VRGuiEditor {
         _GtkSourceLanguage* glsl = 0;
         _GtkTextBuffer* editorBuffer = 0;*/
         string buffer;
+        int headerLines = 0;
 	    map<string, VRUpdateCbPtr> keyBindings;
 
 	    string selection;
@@ -32,8 +33,8 @@ class VRGuiEditor {
     public:
         VRGuiEditor(string window);
 
-        string getCore(int i);
-        void setCore(string c);
+        string getCore();
+        void setCore(string c, int i);
         void focus(int line, int column);
         void highlightStrings(string s, string c);
         void addKeyBinding(string name, VRUpdateCbPtr cb);

@@ -318,7 +318,7 @@ void VRGuiSetup::updateObjectData() {
     if (selected_type == "script") {
         setWidgetVisibility("expander29", true, true);
         VRScript* script = (VRScript*)selected_object;
-        editor->setCore(script->getHead() + script->getCore());
+        editor->setCore(script->getHead() + script->getCore(), script->getHeadSize());
         auto trigs = script->getTriggers();
         setToggleButton("radiotoolbutton1", true);
         if (trigs.size() > 0) {
@@ -1170,7 +1170,7 @@ void VRGuiSetup::on_script_save_clicked() {
     VRScriptPtr script = getSelectedScript();
     if (script == 0) return;
 
-    string core = editor->getCore(script->getHeadSize());
+    string core = editor->getCore();
     auto scene = VRScene::getCurrent();
     if (scene == 0) return;
     scene->updateScript(script->getName(), core);
@@ -1215,7 +1215,7 @@ void VRGuiSetup::on_script_changed() {
     VRScriptPtr script = getSelectedScript();
     if (script == 0) return;
 
-    string core = getEditor()->getCore(script->getHeadSize());
+    string core = getEditor()->getCore();
     auto scene = VRScene::getCurrent();
     if (scene == 0) return;
     scene->updateScript(script->getName(), core, false);
