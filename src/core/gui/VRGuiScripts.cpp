@@ -435,15 +435,18 @@ void VRGuiScripts::on_rename_script(string new_name) {
     if (script == 0) return;
     auto s = scene->changeScriptName(selected, new_name);
     new_name = s->getName();
-    //editor->setCore(script->getScript()); // update the editor to show the new function header
 }
 
-void VRGuiScripts::on_rename_group(string new_name) { // TODO
-    /*groups[type].name = new_name;
-    for (auto& sw : groups[type].scripts) if (auto s = sw.lock()) s->setGroup(new_name);
-
-    updateList();
-    on_select_script();*/
+void VRGuiScripts::on_rename_group(string new_name) {
+    for (auto& g : groups) {
+        if (g.second.name != selected) continue;
+        selected = new_name;
+        g.second.name = new_name;
+        for (auto& sw : g.second.scripts) if (auto s = sw.lock()) s->setGroup(new_name);
+        updateList();
+        //on_select_script();
+        return;
+    }
 }
 
 void VRGuiScripts::on_buffer_changed() {
@@ -1253,7 +1256,9 @@ namespace PL = std::placeholders;
 VRGuiScripts::VRGuiScripts() {
     auto mgr = OSG::VRGuiSignals::get();
     mgr->addCallback("select_script", [&](OSG::VRGuiSignals::Options o) { on_select_script(o["script"]); return true; } );
+    mgr->addCallback("select_group", [&](OSG::VRGuiSignals::Options o) { on_select_script(o["group"]); return true; } );
     mgr->addCallback("rename_script", [&](OSG::VRGuiSignals::Options o) { on_rename_script(o["name"]); return true; } );
+    mgr->addCallback("rename_group", [&](OSG::VRGuiSignals::Options o) { on_rename_group(o["name"]); return true; } );
     mgr->addCallback("scripts_toolbar_new", [&](OSG::VRGuiSignals::Options o) { on_new_clicked(); return true; }, true );
     mgr->addCallback("scripts_toolbar_template", [&](OSG::VRGuiSignals::Options o) { on_template_clicked(); return true; } );
     mgr->addCallback("scripts_toolbar_group", [&](OSG::VRGuiSignals::Options o) { on_addSep_clicked(); return true; } );

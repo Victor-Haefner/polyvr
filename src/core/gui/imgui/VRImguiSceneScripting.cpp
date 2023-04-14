@@ -34,10 +34,10 @@ void ImScriptList::addScript(string name, string groupID) {
     groups[groupID].scripts.push_back(name);
 }
 
-void ImScriptList::renderListEntry(string& script) {
-    ImVec4 colorSelected(0.3f, 0.5f, 1.0f, 1.0f);
+void ImScriptList::renderScriptEntry(string& script) {
+    //ImVec4 colorSelected(0.3f, 0.5f, 1.0f, 1.0f);
     bool isSelected = bool(selected == script);
-    if (isSelected) ImGui::PushStyleColor(ImGuiCol_Button, colorSelected);
+    //if (isSelected) ImGui::PushStyleColor(ImGuiCol_Button, colorSelected);
     if (!isSelected) {
         if (ImGui::Button(script.c_str())) {
             selected = script;
@@ -54,31 +54,51 @@ void ImScriptList::renderListEntry(string& script) {
             uiSignal("select_script", {{"script",script}});
         }
     }
-    if (isSelected) ImGui::PopStyleColor();
+    //if (isSelected) ImGui::PopStyleColor();
+}
+
+void ImScriptList::renderGroupEntry(string& group) {
+    bool isSelected = bool(selected == group);
+    if (!isSelected) {
+        if (ImGui::Button(group.c_str())) {
+            selected = group;
+            uiSignal("select_group", {{"group",group}});
+        }
+    } else {
+        static char str0[128] = "Group0";
+        memcpy(str0, group.c_str(), group.size());
+        str0[group.size()] = 0;
+        if (ImGui::InputText("##renameGroup", str0, 128, ImGuiInputTextFlags_EnterReturnsTrue) ) {
+            group = string(str0);
+            selected = group;
+            uiSignal("rename_group", {{"name",string(str0)}});
+        }
+    }
 }
 
 void ImScriptList::render() {
     ImVec4 colorGroup(0.3f, 0.3f, 0.3f, 1.0f);
     ImVec4 colorScript(0.5f, 0.5f, 0.5f, 1.0f);
 
-    ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_CollapsingHeader;
+    ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_CollapsingHeader | ImGuiTreeNodeFlags_OpenOnArrow;
     ImGui::PushStyleColor(ImGuiCol_Header, colorGroup);
     ImGui::PushStyleColor(ImGuiCol_Button, colorScript);
 
     for (auto groupID : groupsList) {
         if (groupID == "__default__") continue;
         string group = groups[groupID].name;
+        renderGroupEntry(groups[groupID].name);
+        ImGui::SameLine();
 
-        if (ImGui::CollapsingHeader((group+"##"+groupID).c_str(), flags)) {
-
+        //if (ImGui::CollapsingHeader((group+"##"+groupID).c_str(), flags)) {
+        if (ImGui::CollapsingHeader(("##"+groupID).c_str(), flags)) {
             ImGui::Indent();
-            for (auto& script : groups[groupID].scripts) renderListEntry(script);
+            for (auto& script : groups[groupID].scripts) renderScriptEntry(script);
             ImGui::Unindent();
-
         }
     }
 
-    for (auto& script : groups["__default__"].scripts) renderListEntry(script);
+    for (auto& script : groups["__default__"].scripts) renderScriptEntry(script);
 
     ImGui::PopStyleColor();
     ImGui::PopStyleColor();

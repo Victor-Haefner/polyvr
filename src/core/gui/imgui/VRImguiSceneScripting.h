@@ -22,7 +22,8 @@ class ImScriptList {
         void clear();
         void addGroup(string name, string ID);
         void addScript(string name, string groupID);
-        void renderListEntry(string& script);
+        void renderScriptEntry(string& script);
+        void renderGroupEntry(string& group);
 
     public:
         ImScriptList();
