@@ -130,9 +130,11 @@ void ImScriptEditor::setBuffer(string data) {
 
 void ImScriptEditor::setParameters(string type, string group) {
     current_group = 0;
-    current_type = 0;
     for (int i=0; i<groupList.size(); i++) if (groupList[i] == group) current_group = i;
-    for (int i=0; i<typeList.size() ; i++) if (typeList[i]  == type)  current_type = i;
+
+    current_type = 0; // Python
+    if (type == "GLSL") current_type = 1;
+    if (type == "HTML") current_type = 2;
 }
 
 void ImScriptEditor::clear() {
@@ -158,7 +160,9 @@ void ImScriptEditor::render() {
         const char* types[typeList.size()];
         for (int i=0; i<typeList.size(); i++) types[i] = typeList[i].c_str();
         if (ImGui::Combo("##scriptTypesCombo", &current_type, types, typeList.size())) {
-            string type = typeList[current_type];
+            string type = "Python";
+            if (current_type == 1) type = "GLSL";
+            if (current_type == 2) type = "HTML";
             uiSignal("script_editor_change_type", {{"type",type}});
         }
 
