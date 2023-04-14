@@ -32,20 +32,39 @@ class ImScriptList {
 
 class ImScriptEditor {
     private:
+        struct Trigger {
+            string trigger;
+            string parameter;
+            string device;
+            string key;
+            string state;
+        };
+
+        struct Argument {
+            string name;
+            string type;
+            string value;
+        };
+
         TextEditor imEditor;
         int current_type = 0;
         int current_group = 0;
         map<string, string> groups;
         vector<string> groupList;
         vector<string> typeList;
+        vector<Trigger> triggers;
+        vector<Argument> arguments;
 
         void setBuffer(string data);
         void getBuffer(int skipLines);
 
         void setParameters(string type, string group);
 
-        void clear();
+        void clearGroups();
+        void clearTrigsAndArgs();
         void addGroup(string name, string ID);
+        void addTrigger(string trigger, string parameter, string device, string key, string state);
+        void addArgument(string name, string type, string value);
 
     public:
         ImScriptEditor();

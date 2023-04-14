@@ -109,8 +109,11 @@ ImScriptEditor::ImScriptEditor() {
     mgr->addCallback("script_editor_set_buffer", [&](OSG::VRGuiSignals::Options o){ setBuffer(o["data"]); return true; } );
     mgr->addCallback("script_editor_set_parameters", [&](OSG::VRGuiSignals::Options o){ setParameters(o["type"], o["group"]); return true; } );
     mgr->addCallback("script_editor_request_buffer", [&](OSG::VRGuiSignals::Options o){ getBuffer(toInt(o["skipLines"])); return true; } );
-    mgr->addCallback("scripts_list_clear", [&](OSG::VRGuiSignals::Options o){ clear(); return true; } );
+    mgr->addCallback("scripts_list_clear", [&](OSG::VRGuiSignals::Options o){ clearGroups(); return true; } );
     mgr->addCallback("scripts_list_add_group", [&](OSG::VRGuiSignals::Options o){ addGroup(o["name"], o["ID"]); return true; } );
+    mgr->addCallback("script_editor_clear_trigs_and_args", [&](OSG::VRGuiSignals::Options o){ clearTrigsAndArgs(); return true; } );
+    mgr->addCallback("script_editor_add_trigger", [&](OSG::VRGuiSignals::Options o){ addTrigger(o["trigger"], o["parameter"], o["device"], o["key"], o["state"]); return true; } );
+    mgr->addCallback("script_editor_add_argument", [&](OSG::VRGuiSignals::Options o){ addArgument(o["name"], o["type"], o["value"]); return true; } );
     imEditor.SetShowWhitespaces(false); // TODO: add as feature!
 
     typeList = {"Logic (Python)", "Shader (GLSL)", "Web (HTML/JS/CSS)"};
@@ -137,7 +140,20 @@ void ImScriptEditor::setParameters(string type, string group) {
     if (type == "HTML") current_type = 2;
 }
 
-void ImScriptEditor::clear() {
+void ImScriptEditor::addTrigger(string trigger, string parameter, string device, string key, string state) {
+    triggers.push_back({trigger, parameter, device, key, state});
+}
+
+void ImScriptEditor::addArgument(string name, string type, string value) {
+    arguments.push_back({name, type, value});
+}
+
+void ImScriptEditor::clearTrigsAndArgs() {
+    triggers.clear();
+    arguments.clear();
+}
+
+void ImScriptEditor::clearGroups() {
     groups.clear();
     groups["no group"] = "";
     groupList.clear();
@@ -177,9 +193,21 @@ void ImScriptEditor::render() {
     }
 
     if (ImGui::CollapsingHeader("Triggers", flags)) {
+        for (auto& t : triggers) {
+            ImGui::Text(t.trigger.c_str()); ImGui::SameLine();
+            ImGui::Text(t.parameter.c_str()); ImGui::SameLine();
+            ImGui::Text(t.device.c_str()); ImGui::SameLine();
+            ImGui::Text(t.key.c_str()); ImGui::SameLine();
+            ImGui::Text(t.state.c_str());
+        }
     }
 
     if (ImGui::CollapsingHeader("Arguments", flags)) {
+        for (auto& a : arguments) {
+            ImGui::Text(a.name.c_str()); ImGui::SameLine();
+            ImGui::Text(a.type.c_str()); ImGui::SameLine();
+            ImGui::Text(a.value.c_str()); ImGui::SameLine();
+        }
     }
 
     imEditor.Render("Editor");

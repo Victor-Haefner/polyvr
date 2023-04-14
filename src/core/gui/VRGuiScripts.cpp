@@ -319,48 +319,30 @@ void VRGuiScripts::on_select_script(string scriptName) { // selected a script
     //setCombobox("combobox1", getListStorePos("liststore6", script->getType()));
     //auto setup = VRSetup::getCurrent();
     //if (setup) fillStringListstore("liststore7", setup->getDevices("server"));
-    vector<string> grps;
-    grps.push_back("no group");
-    for (auto g : groups) grps.push_back(g.second.name);
-    //fillStringListstore("liststore10", grps);
-    //setCombobox("combobox24", getListStorePos("liststore7", script->getServer()));
-    //setCombobox("combobox10", getListStorePos("liststore10", script->getGroup()));
 
     // update editor content
     editor->setCore(script->getScript(), script->getHeadSize());
     uiSignal("script_editor_set_parameters", {{"type",script->getType()},{"group",script->getGroup()}});
 
+    uiSignal("script_editor_clear_trigs_and_args");
     // update arguments liststore
-    /*auto args = (GtkListStore*)VRGuiBuilder::get()->get_object("liststore2");
-    gtk_list_store_clear(args);
-    GtkTreeIter row;
-    //if (PyErr_Occurred() != NULL) PyErr_Print();
-    for (auto a : script->getArguments()) {
-        gtk_list_store_append(args, &row);
-        gtk_list_store_set(args, &row, 0, a->getName().c_str(), -1);
-        gtk_list_store_set(args, &row, 1, a->val.c_str(), -1);
-        gtk_list_store_set(args, &row, 2, script.get(), -1);
-        gtk_list_store_set(args, &row, 3, a->type.c_str(), -1);
-    }*/
+    for (auto a : script->getArguments()) uiSignal("script_editor_add_argument", {{"name",a->getName()},{"type",a->type},{"value",a->val}});
 
     // update trigger liststore
-    /*auto trigs = (GtkListStore*)VRGuiBuilder::get()->get_object("triggers");
-    gtk_list_store_clear(trigs);
     for (auto t : script->getTriggers()) {
         string key = toString(t->key);
         if (t->dev == "keyboard" && t->key > 32 && t->key < 127) {
             char kc = t->key;
             key = kc;
         }
-        gtk_list_store_append(trigs, &row);
-        gtk_list_store_set(trigs, &row, 0, t->trigger.c_str(), -1);
-        gtk_list_store_set(trigs, &row, 1, t->dev.c_str(), -1);
-        gtk_list_store_set(trigs, &row, 2, key.c_str(), -1);
-        gtk_list_store_set(trigs, &row, 3, t->state.c_str(), -1);
-        gtk_list_store_set(trigs, &row, 4, t->param.c_str(), -1);
-        gtk_list_store_set(trigs, &row, 5, script.get(), -1);
-        gtk_list_store_set(trigs, &row, 6, t->getName().c_str(), -1);
-    }*/
+        uiSignal("script_editor_add_trigger", {
+            {"trigger",t->trigger},
+            {"parameter",t->param},
+            {"device",t->dev},
+            {"key",key},
+            {"state",t->state}
+        });
+    }
 
     /*setWidgetSensitivity("toolbutton8", true);
     setWidgetSensitivity("toolbutton7", false);
