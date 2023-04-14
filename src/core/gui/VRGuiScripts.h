@@ -88,7 +88,7 @@ class VRGuiScripts {
         void on_trigkey_edited(const char* path, const char* new_name);
         //void on_trigstate_edited(const char* new_name, _GtkTreeIter* new_iter);
         void on_trigadd_clicked();
-        void on_trigrem_clicked();
+        void on_trigrem_clicked(string tID);
 
         void updateDocumentation();
         void on_select_help();
@@ -105,7 +105,7 @@ class VRGuiScripts {
         void on_templ_filter_edited();
 
         void on_argadd_clicked();
-        void on_argrem_clicked();
+        void on_argrem_clicked(string aID);
         void on_argname_edited(const char* path, const char* new_name);
         void on_argval_edited(const char* path, const char* new_name);
         //void on_argtype_edited(const char* new_name, _GtkTreeIter* new_iter);

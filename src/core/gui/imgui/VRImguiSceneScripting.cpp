@@ -112,7 +112,7 @@ ImScriptEditor::ImScriptEditor() {
     mgr->addCallback("scripts_list_clear", [&](OSG::VRGuiSignals::Options o){ clearGroups(); return true; } );
     mgr->addCallback("scripts_list_add_group", [&](OSG::VRGuiSignals::Options o){ addGroup(o["name"], o["ID"]); return true; } );
     mgr->addCallback("script_editor_clear_trigs_and_args", [&](OSG::VRGuiSignals::Options o){ clearTrigsAndArgs(); return true; } );
-    mgr->addCallback("script_editor_add_trigger", [&](OSG::VRGuiSignals::Options o){ addTrigger(o["trigger"], o["parameter"], o["device"], o["key"], o["state"]); return true; } );
+    mgr->addCallback("script_editor_add_trigger", [&](OSG::VRGuiSignals::Options o){ addTrigger(o["name"], o["trigger"], o["parameter"], o["device"], o["key"], o["state"]); return true; } );
     mgr->addCallback("script_editor_add_argument", [&](OSG::VRGuiSignals::Options o){ addArgument(o["name"], o["type"], o["value"]); return true; } );
     imEditor.SetShowWhitespaces(false); // TODO: add as feature!
 
@@ -140,8 +140,8 @@ void ImScriptEditor::setParameters(string type, string group) {
     if (type == "HTML") current_type = 2;
 }
 
-void ImScriptEditor::addTrigger(string trigger, string parameter, string device, string key, string state) {
-    triggers.push_back({trigger, parameter, device, key, state});
+void ImScriptEditor::addTrigger(string name, string trigger, string parameter, string device, string key, string state) {
+    triggers.push_back({name, trigger, parameter, device, key, state});
 }
 
 void ImScriptEditor::addArgument(string name, string type, string value) {
@@ -192,8 +192,11 @@ void ImScriptEditor::render() {
         }
     }
 
+    if (ImGui::Button("+##newTrig")) { uiSignal("script_editor_new_trigger"); };
+    ImGui::SameLine();
     if (ImGui::CollapsingHeader("Triggers", flags)) {
         for (auto& t : triggers) {
+            if (ImGui::Button(("-##remTrig-"+t.name).c_str())) { uiSignal("script_editor_rem_trigger", {{"trigger", t.name}}); }; ImGui::SameLine();
             ImGui::Text(t.trigger.c_str()); ImGui::SameLine();
             ImGui::Text(t.parameter.c_str()); ImGui::SameLine();
             ImGui::Text(t.device.c_str()); ImGui::SameLine();
@@ -202,11 +205,14 @@ void ImScriptEditor::render() {
         }
     }
 
+    if (ImGui::Button("+##newArg")) { uiSignal("script_editor_new_argument"); };
+    ImGui::SameLine();
     if (ImGui::CollapsingHeader("Arguments", flags)) {
         for (auto& a : arguments) {
+            if (ImGui::Button(("-##remArg-"+a.name).c_str())) { uiSignal("script_editor_rem_argument", {{"argument", a.name}}); }; ImGui::SameLine();
             ImGui::Text(a.name.c_str()); ImGui::SameLine();
             ImGui::Text(a.type.c_str()); ImGui::SameLine();
-            ImGui::Text(a.value.c_str()); ImGui::SameLine();
+            ImGui::Text(a.value.c_str());
         }
     }
 

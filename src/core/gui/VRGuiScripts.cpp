@@ -336,6 +336,7 @@ void VRGuiScripts::on_select_script(string scriptName) { // selected a script
             key = kc;
         }
         uiSignal("script_editor_add_trigger", {
+            {"name",t->getName()},
             {"trigger",t->trigger},
             {"parameter",t->param},
             {"device",t->dev},
@@ -452,6 +453,7 @@ void VRGuiScripts::on_buffer_changed() {
 shared_ptr<VRGuiEditor> VRGuiScripts::getEditor() { return editor; }
 
 void VRGuiScripts::on_argadd_clicked() {
+    cout << "VRGuiScripts::on_argadd_clicked " << endl;
     VRScriptPtr script = getSelectedScript();
     if (script == 0) return;
 
@@ -469,20 +471,20 @@ void VRGuiScripts::on_trigadd_clicked() {
     on_save_clicked();
 }
 
-void VRGuiScripts::on_argrem_clicked() {
+void VRGuiScripts::on_argrem_clicked(string aID) {
     VRScriptPtr script = getSelectedScript();
     if (script == 0) return;
 
-    //script->remArgument(name);
+    script->remArgument(aID);
     on_select_script(selected);
     on_save_clicked();
 }
 
-void VRGuiScripts::on_trigrem_clicked() {
+void VRGuiScripts::on_trigrem_clicked(string tID) {
     VRScriptPtr script = getSelectedScript();
     if (script == 0) return;
 
-    //script->remTrigger(name);
+    script->remTrigger(tID);
     on_select_script(selected);
     on_save_clicked();
 }
@@ -1258,6 +1260,11 @@ VRGuiScripts::VRGuiScripts() {
     mgr->addCallback("script_editor_change_type", [&](OSG::VRGuiSignals::Options o) { on_change_script_type(o["type"]); return true; }, true );
     mgr->addCallback("script_editor_change_group", [&](OSG::VRGuiSignals::Options o) { on_change_group(o["group"]); return true; }, true );
 
+    mgr->addCallback("script_editor_new_trigger", [&](OSG::VRGuiSignals::Options o) { on_trigadd_clicked(); return true; }, true );
+    mgr->addCallback("script_editor_new_argument", [&](OSG::VRGuiSignals::Options o) { on_argadd_clicked(); return true; }, true );
+    mgr->addCallback("script_editor_rem_trigger", [&](OSG::VRGuiSignals::Options o) { on_trigrem_clicked(o["trigger"]); return true; }, true );
+    mgr->addCallback("script_editor_rem_argument", [&](OSG::VRGuiSignals::Options o) { on_argrem_clicked(o["argument"]); return true; }, true );
+
     /*disableDestroyDiag("pybindings-docs");
     disableDestroyDiag("find_dialog");
     disableDestroyDiag("scriptTemplates");
@@ -1275,10 +1282,6 @@ VRGuiScripts::VRGuiScripts() {
     setToolButtonCallback("toggletoolbutton2", bind(&VRGuiScripts::on_pause_toggled, this) );
     setToolButtonCallback("toolbutton30", bind(&VRGuiScripts::on_convert_cpp_clicked, this) );
 
-    setButtonCallback("button12", bind(&VRGuiScripts::on_argadd_clicked, this) );
-    setButtonCallback("button13", bind(&VRGuiScripts::on_argrem_clicked, this) );
-    setButtonCallback("button23", bind(&VRGuiScripts::on_trigadd_clicked, this) );
-    setButtonCallback("button24", bind(&VRGuiScripts::on_trigrem_clicked, this) );
     setButtonCallback("button16", bind(&VRGuiScripts::on_help_close_clicked, this) );
     setButtonCallback("tbutton1", bind(&VRGuiScripts::on_templ_close_clicked, this) );
     setButtonCallback("tbutton2", bind(&VRGuiScripts::on_templ_import_clicked, this) );

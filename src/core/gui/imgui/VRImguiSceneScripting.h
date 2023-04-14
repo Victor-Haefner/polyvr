@@ -33,6 +33,7 @@ class ImScriptList {
 class ImScriptEditor {
     private:
         struct Trigger {
+            string name;
             string trigger;
             string parameter;
             string device;
@@ -63,7 +64,7 @@ class ImScriptEditor {
         void clearGroups();
         void clearTrigsAndArgs();
         void addGroup(string name, string ID);
-        void addTrigger(string trigger, string parameter, string device, string key, string state);
+        void addTrigger(string name, string trigger, string parameter, string device, string key, string state);
         void addArgument(string name, string type, string value);
 
     public:
