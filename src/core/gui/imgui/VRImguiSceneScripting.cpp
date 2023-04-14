@@ -22,6 +22,7 @@ void ImScriptList::clear() {
 }
 
 void ImScriptList::addGroup(string name, string ID) {
+    cout << " ----- addGroup " << name << ", " << ID << endl;
     if (groups.count(ID)) return;
     groups[ID] = ImScriptGroup(name);
     groupsList.push_back(ID);
@@ -29,6 +30,7 @@ void ImScriptList::addGroup(string name, string ID) {
 
 void ImScriptList::addScript(string name, string groupID) {
     if (groupID == "") groupID = "__default__";
+    cout << " ----- addScript " << name << ", " << groupID << endl;
     groups[groupID].scripts.push_back(name);
 }
 
@@ -85,10 +87,13 @@ void ImScriptList::render() {
 ImScriptEditor::ImScriptEditor() {
     auto mgr = OSG::VRGuiSignals::get();
     mgr->addCallback("script_editor_set_buffer", [&](OSG::VRGuiSignals::Options o){ setBuffer(o["data"]); return true; } );
+    mgr->addCallback("script_editor_set_parameters", [&](OSG::VRGuiSignals::Options o){ setParameters(o["type"], o["group"]); return true; } );
     mgr->addCallback("script_editor_request_buffer", [&](OSG::VRGuiSignals::Options o){ getBuffer(toInt(o["skipLines"])); return true; } );
     mgr->addCallback("scripts_list_clear", [&](OSG::VRGuiSignals::Options o){ clear(); return true; } );
     mgr->addCallback("scripts_list_add_group", [&](OSG::VRGuiSignals::Options o){ addGroup(o["name"], o["ID"]); return true; } );
     imEditor.SetShowWhitespaces(false); // TODO: add as feature!
+
+    typeList = {"Logic (Python)", "Shader (GLSL)", "Web (HTML/JS/CSS)"};
 }
 
 void ImScriptEditor::getBuffer(int skipLines) {
@@ -103,16 +108,25 @@ void ImScriptEditor::setBuffer(string data) {
     imEditor.SetText(data);
 }
 
+void ImScriptEditor::setParameters(string type, string group) {
+    current_group = 0;
+    current_type = 0;
+    for (int i=0; i<groupList.size(); i++) if (groupList[i] == group) current_group = i;
+    for (int i=0; i<typeList.size() ; i++) if (typeList[i]  == type)  current_type = i;
+}
+
 void ImScriptEditor::clear() {
     groups.clear();
-    tmpGroupList.clear();
+    groups["no group"] = "";
+    groupList.clear();
+    groupList.push_back("no group");
 }
 
 void ImScriptEditor::addGroup(string name, string ID) {
-    groups[ID] = name;
-    tmpGroupList.clear();
-    tmpGroupList.push_back("no group");
-    for (auto& g : groups) tmpGroupList.push_back((g.second + "##" + g.first).c_str());
+    string nameID = name + "##" + ID;
+    groups[nameID] = name;
+    groupList.clear();
+    for (auto& g : groups) groupList.push_back(g.first);
 }
 
 
@@ -121,15 +135,26 @@ void ImScriptEditor::render() {
     if (ImGui::CollapsingHeader("Options", flags)) {
         ImGui::Text("Type: ");
         ImGui::SameLine();
-        const char* types[] = {"Logic (Python)", "Shader (GLSL)", "Web (HTML/JS/CSS)"};
-        ImGui::Combo("##scriptTypesCombo", &current_type, types, 3);
+        const char* types[typeList.size()];
+        for (int i=0; i<typeList.size(); i++) types[i] = typeList[i].c_str();
+        if (ImGui::Combo("##scriptTypesCombo", &current_type, types, typeList.size())) {
+            string type = typeList[current_type];
+            uiSignal("script_editor_change_type", {{"type",type}});
+        }
 
+        const char* groupsCstr[groupList.size()];
+        for (int i=0; i<groupList.size(); i++) groupsCstr[i] = groupList[i].c_str();
         ImGui::Text("Group:");
         ImGui::SameLine();
-        ImGui::Combo("##groupsCombo", &current_group, &tmpGroupList[0], tmpGroupList.size());
+        if (ImGui::Combo("##groupsCombo", &current_group, groupsCstr, groupList.size())) {
+            string group = groups[groupList[current_group]];
+            uiSignal("script_editor_change_group", {{"group",group}});
+        }
     }
+
     if (ImGui::CollapsingHeader("Triggers", flags)) {
     }
+
     if (ImGui::CollapsingHeader("Arguments", flags)) {
     }
 

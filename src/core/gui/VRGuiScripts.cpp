@@ -328,6 +328,7 @@ void VRGuiScripts::on_select_script(string scriptName) { // selected a script
 
     // update editor content
     editor->setCore(script->getScript(), script->getHeadSize());
+    uiSignal("script_editor_set_parameters", {{"type",script->getType()},{"group",script->getGroup()}});
 
     // update arguments liststore
     /*auto args = (GtkListStore*)VRGuiBuilder::get()->get_object("liststore2");
@@ -989,23 +990,22 @@ void VRGuiScripts::on_toggle_find_replace() {
 
 // config stuff
 
-void VRGuiScripts::on_change_script_type() {
+void VRGuiScripts::on_change_script_type(string type) {
     if(!trigger_cbs) return;
     VRScriptPtr script = getSelectedScript();
     if (!script) return;
-    //string t = getComboboxText("combobox1");
-    //script->setType(t);
+    script->setType(type);
     on_select_script(selected);
     on_save_clicked();
 }
 
-void VRGuiScripts::on_change_group() {
+void VRGuiScripts::on_change_group(string group) {
     if(!trigger_cbs) return;
     VRScriptPtr script = getSelectedScript();
     if (!script) return;
     int l,c;
     getLineFocus(l,c);
-    //script->setGroup( getComboboxText("combobox10") );
+    script->setGroup( group );
     on_select_script(selected);
     on_save_clicked();
     updateList();
@@ -1268,6 +1268,9 @@ VRGuiScripts::VRGuiScripts() {
     mgr->addCallback("scripts_toolbar_performance", [&](OSG::VRGuiSignals::Options o) { on_perf_toggled(toBool(o["state"])); return true; } );
     mgr->addCallback("script_editor_text_changed", [&](OSG::VRGuiSignals::Options o) { on_buffer_changed(); return true; } );
 
+    mgr->addCallback("script_editor_change_type", [&](OSG::VRGuiSignals::Options o) { on_change_script_type(o["type"]); return true; }, true );
+    mgr->addCallback("script_editor_change_group", [&](OSG::VRGuiSignals::Options o) { on_change_group(o["group"]); return true; }, true );
+
     /*disableDestroyDiag("pybindings-docs");
     disableDestroyDiag("find_dialog");
     disableDestroyDiag("scriptTemplates");
@@ -1297,8 +1300,6 @@ VRGuiScripts::VRGuiScripts() {
 
     setToggleButtonCallback("checkbutton12", bind(&VRGuiScripts::on_toggle_find_replace, this) );
 
-    setComboboxCallback("combobox1", bind(&VRGuiScripts::on_change_script_type, this) );
-    setComboboxCallback("combobox10", bind(&VRGuiScripts::on_change_group, this) );
     setComboboxCallback("combobox24", bind(&VRGuiScripts::on_change_server, this) );
 
     // trigger tree_view

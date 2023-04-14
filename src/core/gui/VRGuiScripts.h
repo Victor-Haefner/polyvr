@@ -72,8 +72,8 @@ class VRGuiScripts {
         void on_select_script(string script);
         void on_buffer_changed();
         //void on_focus_out_changed(_GdkEvent*);
-        void on_change_script_type();
-        void on_change_group();
+        void on_change_script_type(string type);
+        void on_change_group(string group);
         void on_change_server();
         void on_rename_script(string new_name);
         void on_rename_group(string new_name);

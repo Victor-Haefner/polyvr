@@ -35,10 +35,13 @@ class ImScriptEditor {
         int current_type = 0;
         int current_group = 0;
         map<string, string> groups;
-        vector<const char*> tmpGroupList;
+        vector<string> groupList;
+        vector<string> typeList;
 
         void setBuffer(string data);
         void getBuffer(int skipLines);
+
+        void setParameters(string type, string group);
 
         void clear();
         void addGroup(string name, string ID);
