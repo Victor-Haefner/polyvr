@@ -489,54 +489,34 @@ void VRGuiScripts::on_trigrem_clicked(string tID) {
     on_save_clicked();
 }
 
-void VRGuiScripts::on_argname_edited(const char* path, const char* new_name) {
-    /*VRGuiTreeView tree_view("treeview7");
-    if (!tree_view.hasSelection()) return;
-
-    // set the cell with new name
-    string name = tree_view.getSelectedStringValue(0);
-    tree_view.setSelectedStringValue(0, new_name);
-    auto script = (VRScript*)tree_view.getSelectedValue(2);
+void VRGuiScripts::on_argname_edited(string name, string new_name) {
+    VRScriptPtr script = getSelectedScript();
+    if (script == 0) return;
 
     // update argument name
     script->changeArgName(name, new_name);
-    on_select_script();
-    on_save_clicked();*/
+    on_select_script(selected);
+    on_save_clicked();
 }
 
-void VRGuiScripts::on_argval_edited(const char* path, const char* new_name) {
-    /*VRGuiTreeView tree_view("treeview7");
-    if (!tree_view.hasSelection()) return;
-
-    // set the cell with new value
-    string name = tree_view.getSelectedStringValue(0);
-    tree_view.setSelectedStringValue(1, new_name);
-    auto script = (VRScript*)tree_view.getSelectedValue(2);
+void VRGuiScripts::on_argval_edited(string name, string new_val) {
+    VRScriptPtr script = getSelectedScript();
+    if (script == 0) return;
 
     // update argument name
-    script->changeArgValue(name, new_name);
-    on_select_script();
-    on_save_clicked();*/
+    script->changeArgValue(name, new_val);
+    on_select_script(selected);
+    on_save_clicked();
 }
 
-/*void VRGuiScripts::on_argtype_edited(const char* new_name, GtkTreeIter* new_iter) {
-    VRGuiTreeView tree_view("treeview7");
-    if (!tree_view.hasSelection()) return;
+void VRGuiScripts::on_argtype_edited(string name, string new_type) {
+    VRScriptPtr script = getSelectedScript();
+    if (script == 0) return;
 
-    // set the cell with new type
-    auto combo_list = (GtkListStore*)VRGuiBuilder::get()->get_object("arg_types");
-    gchar *t;
-    gtk_tree_model_get((GtkTreeModel*)combo_list, (GtkTreeIter*)new_iter, 0, &t, -1);
-    string type = string(t);
-    tree_view.setSelectedStringValue(3, type);
-
-    // do something
-    string name = tree_view.getSelectedStringValue(0);
-    auto script = (VRScript*)tree_view.getSelectedValue(2);
-    script->changeArgType(name, type);
-    on_select_script();
+    script->changeArgType(name, new_type);
+    on_select_script(selected);
     on_save_clicked();
-}*/
+}
 
 /*void VRGuiScripts::on_trigger_edited(const char* new_name, GtkTreeIter* new_iter) {
     VRGuiTreeView tree_view("treeview14");
@@ -1265,6 +1245,10 @@ VRGuiScripts::VRGuiScripts() {
     mgr->addCallback("script_editor_rem_trigger", [&](OSG::VRGuiSignals::Options o) { on_trigrem_clicked(o["trigger"]); return true; }, true );
     mgr->addCallback("script_editor_rem_argument", [&](OSG::VRGuiSignals::Options o) { on_argrem_clicked(o["argument"]); return true; }, true );
 
+    mgr->addCallback("script_editor_rename_argument", [&](OSG::VRGuiSignals::Options o) { on_argname_edited(o["inputOld"], o["inputNew"]); return true; }, true );
+    mgr->addCallback("script_editor_change_argument", [&](OSG::VRGuiSignals::Options o) { on_argval_edited(o["idKey"], o["inputNew"]); return true; }, true );
+    mgr->addCallback("script_editor_change_argument_type", [&](OSG::VRGuiSignals::Options o) { on_argtype_edited(o["idKey"], o["newValue"]); return true; }, true );
+
     /*disableDestroyDiag("pybindings-docs");
     disableDestroyDiag("find_dialog");
     disableDestroyDiag("scriptTemplates");
@@ -1314,12 +1298,9 @@ VRGuiScripts::VRGuiScripts() {
     setEntryCallback("entry10", bind(&VRGuiScripts::on_find_diag_find_clicked, this), false, false);
 
     setCellRendererCallback("cellrenderertext13", bind(&VRGuiScripts::on_name_edited, this, PL::_1, PL::_2) );
-    setCellRendererCallback("cellrenderertext2", bind(&VRGuiScripts::on_argname_edited, this, PL::_1, PL::_2) );
-    setCellRendererCallback("cellrenderertext14", bind(&VRGuiScripts::on_argval_edited, this, PL::_1, PL::_2) );
     setCellRendererCallback("cellrenderertext16", bind(&VRGuiScripts::on_trigparam_edited, this, PL::_1, PL::_2) );
     setCellRendererCallback("cellrenderertext41", bind(&VRGuiScripts::on_trigkey_edited, this, PL::_1, PL::_2) );
 
-    setCellRendererCombo("treeviewcolumn16", "arg_types", 3, bind(&VRGuiScripts::on_argtype_edited, this, PL::_1, PL::_2) );
     setCellRendererCombo("treeviewcolumn27", "ScriptTrigger", 0, bind(&VRGuiScripts::on_trigger_edited, this, PL::_1, PL::_2) );
     setCellRendererCombo("treeviewcolumn28", "ScriptTriggerDevices", 1, bind(&VRGuiScripts::on_trigdev_edited, this, PL::_1, PL::_2) );
     setCellRendererCombo("treeviewcolumn30", "ScriptTriggerStates", 3, bind(&VRGuiScripts::on_trigstate_edited, this, PL::_1, PL::_2) );*/

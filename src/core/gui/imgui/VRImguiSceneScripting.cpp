@@ -6,6 +6,33 @@
 
 using namespace std;
 
+void renderInput(string& label, string ID, string signal, string idKey) {
+    static char str0[128] = "Script0";
+    memcpy(str0, label.c_str(), label.size());
+    str0[label.size()] = 0;
+    ID = "##"+ID;
+
+    if (ImGui::InputText(ID.c_str(), str0, 128, ImGuiInputTextFlags_EnterReturnsTrue) ) {
+        uiSignal(signal, {{"idKey",idKey}, {"inputOld",label}, {"inputNew",string(str0)}});
+        label = string(str0);
+    }
+}
+
+void renderCombo(string& opt, vector<string>& options, string ID, string signal, string idKey) {
+    ID = "##"+ID;
+    int labelI = 0;
+    const char* optionsCstr[options.size()];
+    for (int i=0; i<options.size(); i++) {
+        optionsCstr[i] = options[i].c_str();
+        if (options[i] == opt) labelI = i;
+    }
+
+    if (ImGui::Combo(ID.c_str(), &labelI, optionsCstr, options.size())) {
+        opt = options[labelI];
+        uiSignal(signal, {{"idKey",idKey}, {"newValue",opt}});
+    }
+}
+
 ImScriptGroup::ImScriptGroup(string name) : name(name) {}
 
 ImScriptList::ImScriptList() {
@@ -117,6 +144,8 @@ ImScriptEditor::ImScriptEditor() {
     imEditor.SetShowWhitespaces(false); // TODO: add as feature!
 
     typeList = {"Logic (Python)", "Shader (GLSL)", "Web (HTML/JS/CSS)"};
+    argumentTypes = {"None", "int", "float", "str", "VRPyObjectType", "VRPyTransformType", "VRPyGeometryType", "VRPyLightType", "VRPyLodType", "VRPyDeviceType", "VRPyMouseType", "VRPyHapticType", "VRPySocketType", "VRPyLeapFrameType"};
+
 }
 
 void ImScriptEditor::getBuffer(int skipLines) {
@@ -196,9 +225,9 @@ void ImScriptEditor::render() {
         }
     }
 
-    if (ImGui::Button("+##newTrig")) { uiSignal("script_editor_new_trigger"); };
-    ImGui::SameLine();
     if (ImGui::CollapsingHeader("Triggers", flags)) {
+        ImGui::Indent();
+        if (ImGui::Button("+##newTrig")) { uiSignal("script_editor_new_trigger"); };
         for (auto& t : triggers) {
             if (ImGui::Button(("-##remTrig-"+t.name).c_str())) { uiSignal("script_editor_rem_trigger", {{"trigger", t.name}}); }; ImGui::SameLine();
             ImGui::Text(t.trigger.c_str()); ImGui::SameLine();
@@ -207,17 +236,22 @@ void ImScriptEditor::render() {
             ImGui::Text(t.key.c_str()); ImGui::SameLine();
             ImGui::Text(t.state.c_str());
         }
+        ImGui::Unindent();
     }
 
-    if (ImGui::Button("+##newArg")) { uiSignal("script_editor_new_argument"); };
-    ImGui::SameLine();
     if (ImGui::CollapsingHeader("Arguments", flags)) {
+        ImGui::Indent();
+        if (ImGui::Button("+##newArg")) { uiSignal("script_editor_new_argument"); };
         for (auto& a : arguments) {
             if (ImGui::Button(("-##remArg-"+a.name).c_str())) { uiSignal("script_editor_rem_argument", {{"argument", a.name}}); }; ImGui::SameLine();
-            ImGui::Text(a.name.c_str()); ImGui::SameLine();
-            ImGui::Text(a.type.c_str()); ImGui::SameLine();
-            ImGui::Text(a.value.c_str());
+            float w = ImGui::GetContentRegionAvail().x;
+            ImGui::PushItemWidth(w*0.33);
+            renderInput(a.name, "argName-"+a.name, "script_editor_rename_argument", a.name); ImGui::SameLine();
+            renderCombo(a.type, argumentTypes, "argType-"+a.name, "script_editor_change_argument_type", a.name); ImGui::SameLine();
+            renderInput(a.value, "argValue-"+a.name, "script_editor_change_argument", a.name);
+            ImGui::PopItemWidth();
         }
+        ImGui::Unindent();
     }
 
     if (sensitive) {

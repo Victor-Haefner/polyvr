@@ -106,9 +106,9 @@ class VRGuiScripts {
 
         void on_argadd_clicked();
         void on_argrem_clicked(string aID);
-        void on_argname_edited(const char* path, const char* new_name);
-        void on_argval_edited(const char* path, const char* new_name);
-        //void on_argtype_edited(const char* new_name, _GtkTreeIter* new_iter);
+        void on_argname_edited(string name, string new_name);
+        void on_argval_edited(string name, string new_val);
+        void on_argtype_edited(string name, string new_type);
 
         void on_diag_import_select_1();
         void on_diag_import_select_2();

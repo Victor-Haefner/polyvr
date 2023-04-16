@@ -54,6 +54,7 @@ class ImScriptEditor {
         map<string, string> groups;
         vector<string> groupList;
         vector<string> typeList;
+        vector<string> argumentTypes;
         vector<Trigger> triggers;
         vector<Argument> arguments;
 
