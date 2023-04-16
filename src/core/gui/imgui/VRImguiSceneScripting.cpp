@@ -129,6 +129,8 @@ void ImScriptEditor::getBuffer(int skipLines) {
 
 void ImScriptEditor::setBuffer(string data) {
     imEditor.SetText(data);
+    sensitive = true;
+    if (data == "") sensitive = false;
 }
 
 void ImScriptEditor::setParameters(string type, string group) {
@@ -169,6 +171,8 @@ void ImScriptEditor::addGroup(string name, string ID) {
 
 
 void ImScriptEditor::render() {
+    if (!sensitive) ImGui::BeginDisabled();
+
     ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_CollapsingHeader;
     if (ImGui::CollapsingHeader("Options", flags)) {
         ImGui::Text("Type: ");
@@ -216,8 +220,12 @@ void ImScriptEditor::render() {
         }
     }
 
-    imEditor.Render("Editor");
-    if (imEditor.IsTextChanged()) uiSignal("script_editor_text_changed");
+    if (sensitive) {
+        imEditor.Render("Editor");
+        if (imEditor.IsTextChanged()) uiSignal("script_editor_text_changed");
+    }
+
+    if (!sensitive) ImGui::EndDisabled();
 }
 
 

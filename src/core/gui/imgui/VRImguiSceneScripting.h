@@ -47,6 +47,7 @@ class ImScriptEditor {
             string value;
         };
 
+        bool sensitive = false;
         TextEditor imEditor;
         int current_type = 0;
         int current_group = 0;
