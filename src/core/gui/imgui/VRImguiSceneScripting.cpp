@@ -145,7 +145,9 @@ ImScriptEditor::ImScriptEditor() {
 
     typeList = {"Logic (Python)", "Shader (GLSL)", "Web (HTML/JS/CSS)"};
     argumentTypes = {"None", "int", "float", "str", "VRPyObjectType", "VRPyTransformType", "VRPyGeometryType", "VRPyLightType", "VRPyLodType", "VRPyDeviceType", "VRPyMouseType", "VRPyHapticType", "VRPySocketType", "VRPyLeapFrameType"};
-
+    triggerTypes = {"none", "on_scene_load", "on_scene_close", "on_scene_import", "on_timeout", "on_device", "on_socket"};
+    device_types = {"mouse", "multitouch", "keyboard", "flystick", "haptic", "server1", "leap", "vrpn_device"};
+    trigger_states = {"Pressed", "Released", "Drag", "Drop", "To edge", "From edge"};
 }
 
 void ImScriptEditor::getBuffer(int skipLines) {
@@ -230,11 +232,16 @@ void ImScriptEditor::render() {
         if (ImGui::Button("+##newTrig")) { uiSignal("script_editor_new_trigger"); };
         for (auto& t : triggers) {
             if (ImGui::Button(("-##remTrig-"+t.name).c_str())) { uiSignal("script_editor_rem_trigger", {{"trigger", t.name}}); }; ImGui::SameLine();
-            ImGui::Text(t.trigger.c_str()); ImGui::SameLine();
-            ImGui::Text(t.parameter.c_str()); ImGui::SameLine();
-            ImGui::Text(t.device.c_str()); ImGui::SameLine();
-            ImGui::Text(t.key.c_str()); ImGui::SameLine();
-            ImGui::Text(t.state.c_str());
+            float w = ImGui::GetContentRegionAvail().x;
+            ImGui::PushItemWidth(w*0.26 - 16);
+            renderCombo(t.trigger, triggerTypes, "trigType-"+t.name, "script_editor_change_trigger_type", t.name); ImGui::SameLine();
+            renderInput(t.parameter, "trigParam-"+t.name, "script_editor_change_trigger_param", t.name); ImGui::SameLine();
+            renderCombo(t.device, device_types, "trigDevice-"+t.name, "script_editor_change_trigger_device", t.name); ImGui::SameLine();
+            ImGui::PushItemWidth(16);
+            renderInput(t.key, "trigKey-"+t.name, "script_editor_change_trigger_key", t.name); ImGui::SameLine();
+            ImGui::PopItemWidth();
+            renderCombo(t.state, trigger_states, "trigState-"+t.name, "script_editor_change_trigger_state", t.name);
+            ImGui::PopItemWidth();
         }
         ImGui::Unindent();
     }

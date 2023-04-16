@@ -55,6 +55,9 @@ class ImScriptEditor {
         vector<string> groupList;
         vector<string> typeList;
         vector<string> argumentTypes;
+        vector<string> triggerTypes;
+        vector<string> device_types;
+        vector<string> trigger_states;
         vector<Trigger> triggers;
         vector<Argument> arguments;
 
