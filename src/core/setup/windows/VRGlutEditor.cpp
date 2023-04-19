@@ -27,6 +27,9 @@ void onUIDisplay() { getCurrentEditor()->on_ui_display(); }
 void onGLDisplay() { getCurrentEditor()->on_gl_display(); }
 void onUIReshape(int w, int h) { getCurrentEditor()->on_ui_resize(w, h); }
 
+void onPopupDisplay() { getCurrentEditor()->on_popup_display(); }
+void onPopupReshape(int w, int h) { getCurrentEditor()->on_popup_resize(w, h); }
+
 void glutEResize(int w, int h) { getCurrentEditor()->on_gl_resize(w, h); }
 void glutEMouse(int b, int s, int x, int y) { getCurrentEditor()->onMouse(b ,s ,x ,y); }
 void glutEMotion(int x, int y) { getCurrentEditor()->onMotion(x, y); }
@@ -86,6 +89,9 @@ VRGlutEditor::VRGlutEditor() {
     glutMouseFunc(glutEMouse);
     cout << " Glut window initiated" << endl;
 
+
+    openPopupWindow("On Save As..");
+
 }
 
 VRGlutEditor::~VRGlutEditor() {
@@ -97,6 +103,28 @@ VRGlutEditor::~VRGlutEditor() {
 
 VRGlutEditorPtr VRGlutEditor::ptr() { return static_pointer_cast<VRGlutEditor>( shared_from_this() ); }
 VRGlutEditorPtr VRGlutEditor::create() { return VRGlutEditorPtr(new VRGlutEditor() ); }
+
+void VRGlutEditor::openPopupWindow(string name) {
+    //glutSetWindow(winUI);
+
+    int width = glutGet(GLUT_SCREEN_WIDTH) * 0.6;
+    int height = glutGet(GLUT_SCREEN_HEIGHT) * 0.5;
+
+    glutSetOption(GLUT_ACTION_ON_WINDOW_CLOSE, GLUT_ACTION_CONTINUE_EXECUTION);
+    //glutSetOption(GLUT_RENDERING_CONTEXT, GLUT_USE_CURRENT_CONTEXT);
+
+    glutInitWindowSize(width, height);
+    winPopup = glutCreateWindow(name.c_str());
+    glutEditors[winPopup] = this;
+
+    glutDisplayFunc( onPopupDisplay );
+    glutReshapeFunc( onPopupReshape );
+    VRGuiManager::get()->initImguiPopup();
+
+    // set options to default
+    glutSetOption(GLUT_ACTION_ON_WINDOW_CLOSE, GLUT_ACTION_EXIT);
+    //glutSetOption(GLUT_RENDERING_CONTEXT, GLUT_CREATE_NEW_CONTEXT);
+}
 
 void VRGlutEditor::initGlut() {
     static bool glutInititated = false;
@@ -144,9 +172,9 @@ void VRGlutEditor::render(bool fromThread) {
     if (fromThread) return;
     glutSetWindow(winGL);
     glutPostRedisplay();
-    //VRWindow::render();
-
     glutSetWindow(winUI);
+    glutPostRedisplay();
+    glutSetWindow(winPopup);
     glutPostRedisplay();
 
     glutMainLoopEvent();
@@ -154,6 +182,8 @@ void VRGlutEditor::render(bool fromThread) {
     glutMainLoopEvent(); // call again after window reshapes
 
     glutSetWindow(winUI);
+    glutSwapBuffers();
+    glutSetWindow(winPopup);
     glutSwapBuffers();
 }
 
@@ -204,6 +234,20 @@ void VRGlutEditor::on_ui_resize(int w, int h) {
     if (winUI < 0) return;
     glutSetWindow(winUI);
     if (resizeSignal) resizeSignal( "glutResize", 0,0,w,h );
+}
+
+void VRGlutEditor::on_popup_display() {
+    //cout << "  Glut::on_ui_display " << winUI << endl;
+    if (winPopup < 0) return;
+    glutSetWindow(winPopup);
+    if (signal) signal( "glutRenderPopup", {} );
+}
+
+void VRGlutEditor::on_popup_resize(int w, int h) {
+    cout << "  Glut::on_ui_resize " << w << ", " << h << endl;
+    if (winPopup < 0) return;
+    glutSetWindow(winPopup);
+    if (resizeSignal) resizeSignal( "glutResizePopup", 0,0,w,h );
 }
 
 OSG_END_NAMESPACE;

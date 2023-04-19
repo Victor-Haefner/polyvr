@@ -19,6 +19,7 @@ class VRImguiManager {
 
         void setupCallbacks();
         void initImgui();
+        void initImguiPopup();
 };
 
 #endif // VRIMGUIMANAGER_H_INCLUDED

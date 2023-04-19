@@ -66,11 +66,14 @@ class VRImguiEditor {
 
     public:
         void init(Signal signal, ResizeSignal resizeSignal);
+        void initPopup();
         void close();
 
         void render();
+        void renderPopup();
         void renderGLArea();
         void resizeUI(const Surface& parent);
+        void resizePopup(const Surface& parent);
         void resize(const Surface& parent);
         void onSectionResize(map<string,string> options);
 };

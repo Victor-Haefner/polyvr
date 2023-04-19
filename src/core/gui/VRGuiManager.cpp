@@ -173,6 +173,10 @@ void VRGuiManager::initImgui() {
     imguiMgr->initImgui();
 }
 
+void VRGuiManager::initImguiPopup() {
+    imguiMgr->initImguiPopup();
+}
+
 void VRGuiManager::setWindowTitle(string title) {
     GtkWindow* top = (GtkWindow*)VRGuiBuilder::get()->get_widget("window1");
     gtk_window_set_title(top, title.c_str());

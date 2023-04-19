@@ -3,6 +3,7 @@
 #include <math.h>
 #include <iostream>
 #include <GL/glew.h>
+#include <GL/glut.h>
 
 #include <backends/imgui_impl_glut.h>
 #include <backends/imgui_impl_opengl3.h>
@@ -15,6 +16,9 @@
 #include "VRImguiConsoles.h"
 #include "VRImguiSetup.h"
 #include "VRImguiScene.h"
+
+ImGuiContext* mainContext = 0;
+ImGuiContext* popupContext = 0;
 
 ImSection::ImSection(string n, Rectangle r) : ImWidget(n), layout(r) {
     resize({0,0,800,800});
@@ -122,6 +126,7 @@ void ImConsolesSection::begin() {
 
 
 void VRImguiEditor::resizeUI(const Surface& parent) {
+    ImGui::SetCurrentContext(mainContext);
     toolbar.resize(parent);
     sidePanel.resize(parent);
     consoles.resize(parent);
@@ -129,7 +134,12 @@ void VRImguiEditor::resizeUI(const Surface& parent) {
     if (resizeSignal) resizeSignal("glAreaResize", glArea.surface);
 }
 
+void VRImguiEditor::resizePopup(const Surface& parent) {
+    ImGui::SetCurrentContext(popupContext);
+}
+
 void VRImguiEditor::onSectionResize(map<string,string> options) {
+    ImGui::SetCurrentContext(mainContext);
     string name = options["name"];
     char edge = options["edge"][0];
     if (name == "Toolbar" && edge == 'B') resolveResize(name, toolbar.resizer);
@@ -137,21 +147,58 @@ void VRImguiEditor::onSectionResize(map<string,string> options) {
     if (name == "Consoles" && (edge == 'T' || edge == 'L')) resolveResize(name, consoles.resizer);
 }
 
+
+void ImGui_ImplGLUT_KeyboardFunc_main(unsigned char c, int x, int y) { ImGui::SetCurrentContext(mainContext); ImGui_ImplGLUT_KeyboardFunc(c,x,y); }
+void ImGui_ImplGLUT_KeyboardUpFunc_main(unsigned char c, int x, int y) { ImGui::SetCurrentContext(mainContext); ImGui_ImplGLUT_KeyboardUpFunc(c,x,y); }
+void ImGui_ImplGLUT_SpecialFunc_main(int k, int x, int y) { ImGui::SetCurrentContext(mainContext); ImGui_ImplGLUT_SpecialFunc(k,x,y); }
+void ImGui_ImplGLUT_SpecialUpFunc_main(int k, int x, int y) { ImGui::SetCurrentContext(mainContext); ImGui_ImplGLUT_SpecialUpFunc(k,x,y); }
+void ImGui_ImplGLUT_MouseFunc_main(int b, int s, int x, int y) { ImGui::SetCurrentContext(mainContext); ImGui_ImplGLUT_MouseFunc(b,s,x,y); }
+void ImGui_ImplGLUT_ReshapeFunc_main(int x, int y) { ImGui::SetCurrentContext(mainContext); ImGui_ImplGLUT_ReshapeFunc(x,y); }
+void ImGui_ImplGLUT_MotionFunc_main(int x, int y) { ImGui::SetCurrentContext(mainContext); ImGui_ImplGLUT_MotionFunc(x,y); }
+
+void ImGui_ImplGLUT_KeyboardFunc_popup(unsigned char c, int x, int y) { ImGui::SetCurrentContext(popupContext); ImGui_ImplGLUT_KeyboardFunc(c,x,y); }
+void ImGui_ImplGLUT_KeyboardUpFunc_popup(unsigned char c, int x, int y) { ImGui::SetCurrentContext(popupContext); ImGui_ImplGLUT_KeyboardUpFunc(c,x,y); }
+void ImGui_ImplGLUT_SpecialFunc_popup(int k, int x, int y) { ImGui::SetCurrentContext(popupContext); ImGui_ImplGLUT_SpecialFunc(k,x,y); }
+void ImGui_ImplGLUT_SpecialUpFunc_popup(int k, int x, int y) { ImGui::SetCurrentContext(popupContext); ImGui_ImplGLUT_SpecialUpFunc(k,x,y); }
+void ImGui_ImplGLUT_MouseFunc_popup(int b, int s, int x, int y) { ImGui::SetCurrentContext(popupContext); ImGui_ImplGLUT_MouseFunc(b,s,x,y); }
+void ImGui_ImplGLUT_ReshapeFunc_popup(int x, int y) { ImGui::SetCurrentContext(popupContext); ImGui_ImplGLUT_ReshapeFunc(x,y); }
+void ImGui_ImplGLUT_MotionFunc_popup(int x, int y) { ImGui::SetCurrentContext(popupContext); ImGui_ImplGLUT_MotionFunc(x,y); }
+
+void ImGui_ImplGLUT_InstallFuncs_main() {
+    glutReshapeFunc(ImGui_ImplGLUT_ReshapeFunc_main);
+    glutMotionFunc(ImGui_ImplGLUT_MotionFunc_main);
+    glutPassiveMotionFunc(ImGui_ImplGLUT_MotionFunc_main);
+    glutMouseFunc(ImGui_ImplGLUT_MouseFunc_main);
+    glutKeyboardFunc(ImGui_ImplGLUT_KeyboardFunc_main);
+    glutKeyboardUpFunc(ImGui_ImplGLUT_KeyboardUpFunc_main);
+    glutSpecialFunc(ImGui_ImplGLUT_SpecialFunc_main);
+    glutSpecialUpFunc(ImGui_ImplGLUT_SpecialUpFunc_main);
+}
+
+void ImGui_ImplGLUT_InstallFuncs_popup() {
+    glutReshapeFunc(ImGui_ImplGLUT_ReshapeFunc_popup);
+    glutMotionFunc(ImGui_ImplGLUT_MotionFunc_popup);
+    glutPassiveMotionFunc(ImGui_ImplGLUT_MotionFunc_popup);
+    glutMouseFunc(ImGui_ImplGLUT_MouseFunc_popup);
+    glutKeyboardFunc(ImGui_ImplGLUT_KeyboardFunc_popup);
+    glutKeyboardUpFunc(ImGui_ImplGLUT_KeyboardUpFunc_popup);
+    glutSpecialFunc(ImGui_ImplGLUT_SpecialFunc_popup);
+    glutSpecialUpFunc(ImGui_ImplGLUT_SpecialUpFunc_popup);
+}
+
 void VRImguiEditor::init(Signal signal, ResizeSignal resizeSignal) {
     this->signal = signal;
     this->resizeSignal = resizeSignal;
 
     cout << "Imgui::init" << endl;
-    // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
-    ImGui::CreateContext();
-    // Setup Platform/Renderer bindings
+    mainContext = ImGui::CreateContext();
+    ImGui::SetCurrentContext(mainContext);
     ImGui_ImplOpenGL3_Init();
-    // Setup Dear ImGui style
     ImGui::StyleColorsDark();
 
     ImGui_ImplGLUT_Init();
-    ImGui_ImplGLUT_InstallFuncs();
+    ImGui_ImplGLUT_InstallFuncs_main();
 
     toolbar.signal = signal;
     sidePanel.signal = signal;
@@ -159,13 +206,35 @@ void VRImguiEditor::init(Signal signal, ResizeSignal resizeSignal) {
     glArea.signal = signal;
 }
 
+void VRImguiEditor::initPopup() {
+    popupContext = ImGui::CreateContext();
+    ImGui::SetCurrentContext(popupContext);
+    ImGui_ImplOpenGL3_Init();
+    ImGui::StyleColorsDark();
+
+    ImGui_ImplGLUT_Init();
+    ImGui_ImplGLUT_InstallFuncs_popup();
+}
+
 void VRImguiEditor::close() {
     cout << "Imgui::close" << endl;
-    ImGui_ImplOpenGL3_Shutdown();
-    ImGui::DestroyContext();
+
+    if (popupContext) {
+        ImGui::SetCurrentContext(popupContext);
+        ImGui_ImplOpenGL3_Shutdown();
+        ImGui::DestroyContext();
+    }
+
+    if (mainContext) {
+        ImGui::SetCurrentContext(mainContext);
+        ImGui_ImplOpenGL3_Shutdown();
+        ImGui::DestroyContext();
+    }
 }
 
 void VRImguiEditor::resolveResize(const string& name, const ResizeEvent& resizer) {
+    ImGui::SetCurrentContext(mainContext);
+
     //cout << "     resolveResize " << name << ", " << resizer << endl;
     if (name == "SidePanel") {
         sidePanel.updateLayout({ resizer.pos.x, resizer.pos.y, resizer.size.x, resizer.size.y });
@@ -193,6 +262,7 @@ void VRImguiEditor::resolveResize(const string& name, const ResizeEvent& resizer
 ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
 void VRImguiEditor::render() {
+    ImGui::SetCurrentContext(mainContext);
     ImGuiIO& io = ImGui::GetIO();
     if (io.DisplaySize.x < 0 || io.DisplaySize.y < 0) return;
 
@@ -206,6 +276,26 @@ void VRImguiEditor::render() {
     consoles.render();
 
     //ImGui::ShowDemoWindow(0);
+
+    // Rendering
+    ImGui::Render();
+    glViewport(0, 0, (GLsizei)io.DisplaySize.x, (GLsizei)io.DisplaySize.y);
+    glClearColor(clear_color.x * clear_color.w, clear_color.y * clear_color.w, clear_color.z * clear_color.w, clear_color.w);
+    glClear(GL_COLOR_BUFFER_BIT);
+    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+}
+
+void VRImguiEditor::renderPopup() {
+    ImGui::SetCurrentContext(popupContext);
+    ImGuiIO& io = ImGui::GetIO();
+    if (io.DisplaySize.x < 0 || io.DisplaySize.y < 0) return;
+
+    // Start the Dear ImGui frame
+    ImGui_ImplOpenGL3_NewFrame();
+    ImGui_ImplGLUT_NewFrame();
+
+    //popup.render();
+    ImGui::ShowDemoWindow(0);
 
     // Rendering
     ImGui::Render();

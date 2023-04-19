@@ -41,6 +41,7 @@ class VRGuiManager {
 
         void init();
         void initImgui();
+        void initImguiPopup();
 
         static string genUUID();
 
