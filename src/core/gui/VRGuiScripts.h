@@ -82,11 +82,11 @@ class VRGuiScripts {
         //void on_any_event(_GdkEvent*);
 
         void on_select_trigger();
-        //void on_trigger_edited(const char* new_name, _GtkTreeIter* new_iter);
-        //void on_trigdev_edited(const char* new_name, _GtkTreeIter* new_iter);
-        void on_trigparam_edited(const char* path, const char* new_name);
-        void on_trigkey_edited(const char* path, const char* new_name);
-        //void on_trigstate_edited(const char* new_name, _GtkTreeIter* new_iter);
+        void on_trigger_edited(string name, string new_val);
+        void on_trigdev_edited(string name, string new_val);
+        void on_trigparam_edited(string name, string new_param);
+        void on_trigkey_edited(string name, string new_key);
+        void on_trigstate_edited(string name, string new_val);
         void on_trigadd_clicked();
         void on_trigrem_clicked(string tID);
 

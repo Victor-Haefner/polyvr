@@ -518,94 +518,50 @@ void VRGuiScripts::on_argtype_edited(string name, string new_type) {
     on_save_clicked();
 }
 
-/*void VRGuiScripts::on_trigger_edited(const char* new_name, GtkTreeIter* new_iter) {
-    VRGuiTreeView tree_view("treeview14");
-    if (!tree_view.hasSelection()) return;
-
-    // set the cell with new type
-    auto combo_list = (GtkListStore*)VRGuiBuilder::get()->get_object("ScriptTrigger");
-    gchar* t = 0;
-    gtk_tree_model_get((GtkTreeModel*)combo_list, (GtkTreeIter*)new_iter, 0, &t, -1);
-    if (!t) return;
-    string type = string(t);
-    tree_view.setSelectedStringValue(0, type);
-
-    // do something
-    string name = tree_view.getSelectedStringValue(6);
-    auto script = (VRScript*)tree_view.getSelectedValue(5);
-    script->changeTrigger(name, type);
-    on_select_script();
+void VRGuiScripts::on_trigger_edited(string name, string new_val) {
+    VRScriptPtr script = getSelectedScript();
+    if (script == 0) return;
+    cout << "VRGuiScripts::on_trigger_edited " << name << " " << new_val << endl;
+    script->changeTrigger(name, new_val);
+    on_select_script(selected);
     on_save_clicked();
-}*/
-
-/*void VRGuiScripts::on_trigdev_edited(const char* new_name, GtkTreeIter* new_iter) {
-    VRGuiTreeView tree_view("treeview14");
-    if (!tree_view.hasSelection()) return;
-
-    // set the cell with new type
-    auto combo_list = (GtkListStore*)VRGuiBuilder::get()->get_object("ScriptTriggerDevices");
-    gchar *t;
-    gtk_tree_model_get((GtkTreeModel*)combo_list, (GtkTreeIter*)new_iter, 0, &t, -1);
-    string type = string(t);
-    tree_view.setSelectedStringValue(1, type);
-
-    // do something
-    string name = tree_view.getSelectedStringValue(6);
-    auto script = (VRScript*)tree_view.getSelectedValue(5);
-    script->changeTrigDev(name, type);
-    on_select_script();
-    on_save_clicked();
-}*/
-
-void VRGuiScripts::on_trigparam_edited(const char* path, const char* new_name) {
-    /*VRGuiTreeView tree_view("treeview14");
-    if (!tree_view.hasSelection()) return;
-
-    // set the cell with new value
-    tree_view.setSelectedStringValue(4, new_name);
-
-    // do something
-    string name = tree_view.getSelectedStringValue(6);
-    auto script = (VRScript*)tree_view.getSelectedValue(5);
-    script->changeTrigParams(name, new_name);
-    on_select_script();
-    on_save_clicked();*/
 }
 
-void VRGuiScripts::on_trigkey_edited(const char* path, const char* new_name) {
-    /*VRGuiTreeView tree_view("treeview14");
-    if (!tree_view.hasSelection()) return;
+void VRGuiScripts::on_trigdev_edited(string name, string new_val) {
+    VRScriptPtr script = getSelectedScript();
+    if (script == 0) return;
 
-    // set the cell with new value
-    tree_view.setSelectedStringValue(2, new_name);
-
-    // do something
-    string name = tree_view.getSelectedStringValue(6);
-    auto script = (VRScript*)tree_view.getSelectedValue(5);
-    script->changeTrigKey(name, toInt(new_name));
-    on_select_script();
-    on_save_clicked();*/
+    script->changeTrigDev(name, new_val);
+    on_select_script(selected);
+    on_save_clicked();
 }
 
-/*void VRGuiScripts::on_trigstate_edited(const char* new_name, GtkTreeIter* new_iter) {
-    VRGuiTreeView tree_view("treeview14");
-    if (!tree_view.hasSelection()) return;
+void VRGuiScripts::on_trigparam_edited(string name, string new_param) {
+    VRScriptPtr script = getSelectedScript();
+    if (script == 0) return;
 
-    // set the cell with new type
-    auto combo_list = (GtkListStore*)VRGuiBuilder::get()->get_object("ScriptTriggerStates");
-    gchar *t;
-    gtk_tree_model_get((GtkTreeModel*)combo_list, (GtkTreeIter*)new_iter, 0, &t, -1);
-    string type = string(t);
-
-    tree_view.setSelectedStringValue(3, new_name);
-
-    // do something
-    string name = tree_view.getSelectedStringValue(6);
-    auto script = (VRScript*)tree_view.getSelectedValue(5);
-    script->changeTrigState(name, type);
-    on_select_script();
+    script->changeTrigParams(name, new_param);
+    on_select_script(selected);
     on_save_clicked();
-}*/
+}
+
+void VRGuiScripts::on_trigkey_edited(string name, string new_key) {
+    VRScriptPtr script = getSelectedScript();
+    if (script == 0) return;
+
+    script->changeTrigKey(name, toInt(new_key));
+    on_select_script(selected);
+    on_save_clicked();
+}
+
+void VRGuiScripts::on_trigstate_edited(string name, string new_val) {
+    VRScriptPtr script = getSelectedScript();
+    if (script == 0) return;
+
+    script->changeTrigState(name, new_val);
+    on_select_script(selected);
+    on_save_clicked();
+}
 
 // templates dialog
 
@@ -1249,14 +1205,20 @@ VRGuiScripts::VRGuiScripts() {
     mgr->addCallback("script_editor_change_argument", [&](OSG::VRGuiSignals::Options o) { on_argval_edited(o["idKey"], o["inputNew"]); return true; }, true );
     mgr->addCallback("script_editor_change_argument_type", [&](OSG::VRGuiSignals::Options o) { on_argtype_edited(o["idKey"], o["newValue"]); return true; }, true );
 
+    mgr->addCallback("script_editor_change_trigger_type", [&](OSG::VRGuiSignals::Options o) { on_trigger_edited(o["idKey"], o["newValue"]); return true; }, true );
+    mgr->addCallback("script_editor_change_trigger_param", [&](OSG::VRGuiSignals::Options o) { on_trigparam_edited(o["idKey"], o["inputNew"]); return true; }, true );
+    mgr->addCallback("script_editor_change_trigger_device", [&](OSG::VRGuiSignals::Options o) { on_trigdev_edited(o["idKey"], o["newValue"]); return true; }, true );
+    mgr->addCallback("script_editor_change_trigger_key", [&](OSG::VRGuiSignals::Options o) { on_trigkey_edited(o["idKey"], o["inputNew"]); return true; }, true );
+    mgr->addCallback("script_editor_change_trigger_state", [&](OSG::VRGuiSignals::Options o) { on_trigstate_edited(o["idKey"], o["newValue"]); return true; }, true );
+
     /*disableDestroyDiag("pybindings-docs");
     disableDestroyDiag("find_dialog");
     disableDestroyDiag("scriptTemplates");
 
-    setToolButtonCallback("toolbutton6", bind(&VRGuiScripts::on_new_clicked, this) );
+öü##########2145, m    setToolButtonCallback("toolbutton6", bind(&VRGuiScripts::on_new_clicked, this) );
     setToolButtonCallback("toolbutton29", bind(&VRGuiScripts::on_template_clicked, this) );
     setToolButtonCallback("toolbutton7", bind(&VRGuiScripts::on_save_clicked, this) );
-    setToolButtonCallback("toolbutton8", bind(&VRGuiScripts::on_exec_clicked, this) );
+    setToolButtonCallback("toolbutton8", bind(&VRGuiScripts::on_exec_clicked, this) 888);
     setToolButtonCallback("toolbutton9", bind(&VRGuiScripts::on_del_clicked, this) );
     setToolButtonCallback("toolbutton16", bind(&VRGuiScripts::on_help_clicked, this) );
     setToolButtonCallback("toolbutton20", bind(&VRGuiScripts::on_addSep_clicked, this) );
