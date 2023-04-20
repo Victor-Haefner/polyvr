@@ -114,7 +114,7 @@ void ImToolbar::begin() {
     ImGui::SameLine(); if (ImGui::Button("Save..")) uiSignal("toolbar_saveas");
     ImGui::SameLine(); if (ImGui::Button("Close")) uiSignal("toolbar_close");
     ImGui::SameLine(); if (ImGui::Button("Exit")) uiSignal("toolbar_exit");
-    ImGui::SameLine(); if (ImGui::Button("About")) uiSignal("toolbar_about");
+    ImGui::SameLine(); if (ImGui::Button("About")) uiSignal("ui_toggle_popup", {{"name","about"}, {"width","400"}, {"height","500"}});
     ImGui::SameLine(); if (ImGui::Button("Profiler")) uiSignal("toolbar_profiler");
     ImGui::SameLine(); if (ImGui::Button("Fullscreen")) uiSignal("toolbar_fullscreen");
 }
@@ -136,6 +136,8 @@ void VRImguiEditor::resizeUI(const Surface& parent) {
 
 void VRImguiEditor::resizePopup(const Surface& parent) {
     ImGui::SetCurrentContext(popupContext);
+    aboutDialog.resize(parent);
+    ImGui_ImplGLUT_ReshapeFunc(parent.width, parent.height);
 }
 
 void VRImguiEditor::onSectionResize(map<string,string> options) {
@@ -161,7 +163,7 @@ void ImGui_ImplGLUT_KeyboardUpFunc_popup(unsigned char c, int x, int y) { ImGui:
 void ImGui_ImplGLUT_SpecialFunc_popup(int k, int x, int y) { ImGui::SetCurrentContext(popupContext); ImGui_ImplGLUT_SpecialFunc(k,x,y); }
 void ImGui_ImplGLUT_SpecialUpFunc_popup(int k, int x, int y) { ImGui::SetCurrentContext(popupContext); ImGui_ImplGLUT_SpecialUpFunc(k,x,y); }
 void ImGui_ImplGLUT_MouseFunc_popup(int b, int s, int x, int y) { ImGui::SetCurrentContext(popupContext); ImGui_ImplGLUT_MouseFunc(b,s,x,y); }
-void ImGui_ImplGLUT_ReshapeFunc_popup(int x, int y) { ImGui::SetCurrentContext(popupContext); ImGui_ImplGLUT_ReshapeFunc(x,y); }
+//void ImGui_ImplGLUT_ReshapeFunc_popup(int x, int y) { ImGui::SetCurrentContext(popupContext); ImGui_ImplGLUT_ReshapeFunc(x,y); }
 void ImGui_ImplGLUT_MotionFunc_popup(int x, int y) { ImGui::SetCurrentContext(popupContext); ImGui_ImplGLUT_MotionFunc(x,y); }
 
 void ImGui_ImplGLUT_InstallFuncs_main() {
@@ -176,7 +178,7 @@ void ImGui_ImplGLUT_InstallFuncs_main() {
 }
 
 void ImGui_ImplGLUT_InstallFuncs_popup() {
-    glutReshapeFunc(ImGui_ImplGLUT_ReshapeFunc_popup);
+    //glutReshapeFunc(ImGui_ImplGLUT_ReshapeFunc_popup);
     glutMotionFunc(ImGui_ImplGLUT_MotionFunc_popup);
     glutPassiveMotionFunc(ImGui_ImplGLUT_MotionFunc_popup);
     glutMouseFunc(ImGui_ImplGLUT_MouseFunc_popup);
@@ -214,6 +216,8 @@ void VRImguiEditor::initPopup() {
 
     ImGui_ImplGLUT_Init();
     ImGui_ImplGLUT_InstallFuncs_popup();
+
+    ImGui::SetCurrentContext(mainContext);
 }
 
 void VRImguiEditor::close() {
@@ -285,7 +289,7 @@ void VRImguiEditor::render() {
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
 
-void VRImguiEditor::renderPopup() {
+void VRImguiEditor::renderPopup(string name) {
     ImGui::SetCurrentContext(popupContext);
     ImGuiIO& io = ImGui::GetIO();
     if (io.DisplaySize.x < 0 || io.DisplaySize.y < 0) return;
@@ -294,8 +298,7 @@ void VRImguiEditor::renderPopup() {
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGLUT_NewFrame();
 
-    //popup.render();
-    ImGui::ShowDemoWindow(0);
+    if (name == "about") aboutDialog.render();
 
     // Rendering
     ImGui::Render();
@@ -304,4 +307,36 @@ void VRImguiEditor::renderPopup() {
     glClear(GL_COLOR_BUFFER_BIT);
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
+
+ImDialog::ImDialog(string n) : ImSection(n, {0,1,0,1}) {}
+
+ImAboutDialog::ImAboutDialog() : ImDialog("about") {
+    auto mgr = OSG::VRGuiSignals::get();
+    mgr->addCallback("setAboutVersion", [&](OSG::VRGuiSignals::Options o){ version = o["version"]; return true; } );
+    mgr->addCallback("addAboutAuthors", [&](OSG::VRGuiSignals::Options o){ authors.push_back(o["author"]); return true; } );
+}
+
+void centeredText(string txt) {
+    ImGuiStyle& style = ImGui::GetStyle();
+    float size = ImGui::CalcTextSize(txt.c_str()).x + style.FramePadding.x * 2.0f;
+    float avail = ImGui::GetContentRegionAvail().x;
+    float off = (avail - size) * 0.5;
+    if (off > 0.0f) ImGui::SetCursorPosX(ImGui::GetCursorPosX() + off);
+    ImGui::Text(txt.c_str());
+}
+
+void ImAboutDialog::begin() {
+    ImSection::begin();
+
+    centeredText("PolyVR");
+    ImGui::Spacing();
+    centeredText("Version:");
+    centeredText(version);
+    ImGui::Spacing();
+    centeredText("Authors:");
+    for (auto& a : authors) centeredText(a);
+}
+
+
+
 

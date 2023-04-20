@@ -229,10 +229,6 @@ void VRGuiBits::on_web_start() {
     updateWebPortRessources();
 }
 
-void VRGuiBits::on_about_clicked() {
-    uiSignal("toolbar_about");
-}
-
 void VRGuiBits::on_fullscreen_clicked() {
     toggleWidgets();
     notifyUser("To Exit Fullscreen..", "Press both, F11 and F12");
@@ -274,10 +270,6 @@ void VRGuiBits::update_terminals() {
 }
 
 VRConsoleWidgetPtr VRGuiBits::getConsole(string t) { return consoles[t]; }
-
-void VRGuiBits::hideAbout(int i) {
-    uiSignal("dialog_about_close");
-}
 
 void VRGuiBits::toggleWidgets() {
     static bool fs = false;
@@ -406,23 +398,13 @@ VRGuiBits::VRGuiBits() {
     recorder_visual_layer->setCallback( recToggleCb );
 
     // About Dialog
-    /*GtkAboutDialog* diag = (GtkAboutDialog*)VRGuiBuilder::get()->get_widget("aboutdialog1");
-    function<void(int)> sig = bind(&VRGuiBits::hideAbout, this, placeholders::_1);
-    connect_signal((GtkWidget*)diag, sig, "response");*/
     ifstream f("ressources/gui/authors");
-    vector<string> authors;
-    for (string line; getline(f, line); ) authors.push_back(line);
+    for (string line; getline(f, line); ) uiSignal("addAboutAuthors", {{"author",line}});
     f.close();
-    /*const gchar** auths = (const gchar**)malloc((authors.size()+1)*sizeof(gchar*));
-    for (int i = 0; i<authors.size(); i++) auths[i] = authors[i].c_str();
-    auths[authors.size()] = NULL;
-    gtk_about_dialog_set_authors(diag, auths);
-    free(auths);
-
-    gtk_about_dialog_set_version(diag, getVersionString());
+    uiSignal("setAboutVersion", {{"version",getVersionString()}});
 
     // window fullscreen
-    GtkWidget* win = VRGuiBuilder::get()->get_widget("window1");
+    /*GtkWidget* win = VRGuiBuilder::get()->get_widget("window1");
     connect_signal<bool,GdkEventKey*>(win, bind(&VRGuiBits::pressFKey, this, placeholders::_1), "key_press_event");
     connect_signal<void>(win, bind(&VRGuiBits::on_quit_clicked, this), "destroy");*/
 

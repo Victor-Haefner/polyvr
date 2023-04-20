@@ -23,12 +23,14 @@ VRGlutEditor* getCurrentEditor() {
 }
 
 void onMainReshape(int w, int h) { getCurrentEditor()->on_resize_window(w,h); }
+void onMainClose() { getCurrentEditor()->on_close_window(); }
 void onUIDisplay() { getCurrentEditor()->on_ui_display(); }
 void onGLDisplay() { getCurrentEditor()->on_gl_display(); }
 void onUIReshape(int w, int h) { getCurrentEditor()->on_ui_resize(w, h); }
 
 void onPopupDisplay() { getCurrentEditor()->on_popup_display(); }
 void onPopupReshape(int w, int h) { getCurrentEditor()->on_popup_resize(w, h); }
+void onPopupClose() { getCurrentEditor()->on_popup_close(); }
 
 void glutEResize(int w, int h) { getCurrentEditor()->on_gl_resize(w, h); }
 void glutEMouse(int b, int s, int x, int y) { getCurrentEditor()->onMouse(b ,s ,x ,y); }
@@ -52,6 +54,7 @@ VRGlutEditor::VRGlutEditor() {
     topWin = glutCreateWindow("PolyVR");
     glutEditors[topWin] = this;
     glutReshapeFunc( onMainReshape );
+    glutCloseFunc( onMainClose );
 
     /** IDE Window **/
     winUI = glutCreateSubWindow(topWin, 0, 0, width, height);
@@ -89,9 +92,9 @@ VRGlutEditor::VRGlutEditor() {
     glutMouseFunc(glutEMouse);
     cout << " Glut window initiated" << endl;
 
-
-    openPopupWindow("On Save As..");
-
+    VRGuiSignals::get()->addCallback("ui_open_popup", [&](VRGuiSignals::Options o) { openPopupWindow(o["name"], toInt(o["width"]), toInt(o["height"])); return true; } );
+    VRGuiSignals::get()->addCallback("ui_close_popup", [&](VRGuiSignals::Options o) { closePopupWindow(); return true; } );
+    VRGuiSignals::get()->addCallback("ui_toggle_popup", [&](VRGuiSignals::Options o) { togglePopupWindow(o["name"], toInt(o["width"]), toInt(o["height"])); return true; } );
 }
 
 VRGlutEditor::~VRGlutEditor() {
@@ -104,26 +107,36 @@ VRGlutEditor::~VRGlutEditor() {
 VRGlutEditorPtr VRGlutEditor::ptr() { return static_pointer_cast<VRGlutEditor>( shared_from_this() ); }
 VRGlutEditorPtr VRGlutEditor::create() { return VRGlutEditorPtr(new VRGlutEditor() ); }
 
-void VRGlutEditor::openPopupWindow(string name) {
-    //glutSetWindow(winUI);
+void VRGlutEditor::on_close_window() { signal( "glutCloseWindow", {} ); }
+void VRGlutEditor::on_popup_close() { popup = ""; winPopup = -1; }
 
-    int width = glutGet(GLUT_SCREEN_WIDTH) * 0.6;
-    int height = glutGet(GLUT_SCREEN_HEIGHT) * 0.5;
+void VRGlutEditor::togglePopupWindow(string name, int width, int height) {
+    if (popup == name) closePopupWindow();
+    else openPopupWindow(name, width, height);
+}
 
-    glutSetOption(GLUT_ACTION_ON_WINDOW_CLOSE, GLUT_ACTION_CONTINUE_EXECUTION);
-    //glutSetOption(GLUT_RENDERING_CONTEXT, GLUT_USE_CURRENT_CONTEXT);
+void VRGlutEditor::closePopupWindow() {
+    if (winPopup < 0) return;
+    popup = "";
+    glutDestroyWindow(winPopup);
+    winPopup = -1;
+}
+
+void VRGlutEditor::openPopupWindow(string name, int width, int height) {
+    popup = name;
+
+    int screenWidth = glutGet(GLUT_SCREEN_WIDTH);
+    int screenHeight = glutGet(GLUT_SCREEN_HEIGHT);
 
     glutInitWindowSize(width, height);
+    glutInitWindowPosition((screenWidth-width)*0.5, (screenHeight-height)*0.5);
     winPopup = glutCreateWindow(name.c_str());
     glutEditors[winPopup] = this;
 
     glutDisplayFunc( onPopupDisplay );
     glutReshapeFunc( onPopupReshape );
+    glutCloseFunc( onPopupClose );
     VRGuiManager::get()->initImguiPopup();
-
-    // set options to default
-    glutSetOption(GLUT_ACTION_ON_WINDOW_CLOSE, GLUT_ACTION_EXIT);
-    //glutSetOption(GLUT_RENDERING_CONTEXT, GLUT_CREATE_NEW_CONTEXT);
 }
 
 void VRGlutEditor::initGlut() {
@@ -143,6 +156,8 @@ void VRGlutEditor::initGlut() {
         glutInitDisplayMode(GLUT_RGBA | GLUT_DEPTH | GLUT_DOUBLE | GLUT_STEREO | GLUT_STENCIL | GLUT_MULTISAMPLE);
     else glutInitDisplayMode(GLUT_RGBA | GLUT_DEPTH | GLUT_DOUBLE | GLUT_STENCIL | GLUT_MULTISAMPLE);
 #endif
+
+    glutSetOption(GLUT_ACTION_ON_WINDOW_CLOSE, GLUT_ACTION_CONTINUE_EXECUTION);
 
     cout << " ..done " << endl;
 }
@@ -174,8 +189,10 @@ void VRGlutEditor::render(bool fromThread) {
     glutPostRedisplay();
     glutSetWindow(winUI);
     glutPostRedisplay();
-    glutSetWindow(winPopup);
-    glutPostRedisplay();
+    if (winPopup >= 0) {
+        glutSetWindow(winPopup);
+        glutPostRedisplay();
+    }
 
     glutMainLoopEvent();
     glutMainLoopEvent(); // call again after window reshapes
@@ -183,8 +200,10 @@ void VRGlutEditor::render(bool fromThread) {
 
     glutSetWindow(winUI);
     glutSwapBuffers();
-    glutSetWindow(winPopup);
-    glutSwapBuffers();
+    if (winPopup >= 0) {
+        glutSetWindow(winPopup);
+        glutSwapBuffers();
+    }
 }
 
 void VRGlutEditor::on_gl_resize(int w, int h) {
@@ -240,7 +259,7 @@ void VRGlutEditor::on_popup_display() {
     //cout << "  Glut::on_ui_display " << winUI << endl;
     if (winPopup < 0) return;
     glutSetWindow(winPopup);
-    if (signal) signal( "glutRenderPopup", {} );
+    if (signal) signal( "glutRenderPopup", {{"name",popup}} );
 }
 
 void VRGlutEditor::on_popup_resize(int w, int h) {

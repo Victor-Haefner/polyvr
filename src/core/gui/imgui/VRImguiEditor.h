@@ -52,6 +52,21 @@ class ImConsolesSection : public ImSection {
         void begin() override;
 };
 
+class ImDialog : public ImSection {
+    public:
+        ImDialog(string n);
+};
+
+class ImAboutDialog : public ImDialog {
+    public:
+        string version;
+        vector<string> authors;
+
+        ImAboutDialog();
+
+        void begin() override;
+};
+
 class VRImguiEditor {
     private:
         Signal signal;
@@ -62,6 +77,8 @@ class VRImguiEditor {
         ImConsolesSection consoles = ImConsolesSection({0.3,1.0,0,0.3});
         ImSection glArea = ImSection("glArea", {0.3,1,0.3,0.95});
 
+        ImAboutDialog aboutDialog = ImAboutDialog();
+
         void resolveResize(const string& name, const ResizeEvent& resizer);
 
     public:
@@ -70,7 +87,7 @@ class VRImguiEditor {
         void close();
 
         void render();
-        void renderPopup();
+        void renderPopup(string name);
         void renderGLArea();
         void resizeUI(const Surface& parent);
         void resizePopup(const Surface& parent);

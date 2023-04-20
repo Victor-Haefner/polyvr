@@ -28,7 +28,6 @@ class VRGuiBits {
         VRGuiRecWidget recorder;
         VRVisualLayerPtr recorder_visual_layer;
 
-        void hideAbout(int i);
         void updateVisualLayer();
         void on_view_option_toggle(VRVisualLayer* l, bool b);
         void toggleVerbose(string s);
@@ -40,7 +39,6 @@ class VRGuiBits {
         void on_save_clicked();
         void on_web_export_clicked();
         void on_quit_clicked();
-        void on_about_clicked();
         void on_internal_clicked();
         void on_fullscreen_clicked();
 

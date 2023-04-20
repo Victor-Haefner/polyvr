@@ -17,6 +17,8 @@ class VRGlutEditor: public VRWindow {
         int winUI = -1;
         int winPopup = -1;
 
+        string popup;
+
         typedef function<void(string, map<string, string>)> Signal;
         typedef function<void(string, int, int, int, int)> ResizeSignal;
         Signal signal;
@@ -31,7 +33,9 @@ class VRGlutEditor: public VRWindow {
 
         static void initGlut();
 
-        void openPopupWindow(string name);
+        void openPopupWindow(string name, int width, int height);
+        void togglePopupWindow(string name, int width, int height);
+        void closePopupWindow();
 
         void render(bool fromThread = false) override;
 
@@ -45,12 +49,14 @@ class VRGlutEditor: public VRWindow {
 
         void resizeGLWindow(int x, int y, int w, int h);
         void on_resize_window(int w, int h);
+        void on_close_window();
         void on_ui_display();
         void on_gl_display();
         void on_popup_display();
         void on_ui_resize(int w, int h);
         void on_gl_resize(int w, int h);
         void on_popup_resize(int w, int h);
+        void on_popup_close();
 };
 
 OSG_END_NAMESPACE;
