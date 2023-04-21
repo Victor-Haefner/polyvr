@@ -67,6 +67,12 @@ class ImAboutDialog : public ImDialog {
         void begin() override;
 };
 
+class ImOpenDialog : public ImDialog {
+    public:
+        ImOpenDialog();
+        void begin() override;
+};
+
 class VRImguiEditor {
     private:
         Signal signal;
@@ -78,6 +84,7 @@ class VRImguiEditor {
         ImSection glArea = ImSection("glArea", {0.3,1,0.3,0.95});
 
         ImAboutDialog aboutDialog = ImAboutDialog();
+        ImOpenDialog openDialog = ImOpenDialog();
 
         void resolveResize(const string& name, const ResizeEvent& resizer);
 

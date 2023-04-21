@@ -16,6 +16,7 @@
 #include "VRImguiConsoles.h"
 #include "VRImguiSetup.h"
 #include "VRImguiScene.h"
+#include "imFileDialog/ImGuiFileDialog.h"
 
 ImGuiContext* mainContext = 0;
 ImGuiContext* popupContext = 0;
@@ -109,7 +110,10 @@ ImConsolesSection::ImConsolesSection(Rectangle r) : ImSection("Consoles", r) {
 void ImToolbar::begin() {
     ImSection::begin();
     if (ImGui::Button("New")) uiSignal("toolbar_new");
-    ImGui::SameLine(); if (ImGui::Button("Open")) uiSignal("toolbar_open");
+    ImGui::SameLine(); if (ImGui::Button("Open")) {
+        ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgKey", "Choose File", ".cpp,.h,.hpp", ".");
+        uiSignal("ui_toggle_popup", {{"name","open"}, {"width","400"}, {"height","500"}});
+    }
     ImGui::SameLine(); if (ImGui::Button("Save")) uiSignal("toolbar_save");
     ImGui::SameLine(); if (ImGui::Button("Save..")) uiSignal("toolbar_saveas");
     ImGui::SameLine(); if (ImGui::Button("Close")) uiSignal("toolbar_close");
@@ -137,6 +141,7 @@ void VRImguiEditor::resizeUI(const Surface& parent) {
 void VRImguiEditor::resizePopup(const Surface& parent) {
     ImGui::SetCurrentContext(popupContext);
     aboutDialog.resize(parent);
+    openDialog.resize(parent);
     ImGui_ImplGLUT_ReshapeFunc(parent.width, parent.height);
 }
 
@@ -299,6 +304,7 @@ void VRImguiEditor::renderPopup(string name) {
     ImGui_ImplGLUT_NewFrame();
 
     if (name == "about") aboutDialog.render();
+    if (name == "open") openDialog.render();
 
     // Rendering
     ImGui::Render();
@@ -308,7 +314,9 @@ void VRImguiEditor::renderPopup(string name) {
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
 
-ImDialog::ImDialog(string n) : ImSection(n, {0,1,0,1}) {}
+ImDialog::ImDialog(string n) : ImSection(n, {0,1,0,1}) {
+    flags |= ImGuiWindowFlags_NoResize;
+}
 
 ImAboutDialog::ImAboutDialog() : ImDialog("about") {
     auto mgr = OSG::VRGuiSignals::get();
@@ -335,6 +343,25 @@ void ImAboutDialog::begin() {
     ImGui::Spacing();
     centeredText("Authors:");
     for (auto& a : authors) centeredText(a);
+}
+
+ImOpenDialog::ImOpenDialog() : ImDialog("open") {
+    auto mgr = OSG::VRGuiSignals::get();
+}
+
+void ImOpenDialog::begin() {
+    ImSection::begin();
+
+    ImVec2 minSize = ImGui::GetWindowSize();
+
+    if (ImGuiFileDialog::Instance()->Display("ChooseFileDlgKey", flags, minSize, minSize)) {
+        if (ImGuiFileDialog::Instance()->IsOk()) {
+            std::string filePathName = ImGuiFileDialog::Instance()->GetFilePathName();
+            std::string filePath = ImGuiFileDialog::Instance()->GetCurrentPath();
+        }
+
+        ImGuiFileDialog::Instance()->Close();
+    }
 }
 
 
