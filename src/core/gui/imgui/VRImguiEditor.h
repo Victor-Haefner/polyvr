@@ -9,6 +9,7 @@
 #include "VRImguiUtils.h"
 #include <imgui.h>
 #include <core/utils/VRFwdDeclTemplate.h>
+#include <core/gui/VRGuiSignals.h>
 
 using namespace std;
 
@@ -55,6 +56,8 @@ class ImConsolesSection : public ImSection {
 class ImDialog : public ImSection {
     public:
         ImDialog(string n);
+
+        void renderFileDialog(string signal);
 };
 
 class ImAboutDialog : public ImDialog {
@@ -67,9 +70,21 @@ class ImAboutDialog : public ImDialog {
         void begin() override;
 };
 
+class ImNewDialog : public ImDialog {
+    public:
+        ImNewDialog();
+        void begin() override;
+};
+
 class ImOpenDialog : public ImDialog {
     public:
         ImOpenDialog();
+        void begin() override;
+};
+
+class ImSaveasDialog : public ImDialog {
+    public:
+        ImSaveasDialog();
         void begin() override;
 };
 
@@ -84,7 +99,9 @@ class VRImguiEditor {
         ImSection glArea = ImSection("glArea", {0.3,1,0.3,0.95});
 
         ImAboutDialog aboutDialog = ImAboutDialog();
+        ImNewDialog newDialog = ImNewDialog();
         ImOpenDialog openDialog = ImOpenDialog();
+        ImSaveasDialog saveasDialog = ImSaveasDialog();
 
         void resolveResize(const string& name, const ResizeEvent& resizer);
 
@@ -94,7 +111,7 @@ class VRImguiEditor {
         void close();
 
         void render();
-        void renderPopup(string name);
+        void renderPopup(OSG::VRGuiSignals::Options o);
         void renderGLArea();
         void resizeUI(const Surface& parent);
         void resizePopup(const Surface& parent);

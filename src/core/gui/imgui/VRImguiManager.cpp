@@ -12,7 +12,7 @@ VRImguiManager::~VRImguiManager() {}
 void VRImguiManager::setupCallbacks() {
     auto mgr = VRGuiSignals::get();
     mgr->addCallback("glutRenderUI", [&](VRGuiSignals::Options){ imgui.render(); return true; } );
-    mgr->addCallback("glutRenderPopup", [&](VRGuiSignals::Options o){ imgui.renderPopup(o["name"]); return true; } );
+    mgr->addCallback("glutRenderPopup", [&](VRGuiSignals::Options o){ imgui.renderPopup(o); return true; } );
     mgr->addCallback("uiSectionResize", [&](VRGuiSignals::Options o){ imgui.onSectionResize(o); return true; } );
     mgr->addResizeCallback("glutResize", [&](int x, int y, int w, int h){ imgui.resizeUI({x,y,w,h}); return true; } );
     mgr->addResizeCallback("glutResizePopup", [&](int x, int y, int w, int h){ imgui.resizePopup({x,y,w,h}); return true; } );

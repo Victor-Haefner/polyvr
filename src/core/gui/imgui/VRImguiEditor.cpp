@@ -109,13 +109,33 @@ ImConsolesSection::ImConsolesSection(Rectangle r) : ImSection("Consoles", r) {
 
 void ImToolbar::begin() {
     ImSection::begin();
-    if (ImGui::Button("New")) uiSignal("toolbar_new");
-    ImGui::SameLine(); if (ImGui::Button("Open")) {
-        ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgKey", "Choose File", ".cpp,.h,.hpp", ".");
+
+    if (ImGui::Button("New")) {
+        string filters = "PolyVR Project (.pvr .pvc){.pvr,.pvc,.xml}";
+        ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgKey", "Choose File", filters.c_str(), "~/", "myApp.pvr");
+        uiSignal("ui_toggle_popup", {{"name","new"}, {"width","400"}, {"height","500"}});
+    }
+
+    ImGui::SameLine();
+    if (ImGui::Button("Open")) {
+        string filters = "PolyVR Project (.pvr .pvc){.pvr,.pvc,.xml}";
+        filters += ",Mesh Model (.dae .wrl .obj .3ds .ply){.dae,.wrl,.obj,.3ds,.3DS,.ply}";
+        filters += ",CAD Model (.step .ifc .dxf){.STEP,.STP,.step,.stp,.ifc,.dxf}";
+        filters += ",Pointcloud (.e57 .xyz){.e57,.xyz}";
+        filters += ",Geo Data (.hgt .tiff .pdf .shp){.hgt,.tif,.tiff,.pdf,.shp}";
+        ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgKey", "Open File", filters.c_str(), "~/");
         uiSignal("ui_toggle_popup", {{"name","open"}, {"width","400"}, {"height","500"}});
     }
+
     ImGui::SameLine(); if (ImGui::Button("Save")) uiSignal("toolbar_save");
-    ImGui::SameLine(); if (ImGui::Button("Save..")) uiSignal("toolbar_saveas");
+
+    ImGui::SameLine();
+    if (ImGui::Button("Save..")) {
+        string filters = "PolyVR Project (.pvr .pvc){.pvr,.pvc,.xml}";
+        ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgKey", "Save as..", filters.c_str(), ".", "myApp.pvr");
+        uiSignal("ui_toggle_popup", {{"name","saveas"}, {"width","400"}, {"height","500"}});
+    }
+
     ImGui::SameLine(); if (ImGui::Button("Close")) uiSignal("toolbar_close");
     ImGui::SameLine(); if (ImGui::Button("Exit")) uiSignal("toolbar_exit");
     ImGui::SameLine(); if (ImGui::Button("About")) uiSignal("ui_toggle_popup", {{"name","about"}, {"width","400"}, {"height","500"}});
@@ -141,7 +161,9 @@ void VRImguiEditor::resizeUI(const Surface& parent) {
 void VRImguiEditor::resizePopup(const Surface& parent) {
     ImGui::SetCurrentContext(popupContext);
     aboutDialog.resize(parent);
+    newDialog.resize(parent);
     openDialog.resize(parent);
+    saveasDialog.resize(parent);
     ImGui_ImplGLUT_ReshapeFunc(parent.width, parent.height);
 }
 
@@ -211,6 +233,9 @@ void VRImguiEditor::init(Signal signal, ResizeSignal resizeSignal) {
     sidePanel.signal = signal;
     consoles.signal = signal;
     glArea.signal = signal;
+    newDialog.signal = signal;
+    openDialog.signal = signal;
+    saveasDialog.signal = signal;
 }
 
 void VRImguiEditor::initPopup() {
@@ -294,7 +319,7 @@ void VRImguiEditor::render() {
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
 
-void VRImguiEditor::renderPopup(string name) {
+void VRImguiEditor::renderPopup(OSG::VRGuiSignals::Options options) {
     ImGui::SetCurrentContext(popupContext);
     ImGuiIO& io = ImGui::GetIO();
     if (io.DisplaySize.x < 0 || io.DisplaySize.y < 0) return;
@@ -303,8 +328,11 @@ void VRImguiEditor::renderPopup(string name) {
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGLUT_NewFrame();
 
+    string name = options["name"];
     if (name == "about") aboutDialog.render();
+    if (name == "new") newDialog.render();
     if (name == "open") openDialog.render();
+    if (name == "saveas") saveasDialog.render();
 
     // Rendering
     ImGui::Render();
@@ -316,6 +344,23 @@ void VRImguiEditor::renderPopup(string name) {
 
 ImDialog::ImDialog(string n) : ImSection(n, {0,1,0,1}) {
     flags |= ImGuiWindowFlags_NoResize;
+}
+
+void ImDialog::renderFileDialog(string sig) {
+    ImSection::begin();
+    ImVec2 minSize = ImGui::GetWindowSize();
+    ImGui::SetNextWindowPos(ImVec2(surface.x, surface.y)); // ImGuiCond_FirstUseEver
+    //ImGui::SetNextWindowSize(ImVec2(surface.width, surface.height));
+    if (ImGuiFileDialog::Instance()->Display("ChooseFileDlgKey", flags, minSize, minSize)) {
+        if (ImGuiFileDialog::Instance()->IsOk()) {
+            std::string fileName = ImGuiFileDialog::Instance()->GetFilePathName();
+            std::string filePath = ImGuiFileDialog::Instance()->GetCurrentPath();
+            signal(sig, {{"fileName",fileName},{"filePath",filePath}});
+        }
+
+        ImGuiFileDialog::Instance()->Close();
+        signal("ui_close_popup", {});
+    }
 }
 
 ImAboutDialog::ImAboutDialog() : ImDialog("about") {
@@ -345,24 +390,13 @@ void ImAboutDialog::begin() {
     for (auto& a : authors) centeredText(a);
 }
 
-ImOpenDialog::ImOpenDialog() : ImDialog("open") {
-    auto mgr = OSG::VRGuiSignals::get();
-}
+ImNewDialog::ImNewDialog() : ImDialog("new") {}
+ImOpenDialog::ImOpenDialog() : ImDialog("open") {}
+ImSaveasDialog::ImSaveasDialog() : ImDialog("saveas") {}
 
-void ImOpenDialog::begin() {
-    ImSection::begin();
-
-    ImVec2 minSize = ImGui::GetWindowSize();
-
-    if (ImGuiFileDialog::Instance()->Display("ChooseFileDlgKey", flags, minSize, minSize)) {
-        if (ImGuiFileDialog::Instance()->IsOk()) {
-            std::string filePathName = ImGuiFileDialog::Instance()->GetFilePathName();
-            std::string filePath = ImGuiFileDialog::Instance()->GetCurrentPath();
-        }
-
-        ImGuiFileDialog::Instance()->Close();
-    }
-}
+void ImNewDialog::begin() { renderFileDialog("ui_new_file"); }
+void ImOpenDialog::begin() { renderFileDialog("ui_open_file"); }
+void ImSaveasDialog::begin() { renderFileDialog("ui_saveas_file"); }
 
 
 

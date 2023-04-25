@@ -33,7 +33,6 @@ VRAppManager::VRAppManager() {
     //menu->appendItem("DemoMenu", "Unpin", bind(&VRAppManager::on_launcher_unpin, this));
     //menu->appendItem("DemoMenu", "Delete", bind(&VRAppManager::on_launcher_delete, this));
     //menu->appendItem("DemoMenu", "Advanced..", bind(&VRAppManager::on_menu_advanced, this, VRAppLauncherPtr(0)));
-    //setButtonCallback("button26", bind(&VRAppManager::on_advanced_start, this));
 
     auto examplesSection = addSection("examples");
     auto favoritesSection = addSection("favorites");
@@ -57,18 +56,14 @@ VRAppManager::VRAppManager() {
     if (favorites->size() == 0) setNotebookPage("notebook2", 1);
 
     updateCb = VRFunction<VRDeviceWeakPtr, bool>::create("GUI_updateDemos", bind(&VRAppManager::update, this) );
-    VRGuiSignals::get()->getSignal("scene_changed")->add( updateCb );
 
-    //setToolButtonCallback("toolbutton1", bind(&VRAppManager::on_new_clicked, this));
-    //setToolButtonCallback("toolbutton5", bind(&VRAppManager::on_saveas_clicked, this));
+    auto mgr = VRGuiSignals::get();
+    mgr->getSignal("scene_changed")->add( updateCb );
+    mgr->addCallback("ui_new_file", [&](OSG::VRGuiSignals::Options o) { on_diag_new_clicked(o["fileName"]); return true; }, true );
+    mgr->addCallback("ui_open_file", [&](OSG::VRGuiSignals::Options o) { on_diag_load_clicked(o["fileName"]); return true; } );
+    mgr->addCallback("ui_saveas_file", [&](OSG::VRGuiSignals::Options o) { on_diag_save_clicked(o["fileName"]); return true; } );
+
     //setToolButtonCallback("toolbutton28", bind(&VRAppManager::on_stop_clicked, this));
-    //setToolButtonCallback("toolbutton21", bind(&VRAppManager::on_load_clicked, this));
-
-    //setWidgetSensitivity("toolbutton4", false); // disable 'save' button on startup
-    //setWidgetSensitivity("toolbutton5", false); // disable 'save as' button on startup
-    //setWidgetSensitivity("toolbutton50", false); // disable 'web export' button on startup
-    //setWidgetSensitivity("toolbutton28", false); // disable 'stop' button on startup
-
     //setEntryCallback("appSearch", bind(&VRAppManager::on_search, this), true); // app search
 }
 
@@ -220,8 +215,8 @@ void VRAppManager::on_toggle_encryption(bool b) {
     encryptionKey = askUserPass("Please enter an encryption key");
 }
 
-void VRAppManager::on_diag_save_clicked() { // TODO: check if ending is .pvr
-    string path = VRGuiFile::getPath();
+void VRAppManager::on_diag_save_clicked(string path) { // TODO: check if ending is .pvr
+    encryptionKey = "";
     saveScene(path, true, encryptionKey);
     VRSceneManager::get()->addFavorite(path);
     addEntry(path, "favorites_tab", true);
@@ -237,20 +232,6 @@ void VRAppManager::toggleDemo(VRAppLauncherPtr e) {
     }
 }
 
-void VRAppManager::on_saveas_clicked() {
-    auto scene = VRScene::getCurrent();
-    if (!scene) return;
-    encryptionKey = "";
-    VRGuiFile::gotoPath( scene->getWorkdir() );
-    VRGuiFile::setCallbacks( bind(&VRAppManager::on_diag_save_clicked, this) );
-    VRGuiFile::clearFilter();
-    VRGuiFile::addFilter("Project", 3, "*.xml", "*.pvr", "*.pvc");
-    VRGuiFile::addFilter("All", 1, "*");
-    VRGuiFile::open( "Save", "save", "Save project as.." );
-    VRGuiFile::setSaveasWidget( bind( &VRAppManager::on_toggle_encryption, this, placeholders::_1 ) );
-    VRGuiFile::setFile( scene->getFile() );
-}
-
 void VRAppManager::on_stop_clicked() {
     if (noLauncherScene) {
         VRSceneManager::get()->closeScene();
@@ -261,8 +242,7 @@ void VRAppManager::on_stop_clicked() {
     if (current_demo && current_demo->running) toggleDemo(current_demo); // close demo if it is running
 }
 
-void VRAppManager::on_diag_load_clicked() {
-    string path = VRGuiFile::getPath();
+void VRAppManager::on_diag_load_clicked(string path) {
     if (!exists(path)) return;
     if (current_demo) if (current_demo->running) toggleDemo(current_demo); // close demo if it is running
     bool loadProject = bool( endsWith(path, ".xml") || endsWith(path, ".pvr") || endsWith(path, ".pvc") );
@@ -298,16 +278,6 @@ void VRAppManager::on_diag_load_clicked() {
     }
 }
 
-void VRAppManager::on_load_clicked() {
-    VRGuiFile::setCallbacks( bind(&VRAppManager::on_diag_load_clicked, this) );
-    VRGuiFile::gotoPath( g_get_home_dir() );
-    VRGuiFile::clearFilter();
-    VRGuiFile::addFilter("Project", 3, "*.xml", "*.pvr", "*.pvc");
-    VRGuiFile::addFilter("Model", 19, "*.dae", "*.wrl", "*.obj", "*.3ds", "*.3DS", "*.ply", "*.hgt", "*.tif", "*.tiff", "*.pdf", "*.shp", "*.e57", "*.xyz", "*.STEP", "*.STP", "*.step", "*.stp", "*.ifc", "*.dxf");
-    VRGuiFile::addFilter("All", 1, "*");
-    VRGuiFile::open( "Load", "open", "Load project" );
-}
-
 void VRAppManager::writeGitignore(string path) {
     ofstream f(path);
     f << ".local_*" << endl;
@@ -319,9 +289,7 @@ void VRAppManager::writeGitignore(string path) {
     f << "GPUCache" << endl;
 }
 
-void VRAppManager::on_diag_new_clicked() {
-    //string path = VRGuiFile::getRelativePath_toOrigin();
-    string path = VRGuiFile::getPath();
+void VRAppManager::on_diag_new_clicked(string path) {
     if (path == "") return;
     normFileName(path);
     VRSceneManager::get()->newScene(path);
@@ -330,14 +298,6 @@ void VRAppManager::on_diag_new_clicked() {
     saveScene(path);
     addEntry(path, "favorites_tab", true);
     VRSceneManager::get()->addFavorite(path);
-}
-
-void VRAppManager::on_new_clicked() {
-    VRGuiFile::setCallbacks( bind(&VRAppManager::on_diag_new_clicked, this) );
-    VRGuiFile::gotoPath( g_get_home_dir() );
-    VRGuiFile::setFile( "myApp.pvr" );
-    VRGuiFile::clearFilter();
-    VRGuiFile::open( "Create", "save", "Create new project" );
 }
 
 void VRAppManager::on_search() {

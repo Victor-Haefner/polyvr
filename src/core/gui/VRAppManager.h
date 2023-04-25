@@ -46,13 +46,10 @@ class VRAppManager {
         void on_launcher_unpin();
         void on_advanced_start();
 
-        void on_diag_new_clicked();
-        void on_diag_save_clicked();
-        void on_diag_load_clicked();
-        void on_new_clicked();
-        void on_saveas_clicked();
+        void on_diag_new_clicked(string path);
+        void on_diag_save_clicked(string path);
+        void on_diag_load_clicked(string path);
         void on_stop_clicked();
-        void on_load_clicked();
 
         void on_toggle_encryption(bool b);
         void on_search();

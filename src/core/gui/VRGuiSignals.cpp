@@ -1,6 +1,7 @@
 #include "VRGuiSignals.h"
 #include "core/setup/devices/VRSignal.h"
 #include "core/scene/VRScene.h"
+#include "core/scene/VRSceneManager.h"
 
 #include <iostream>
 
@@ -43,11 +44,11 @@ bool VRGuiSignals::trigger(string name, Options options) {
     }
 
     if (deferredCallbacks.count(name)) { // to be executed in main thread!
-        auto scene = VRScene::getCurrent();
-        if (scene) {
+        auto mgr = VRSceneManager::get();
+        if (mgr) {
             for (auto& callback : deferredCallbacks[name]) {
                 auto fkt = VRUpdateCb::create("deferredCb", bind(callback, options));
-                scene->queueJob(fkt);
+                mgr->queueJob(fkt);
             }
         }
     }
