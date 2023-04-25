@@ -30,10 +30,6 @@ OSG_BEGIN_NAMESPACE;
 using namespace std;
 
 VRAppManager::VRAppManager() {
-    //menu->appendItem("DemoMenu", "Unpin", bind(&VRAppManager::on_launcher_unpin, this));
-    //menu->appendItem("DemoMenu", "Delete", bind(&VRAppManager::on_launcher_delete, this));
-    //menu->appendItem("DemoMenu", "Advanced..", bind(&VRAppManager::on_menu_advanced, this, VRAppLauncherPtr(0)));
-
     auto examplesSection = addSection("examples");
     auto favoritesSection = addSection("favorites");
     auto recentsSection = addSection("recents");
@@ -62,8 +58,11 @@ VRAppManager::VRAppManager() {
     mgr->addCallback("ui_new_file", [&](OSG::VRGuiSignals::Options o) { on_diag_new_clicked(o["fileName"]); return true; }, true );
     mgr->addCallback("ui_open_file", [&](OSG::VRGuiSignals::Options o) { on_diag_load_clicked(o["fileName"]); return true; } );
     mgr->addCallback("ui_saveas_file", [&](OSG::VRGuiSignals::Options o) { on_diag_save_clicked(o["fileName"]); return true; } );
+    mgr->addCallback("toolbar_close", [&](OSG::VRGuiSignals::Options o) { on_stop_clicked(); return true; } );
 
-    //setToolButtonCallback("toolbutton28", bind(&VRAppManager::on_stop_clicked, this));
+    //menu->appendItem("DemoMenu", "Unpin", bind(&VRAppManager::on_launcher_unpin, this));
+    //menu->appendItem("DemoMenu", "Delete", bind(&VRAppManager::on_launcher_delete, this));
+    //menu->appendItem("DemoMenu", "Advanced..", bind(&VRAppManager::on_menu_advanced, this, VRAppLauncherPtr(0)));
     //setEntryCallback("appSearch", bind(&VRAppManager::on_search, this), true); // app search
 }
 

@@ -369,16 +369,18 @@ VRGuiBits::VRGuiBits() {
     }*/
 
     /*setComboboxCallback("combobox4", bind(&VRGuiBits::on_camera_changed, this));
-    setToggleButtonCallback("navButton", bind(&VRGuiBits::on_navigation_clicked, this));
+    setToggleButtonCallback("navButton", bind(&VRGuiBits::on_navigation_clicked, this));*/
 
-    setToolButtonCallback("toolbutton4", bind(&VRGuiBits::on_save_clicked, this));
-    setToolButtonCallback("toolbutton50", bind(&VRGuiBits::on_web_export_clicked, this));
-    setToolButtonCallback("toolbutton3", bind(&VRGuiBits::on_quit_clicked, this));
-    setToolButtonCallback("toolbutton17", bind(&VRGuiBits::on_about_clicked, this));
+
+    auto mgr = VRGuiSignals::get();
+    mgr->addCallback("toolbar_save", [&](OSG::VRGuiSignals::Options o) { on_save_clicked(); return true; }, true );
+    mgr->addCallback("toolbar_exit", [&](OSG::VRGuiSignals::Options o) { on_quit_clicked(); return true; }, true );
+
+    /*setToolButtonCallback("toolbutton50", bind(&VRGuiBits::on_web_export_clicked, this));
     setToolButtonCallback("toolbutton18", bind(&VRGuiBits::on_internal_clicked, this));
-    setToolButtonCallback("toolbutton26", bind(&VRGuiBits::on_fullscreen_clicked, this));
+    setToolButtonCallback("toolbutton26", bind(&VRGuiBits::on_fullscreen_clicked, this));*/
 
-    setButtonCallback("button21", bind(&VRGuiBits::on_internal_close_clicked, this));
+    /*setButtonCallback("button21", bind(&VRGuiBits::on_internal_close_clicked, this));
 
     setButtonCallback("wed_cancel", bind(&VRGuiBits::on_wed_cancel, this));
     setButtonCallback("wed_start", bind(&VRGuiBits::on_wed_start, this));
