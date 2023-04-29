@@ -14,7 +14,6 @@
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/geometry/VRSky.h"
 #include "core/setup/VRSetup.h"
-#include "core/setup/windows/VRGtkWindow.h"
 #include "core/setup/windows/VRView.h"
 #include "core/scene/VRScene.h"
 #include "core/scene/rendering/VRDefShading.h"

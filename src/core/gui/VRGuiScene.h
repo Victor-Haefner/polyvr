@@ -4,15 +4,7 @@
 #include <OpenSG/OSGConfig.h>
 #include "core/objects/object/VRObject.h"
 #include "core/objects/material/VRMaterialFwd.h"
-#include "VRGuiContextMenu.h"
 #include "VRGuiVectorEntry.h"
-
-struct _GtkSelectionData;
-struct _GdkDragContext;
-struct _GdkEventButton;
-struct _GtkTreeIter;
-struct _GtkTreeView;
-struct _GtkTreeStore;
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -24,12 +16,7 @@ class VRGuiScene {
         string dragPath;
         int dragPos = 0;
         bool transformModeLocal = true;
-        VRGuiContextMenu* menu;
 
-        _GtkTreeStore* tree_store = 0;
-        _GtkTreeView* tree_view = 0;
-
-        _GtkTreeIter* selected_itr = 0;
         int selected = -1;
         VRGeometryWeakPtr selected_geometry;
         VRObjectWeakPtr VRGuiScene_copied;
@@ -61,10 +48,10 @@ class VRGuiScene {
         // ---------TreeView---------
         void on_treeview_select();
         void getTypeColors(VRObjectPtr o, string& fg, string& bg);
-        void setSGRow(_GtkTreeIter* itr, VRObjectPtr o);
-        void parseSGTree(VRObjectPtr o, _GtkTreeIter* itr = 0);
-        void removeTreeStoreBranch(_GtkTreeIter* iter, bool self = true);
-        void syncSGTree(VRObjectPtr o, _GtkTreeIter* itr);
+        void setSGRow(VRObjectPtr o);
+        void parseSGTree(VRObjectPtr o);
+        void removeTreeStoreBranch(bool self = true);
+        void syncSGTree(VRObjectPtr o);
         // ----------------------------------------------
 
         // ------------- transform -----------------------
@@ -103,10 +90,10 @@ class VRGuiScene {
         void on_change_light_type();
         void on_change_light_shadow();
         void on_edit_light_attenuation();
-        bool setShadow_color(_GdkEventButton* b);
-        bool setLight_diff_color(_GdkEventButton* b);
-        bool setLight_amb_color(_GdkEventButton* b);
-        bool setLight_spec_color(_GdkEventButton* b);
+        bool setShadow_color();
+        bool setLight_diff_color();
+        bool setLight_amb_color();
+        bool setLight_spec_color();
         // ----------------------------------------------
 
         // ------------- camera -----------------------
@@ -120,9 +107,9 @@ class VRGuiScene {
         // ------------- material -----------------------
         void setMaterial_gui();
         void setMaterial_lit();
-        bool setMaterial_diffuse(_GdkEventButton* b);
-        bool setMaterial_specular(_GdkEventButton* b);
-        bool setMaterial_ambient(_GdkEventButton* b);
+        bool setMaterial_diffuse();
+        bool setMaterial_specular();
+        bool setMaterial_ambient();
         void setMaterial_pointsize();
         void setMaterial_texture_toggle();
         void setMaterial_texture_name();
@@ -134,15 +121,15 @@ class VRGuiScene {
         // ----------------------------------------------
 
         // ------------- scenegraph drag && drop -------
-        void on_drag_beg(_GdkDragContext* dc);
-        void on_drag_end(_GdkDragContext* dc);
-        void on_drag_data_receive(_GdkDragContext* dc , int i1, int i2, _GtkSelectionData* sd, unsigned int i3, unsigned int i4);
+        void on_drag_beg();
+        void on_drag_end();
+        void on_drag_data_receive(/*_GdkDragContext* dc , int i1, int i2, _GtkSelectionData* sd, unsigned int i3, unsigned int i4*/);
         void on_edit_object_name(const char* path_string, const char* new_text);
         // ----------------------------------------------
 
         // ------------- context menu -------------------
         void initMenu();
-        bool on_treeview_rightclick(_GdkEventButton * event);
+        bool on_treeview_rightclick();
         void on_menu_delete();
         void on_menu_copy();
         void on_menu_paste();

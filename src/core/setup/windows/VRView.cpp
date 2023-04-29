@@ -14,10 +14,7 @@
 #include "core/utils/xml.h"
 #include "core/tools/VRText.h"
 #include "core/setup/VRSetup.h"
-#ifndef WITHOUT_GTK
-#include "core/gui/VRGuiUtils.h"
 #include "core/gui/VRGuiManager.h"
-#endif
 #include "core/objects/OSGObject.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/material/OSGMaterial.h"
@@ -663,7 +660,8 @@ void VRView::setFotoMode(bool b) {
 
 VRTexturePtr VRView::grab() {
 #ifndef WITHOUT_GTK
-    return takeSnapshot();
+    //return takeSnapshot();
+    return 0;
 #else
     return 0;
 #endif

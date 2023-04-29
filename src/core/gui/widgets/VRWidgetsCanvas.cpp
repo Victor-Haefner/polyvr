@@ -5,24 +5,21 @@
 #include "core/scene/VRSceneManager.h"
 #include "core/utils/VRFunction.h"
 
-#include "../VRGuiUtils.h"
-#include "../VRGuiBuilder.h"
-
 #include "addons/Algorithms/VRGraphLayout.h"
 
 using namespace OSG;
 namespace PL = std::placeholders;
 
-void VRWidgetsCanvas_on_drag_data_received( GdkDragContext* context, int x, int y, GtkSelectionData* data, guint info, guint time, VRWidgetsCanvas* self) {
+/*void VRWidgetsCanvas_on_drag_data_received( GdkDragContext* context, int x, int y, GtkSelectionData* data, guint info, guint time, VRWidgetsCanvas* self) {
     GdkAtom target = gtk_selection_data_get_target(data);
     string targetName = gdk_atom_name(target);
     if (targetName != "concept") { cout << "VRWidgetsCanvas_on_drag_data_received, wrong dnd: " << targetName << endl; return; }
     VRCanvasWidget* e = *(VRCanvasWidget**)gtk_selection_data_get_data(data);
     e->move(Vec2d(x,y));
-}
+}*/
 
 VRWidgetsCanvas::VRWidgetsCanvas(string canvasName) {
-    canvas = (GtkFixed*)VRGuiBuilder::get()->get_widget(canvasName);
+    /*canvas = (GtkFixed*)VRGuiBuilder::get()->get_widget(canvasName);
 
     // dnd canvas
     GtkTargetEntry entries[] = {{ "concept", 0, GTK_TARGET_SAME_APP }};
@@ -42,7 +39,7 @@ VRWidgetsCanvas::VRWidgetsCanvas(string canvasName) {
     // layout update cb
     auto sm = VRSceneManager::get();
     updateLayoutCb = VRUpdateCb::create("layout_update", bind(&VRWidgetsCanvas::updateLayout, this));
-    sm->addUpdateFkt(updateLayoutCb);
+    sm->addUpdateFkt(updateLayoutCb);*/
 }
 
 VRWidgetsCanvas::~VRWidgetsCanvas() {}
@@ -50,7 +47,7 @@ VRWidgetsCanvas::~VRWidgetsCanvas() {}
 VRWidgetsCanvasPtr VRWidgetsCanvas::create(string canvasName) { return VRWidgetsCanvasPtr( new VRWidgetsCanvas(canvasName) ); }
 VRWidgetsCanvasPtr VRWidgetsCanvas::ptr() { return static_pointer_cast<VRWidgetsCanvas>(shared_from_this()); }
 
-GtkFixed* VRWidgetsCanvas::getCanvas() { return canvas; }
+//GtkFixed* VRWidgetsCanvas::getCanvas() { return canvas; }
 VRGraphLayoutPtr VRWidgetsCanvas::getLayout() { return layout; }
 
 void VRWidgetsCanvas::clear() {

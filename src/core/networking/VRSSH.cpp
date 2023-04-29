@@ -1,9 +1,9 @@
 #include "VRSSH.h"
-#include "core/gui/VRGuiUtils.h"
 #include "core/utils/toString.h"
 #include "core/utils/system/VRSystem.h"
 
 #include <libssh2.h>
+#include <fstream>
 
 #ifndef _WIN32
 #include <sys/socket.h>
@@ -96,8 +96,8 @@ string VRSSHSession::verify_knownhost() { // TODO
     if (check == LIBSSH2_KNOWNHOST_CHECK_FAILURE) err = "Host check failure";
 
     if (err.size()) {
-        bool ok = askUser(err, "If you trust the host key (hash):\n" + Hash + "\nthe host will be added to your list of known hosts.");
-        if (!ok) return "Host not trusted by user";
+        //bool ok = askUser(err, "If you trust the host key (hash):\n" + Hash + "\nthe host will be added to your list of known hosts.");
+        //if (!ok) return "Host not trusted by user";
         int mode2 = LIBSSH2_KNOWNHOST_TYPE_PLAIN | LIBSSH2_KNOWNHOST_KEYENC_RAW | ((HKtype+1) << LIBSSH2_KNOWNHOST_KEY_SHIFT); // LIBSSH2_KNOWNHOST_KEY_RSA1, LIBSSH2_KNOWNHOST_KEY_SSHRSA or LIBSSH2_KNOWNHOST_KEY_SSHDSS
         rc = libssh2_knownhost_addc(nh, address.c_str(), 0, HKey, HKlen, NULL, 0, mode2, NULL );
         if (rc < 0) return lastError(31);
@@ -214,9 +214,9 @@ string VRSSHSession::exec_cmd(string cmd, bool read) {
     else return string("failed with: ") + toString(exisStatus);
 }
 
-void VRSSHSession::distrib_key() {
+void VRSSHSession::distrib_key() { // TODO: password dialog
     if (stat == "ok") { stat_key = "ok"; return; }
-    string pw = askUserPass("No pubkey acces, enter password for " + user + "@" + address + " to distribute the key");
+    string pw = "";//askUserPass("No pubkey acces, enter password for " + user + "@" + address + " to distribute the key");
     int rc = libssh2_userauth_password(session, user.c_str(), pw.c_str());
     if (rc < 0) { stat_key = lastError(5); return; }
 

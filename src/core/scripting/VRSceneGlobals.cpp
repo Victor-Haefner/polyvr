@@ -32,7 +32,6 @@
 #ifndef WITHOUT_GTK
 #include "core/gui/VRGuiManager.h"
 #include "core/gui/VRGuiConsole.h"
-#include "core/gui/VRGuiFile.h"
 #endif
 
 OSG_BEGIN_NAMESPACE;
@@ -383,18 +382,18 @@ PyObject* VRSceneGlobals::stackCall(VRSceneGlobals* self, PyObject *args) {
 
 void on_py_file_diag_cb(PyObject* pyFkt) {
 #ifndef WITHOUT_GTK
-    string res = VRGuiFile::getRelativePath_toWorkdir();
+    /*string res = VRGuiFile::getRelativePath_toWorkdir();
     PyObject *pArgs = PyTuple_New(3);
     PyTuple_SetItem( pArgs, 0, PyString_FromString(res.c_str()) );
     PyTuple_SetItem( pArgs, 1, PyFloat_FromDouble( VRGuiFile::getScale() ) );
     PyTuple_SetItem( pArgs, 2, PyString_FromString( VRGuiFile::getPreset().c_str() ) );
-    execCall( pyFkt, pArgs, 0 );
+    execCall( pyFkt, pArgs, 0 );*/
 #endif
 }
 
 PyObject* VRSceneGlobals::openFileDialog(VRSceneGlobals* self, PyObject *args) {
 #ifndef WITHOUT_GTK
-    PyObject *cb, *mode, *title, *default_path, *filter;
+    /*PyObject *cb, *mode, *title, *default_path, *filter;
     if (! PyArg_ParseTuple(args, "OOOOO", &cb, &mode, &title, &default_path, &filter)) return NULL;
     Py_IncRef(cb);
 
@@ -407,7 +406,7 @@ PyObject* VRSceneGlobals::openFileDialog(VRSceneGlobals* self, PyObject *args) {
     string action = "open";
     if (m == "Save" || m == "New" || m == "Create") action = "save";
     else VRGuiFile::setGeoLoadWidget();
-    VRGuiFile::open( m, action, PyString_AsString(title) );
+    VRGuiFile::open( m, action, PyString_AsString(title) );*/
 #endif
     Py_RETURN_TRUE;
 }

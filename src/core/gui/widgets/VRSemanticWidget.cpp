@@ -3,19 +3,15 @@
 #include "VREntityWidget.h"
 #include "VRRuleWidget.h"
 #include "VRConnectorWidget.h"
-#include "../VRGuiUtils.h"
 #include "../VRGuiSemantics.h"
-#include "../wrapper/VRGuiTreeView.h"
-
-#include <gtk/gtk.h>
 
 using namespace OSG;
 
 namespace PL = std::placeholders;
 
-const GdkAtom CONCEPT_ATOM = GdkAtom("concept");
+//const GdkAtom CONCEPT_ATOM = GdkAtom("concept");
 
-void VRSemanticWidget_on_drag_data_get(GdkDragContext* context, GtkSelectionData* data, unsigned int info, unsigned int time, VRSemanticWidget* e) {
+/*void VRSemanticWidget_on_drag_data_get(GdkDragContext* context, GtkSelectionData* data, unsigned int info, unsigned int time, VRSemanticWidget* e) {
     gtk_selection_data_set(data, CONCEPT_ATOM, 0, (const guint8*)&e, sizeof(void*));
 }
 
@@ -24,14 +20,14 @@ void VRSemanticWidget_on_drag_data_received(GdkDragContext* context, int x, int 
     if (target != CONCEPT_ATOM) { cout << "VRGuiSemantics_on_drag_data_received, wrong dnd: " << (const char*)target << endl; return; }
     VRSemanticWidget* e = *(VRSemanticWidget**)gtk_selection_data_get_data(data);
     self->reparent(e->ptr());
-}
+}*/
 
-VRSemanticWidget::VRSemanticWidget(VRGuiSemantics* m, GtkFixed* canvas, string color) : VRCanvasWidget(canvas) {
+VRSemanticWidget::VRSemanticWidget(VRGuiSemantics* m, string color) : VRCanvasWidget() {
     manager = m;
 
     // properties treeview
     //  name, type, prop, ptype, flag, rtype, ID
-    auto treestore = gtk_tree_store_new(7, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_INT, G_TYPE_INT, G_TYPE_INT);
+    /*auto treestore = gtk_tree_store_new(7, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_INT, G_TYPE_INT, G_TYPE_INT);
     treeview = GTK_TREE_VIEW( gtk_tree_view_new_with_model(GTK_TREE_MODEL(treestore)) );
     gtk_tree_view_set_headers_visible(treeview, false);
     function<void(void)> fkt = bind(&VRSemanticWidget::on_select_property, this);
@@ -119,7 +115,7 @@ VRSemanticWidget::VRSemanticWidget(VRGuiSemantics* m, GtkFixed* canvas, string c
     gtk_drag_dest_set(expander, GTK_DEST_DEFAULT_ALL, entries, 1, GDK_ACTION_MOVE);
 
     function<void(GdkDragContext*, int, int, GtkSelectionData*, guint, guint)> fkt4 = bind(VRSemanticWidget_on_drag_data_received, PL::_1, PL::_2, PL::_3, PL::_4, PL::_5, PL::_6, this);
-    connect_signal(expander, fkt4, "drag_data_received" );
+    connect_signal(expander, fkt4, "drag_data_received" );*/
 }
 
 VRSemanticWidget::~VRSemanticWidget() {}
@@ -135,11 +131,11 @@ void VRSemanticWidget::reparent(VRSemanticWidgetPtr w) {
     if (r) reparent(r);
 }
 
-void VRSemanticWidget::setPropRow(GtkTreeIter* iter, string name, string type, string color, int flag, int ID, int rtype) {
+void VRSemanticWidget::setPropRow(string name, string type, string color, int flag, int ID, int rtype) {
     string cname = "<span color=\""+color+"\">" + name + "</span>";
     string ctype = "<span color=\""+color+"\">" + type + "</span>";
 
-    GtkTreeStore* treestore = GTK_TREE_STORE( gtk_tree_view_get_model(treeview) );
+    /*GtkTreeStore* treestore = GTK_TREE_STORE( gtk_tree_view_get_model(treeview) );
 
     gtk_tree_store_set(treestore, iter, 0, cname.c_str(), -1);
     gtk_tree_store_set(treestore, iter, 1, ctype.c_str(), -1);
@@ -147,12 +143,12 @@ void VRSemanticWidget::setPropRow(GtkTreeIter* iter, string name, string type, s
     gtk_tree_store_set(treestore, iter, 3, type.c_str(), -1);
     gtk_tree_store_set(treestore, iter, 4, flag, -1);
     gtk_tree_store_set(treestore, iter, 5, rtype, -1);
-    gtk_tree_store_set(treestore, iter, 6, ID, -1);
+    gtk_tree_store_set(treestore, iter, 6, ID, -1);*/
 }
 
-void VRSemanticWidget::on_expander_toggled(GParamSpec* param_spec) {
-    if (expanded) gtk_widget_show_all(GTK_WIDGET(toolbar1));
-    else gtk_widget_hide(GTK_WIDGET(toolbar1));
+void VRSemanticWidget::on_expander_toggled() {
+    /*if (expanded) gtk_widget_show_all(GTK_WIDGET(toolbar1));
+    else gtk_widget_hide(GTK_WIDGET(toolbar1));*/
     expanded = !expanded;
 }
 
@@ -160,7 +156,7 @@ void VRSemanticWidget::on_select() {}
 
 void VRSemanticWidget::on_fold_clicked() {
     subTreeFolded = !subTreeFolded;
-    if (subTreeFolded) gtk_tool_button_set_stock_id(GTK_TOOL_BUTTON(bFold), "gtk-add");
-    else gtk_tool_button_set_stock_id(GTK_TOOL_BUTTON(bFold), "gtk-remove");
+    /*if (subTreeFolded) gtk_tool_button_set_stock_id(GTK_TOOL_BUTTON(bFold), "gtk-add");
+    else gtk_tool_button_set_stock_id(GTK_TOOL_BUTTON(bFold), "gtk-remove");*/
     setFolding(subTreeFolded);
 }

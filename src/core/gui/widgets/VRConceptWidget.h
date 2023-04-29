@@ -4,15 +4,13 @@
 #include "VRSemanticWidget.h"
 #include "addons/Semantics/VRSemanticsFwd.h"
 
-struct _GtkFixed;
-
 OSG_BEGIN_NAMESPACE;
 
 struct VRConceptWidget : public VRSemanticWidget {
     VRConceptPtr concept;
     VRPropertyPtr selected_property;
 
-    VRConceptWidget(VRGuiSemantics* m, _GtkFixed* canvas = 0, VRConceptPtr concept = 0);
+    VRConceptWidget(VRGuiSemantics* m, VRConceptPtr concept = 0);
 
     void on_new_concept_clicked();
     void on_new_entity_clicked();

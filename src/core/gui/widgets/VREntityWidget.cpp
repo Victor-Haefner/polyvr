@@ -4,9 +4,7 @@
 #include "addons/Semantics/Reasoning/VRProperty.h"
 #include "addons/Semantics/Reasoning/VROntology.h"
 
-#include "../VRGuiUtils.h"
 #include "../VRGuiSemantics.h"
-#include "../VRGuiBuilder.h"
 
 #include "core/utils/toString.h"
 
@@ -14,9 +12,9 @@ using namespace OSG;
 
 // TODO
 
-VREntityWidget::VREntityWidget(VRGuiSemantics* m, GtkFixed* canvas, VREntityPtr entity) : VRSemanticWidget(m, canvas, "#FFEE00") {
+VREntityWidget::VREntityWidget(VRGuiSemantics* m, VREntityPtr entity) : VRSemanticWidget(m, "#FFEE00") {
     this->entity = entity;
-    gtk_label_set_text(label, entity->getName().c_str());
+    //gtk_label_set_text(label, entity->getName().c_str());
     update();
 }
 
@@ -24,7 +22,7 @@ int VREntityWidget::ID() { return entity->ID; }
 
 void VREntityWidget::on_edit_prop_clicked() {
     if (!selected_entity_property) return;
-    auto dialog = VRGuiBuilder::get()->get_widget("PropertyEdit");
+    /*auto dialog = VRGuiBuilder::get()->get_widget("PropertyEdit");
     setTextEntry("entry23", selected_entity_property->getName());
     setTextEntry("entry24", selected_entity_property->value);
     gtk_widget_show(dialog);
@@ -33,17 +31,17 @@ void VREntityWidget::on_edit_prop_clicked() {
         //selected_entity_property->setName( getTextEntry("entry23") );
         selected_entity_property->setValue( getTextEntry("entry24") );
     }
-    gtk_widget_hide(dialog);
+    gtk_widget_hide(dialog);*/
     update();
     saveScene();
 }
 
 void VREntityWidget::on_rem_prop_clicked() {
     if (!selected_entity_property) return;
-    bool b = askUser("Delete property " + selected_entity_property->getName() + "?", "Are you sure you want to delete this property?");
+    /*bool b = askUser("Delete property " + selected_entity_property->getName() + "?", "Are you sure you want to delete this property?");
     if (!b) return;
     entity->rem(selected_entity_property); // TODO
-    selected_entity_property = 0;
+    selected_entity_property = 0;*/
     update();
     saveScene();
 }
@@ -58,22 +56,22 @@ void VREntityWidget::on_newp_clicked() {
 }
 
 void VREntityWidget::on_rem_clicked() {
-    string txt = gtk_label_get_text(label);
+    /*string txt = gtk_label_get_text(label);
     bool b = askUser("Delete entity " + txt + "?", "Are you sure you want to delete this entity?");
-    if (b) manager->remEntity(this);
+    if (b) manager->remEntity(this);*/
 }
 
 void VREntityWidget::on_edit_clicked() {
-    string txt = gtk_label_get_text(label);
+    /*string txt = gtk_label_get_text(label);
     string s = askUserInput("Rename entity " + txt + ":");
     if (s == "") return;
     manager->getSelectedOntology()->renameEntity(entity, s);
-    gtk_label_set_text(label, entity->getName().c_str());
+    gtk_label_set_text(label, entity->getName().c_str());*/
     saveScene();
 }
 
 void VREntityWidget::on_select_property() {
-    auto model = gtk_tree_view_get_model(treeview);
+    /*auto model = gtk_tree_view_get_model(treeview);
     GtkTreeIter itr;
     auto treeselection = gtk_tree_view_get_selection(treeview);
     auto res = gtk_tree_selection_get_selected(treeselection, &model, &itr);
@@ -96,12 +94,12 @@ void VREntityWidget::on_select_property() {
     selected_concept_property = selected_entity_property = 0;
     if (flag == 0 && type == 0) selected_concept_property = p;
     if (flag == 0 && type == 1) selected_entity_property = p;
-    gtk_tree_selection_unselect_all(treeselection); // clear selection
+    gtk_tree_selection_unselect_all(treeselection); // clear selection*/
     update();
 }
 
 void VREntityWidget::update() {
-    auto store = GTK_TREE_STORE(gtk_tree_view_get_model(treeview));
+    /*auto store = GTK_TREE_STORE(gtk_tree_view_get_model(treeview));
     gtk_tree_store_clear(store);
     if (!entity) return;
 
@@ -121,7 +119,7 @@ void VREntityWidget::update() {
         }
     }
 
-    gtk_tree_view_expand_all(treeview);
+    gtk_tree_view_expand_all(treeview);*/
 }
 
 void VREntityWidget::reparent(VRConceptWidgetPtr w) {}

@@ -27,12 +27,7 @@
 #include "addons/Semantics/Reasoning/VREntity.h"
 #include "addons/Semantics/Reasoning/VRConcept.h"
 #include "addons/Semantics/Reasoning/VRProperty.h"
-#include "VRGuiUtils.h"
-#include "VRGuiBuilder.h"
 #include "VRGuiSignals.h"
-#include "VRGuiFile.h"
-
-#include "wrapper/VRGuiTreeView.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -63,7 +58,7 @@ VRObjectPtr VRGuiScene::getSelected() {
 }
 
 void VRGuiScene::setObject(VRObjectPtr o) {
-    setWidgetVisibility("expander2", true, true);
+    /*setWidgetVisibility("expander2", true, true);
 
     // set object properties
     setToggleButton("checkbutton6", o->isVisible());
@@ -73,11 +68,11 @@ void VRGuiScene::setObject(VRObjectPtr o) {
     VRObjectPtr parent = o->getParent();
     string pName = parent ? parent->getName() : "";
     setTextEntry("entry17", pName);
-    setTextEntry("entry21", toString(o->getPersistency()) );
+    setTextEntry("entry21", toString(o->getPersistency()) );*/
 }
 
 void VRGuiScene::setTransform(VRTransformPtr e) {
-    setWidgetVisibility("expander1", true, true);
+    //setWidgetVisibility("expander1", true, true);
 
     Vec3d f,a,u,d,s;
     if (transformModeLocal) {
@@ -122,7 +117,7 @@ void VRGuiScene::setTransform(VRTransformPtr e) {
     setToggleButton("checkbutton22", doRc);
 
     setToggleButton("radiobutton1", !c->getTMode());
-    setToggleButton("radiobutton2", c->getTMode());*/
+    setToggleButton("radiobutton2", c->getTMode());
 
     setToggleButton("radiobutton19",  transformModeLocal);
     setToggleButton("radiobutton20", !transformModeLocal);
@@ -135,7 +130,7 @@ void VRGuiScene::setTransform(VRTransformPtr e) {
         setCombobox("combobox8", getListStorePos("phys_shapes", e->getPhysics()->getShape()));
         setWidgetSensitivity("combobox8", e->getPhysics()->isPhysicalized());
     }
-#endif
+#endif*/
 }
 
 void VRGuiScene::setMaterial(VRMaterialPtr mat) {
@@ -144,15 +139,15 @@ void VRGuiScene::setMaterial(VRMaterialPtr mat) {
     VRTexturePtr tex;
 
     if (mat) {
-        setLabel("label60", mat->getName());
+        //setLabel("label60", mat->getName());
         _cd = mat->getDiffuse();
         _cs = mat->getSpecular();
         _ca = mat->getAmbient();
         lit = mat->isLit();
         tex = mat->getTexture();
-    } else setLabel("label60", "NONE");
+    } //else setLabel("label60", "NONE");
 
-    setColorChooserColor("mat_diffuse", _cd);
+    /*setColorChooserColor("mat_diffuse", _cd);
     setColorChooserColor("mat_specular", _cs);
     setColorChooserColor("mat_ambient", _ca);
 
@@ -163,11 +158,11 @@ void VRGuiScene::setMaterial(VRMaterialPtr mat) {
     if (tex) {
         setLabel("label168", toString(tex->getSize()) + " (" + toString(tex->getByteSize()/1048576.0) + " mb)");
         setLabel("label167", toString(tex->getChannels()));
-    }
+    }*/
 }
 
 void VRGuiScene::on_geo_menu_print() {
-    if(!selected_itr) return;
+    /*if(!selected_itr) return;
 
     VRGuiTreeView tree_view("treeview9");
 
@@ -177,11 +172,11 @@ void VRGuiScene::on_geo_menu_print() {
     VRGeometryPtr geo = dynamic_pointer_cast<VRGeometry>(getSelected());
     VRGeoData data(geo);
     string msg = data.getDataAsString(index);
-    VRConsoleWidget::get( "Console" )->write( geo->getName() + " " + name + ": " + msg + "\n" );
+    VRConsoleWidget::get( "Console" )->write( geo->getName() + " " + name + ": " + msg + "\n" );*/
 }
 
 void VRGuiScene::setGeometry(VRGeometryPtr g) {
-    setWidgetVisibility("expander11", true, true);
+    /*setWidgetVisibility("expander11", true, true);
     setWidgetVisibility("expander14", true, true);
     setWidgetVisibility("expander16", true, true);
     VRMaterialPtr mat = g->getMaterial();
@@ -230,11 +225,11 @@ void VRGuiScene::setGeometry(VRGeometryPtr g) {
     for (int i=0; i<=8; i++) {
         int N = data.getDataSize(i);
         if (N) appendGeoData(store, data.getDataName(i), N, i);
-    }
+    }*/
 }
 
 void VRGuiScene::setLight(VRLightPtr l) {
-    setWidgetVisibility("expander13", true, true);
+    /*setWidgetVisibility("expander13", true, true);
 
     setToggleButton("checkbutton31", l->isOn());
     setToggleButton("checkbutton32", l->getShadows());
@@ -266,30 +261,30 @@ void VRGuiScene::setLight(VRLightPtr l) {
         gtk_list_store_append(store, &row);
         gtk_list_store_set(store, &row, 0, param_names[i].c_str(), -1);
         gtk_list_store_set(store, &row, 1, val.c_str(), -1);
-    }
+    }*/
 }
 
 void VRGuiScene::setCamera(VRCameraPtr c) {
-    setWidgetVisibility("expander12", true, true);
+    /*setWidgetVisibility("expander12", true, true);
     setToggleButton("checkbutton17", c->getAcceptRoot());
     setTextEntry("entry60", toString(c->getAspect()));
     setTextEntry("entry61", toString(c->getFov()));
     setTextEntry("entry6", toString(c->getNear()));
-    setTextEntry("entry7", toString(c->getFar()));
+    setTextEntry("entry7", toString(c->getFar()));*/
 }
 
 void VRGuiScene::setGroup(VRGroupPtr g) {
-    setWidgetVisibility("expander2", true, true);
+    /*setWidgetVisibility("expander2", true, true);
     setWidgetVisibility("expander9", true, true);
     setToggleButton("checkbutton23", g->getActive() );
 
     fillStringListstore("liststore3", g->getGroups());
 
-    setCombobox("combobox14", getListStorePos("liststore3",g->getGroup()));
+    setCombobox("combobox14", getListStorePos("liststore3",g->getGroup()));*/
 }
 
 void VRGuiScene::setLod(VRLodPtr lod) {
-    setWidgetVisibility("expander2", true, true);
+    /*setWidgetVisibility("expander2", true, true);
     setWidgetVisibility("expander10", true, true);
 
     setTextEntry("entry9", toString(lod->getDecimateNumber()));
@@ -306,11 +301,11 @@ void VRGuiScene::setLod(VRLodPtr lod) {
         gtk_list_store_set(store, &row, 0, i, -1);
         gtk_list_store_set(store, &row, 1, dists[i], -1);
         gtk_list_store_set(store, &row, 2, true, -1);
-    }
+    }*/
 }
 
 void VRGuiScene::setEntity(VREntityPtr e) {
-    setWidgetVisibility("expander27", true, true);
+    /*setWidgetVisibility("expander27", true, true);
 
     setLabel("label145", e->getConceptList());
 
@@ -325,7 +320,7 @@ void VRGuiScene::setEntity(VREntityPtr e) {
             gtk_list_store_set(store, &row, 1, p.second->value.c_str(), -1);
             gtk_list_store_set(store, &row, 2, p.second->type.c_str(), -1);
         }
-    }
+    }*/
 }
 
 /*void setCSG(CSGGeometryPtr g) {
@@ -340,7 +335,7 @@ void VRGuiScene::setEntity(VREntityPtr e) {
 void VRGuiScene::on_toggle_liveupdate() { liveUpdate = !liveUpdate; }
 
 void VRGuiScene::updateObjectForms(bool disable) {
-    setWidgetVisibility("expander1", false, true);
+    /*setWidgetVisibility("expander1", false, true);
     setWidgetVisibility("expander2", false, true);
     setWidgetVisibility("expander9", false, true);
     setWidgetVisibility("expander10", false, true);
@@ -376,7 +371,7 @@ void VRGuiScene::updateObjectForms(bool disable) {
 
     //if (type == "CSGGeometry") setCSG((CSGGeometryPtr)obj);
 
-    trigger_cbs = true;
+    trigger_cbs = true;*/
 }
 
 // --------------------------
@@ -399,9 +394,9 @@ void VRGuiScene::getTypeColors(VRObjectPtr o, string& fg, string& bg) {
     if (!o->isVisible()) bg = "#EEEEEE";
 }
 
-void VRGuiScene::setSGRow(GtkTreeIter* itr, VRObjectPtr o) {
+void VRGuiScene::setSGRow( VRObjectPtr o) {
     if (o == 0) return;
-    if (!itr) return;
+    //if (!itr) return;
 
     string fg, bg;
     getTypeColors(o, fg, bg);
@@ -411,24 +406,24 @@ void VRGuiScene::setSGRow(GtkTreeIter* itr, VRObjectPtr o) {
     string name = o->getName();
     if (e) name += "<sub><u><span foreground=\"blue\">" + e->getConceptList() + "</span></u></sub>";
 
-    gtk_tree_store_set (tree_store, itr, 0, name.c_str(), -1);
+    /*gtk_tree_store_set (tree_store, itr, 0, name.c_str(), -1);
     gtk_tree_store_set (tree_store, itr, 1, o->getType().c_str(), -1);
     gtk_tree_store_set (tree_store, itr, 2, o->getPath().c_str(), -1);
     gtk_tree_store_set (tree_store, itr, 3, fg.c_str(), -1);
     gtk_tree_store_set (tree_store, itr, 4, bg.c_str(), -1);
-    gtk_tree_store_set (tree_store, itr, 5, o->getID(), -1);
+    gtk_tree_store_set (tree_store, itr, 5, o->getID(), -1);*/
 }
 
-void VRGuiScene::parseSGTree(VRObjectPtr o, GtkTreeIter* itr) {
+void VRGuiScene::parseSGTree(VRObjectPtr o) {
     if (o == 0) return;
-    GtkTreeIter nItr;
+    /*GtkTreeIter nItr;
     gtk_tree_store_append(tree_store, &nItr, itr);
     setSGRow( &nItr, o );
-    for (uint i=0; i<o->getChildrenCount(); i++) parseSGTree( o->getChild(i), &nItr );
+    for (uint i=0; i<o->getChildrenCount(); i++) parseSGTree( o->getChild(i), &nItr );*/
 }
 
-void VRGuiScene::removeTreeStoreBranch(GtkTreeIter* iter, bool self) {
-    int N = gtk_tree_store_iter_depth(tree_store, iter);
+void VRGuiScene::removeTreeStoreBranch(bool self) {
+    /*int N = gtk_tree_store_iter_depth(tree_store, iter);
 
     if (!self) {
         int Nc = gtk_tree_model_iter_n_children((GtkTreeModel*)tree_store, iter);
@@ -436,17 +431,17 @@ void VRGuiScene::removeTreeStoreBranch(GtkTreeIter* iter, bool self) {
         gtk_tree_model_iter_children((GtkTreeModel*)tree_store, iter, iter);
     } else gtk_tree_store_remove(tree_store, iter); // removes iter and sets it to next row
 
-    while (gtk_tree_store_iter_depth(tree_store, iter) > N) gtk_tree_store_remove(tree_store, iter); // removes iter and sets it to next row
+    while (gtk_tree_store_iter_depth(tree_store, iter) > N) gtk_tree_store_remove(tree_store, iter); // removes iter and sets it to next row*/
 }
 
-void VRGuiScene::syncSGTree(VRObjectPtr o, GtkTreeIter* itr) {
+void VRGuiScene::syncSGTree(VRObjectPtr o) {
     if (o == 0) return;
-    removeTreeStoreBranch(itr, false);
-    for (uint i=0; i<o->getChildrenCount(); i++) parseSGTree( o->getChild(i), itr );
+    //removeTreeStoreBranch(itr, false);
+    //for (uint i=0; i<o->getChildrenCount(); i++) parseSGTree( o->getChild(i), itr );
 }
 
 void VRGuiScene::on_treeview_select() {
-    GtkTreeSelection* sel = gtk_tree_view_get_selection(tree_view);
+    /*GtkTreeSelection* sel = gtk_tree_view_get_selection(tree_view);
     GtkTreeModel* model = gtk_tree_view_get_model(tree_view);
 
     if (!selected_itr) selected_itr = new GtkTreeIter();
@@ -460,16 +455,16 @@ void VRGuiScene::on_treeview_select() {
 
     selected_geometry.reset();
     if (getSelected() == 0) return;
-    if (getSelected()->hasTag("geometry")) selected_geometry = static_pointer_cast<VRGeometry>(getSelected());
+    if (getSelected()->hasTag("geometry")) selected_geometry = static_pointer_cast<VRGeometry>(getSelected());*/
 }
 
 void VRGuiScene::on_edit_object_name(const char* path_string, const char* new_text) {
     if(!trigger_cbs) return;
-    getSelected()->setName(new_text);
+    /*getSelected()->setName(new_text);
     VRGuiTreeView tree_view("treeview6");
     tree_view.setSelectedStringValue(0, getSelected()->getName());
     updateObjectForms();
-    if (getSelected()->getType() == "Camera") VRGuiSignals::get()->getSignal("camera_added")->triggerAll<VRDevice>();
+    if (getSelected()->getType() == "Camera") VRGuiSignals::get()->getSignal("camera_added")->triggerAll<VRDevice>();*/
 }
 
 // --------------------------
@@ -479,7 +474,7 @@ void VRGuiScene::on_edit_object_name(const char* path_string, const char* new_te
 // VRObjects
 void VRGuiScene::on_toggle_visible() {
     if (trigger_cbs) getSelected()->toggleVisible();
-    setSGRow(selected_itr, getSelected());
+    //setSGRow(selected_itr, getSelected());
 }
 
 void VRGuiScene::on_toggle_throw_shadow() {
@@ -491,11 +486,11 @@ void VRGuiScene::on_toggle_pickable() { if (trigger_cbs) getSelected()->setPicka
 // VRGroup
 void VRGuiScene::on_groupsync_clicked() {
     if(!trigger_cbs) return;
-    if(!selected_itr) return;
+    /*if(!selected_itr) return;
 
     VRGroupPtr obj = static_pointer_cast<VRGroup>( getSelected() );
     obj->sync();
-    syncSGTree(obj, selected_itr);
+    syncSGTree(obj, selected_itr);*/
 }
 
 void VRGuiScene::on_scene_update() {
@@ -504,7 +499,7 @@ void VRGuiScene::on_scene_update() {
 
 void VRGuiScene::on_groupapply_clicked() {
     if(!trigger_cbs) return;
-    if(!selected_itr) return;
+    /*if(!selected_itr) return;
 
     VRGroupPtr obj = static_pointer_cast<VRGroup>( getSelected() );
     obj->apply();
@@ -518,14 +513,14 @@ void VRGuiScene::on_groupapply_clicked() {
         GtkTreeIter itr;
         gtk_tree_model_get_iter_from_string((GtkTreeModel*)tree_store, &itr, path.c_str());
         syncSGTree(g, &itr);
-    }
+    }*/
 }
 
 void VRGuiScene::on_change_group() {
     if(!trigger_cbs) return;
 
     VRGroupPtr obj = static_pointer_cast<VRGroup>( getSelected() );
-    obj->setGroup(getComboboxText("combobox14"));
+    //obj->setGroup(getComboboxText("combobox14"));
 }
 
 void VRGuiScene::on_group_edited() {
@@ -533,7 +528,7 @@ void VRGuiScene::on_group_edited() {
 
     VRGroupPtr obj = static_pointer_cast<VRGroup>( getSelected() );
     if (!obj) return;
-    string old_group = getComboboxText("combobox14");
+    /*string old_group = getComboboxText("combobox14");
     string new_group = getTextEntry("entry41");
 
     // update group list
@@ -546,7 +541,7 @@ void VRGuiScene::on_group_edited() {
     obj->setGroup(new_group);
     setComboboxLastActive("combobox14");
 
-    setTextEntry("entry41", "");
+    setTextEntry("entry41", "");*/
 }
 
 // VR3DEntities
@@ -630,18 +625,18 @@ void VRGuiScene::on_toggle_T_constraint() {
     if(!trigger_cbs) return;
     VRTransformPtr obj = static_pointer_cast<VRTransform>( getSelected() );
 
-    bool bT = getCheckButtonState("checkbutton21");
+    /*bool bT = getCheckButtonState("checkbutton21");
     bool bR = getCheckButtonState("checkbutton22");
-    obj->getConstraint()->setActive(bT || bR);
+    obj->getConstraint()->setActive(bT || bR);*/
 }
 
 void VRGuiScene::on_toggle_R_constraint() {
     if(!trigger_cbs) return;
     VRTransformPtr obj = static_pointer_cast<VRTransform>( getSelected() );
 
-    bool bT = getCheckButtonState("checkbutton21");
+    /*bool bT = getCheckButtonState("checkbutton21");
     bool bR = getCheckButtonState("checkbutton22");
-    obj->getConstraint()->setActive(bT || bR);
+    obj->getConstraint()->setActive(bT || bR);*/
 }
 
 void VRGuiScene::on_toggle_rc() {
@@ -649,9 +644,9 @@ void VRGuiScene::on_toggle_rc() {
     VRTransformPtr obj = static_pointer_cast<VRTransform>( getSelected() );
 
     Vec3d rc;
-    if (getCheckButtonState("checkbutton18") ) rc[0] = 1;
+    /*if (getCheckButtonState("checkbutton18") ) rc[0] = 1;
     if (getCheckButtonState("checkbutton19") ) rc[1] = 1;
-    if (getCheckButtonState("checkbutton20") ) rc[2] = 1;
+    if (getCheckButtonState("checkbutton20") ) rc[2] = 1;*/
 
     //obj->getConstraint()->setRConstraint(rc, obj->getConstraint()->getRMode());
 }
@@ -659,18 +654,18 @@ void VRGuiScene::on_toggle_rc() {
 // geometry
 void VRGuiScene::on_change_primitive() {
     if(!trigger_cbs) return;
-    string prim = getComboboxText("combobox21");
+    /*string prim = getComboboxText("combobox21");
 
     VRGeometryPtr obj = static_pointer_cast<VRGeometry>( getSelected() );
 
     obj->setPrimitive(prim);
-    updateObjectForms();
+    updateObjectForms();*/
 }
 
 void VRGuiScene::on_edit_primitive_params(const char* path_string, const char* new_text) {
     if (!trigger_cbs) return;
 
-    string prim = getComboboxText("combobox21");
+    /*string prim = getComboboxText("combobox21");
     string args;
 
     VRGuiTreeView tree_view("treeview12");
@@ -692,25 +687,25 @@ void VRGuiScene::on_edit_primitive_params(const char* path_string, const char* n
     }
 
     VRGeometryPtr obj = static_pointer_cast<VRGeometry>( getSelected() );
-    obj->setPrimitive(prim + " " + args);
+    obj->setPrimitive(prim + " " + args);*/
 }
 
 void VRGuiScene::on_edit_distance(const char* path_string, const char* new_text) {
     if(!trigger_cbs) return;
     VRLodPtr lod = static_pointer_cast<VRLod>( getSelected() );
 
-    VRGuiTreeView tree_view("treeview8");
+    /*VRGuiTreeView tree_view("treeview8");
     tree_view.setSelectedStringValue(1, new_text);
 
     float f = toFloat(new_text);
     int i = toInt(path_string);
-    lod->setDistance(i,f);
+    lod->setDistance(i,f);*/
 }
 
 void VRGuiScene::on_lod_decimate_changed() {
     if(!trigger_cbs) return;
     VRLodPtr lod = static_pointer_cast<VRLod>( getSelected() );
-    lod->setDecimate(getCheckButtonState("checkbutton35"), toInt(getTextEntry("entry9")));
+    //lod->setDecimate(getCheckButtonState("checkbutton35"), toInt(getTextEntry("entry9")));
 }
 
 // CSG
@@ -738,8 +733,8 @@ void VRGuiScene::on_toggle_camera_accept_realroot() {
     if(!trigger_cbs) return;
     VRCameraPtr obj = static_pointer_cast<VRCamera>( getSelected() );
 
-    bool b = getCheckButtonState("checkbutton17");
-    obj->setAcceptRoot(b);
+    /*bool b = getCheckButtonState("checkbutton17");
+    obj->setAcceptRoot(b);*/
 }
 
 
@@ -751,21 +746,21 @@ void VRGuiScene::on_toggle_camera_accept_realroot() {
 
 template <class T>
 void VRGuiScene::on_menu_add() {
-    if(!selected_itr) return;
+    /*if(!selected_itr) return;
     auto obj = T::create("None");
     getSelected()->addChild(obj);
-    parseSGTree(obj, selected_itr);
+    parseSGTree(obj, selected_itr);*/
 }
 
 void VRGuiScene::on_menu_add_animation() {
-    if(!selected_itr) return;
+    //if(!selected_itr) return;
     //VRAnimation* obj = new VRAnimation("None");
     //getSelected()->addChild(obj);
     //parseSGTree(obj, selected_itr);
 }
 
 void VRGuiScene::on_menu_add_file() {
-    if(!selected_itr) return;
+    /*if(!selected_itr) return;
     auto scene = VRScene::getCurrent();
     if (scene == 0) return;
     VRGuiFile::gotoPath( scene->getWorkdir() );
@@ -777,11 +772,11 @@ void VRGuiScene::on_menu_add_file() {
     VRGuiFile::addFilter("3DS", 1, "*.3ds");
     VRGuiFile::addFilter("OBJ", 1, "*.obj");
     VRGuiFile::setGeoLoadWidget();
-    VRGuiFile::open( "Load", "open", "Load geometric data" );
+    VRGuiFile::open( "Load", "open", "Load geometric data" );*/
 }
 
 void VRGuiScene::on_menu_add_light() {
-    if(!selected_itr) return;
+    /*if(!selected_itr) return;
     auto scene = VRScene::getCurrent();
     if (scene == 0) return;
     VRLightPtr light = VRLight::create("light");
@@ -789,31 +784,31 @@ void VRGuiScene::on_menu_add_light() {
     light->addChild(lb);
     light->setBeacon(lb);
     getSelected()->addChild(light);
-    parseSGTree(light, selected_itr);
+    parseSGTree(light, selected_itr);*/
 }
 
 void VRGuiScene::on_menu_add_camera() {
-    if(!selected_itr) return;
+    /*if(!selected_itr) return;
     auto scene = VRScene::getCurrent();
     if (scene == 0) return;
     VRTransformPtr cam = VRCamera::create("camera");
     getSelected()->addChild(cam);
     parseSGTree(cam, selected_itr);
-    VRGuiSignals::get()->getSignal("camera_added")->triggerAll<VRDevice>();
+    VRGuiSignals::get()->getSignal("camera_added")->triggerAll<VRDevice>();*/
 }
 
 void VRGuiScene::on_menu_add_primitive(string s) {
-    if(!selected_itr) return;
+    /*if(!selected_itr) return;
 
     VRGeometryPtr geo = VRGeometry::create(s);
     geo->setPrimitive(s);
 
     getSelected()->addChild(geo);
-    parseSGTree(geo, selected_itr);
+    parseSGTree(geo, selected_itr);*/
 }
 
 void VRGuiScene::on_menu_delete() {
-    if(!selected_itr) return;
+    /*if(!selected_itr) return;
     //if (getSelected()->getPersistency() == 0) return; // if this behavior is intended, explain why..
     // todo: check for camera!!
 
@@ -821,16 +816,16 @@ void VRGuiScene::on_menu_delete() {
     if (!askUser(msg1, "Are you sure you want to delete this object?")) return;
     getSelected()->destroy();
     selected = -1;
-    removeTreeStoreBranch(selected_itr);
+    removeTreeStoreBranch(selected_itr);*/
 }
 
 void VRGuiScene::on_menu_copy() {
-    if(!selected_itr) return;
-    VRGuiScene_copied = getSelected();
+    //if(!selected_itr) return;
+    //VRGuiScene_copied = getSelected();
 }
 
 void VRGuiScene::on_menu_paste() {
-    if(!selected_itr) return;
+    /*if(!selected_itr) return;
     auto obj = VRGuiScene_copied.lock();
     if (obj == 0) return;
 
@@ -838,7 +833,7 @@ void VRGuiScene::on_menu_paste() {
     tmp->switchParent(getSelected());
     VRGuiScene_copied.reset();
 
-    parseSGTree(tmp, selected_itr);
+    parseSGTree(tmp, selected_itr);*/
 }
 
 /*void VRGuiScene::on_menu_add_csg() {
@@ -849,18 +844,18 @@ void VRGuiScene::on_menu_paste() {
 }*/
 
 void VRGuiScene::on_collada_import_clicked() {
-    string rel_path = VRGuiFile::getRelativePath_toWorkdir();
+    /*string rel_path = VRGuiFile::getRelativePath_toWorkdir();
     string path = VRGuiFile::getPath(); // absolute path
     cout << "Data import: " << path << ", relative: " << rel_path << endl;
     VRGuiFile::close();
 
     // import stuff
     VRObjectPtr tmp = VRImport::get()->load(rel_path, getSelected());
-    parseSGTree(tmp, selected_itr);
+    parseSGTree(tmp, selected_itr);*/
 }
 
-void VRGuiScene::on_drag_end(GdkDragContext* dc) {
-    auto act = gdk_drag_context_get_selected_action(dc);
+void VRGuiScene::on_drag_end() {
+    /*auto act = gdk_drag_context_get_selected_action(dc);
     auto dest = dragDest.lock();
     if (dest == 0) return;
     if (act == 0) return;
@@ -871,15 +866,15 @@ void VRGuiScene::on_drag_end(GdkDragContext* dc) {
     GtkTreeIter iter;
     GtkTreeModel* model = gtk_tree_view_get_model(tree_view);
     gtk_tree_model_get_iter_from_string(model, &iter, obj->getPath().c_str());
-    setSGRow(&iter, obj);
+    setSGRow(&iter, obj);*/
 }
 
-void VRGuiScene::on_drag_beg(GdkDragContext* dc) {
+void VRGuiScene::on_drag_beg() {
     //cout << "\nDRAG BEGIN " << dc->get_selection() << endl;
 }
 
-void VRGuiScene::on_drag_data_receive(GdkDragContext* dc, int x, int y, GtkSelectionData* sd, guint info, guint time) {
-    GtkTreePath* path = 0;
+void VRGuiScene::on_drag_data_receive(/*GdkDragContext* dc, int x, int y, GtkSelectionData* sd, guint info, guint time*/) {
+    /*GtkTreePath* path = 0;
     GtkTreeViewDropPosition pos; // enum
     gtk_tree_view_get_drag_dest_row(tree_view, &path, &pos);
     if (path == 0) return;
@@ -902,14 +897,8 @@ void VRGuiScene::on_drag_data_receive(GdkDragContext* dc, int x, int y, GtkSelec
     if (obj->hasTag("treeviewNotDragable")) { gdk_drag_status(dc, GdkDragAction(0),0); return; } // object is not dragable
     if (dragPath == "0" && pos <= 1) { gdk_drag_status(dc, GdkDragAction(0),0); return; } // drag out of root
 
-    /*GtkTreeIter* iter = tree_view->get_model()->get_iter(path);
-    if(!iter) { dc->drag_status(Gdk::DragAction(0),0); return; }
-    ModelColumns cols; // name, type, obj, fg, bg
-    Gtk::TreeModel::Row row = *iter;
-    string dest_path = row.get_value(cols.obj);*/
-
     auto scene = VRScene::getCurrent();
-    if (scene) dragDest = scene->getRoot()->getAtPath(dragPath);
+    if (scene) dragDest = scene->getRoot()->getAtPath(dragPath);*/
 }
 
 
@@ -917,12 +906,12 @@ void VRGuiScene::on_drag_data_receive(GdkDragContext* dc, int x, int y, GtkSelec
 
 void VRGuiScene::on_toggle_T_mode() {
     if (!trigger_cbs) return;
-    transformModeLocal = getRadioButtonState("radiobutton19");
+    /*transformModeLocal = getRadioButtonState("radiobutton19");
 
     VRObjectPtr obj = getSelected();
     if (obj) {
         if (obj->hasTag("transform")) setTransform(static_pointer_cast<VRTransform>(obj));
-    }
+    }*/
 }
 
 void VRGuiScene::on_toggle_T_constraint_mode() {
@@ -937,40 +926,40 @@ void VRGuiScene::on_toggle_phys() {
     if(!trigger_cbs) return;
     VRTransformPtr obj = static_pointer_cast<VRTransform>( getSelected() );
 
-    bool phys = getCheckButtonState("checkbutton13");
+    /*bool phys = getCheckButtonState("checkbutton13");
 #ifndef WITHOUT_BULLET
     if (obj->getPhysics()) obj->getPhysics()->setPhysicalized(phys);
 #endif
-    setWidgetSensitivity("combobox8", phys);
+    setWidgetSensitivity("combobox8", phys);*/
 }
 
 void VRGuiScene::on_toggle_dynamic() {
     if(!trigger_cbs) return;
     VRTransformPtr obj = static_pointer_cast<VRTransform>( getSelected() );
 
-    bool dyn = getCheckButtonState("checkbutton33");
+    /*bool dyn = getCheckButtonState("checkbutton33");
 #ifndef WITHOUT_BULLET
     if (obj->getPhysics()) obj->getPhysics()->setDynamic(dyn);
-#endif
+#endif*/
 }
 
 void VRGuiScene::on_mass_changed() {
     if(!trigger_cbs) return;
     VRTransformPtr obj = static_pointer_cast<VRTransform>( getSelected() );
 
-    string m = getTextEntry("entry59");
+    /*string m = getTextEntry("entry59");
 #ifndef WITHOUT_BULLET
     if (obj->getPhysics()) obj->getPhysics()->setMass(toFloat(m));
-#endif
+#endif*/
 }
 
 void VRGuiScene::on_change_phys_shape() {
     if(!trigger_cbs) return;
     VRTransformPtr obj = static_pointer_cast<VRTransform>( getSelected() );
-    string t = getComboboxText("combobox8");
+    /*string t = getComboboxText("combobox8");
 #ifndef WITHOUT_BULLET
     if (obj->getPhysics()) obj->getPhysics()->setShape(t);
-#endif
+#endif*/
 }
 
 
@@ -1017,35 +1006,35 @@ void VRGuiScene::setGeometry_face_count() {
 void VRGuiScene::on_cam_aspect_changed() {
     if(!trigger_cbs) return;
     VRCameraPtr obj = static_pointer_cast<VRCamera>( getSelected() );
-    string a = getTextEntry("entry60");
-    obj->setAspect(toFloat(a));
+    /*string a = getTextEntry("entry60");
+    obj->setAspect(toFloat(a));*/
 }
 
 void VRGuiScene::on_cam_fov_changed() {
     if(!trigger_cbs) return;
     VRCameraPtr obj = static_pointer_cast<VRCamera>( getSelected() );
-    string f = getTextEntry("entry61");
-    obj->setFov(toFloat(f));
+    /*string f = getTextEntry("entry61");
+    obj->setFov(toFloat(f));*/
 }
 
 void VRGuiScene::on_cam_near_changed() {
     if(!trigger_cbs) return;
     VRCameraPtr obj = static_pointer_cast<VRCamera>( getSelected() );
-    string f = getTextEntry("entry6");
-    obj->setNear(toFloat(f));
+    /*string f = getTextEntry("entry6");
+    obj->setNear(toFloat(f));*/
 }
 
 void VRGuiScene::on_cam_far_changed() {
     if(!trigger_cbs) return;
     VRCameraPtr obj = static_pointer_cast<VRCamera>( getSelected() );
-    string f = getTextEntry("entry7");
-    obj->setFar(toFloat(f));
+    /*string f = getTextEntry("entry7");
+    obj->setFar(toFloat(f));*/
 }
 
 void VRGuiScene::on_change_cam_proj() {
     if(!trigger_cbs) return;
     VRCameraPtr obj = static_pointer_cast<VRCamera>( getSelected() );
-    obj->setType(getComboboxI("combobox23"));
+    //obj->setType(getComboboxI("combobox23"));
 }
 // ----------------------------------------------
 
@@ -1054,23 +1043,23 @@ void VRGuiScene::on_toggle_light() {
     if(!trigger_cbs) return;
     VRLightPtr obj = static_pointer_cast<VRLight>( getSelected() );
     if (!obj) return;
-    bool b = getCheckButtonState("checkbutton31");
-    obj->setOn(b);
+    /*bool b = getCheckButtonState("checkbutton31");
+    obj->setOn(b);*/
 }
 
 void VRGuiScene::on_toggle_light_shadow() {
     if(!trigger_cbs) return;
     VRLightPtr obj = static_pointer_cast<VRLight>( getSelected() );
     if (!obj) return;
-    bool b = getCheckButtonState("checkbutton32");
-    obj->setShadows(b);
+    /*bool b = getCheckButtonState("checkbutton32");
+    obj->setShadows(b);*/
 }
 
 void VRGuiScene::on_toggle_light_shadow_volume() {
     if(!trigger_cbs) return;
     VRLightPtr obj = static_pointer_cast<VRLight>( getSelected() );
     if (!obj) return;
-    bool b = getCheckButtonState("checkbutton2");
+    /*bool b = getCheckButtonState("checkbutton2");
     float D = toFloat( getTextEntry("entry36") );
     Boundingbox bb;
     if (!b) obj->setShadowVolume( bb );
@@ -1078,69 +1067,69 @@ void VRGuiScene::on_toggle_light_shadow_volume() {
         bb.inflate( 0.5*D );
         cout << "VRGuiScene::on_toggle_light_shadow_volume " << 0.5*D << " " << bb.volume() << " " << bb.size() << endl;
         obj->setShadowVolume( bb );
-    }
+    }*/
 }
 
 void VRGuiScene::on_change_light_type() {
     if(!trigger_cbs) return;
     VRLightPtr obj = static_pointer_cast<VRLight>( getSelected() );
-    if (!obj) return;
+    /*if (!obj) return;
     string t = getComboboxText("combobox2");
-    obj->setType(t);
+    obj->setType(t);*/
 }
 
 void VRGuiScene::on_change_light_shadow() {
     if(!trigger_cbs) return;
     VRLightPtr obj = static_pointer_cast<VRLight>( getSelected() );
-    if (!obj) return;
+    /*if (!obj) return;
     string t = getComboboxText("combobox22");
-    obj->setShadowMapRes(toInt(t));
+    obj->setShadowMapRes(toInt(t));*/
 }
 
 void VRGuiScene::on_edit_light_attenuation() {
     if(!trigger_cbs) return;
     VRLightPtr obj = static_pointer_cast<VRLight>( getSelected() );
     if (!obj) return;
-    string ac = getTextEntry("entry44");
+    /*string ac = getTextEntry("entry44");
     string al = getTextEntry("entry45");
     string aq = getTextEntry("entry46");
-    obj->setAttenuation(Vec3d(toFloat(ac), toFloat(al), toFloat(aq)));
+    obj->setAttenuation(Vec3d(toFloat(ac), toFloat(al), toFloat(aq)));*/
 }
 
-bool VRGuiScene::setShadow_color(GdkEventButton* b) {
+bool VRGuiScene::setShadow_color() {
     if(!trigger_cbs) return true;
     VRLightPtr obj = static_pointer_cast<VRLight>( getSelected() );
     if (!obj) return true;
-    Color4f c = chooseColor("shadow_col", obj->getShadowColor());
+    /*Color4f c = chooseColor("shadow_col", obj->getShadowColor());
     obj->setShadowColor(c);
-    return true;
+    return true;*/
 }
 
-bool VRGuiScene::setLight_diff_color(GdkEventButton* b) {
+bool VRGuiScene::setLight_diff_color() {
     if(!trigger_cbs) return true;
     VRLightPtr obj = static_pointer_cast<VRLight>( getSelected() );
     if (!obj) return true;
-    Color4f c = chooseColor("light_diff", obj->getDiffuse());
+    /*Color4f c = chooseColor("light_diff", obj->getDiffuse());
     obj->setDiffuse(c);
-    return true;
+    return true;*/
 }
 
-bool VRGuiScene::setLight_amb_color(GdkEventButton* b) {
+bool VRGuiScene::setLight_amb_color() {
     if(!trigger_cbs) return true;
     VRLightPtr obj = static_pointer_cast<VRLight>( getSelected() );
-    if (!obj) return true;
+    /*if (!obj) return true;
     Color4f c = chooseColor("light_amb", obj->getAmbient());
     obj->setAmbient(c);
-    return true;
+    return true;*/
 }
 
-bool VRGuiScene::setLight_spec_color(GdkEventButton* b) {
+bool VRGuiScene::setLight_spec_color() {
     if(!trigger_cbs) return true;
     VRLightPtr obj = static_pointer_cast<VRLight>( getSelected() );
     if (!obj) return true;
-    Color4f c = chooseColor("light_spec", obj->getSpecular());
+    /*Color4f c = chooseColor("light_spec", obj->getSpecular());
     obj->setSpecular(c);
-    return true;
+    return true;*/
 }
 // ----------------------------------------------
 
@@ -1154,38 +1143,38 @@ void VRGuiScene::setMaterial_lit() {
     if(!trigger_cbs) return;
     auto geo = selected_geometry.lock();
     if(!geo) return;
-    bool b = getCheckButtonState("checkbutton3");
-    geo->getMaterial()->setLit(b);
+    /*bool b = getCheckButtonState("checkbutton3");
+    geo->getMaterial()->setLit(b);*/
 }
 
-bool VRGuiScene::setMaterial_diffuse(GdkEventButton* b) {
+bool VRGuiScene::setMaterial_diffuse() {
     if(!trigger_cbs) return true;
     auto geo = selected_geometry.lock();
     if(!geo) return true;
-    Color4f c = toColor4f(geo->getMaterial()->getDiffuse());
+    /*Color4f c = toColor4f(geo->getMaterial()->getDiffuse());
     c[3] = geo->getMaterial()->getTransparency();
     c = chooseColor("mat_diffuse", c);
     geo->getMaterial()->setDiffuse(toColor3f(c));
     geo->getMaterial()->setTransparency(c[3]);
-    return true;
+    return true;*/
 }
 
-bool VRGuiScene::setMaterial_specular(GdkEventButton* b) {
+bool VRGuiScene::setMaterial_specular() {
     if(!trigger_cbs) return true;
     auto geo = selected_geometry.lock();
     if(!geo) return true;
-    Color4f c = chooseColor("mat_specular", toColor4f(geo->getMaterial()->getSpecular()));
+    /*Color4f c = chooseColor("mat_specular", toColor4f(geo->getMaterial()->getSpecular()));
     geo->getMaterial()->setSpecular(toColor3f(c));
-    return true;
+    return true;*/
 }
 
-bool VRGuiScene::setMaterial_ambient(GdkEventButton* b) {
+bool VRGuiScene::setMaterial_ambient() {
     if(!trigger_cbs) return true;
     auto geo = selected_geometry.lock();
     if(!geo) return true;
-    Color4f c = chooseColor("mat_ambient", toColor4f(geo->getMaterial()->getAmbient()));
+    /*Color4f c = chooseColor("mat_ambient", toColor4f(geo->getMaterial()->getAmbient()));
     geo->getMaterial()->setAmbient(toColor3f(c));
-    return true;
+    return true;*/
 }
 
 void VRGuiScene::setMaterial_pointsize() { // TODO
@@ -1206,7 +1195,7 @@ void VRGuiScene::setMaterial_texture_name() {
 // ----------------------------------------------
 
 void VRGuiScene::initMenu() {
-    menu = new VRGuiContextMenu("SGMenu");
+    /*menu = new VRGuiContextMenu("SGMenu");
     menu->connectWidget("SGMenu", (GtkWidget*)tree_view);
 
     menu->appendMenu("SGMenu", "Add", "SGM_AddMenu");
@@ -1238,16 +1227,16 @@ void VRGuiScene::initMenu() {
 
     // building elements
     //menu->appendItem("SGM_AddUrbBuiMenu", "Opening", bind(&VRGuiScene::on_menu_add<VROpening>) );
-    //menu->appendItem("SGM_AddUrbBuiMenu", "Device", bind(&VRGuiScene::on_menu_add<VRElectricDevice>) );
+    //menu->appendItem("SGM_AddUrbBuiMenu", "Device", bind(&VRGuiScene::on_menu_add<VRElectricDevice>) );*/
 }
 
 void VRGuiScene::initCallbacks() {
-    setToggleButtonCallback("checkbutton3", bind(&VRGuiScene::setMaterial_lit, this));
+    //setToggleButtonCallback("checkbutton3", bind(&VRGuiScene::setMaterial_lit, this));
 }
 
 // TODO: remove groups
 VRGuiScene::VRGuiScene() { // TODO: reduce callbacks with templated functions
-    dragDest.reset();
+    /*dragDest.reset();
 
     initCallbacks();
 
@@ -1348,12 +1337,12 @@ VRGuiScene::VRGuiScene() { // TODO: reduce callbacks with templated functions
     menu->connectWidget("GeoMenu", (GtkWidget*)tree_view9);
     menu->appendItem("GeoMenu", "Print", bind(&VRGuiScene::on_geo_menu_print, this));
 
-    updateObjectForms();
+    updateObjectForms();*/
 }
 
 // new scene, update stuff here
 bool VRGuiScene::updateTreeView() {
-	cout << "VRGuiScene::updateTreeView" << endl;
+	/*cout << "VRGuiScene::updateTreeView" << endl;
     auto scene = VRScene::getCurrent();
     if (scene == 0) return true;
 
@@ -1363,7 +1352,7 @@ bool VRGuiScene::updateTreeView() {
     gtk_tree_view_expand_all(tree_view);
 
     setWidgetSensitivity("table11", false);
-    return true;
+    return true;*/
 }
 
 // check if currently getSelected() object has been modified
@@ -1373,7 +1362,7 @@ void VRGuiScene::update() {
 }
 
 void VRGuiScene::selectObject(VRObjectPtr obj) {
-    string path = obj->getPath();
+    /*string path = obj->getPath();
     GtkTreePath* tpath = gtk_tree_path_new_from_string(path.c_str());
     GtkTreeViewColumn* focus_column = gtk_tree_view_get_column(tree_view, 0);
     gtk_tree_view_expand_to_path(tree_view, tpath);
@@ -1387,7 +1376,7 @@ void VRGuiScene::selectObject(VRObjectPtr obj) {
     updateObjectForms();
 
     selected_geometry.reset();
-    if (obj && obj->hasTag("geometry")) selected_geometry = static_pointer_cast<VRGeometry>(obj);
+    if (obj && obj->hasTag("geometry")) selected_geometry = static_pointer_cast<VRGeometry>(obj);*/
 }
 
 OSG_END_NAMESPACE;

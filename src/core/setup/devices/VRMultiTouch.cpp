@@ -2,7 +2,7 @@
 #include "core/utils/toString.h"
 #include "core/utils/VRFunction.h"
 #include "core/setup/VRSetup.h"
-#include "core/setup/windows/VRGtkWindow.h"
+#include "core/setup/windows/VRWindow.h"
 #include "core/scene/VRSceneManager.h"
 #include "core/objects/VRCamera.h"
 #include "core/objects/OSGCamera.h"

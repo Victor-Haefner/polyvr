@@ -6,9 +6,6 @@
 
 #include <map>
 
-struct _GtkFixed;
-struct _GtkFrame;
-
 using namespace std;
 OSG_BEGIN_NAMESPACE;
 
@@ -25,14 +22,14 @@ class VRCanvasWidget : public std::enable_shared_from_this<VRCanvasWidget> {
         bool subTreeFolded = false;
         ORIGIN origin = CENTER;
 
-        _GtkFixed* canvas = 0;
-        _GtkFrame* widget = 0;
+        //_GtkFixed* canvas = 0;
+        //_GtkFrame* widget = 0;
 
         map<VRCanvasWidget*, VRCanvasWidgetWeakPtr> children;
         map<VRConnectorWidget*, VRConnectorWidgetWeakPtr> connectors;
 
 	public:
-		VRCanvasWidget(_GtkFixed* canvas);
+		VRCanvasWidget();
 		~VRCanvasWidget();
 
 		VRCanvasWidgetPtr ptr();

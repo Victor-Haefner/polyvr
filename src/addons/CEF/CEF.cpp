@@ -18,11 +18,8 @@
 #include "core/utils/VRLogger.h"
 #include "core/utils/system/VRSystem.h"
 
-#ifndef WITHOUT_GTK
-#include "core/gui/VRGuiFile.h"
 #include "core/gui/VRGuiManager.h"
 #include "core/gui/VRGuiConsole.h"
-#endif // WITHOUT_GTK
 
 using namespace OSG;
 
@@ -496,19 +493,20 @@ bool CEF_handler::OnFileDialog(CefRefPtr< CefBrowser > browser, CefDialogHandler
 bool CEF_handler::OnFileDialog( CefRefPtr< CefBrowser > browser, CefDialogHandler::FileDialogMode mode, const CefString& title, const CefString& default_file_path, const std::vector< CefString >& accept_filters, int selected_accept_filter, CefRefPtr< CefFileDialogCallback > callback ) {
 #endif
     auto onAccept = [callback](){
-#ifdef _WIN32
+/*#ifdef _WIN32
         callback->Continue( { VRGuiFile::getPath() } );
 #else
         callback->Continue(0, { VRGuiFile::getPath() });
-#endif
+#endif*/
     };
 
     auto onCancel = [callback](){
         callback->Cancel();
     };
 
-    VRGuiFile::setCallbacks(onAccept, onCancel);
-    VRGuiFile::open("Open", 0, title);
+    // TODO
+    //VRGuiFile::setCallbacks(onAccept, onCancel);
+    //VRGuiFile::open("Open", 0, title);
     return true;
 }
 

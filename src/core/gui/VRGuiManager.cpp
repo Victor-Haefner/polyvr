@@ -1,12 +1,10 @@
 #include "VRGuiManager.h"
-#include "VRGuiBuilder.h"
 #include "imgui/VRImguiManager.h"
 #include "core/scene/VRScene.h"
 #include "core/scene/VRSceneLoader.h"
 #include "core/scene/VRSceneManager.h"
 #include "core/setup/VRSetupManager.h"
 #include "core/scripting/VRScript.h"
-#include "VRGuiUtils.h"
 #include "VRAppManager.h"
 #include "VRGuiScene.h"
 #include "VRGuiBits.h"
@@ -20,14 +18,9 @@
 #include "VRGuiSemantics.h"
 #include "core/utils/VROptions.h"
 #include "core/utils/VRFunction.h"
+#include "core/utils/VRMutex.h"
 #include "core/setup/devices/VRDevice.h"
 #include "core/setup/devices/VRSignalT.h"
-
-#include "glarea/glgdk.h"
-#include "glarea/glarea.h"
-
-#include "core/utils/VRMutex.h"
-
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -155,7 +148,7 @@ void VRGuiManager::init() {
     guiSignalCbs.push_back(fkt);
 
 
-    GtkWindow* top = (GtkWindow*)VRGuiBuilder::get()->get_widget("window1");
+    /*GtkWindow* top = (GtkWindow*)VRGuiBuilder::get()->get_widget("window1");
     gtk_window_maximize(top);
     gtk_widget_show_all((GtkWidget*)top);
 
@@ -164,7 +157,7 @@ void VRGuiManager::init() {
 
 #ifdef _WIN32
     disableBlur(gtk_widget_get_window(GTK_WIDGET(top)));
-#endif
+#endif*/
     cout << " done" << endl;
 }
 
@@ -178,8 +171,8 @@ void VRGuiManager::initImguiPopup() {
 }
 
 void VRGuiManager::setWindowTitle(string title) {
-    GtkWindow* top = (GtkWindow*)VRGuiBuilder::get()->get_widget("window1");
-    gtk_window_set_title(top, title.c_str());
+    //GtkWindow* top = (GtkWindow*)VRGuiBuilder::get()->get_widget("window1");
+    //gtk_window_set_title(top, title.c_str());
 }
 
 void VRGuiManager::selectObject(VRObjectPtr obj) {
@@ -226,8 +219,8 @@ bool VRGuiManager::triggerResize(string name, int x, int y, int w, int h) {
 }
 
 void VRGuiManager::wakeWindow() {
-    setWidgetSensitivity("vpaned1", true);
-    setWidgetSensitivity("notebook3", true);
+    /*setWidgetSensitivity("vpaned1", true);
+    setWidgetSensitivity("notebook3", true);*/
 }
 
 VRConsoleWidgetPtr VRGuiManager::getConsole(string t) {
@@ -240,7 +233,7 @@ void VRGuiManager::update() {
     if (!standalone && g_bits) g_bits->update_terminals();
 }
 
-GtkWindow* VRGuiManager::newWindow() {
+/*GtkWindow* VRGuiManager::newWindow() {
     GtkWindow* w = (GtkWindow*)gtk_window_new(GTK_WINDOW_TOPLEVEL);
     gtk_window_set_default_size(w, 200, 200);
     gtk_widget_show_all((GtkWidget*)w);
@@ -248,7 +241,7 @@ GtkWindow* VRGuiManager::newWindow() {
 }
 
 void VRGuiManager::remWindow(GtkWindow* w) {
-}
+}*/
 
 OSG_END_NAMESPACE;
 

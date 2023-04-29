@@ -13,8 +13,6 @@
 #include "VRGuiFwd.h"
 #include "VRGuiSignals.h"
 
-struct _GtkWindow;
-
 namespace boost { class recursive_mutex; }
 
 OSG_BEGIN_NAMESPACE;
@@ -61,8 +59,8 @@ class VRGuiManager {
 
         void selectObject(VRObjectPtr obj);
 
-        _GtkWindow* newWindow();
-        void remWindow(_GtkWindow* w);
+        /*_GtkWindow* newWindow();
+        void remWindow(_GtkWindow* w);*/
 
         void setWindowTitle(string title);
 

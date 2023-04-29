@@ -206,6 +206,14 @@ void VRGlutEditor::render(bool fromThread) {
     }
 }
 
+void VRGlutEditor::forceGLResize(int w, int h) { // TODO
+    ;
+}
+
+void VRGlutEditor::enableVSync(bool b) { // TODO
+    ;
+}
+
 void VRGlutEditor::on_gl_resize(int w, int h) {
     cout << "  Glut::on_gl_resize " << w << ", " << h << endl;
     if (winGL < 0) return;

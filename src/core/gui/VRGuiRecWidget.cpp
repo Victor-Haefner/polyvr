@@ -1,8 +1,6 @@
 #include <OpenSG/OSGRenderAction.h>
 
 #include "VRGuiRecWidget.h"
-#include "VRGuiUtils.h"
-#include "VRGuiBuilder.h"
 
 #include "core/tools/VRRecorder.h"
 #include "core/scene/VRSceneManager.h"
@@ -71,13 +69,13 @@ VRGuiRecWidget::VRGuiRecWidget() {
 }
 
 void VRGuiRecWidget::onSCPathChanged() {
-    screenshots_path = getTextEntry("sc_entry");
+    //screenshots_path = getTextEntry("sc_entry");
 }
 
 void VRGuiRecWidget::onSCTrigger() {
     if (!exists(screenshots_path)) makedir(screenshots_path);
-    auto tex = takeSnapshot(true);
-    tex->write(screenshots_path+"/pvr_"+toString(time(0))+".png");
+    /*auto tex = takeSnapshot(true);
+    tex->write(screenshots_path+"/pvr_"+toString(time(0))+".png");*/
 }
 
 void VRGuiRecWidget::onSCChangeDir() { // TODO
@@ -88,25 +86,25 @@ VRGuiRecWidget::~VRGuiRecWidget() {}
 
 void VRGuiRecWidget::on_codec_changed() {
 #ifndef WITHOUT_AV
-	rec->setCodec( getComboboxText("codecs") );
+	//rec->setCodec( getComboboxText("codecs") );
 #endif
 }
 
 void VRGuiRecWidget::on_toggle_vsync() {
 #ifndef WITHOUT_AV
-	rec->enableVSync( getCheckButtonState("doVSyncCB") );
+	//rec->enableVSync( getCheckButtonState("doVSyncCB") );
 #endif
 }
 
 void VRGuiRecWidget::on_res_changed() {
 #ifndef WITHOUT_AV
-	rec->setViewResolution( getComboboxText("resolutions") );
+	//rec->setViewResolution( getComboboxText("resolutions") );
 #endif
 }
 
 void VRGuiRecWidget::on_bitrate_changed() {
 #ifndef WITHOUT_AV
-	rec->setBitrate( toInt( getTextEntry("entry27") ) );
+	//rec->setBitrate( toInt( getTextEntry("entry27") ) );
 #endif
 }
 

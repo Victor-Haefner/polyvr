@@ -1,8 +1,5 @@
 #include "VRGuiEditor.h"
-#include "VRGuiUtils.h"
-#include "VRGuiBuilder.h"
 #include "VRGuiManager.h"
-#include "VRGuiCodeCompletion.h"
 #include "core/scene/VRSceneManager.h"
 #include "core/scripting/VRScript.h"
 #include "core/utils/VRFunction.h"
@@ -252,8 +249,8 @@ void VRGuiEditor::setSelection(string s) {
     highlightStrings(selection, "asSelected");
 }
 
-bool VRGuiEditor_on_editor_select(GtkWidget* widget, GdkEvent* event, VRGuiEditor* self) {
-    /*GdkEventButton* event_btn = (GdkEventButton*)event;
+/*bool VRGuiEditor_on_editor_select(GtkWidget* widget, GdkEvent* event, VRGuiEditor* self) {
+    GdkEventButton* event_btn = (GdkEventButton*)event;
 
     if (event->type == GDK_BUTTON_RELEASE && event_btn->button == 1) {
         auto editor = GTK_TEXT_VIEW(widget);
@@ -271,10 +268,10 @@ bool VRGuiEditor_on_editor_select(GtkWidget* widget, GdkEvent* event, VRGuiEdito
     if (event->type == GDK_KEY_RELEASE || event->type == GDK_BUTTON_RELEASE) { // remove selection on any key or button
         self->setSelection("");
         return false;
-    }*/
+    }
 
     return false;
-}
+}*/
 
 void VRGuiEditor::setLanguage(string lang) {
     uiSignal("script_editor_set_lang", {{"lang", lang}});

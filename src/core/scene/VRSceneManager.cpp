@@ -20,12 +20,8 @@
 #include "core/objects/VRLightBeacon.h"
 #include "addons/Semantics/Reasoning/VROntology.h"
 
-#ifndef WITHOUT_GTK
 #include "core/gui/VRGuiManager.h"
 #include "core/gui/VRGuiSignals.h"
-#include "core/gui/VRGuiFile.h"
-#include "core/gui/VRGuiUtils.h"
-#endif
 
 #include <OpenSG/OSGSceneFileHandler.h>
 #include <boost/filesystem.hpp>
@@ -84,16 +80,12 @@ void VRSceneManager::loadScene(string path, bool write_protected, string encrypt
     newEmptyScene(path);
     bool success = VRSceneLoader::get()->loadScene(path, encryptionKey);
     if (!success) {
-#ifndef WITHOUT_GTK
-        notifyUser("Could not load scene", "File '" + path + "' not found or corrupted!");
-#endif
+        //notifyUser("Could not load scene", "File '" + path + "' not found or corrupted!");
         return;
     }
     current->setFlag("write_protected", write_protected);
 
-#ifndef WITHOUT_GTK
     VRGuiSignals::get()->getSignal("scene_changed")->triggerAll<VRDevice>(); // update gui
-#endif
 
     cout << " VRSceneManager, storeFavorites" << endl;
     if (auto pEntry = projects->getEntry(path)) {
@@ -234,7 +226,7 @@ void VRSceneManager::searchExercisesAndFavorites() {
     examples->clear();
 
     // examples
-	vector<string> files = VRGuiFile::listDir("examples");
+	/*vector<string> files = VRGuiFile::listDir("examples");
 	for (string file : files) {
 		int N = file.size(); if (N < 6) continue;
 
@@ -260,7 +252,7 @@ void VRSceneManager::searchExercisesAndFavorites() {
         storeFavorites();
         remove("examples/.cfg"); // remove old config file
         return;
-    }
+    }*/
 
     projects->loadFromFile("examples/.config");
 #endif
@@ -301,21 +293,6 @@ void VRSceneManager::update() {
         static VRRate FPS;
         fps = FPS.getRate();
         timer.start();
-    };
-
-    auto doGTKUpdate = [&]() {
-#ifndef WASM
-        int pID7 = profiler->regStart("frame gtk update");
-#endif
-        VRTimer t1; t1.start();
-#ifndef WITHOUT_GTK
-        VRSetup::getCurrent()->updateGtkDevices();
-#endif
-        VRGlobals::GTK1_FRAME_RATE.update(t1);
-        VRGlobals::UPDATE_LOOP1.update(timer);
-#ifndef WASM
-        profiler->regStop(pID7);
-#endif
     };
 
     auto doCallbacks = [&]() {

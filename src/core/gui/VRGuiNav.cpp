@@ -4,13 +4,7 @@
 #include "core/scene/VRScene.h"
 #include "core/utils/toString.h"
 #include "core/objects/VRCamera.h"
-#include "VRGuiUtils.h"
-#include "VRGuiBuilder.h"
 #include "VRGuiSignals.h"
-
-#include "wrapper/VRGuiTreeView.h"
-
-#include <gtk/gtk.h>
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -20,16 +14,11 @@ using namespace std;
 // ---------SIGNALS----------
 // --------------------------
 
-GtkListStore* navBindings_store = 0;
-
 void VRGuiNav::on_preset_changed() {
     auto scene = VRScene::getCurrent();
     if (scene == 0) return;
-    auto preset = scene->getNavigation(getComboboxText("combobox5"));
+    /*auto preset = scene->getNavigation(getComboboxText("combobox5"));
     if (preset == 0) return;
-
-    //get binding type liststore
-    //GtkListStore* store = (GtkListStore*)VRGuiBuilder::get()->get_object("binding_types");
 
     //TODO: get all bindings from preset && update nav_bindings
     gtk_list_store_clear(navBindings_store);
@@ -47,7 +36,7 @@ void VRGuiNav::on_preset_changed() {
         gtk_list_store_set(navBindings_store, &row, 2, type.c_str(), -1);
         gtk_list_store_set(navBindings_store, &row, 3, cb_name.c_str(), -1);
         gtk_list_store_set(navBindings_store, &row, 4, NULL, -1);
-    }
+    }*/
 }
 
 
@@ -58,39 +47,37 @@ void VRGuiNav::on_new_preset_clicked() {
     scene->addNavigation(preset);
     preset->setTarget(scene->getActiveCamera());
 
-    GtkListStore* store = (GtkListStore*)VRGuiBuilder::get()->get_object("nav_presets");
+    /*GtkListStore* store = (GtkListStore*)VRGuiBuilder::get()->get_object("nav_presets");
     GtkTreeIter row;
     gtk_list_store_append(store, &row);
     gtk_list_store_set(store, &row, 0, preset->getName().c_str(), -1);
-
-    setComboboxLastActive("combobox5");
+    setComboboxLastActive("combobox5");*/
 }
 
 void VRGuiNav::on_del_preset_clicked() {
-    string preset = getComboboxText("combobox5");
+    /*string preset = getComboboxText("combobox5");
     auto scene = VRScene::getCurrent();
     if (scene == 0) return;
     scene->remNavigation(preset);
-    eraseComboboxActive("combobox5");
+    eraseComboboxActive("combobox5");*/
 }
 
 void VRGuiNav::on_new_binding_clicked() {
     auto scene = VRScene::getCurrent();
     if (scene == 0) return;
-    auto preset = scene->getNavigation(getComboboxText("combobox5"));
+    /*auto preset = scene->getNavigation(getComboboxText("combobox5"));
     VRDeviceCbPtr fkt;
     //cb = VRFunction<VRDeviceWeakPtr>::create( bind(&VRNavigator::sandBoxNavigation, this, _1) ); //TODO
     VRNavBinding binding(fkt, 0, 0, false);
     preset->addKeyBinding(binding);
-
-    on_preset_changed();// update bindings in treeview
+    on_preset_changed();*/ // update bindings in treeview
 }
 
 void VRGuiNav::on_del_binding_clicked() { // TODO
     ;
 }
 
-void VRGuiNav_on_keybinding_edited(GtkCellRendererText *cell, gchar *path_string, gchar *new_text, gpointer d) {
+/*void VRGuiNav_on_keybinding_edited(GtkCellRendererText *cell, gchar *path_string, gchar *new_text, gpointer d) {
     VRGuiTreeView("treeview4").setSelectedStringValue(0, new_text);
 
     // do something
@@ -151,14 +138,14 @@ void VRGuiNav_on_cbbinding_changed(const char* path_string, GtkTreeIter* new_ite
     b.clearSignal();
     b.cb = cback;
     preset->updateBinding(b);
-}
+}*/
 
 // --------------------------
 // ---------Main-------------
 // --------------------------
 
 VRGuiNav::VRGuiNav() {
-    navBindings_store = (GtkListStore*)(VRGuiBuilder::get()->get_object("nav_bindings"));
+    /*navBindings_store = (GtkListStore*)(VRGuiBuilder::get()->get_object("nav_bindings"));
     setComboboxCallback("combobox5", bind(&VRGuiNav::on_preset_changed, this) );
 
     setButtonCallback("button2", bind(&VRGuiNav::on_new_preset_clicked, this) );
@@ -174,7 +161,7 @@ VRGuiNav::VRGuiNav() {
     g_signal_connect(crt, "edited", G_CALLBACK(VRGuiNav_on_statebinding_edited), NULL);
 
     setCellRendererCombo("treeviewcolumn12", "binding_types", 2, bind(VRGuiNav_on_typebinding_changed, placeholders::_1, placeholders::_2));
-    setCellRendererCombo("treeviewcolumn13", "binding_callbacks", 3, bind(VRGuiNav_on_cbbinding_changed, placeholders::_1, placeholders::_2));
+    setCellRendererCombo("treeviewcolumn13", "binding_callbacks", 3, bind(VRGuiNav_on_cbbinding_changed, placeholders::_1, placeholders::_2));*/
 }
 
 // scene updated, get cameras && nav presets
@@ -185,10 +172,8 @@ bool VRGuiNav::update() {
 
     vector<string> callbacks; // get navigator callback library!
     for (auto cb : scene->getNavigationCallbacks()) callbacks.push_back(cb.first);
-    fillStringListstore("binding_callbacks", callbacks);
-
-    setComboboxLastActive("combobox5");
-    //setCombobox("combobox5", getListStorePos( "nav_presets", scene->getActiveNavigation() ) );
+    //fillStringListstore("binding_callbacks", callbacks);
+    //setComboboxLastActive("combobox5");
     return true;
 }
 

@@ -9,11 +9,6 @@
 #include "VRGuiVectorEntry.h"
 #include "VRGuiEditor.h"
 
-struct _GtkTreeIter;
-struct _GtkTreeStore;
-struct _GdkEventButton;
-typedef void* gpointer;
-
 class VRGuiContextMenu;
 
 OSG_BEGIN_NAMESPACE;
@@ -21,9 +16,9 @@ using namespace std;
 
 class VRGuiSetup {
     private:
-        _GtkTreeIter* parent_row = 0;
+        /*_GtkTreeIter* parent_row = 0;
         gpointer selected_object;
-        gpointer selected_object_parent;
+        gpointer selected_object_parent;*/
         string selected_type;
         string selected_name;
         VRSetupWeakPtr current_setup;
@@ -70,7 +65,7 @@ class VRGuiSetup {
         void on_new_clicked();
         void on_foto_clicked();
         void on_setup_changed();
-        bool on_treeview_rightclick(_GdkEventButton* event);
+        bool on_treeview_rightclick();
 
         void on_menu_add_window();
         void on_menu_add_viewport();
@@ -165,7 +160,7 @@ class VRGuiSetup {
         void closeAllExpander();
         void updateObjectData();
 
-        void setTreeRow(_GtkTreeStore* tree_store, _GtkTreeIter* row, string name, string type, gpointer ptr, string fg = "#000000", string bg = "#FFFFFF");
+        //void setTreeRow(_GtkTreeStore* tree_store, _GtkTreeIter* row, string name, string type, gpointer ptr, string fg = "#000000", string bg = "#FFFFFF");
 
     public:
         VRGuiSetup();

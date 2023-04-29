@@ -3,9 +3,6 @@
 #include "core/utils/VRFunction.h"
 #include "core/setup/VRSetup.h"
 #include "core/setup/windows/VRWindow.h"
-#ifndef WITHOUT_GTK
-#include "core/setup/windows/VRGtkWindow.h"
-#endif
 #include "core/objects/VRCamera.h"
 #include "core/objects/OSGCamera.h"
 #include "VRSignal.h"
@@ -29,15 +26,15 @@ VRMousePtr VRMouse::create() {
 
 VRMousePtr VRMouse::ptr() { return static_pointer_cast<VRMouse>( shared_from_this() ); }
 
-void VRMouse::setCursor(string c) {
-    auto s = VRSetup::getCurrent();
+void VRMouse::setCursor(string c) { // TODO
+    /*auto s = VRSetup::getCurrent();
     for (auto w : s->getWindows()) {
         if (!w.second->hasType("gtk")) continue; // not a gtk window
 #ifndef WITHOUT_GTK
         auto win = dynamic_pointer_cast<VRGtkWindow>(w.second);
         win->setCursor(c);
 #endif
-    }
+    }*/
 }
 
 void VRMouse::clearSignals() {

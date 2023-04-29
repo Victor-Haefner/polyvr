@@ -136,6 +136,7 @@ void ImToolbar::begin() {
         uiSignal("ui_toggle_popup", {{"name","saveas"}, {"width","400"}, {"height","500"}});
     }
 
+    ImGui::SameLine(); if (ImGui::Button("Export")) uiSignal("toolbar_export");
     ImGui::SameLine(); if (ImGui::Button("Close")) uiSignal("toolbar_close");
     ImGui::SameLine(); if (ImGui::Button("Exit")) uiSignal("toolbar_exit");
     ImGui::SameLine(); if (ImGui::Button("About")) uiSignal("ui_toggle_popup", {{"name","about"}, {"width","400"}, {"height","500"}});

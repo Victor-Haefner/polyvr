@@ -1,7 +1,4 @@
 #include "VRGuiSemantics.h"
-#include "VRGuiUtils.h"
-#include "VRGuiBuilder.h"
-#include "VRGuiFile.h"
 #include "addons/Semantics/Reasoning/VROntology.h"
 #include "addons/Semantics/Reasoning/VRProperty.h"
 #include "addons/Semantics/Reasoning/VRReasoner.h"
@@ -19,8 +16,6 @@
 #include "widgets/VREntityWidget.h"
 #include "widgets/VRRuleWidget.h"
 #include "widgets/VRConnectorWidget.h"
-
-#include "wrapper/VRGuiTreeView.h"
 
 
 /** TODO:
@@ -88,21 +83,21 @@ void VRGuiSemantics::on_del_clicked() {
 void VRGuiSemantics::on_diag_load_clicked() {
     auto mgr = getManager();
     if (!mgr) return;
-    string path = VRGuiFile::getPath();
+    /*string path = VRGuiFile::getPath();
     auto o = mgr->loadOntology(path);
     o->setPersistency(666);
-    o->setFlag("custom");
+    o->setFlag("custom");*/
     updateOntoList();
     saveScene();
 }
 
 void VRGuiSemantics::on_open_clicked() {
-    VRGuiFile::setCallbacks( bind(&VRGuiSemantics::on_diag_load_clicked, this) );
+    /*VRGuiFile::setCallbacks( bind(&VRGuiSemantics::on_diag_load_clicked, this) );
     VRGuiFile::gotoPath( g_get_home_dir() );
     VRGuiFile::clearFilter();
     VRGuiFile::addFilter("Ontology", 1, "*.owl");
     VRGuiFile::addFilter("All", 1, "*");
-    VRGuiFile::open( "Load", "open", "Load ontology" );
+    VRGuiFile::open( "Load", "open", "Load ontology" );*/
 }
 
 void VRGuiSemantics::setOntology(string name) {
@@ -117,7 +112,7 @@ void VRGuiSemantics::updateCanvas() {
     int i = 0;
     clear();
 
-    function<void(map<int, vector<VRConceptPtr>>&, VRConceptPtr,int,int,VRConceptWidgetPtr)> travConcepts = [&](map<int, vector<VRConceptPtr>>& cMap, VRConceptPtr c, int cID, int lvl, VRConceptWidgetPtr cp) {
+    /*function<void(map<int, vector<VRConceptPtr>>&, VRConceptPtr,int,int,VRConceptWidgetPtr)> travConcepts = [&](map<int, vector<VRConceptPtr>>& cMap, VRConceptPtr c, int cID, int lvl, VRConceptWidgetPtr cp) {
         if (auto w = canvas->getWidget(c->ID)) {
             if (cp) connect(cp, w, "#00CCFF");
             return;
@@ -163,7 +158,7 @@ void VRGuiSemantics::updateCanvas() {
 
     gtk_widget_show_all(GTK_WIDGET(canvas->getCanvas()));
     canvas->foldAll(true);
-    cout << "updateCanvas, took " << t.stop() << endl;
+    cout << "updateCanvas, took " << t.stop() << endl;*/
 }
 
 void VRGuiSemantics::connect(VRCanvasWidgetPtr w1, VRCanvasWidgetPtr w2, string color) {
@@ -179,16 +174,16 @@ void VRGuiSemantics::disconnectAny(VRCanvasWidgetPtr w) {
 }
 
 void VRGuiSemantics::on_treeview_select() {
-    setWidgetSensitivity("toolbutton15", true);
+    /*setWidgetSensitivity("toolbutton15", true);
     clear();
     VRGuiTreeView tview("treeview16");
     string name = tview.getSelectedStringValue(0);
     string type = tview.getSelectedStringValue(1);
     if (type == "section") return;
-    setOntology(name);
+    setOntology(name);*/
 }
 
-void VRGuiSemantics_on_name_edited(gchar *path_string, gchar *new_name) {
+/*void VRGuiSemantics_on_name_edited(gchar *path_string, gchar *new_name) {
     auto scene = VRScene::getCurrent();
     if (!scene) return;
 
@@ -197,7 +192,7 @@ void VRGuiSemantics_on_name_edited(gchar *path_string, gchar *new_name) {
     auto o = scene->getSemanticManager()->renameOntology(name, new_name);
     tview.setSelectedStringValue(0, new_name);
     saveScene();
-}
+}*/
 
 VRSemanticManagerPtr VRGuiSemantics::getManager() {
     auto scene = VRScene::getCurrent();
@@ -209,38 +204,38 @@ namespace PL = std::placeholders;
 
 VRGuiSemantics::VRGuiSemantics() {
     canvas = VRWidgetsCanvas::create("onto_visu");
-    setToolButtonCallback("toolbutton14", bind(&VRGuiSemantics::on_new_clicked, this));
+    /*setToolButtonCallback("toolbutton14", bind(&VRGuiSemantics::on_new_clicked, this));
     setToolButtonCallback("toolbutton15", bind(&VRGuiSemantics::on_del_clicked, this));
     setToolButtonCallback("toolbutton2", bind(&VRGuiSemantics::on_open_clicked, this));
     setTreeviewSelectCallback("treeview16", bind(&VRGuiSemantics::on_treeview_select, this));
     setCellRendererCallback("cellrenderertext51", bind(VRGuiSemantics_on_name_edited, placeholders::_1, placeholders::_2));
     setWidgetSensitivity("toolbutton15", false);
     setButtonCallback("button33", bind(&VRGuiSemantics::on_query_clicked, this));
-    setNoteBookCallback("notebook3", bind(&VRGuiSemantics::onTabSwitched, this, placeholders::_1, placeholders::_2));
+    setNoteBookCallback("notebook3", bind(&VRGuiSemantics::onTabSwitched, this, placeholders::_1, placeholders::_2));*/
 }
 
-void VRGuiSemantics::onTabSwitched(GtkWidget* page, unsigned int tab) {
-    auto nbook = VRGuiBuilder::get()->get_widget("notebook3");
+void VRGuiSemantics::onTabSwitched(string page, unsigned int tab) {
+    /*auto nbook = VRGuiBuilder::get()->get_widget("notebook3");
     string name = gtk_notebook_get_tab_label_text(GTK_NOTEBOOK(nbook), page);
     if (name == "Semantics") {
         updateOntoList();
-    }
+    }*/
 }
 
 void VRGuiSemantics::on_query_clicked() {
-    auto query = getTextEntry("entry26");
+    /*auto query = getTextEntry("entry26");
     if (!current) return;
 
     auto r = VRReasoner::create();
     auto res = r->process(query, current);
-    cout << "res " << res.size() << endl;
+    cout << "res " << res.size() << endl;*/
 
 }
 
 bool VRGuiSemantics::updateOntoList() {
 	cout << "VRGuiSemantics::updateOntoList" << endl;
     // update script list
-    auto store = GTK_TREE_STORE( VRGuiBuilder::get()->get_object("onto_list") );
+    /*auto store = GTK_TREE_STORE( VRGuiBuilder::get()->get_object("onto_list") );
     gtk_tree_store_clear(store);
 
     auto setRow = [&](GtkTreeIter* itr, string name, string type) {
@@ -270,7 +265,7 @@ bool VRGuiSemantics::updateOntoList() {
         if (o->getFlag() == "internal") addToSection(o, &itr_sce);
         if (o->getFlag() == "custom") addToSection(o, &itr_own);
         if (o->getFlag() == "built-in") addToSection(o, &itr_lib);
-    }
+    }*/
 
     clear();
     return true;
@@ -283,29 +278,29 @@ void VRGuiSemantics::copyConcept(VRConceptWidget* w) {
         return;
     }
     if (!c || !w) return;
-    auto cw = VRConceptWidgetPtr( new VRConceptWidget(this, canvas->getCanvas(), c) );
+    /*auto cw = VRConceptWidgetPtr( new VRConceptWidget(this, canvas->getCanvas(), c) );
     canvas->addWidget(c->ID, cw);
     cw->move(w->pos + Vec2d(90,0));
-    canvas->connect(canvas->getWidget(w->ID()), cw, "#00CCFF");
+    canvas->connect(canvas->getWidget(w->ID()), cw, "#00CCFF");*/
     saveScene();
 }
 
 void VRGuiSemantics::addEntity(VRConceptWidget* w) {
     auto c = current->addEntity(w->concept->getName() + "_entity", w->concept->getName());
-    auto cw = VREntityWidgetPtr( new VREntityWidget(this, canvas->getCanvas(), c) );
+    /*auto cw = VREntityWidgetPtr( new VREntityWidget(this, canvas->getCanvas(), c) );
     canvas->addWidget(c->ID, cw);
     cw->move(w->pos + Vec2d(90,0));
-    canvas->connect(canvas->getWidget(w->ID()), cw, "#FFEE00");
+    canvas->connect(canvas->getWidget(w->ID()), cw, "#FFEE00");*/
     saveScene();
 }
 
 void VRGuiSemantics::addRule(VRConceptWidget* w) {
     string n = w->concept->getName();
-    auto c = current->addRule("q(x):"+n+"(x)", n);
+    /*auto c = current->addRule("q(x):"+n+"(x)", n);
     auto cw = VRRuleWidgetPtr( new VRRuleWidget(this, canvas->getCanvas(), c) );
     canvas->addWidget(c->ID, cw);
     cw->move(w->pos + Vec2d(90,0));
-    canvas->connect(canvas->getWidget(w->ID()), cw, "#00DD00");
+    canvas->connect(canvas->getWidget(w->ID()), cw, "#00DD00");*/
     saveScene();
 }
 

@@ -2,8 +2,8 @@
 #include <OpenSG/OSGSceneFileHandler.h>
 
 #include "VRGuiGeneral.h"
-#include "VRGuiUtils.h"
-#include "VRGuiFile.h"
+//#include "VRGuiUtils.h"
+//#include "VRGuiFile.h"
 
 #include "core/scene/VRScene.h"
 #include "core/setup/VRSetup.h"
@@ -20,7 +20,7 @@ using namespace OSG;
 // --------------------------
 
 VRGuiGeneral::VRGuiGeneral() {
-    setCheckButtonCallback("radiobutton5", bind(&VRGuiGeneral::setMode, this) );
+    /*setCheckButtonCallback("radiobutton5", bind(&VRGuiGeneral::setMode, this) );
     setCheckButtonCallback("radiobutton18", bind(&VRGuiGeneral::setMode, this) );
     setCheckButtonCallback("radiobutton4", bind(&VRGuiGeneral::setMode, this) );
     setCheckButtonCallback("checkbutton_01", bind(&VRGuiGeneral::toggleFrustumCulling, this) );
@@ -46,44 +46,44 @@ VRGuiGeneral::VRGuiGeneral() {
 
     fillStringListstore("tfps", { "60", "75", "90", "120", "144" });
     setCombobox("tfpsCombobox", 0);
-    setComboboxCallback("tfpsCombobox", bind(&VRGuiGeneral::on_tfps_changed, this) );
+    setComboboxCallback("tfpsCombobox", bind(&VRGuiGeneral::on_tfps_changed, this) );*/
 }
 
 void VRGuiGeneral::on_bg_path_choose() {
-    string path = VRGuiFile::getPath();
-    setTextEntry("entry42", path);
+    /*string path = VRGuiFile::getPath();
+    setTextEntry("entry42", path);*/
     setPath();
 }
 
 void VRGuiGeneral::openBGpath() {
-    VRGuiFile::gotoPath("./");
+    /*VRGuiFile::gotoPath("./");
     VRGuiFile::setCallbacks(bind(&VRGuiGeneral::on_bg_path_choose, this));
-    VRGuiFile::open("Open", "open", "Choose image");
+    VRGuiFile::open("Open", "open", "Choose image");*/
 }
 
 void VRGuiGeneral::on_tfps_changed() {
-    float fps = toFloat(getComboboxText("tfpsCombobox"));
-    VRSceneManager::get()->setTargetFPS(fps);
+    //float fps = toFloat(getComboboxText("tfpsCombobox"));
+    //VRSceneManager::get()->setTargetFPS(fps);
 }
 
 bool VRGuiGeneral::setSSAOradius( int st, double d ) {
     if (updating) return false;
     auto scene = VRScene::getCurrent();
-    if (scene) scene->setSSAOradius( getSliderValue("hscale1") );
+    //if (scene) scene->setSSAOradius( getSliderValue("hscale1") );
     return false;
 }
 
 bool VRGuiGeneral::setSSAOkernel( int st, double d ) {
     if (updating) return false;
     auto scene = VRScene::getCurrent();
-    if (scene) scene->setSSAOkernel( getSliderValue("hscale2") );
+    //if (scene) scene->setSSAOkernel( getSliderValue("hscale2") );
     return false;
 }
 
 bool VRGuiGeneral::setSSAOnoise( int st, double d ) {
     if (updating) return false;
     auto scene = VRScene::getCurrent();
-    if (scene) scene->setSSAOnoise( getSliderValue("hscale3") );
+    //if (scene) scene->setSSAOnoise( getSliderValue("hscale3") );
     return false;
 }
 
@@ -107,7 +107,7 @@ void VRGuiGeneral::dumpOSG() {
     }
 }
 
-bool VRGuiGeneral::setColor(GdkEventButton* b) {
+/*bool VRGuiGeneral::setColor(GdkEventButton* b) {
     if (updating) return true;
 
     auto scene = VRScene::getCurrent();
@@ -115,41 +115,41 @@ bool VRGuiGeneral::setColor(GdkEventButton* b) {
     Color4f c = chooseColor("bg_solid", toColor4f(col));
     scene->setBackgroundColor(toColor3f(c));
     return true;
-}
+}*/
 
 void VRGuiGeneral::setPath() {
     if (updating) return;
     auto scene = VRScene::getCurrent();
     if (scene == 0) return;
-    scene->setBackgroundPath( getTextEntry("entry42") );
+    //scene->setBackgroundPath( getTextEntry("entry42") );
 }
 
 void VRGuiGeneral::setExtension() {
     if (updating) return;
     auto scene = VRScene::getCurrent();
     if (scene == 0) return;
-    scene->setSkyBGExtension( getTextEntry("entry14") );
+    //scene->setSkyBGExtension( getTextEntry("entry14") );
 }
 
 void VRGuiGeneral::setMode() {
     if (updating) return;
 
     VRBackground::TYPE t = VRBackground::SOLID;
-    if ( getCheckButtonState("radiobutton4") ) t = VRBackground::IMAGE;
+    /*if ( getCheckButtonState("radiobutton4") ) t = VRBackground::IMAGE;
     if ( getCheckButtonState("radiobutton5") ) t = VRBackground::SKYBOX;
-    if ( getCheckButtonState("radiobutton18") ) t = VRBackground::SKY;
+    if ( getCheckButtonState("radiobutton18") ) t = VRBackground::SKY;*/
     auto scene = VRScene::getCurrent();
     scene->setBackground( t );
 
-    setWidgetSensitivity("entry14", t == VRBackground::SKYBOX);
+    /*setWidgetSensitivity("entry14", t == VRBackground::SKYBOX);
     setWidgetSensitivity("entry42", t == VRBackground::SKYBOX || t == VRBackground::IMAGE);
-    setWidgetSensitivity("button18", t == VRBackground::IMAGE);
+    setWidgetSensitivity("button18", t == VRBackground::IMAGE);*/
 }
 
 void VRGuiGeneral::toggleDeferredShader() {
     if (updating) return;
     auto scene = VRScene::getCurrent();
-    if (scene) scene->setDeferredShading( getCheckButtonState("checkbutton_3") );
+    //if (scene) scene->setDeferredShading( getCheckButtonState("checkbutton_3") );
 }
 
 void VRGuiGeneral::toggleDRendChannel() {
@@ -157,53 +157,53 @@ void VRGuiGeneral::toggleDRendChannel() {
     auto scene = VRScene::getCurrent();
     if (!scene) return;
     int channel = 0;
-    if ( getRadioButtonState("radiobutton14") ) channel = 1;
+    /*if ( getRadioButtonState("radiobutton14") ) channel = 1;
     if ( getRadioButtonState("radiobutton15") ) channel = 2;
     if ( getRadioButtonState("radiobutton16") ) channel = 3;
-    if ( getRadioButtonState("radiobutton17") ) channel = 4;
+    if ( getRadioButtonState("radiobutton17") ) channel = 4;*/
     scene->setDeferredChannel(channel);
 }
 
 void VRGuiGeneral::toggleSSAO() {
     if (updating) return;
     auto scene = VRScene::getCurrent();
-    if (scene) scene->setSSAO( getCheckButtonState("checkbutton_4") );
+    //if (scene) scene->setSSAO( getCheckButtonState("checkbutton_4") );
 }
 
 void VRGuiGeneral::toggleHMDD() {
     if (updating) return;
     auto scene = VRScene::getCurrent();
-    if (scene) scene->setHMDD( getCheckButtonState("checkbutton_6") );
+    //if (scene) scene->setHMDD( getCheckButtonState("checkbutton_6") );
 }
 
 void VRGuiGeneral::toggleFXAA() {
     if (updating) return;
     auto scene = VRScene::getCurrent();
-    if (scene) scene->setFXAA( getCheckButtonState("checkbutton_8") );
+    //if (scene) scene->setFXAA( getCheckButtonState("checkbutton_8") );
 }
 
 void VRGuiGeneral::toggleCalib() {
     if (updating) return;
     auto scene = VRScene::getCurrent();
-    if (scene) scene->setCalib( getCheckButtonState("checkbutton_5") );
+    //if (scene) scene->setCalib( getCheckButtonState("checkbutton_5") );
 }
 
 void VRGuiGeneral::toggleMarker() {
     if (updating) return;
     auto scene = VRScene::getCurrent();
-    if (scene) scene->setMarker( getCheckButtonState("checkbutton_7") );
+    //if (scene) scene->setMarker( getCheckButtonState("checkbutton_7") );
 }
 
 void VRGuiGeneral::toggleFrustumCulling() {
     if (updating) return;
     auto scene = VRScene::getCurrent();
-    if (scene) scene->setFrustumCulling( getCheckButtonState("checkbutton_01") );
+    //if (scene) scene->setFrustumCulling( getCheckButtonState("checkbutton_01") );
 }
 
 void VRGuiGeneral::toggleOcclusionCulling() {
     if (updating) return;
     auto scene = VRScene::getCurrent();
-    if (scene) scene->setOcclusionCulling( getCheckButtonState("checkbutton_02") );
+    //if (scene) scene->setOcclusionCulling( getCheckButtonState("checkbutton_02") );
 }
 
 bool VRGuiGeneral::updateScene() {
@@ -217,7 +217,7 @@ bool VRGuiGeneral::updateScene() {
     Color3f col = scene->getBackgroundColor();
     VRBackground::TYPE t = scene->getBackgroundType();
 
-    setColorChooserColor("bg_solid", Color3f(col[0], col[1], col[2]));
+    /*setColorChooserColor("bg_solid", Color3f(col[0], col[1], col[2]));
     setTextEntry("entry42", scene->getBackgroundPath());
     setWidgetSensitivity("entry14", t == VRBackground::SKYBOX);
     if (t == VRBackground::SKYBOX) setTextEntry("entry14", scene->getSkyBGExtension());
@@ -236,7 +236,7 @@ bool VRGuiGeneral::updateScene() {
 
     setSliderValue("hscale1", scene->getSSAOradius());
     setSliderValue("hscale2", scene->getSSAOkernel());
-    setSliderValue("hscale3", scene->getSSAOnoise());
+    setSliderValue("hscale3", scene->getSSAOnoise());*/
 
     updating = false;
     return true;

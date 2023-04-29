@@ -3,9 +3,6 @@
 #include <OpenSG/OSGChangeList.h>
 #include <OpenSG/OSGRenderAction.h>
 
-#ifndef WITHOUT_GTK
-#include <gtk/gtk.h>
-#endif
 #include <OpenSG/OSGGLUTWindow.h>
 #include <thread>
 
@@ -35,9 +32,6 @@
 
 
 #ifndef WITHOUT_GTK
-#include "core/gui/VRGuiUtils.h"
-#include "core/gui/VRGuiBuilder.h"
-#include "VRGtkWindow.h"
 #include "core/gui/VRGuiManager.h"
 #include "core/gui/VRGuiConsole.h"
 #define WARN(x) \
@@ -79,6 +73,7 @@ VRWindowPtr VRWindowManager::addGlutWindow(string name) {
 
 VRWindowPtr VRWindowManager::addGlutEditor(string name) {
     VRGlutEditorPtr win = VRGlutEditor::create();
+    editorWindow = win;
     win->setName(name);
     win->setAction(ract);
     windows[win->getName()] = win;
@@ -97,26 +92,7 @@ VRWindowPtr VRWindowManager::addMultiWindow(string name) {
 #endif
 }
 
-VRWindowPtr VRWindowManager::addGtkWindow(string name, string glarea, string msaa) {
-#ifndef WITHOUT_GTK
-    cout << " add Gtk window " << name << endl;
-    //gdk_error_trap_push();
-    //if (gdk_error_trap_pop()) cout << "    ---- AAA1 ------ " << endl;
-
-    auto drawArea = VRGuiBuilder::get()->get_widget(glarea); // TODO: create new glarea, add flag to editor area window!
-    VRGtkWindowPtr win = VRGtkWindow::create(drawArea, msaa);
-
-    editorWindow = win;
-    win->setName(name);
-    win->setAction(ract);
-    windows[win->getName()] = win;
-    return win;
-#else
-    return 0;
-#endif
-}
-
-VRGtkWindowPtr VRWindowManager::getEditorWindow() { return editorWindow; }
+VRGlutEditorPtr VRWindowManager::getEditorWindow() { return editorWindow; }
 
 void VRWindowManager::pauseRendering(bool b) { rendering_paused = b; }
 
@@ -228,9 +204,6 @@ void VRWindowManager::updateWindows() {
         for (auto w : getWindows()) {
             if (auto win = dynamic_pointer_cast<VRGlutEditor>(w.second)) win->render();
             if (auto win = dynamic_pointer_cast<VRGlutWindow>(w.second)) win->render();
-#ifndef WITHOUT_GTK
-            if (auto win = dynamic_pointer_cast<VRGtkWindow>(w.second)) win->render();
-#endif
 #ifndef WITHOUT_OPENVR
             if (auto win = dynamic_pointer_cast<VRHeadMountedDisplay>(w.second)) win->render();
 #endif
@@ -333,11 +306,6 @@ void VRWindowManager::load(XMLElementPtr node) {
 
         if (type == "glutEditor") {
             win = addGlutEditor(name);
-            win->load(el);
-        }
-
-        if (type == "2" || type == "gtk") {
-            win = addGtkWindow(name, "glarea", msaa);
             win->load(el);
         }
     }

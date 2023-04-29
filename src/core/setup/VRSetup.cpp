@@ -5,11 +5,9 @@
 #include "windows/VRView.h"
 #include "core/scene/VRSceneManager.h"
 #include "core/scene/VRScene.h"
-#ifndef WITHOUT_GTK
-#include "core/setup/windows/VRGtkWindow.h"
 #include "core/setup/devices/VRMouse.h"
 #include "core/setup/devices/VRKeyboard.h"
-#endif
+#include "core/setup/windows/VRGlutEditor.h"
 #include "core/utils/toString.h"
 #include "core/utils/VROptions.h"
 #include "core/utils/VRVisualLayer.h"
@@ -86,10 +84,8 @@ VRSetupPtr VRSetup::create(string name) { return VRSetupPtr(new VRSetup(name)); 
 VRSetupPtr VRSetup::getCurrent() { return VRSetupManager::get()->getCurrent(); }
 
 void VRSetup::showStats(bool b) {
-#ifndef WITHOUT_GTK
     auto w = getEditorWindow();
     for (auto v : w->getViews()) v->showStats(b);
-#endif
 }
 
 void VRSetup::showStencil(bool b) {
@@ -154,9 +150,7 @@ void VRSetup::setScene(VRScenePtr scene) {
     for (auto dev : getDevices()) dev.second->setCamera(cam);
     for (auto w : getWindows()) w.second->setContent(true);
     for (auto s : scripts) scene->addScript(s.second);
-#ifndef WITHOUT_GTK
-    if (auto w = getEditorWindow()) w->doResize();
-#endif
+    //if (auto w = getEditorWindow()) w->doResize(); // ??
     //scene->initDevices();
 }
 

@@ -1,11 +1,5 @@
 #include "VRKeyboard.h"
 
-//#include <GL/glut.h>
-//#include <OpenSG/OSGBaseInitFunctions.h>
-#ifndef WITHOUT_GTK
-#include <gdk/gdk.h>
-#endif
-
 using namespace OSG;
 
 void VRKeyboard::applyEvents() {

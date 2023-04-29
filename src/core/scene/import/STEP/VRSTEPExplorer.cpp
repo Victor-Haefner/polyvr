@@ -1,5 +1,4 @@
 #include "VRSTEPExplorer.h"
-#include "core/gui/VRGuiTreeExplorer.h"
 #include "core/utils/VRFunction.h"
 #include "core/utils/toString.h"
 
@@ -8,8 +7,8 @@
 using namespace OSG;
 
 VRSTEPExplorer::VRSTEPExplorer(string file) {
-    treeview = VRGuiTreeExplorer::create("ssssp", "STEP file explorer (" + file + ")");
-    treeview->setSelectCallback( VRFunction<VRGuiTreeExplorer*>::create( "step_explorer", bind(&VRSTEPExplorer::on_explorer_select, this, placeholders::_1) ) );
+    /*treeview = VRGuiTreeExplorer::create("ssssp", "STEP file explorer (" + file + ")");
+    treeview->setSelectCallback( VRFunction<VRGuiTreeExplorer*>::create( "step_explorer", bind(&VRSTEPExplorer::on_explorer_select, this, placeholders::_1) ) );*/
 }
 
 VRSTEPExplorer::~VRSTEPExplorer() {}
@@ -52,7 +51,7 @@ bool VRSTEPExplorer::doIgnore(VRSTEP::Node* node) {
 
 void VRSTEPExplorer::on_explorer_select(VRGuiTreeExplorer* e) {
 #ifndef WITHOUT_GTK
-    auto row = e->getSelected();
+    /*auto row = e->getSelected();
     auto id = e->get<const char*>(row, 1);
     VRSTEP::Node* node = (VRSTEP::Node*)e->get<void*>(row, 4);
 
@@ -80,7 +79,7 @@ void VRSTEPExplorer::on_explorer_select(VRGuiTreeExplorer* e) {
         info += "\n    type: " + string(stype?stype:"");
     }
 
-    e->setInfo(info);
+    e->setInfo(info);*/
 #endif
 }
 
@@ -130,7 +129,7 @@ void VRSTEPExplorer::explore(VRSTEP::Node* node, int parent, bool doFilter) {
 #ifndef WITHOUT_GTK
     static size_t c = 0; c++;
     string sID = "#"+toString(ID);
-    if (ID >= 0 /*&& c < 30000*/) parent = treeview->add( parent, 5, type.c_str(), sID.c_str(), name.c_str(), data.c_str(), node);
+    //if (ID >= 0 /*&& c < 30000*/) parent = treeview->add( parent, 5, type.c_str(), sID.c_str(), name.c_str(), data.c_str(), node);
 #endif
 
     for (auto n : node->childrenV) explore(n, parent, doFilter);

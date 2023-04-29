@@ -4,7 +4,6 @@
 #include "core/utils/VRMutex.h"
 
 #include "core/utils/VRMutex.h"
-#include "VRGuiUtils.h"
 
 using namespace OSG;
 
@@ -92,7 +91,7 @@ void VRConsoleWidget::clear() {
 }
 
 string VRConsoleWidget::getWindow() { return swin; }
-void VRConsoleWidget::pause() { paused = getToggleToolButtonState("pause_terminal"); }
+void VRConsoleWidget::pause() { /*paused = getToggleToolButtonState("pause_terminal");*/ }
 
 void VRConsoleWidget::setLabel(string lbl) {
     label = lbl;

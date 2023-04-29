@@ -17,7 +17,7 @@ class VRWindow;
 class VRWindowManager {
     private:
         map<string, VRWindowPtr> windows;
-        VRGtkWindowPtr editorWindow;
+        VRGlutEditorPtr editorWindow;
         RenderActionRefPtr ract;
         VRChangeList changeListStats;
         bool rendering_paused = false;
@@ -33,7 +33,6 @@ class VRWindowManager {
 
         VRWindowPtr addGlutWindow  (string name);
         VRWindowPtr addGlutEditor  (string name);
-        VRWindowPtr addGtkWindow   (string name, string glarea = "glarea", string msaa = "x4");
         VRWindowPtr addMultiWindow (string name);
         void removeWindow   (string name);
 
@@ -49,7 +48,7 @@ class VRWindowManager {
         void updateWindows();
         void stopWindows();
 
-        VRGtkWindowPtr getEditorWindow();
+        VRGlutEditorPtr getEditorWindow();
 
         void save(XMLElementPtr node);
         void load(XMLElementPtr node);

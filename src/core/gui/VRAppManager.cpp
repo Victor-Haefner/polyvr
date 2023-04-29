@@ -19,11 +19,7 @@
 #include "core/utils/system/VRSystem.h"
 #include "core/gui/VRGuiManager.h"
 
-#include "VRGuiUtils.h"
-#include "VRGuiBuilder.h"
 #include "VRGuiSignals.h"
-#include "VRGuiFile.h"
-#include "VRGuiContextMenu.h"
 #include "widgets/VRAppLauncher.h"
 
 OSG_BEGIN_NAMESPACE;
@@ -49,7 +45,7 @@ VRAppManager::VRAppManager() {
         i++;
     }
 
-    if (favorites->size() == 0) setNotebookPage("notebook2", 1);
+    //if (favorites->size() == 0) setNotebookPage("notebook2", 1);
 
     updateCb = VRFunction<VRDeviceWeakPtr, bool>::create("GUI_updateDemos", bind(&VRAppManager::update, this) );
 
@@ -151,7 +147,7 @@ void VRAppManager::on_launcher_delete() {
     string table = d->table;
 
     string path = d->path;
-    if (!askUser("Delete scene " + path + " (this will remove it completely from disk!)", "Are you sure you want to delete this scene?")) return;
+    //if (!askUser("Delete scene " + path + " (this will remove it completely from disk!)", "Are you sure you want to delete this scene?")) return;
     if (d->running) toggleDemo(d); // close demo if it is running
 
     clearTable(table);
@@ -172,7 +168,7 @@ void VRAppManager::on_launcher_unpin() {
     string table = d->table;
 
     string path = d->path;
-    if (!askUser("Forget about " + path + " ?", "")) return;
+    //if (!askUser("Forget about " + path + " ?", "")) return;
     if (d->running) toggleDemo(d); // close demo if it is running
 
     clearTable(table);
@@ -186,7 +182,7 @@ void VRAppManager::on_launcher_unpin() {
 }
 
 void VRAppManager::on_advanced_start() {
-    bool no_scripts = getCheckButtonState("checkbutton34");
+    /*bool no_scripts = getCheckButtonState("checkbutton34");
     bool lightweight = getCheckButtonState("checkbutton36");
     hideDialog("advanced_start");
     if (current_demo == 0) return;
@@ -197,7 +193,7 @@ void VRAppManager::on_advanced_start() {
     toggleDemo(current_demo); // start demo
 
     auto scene = VRScene::getCurrent();
-    if (no_scripts && scene) scene->pauseScripts(true);
+    if (no_scripts && scene) scene->pauseScripts(true);*/
 }
 
 void VRAppManager::normFileName(string& path) {
@@ -211,7 +207,7 @@ void VRAppManager::on_toggle_encryption(bool b) {
     bool doEncryption = b;
     encryptionKey = "";
     if (!doEncryption) return;
-    encryptionKey = askUserPass("Please enter an encryption key");
+    //encryptionKey = askUserPass("Please enter an encryption key");
 }
 
 void VRAppManager::on_diag_save_clicked(string path) { // TODO: check if ending is .pvr
@@ -226,7 +222,7 @@ void VRAppManager::toggleDemo(VRAppLauncherPtr e) {
     VRSceneManager::get()->closeScene();
     if (run) {
         string encryptionKey;
-        if (endsWith(e->path, ".pvc")) encryptionKey = askUserPass("Please insert encryption key");
+        //if (endsWith(e->path, ".pvc")) encryptionKey = askUserPass("Please insert encryption key");
         VRSceneManager::get()->loadScene(e->path, e->write_protected, encryptionKey);
     }
 }
@@ -300,7 +296,7 @@ void VRAppManager::on_diag_new_clicked(string path) {
 }
 
 void VRAppManager::on_search() {
-    string s = getTextEntry("appSearch");
+    /*string s = getTextEntry("appSearch");
     for (auto section : sections) {
         for (auto launcher : section.second->getLaunchers()) {
             if (s == "") { launcher.second->show(); continue; }
@@ -308,7 +304,7 @@ void VRAppManager::on_search() {
             if (contains(name, s, false)) launcher.second->show(); // TODO: extend contains with a case sensitive flag
             else launcher.second->hide();
         }
-    }
+    }*/
 }
 
 VRAppLauncherPtr VRAppManager::getEntry(string sPath) {

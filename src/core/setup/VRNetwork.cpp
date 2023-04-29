@@ -4,9 +4,6 @@
 #ifndef WITHOUT_SSH
 #include "core/networking/VRSSH.h"
 #endif
-#ifndef WITHOUT_GTK
-#include "core/gui/VRGuiUtils.h"
-#endif
 
 #include "core/scene/VRSceneManager.h"
 #include "core/utils/system/VRSystem.h"

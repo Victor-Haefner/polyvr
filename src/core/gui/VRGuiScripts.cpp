@@ -1,7 +1,6 @@
 #include <OpenSG/OSGRenderAction.h>
 
 #include "VRGuiScripts.h"
-#include "VRGuiFile.h"
 #include "VRGuiBits.h"
 #include "VRGuiManager.h"
 #include "VRGuiConsole.h"

@@ -4,8 +4,8 @@
 #include "VRGuiConsole.h"
 
 #include "core/scene/VRSceneManager.h"
-#include "core/setup/windows/VRGtkWindow.h"
 #include "core/setup/windows/VRView.h"
+#include "core/setup/windows/VRGlutEditor.h"
 #include "core/utils/VRInternalMonitor.h"
 #include "core/utils/VRVisualLayer.h"
 #include "core/utils/VROptions.h"
@@ -13,9 +13,7 @@
 #include "core/utils/system/VRSystem.h"
 #include "core/scene/VRSceneLoader.h"
 #include "core/scripting/VRScript.h"
-#include "VRGuiUtils.h"
 #include "VRGuiSignals.h"
-#include "VRGuiFile.h"
 #include "core/setup/VRSetup.h"
 #include "core/scene/VRScene.h"
 #include "PolyVR.h"
@@ -40,14 +38,14 @@ void VRGuiBits::on_view_option_toggle(VRVisualLayer* l, bool b) {
 
 void VRGuiBits::on_camera_changed() {
     if (update_ward) return;
-    string name = getComboboxText("combobox4");
+    /*string name = getComboboxText("combobox4");
     auto scene = VRScene::getCurrent();
     scene->setActiveCamera(name);
-    VRGuiManager::broadcast("camera_changed");
+    VRGuiManager::broadcast("camera_changed");*/
 }
 
 void VRGuiBits::on_navigation_clicked(bool b) {
-    setWidgetVisibility("navOverlay", b);
+    //setWidgetVisibility("navOverlay", b);
 }
 
 void VRGuiBits::on_navigation_toggled(VRNavPresetWeakPtr np, bool b) {
@@ -80,7 +78,7 @@ string wrapTimeout(string code, string delay) {
 }
 
 void VRGuiBits::updateWebPortRessources() {
-    bool withXR = getCheckButtonState("wed_opt_xr");
+    /*bool withXR = getCheckButtonState("wed_opt_xr");
 
     int startOpt = getRadioButtonState("wed_opt_start1");
     startOpt +=  2*getRadioButtonState("wed_opt_start2");
@@ -128,7 +126,7 @@ void VRGuiBits::updateWebPortRessources() {
         itr = core.find("websocket.onclose"); // close the comment to disable the websocket
         if (itr != string::npos) {
             auto itr2 = core.find("\n", itr);
-            if (itr2 != string::npos) core.insert(itr2, "*/");
+            if (itr2 != string::npos) core.insert(itr2, "*\/");
         }
 
         ofstream out(script.first+".html");
@@ -213,7 +211,7 @@ void VRGuiBits::updateWebPortRessources() {
     }
 
     if (startOpt > 1)
-        systemCall("google-chrome --new-window \"http://localhost:5500/"+projectName+".html"+optionstr+"\"");
+        systemCall("google-chrome --new-window \"http://localhost:5500/"+projectName+".html"+optionstr+"\"");*/
 }
 
 void VRGuiBits::on_web_export_clicked() {
@@ -231,7 +229,7 @@ void VRGuiBits::on_web_start() {
 
 void VRGuiBits::on_fullscreen_clicked() {
     toggleWidgets();
-    notifyUser("To Exit Fullscreen..", "Press both, F11 and F12");
+    //notifyUser("To Exit Fullscreen..", "Press both, F11 and F12");
     toggleFullscreen();
 }
 
@@ -356,7 +354,7 @@ void VRGuiBits::toggleDock(bool b) {
 }
 
 void VRGuiBits::toggleVerbose(string s) {
-    if (s == "network") VRLog::setTag("net", getToggleToolButtonState("network_verbose"));
+    //if (s == "network") VRLog::setTag("net", getToggleToolButtonState("network_verbose"));
 }
 
 VRGuiBits::VRGuiBits() {
@@ -374,10 +372,10 @@ VRGuiBits::VRGuiBits() {
 
     auto mgr = VRGuiSignals::get();
     mgr->addCallback("toolbar_save", [&](OSG::VRGuiSignals::Options o) { on_save_clicked(); return true; }, true );
+    mgr->addCallback("toolbar_export", [&](OSG::VRGuiSignals::Options o) { on_web_export_clicked(); return true; }, true );
     mgr->addCallback("toolbar_exit", [&](OSG::VRGuiSignals::Options o) { on_quit_clicked(); return true; }, true );
 
-    /*setToolButtonCallback("toolbutton50", bind(&VRGuiBits::on_web_export_clicked, this));
-    setToolButtonCallback("toolbutton18", bind(&VRGuiBits::on_internal_clicked, this));
+    /*setToolButtonCallback("toolbutton18", bind(&VRGuiBits::on_internal_clicked, this));
     setToolButtonCallback("toolbutton26", bind(&VRGuiBits::on_fullscreen_clicked, this));*/
 
     /*setButtonCallback("button21", bind(&VRGuiBits::on_internal_close_clicked, this));
@@ -490,17 +488,17 @@ bool VRGuiBits::update() { // scene changed
 	cout << "VRGuiBits::update" << endl;
     update_ward = true;
     auto scene = VRScene::getCurrent();
-    setLabel("label24", "Project: None");
+    //setLabel("label24", "Project: None");
     if (scene == 0) return true;
 
-    fillStringListstore("cameras", scene->getCameraNames());
+    /*fillStringListstore("cameras", scene->getCameraNames());
     fillStringListstore("nav_presets", scene->getNavigationNames());
 
     setCombobox("combobox4", scene->getActiveCameraIndex());
     //setCombobox("combobox9", getListStorePos( "nav_presets", scene->getActiveNavigation() ) );
 
     // update setup && project label
-    setLabel("label24", "Project: " + scene->getName());
+    setLabel("label24", "Project: " + scene->getName());*/
 
     updateVisualLayer();
     update_ward = false;

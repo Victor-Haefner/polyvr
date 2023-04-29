@@ -1,6 +1,6 @@
 #include "VRRecorder.h"
 #include "core/setup/windows/VRView.h"
-#include "core/setup/windows/VRGtkWindow.h"
+#include "core/setup/windows/VRGlutEditor.h"
 #include "core/setup/VRSetup.h"
 #include "core/scene/VRSceneManager.h"
 #include "core/objects/object/VRObject.h"
@@ -173,10 +173,10 @@ vector<string> VRRecorder::getResList() {
 
 void VRRecorder::setViewResolution(string res) {
     auto w = VRSetup::getCurrent()->getEditorWindow();
-    if (res == "1080p") w->forceSize(1920, 1080);
-    if (res == "720p")  w->forceSize(1280, 720);
-    if (res == "480p")  w->forceSize(640, 480);
-    if (res == "240p")  w->forceSize(320, 240);
+    if (res == "1080p") w->forceGLResize(1920, 1080);
+    if (res == "720p")  w->forceGLResize(1280, 720);
+    if (res == "480p")  w->forceGLResize(640, 480);
+    if (res == "240p")  w->forceGLResize(320, 240);
 }
 
 void VRRecorder::enableVSync(bool b) {

@@ -11,8 +11,7 @@
 #include "core/tools/VRTextureRenderer.h"
 
 #include "core/setup/VRSetup.h"
-#include "core/setup/windows/VRWindow.h"
-#include "core/setup/windows/VRGtkWindow.h"
+#include "core/setup/windows/VRGlutEditor.h"
 #include "core/setup/devices/VRDevice.h"
 #include "core/setup/devices/VRFlystick.h"
 #include "core/scripting/VRScript.h"
