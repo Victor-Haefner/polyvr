@@ -45,7 +45,52 @@ void ImConsoles::pushConsole(string ID, string data) {
     consoles[ID].data += data;
 }
 
+ImViewControls::ImViewControls() {
+    auto mgr = OSG::VRGuiSignals::get();
+    mgr->addCallback("ui_clear_navigations", [&](OSG::VRGuiSignals::Options o){ navigations.clear(); return true; } );
+    mgr->addCallback("ui_add_navigation", [&](OSG::VRGuiSignals::Options o){ navigations[o["nav"]] = toBool(o["active"]); return true; } );
+
+    mgr->addCallback("ui_clear_cameras", [&](OSG::VRGuiSignals::Options o){ cameras.clear(); return true; } );
+    mgr->addCallback("ui_add_camera", [&](OSG::VRGuiSignals::Options o){ cameras.push_back(o["cam"]); return true; } );
+    mgr->addCallback("ui_set_active_camera", [&](OSG::VRGuiSignals::Options o){ current_camera = toInt(o["camIndex"]); return true; } );
+}
+
+void ImViewControls::render() {
+    const char* tmpCameras[cameras.size()];
+    for (int i=0; i<cameras.size(); i++) tmpCameras[i] = cameras[i].c_str();
+    ImGui::SameLine();
+    ImGui::Text("Camera:");
+    ImGui::SameLine();
+    ImGui::SetNextItemWidth(150);
+    ImGui::Combo("##Cameras", &current_camera, tmpCameras, IM_ARRAYSIZE(tmpCameras));
+
+    ImGui::SameLine();
+    ImGui::SetNextItemWidth(150);
+    if (ImGui::BeginCombo("##Navigations", "Navigations", 0)) {
+        for (auto& n : navigations) {
+            if (ImGui::Checkbox(n.first.c_str(), &n.second)) uiSignal("view_toggle_navigation", {{"nav",n.first}, {"state",toString(n.second)}});
+        }
+        ImGui::EndCombo();
+    }
+
+    ImGui::SameLine();
+    ImGui::SetNextItemWidth(150);
+    if (ImGui::BeginCombo("##Layers", "Layers", 0)) {
+        if (ImGui::Checkbox("Cameras", &showCams)) uiSignal("view_show_cameras", {{"state",toString(showCams)}});
+        if (ImGui::Checkbox("Lights", &showLights)) uiSignal("view_show_lights", {{"state",toString(showLights)}});
+        if (ImGui::Checkbox("Pause Window", &pauseRendering)) uiSignal("view_pause_rendering", {{"state",toString(pauseRendering)}});
+        if (ImGui::Checkbox("Physics", &showPhysics)) uiSignal("view_show_physics", {{"state",toString(showPhysics)}});
+        if (ImGui::Checkbox("Objects", &showCoordinates)) uiSignal("view_show_coordinates", {{"state",toString(showCoordinates)}});
+        if (ImGui::Checkbox("Setup", &showSetup)) uiSignal("view_show_setup", {{"state",toString(showSetup)}});
+        if (ImGui::Checkbox("Statistics", &showStats)) uiSignal("view_show_stats", {{"state",toString(showStats)}});
+        if (ImGui::Checkbox("Stencil", &showStencil)) uiSignal("view_show_stencil", {{"state",toString(showStencil)}});
+        ImGui::EndCombo();
+    }
+}
+
 void ImConsoles::begin() {
+    viewControls.render();
+    ImGui::Separator();
     if (ImGui::BeginTabBar("ConsolesTabBar", ImGuiTabBarFlags_None)) {
         for (auto& c : consolesOrder) consoles[c].render();
         ImGui::EndTabBar();

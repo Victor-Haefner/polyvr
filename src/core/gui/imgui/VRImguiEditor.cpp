@@ -142,6 +142,7 @@ void ImToolbar::begin() {
     ImGui::SameLine(); if (ImGui::Button("About")) uiSignal("ui_toggle_popup", {{"name","about"}, {"width","400"}, {"height","500"}});
     ImGui::SameLine(); if (ImGui::Button("Profiler")) uiSignal("toolbar_profiler");
     ImGui::SameLine(); if (ImGui::Button("Fullscreen")) uiSignal("toolbar_fullscreen");
+    ImGui::SameLine(); if (ImGui::Button("Recorder")) uiSignal("toggle_recorder");
 }
 
 void ImConsolesSection::begin() {

@@ -226,7 +226,7 @@ void VRSceneManager::searchExercisesAndFavorites() {
     examples->clear();
 
     // examples
-	/*vector<string> files = VRGuiFile::listDir("examples");
+	vector<string> files = openFolder("examples");
 	for (string file : files) {
 		int N = file.size(); if (N < 6) continue;
 
@@ -252,7 +252,7 @@ void VRSceneManager::searchExercisesAndFavorites() {
         storeFavorites();
         remove("examples/.cfg"); // remove old config file
         return;
-    }*/
+    }
 
     projects->loadFromFile("examples/.config");
 #endif

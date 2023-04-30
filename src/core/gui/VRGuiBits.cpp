@@ -491,33 +491,24 @@ bool VRGuiBits::update() { // scene changed
     //setLabel("label24", "Project: None");
     if (scene == 0) return true;
 
-    /*fillStringListstore("cameras", scene->getCameraNames());
-    fillStringListstore("nav_presets", scene->getNavigationNames());
+    uiSignal("ui_clear_cameras");
+    for (auto cam : scene->getCameraNames()) uiSignal("ui_add_camera", {{"cam",cam}});
+    uiSignal("ui_set_active_camera", {{"camIndex",toString(scene->getActiveCameraIndex())}});
 
-    setCombobox("combobox4", scene->getActiveCameraIndex());
-    //setCombobox("combobox9", getListStorePos( "nav_presets", scene->getActiveNavigation() ) );
-
-    // update setup && project label
+    /* // update setup && project label
     setLabel("label24", "Project: " + scene->getName());*/
 
     updateVisualLayer();
     update_ward = false;
-    cout << " VRGuiBits::update done" << endl;
 
-    /*auto navOverlay = VRGuiBuilder::get()->get_widget("navOverlay");
-    clearContainer(navOverlay);*/
+    uiSignal("ui_clear_navigations");
     for (auto nav : scene->getNavigations()) {
-        /*auto row = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
-        auto cb = gtk_check_button_new_with_label(nav.second->getBaseName().c_str());
-        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cb), nav.second->isActive());
-        setTooltip(cb, scene->getNavigationTip(nav.first) );
-        setCheckButtonCallback(cb, bind(&VRGuiBits::on_navigation_toggled, this, nav.second, cb));
-
-        gtk_box_pack_start(GTK_BOX(row), cb, false, true, 0);
-        gtk_box_pack_start(GTK_BOX(navOverlay), row, false, true, 0);
-        gtk_widget_show_all(row);*/
+        uiSignal("ui_add_navigation", {{"nav",nav.first},{"active",toString(nav.second->isActive())}});
+        //setTooltip(cb, scene->getNavigationTip(nav.first) );
+        //setCheckButtonCallback(cb, bind(&VRGuiBits::on_navigation_toggled, this, nav.second, cb));
     }
 
+    cout << " VRGuiBits::update done" << endl;
     return true;
 }
 

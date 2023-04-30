@@ -26,12 +26,16 @@ OSG_BEGIN_NAMESPACE;
 using namespace std;
 
 VRAppManager::VRAppManager() {
+    cout << " - - - VRAppManager" << endl;
     auto examplesSection = addSection("examples");
     auto favoritesSection = addSection("favorites");
     auto recentsSection = addSection("recents");
 
     auto examples = VRSceneManager::get()->getExamplePaths();
-    for (auto p : examples->getPaths() ) examplesSection->addLauncher(p, "", this, true, false, "examples_tab");
+    for (auto p : examples->getPaths() ) {
+        cout << "   - - - examples path " << p << endl;
+        examplesSection->addLauncher(p, "", this, true, false, "examples_tab");
+    }
     updateTable("examples_tab");
 
     auto favorites = VRSceneManager::get()->getFavoritePaths();

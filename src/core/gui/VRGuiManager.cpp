@@ -98,8 +98,8 @@ void VRGuiManager::init() {
     VRDeviceCbPtr fkt; // TODO: all those signals are not properly connected to, the fkt binding is destroyed when going out of scope
 
     fkt = VRDeviceCb::create("GUI_updateBits", bind(&VRGuiBits::update, g_bits) );
-    //VRGuiSignals::get()->getSignal("scene_changed")->add( fkt );
-    //VRGuiSignals::get()->getSignal("camera_added")->add( fkt );
+    VRGuiSignals::get()->getSignal("scene_changed")->add( fkt );
+    VRGuiSignals::get()->getSignal("camera_added")->add( fkt );
     guiSignalCbs.push_back(fkt);
 
     updatePtr = VRUpdateCb::create("GUI_updateManager", bind(&VRGuiManager::update, this) );

@@ -5,6 +5,27 @@
 
 using namespace std;
 
+class ImViewControls {
+    public:
+        vector<string> cameras;
+        int current_camera = 0;
+
+        map<string, bool> navigations;
+
+        bool showCams = false;
+        bool showLights = false;
+        bool pauseRendering = false;
+        bool showPhysics = false;
+        bool recorder = false;
+        bool showCoordinates = false;
+        bool showSetup = false;
+        bool showStats = false;
+        bool showStencil = false;
+
+        ImViewControls();
+        void render();
+};
+
 class ImConsole {
     public:
         bool sensitive = true;
@@ -19,6 +40,7 @@ class ImConsole {
 
 class ImConsoles : public ImWidget {
     public:
+        ImViewControls viewControls;
         vector<string> consolesOrder;
         map<string,ImConsole> consoles;
 
