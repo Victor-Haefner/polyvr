@@ -29,12 +29,11 @@ class VRGuiBits {
         VRVisualLayerPtr recorder_visual_layer;
 
         void updateVisualLayer();
-        void on_view_option_toggle(VRVisualLayer* l, bool b);
+        void on_view_option_toggle(string layer, bool b);
         void toggleVerbose(string s);
 
-        void on_camera_changed();
-        void on_navigation_clicked(bool b);
-        void on_navigation_toggled(VRNavPresetWeakPtr np, bool b);
+        void on_camera_changed(string cam);
+        void on_navigation_toggled(string name, bool b);
 
         void on_save_clicked();
         void on_web_export_clicked();

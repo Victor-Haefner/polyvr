@@ -32,27 +32,21 @@ using namespace std;
 // ---------SIGNALS----------
 // --------------------------
 
-void VRGuiBits::on_view_option_toggle(VRVisualLayer* l, bool b) {
+void VRGuiBits::on_view_option_toggle(string layer, bool b) {
+    auto l = VRVisualLayer::getLayer(layer);
     if (l) l->setVisibility( b );
 }
 
-void VRGuiBits::on_camera_changed() {
+void VRGuiBits::on_camera_changed(string name) {
     if (update_ward) return;
-    /*string name = getComboboxText("combobox4");
     auto scene = VRScene::getCurrent();
     scene->setActiveCamera(name);
-    VRGuiManager::broadcast("camera_changed");*/
+    VRGuiManager::broadcast("camera_changed");
 }
 
-void VRGuiBits::on_navigation_clicked(bool b) {
-    //setWidgetVisibility("navOverlay", b);
-}
-
-void VRGuiBits::on_navigation_toggled(VRNavPresetWeakPtr np, bool b) {
-    auto npreset = np.lock();
-    //npreset->setActive(v);
+void VRGuiBits::on_navigation_toggled(string name, bool b) {
     auto scene = VRScene::getCurrent();
-    if (scene) scene->setNavigationState(npreset->getName(), b);
+    if (scene) scene->setNavigationState(name, b);
 }
 
 void VRGuiBits::on_save_clicked() {
@@ -366,14 +360,14 @@ VRGuiBits::VRGuiBits() {
         return;
     }*/
 
-    /*setComboboxCallback("combobox4", bind(&VRGuiBits::on_camera_changed, this));
-    setToggleButtonCallback("navButton", bind(&VRGuiBits::on_navigation_clicked, this));*/
-
-
     auto mgr = VRGuiSignals::get();
     mgr->addCallback("toolbar_save", [&](OSG::VRGuiSignals::Options o) { on_save_clicked(); return true; }, true );
     mgr->addCallback("toolbar_export", [&](OSG::VRGuiSignals::Options o) { on_web_export_clicked(); return true; }, true );
     mgr->addCallback("toolbar_exit", [&](OSG::VRGuiSignals::Options o) { on_quit_clicked(); return true; }, true );
+
+    mgr->addCallback("view_switch_camera", [&](OSG::VRGuiSignals::Options o) { on_camera_changed(o["cam"]); return true; }, true );
+    mgr->addCallback("view_toggle_navigation", [&](OSG::VRGuiSignals::Options o) { on_navigation_toggled(o["nav"], toBool(o["state"])); return true; }, true );
+    mgr->addCallback("view_toggle_layer", [&](OSG::VRGuiSignals::Options o) { on_view_option_toggle(o["layer"], toBool(o["state"])); return true; }, true );
 
     /*setToolButtonCallback("toolbutton18", bind(&VRGuiBits::on_internal_clicked, this));
     setToolButtonCallback("toolbutton26", bind(&VRGuiBits::on_fullscreen_clicked, this));*/
@@ -440,8 +434,6 @@ VRGuiBits::VRGuiBits() {
 
     updatePtr = VRUpdateCb::create( "IntMonitor_guiUpdate", VRGuiBits_on_internal_update );
     VRSceneManager::get()->addUpdateFkt(updatePtr);
-
-    updateVisualLayer();
 }
 
 void VRGuiBits::on_console_switch(string name) {
@@ -450,38 +442,6 @@ void VRGuiBits::on_console_switch(string name) {
     openConsole->setOpen(false);
     openConsole = consoles[name];
     openConsole->setOpen(true);
-}
-
-void VRGuiBits::updateVisualLayer() {
-    //auto bar = VRGuiBuilder::get()->get_widget("toolbar6");
-    //clearContainer(bar);
-
-    for (auto l : VRVisualLayer::getLayers()) {
-        auto lay = VRVisualLayer::getLayer(l).get();
-        //GtkToolItem* ttb = 0;
-
-        string icon_path = VRSceneManager::get()->getOriginalWorkdir() + "/ressources/gui/" + lay->getIconName();
-        if (exists(icon_path)) {
-            /*ttb = gtk_toggle_tool_button_new();
-            auto icon = gtk_image_new();
-            gtk_image_set_from_file((GtkImage*)icon, icon_path.c_str());
-            auto pbuf = gtk_image_get_pixbuf((GtkImage*)icon);
-            if (pbuf) {
-                pbuf = gdk_pixbuf_scale_simple((GdkPixbuf*)pbuf, 24, 24, GDK_INTERP_BILINEAR);
-                gtk_image_set_from_pixbuf((GtkImage*)icon, pbuf);
-                gtk_tool_button_set_icon_widget((GtkToolButton*)ttb, icon);
-            }*/
-        } else { // try stock image
-            //ttb = gtk_toggle_tool_button_new_from_stock(lay->getIconName().c_str());
-        }
-
-        /*gtk_tool_item_set_tooltip_markup(ttb, l.c_str());
-        gtk_toolbar_insert((GtkToolbar*)bar, (GtkToolItem*)ttb, -1);
-
-        connect_signal<void>(ttb, bind(&VRGuiBits::on_view_option_toggle, this, lay, (GtkToggleToolButton*)ttb), "toggled");*/
-    }
-
-    //gtk_widget_show_all(bar);
 }
 
 bool VRGuiBits::update() { // scene changed
@@ -498,7 +458,6 @@ bool VRGuiBits::update() { // scene changed
     /* // update setup && project label
     setLabel("label24", "Project: " + scene->getName());*/
 
-    updateVisualLayer();
     update_ward = false;
 
     uiSignal("ui_clear_navigations");

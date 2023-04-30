@@ -62,7 +62,9 @@ void ImViewControls::render() {
     ImGui::Text("Camera:");
     ImGui::SameLine();
     ImGui::SetNextItemWidth(150);
-    ImGui::Combo("##Cameras", &current_camera, tmpCameras, IM_ARRAYSIZE(tmpCameras));
+    if (ImGui::Combo("##Cameras", &current_camera, tmpCameras, IM_ARRAYSIZE(tmpCameras))) {
+        uiSignal("view_switch_camera", {{"cam",cameras[current_camera]}});
+    }
 
     ImGui::SameLine();
     ImGui::SetNextItemWidth(150);
@@ -76,14 +78,14 @@ void ImViewControls::render() {
     ImGui::SameLine();
     ImGui::SetNextItemWidth(150);
     if (ImGui::BeginCombo("##Layers", "Layers", 0)) {
-        if (ImGui::Checkbox("Cameras", &showCams)) uiSignal("view_show_cameras", {{"state",toString(showCams)}});
-        if (ImGui::Checkbox("Lights", &showLights)) uiSignal("view_show_lights", {{"state",toString(showLights)}});
-        if (ImGui::Checkbox("Pause Window", &pauseRendering)) uiSignal("view_pause_rendering", {{"state",toString(pauseRendering)}});
-        if (ImGui::Checkbox("Physics", &showPhysics)) uiSignal("view_show_physics", {{"state",toString(showPhysics)}});
-        if (ImGui::Checkbox("Objects", &showCoordinates)) uiSignal("view_show_coordinates", {{"state",toString(showCoordinates)}});
-        if (ImGui::Checkbox("Setup", &showSetup)) uiSignal("view_show_setup", {{"state",toString(showSetup)}});
-        if (ImGui::Checkbox("Statistics", &showStats)) uiSignal("view_show_stats", {{"state",toString(showStats)}});
-        if (ImGui::Checkbox("Stencil", &showStencil)) uiSignal("view_show_stencil", {{"state",toString(showStencil)}});
+        if (ImGui::Checkbox("Cameras", &showCams)) uiSignal("view_toggle_layer", {{"layer","Cameras"},{"state",toString(showCams)}});
+        if (ImGui::Checkbox("Lights", &showLights)) uiSignal("view_toggle_layer", {{"layer","Lights"},{"state",toString(showLights)}});
+        if (ImGui::Checkbox("Pause Window", &pauseRendering)) uiSignal("view_toggle_layer", {{"layer","Pause rendering"},{"state",toString(pauseRendering)}});
+        if (ImGui::Checkbox("Physics", &showPhysics)) uiSignal("view_toggle_layer", {{"layer","Physics"},{"state",toString(showPhysics)}});
+        if (ImGui::Checkbox("Objects", &showCoordinates)) uiSignal("view_toggle_layer", {{"layer","Referentials"},{"state",toString(showCoordinates)}});
+        if (ImGui::Checkbox("Setup", &showSetup)) uiSignal("view_toggle_layer", {{"layer","Setup"},{"state",toString(showSetup)}});
+        if (ImGui::Checkbox("Statistics", &showStats)) uiSignal("view_toggle_layer", {{"layer","Statistics"},{"state",toString(showStats)}});
+        if (ImGui::Checkbox("Stencil", &showStencil)) uiSignal("view_toggle_layer", {{"layer","Stencil"},{"state",toString(showStencil)}});
         ImGui::EndCombo();
     }
 }
