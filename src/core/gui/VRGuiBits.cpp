@@ -298,6 +298,7 @@ void VRGuiBits::toggleWidgets() {
 }
 
 void VRGuiBits::toggleFullscreen() {
+    cout << "toggleFullscreen" << endl;
     static bool fs = false;
     fs = !fs;
     uiSignal("set_editor_fullscreen", {{"fullscreen",toString(fs)}});
@@ -368,10 +369,9 @@ VRGuiBits::VRGuiBits() {
     mgr->addCallback("view_switch_camera", [&](OSG::VRGuiSignals::Options o) { on_camera_changed(o["cam"]); return true; }, true );
     mgr->addCallback("view_toggle_navigation", [&](OSG::VRGuiSignals::Options o) { on_navigation_toggled(o["nav"], toBool(o["state"])); return true; }, true );
     mgr->addCallback("view_toggle_layer", [&](OSG::VRGuiSignals::Options o) { on_view_option_toggle(o["layer"], toBool(o["state"])); return true; }, true );
+    mgr->addCallback("toolbar_fullscreen", [&](OSG::VRGuiSignals::Options o) { on_fullscreen_clicked(); return true; }, true );
 
-    /*setToolButtonCallback("toolbutton18", bind(&VRGuiBits::on_internal_clicked, this));
-    setToolButtonCallback("toolbutton26", bind(&VRGuiBits::on_fullscreen_clicked, this));*/
-
+    /*setToolButtonCallback("toolbutton18", bind(&VRGuiBits::on_internal_clicked, this));*/
     /*setButtonCallback("button21", bind(&VRGuiBits::on_internal_close_clicked, this));
 
     setButtonCallback("wed_cancel", bind(&VRGuiBits::on_wed_cancel, this));

@@ -16,7 +16,7 @@ class VRGlutEditor: public VRWindow {
         int winGL = -1;
         int winUI = -1;
         int winPopup = -1;
-
+        bool fullscreen = false;
         string popup;
 
         typedef function<void(string, map<string, string>)> Signal;
@@ -32,6 +32,8 @@ class VRGlutEditor: public VRWindow {
         VRGlutEditorPtr ptr();
 
         static void initGlut();
+
+        void onMain_Keyboard_special(int k);
 
         void openPopupWindow(string name, int width, int height);
         void togglePopupWindow(string name, int width, int height);
@@ -49,6 +51,7 @@ class VRGlutEditor: public VRWindow {
 
         void forceGLResize(int w, int h);
         void enableVSync(bool b);
+        void setFullscreen(bool b);
 
         void resizeGLWindow(int x, int y, int w, int h);
         void on_resize_window(int w, int h);

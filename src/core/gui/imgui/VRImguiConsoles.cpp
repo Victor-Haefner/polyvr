@@ -88,6 +88,9 @@ void ImViewControls::render() {
         if (ImGui::Checkbox("Stencil", &showStencil)) uiSignal("view_toggle_layer", {{"layer","Stencil"},{"state",toString(showStencil)}});
         ImGui::EndCombo();
     }
+
+    ImGui::SameLine();
+    if (ImGui::Button("Fullscreen")) uiSignal("toolbar_fullscreen");
 }
 
 void ImConsoles::begin() {

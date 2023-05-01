@@ -92,9 +92,11 @@ VRGlutEditor::VRGlutEditor() {
     glutMouseFunc(glutEMouse);
     cout << " Glut window initiated" << endl;
 
-    VRGuiSignals::get()->addCallback("ui_open_popup", [&](VRGuiSignals::Options o) { openPopupWindow(o["name"], toInt(o["width"]), toInt(o["height"])); return true; } );
-    VRGuiSignals::get()->addCallback("ui_close_popup", [&](VRGuiSignals::Options o) { closePopupWindow(); return true; } );
-    VRGuiSignals::get()->addCallback("ui_toggle_popup", [&](VRGuiSignals::Options o) { togglePopupWindow(o["name"], toInt(o["width"]), toInt(o["height"])); return true; } );
+    auto mgr = OSG::VRGuiSignals::get();
+    mgr->addCallback("ui_open_popup", [&](VRGuiSignals::Options o) { openPopupWindow(o["name"], toInt(o["width"]), toInt(o["height"])); return true; } );
+    mgr->addCallback("ui_close_popup", [&](VRGuiSignals::Options o) { closePopupWindow(); return true; } );
+    mgr->addCallback("ui_toggle_popup", [&](VRGuiSignals::Options o) { togglePopupWindow(o["name"], toInt(o["width"]), toInt(o["height"])); return true; } );
+    mgr->addCallback("set_editor_fullscreen", [&](VRGuiSignals::Options o) { setFullscreen(toBool(o["fullscreen"])); return true; } );
 }
 
 VRGlutEditor::~VRGlutEditor() {
@@ -106,6 +108,28 @@ VRGlutEditor::~VRGlutEditor() {
 
 VRGlutEditorPtr VRGlutEditor::ptr() { return static_pointer_cast<VRGlutEditor>( shared_from_this() ); }
 VRGlutEditorPtr VRGlutEditor::create() { return VRGlutEditorPtr(new VRGlutEditor() ); }
+
+void VRGlutEditor::onMain_Keyboard_special(int k) {
+    cout << " VRGlutEditor::onMain_Keyboard_special " << k << endl;
+}
+
+void VRGlutEditor::setFullscreen(bool b) {
+    int width = glutGet(GLUT_SCREEN_WIDTH);
+    int height = glutGet(GLUT_SCREEN_HEIGHT);
+
+    glutSetWindow(topWin);
+    if (b) {
+        glutFullScreen();
+        glutSetWindow(winUI);
+        glutHideWindow();
+        resizeGLWindow(0,0,width,height);
+    } else {
+        glutLeaveFullScreen();
+        glutSetWindow(winUI);
+        glutShowWindow();
+    }
+    fullscreen = b;
+}
 
 void VRGlutEditor::on_close_window() { signal( "glutCloseWindow", {} ); }
 void VRGlutEditor::on_popup_close() { popup = ""; winPopup = -1; }
@@ -180,6 +204,8 @@ void VRGlutEditor::onKeyboard(int c, int s, int x, int y) {
 }
 
 void VRGlutEditor::onKeyboard_special(int c, int s, int x, int y) {
+    if (s == 0 && c == 11) setFullscreen(!fullscreen);
+    cout << " VRGlutEditor::onKeyboard_special " << c << " " << s << " " << x << " " << y << endl;
     if (auto k = getKeyboard()) k->keyboard_special(c, s, x, y);
 }
 
@@ -224,6 +250,7 @@ void VRGlutEditor::on_gl_resize(int w, int h) {
 }
 
 void VRGlutEditor::resizeGLWindow(int x, int y, int w, int h) { // glArea.surface
+    if (fullscreen) return;
     cout << "     Glut::updateGLWindow " << x << ", " << y << ", " << w << ", " << h << endl;
     if (winGL < 0) return;
     glutSetWindow(winGL);
