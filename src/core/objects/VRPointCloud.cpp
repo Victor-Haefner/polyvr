@@ -44,6 +44,7 @@ void VRPointCloud::setupMaterial(bool lit, int pointsize, bool doSplat, float sp
 
 VRMaterialPtr VRPointCloud::getMaterial() { return mat; }
 shared_ptr<Octree<VRPointCloud::PntData>>& VRPointCloud::getOctree() { return octree; }
+VRGeometryPtr VRPointCloud::getOctreeVisual() { return octree->getVisualization(); }
 
 void VRPointCloud::applySettings(map<string, string> options) {
     if (options.count("filePath")) filePath = options["filePath"];

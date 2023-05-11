@@ -2744,14 +2744,15 @@ const TextEditor::LanguageDefinition& TextEditor::LanguageDefinition::Python() {
 			"and", "as", "assert", "break", "class", "continue", "def", "del", "elif",
 			"else", "except", "False", "finally", "for", "from", "global", "if", "import",
 			"in", "is", "lambda", "None", "nonlocal", "not", "or", "pass", "raise", "return",
-			"True", "try", "while", "with", "yield"
+			"True", "try", "while", "with", "yield", "print"
 		};
 		for (auto& k : keywords) langDef.mKeywords.insert(k);
 
 		static const char* const identifiers[] = { // TODO
-			"abort", "abs", "acos", "asin", "atan", "atexit", "atof", "atoi", "atol", "ceil", "clock", "cosh", "ctime", "div", "exit", "fabs", "floor", "fmod", "getchar", "getenv", "isalnum", "isalpha", "isdigit", "isgraph",
-			"ispunct", "isspace", "isupper", "kbhit", "log10", "log2", "log", "memcmp", "modf", "pow", "printf", "sprintf", "snprintf", "putchar", "putenv", "puts", "rand", "remove", "rename", "sinh", "sqrt", "srand", "strcat", "strcmp", "strerror", "time", "tolower", "toupper",
-			"std", "string", "vector", "map", "unordered_map", "set", "unordered_set", "min", "max"
+			"abs", "acos", "asin", "atan", "ceil", "cosh", "exit", "floor",
+			"sin", "cos", "tan", "atan2",
+			"log", "random", "sinh", "sqrt", "map", "set", "min", "max", "str",
+			"VR"
 		};
 		for (auto& k : identifiers) {
 			Identifier id;
