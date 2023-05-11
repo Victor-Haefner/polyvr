@@ -89,6 +89,7 @@ VRGlutEditor::VRGlutEditor() {
     glutKeyboardUpFunc(glutEKeyboardUp);
     glutSpecialUpFunc(glutESpecialUp);
     glutMotionFunc(glutEMotion);
+    glutPassiveMotionFunc(glutEMotion);
     glutMouseFunc(glutEMouse);
     cout << " Glut window initiated" << endl;
 
@@ -190,12 +191,16 @@ void VRGlutEditor::save(XMLElementPtr node) { VRWindow::save(node); }
 void VRGlutEditor::load(XMLElementPtr node) { VRWindow::load(node); }
 
 void VRGlutEditor::onMouse(int b, int s, int x, int y) {
-    cout << "VRGlutEditor::onMouse " << Vec4i(b, s, x, y) << endl;
+    // swap mouse wheel
+    if (b == 3) b = 4;
+    else if (b == 4) b = 3;
+
+    //cout << "VRGlutEditor::onMouse " << Vec4i(b, s, x, y) << endl;
     if (auto m = getMouse()) m->mouse(b, s, x, y, 0);
 }
 
 void VRGlutEditor::onMotion(int x, int y) {
-    cout << "VRGlutEditor::onMouse " << Vec2i(x, y) << endl;
+    //cout << "VRGlutEditor::onMotion " << Vec2i(x, y) << endl;
     if (auto m = getMouse()) m->motion(x, y, 0);
 }
 
@@ -205,7 +210,7 @@ void VRGlutEditor::onKeyboard(int c, int s, int x, int y) {
 
 void VRGlutEditor::onKeyboard_special(int c, int s, int x, int y) {
     if (s == 0 && c == 11) setFullscreen(!fullscreen);
-    cout << " VRGlutEditor::onKeyboard_special " << c << " " << s << " " << x << " " << y << endl;
+    //cout << " VRGlutEditor::onKeyboard_special " << c << " " << s << " " << x << " " << y << endl;
     if (auto k = getKeyboard()) k->keyboard_special(c, s, x, y);
 }
 

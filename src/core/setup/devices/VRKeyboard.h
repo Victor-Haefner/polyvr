@@ -8,8 +8,14 @@ OSG_BEGIN_NAMESPACE;
 using namespace std;
 
 class VRKeyboard : public VRDevice {
+    public:
+        struct KeyEvent {
+            int keyval = 0;
+            int state = 0;
+        };
+
     private:
-        _GdkEventKey* gdk_event = 0;
+        KeyEvent event;
 
         vector< vector<int> > delayedEvents;
 
@@ -27,11 +33,10 @@ class VRKeyboard : public VRDevice {
 
         bool shiftDown();
         bool ctrlDown();
+        bool altDown();
+        bool lockDown();
 
-#ifndef WITHOUT_GTK
-        void setGtkEvent(_GdkEventKey* event);
-        _GdkEventKey* getGtkEvent();
-#endif
+        KeyEvent& getEvent();
 };
 
 OSG_END_NAMESPACE;

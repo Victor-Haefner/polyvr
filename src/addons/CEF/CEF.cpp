@@ -439,48 +439,48 @@ bool CEF::keyboard(VRDeviceWeakPtr d) {
     //bool down = dev->getState();
     VRKeyboardPtr keyboard = dynamic_pointer_cast<VRKeyboard>(dev);
     if (!keyboard) return true;
-    auto event = keyboard->getGtkEvent();
+    auto event = keyboard->getEvent();
     if (!browser) return true;
     auto host = browser->GetHost();
     if (!host) return true;
 
-    //cout << "CEF::keyboard " << event->keyval << " " << ctrlUsed << " " << keyboard->ctrlDown() << endl;
+    cout << "CEF::keyboard " << event.keyval << " " << ctrlUsed << " " << keyboard->ctrlDown() << endl;
 
-    if (keyboard->ctrlDown() && event->type == GDK_KEY_PRESS) {
-        if (event->keyval == 'a') { browser->GetFocusedFrame()->SelectAll(); ctrlUsed = true; }
-        if (event->keyval == 'c') { browser->GetFocusedFrame()->Copy(); ctrlUsed = true; }
-        if (event->keyval == 'v') { browser->GetFocusedFrame()->Paste(); ctrlUsed = true; }
+    if (keyboard->ctrlDown() && event.state == 1) {
+        if (event.keyval == 'a') { browser->GetFocusedFrame()->SelectAll(); ctrlUsed = true; }
+        if (event.keyval == 'c') { browser->GetFocusedFrame()->Copy(); ctrlUsed = true; }
+        if (event.keyval == 'v') { browser->GetFocusedFrame()->Paste(); ctrlUsed = true; }
         return false;
     }
 
-    if (!keyboard->ctrlDown() && event->type == GDK_KEY_PRESS) ctrlUsed = false;
+    if (!keyboard->ctrlDown() && event.state == 1) ctrlUsed = false;
 
-    if (ctrlUsed && !keyboard->ctrlDown() && event->type == GDK_KEY_RELEASE && event->keyval != GDK_KEY_Control_L && event->keyval != GDK_KEY_Control_R ) {
+    if (ctrlUsed && !keyboard->ctrlDown() && event.state == 0 ) {
         ctrlUsed = false;
         return false; // ignore next key up event when ctrl was used for a shortcut above!
     }
 
     CefKeyEvent kev;
-    kev.modifiers = GetCefStateModifiers(event->state);
-    if (event->keyval >= GDK_KEY_KP_Space && event->keyval <= GDK_KEY_KP_9) kev.modifiers |= EVENTFLAG_IS_KEY_PAD;
+    kev.modifiers = GetCefStateModifiers(keyboard->shiftDown(), keyboard->lockDown(), keyboard->ctrlDown(), keyboard->altDown(), false, false, false);
+    if (event.keyval >= 1100 && event.keyval <= 1111) kev.modifiers |= EVENTFLAG_IS_KEY_PAD;
     if (kev.modifiers & EVENTFLAG_ALT_DOWN) kev.is_system_key = true;
 
-    KeyboardCode windows_key_code = GdkEventToWindowsKeyCode(event);
+    KeyboardCode windows_key_code = GdkEventToWindowsKeyCode(event.keyval);
     kev.windows_key_code = GetWindowsKeyCodeWithoutLocation(windows_key_code);
 
-    kev.native_key_code = event->keyval;
+    kev.native_key_code = event.keyval;
 
     if (windows_key_code == VKEY_RETURN) kev.unmodified_character = '\r';
-    else kev.unmodified_character = static_cast<int>(gdk_keyval_to_unicode(event->keyval));
+    else kev.unmodified_character = static_cast<int>(event.keyval);
 
     if (kev.modifiers & EVENTFLAG_CONTROL_DOWN) kev.character = GetControlCharacter(windows_key_code, kev.modifiers & EVENTFLAG_SHIFT_DOWN);
     else kev.character = kev.unmodified_character;
 
-    if (event->type == GDK_KEY_PRESS) {
-        //cout << " CEF::keyboard press " << event->keyval << " " << kev.native_key_code << " " << kev.character << endl;
+    if (event.state == 1) {
+        //cout << " CEF::keyboard press " << event.keyval << " " << kev.native_key_code << " " << kev.character << endl;
         kev.type = KEYEVENT_RAWKEYDOWN; host->SendKeyEvent(kev);
     } else {
-        //cout << " CEF::keyboard release " << event->keyval << " " << kev.native_key_code << " " << kev.character << endl;
+        //cout << " CEF::keyboard release " << event.keyval << " " << kev.native_key_code << " " << kev.character << endl;
         kev.type = KEYEVENT_KEYUP; host->SendKeyEvent(kev);
         kev.type = KEYEVENT_CHAR; host->SendKeyEvent(kev);
     }
