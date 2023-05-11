@@ -142,6 +142,7 @@ ImScriptEditor::ImScriptEditor() {
     mgr->addCallback("script_editor_add_trigger", [&](OSG::VRGuiSignals::Options o){ addTrigger(o["name"], o["trigger"], o["parameter"], o["device"], o["key"], o["state"]); return true; } );
     mgr->addCallback("script_editor_add_argument", [&](OSG::VRGuiSignals::Options o){ addArgument(o["name"], o["type"], o["value"]); return true; } );
     imEditor.SetShowWhitespaces(false); // TODO: add as feature!
+    imEditor.SetLanguageDefinition(TextEditor::LanguageDefinition::Python());
 
     typeList = {"Logic (Python)", "Shader (GLSL)", "Web (HTML/JS/CSS)"};
     argumentTypes = {"None", "int", "float", "str", "VRPyObjectType", "VRPyTransformType", "VRPyGeometryType", "VRPyLightType", "VRPyLodType", "VRPyDeviceType", "VRPyMouseType", "VRPyHapticType", "VRPySocketType", "VRPyLeapFrameType"};
