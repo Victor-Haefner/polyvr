@@ -205,7 +205,6 @@ void VRGlutEditor::onKeyboard(int c, int s, int x, int y) {
 
 void VRGlutEditor::onKeyboard_special(int c, int s, int x, int y) {
     if (s == 0 && c == 11) setFullscreen(!fullscreen);
-    cout << " VRGlutEditor::onKeyboard_special " << c << " " << s << " " << x << " " << y << endl;
     if (auto k = getKeyboard()) k->keyboard_special(c, s, x, y);
 }
 

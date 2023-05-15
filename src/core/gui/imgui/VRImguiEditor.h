@@ -88,6 +88,12 @@ class ImSaveasDialog : public ImDialog {
         void begin() override;
 };
 
+class ImRecorderDialog : public ImDialog {
+    public:
+        ImRecorderDialog();
+        void begin() override;
+};
+
 class VRImguiEditor {
     private:
         Signal signal;
@@ -102,6 +108,7 @@ class VRImguiEditor {
         ImNewDialog newDialog = ImNewDialog();
         ImOpenDialog openDialog = ImOpenDialog();
         ImSaveasDialog saveasDialog = ImSaveasDialog();
+        ImRecorderDialog recorderDialog = ImRecorderDialog();
 
         void resolveResize(const string& name, const ResizeEvent& resizer);
 

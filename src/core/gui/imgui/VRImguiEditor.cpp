@@ -141,7 +141,7 @@ void ImToolbar::begin() {
     ImGui::SameLine(); if (ImGui::Button("Exit")) uiSignal("toolbar_exit");
     ImGui::SameLine(); if (ImGui::Button("About")) uiSignal("ui_toggle_popup", {{"name","about"}, {"width","400"}, {"height","500"}});
     ImGui::SameLine(); if (ImGui::Button("Profiler")) uiSignal("toolbar_profiler");
-    ImGui::SameLine(); if (ImGui::Button("Recorder")) uiSignal("toggle_recorder");
+    ImGui::SameLine(); if (ImGui::Button("Recorder")) uiSignal("ui_toggle_popup", {{"name","recorder"}, {"width","400"}, {"height","200"}});
 }
 
 void ImConsolesSection::begin() {
@@ -165,6 +165,7 @@ void VRImguiEditor::resizePopup(const Surface& parent) {
     newDialog.resize(parent);
     openDialog.resize(parent);
     saveasDialog.resize(parent);
+    recorderDialog.resize(parent);
     ImGui_ImplGLUT_ReshapeFunc(parent.width, parent.height);
 }
 
@@ -237,6 +238,7 @@ void VRImguiEditor::init(Signal signal, ResizeSignal resizeSignal) {
     newDialog.signal = signal;
     openDialog.signal = signal;
     saveasDialog.signal = signal;
+    recorderDialog.signal = signal;
 }
 
 void VRImguiEditor::initPopup() {
@@ -334,6 +336,7 @@ void VRImguiEditor::renderPopup(OSG::VRGuiSignals::Options options) {
     if (name == "new") newDialog.render();
     if (name == "open") openDialog.render();
     if (name == "saveas") saveasDialog.render();
+    if (name == "recorder") recorderDialog.render();
 
     // Rendering
     ImGui::Render();
@@ -400,5 +403,21 @@ void ImOpenDialog::begin() { renderFileDialog("ui_open_file"); }
 void ImSaveasDialog::begin() { renderFileDialog("ui_saveas_file"); }
 
 
+
+ImRecorderDialog::ImRecorderDialog() : ImDialog("recorder") {
+    ;
+}
+
+void ImRecorderDialog::begin() {
+    ImSection::begin();
+
+    centeredText("PolyVR");
+    ImGui::Spacing();
+    centeredText("Version:");
+    //centeredText(version);
+    ImGui::Spacing();
+    centeredText("Authors:");
+    //for (auto& a : authors) centeredText(a);
+}
 
 
