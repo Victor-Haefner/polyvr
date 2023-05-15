@@ -5,7 +5,11 @@
 
 ImAppLauncher::ImAppLauncher(string ID) : ID(ID), name(ID) {}
 
-void ImAppLauncher::render() {
+void ImAppLauncher::render(string filter) {
+    if (filter != "") {
+        if (!contains(name, filter)) return;
+    }
+
     string label = name;
     if (label.length() > 25) label = ".." + subString(label, label.length()-23, 23);
     ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_CollapsingHeader;
@@ -39,8 +43,8 @@ void ImAppLauncher::render() {
     if (!sensitive) ImGui::EndDisabled();
 }
 
-void ImAppPanel::render() {
-    for (auto& l : launchers) l.second.render();
+void ImAppPanel::render(string filter) {
+    for (auto& l : launchers) l.second.render(filter);
 }
 
 ImAppManager::ImAppManager() : ImWidget("AppManager") {
@@ -72,17 +76,28 @@ void ImAppManager::setupAppLauncher(string ID, string name) {
 }
 
 void ImAppManager::begin() {
+    static char str0[128] = "";
+    memcpy(str0, filter.c_str(), filter.size());
+    str0[filter.size()] = 0;
+
+    ImGui::Text("filter:");
+    ImGui::SameLine();
+    if (ImGui::InputText("##AppFilter", str0, 128) ) {
+        filter = string(str0);
+        uiSignal("on_change_app_filter", {{"filter",filter}});
+    }
+
     if (ImGui::BeginTabBar("AppPanelsTabBar", ImGuiTabBarFlags_None)) {
         ImGuiWindowFlags flags = ImGuiWindowFlags_None;
 
         if (ImGui::BeginTabItem("Projects")) {
             ImGui::Spacing();
             ImGui::BeginChild("Panel1", ImGui::GetContentRegionAvail(), false, flags);
-            recents.render();
+            recents.render(filter);
             ImGui::Spacing();
             ImGui::Separator();
             ImGui::Spacing();
-            projects.render();
+            projects.render(filter);
             ImGui::EndChild();
             ImGui::EndTabItem();
         }
@@ -90,7 +105,7 @@ void ImAppManager::begin() {
         if (ImGui::BeginTabItem("Examples")) {
             ImGui::Spacing();
             ImGui::BeginChild("Panel2", ImGui::GetContentRegionAvail(), false, flags);
-            examples.render();
+            examples.render(filter);
             ImGui::EndChild();
             ImGui::EndTabItem();
         }

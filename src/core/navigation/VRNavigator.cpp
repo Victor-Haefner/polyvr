@@ -196,8 +196,8 @@ bool VRNavigator::zoom(VRDeviceWeakPtr _dev, int dir) {
     return true;
 }
 
-bool VRNavigator::isCtrlDown() { return isKeyDown(65507); }
-bool VRNavigator::isShiftDown() { return isKeyDown(65505); }
+bool VRNavigator::isCtrlDown() { return isKeyDown(1114); }
+bool VRNavigator::isShiftDown() { return isKeyDown(1112); }
 
 bool VRNavigator::isKeyDown(int k) {
     auto kb = VRSetup::getCurrent()->getDevice("keyboard");

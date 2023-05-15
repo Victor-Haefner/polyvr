@@ -1,14 +1,14 @@
 #ifndef CEFWINDOWSKEY_H_INCLUDED
 #define CEFWINDOWSKEY_H_INCLUDED
 
-#include <gdk/gdkkeysyms.h>
+/*#include <gdk/gdkkeysyms.h>
 #ifdef _WIN32
 #include <gdk/gdkwin32.h>
 #endif
-#define XK_3270  // for XK_3270_BackTab
 #ifndef _WIN32
 #include <gdk/gdkx.h>
-#include <gdk/gdkkeysyms-compat.h>
+#include <gdk/gdkkeysyms-compat.h>*/
+#define XK_3270  // for XK_3270_BackTab
 #include <X11/keysym.h>
 #include <X11/XF86keysym.h>
 #endif
@@ -28,22 +28,15 @@ char (&ArraySizeHelper(const T (&array)[N]))[N];
 #endif
 #define arraysize(array) (sizeof(ArraySizeHelper(array)))
 
-int GetCefStateModifiers(unsigned int state) {
+int GetCefStateModifiers(bool shift, bool lock, bool ctrl, bool alt, bool mouse0, bool mouse1, bool mouse2) {
   int modifiers = 0;
-  if (state & GDK_SHIFT_MASK)
-    modifiers |= EVENTFLAG_SHIFT_DOWN;
-  if (state & GDK_LOCK_MASK)
-    modifiers |= EVENTFLAG_CAPS_LOCK_ON;
-  if (state & GDK_CONTROL_MASK)
-    modifiers |= EVENTFLAG_CONTROL_DOWN;
-  if (state & GDK_MOD1_MASK)
-    modifiers |= EVENTFLAG_ALT_DOWN;
-  if (state & GDK_BUTTON1_MASK)
-    modifiers |= EVENTFLAG_LEFT_MOUSE_BUTTON;
-  if (state & GDK_BUTTON2_MASK)
-    modifiers |= EVENTFLAG_MIDDLE_MOUSE_BUTTON;
-  if (state & GDK_BUTTON3_MASK)
-    modifiers |= EVENTFLAG_RIGHT_MOUSE_BUTTON;
+  if (shift) modifiers |= EVENTFLAG_SHIFT_DOWN;
+  if (lock) modifiers |= EVENTFLAG_CAPS_LOCK_ON;
+  if (ctrl) modifiers |= EVENTFLAG_CONTROL_DOWN;
+  if (alt) modifiers |= EVENTFLAG_ALT_DOWN;
+  if (mouse0) modifiers |= EVENTFLAG_LEFT_MOUSE_BUTTON;
+  if (mouse1) modifiers |= EVENTFLAG_MIDDLE_MOUSE_BUTTON;
+  if (mouse2) modifiers |= EVENTFLAG_RIGHT_MOUSE_BUTTON;
   return modifiers;
 }
 
@@ -646,187 +639,7 @@ KeyboardCode KeyboardCodeFromXKeysym(unsigned int keysym) {
 }
 
 // From content/browser/renderer_host/input/web_input_event_util_posix.cc.
-KeyboardCode GdkEventToWindowsKeyCode(const GdkEventKey* event) {
-  static const unsigned int kHardwareCodeToGDKKeyval[] = {
-    0,                 // 0x00:
-    0,                 // 0x01:
-    0,                 // 0x02:
-    0,                 // 0x03:
-    0,                 // 0x04:
-    0,                 // 0x05:
-    0,                 // 0x06:
-    0,                 // 0x07:
-    0,                 // 0x08:
-    0,                 // 0x09: GDK_Escape
-#if GTK_MAJOR_VERSION == 2
-    GDK_1,             // 0x0A: GDK_1
-    GDK_2,             // 0x0B: GDK_2
-    GDK_3,             // 0x0C: GDK_3
-    GDK_4,             // 0x0D: GDK_4
-    GDK_5,             // 0x0E: GDK_5
-    GDK_6,             // 0x0F: GDK_6
-    GDK_7,             // 0x10: GDK_7
-    GDK_8,             // 0x11: GDK_8
-    GDK_9,             // 0x12: GDK_9
-    GDK_0,             // 0x13: GDK_0
-    GDK_minus,         // 0x14: GDK_minus
-    GDK_equal,         // 0x15: GDK_equal
-    0,                 // 0x16: GDK_BackSpace
-    0,                 // 0x17: GDK_Tab
-    GDK_q,             // 0x18: GDK_q
-    GDK_w,             // 0x19: GDK_w
-    GDK_e,             // 0x1A: GDK_e
-    GDK_r,             // 0x1B: GDK_r
-    GDK_t,             // 0x1C: GDK_t
-    GDK_y,             // 0x1D: GDK_y
-    GDK_u,             // 0x1E: GDK_u
-    GDK_i,             // 0x1F: GDK_i
-    GDK_o,             // 0x20: GDK_o
-    GDK_p,             // 0x21: GDK_p
-    GDK_bracketleft,   // 0x22: GDK_bracketleft
-    GDK_bracketright,  // 0x23: GDK_bracketright
-    0,                 // 0x24: GDK_Return
-    0,                 // 0x25: GDK_Control_L
-    GDK_a,             // 0x26: GDK_a
-    GDK_s,             // 0x27: GDK_s
-    GDK_d,             // 0x28: GDK_d
-    GDK_f,             // 0x29: GDK_f
-    GDK_g,             // 0x2A: GDK_g
-    GDK_h,             // 0x2B: GDK_h
-    GDK_j,             // 0x2C: GDK_j
-    GDK_k,             // 0x2D: GDK_k
-    GDK_l,             // 0x2E: GDK_l
-    GDK_semicolon,     // 0x2F: GDK_semicolon
-    GDK_apostrophe,    // 0x30: GDK_apostrophe
-    GDK_grave,         // 0x31: GDK_grave
-    0,                 // 0x32: GDK_Shift_L
-    GDK_backslash,     // 0x33: GDK_backslash
-    GDK_z,             // 0x34: GDK_z
-    GDK_x,             // 0x35: GDK_x
-    GDK_c,             // 0x36: GDK_c
-    GDK_v,             // 0x37: GDK_v
-    GDK_b,             // 0x38: GDK_b
-    GDK_n,             // 0x39: GDK_n
-    GDK_m,             // 0x3A: GDK_m
-    GDK_comma,         // 0x3B: GDK_comma
-    GDK_period,        // 0x3C: GDK_period
-    GDK_slash,         // 0x3D: GDK_slash
-#else
-    GDK_KEY_1,             // 0x0A: GDK_1
-    GDK_KEY_2,             // 0x0B: GDK_2
-    GDK_KEY_3,             // 0x0C: GDK_3
-    GDK_KEY_4,             // 0x0D: GDK_4
-    GDK_KEY_5,             // 0x0E: GDK_5
-    GDK_KEY_6,             // 0x0F: GDK_6
-    GDK_KEY_7,             // 0x10: GDK_7
-    GDK_KEY_8,             // 0x11: GDK_8
-    GDK_KEY_9,             // 0x12: GDK_9
-    GDK_KEY_0,             // 0x13: GDK_0
-    GDK_KEY_minus,         // 0x14: GDK_minus
-    GDK_KEY_equal,         // 0x15: GDK_equal
-    0,                 // 0x16: GDK_BackSpace
-    0,                 // 0x17: GDK_Tab
-    GDK_KEY_q,             // 0x18: GDK_q
-    GDK_KEY_w,             // 0x19: GDK_w
-    GDK_KEY_e,             // 0x1A: GDK_e
-    GDK_KEY_r,             // 0x1B: GDK_r
-    GDK_KEY_t,             // 0x1C: GDK_t
-    GDK_KEY_y,             // 0x1D: GDK_y
-    GDK_KEY_u,             // 0x1E: GDK_u
-    GDK_KEY_i,             // 0x1F: GDK_i
-    GDK_KEY_o,             // 0x20: GDK_o
-    GDK_KEY_p,             // 0x21: GDK_p
-    GDK_KEY_bracketleft,   // 0x22: GDK_bracketleft
-    GDK_KEY_bracketright,  // 0x23: GDK_bracketright
-    0,                 // 0x24: GDK_Return
-    0,                 // 0x25: GDK_Control_L
-    GDK_KEY_a,             // 0x26: GDK_a
-    GDK_KEY_s,             // 0x27: GDK_s
-    GDK_KEY_d,             // 0x28: GDK_d
-    GDK_KEY_f,             // 0x29: GDK_f
-    GDK_KEY_g,             // 0x2A: GDK_g
-    GDK_KEY_h,             // 0x2B: GDK_h
-    GDK_KEY_j,             // 0x2C: GDK_j
-    GDK_KEY_k,             // 0x2D: GDK_k
-    GDK_KEY_l,             // 0x2E: GDK_l
-    GDK_KEY_semicolon,     // 0x2F: GDK_semicolon
-    GDK_KEY_apostrophe,    // 0x30: GDK_apostrophe
-    GDK_KEY_grave,         // 0x31: GDK_grave
-    0,                 // 0x32: GDK_Shift_L
-    GDK_KEY_backslash,     // 0x33: GDK_backslash
-    GDK_KEY_z,             // 0x34: GDK_z
-    GDK_KEY_x,             // 0x35: GDK_x
-    GDK_KEY_c,             // 0x36: GDK_c
-    GDK_KEY_v,             // 0x37: GDK_v
-    GDK_KEY_b,             // 0x38: GDK_b
-    GDK_KEY_n,             // 0x39: GDK_n
-    GDK_KEY_m,             // 0x3A: GDK_m
-    GDK_KEY_comma,         // 0x3B: GDK_comma
-    GDK_KEY_period,        // 0x3C: GDK_period
-    GDK_KEY_slash,         // 0x3D: GDK_slash
-#endif
-    0,                 // 0x3E: GDK_Shift_R
-    0,                 // 0x3F:
-    0,                 // 0x40:
-    0,                 // 0x41:
-    0,                 // 0x42:
-    0,                 // 0x43:
-    0,                 // 0x44:
-    0,                 // 0x45:
-    0,                 // 0x46:
-    0,                 // 0x47:
-    0,                 // 0x48:
-    0,                 // 0x49:
-    0,                 // 0x4A:
-    0,                 // 0x4B:
-    0,                 // 0x4C:
-    0,                 // 0x4D:
-    0,                 // 0x4E:
-    0,                 // 0x4F:
-    0,                 // 0x50:
-    0,                 // 0x51:
-    0,                 // 0x52:
-    0,                 // 0x53:
-    0,                 // 0x54:
-    0,                 // 0x55:
-    0,                 // 0x56:
-    0,                 // 0x57:
-    0,                 // 0x58:
-    0,                 // 0x59:
-    0,                 // 0x5A:
-    0,                 // 0x5B:
-    0,                 // 0x5C:
-    0,                 // 0x5D:
-    0,                 // 0x5E:
-    0,                 // 0x5F:
-    0,                 // 0x60:
-    0,                 // 0x61:
-    0,                 // 0x62:
-    0,                 // 0x63:
-    0,                 // 0x64:
-    0,                 // 0x65:
-    0,                 // 0x66:
-    0,                 // 0x67:
-    0,                 // 0x68:
-    0,                 // 0x69:
-    0,                 // 0x6A:
-    0,                 // 0x6B:
-    0,                 // 0x6C:
-    0,                 // 0x6D:
-    0,                 // 0x6E:
-    0,                 // 0x6F:
-    0,                 // 0x70:
-    0,                 // 0x71:
-    0,                 // 0x72:
-#if GTK_MAJOR_VERSION == 2
-    GDK_Super_L,       // 0x73: GDK_Super_L
-    GDK_Super_R,       // 0x74: GDK_Super_R
-#else
-    GDK_KEY_Super_L,       // 0x73: GDK_Super_L
-    GDK_KEY_Super_R,       // 0x74: GDK_Super_R
-#endif
-  };
-
+KeyboardCode GdkEventToWindowsKeyCode(int keyval) {
   // |windows_key_code| has to include a valid virtual-key code even when we
   // use non-US layouts, e.g. even when we type an 'A' key of a US keyboard
   // on the Hebrew layout, |windows_key_code| should be VK_A.
@@ -842,18 +655,9 @@ KeyboardCode GdkEventToWindowsKeyCode(const GdkEventKey* event) {
   // even when we change the layout options, e.g. when we swap a control
   // key and a caps-lock key, GTK doesn't swap their
   // |event->hardware_keycode| values but swap their |event->keyval| values.
-  KeyboardCode windows_key_code = KeyboardCodeFromXKeysym(event->keyval);
+  KeyboardCode windows_key_code = KeyboardCodeFromXKeysym(keyval);
   if (windows_key_code) return windows_key_code;
-  else return KeyboardCode(event->keyval);
-
-  if (event->hardware_keycode < arraysize(kHardwareCodeToGDKKeyval)) {
-    int keyval = kHardwareCodeToGDKKeyval[event->hardware_keycode];
-    if (keyval) return KeyboardCodeFromXKeysym(keyval);
-  }
-
-  // This key is one that keyboard-layout drivers cannot change.
-  // Use |event->keyval| to retrieve its |windows_key_code| value.
-  return KeyboardCodeFromXKeysym(event->keyval);
+  else return KeyboardCode(keyval);
 }
 
 // From content/browser/renderer_host/input/web_input_event_util_posix.cc.
@@ -918,6 +722,3 @@ int GetControlCharacter(KeyboardCode windows_key_code, bool shift) {
     }
   }
 }
-
-
-#endif // CEFWINDOWSKEY_H_INCLUDED

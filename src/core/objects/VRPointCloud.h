@@ -98,6 +98,7 @@ class VRPointCloud : public VRTransform {
         void externalComputeSplats(string path);
 
         shared_ptr<Octree<PntData>>& getOctree();
+        VRGeometryPtr getOctreeVisual();
 
         static map<string, string> readPCBHeader(string path);
         static void writePCBHeader(string path, map<string, string> params);

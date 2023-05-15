@@ -14,7 +14,7 @@ class ImAppLauncher {
 
         ImAppLauncher() {}
         ImAppLauncher(string ID);
-        void render();
+        void render(string filter);
 };
 
 class ImAppPanel {
@@ -22,11 +22,13 @@ class ImAppPanel {
         map<string,ImAppLauncher> launchers;
 
         ImAppPanel() {}
-        void render();
+        void render(string filter);
 };
 
 class ImAppManager : public ImWidget {
     public:
+        string filter = "";
+
         ImAppPanel recents;
         ImAppPanel projects;
         ImAppPanel examples;

@@ -11,6 +11,9 @@ void VRKeyboard::applyEvents() {
 }
 
 void VRKeyboard::keyboard(unsigned int k, bool pressed, int x, int y, bool delayed) {
+    event.keyval = k;
+    event.state = pressed;
+
     if (delayed && 0) { // TODO: delay deaktivated because CEF doenst like it at all!
         delayedEvents.push_back( {0,int(k),int(pressed),x,y} );
         return;
@@ -21,13 +24,16 @@ void VRKeyboard::keyboard(unsigned int k, bool pressed, int x, int y, bool delay
 }
 
 void VRKeyboard::keyboard_special(int k, bool pressed, int x, int y, bool delayed) {
+    event.keyval = k;
+    event.state = pressed;
+
     if (delayed && 0) { // TODO: delay deaktivated because CEF doenst like it at all!
         delayedEvents.push_back( {1,k,pressed,x,y} );
         return;
     }
 
     //cout << "VRKeyboard::keyboard_special " << k << " " << pressed << " " << Vec2i(x,y) << endl;
-    change_button(k+100,pressed);
+    change_button(k+1000,pressed);
 }
 
 VRKeyboard::VRKeyboard() : VRDevice("keyboard") {
@@ -44,11 +50,10 @@ VRKeyboardPtr VRKeyboard::create() {
 
 VRKeyboardPtr VRKeyboard::ptr() { return static_pointer_cast<VRKeyboard>( shared_from_this() ); }
 
-bool VRKeyboard::shiftDown() { return (b_state(65505) == 1 || b_state(65506) == 1); } // Shift left and right
-bool VRKeyboard::ctrlDown()  { return (b_state(65507) == 1 || b_state(65508) == 1); } // Ctrl  left and right
+bool VRKeyboard::shiftDown() { return (b_state(1112) == 1 || b_state(1113) == 1); } // Shift left and right
+bool VRKeyboard::ctrlDown()  { return (b_state(1114) == 1 || b_state(1115) == 1); } // Ctrl  left and right
+bool VRKeyboard::altDown()  { return (b_state(1116) == 1); } // Alt
+bool VRKeyboard::lockDown()  { return false; } // TODO
 
-#ifndef WITHOUT_GTK
-void VRKeyboard::setGtkEvent(_GdkEventKey* event) { gdk_event = event; }
-_GdkEventKey* VRKeyboard::getGtkEvent() { return gdk_event; }
-#endif
+VRKeyboard::KeyEvent& VRKeyboard::getEvent() { return event; }
 
