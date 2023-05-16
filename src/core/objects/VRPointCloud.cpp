@@ -82,6 +82,8 @@ void VRPointCloud::loadChunk(VRLodPtr lod) {
     Vec3d c = lod->getCenter();
     double L = actualLeafSize*0.5;
 
+    cout << " - - - - - VRPointCloud::loadChunk " << c << ",   " << L << endl;
+
     vector<double> region = {c[0]-L,c[0]+L, c[1]-L,c[1]+L, c[2]-L,c[2]+L};
     string path = filePath;
 
@@ -94,7 +96,7 @@ void VRPointCloud::loadChunk(VRLodPtr lod) {
     options["region"] = toString( region );
     options["splatScale"] = toString( splatScale );
     options["threaded"] = toString( 1 );
-    cout << " ---------------- " << splatScale << endl;
+    //cout << " ---------------- VRPointCloud::loadChunk, splatScale: " << splatScale << endl;
 
     bool threaded = false;
     auto chunk = VRImport::get()->load(path, prxy, false, "OSG", threaded, options);
@@ -420,15 +422,17 @@ void VRPointCloud::externalPartition(string path) {
 
     for (auto& ref : chunkRefs) ref.second.stream.close();
 
+    size_t ocNodeBinSize = sizeof(ocSerialNode);
     string wpath = path+".tmp.pcb";
     params["partitionStructure"] = "octree";
     params["ocRootSize"] = toString(oc->getRoot()->size);
+    params["ocRootCenter"] = toString(oc->getRoot()->center);
     params["ocNodeCount"] = toString(oc->getNodesCount());
     writePCBHeader(wpath, params);
     ofstream wstream(wpath, ios::app);
 
     // compute/predict the binary offsets of chunks and write them into the refs
-    size_t chunksOffset = size_t(wstream.tellp()) + sizeof(ocSerialNode) * oc->getNodesCount();
+    size_t chunksOffset = size_t(wstream.tellp()) + ocNodeBinSize * oc->getNodesCount();
     for (auto& ref : chunkRefs) {
         ref.second.offset = chunksOffset;
         chunksOffset += ref.second.size * N1;
@@ -439,14 +443,18 @@ void VRPointCloud::externalPartition(string path) {
         for (int i=0; i<8; i++) {
             auto c = node->getChild(i);
             if (c) {
-                sNode.children[i] = nOffset;
                 writeOutOcNode(c, wstream, nOffset);
+                sNode.children[i] = nOffset - ocNodeBinSize;
             }
         }
         void* key = node;
-        if (chunkRefs.count(key)) sNode.chunkOffset = chunkRefs[key].offset;
-        wstream.write((char*)&sNode, sizeof(ocSerialNode));
-        nOffset += sizeof(ocSerialNode);
+        if (chunkRefs.count(key)) {
+            sNode.chunkOffset = chunkRefs[key].offset;
+            sNode.chunkSize = chunkRefs[key].size;
+        }
+        //sNode.chunkSize = node->getSize(); // TEMP
+        wstream.write((char*)&sNode, ocNodeBinSize);
+        nOffset +=ocNodeBinSize;
     };
 
     int nOffset = 0;

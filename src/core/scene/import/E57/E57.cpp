@@ -277,7 +277,7 @@ void OSG::loadE57(string path, VRTransformPtr res, map<string, string> importOpt
     catch (...) { cerr << "Got an unknown exception" << endl; return; }
 }
 
-vector<size_t> extractRegionBounds(string path, vector<double> region) {
+vector<size_t> extractSortedRegionBounds(string path, vector<double> region) {
     if (region.size() != 6) return {};
 
     auto params = VRPointCloud::readPCBHeader(path);
@@ -418,6 +418,113 @@ vector<size_t> extractRegionBounds(string path, vector<double> region) {
     return bounds;
 }
 
+vector<size_t> extractOctreeRegionBounds(string path, vector<double> region) {
+    if (region.size() != 6) return {};
+
+    auto params = VRPointCloud::readPCBHeader(path);
+    ifstream stream(path);
+    int hL = toInt(params["headerLength"]);
+    stream.seekg(hL);
+    size_t ocTree = stream.tellg();
+
+    auto cN = toValue<size_t>(params["N_points"]);
+    if (cN == 0) return {};
+
+    bool hasCol = contains( params["format"], "r");
+    bool hasSpl = contains( params["format"], "u");
+    double binSize = toValue<double>(params["binSize"]);
+    if (binSize == 0) {
+        cout << " extractRegionBounds failed, binSize is 0!" << endl;
+        return {};
+    }
+
+    int N = sizeof(Vec3d);
+    if (hasCol) N = VRPointCloud::PntCol::size;
+    if (hasSpl) N = VRPointCloud::Splat::size;
+    VRPointCloud::Splat pnt;
+
+    cout << " extractRegionBounds - headers: " << toString(params) << ", cN: " << cN << endl;
+    double regionSize = region[1]-region[0]; // xmax-xmin
+    Vec3d regionCenter = Vec3d((region[0]+region[1])*0.5, (region[2]+region[3])*0.5, (region[4]+region[5])*0.5);
+    double rootSize = toValue<double>(params["ocRootSize"]);
+    Vec3d rootCenter = toValue<Vec3d>(params["ocRootCenter"]);
+    size_t nodeCount = toValue<size_t>(params["ocNodeCount"]);
+
+    // get correct octree node based on region
+    size_t ocNodeBinSize = sizeof(ocSerialNode);
+    size_t rOffset = (nodeCount-1) * ocNodeBinSize; // root is last node written
+    ocSerialNode ocNode;
+    stream.seekg(ocTree + rOffset, ios::beg);
+    cout << " get child from " << ocTree + rOffset << ", " << ocNode.chunkOffset << ", " << ocNode.chunkSize << endl;
+    stream.read((char*)&ocNode, ocNodeBinSize); // read tree root
+
+    int jumps = 0;
+    double nodeSize = rootSize;
+    Vec3d nodeCenter = rootCenter; // root is on 0, 0, 0
+    while (nodeSize > regionSize*1.01) { // traverse tree until node size corresponds to region
+        // compute child octant
+        //Vec3d rp = nodeCenter - regionCenter;
+        Vec3d rp = regionCenter - nodeCenter;
+        int octant = 0;
+        if (rp[0] < 0) octant += 1;
+        if (rp[1] < 0) octant += 2;
+        if (rp[2] < 0) octant += 4;
+
+        // get child address
+        int cOffset = ocNode.children[octant];
+        if (cOffset == 0) {
+            cout << "  WARNING! child is 0! ..after " << jumps << " jumps, regionCenter: " << regionCenter << ", nodeCenter: " << nodeCenter << ", nodeSize: " << nodeSize << ", regionSize: " << regionSize << ", octant: " << octant << endl;
+
+            for (int i=0; i<8; i++) {
+                cout << "   child " << i << ": " << ocNode.children[i] << endl;
+            }
+            break;
+        } else {
+            cout << "  Got child after " << jumps << " jumps, regionCenter: " << regionCenter << ", nodeCenter: " << nodeCenter << ", nodeSize: " << nodeSize << ", regionSize: " << regionSize << ", octant: " << octant << endl;
+
+            for (int i=0; i<8; i++) {
+                cout << "   child " << i << ": " << ocNode.children[i] << endl;
+            }
+        }
+
+        // compute new node size and center
+        nodeSize *= 0.5;
+        Vec3d c(nodeSize, nodeSize, nodeSize);
+        if (rp[0] < 0) c[0] -= nodeSize*2;
+        if (rp[1] < 0) c[1] -= nodeSize*2;
+        if (rp[2] < 0) c[2] -= nodeSize*2;
+        nodeCenter += c;
+        jumps++;
+
+        // get child node
+        stream.seekg(ocTree + cOffset, ios::beg);
+        cout << " get child from " << ocTree + cOffset << ", " << ocNode.chunkOffset << ", " << ocNode.chunkSize << endl;
+        stream.read((char*)&ocNode, ocNodeBinSize);
+    }
+
+    // print all tree nodes
+    if (true) {
+        ofstream log("tmp.log");
+        ocSerialNode tmp;
+        stream.seekg(ocTree, ios::beg);
+        for (int i=0; i<nodeCount; i++) {
+            stream.read((char*)&tmp, ocNodeBinSize);
+            log << "node " << i << " at " << i*ocNodeBinSize << ": chunk " << tmp.chunkOffset << ", " << tmp.chunkSize << ", children: ";
+            for (int j=0; j<8; j++) log << tmp.children[j] << " ";
+            log << endl;
+        }
+        log.close();
+    }
+
+    return {37089059,37089059}; // TEMP
+
+    vector<size_t> bounds;
+    bounds.push_back(ocNode.chunkOffset);
+    bounds.push_back(ocNode.chunkOffset + ocNode.chunkSize);
+    cout << "extractOctreeRegionBounds " << toString(bounds) << endl;
+    return bounds;
+}
+
 void OSG::loadPCB(string path, VRTransformPtr res, map<string, string> importOptions) {
     cout << "load PCB pointcloud " << path << endl;
     importOptions["filePath"] = path;
@@ -425,9 +532,6 @@ void OSG::loadPCB(string path, VRTransformPtr res, map<string, string> importOpt
 
     float downsampling = 1;
     if (importOptions.count("downsampling")) downsampling = toFloat(importOptions["downsampling"]);
-
-    auto region = toValue<vector<double>>(importOptions["region"]);
-    auto bounds = extractRegionBounds(path, region);
 
     auto params = VRPointCloud::readPCBHeader(path);
     ifstream stream(path);
@@ -480,20 +584,23 @@ void OSG::loadPCB(string path, VRTransformPtr res, map<string, string> importOpt
         progress->update( Nprocessed );
     };
 
-    if (hasOct) {
-        // TODO: read octree
-        cout << "---- got octree at " << stream.tellg() << endl;
-        size_t ocBinSize = toInt( params["ocNodeCount"] ) * sizeof(ocSerialNode);
-        skipBin(ocBinSize);
-        cout << "---- skipped octree to " << stream.tellg() << endl;
+    // get binary bounds of region
+    auto region = toValue<vector<double>>(importOptions["region"]);
+    vector<size_t> bounds;
+    if (hasOct) bounds = extractOctreeRegionBounds(path, region);
+    else bounds = extractSortedRegionBounds(path, region);
 
-        //TODO:
-        // - add LODs as chunks in VRPointCloud::externalPartition
-        // - read first LOD and pass to pointcloud without it using a octree
-        // - setup pointcloud LOD tree? or somehow add the chunk positions to be loaded
+    // skip octree
+    if (hasOct) {
+        cout << "---- got octree at " << stream.tellg() << endl;
+        size_t Nnodes = toInt( params["ocNodeCount"] );
+        size_t ocNodeBinSize = sizeof(ocSerialNode);
+        size_t ocBinSize = Nnodes * ocNodeBinSize;
+        skipBin(ocBinSize);
+        cout << "---- end of octree at " << stream.tellg() << endl;
     }
 
-    if (!hasOct) { // read from a sorted PC
+    if (!hasOct || true) { // read from a sorted PC // TODO: is this also valid for octrees?
         int boundsID = 0;
         int Nbounds = bounds.size()*0.5;
         if (Nbounds > 0 && bounds[0] > 0) skip(bounds[0]);

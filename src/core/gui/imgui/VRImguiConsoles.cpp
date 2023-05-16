@@ -40,7 +40,7 @@ void ImConsoles::setupConsole(string ID, string name) {
 }
 
 void ImConsoles::pushConsole(string ID, string data) {
-    cout << " - - - - - - - ImConsoles::pushConsole " << ID << "  " << data << endl;
+    //cout << " - - - - - - - ImConsoles::pushConsole " << ID << "  " << data << endl;
     if (!consoles.count(ID)) return;
     consoles[ID].data += data;
 }

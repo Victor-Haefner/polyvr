@@ -458,7 +458,7 @@ void VRGearSegmentation::computeGearParams(int fN) {
 		double offset = (plane1.position+plane2.position)*0.5;
 
         gears.push_back( {rmin, r1, R, ts, pitch, Nteeth, width, offset} );
-        cout << "- - - computeGearParams " << Vec4d(f, pitch, Nteeth, R) << endl;
+        //cout << "- - - computeGearParams " << Vec4d(f, pitch, Nteeth, R) << endl;
     }
 }
 

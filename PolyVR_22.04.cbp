@@ -707,6 +707,7 @@
 		<Unit filename="src/core/math/kinematics/VRKinematics.h" />
 		<Unit filename="src/core/math/partitioning/Octree.cpp" />
 		<Unit filename="src/core/math/partitioning/Octree.h" />
+		<Unit filename="src/core/math/partitioning/OctreeT.h" />
 		<Unit filename="src/core/math/partitioning/Partitiontree.cpp" />
 		<Unit filename="src/core/math/partitioning/Partitiontree.h" />
 		<Unit filename="src/core/math/partitioning/Quadtree.cpp" />

@@ -47,7 +47,7 @@ VRConsoleWidgetPtr VRConsoleWidget::get(string name) {
 }
 
 void VRConsoleWidget::write(string msg, string style, shared_ptr< VRFunction<string> > link) {
-    cout << " - - - - - - - VRConsoleWidget::write " << msg << endl;
+    //cout << " - - - - - - - VRConsoleWidget::write " << msg << endl;
     VRLock lock(mtx);
 
     if (style == "" && msg.find('\033') != string::npos) { // check for style tags
@@ -163,7 +163,7 @@ void VRConsoleWidget::update() {
     while(!msg_queue.empty()) {
         if (!isOpen) setColor(notifyColor);
         auto& msg = msg_queue.front();
-    cout << " - - - - - - - VRConsoleWidget::update " << msg.msg << endl;
+    //cout << " - - - - - - - VRConsoleWidget::update " << msg.msg << endl;
         //cout << "VRConsoleWidget::update message: '" << msg.msg << "'" << endl;
         /*GtkTextIter itr;
         if (styles.count( msg.style )) {
