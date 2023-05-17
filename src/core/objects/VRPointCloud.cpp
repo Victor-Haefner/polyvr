@@ -452,7 +452,9 @@ void VRPointCloud::externalPartition(string path) {
             sNode.chunkOffset = chunkRefs[key].offset;
             sNode.chunkSize = chunkRefs[key].size;
         }
-        //sNode.chunkSize = node->getSize(); // TEMP
+
+        //sNode.size = node->getSize(); // TEMP
+        //sNode.center = node->getCenter(); // TEMP
         wstream.write((char*)&sNode, ocNodeBinSize);
         nOffset +=ocNodeBinSize;
     };

@@ -2,6 +2,7 @@
 #define E57_H_INCLUDED
 
 #include <OpenSG/OSGConfig.h>
+#include <OpenSG/OSGVector.h>
 #include <string>
 #include <map>
 #include <fstream>
@@ -18,6 +19,8 @@ struct ocChunkRef {
 };
 
 struct ocSerialNode {
+    //double size = 0;
+    //Vec3d center;
     size_t chunkOffset = 0;
     size_t chunkSize = 0;
     int children[8] = {0,0,0,0,0,0,0,0};
