@@ -90,6 +90,7 @@ class VRPointCloud : public VRTransform {
         void addPoint(Vec3d p, Splat c);
 
         void convert(string pathIn, string pathOut);
+        void convertMerge(vector<string> pathIn, string pathOut);
         void genTestFile(string path, size_t N, bool doColor);
         void genTestFile2(string path, size_t N, bool doColor);
 

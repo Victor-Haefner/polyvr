@@ -16,6 +16,7 @@ PyMethodDef VRPyPointCloud::methods[] = {
     {"getMaterial", PyWrap( PointCloud, getMaterial, "Get material", VRMaterialPtr ) },
     {"applySettings", PyWrap( PointCloud, applySettings, "Setup parameters", void, map<string, string> ) },
     {"convert", PyWrapOpt( PointCloud, convert, "Convert a E57 pointcloud to PCB, if out path provided it will export to the same path but with '.pcb' at the end", "", void, string, string ) },
+    {"convertMerge", PyWrapOpt( PointCloud, convertMerge, "Convert E57 pointclouds to a single PCB, if out path provided it will export to the same path but with '.pcb' at the end", "", void, vector<string>, string ) },
     {"externalSort", PyWrap( PointCloud, externalSort, "External sort, merge sort, only for PCB files, chunkSize in bytes to sort internal, bin size in m (path, chunkSize, binSize)", void, string, size_t, double ) },
     {"externalPartition", PyWrap( PointCloud, externalPartition, "External partitioning, only for PCB files", void, string) },
     {"externalComputeSplats", PyWrap( PointCloud, externalComputeSplats, "External algorithm to compute surface tangents and splat sizes", void, string) },

@@ -27,119 +27,214 @@ using namespace e57;
 using namespace std;
 using namespace OSG;
 
-void OSG::convertE57(string pathIn, string pathOut) {
-    try {
-        ImageFile imf(pathIn, "r"); // Read file from disk
+class E57Scan {
+    public:
+        string name;
+        size_t pointCount = 0;
+        bool hasPos;
+        bool hasCol;
+        bool hasInt;
+        CompressedVectorNode points;
+        PosePtr pose;
 
-        StructureNode root = imf.root();
-        if (!root.isDefined("/data3D")) { cout << "File doesn't contain 3D images" << endl; return; }
-
-        e57::Node n = root.get("/data3D");
-        if (n.type() != E57_VECTOR) { cout << "bad file" << endl; return; }
-
-        VectorNode data3D(n);
-        int64_t scanCount = data3D.childCount(); // number of scans in file
-        cout << " file read succefully, it contains " << scanCount << " scans" << endl;
-
-        for (int i = 0; i < scanCount; i++) {
-            StructureNode scan(data3D.get(i));
-            string sname = scan.pathName();
-
-            CompressedVectorNode points( scan.get("points") );
+    public:
+        E57Scan(StructureNode node) : points( node.get("points") ) {
+            name = node.pathName();
             string pname = points.pathName();
-            size_t cN = points.childCount();
-            cout << "  scan " << i << " contains " << cN << " points\n";
-
-            auto progress = VRProgress::create();
-            progress->setup("process points ", cN);
-            progress->reset();
+            pointCount = points.childCount();
 
             StructureNode proto(points.prototype());
-            bool hasPos = (proto.isDefined("cartesianX") && proto.isDefined("cartesianY") && proto.isDefined("cartesianZ"));
-            bool hasCol = (proto.isDefined("colorRed") && proto.isDefined("colorGreen") && proto.isDefined("colorBlue"));
-            if (!hasPos) continue;
+            hasPos = (proto.isDefined("cartesianX") && proto.isDefined("cartesianY") && proto.isDefined("cartesianZ"));
+            hasCol = (proto.isDefined("colorRed") && proto.isDefined("colorGreen") && proto.isDefined("colorBlue"));
+            hasInt = proto.isDefined("intensity");
+            pose = extractPose(node);
 
+            //cout << "  scan " << scan_i << " dump: " << endl; scan.dump();
+            /*cout << "  scan " << i << " contains " << cN << " points\n";
             if (hasCol) cout << "   scan has colors\n";
-            else cout << "   scan has no colors\n";
-
+            if (hasInt) cout << "   scan has intensities\n";
             for (int i=0; i<proto.childCount(); i++) {
                 auto child = proto.get(i);
                 cout << "    scan data: " << child.pathName() << endl;
-            }
-
-            vector<SourceDestBuffer> destBuffers;
-            const int N = 4;
-            double x[N]; destBuffers.push_back(SourceDestBuffer(imf, "cartesianX", x, N, true));
-            double y[N]; destBuffers.push_back(SourceDestBuffer(imf, "cartesianY", y, N, true));
-            double z[N]; destBuffers.push_back(SourceDestBuffer(imf, "cartesianZ", z, N, true));
-            double r[N];
-            double g[N];
-            double b[N];
-            if (hasCol) {
-                destBuffers.push_back(SourceDestBuffer(imf, "colorRed", r, N, true));
-                destBuffers.push_back(SourceDestBuffer(imf, "colorGreen", g, N, true));
-                destBuffers.push_back(SourceDestBuffer(imf, "colorBlue", b, N, true));
-            }
-
-            int gotCount = 0;
-            CompressedVectorReader reader = points.reader(destBuffers);
-
-            map<string, string> params;
-            params["N_points"] = toString(cN);
-            params["format"] = "x8y8z8";
-            if (hasCol) params["format"] += "r1g1b1";
-            VRPointCloud::writePCBHeader(pathOut, params);
-
-            ofstream stream(pathOut, ios::app);
-            do {
-                gotCount = (int)reader.read();
-
-                for (int j=0; j < gotCount; j++) {
-                    Vec3d P(x[j], y[j], z[j]);
-                    Vec3ub C(r[j], g[j], b[j]);
-                    stream.write((const char*)&P[0], sizeof(Vec3d));
-                    stream.write((const char*)&C[0], sizeof(Vec3ub));
-                }
-                progress->update( gotCount );
-
-            } while(gotCount);
-            stream.close();
-            reader.close();
+            }*/
         }
 
-        imf.close();
+        PosePtr extractPose(StructureNode& node) {
+            if (!node.isDefined("pose")) return 0;
+
+            StructureNode ep(node.get("pose"));
+            StructureNode tn(ep.get("translation"));
+            StructureNode rn(ep.get("rotation"));
+
+            Pnt3d p;
+            p[0] = e57::FloatNode(tn.get("x")).value();
+            p[1] = e57::FloatNode(tn.get("y")).value();
+            p[2] = e57::FloatNode(tn.get("z")).value();
+
+            OSG::Quaterniond q;
+            q[0] = e57::FloatNode(rn.get("x")).value();
+            q[1] = e57::FloatNode(rn.get("y")).value();
+            q[2] = e57::FloatNode(rn.get("z")).value();
+            q[3] = e57::FloatNode(rn.get("w")).value();
+
+            Matrix4d m;
+            m.setTranslate(p);
+            m.setRotate(q);
+            return Pose::create(m);
+        }
+};
+
+class E57Loader {
+    public:
+        string path;
+        int64_t scanCount = 0;
+        int64_t pointCount = 0;
+        bool hasCol = false;
+        bool hasInt = false;
+        vector<E57Scan> scans;
+        ImageFile imf;
+        bool valid = false;
+
+        struct CBData {
+            Vec3d P;
+            Vec3ub C;
+        };
+
+        typedef function<void(E57Scan&, CBData&)> ProcessCB;
+
+    public:
+        E57Loader(string path) : path(path), imf(path, "r") {
+            try {
+                StructureNode root = imf.root();
+                if (!root.isDefined("/data3D")) { cout << "File doesn't contain 3D images" << endl; return; }
+
+                e57::Node n = root.get("/data3D");
+                if (n.type() != E57_VECTOR) { cout << "bad file" << endl; return; }
+
+                VectorNode data3D(n);
+                scanCount = data3D.childCount(); // number of scans in file
+                cout << " file read succefully, it contains " << scanCount << " scans" << endl;
+
+                for (int i = 0; i < scanCount; i++) {
+                    StructureNode scanNode(data3D.get(i));
+                    E57Scan scan(scanNode);
+                    if (!scan.hasPos) continue;
+                    scans.push_back(scan);
+                    pointCount += scan.pointCount;
+                    if (scan.hasCol) hasCol = true;
+                    if (scan.hasInt) hasInt = true;
+                }
+
+                valid = true;
+            }
+            catch (E57Exception& ex) { ex.report(__FILE__, __LINE__, __FUNCTION__); return; }
+            catch (std::exception& ex) { cerr << "Got an std::exception, what=" << ex.what() << endl; return; }
+            catch (...) { cerr << "Got an unknown exception" << endl; return; }
+        }
+
+        ~E57Loader() {
+            imf.close();
+        }
+
+        void process(ProcessCB cb, int N = 4, size_t Nskip = 0) {
+            for (int scanI = 0; scanI < scanCount; scanI++) {
+                E57Scan& scan = scans[scanI];
+
+                vector<SourceDestBuffer> destBuffers;
+                double x[N];
+                double y[N];
+                double z[N];
+                double r[N];
+                double g[N];
+                double b[N];
+                double i[N];
+
+                destBuffers.push_back(SourceDestBuffer(imf, "cartesianX", x, N, true));
+                destBuffers.push_back(SourceDestBuffer(imf, "cartesianY", y, N, true));
+                destBuffers.push_back(SourceDestBuffer(imf, "cartesianZ", z, N, true));
+                if (scan.hasCol) {
+                    destBuffers.push_back(SourceDestBuffer(imf, "colorRed", r, N, true));
+                    destBuffers.push_back(SourceDestBuffer(imf, "colorGreen", g, N, true));
+                    destBuffers.push_back(SourceDestBuffer(imf, "colorBlue", b, N, true));
+                } else if (scan.hasInt) {
+                    destBuffers.push_back(SourceDestBuffer(imf, "intensity", i, N, true));
+                }
+
+                int gotCount = 0;
+                int Nskipped = 0;
+                CBData data;
+                CompressedVectorReader reader = scan.points.reader(destBuffers);
+
+                if (Nskip == 0) {
+                    do {
+                        gotCount = (int)reader.read();
+                        for (int j=0; j < gotCount; j++) {
+                            data.P = Vec3d(x[j], y[j], z[j]);
+                            if (scan.hasCol) data.C = Vec3ub(r[j], g[j], b[j]);
+                            if (scan.hasInt) data.C = Vec3ub(i[j], i[j], i[j]);
+                            cb(scan, data);
+                        }
+                    } while(gotCount);
+                } else {
+                    do {
+                        gotCount = (int)reader.read();
+                        if (gotCount > 0) {
+                            if (Nskipped+gotCount <= Nskip) Nskipped += gotCount;
+                            else for (int j=0; j < gotCount; j++) {
+                                Nskipped++;
+                                if (Nskipped >= Nskip) {
+                                    data.P = Vec3d(x[j], y[j], z[j]);
+                                    if (scan.hasCol) data.C = Vec3ub(r[j], g[j], b[j]);
+                                    if (scan.hasInt) data.C = Vec3ub(i[j], i[j], i[j]);
+                                    cb(scan, data);
+                                    Nskipped = 0;
+                                }
+                            }
+                        }
+                    } while(gotCount);
+                }
+                reader.close();
+            }
+        }
+};
+
+void OSG::convertE57(vector<string> pathsIn, string pathOut) {
+    auto progress = VRProgress::create();
+    size_t cN = 0;
+    bool hasCol = false;
+    for (auto pathIn : pathsIn) {
+        E57Loader loader(pathIn);
+        cN += loader.pointCount;
+        if (loader.hasCol || loader.hasInt) hasCol = true;
     }
-    catch (E57Exception& ex) { ex.report(__FILE__, __LINE__, __FUNCTION__); return; }
-    catch (std::exception& ex) { cerr << "Got an std::exception, what=" << ex.what() << endl; return; }
-    catch (...) { cerr << "Got an unknown exception" << endl; return; }
+    progress->setup("process points ", cN);
+    progress->reset();
+
+    map<string, string> params;
+    params["N_points"] = toString(cN);
+    params["format"] = "x8y8z8";
+    if (hasCol) params["format"] += "r1g1b1";
+    VRPointCloud::writePCBHeader(pathOut, params);
+
+    ofstream stream(pathOut, ios::app);
+
+    auto onPoints = [&](E57Scan& scan, E57Loader::CBData& data) {
+        Vec3d P = scan.pose->transform(data.P);
+        stream.write((const char*)&P[0], sizeof(Vec3d));
+        stream.write((const char*)&data.C[0], sizeof(Vec3ub));
+        progress->update(1);
+    };
+
+    for (auto pathIn : pathsIn) {
+        E57Loader loader(pathIn);
+        loader.process(onPoints);
+    }
+
+    stream.close();
 }
 
 // nice reference implementation
 //  https://github.com/CloudCompare/CloudCompare/blob/master/plugins/core/IO/qE57IO/src/E57Filter.cpp#L1329
-
-PosePtr extractPose(e57::StructureNode& node) {
-    if (!node.isDefined("pose")) return 0;
-
-    StructureNode ep(node.get("pose"));
-    StructureNode tn(ep.get("translation"));
-    StructureNode rn(ep.get("rotation"));
-
-    Pnt3d p;
-    p[0] = e57::FloatNode(tn.get("x")).value();
-    p[1] = e57::FloatNode(tn.get("y")).value();
-    p[2] = e57::FloatNode(tn.get("z")).value();
-
-    OSG::Quaterniond q;
-    q[0] = e57::FloatNode(rn.get("x")).value();
-    q[1] = e57::FloatNode(rn.get("y")).value();
-    q[2] = e57::FloatNode(rn.get("z")).value();
-    q[3] = e57::FloatNode(rn.get("w")).value();
-
-    Matrix4d m;
-    m.setTranslate(p);
-    m.setRotate(q);
-    return Pose::create(m);
-}
 
 void OSG::loadE57(string path, VRTransformPtr res, map<string, string> importOptions) {
     cout << "load e57 pointcloud " << path << endl;
@@ -149,132 +244,29 @@ void OSG::loadE57(string path, VRTransformPtr res, map<string, string> importOpt
     float downsampling = 1;
     if (importOptions.count("downsampling")) downsampling = toFloat(importOptions["downsampling"]);
 
-    try {
-        ImageFile imf(path, "r"); // Read file from disk
+    E57Loader loader(path);
+    size_t cN = loader.pointCount;
 
-        StructureNode root = imf.root();
-        if (!root.isDefined("/data3D")) { cout << "File doesn't contain 3D images" << endl; return; }
+    auto progress = VRProgress::create();
+    progress->setup("process points ", cN);
+    progress->reset();
 
-        e57::Node n = root.get("/data3D");
-        if (n.type() != E57_VECTOR) { cout << "bad file" << endl; return; }
+    auto pointcloud = VRPointCloud::create("pointcloud");
+    pointcloud->applySettings(importOptions);
 
-        VectorNode data3D(n);
-        int64_t scanCount = data3D.childCount(); // number of scans in file
-        cout << " file read succefully, it contains " << scanCount << " scans" << endl;
+    auto onPoint = [&](E57Scan& scan, E57Loader::CBData& data) {
+        pointcloud->addPoint(data.P, data.C);
+        progress->update(1);
+    };
 
-        for (int scan_i = 0; scan_i < scanCount; scan_i++) {
-            StructureNode scan(data3D.get(scan_i));
-            string sname = scan.pathName();
+    cout << "fill octree" << endl;
+    size_t Nskip = round(1.0/downsampling) - 1;
+    loader.process(onPoint, 1, Nskip);
 
-            PosePtr pose = extractPose(scan);
-            if (!scan.isDefined("points")) { cout << " no points found in scan, skip.." << endl; continue; }
-
-            CompressedVectorNode points( scan.get("points") );
-            string pname = points.pathName();
-            auto cN = points.childCount();
-            //cout << "  scan " << scan_i << " dump: " << endl; scan.dump();
-            cout << "  scan " << scan_i << " contains " << cN << " points\n";
-
-            auto progress = VRProgress::create();
-            progress->setup("process points ", cN);
-            progress->reset();
-
-            StructureNode proto(points.prototype());
-            bool hasPos = (proto.isDefined("cartesianX") && proto.isDefined("cartesianY") && proto.isDefined("cartesianZ"));
-            bool hasCol = (proto.isDefined("colorRed") && proto.isDefined("colorGreen") && proto.isDefined("colorBlue"));
-            bool hasInt = proto.isDefined("intensity");
-            if (!hasPos) continue;
-
-            if (hasCol) cout << "   scan has colors\n";
-            else cout << "   scan has no colors\n";
-            if (hasInt) cout << "   scan has intensity\n";
-            else cout << "   scan has no intensity\n";
-
-            for (int i=0; i<proto.childCount(); i++) {
-                auto child = proto.get(i);
-                cout << "    scan data channel: " << child.pathName() << endl;
-            }
-
-            vector<SourceDestBuffer> destBuffers;
-            const int N = 1;
-            double x[N]; destBuffers.push_back(SourceDestBuffer(imf, "cartesianX", x, N, true));
-            double y[N]; destBuffers.push_back(SourceDestBuffer(imf, "cartesianY", y, N, true));
-            double z[N]; destBuffers.push_back(SourceDestBuffer(imf, "cartesianZ", z, N, true));
-            double r[N];
-            double g[N];
-            double b[N];
-            double i[N];
-            if (hasCol) {
-                destBuffers.push_back(SourceDestBuffer(imf, "colorRed", r, N, true));
-                destBuffers.push_back(SourceDestBuffer(imf, "colorGreen", g, N, true));
-                destBuffers.push_back(SourceDestBuffer(imf, "colorBlue", b, N, true));
-            } else if (hasInt) {
-                destBuffers.push_back(SourceDestBuffer(imf, "intensity", i, N, true));
-            }
-
-            auto pointcloud = VRPointCloud::create("pointcloud");
-            pointcloud->applySettings(importOptions);
-
-            auto pushPoint = [&](int j) {
-                Vec3d pos = Vec3d(x[j], y[j], z[j]);
-                Color3ub col(0,0,0);
-                if (hasCol) col = Color3ub(r[j], g[j], b[j]);
-                else if (hasInt) col = Color3ub(i[j], i[j], i[j]);
-                pointcloud->addPoint(pos, col);
-            };
-
-            CompressedVectorReader reader = points.reader(destBuffers);
-
-            //reader.seek(5500); // test
-
-            cout << "fill octree" << endl;
-            size_t Nskip = round(1.0/downsampling) - 1;
-            //size_t count = 0;
-            int Nskipped = 0;
-            int gotCount = 0;
-            do {
-                gotCount = (int)reader.read();
-
-                /*if (gotCount > 0) {
-                    int j = 0;
-                    pushPoint(j);
-
-                    Nskip = min(Nskip, cN-count);
-                    if (Nskip > 0) reader.skip(Nskip, count);
-                    progress->update( gotCount+Nskip );
-                    count += gotCount+Nskip;
-
-                    //if (count >= cN) break;
-                }*/
-
-                if (gotCount > 0) {
-
-                    if (Nskipped+gotCount <= Nskip) Nskipped += gotCount;
-                    else for (int j=0; j < gotCount; j++) {
-                        Nskipped++;
-                        if (Nskipped >= Nskip) {
-                            pushPoint(j);
-                            Nskipped = 0;
-                        }
-                    }
-
-                    progress->update( gotCount );
-                }
-
-            } while(gotCount);
-
-            pointcloud->setupLODs();
-            if (pose) pointcloud->setPose(pose);
-            res->addChild(pointcloud);
-
-            reader.close();
-        }
-
-        imf.close();
-    }
-    catch (E57Exception& ex) { ex.report(__FILE__, __LINE__, __FUNCTION__); return; }
-    catch (std::exception& ex) { cerr << "Got an std::exception, what=" << ex.what() << endl; return; }
-    catch (...) { cerr << "Got an unknown exception" << endl; return; }
+    pointcloud->setupLODs();
+    for (auto& scan : loader.scans)
+        if (scan.pose) pointcloud->setPose(scan.pose);
+    res->addChild(pointcloud);
 }
 
 vector<size_t> extractSortedRegionBounds(string path, vector<double> region) {
