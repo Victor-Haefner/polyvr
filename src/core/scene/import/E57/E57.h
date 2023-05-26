@@ -31,7 +31,7 @@ void loadPCB(string path, VRTransformPtr res, map<string, string> importOptions)
 void loadXYZ(string path, VRTransformPtr res, map<string, string> importOptions);
 
 void writeE57(VRPointCloudPtr pcloud, string path);
-void convertE57(string pathIn, string pathOut);
+void convertE57(vector<string> pathsIn, string pathOut);
 
 OSG_END_NAMESPACE;
 

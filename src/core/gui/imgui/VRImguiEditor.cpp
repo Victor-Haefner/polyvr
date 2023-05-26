@@ -17,6 +17,7 @@
 #include "VRImguiSetup.h"
 #include "VRImguiScene.h"
 #include "imFileDialog/ImGuiFileDialog.h"
+#include "../clipboard/clip.h"
 
 ImGuiContext* mainContext = 0;
 ImGuiContext* popupContext = 0;
@@ -217,6 +218,19 @@ void ImGui_ImplGLUT_InstallFuncs_popup() {
     glutSpecialUpFunc(ImGui_ImplGLUT_SpecialUpFunc_popup);
 }
 
+void IMGUISetClipboardText(void* user_data, const char* text) {
+    if (text) clip::set_text(text);
+}
+
+const char* IMGUIGetClipboardText(void* user_data) {
+    if (clip::has(clip::text_format())) {
+        static string value;
+        clip::get_text(value);
+        return value.c_str();
+    }
+    else return 0;
+}
+
 void VRImguiEditor::init(Signal signal, ResizeSignal resizeSignal) {
     this->signal = signal;
     this->resizeSignal = resizeSignal;
@@ -230,6 +244,10 @@ void VRImguiEditor::init(Signal signal, ResizeSignal resizeSignal) {
 
     ImGui_ImplGLUT_Init();
     ImGui_ImplGLUT_InstallFuncs_main();
+
+    ImGuiIO& io = ImGui::GetIO();
+    io.SetClipboardTextFn = IMGUISetClipboardText;
+    io.GetClipboardTextFn = IMGUIGetClipboardText;
 
     toolbar.signal = signal;
     sidePanel.signal = signal;

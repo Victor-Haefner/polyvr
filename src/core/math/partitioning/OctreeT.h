@@ -69,7 +69,6 @@ OctreeNode<T>* OctreeNode<T>::add(Vec3d pos, T dat, int targetLevel, bool checkP
         return true;
     };
 
-
     // TODO: there is a bug if adding millions of zeros..
     /*static int N = 0;
     N++;
@@ -78,9 +77,13 @@ OctreeNode<T>* OctreeNode<T>::add(Vec3d pos, T dat, int targetLevel, bool checkP
         N = 0;
     }*/
 
-
     if (checkPosition) {
         if ( !inBox(pos, center, size) ) { // not in node
+            //cout << "OctreeNode<T>::add, out of box " << size << " -> go up!" << endl;
+            if (size > 1e12) {
+                //cout << "OctreeNode<T>::add, out of box but size too big: " << size << " -> skip point " << pos << endl;
+                return 0;
+            }
             if (!parent) createParent();
             return parent->add(pos, dat, targetLevel, true, partitionLimit); // go a level up
         }
@@ -89,6 +92,10 @@ OctreeNode<T>* OctreeNode<T>::add(Vec3d pos, T dat, int targetLevel, bool checkP
     if (!reachedTargetLevel()) {
         int o = getOctant(pos);
         if (!children[o]) createChild(o);
+        //cout << "OctreeNode<T>::add, not yet target level reached (" << targetLevel << ", " << pos << ", " << o << ", " << size <<  ") -> go down!" << endl;
+        /*cout << "OctreeNode<T>::add, not yet target level reached (" << targetLevel << ", " << pos << ", " << o << ", " << size <<  ") -> go down! ";
+        cout << DBL_MAX << ", " << bool(size > DBL_MAX/4) << endl;
+        cout << endl;*/
         return children[o]->add(pos, dat, targetLevel, false, partitionLimit);
     }
 

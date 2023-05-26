@@ -229,6 +229,12 @@ void VRPointCloud::setupLODs() {
 
 void VRPointCloud::convert(string pathIn, string pathOut) {
     if (pathOut == "") pathOut = pathIn+".pcb";
+    convertE57({pathIn}, pathOut);
+}
+
+void VRPointCloud::convertMerge(vector<string> pathIn, string pathOut) {
+    if (pathIn.size() == 0) return;
+    if (pathOut == "") pathOut = pathIn[0]+".pcb";
     convertE57(pathIn, pathOut);
 }
 
