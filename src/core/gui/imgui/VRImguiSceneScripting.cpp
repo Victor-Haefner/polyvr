@@ -275,6 +275,11 @@ void ImScriptEditor::render() {
 ImScripting::ImScripting() {}
 
 void ImScripting::render() {
+    ImGuiIO& io = ImGui::GetIO();
+    if (io.KeyCtrl && io.KeysDown['s']) { io.KeysDown['s'] = false; uiSignal("scripts_toolbar_save"); }
+    if (io.KeyCtrl && io.KeysDown['e']) { io.KeysDown['e'] = false; uiSignal("scripts_toolbar_execute"); }
+    if (io.KeyCtrl && io.KeysDown['w']) { io.KeysDown['w'] = false; uiSignal("clearConsoles"); }
+
     // toolbar
     ImGui::Spacing();
     ImGui::Indent(5);  if (ImGui::Button("New")) uiSignal("scripts_toolbar_new");

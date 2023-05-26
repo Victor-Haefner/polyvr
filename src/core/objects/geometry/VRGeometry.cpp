@@ -854,12 +854,12 @@ void VRGeometry::genTexCoords(string mapping, float scale, int channel, shared_p
 }
 
 void VRGeometry::decimate(float f) {
-    /*if (mesh == 0) return;
+    if (mesh == 0) return;
 
     map<int, int> collapsing;
     map<int, Pnt3d> collapse_points;
     map<int, Vec3d> collapse_normals;
-	TriangleIterator it(mesh);
+	TriangleIterator it(mesh->geo);
 	for(int i=0; !it.isAtEnd(); ++it, i++) {
         float r = (float)rand()/RAND_MAX;
         if (r <= f) continue;
@@ -874,8 +874,8 @@ void VRGeometry::decimate(float f) {
         //Pnt3d p = (it.getPosition(0) + Vec3d(it.getPosition(1)))*0.5; // edge midpoint
         //Vec3d n = (it.getNormal(0) + it.getNormal(1))*0.5;
 
-        Pnt3d p = it.getPosition(0);
-        Vec3d n = it.getNormal(0);
+        Pnt3d p = Pnt3d(it.getPosition(0));
+        Vec3d n = Vec3d(it.getNormal(0));
 
         collapse_points[in[0]] = p;
         collapse_points[in[1]] = p;
@@ -887,18 +887,18 @@ void VRGeometry::decimate(float f) {
 	GeoUInt32PropertyMTRecPtr indices = GeoUInt32Property::create();
 	GeoVec3fPropertyMTRecPtr normals = GeoVec3fProperty::create();
 
-	GeoUInt32PropertyMTRecPtr idx = dynamic_cast<GeoUInt32Property*>(mesh->getIndices());
-	for (unsigned int i=0; i<idx->size(); i++) {
+	GeoUInt32PropertyMTRecPtr idx = dynamic_cast<GeoUInt32Property*>(mesh->geo->getIndices());
+	/*for (unsigned int i=0; i<idx->size(); i++) {
         cout << "   VRGeometry::decimate " << i << " " << idx->getValue(i) << endl;
-	}
+	}*/
 
-	TriangleIterator it2(mesh);
+	TriangleIterator it2(mesh->geo);
 	for(int i=0; !it2.isAtEnd(); ++it2) { // simplify mesh
         Vec3i in(it2.getPositionIndex(0), it2.getPositionIndex(1), it2.getPositionIndex(2));
         Vec3b inc(collapsing.count(in[0]), collapsing.count(in[1]), collapsing.count(in[2]));
 
         //inc = Vec3b(false, false, false);
-        cout << "   VRGeometry::decimate " << inc << "   " << in << endl;
+        //cout << "   VRGeometry::decimate " << inc << "   " << in << endl;
 
         if (inc[0]) { // collapse one edge, no triangle!
             if(collapsing[in[0]] == in[1]) continue;
@@ -944,7 +944,7 @@ void VRGeometry::decimate(float f) {
 	setLengths(lengths);
 
 
-    createSharedIndex(mesh);*/
+    createSharedIndex(mesh->geo);
 }
 
 void VRGeometry::removeDoubles(float minAngle) {// TODO: use angle

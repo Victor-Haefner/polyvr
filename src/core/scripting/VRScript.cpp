@@ -583,7 +583,7 @@ void VRScript::execute() {
 
         execution_time = timer.stop();
 
-        Py_XDECREF(pArgs);
+        Py_XDECREF(pArgs); // TODO: segfault!
         pyErrPrint("Errors");
         PyGILState_Release(gstate);
     }
