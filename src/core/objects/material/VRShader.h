@@ -1,6 +1,7 @@
 #ifndef VRSHADER_H_INCLUDED
 #define VRSHADER_H_INCLUDED
 
+#include "VRMaterialFwd.h"
 #include <OpenSG/OSGSimpleSHLChunk.h>
 #include <OpenSG/OSGChunkMaterial.h>
 #include <OpenSG/OSGMaterialGroup.h>

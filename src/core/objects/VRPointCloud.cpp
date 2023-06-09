@@ -115,7 +115,7 @@ void VRPointCloud::onImportEvent(VRImportJob params) {
 }
 
 void VRPointCloud::onLodSwitch(VRLodEventPtr e) { // for streaming
-    int i0 = e->getLast();
+    //int i0 = e->getLast();
     int i1 = e->getCurrent();
     VRLodPtr lod = e->getLod();
 
@@ -360,17 +360,124 @@ VRProgressPtr VRPointCloud::addProgress(string head, size_t N) {
     return progress;
 }
 
+void VRPointCloud::externalPartition(string path) {
+    /**
+    1) create an octree with resolution binSize
+    2) put all points in that octree without storing them inside
+    3) for each leaf create a file and put the points inside
+    5) serialize the octree and write it into a file
+    6) append each bin file to the octree file
+    */
+
+    auto params = readPCBHeader(path);
+    cout << "  externalPartition headers " << toString(params) << endl;
+    if (!params.count("binSize")) { cout << "  externalPartition needs a sorted PCB, please run externalSort on it first!" << endl; return; }
+
+    bool hasCol = contains( params["format"], "r");
+    auto cN = toValue<size_t>( params["N_points"] );
+
+    int N1 = sizeof(Vec3d);
+    if (hasCol) N1 += sizeof(Vec3ub);
+
+    ifstream stream(path);
+    int hL = toInt(params["headerLength"]);
+    stream.seekg(hL);
+
+    auto progress = addProgress("process points ", cN);
+
+    float binSize = toFloat(params["binSize"]);
+    auto oc = Octree<bool>::create(binSize);
+
+    map<void*, ocChunkRef> chunkRefs;
+
+    size_t Nwritten1 = 0;
+    VRPointCloud::Splat splat;
+    for (size_t i = 0; i<cN; i++) {
+        stream.read((char*)&splat, N1);
+        if (splat.p.length() < 1e-6) cout << " A GOT P0 " << splat.p << endl;
+        auto node = oc->add( splat.p, 0 );
+        node->clearContent();
+        progress->update(1);
+
+        void* key = node;
+        if (!chunkRefs.count(key)) {
+            string path = "ocChnk"+toString(key)+".dat";
+            chunkRefs[key].path = path;
+            chunkRefs[key].stream.open( path );
+            if (!chunkRefs[key].stream) {
+                cout << " ERROR! cannot create more files to store chunks: " << chunkRefs.size() << endl;
+                break;
+            }
+        }
+
+        chunkRefs[key].size += 1;
+        chunkRefs[key].stream.write((char*)&splat, N1);
+        Nwritten1 += 1;
+    }
+    cout << " written N in chunks: " << Nwritten1 << endl;
+    stream.close();
+
+    for (auto& ref : chunkRefs) ref.second.stream.close();
+
+    string wpath = path+".tmp.pcb";
+    params["partitionStructure"] = "octree";
+    params["ocRootSize"] = toString(oc->getRoot()->size);
+    params["ocNodeCount"] = toString(oc->getNodesCount());
+    writePCBHeader(wpath, params);
+    ofstream wstream(wpath, ios::app);
+
+    // compute/predict the binary offsets of chunks and write them into the refs
+    size_t chunksOffset = size_t(wstream.tellp()) + sizeof(ocSerialNode) * oc->getNodesCount();
+    for (auto& ref : chunkRefs) {
+        ref.second.offset = chunksOffset;
+        chunksOffset += ref.second.size * N1;
+    }
+
+    function<void(OctreeNode<bool>*, ofstream&, int&)> writeOutOcNode = [&](OctreeNode<bool>* node, ofstream& wstream, int& nOffset) {
+        ocSerialNode sNode;
+        for (int i=0; i<8; i++) {
+            auto c = node->getChild(i);
+            if (c) {
+                sNode.children[i] = nOffset;
+                writeOutOcNode(c, wstream, nOffset);
+            }
+        }
+        void* key = node;
+        if (chunkRefs.count(key)) sNode.chunkOffset = chunkRefs[key].offset;
+        wstream.write((char*)&sNode, sizeof(ocSerialNode));
+        nOffset += sizeof(ocSerialNode);
+    };
+
+    int nOffset = 0;
+    writeOutOcNode(oc->getRoot(), wstream, nOffset);
+
+    cout << "---- start writing points at " << wstream.tellp() << endl;
+    size_t Nwritten = 0;
+    for (auto& ref : chunkRefs) {
+        VRPointCloud::Splat splat;
+        ifstream stream(ref.second.path);
+        while(stream.read((char*)&splat, N1)) {
+            if (splat.p.length() < 1e-6) cout << " B GOT P0 " << splat.p << endl;
+            wstream.write((char*)&splat, N1);
+            Nwritten += 1;
+        }
+
+        removeFile(ref.second.path);
+    }
+    cout << "---- writing points " << Nwritten << endl;
+
+    wstream.close();
+    rename(wpath.c_str(), path.c_str());
+}
+
 void VRPointCloud::externalSort(string path, size_t chunkSize, double binSize) {
     auto params = readPCBHeader(path);
     params["binSize"] = toString(binSize);
     cout << "  externalSort headers " << toString(params) << endl;
 
+    bool hasCol = contains( params["format"], "r");
     auto cN = toValue<size_t>( params["N_points"] );
     cout << "  externalSort scan '" << path << "' contains " << cN << " points" << endl;
-
-    bool hasCol = contains( params["format"], "r");
-    if (hasCol) cout << "   scan has colors\n";
-    else cout << "   scan has no colors\n";
 
     int N = sizeof(Vec3d);
     if (hasCol) N += sizeof(Vec3ub);
@@ -532,6 +639,7 @@ void VRPointCloud::externalSort(string path, size_t chunkSize, double binSize) {
 void VRPointCloud::externalComputeSplats(string path) {
     auto params = readPCBHeader(path);
     cout << "  externalComputeSplats headers " << toString(params) << endl;
+    if (!params.count("binSize")) { cout << "  externalPartition needs a sorted PCB, please run externalSort on it first!" << endl; return; }
 
     bool hasCol = contains( params["format"], "r");
     auto cN = toValue<size_t>( params["N_points"] );
@@ -657,7 +765,7 @@ void VRPointCloud::externalComputeSplats(string path) {
     for (size_t i = 0; i<cN; i++) {
         stream.read((char*)&buffer[i%buffer.size()], N1);
 
-        if (i >= buffer.size()-1) { // first fill the whole buffer
+        if (i >= buffer.size()-1 || i+1 == cN) { // buffer full
             while (wi <= i) {
                 int Wi = wi%buffer.size();
                 VRPointCloud::Splat& splat = buffer[Wi];

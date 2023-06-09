@@ -1,3 +1,5 @@
+#include <OpenSG/OSGRenderAction.h>
+
 #include "VRGuiBits.h"
 #include "VRGuiConsole.h"
 
@@ -47,13 +49,18 @@ void VRGuiBits::on_camera_changed() {
     VRGuiManager::broadcast("camera_changed");
 }
 
-void VRGuiBits::on_navigation_changed() {
+void VRGuiBits::on_navigation_clicked() {
+    auto tb = VRGuiBuilder::get()->get_widget("navButton");
+    bool v = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(tb));
+    setWidgetVisibility("navOverlay", v);
+}
+
+void VRGuiBits::on_navigation_toggled(VRNavPresetWeakPtr np, GtkWidget* cb) {
+    bool v = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cb));
+    auto npreset = np.lock();
+    //npreset->setActive(v);
     auto scene = VRScene::getCurrent();
-    if (scene == 0) return;
-    string name = getComboboxText("combobox9");
-    scene->setActiveNavigation(name);
-    setCombobox("combobox5", getListStorePos("nav_presets", name));
-    setTooltip("combobox9", scene->getNavigationTip(name) );
+    if (scene) scene->setNavigationState(npreset->getName(), v);
 }
 
 void VRGuiBits::on_save_clicked() {
@@ -380,7 +387,7 @@ VRGuiBits::VRGuiBits() {
     }
 
     setComboboxCallback("combobox4", bind(&VRGuiBits::on_camera_changed, this));
-    setComboboxCallback("combobox9", bind(&VRGuiBits::on_navigation_changed, this));
+    setToggleButtonCallback("navButton", bind(&VRGuiBits::on_navigation_clicked, this));
 
     setToolButtonCallback("toolbutton4", bind(&VRGuiBits::on_save_clicked, this));
     setToolButtonCallback("toolbutton50", bind(&VRGuiBits::on_web_export_clicked, this));
@@ -520,7 +527,7 @@ bool VRGuiBits::update() { // scene changed
     fillStringListstore("nav_presets", scene->getNavigationNames());
 
     setCombobox("combobox4", scene->getActiveCameraIndex());
-    setCombobox("combobox9", getListStorePos( "nav_presets", scene->getActiveNavigation() ) );
+    //setCombobox("combobox9", getListStorePos( "nav_presets", scene->getActiveNavigation() ) );
 
     // update setup && project label
     setLabel("label24", "Project: " + scene->getName());
@@ -528,6 +535,21 @@ bool VRGuiBits::update() { // scene changed
     updateVisualLayer();
     update_ward = false;
     cout << " VRGuiBits::update done" << endl;
+
+    auto navOverlay = VRGuiBuilder::get()->get_widget("navOverlay");
+    clearContainer(navOverlay);
+    for (auto nav : scene->getNavigations()) {
+        auto row = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
+        auto cb = gtk_check_button_new_with_label(nav.second->getBaseName().c_str());
+        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cb), nav.second->isActive());
+        setTooltip(cb, scene->getNavigationTip(nav.first) );
+        setCheckButtonCallback(cb, bind(&VRGuiBits::on_navigation_toggled, this, nav.second, cb));
+
+        gtk_box_pack_start(GTK_BOX(row), cb, false, true, 0);
+        gtk_box_pack_start(GTK_BOX(navOverlay), row, false, true, 0);
+        gtk_widget_show_all(row);
+    }
+
     return true;
 }
 

@@ -68,7 +68,6 @@ string VREntity::getConceptList() {
 
 VRPropertyPtr VREntity::getProperty(string name, bool warn) {
     for (auto c : getConcepts()) if (auto p = c->getProperty(name, 0)) return p;
-    if (!ontology.lock()) return VRProperty::create(name);
     if (warn) WARN("Warning in VREntity::getProperty: property " + name + " of " + toString() + " not found!");
     return 0;
 }
@@ -81,15 +80,22 @@ vector<VRPropertyPtr> VREntity::getProperties() {
 
 void VREntity::set(string name, string value, int pos) {
     auto prop = getProperty(name, true);
-    if (!prop) { WARN("Warning (set): Entity " + this->name + " has no property " + name); return; }
-    if (!properties[name].count(pos)) properties[name][pos] = prop->copy();
+    if (prop) prop = prop->copy();
+    else {
+        WARN("Warning (set): Entity " + this->name + " has no property " + name);
+        prop = VRProperty::create();
+    }
+    if (!properties[name].count(pos)) properties[name][pos] = prop;
     properties[name][pos]->setValue( value );
 }
 
 void VREntity::add(string name, string value) {
     auto prop = getProperty(name, true);
-    if (!prop) { WARN("Warning (add): Entity " + this->name + " has no property " + name); return; }
-    prop = prop->copy();
+    if (prop) prop = prop->copy();
+    else {
+        WARN("Warning (add): Entity " + this->name + " has no property " + name);
+        prop = VRProperty::create();
+    }
     prop->setValue( value );
     int i = properties[name].size();
     properties[name][i] = prop;

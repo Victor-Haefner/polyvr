@@ -1,4 +1,5 @@
-#include <gtk/gtk.h>
+#include <OpenSG/OSGRenderAction.h>
+
 #include "VRGuiScripts.h"
 #include "VRGuiUtils.h"
 #include "VRGuiBuilder.h"
@@ -196,7 +197,7 @@ void VRGuiScripts::on_import_clicked() {
     VRGuiFile::addFilter("All", 1, "*");
     VRGuiFile::setWidget(scriptImportWidget, true, true);
     VRGuiFile::setCallbacks( bind(&VRGuiScripts::on_diag_import, this), function<void()>(), bind(&VRGuiScripts::on_diag_import_select, this));
-    VRGuiFile::open("Import", GTK_FILE_CHOOSER_ACTION_OPEN, "Import script");
+    VRGuiFile::open("Import", "open", "Import script");
 }
 
 void VRGuiScripts::on_diag_import_select() {
@@ -908,10 +909,7 @@ void VRGuiScripts::on_find_diag_cancel_clicked() {
 
 VRGuiScripts::searchResult::searchResult(string s, int l, int c) : scriptName(s), line(l), column(c) {}
 
-void VRGuiScripts::focusScript(string name, int line, int column) {
-    setNotebookPage("notebook1", 2);
-    setNotebookPage("notebook3", 2);
-
+void VRGuiScripts::selectScript(string name) {
     auto store = (GtkTreeStore*)VRGuiBuilder::get()->get_object("script_tree");
     auto tree_view = (GtkTreeView*)VRGuiBuilder::get()->get_widget("treeview5");
 
@@ -944,10 +942,20 @@ void VRGuiScripts::focusScript(string name, int line, int column) {
 
     // select script in tree view
     selectScript2();
+}
 
-    // set focus on editor
-    editor->grabFocus();
-    editor->setCursorPosition(line, column);
+void VRGuiScripts::focusScript(string name, int line, int column) {
+    setNotebookPage("notebook1", 2);
+    setNotebookPage("notebook3", 2);
+    selectScript(name); // messes with editor cursor position etc.. queueJob fixes it
+
+    auto focusLine = [](shared_ptr<VRGuiEditor> editor, int line, int column) {
+        editor->grabFocus();
+        editor->setCursorPosition(line, column);
+    };
+
+    auto fkt = VRUpdateCb::create("gui_focus_script", bind(focusLine, editor, line, column));
+    VRSceneManager::get()->queueJob(fkt, 0);
 }
 
 void VRGuiScripts::getLineFocus(int& line, int& column) {
@@ -1231,6 +1239,19 @@ bool VRGuiScripts::updateList() {
         else pages[name] = pagePos();
     }
     on_select_script();
+
+    if (selected == "") {
+        cout << "No script open, selecting a script.." << endl;
+        if (scene->getScript("init")) selectScript("init");
+        else {
+            auto scs = scene->getScripts();
+            if (scs.size() > 0) {
+                auto sc = scs.begin()->second;
+                if (sc) selectScript(sc->getName());
+            }
+        }
+    }
+
     return true;
 }
 
@@ -1361,20 +1382,6 @@ VRGuiScripts::VRGuiScripts() {
     GtkScrolledWindow* sw2 = (GtkScrolledWindow*)gtk_scrolled_window_new(0,0);
     import_treeview1 = (GtkTreeView*)gtk_tree_view_new();
     import_treeview2 = (GtkTreeView*)gtk_tree_view_new();
-
-/*class VRGuiScripts_ModelColumns : public Gtk::TreeModelColumnRecord {
-    public:
-        VRGuiScripts_ModelColumns() { add(script); add(fg); add(bg); add(time); add(tfg); add(tbg); add(icon); add(Nfound); add(type); }
-        Gtk::TreeModelColumn<Glib::ustring> script; 0
-        Gtk::TreeModelColumn<Glib::ustring> fg;     1
-        Gtk::TreeModelColumn<Glib::ustring> bg;     2
-        Gtk::TreeModelColumn<Glib::ustring> time;   3
-        Gtk::TreeModelColumn<Glib::ustring> tfg;    4
-        Gtk::TreeModelColumn<Glib::ustring> tbg;    5
-        Gtk::TreeModelColumn<Glib::ustring> icon;   6
-        Gtk::TreeModelColumn<Glib::ustring> Nfound; 7
-        Gtk::TreeModelColumn<gint> type;            8
-};*/
 
     import_liststore1 = gtk_list_store_new(9, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_INT);
     import_liststore2 = gtk_list_store_new(9, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_INT);

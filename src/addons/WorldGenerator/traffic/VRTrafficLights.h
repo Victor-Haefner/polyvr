@@ -3,6 +3,7 @@
 
 #include <OpenSG/OSGConfig.h>
 #include "core/objects/VRObjectFwd.h"
+#include "core/objects/material/VRMaterialFwd.h"
 #include "core/objects/VRTransform.h"
 #include "addons/WorldGenerator/VRWorldGeneratorFwd.h"
 

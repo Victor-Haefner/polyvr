@@ -1,10 +1,11 @@
+#include <OpenSG/OSGRenderAction.h>
+
 #include "VRDemos.h"
 #include "widgets/VRAppPanel.h"
 #include "widgets/VRAppLauncher.h"
 
 #include <string>
 #include <iostream>
-#include <gtk/gtk.h>
 
 #include "core/scene/VRSceneLoader.h"
 #include "core/scene/VRSceneManager.h"
@@ -266,7 +267,7 @@ void VRAppManager::on_saveas_clicked() {
     VRGuiFile::clearFilter();
     VRGuiFile::addFilter("Project", 3, "*.xml", "*.pvr", "*.pvc");
     VRGuiFile::addFilter("All", 1, "*");
-    VRGuiFile::open( "Save", GTK_FILE_CHOOSER_ACTION_SAVE, "Save project as.." );
+    VRGuiFile::open( "Save", "save", "Save project as.." );
     VRGuiFile::setSaveasWidget( bind( &VRAppManager::on_toggle_encryption, this, placeholders::_1 ) );
     VRGuiFile::setFile( scene->getFile() );
 }
@@ -325,7 +326,7 @@ void VRAppManager::on_load_clicked() {
     VRGuiFile::addFilter("Project", 3, "*.xml", "*.pvr", "*.pvc");
     VRGuiFile::addFilter("Model", 19, "*.dae", "*.wrl", "*.obj", "*.3ds", "*.3DS", "*.ply", "*.hgt", "*.tif", "*.tiff", "*.pdf", "*.shp", "*.e57", "*.xyz", "*.STEP", "*.STP", "*.step", "*.stp", "*.ifc", "*.dxf");
     VRGuiFile::addFilter("All", 1, "*");
-    VRGuiFile::open( "Load", GTK_FILE_CHOOSER_ACTION_OPEN, "Load project" );
+    VRGuiFile::open( "Load", "open", "Load project" );
 }
 
 void VRAppManager::writeGitignore(string path) {
@@ -357,7 +358,7 @@ void VRAppManager::on_new_clicked() {
     VRGuiFile::gotoPath( g_get_home_dir() );
     VRGuiFile::setFile( "myApp.pvr" );
     VRGuiFile::clearFilter();
-    VRGuiFile::open( "Create", GTK_FILE_CHOOSER_ACTION_SAVE, "Create new project" );
+    VRGuiFile::open( "Create", "save", "Create new project" );
 }
 
 void VRAppManager::on_search() {
@@ -372,14 +373,25 @@ void VRAppManager::on_search() {
     }
 }
 
+VRAppLauncherPtr VRAppManager::getEntry(string sPath) {
+    auto e = sections["recents"]->getLauncher(sPath);
+    if (!e) e = sections["examples"]->getLauncher(sPath);
+    if (!e) e = sections["favorites"]->getLauncher(sPath);
+    return e;
+}
+
+void VRAppManager::setCurrentGuiState(bool b) {
+    if (current_demo) current_demo->running = b;
+    setGuiState(current_demo);
+    if (!b) current_demo = 0;
+}
+
 bool VRAppManager::update() {
 	cout << "VRAppManager::update " << endl;
     auto scene = VRScene::getCurrent();
     if (scene == 0) {
         cout << " .. no scene" << endl;
-        if (current_demo) current_demo->running = false;
-        setGuiState(current_demo);
-        current_demo = 0;
+        setCurrentGuiState(false);
         return true;
     }
 
@@ -388,31 +400,14 @@ bool VRAppManager::update() {
     if (current_demo) {
         cout << " .. current_demo is set" << endl;
         if (isSamePath(current_demo->path, sPath)) {
-            current_demo->running = true;
             cout << "  .. to running, set ui state accordingly" << endl;
-            setGuiState(current_demo);
-            return true;
+            setCurrentGuiState(true);
+        } else {
+            cout << "  .. to not running, set ui state accordingly" << endl;
+            setCurrentGuiState(false);
         }
-        cout << "  .. to not running, set ui state accordingly" << endl;
-        current_demo->running = false;
-        setGuiState(current_demo);
-        current_demo = 0;
         return true;
     }
-
-    auto e = sections["recents"]->getLauncher(sPath);
-    if (!e) e = sections["examples"]->getLauncher(sPath);
-    if (!e) e = sections["favorites"]->getLauncher(sPath);
-
-    if (e) {
-        current_demo = e;
-        current_demo->running = true;
-        cout << " .. found launcher, set to current and to running, set ui state accordingly" << endl;
-        setGuiState(current_demo);
-        return true;
-    }
-
-    //noLauncherScene = true;
 
     if (noLauncherScene) {
         cout << " .. noLauncherScene set, set ui state accordingly" << endl;
@@ -420,7 +415,14 @@ bool VRAppManager::update() {
         return true;
     }
 
-    cout << " .. ui state not changed" << endl;
+    if ( auto e = getEntry(sPath) ) {
+        cout << " .. found launcher, set to current and to running, set ui state accordingly" << endl;
+        current_demo = e;
+    } else {
+        cout << " .. create launcher, set to current and to running, set ui state accordingly" << endl;
+        current_demo = addEntry(sPath, "favorites_tab", true);
+    }
+    setCurrentGuiState(true);
     return true;
 }
 

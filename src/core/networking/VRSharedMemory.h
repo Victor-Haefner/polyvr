@@ -72,7 +72,7 @@ class VRSharedMemory {
                     unlock();
                     return res;
                 }
-            } catch(boost::interprocess::interprocess_exception e) { cout << "SharedMemory::getObject failed with: " << e.what() << endl; }
+            } catch(boost::interprocess::interprocess_exception& e) { cout << "SharedMemory::getObject failed with: " << e.what() << endl; }
             unlock();
             return T();
         }
@@ -129,7 +129,7 @@ class VRSharedMemory {
                     vres.reserve(res->size());
                     copy(res->begin(),res->end(),back_inserter(vres));
                 }
-            } catch(boost::interprocess::interprocess_exception e) { cout << "getVector failed with: " << e.what() << endl; }
+            } catch(boost::interprocess::interprocess_exception& e) { cout << "getVector failed with: " << e.what() << endl; }
             unlock();
 
             return vres;

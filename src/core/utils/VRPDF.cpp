@@ -8,7 +8,11 @@
 #include "core/objects/geometry/VRGeoData.h"
 #include "core/objects/material/VRMaterial.h"
 
+#ifdef _WIN32
+#include <cairo/cairo-pdf.h>
+#else
 #include <cairo-pdf.h>
+#endif
 
 using namespace OSG;
 

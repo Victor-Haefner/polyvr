@@ -99,17 +99,17 @@ void VRScene::initDevices() { // TODO: remove this after refactoring the navigat
         initOrbit(getActiveCamera(), mouse); //TODO, load from xml
         //initWalk(getActiveCamera(), mouse);
         //initOrbit2D(getActiveCamera(), mouse);
-        setActiveNavigation("Orbit");
+        //setActiveNavigation("Orbit");
     }
 
     if (flystick) {
         initFlyWalk(getActiveCamera(), flystick); // TODO
-        setActiveNavigation("FlyWalk");
+        //setActiveNavigation("FlyWalk");
     }
 
     if (razer) {
         initHydraFly(getActiveCamera(), razer); // TODO
-        setActiveNavigation("Hydra");
+        //setActiveNavigation("Hydra");
     }
 
     setup->resetDeviceDynNodes(getRoot());

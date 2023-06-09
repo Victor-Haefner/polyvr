@@ -5,6 +5,7 @@
 
 #include "core/utils/VRFunctionFwd.h"
 #include "core/objects/VRObjectFwd.h"
+#include "core/objects/material/VRMaterialFwd.h"
 
 #ifdef PLOG
 #undef PLOG
@@ -21,7 +22,7 @@ OSG_BEGIN_NAMESPACE;
 
 class VRDevice;
 
-class CEF_handler : public CefRenderHandler, public CefLoadHandler, public CefContextMenuHandler {
+class CEF_handler : public CefRenderHandler, public CefLoadHandler, public CefContextMenuHandler, public CefDialogHandler, public CefDisplayHandler {
     private:
         VRTexturePtr image = 0;
         int width = 1024;
@@ -48,6 +49,16 @@ class CEF_handler : public CefRenderHandler, public CefLoadHandler, public CefCo
         void OnLoadError( CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, ErrorCode errorCode, const CefString& errorText, const CefString& failedUrl ) override;
         void OnLoadStart( CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, TransitionType transition_type ) override;
 
+#ifdef _WIN32
+        bool OnFileDialog( CefRefPtr< CefBrowser > browser, CefDialogHandler::FileDialogMode mode, const CefString& title, const CefString& default_file_path, const std::vector< CefString >& accept_filters, CefRefPtr< CefFileDialogCallback > callback) override;
+#else
+        bool OnFileDialog( CefRefPtr< CefBrowser > browser, CefDialogHandler::FileDialogMode mode, const CefString& title, const CefString& default_file_path, const std::vector< CefString >& accept_filters, int selected_accept_filter, CefRefPtr< CefFileDialogCallback > callback ) override;
+#endif
+
+
+        void on_link_clicked(string source, int line, string s);
+        bool OnConsoleMessage( CefRefPtr< CefBrowser > browser, cef_log_severity_t level, const CefString& message, const CefString& source, int line ) override;
+
         IMPLEMENT_REFCOUNTING(CEF_handler);
 };
 
@@ -63,6 +74,8 @@ class CEF_client : public CefClient {
         CefRefPtr<CefRenderHandler> GetRenderHandler() override;
         CefRefPtr<CefLoadHandler> GetLoadHandler() override;
         CefRefPtr<CefContextMenuHandler> GetContextMenuHandler() override;
+        CefRefPtr<CefDialogHandler> GetDialogHandler() override;
+        CefRefPtr<CefDisplayHandler> GetDisplayHandler() override;
 
         IMPLEMENT_REFCOUNTING(CEF_client);
 };
@@ -80,6 +93,8 @@ class CEF {
         bool init = false;
         bool focus = false;
         bool ctrlUsed = false;
+        bool doMouse = true;
+        bool doKeyboard = true;
         int mX = -1;
         int mY = -1;
 
@@ -108,6 +123,7 @@ class CEF {
         void setMaterial(VRMaterialPtr mat);
         void addMouse(VRDevicePtr dev, VRObjectPtr obj, int lb, int rb, int wu, int wd);
         void addKeyboard(VRDevicePtr dev);
+        void toggleInput(bool keyboard, bool mouse);
 
         void open(string site);
         void reload();

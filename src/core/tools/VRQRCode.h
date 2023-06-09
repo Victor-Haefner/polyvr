@@ -4,6 +4,7 @@
 #include <string>
 #include "core/math/OSGMathFwd.h"
 #include "core/objects/VRObjectFwd.h"
+#include "core/objects/material/VRMaterialFwd.h"
 
 void createQRCode(std::string s, OSG::VRMaterialPtr mat, OSG::Vec3d fg, OSG::Vec3d bg, int offset);
 

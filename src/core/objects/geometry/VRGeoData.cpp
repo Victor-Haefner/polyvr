@@ -210,9 +210,9 @@ bool VRGeoData::validIndices() const {
 }
 
 void VRGeoData::apply(VRGeometryPtr geo, bool check, bool checkIndices) const {
-    if (!geo) { cout << "VRGeoData::apply to geometry " << geo->getName() << " failed: geometry invalid!" << endl; return; }
-    if (check && !valid()) { cout << "VRGeoData::apply to geometry " << geo->getName() << " failed: data invalid!" << endl; return; }
-    if (checkIndices && !validIndices()) { cout << "VRGeoData::apply to geometry " << geo->getName() << " failed: indices invalid!" << endl; return; }
+    if (!geo) { cout << "VRGeoData::apply to geometry '" << geo->getName() << "' failed: geometry invalid!" << endl; return; }
+    if (check && !valid()) { cout << "VRGeoData::apply to geometry '" << geo->getName() << "' failed: data invalid!" << endl; return; }
+    if (checkIndices && !validIndices()) { cout << "VRGeoData::apply to geometry '" << geo->getName() << "' failed: indices invalid!" << endl; return; }
 
     geo->setPositions( data->pos );
     geo->setLengths( data->lengths->size() > 0 ? data->lengths : 0 );
@@ -724,17 +724,17 @@ bool VRGeoData::setIndices(Primitive& p) const {
     if (p.tID >= int(data->types->size())) return false;
 
     int t = data->types->getValue(p.tID);
-    int l = data->lengths->getValue(p.tID);
+    size_t l = data->lengths->getValue(p.tID);
     int Np = primN(t);
-    int Npo = primNOffset(p.lID, t);
+    size_t Npo = primNOffset(p.lID, t);
 
     if (Np < 0) { // GL_POLYGON
         Np = l;
     }
 
     for (int j=0; j<Np; j++) {
-        int k = p.pID + j - Npo;
-        int i = data->indices->getValue(k);
+        size_t k = p.pID + j - Npo;
+        size_t i = data->indices->getValue(k);
         inds.push_back(i);
     }
 

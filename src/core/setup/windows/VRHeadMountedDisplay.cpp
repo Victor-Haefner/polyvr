@@ -75,6 +75,13 @@ VRHeadMountedDisplay::VRHeadMountedDisplay() {
 	if (setup) setup->addDevice(hmd);
 }
 
+struct VRHeadMountedDisplay::FBOData {
+	VRTextureRendererPtr rendererL;
+	VRTextureRendererPtr rendererR;
+	MatrixCameraRecPtr mcamL;
+	MatrixCameraRecPtr mcamR;
+};
+
 VRHeadMountedDisplay::~VRHeadMountedDisplay() {
 	cout << "~VRHeadMountedDisplay" << endl;
 	if (fboData) delete fboData;
@@ -86,13 +93,6 @@ VRHeadMountedDisplayPtr VRHeadMountedDisplay::create() { return VRHeadMountedDis
 bool VRHeadMountedDisplay::checkDeviceAttached() {
 	return vr::VR_IsHmdPresent();
 }
-
-struct VRHeadMountedDisplay::FBOData {
-	VRTextureRendererPtr rendererL;
-	VRTextureRendererPtr rendererR;
-	MatrixCameraRecPtr mcamL;
-	MatrixCameraRecPtr mcamR;
-};
 
 void VRHeadMountedDisplay::initFBO() {
 	fboData = new FBOData();
@@ -143,12 +143,16 @@ void VRHeadMountedDisplay::setScene() {
 	root->addChild(fboData->rendererR);
 
 	auto setupMatrixCam = [&](Matrix4d& m) {
+        float f = cam->getFar();
+        float n = cam->getNear();
 		MatrixCameraRecPtr mcam = MatrixCamera::create();
 		mcam->setBeacon(cam->getCam()->cam->getBeacon());
 		//mcam->setUseBeacon(true);
 		mcam->setProjectionMatrix(toMatrix4f(m));
-		mcam->setNear(m_fNearClip);
-		mcam->setFar(m_fFarClip);
+		mcam->setNear(n);
+		mcam->setFar(f);
+        m_fNearClip = n;
+        m_fFarClip = f;
 		return mcam;
 	};
 
@@ -293,8 +297,8 @@ void VRHeadMountedDisplay::SetupTexturemaps() {
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-	for (int i = 0; i < m_nRenderHeight; i++) {
-		for (int j = 0; j < m_nRenderWidth; j++) {
+	for (uint i = 0; i < m_nRenderHeight; i++) {
+		for (uint j = 0; j < m_nRenderWidth; j++) {
 			if (i == j) { testImage.push_back(0); testImage.push_back(0); testImage.push_back(255); testImage.push_back(255); }
 			else if (i%2 == 0) { testImage.push_back(0); testImage.push_back(255); testImage.push_back(0); testImage.push_back(255); }
 			else { testImage.push_back(255); testImage.push_back(0); testImage.push_back(0); testImage.push_back(255); }
@@ -335,7 +339,7 @@ void VRHeadMountedDisplay::addController(int devID) {
 	auto scene = VRScene::getCurrent();
 	if (scene) {
 		scene->initFlyWalk(scene->getActiveCamera(), dev);
-		scene->setActiveNavigation("FlyWalk");
+		//scene->setActiveNavigation("FlyWalk");
 		dev->clearDynTrees();
 		dev->addDynTree(scene->getRoot());
 
@@ -394,7 +398,7 @@ void VRHeadMountedDisplay::UpdateHMDMatrixPose() {
 	vr::VRCompositor()->WaitGetPoses(&m_rTrackedDevicePose[0], vr::k_unMaxTrackedDeviceCount, NULL, 0);
 
 	m_iValidPoseCount = 0;
-	for (int devID = 0; devID < vr::k_unMaxTrackedDeviceCount; devID++) {
+	for (uint devID = 0; devID < vr::k_unMaxTrackedDeviceCount; devID++) {
 		if (m_rTrackedDevicePose[devID].bPoseIsValid) {
 			m_iValidPoseCount++;
 			Matrix4d m = convertMatrix(m_rTrackedDevicePose[devID].mDeviceToAbsoluteTracking);

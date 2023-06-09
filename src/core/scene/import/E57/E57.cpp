@@ -9,6 +9,7 @@
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/VRPointCloud.h"
 #include "core/objects/VRLod.h"
+#include "core/math/pose.h"
 #include "core/math/partitioning/boundingbox.h"
 #include "core/math/partitioning/Octree.h"
 #include "core/utils/VRProgress.h"
@@ -113,6 +114,33 @@ void OSG::convertE57(string pathIn, string pathOut) {
     catch (...) { cerr << "Got an unknown exception" << endl; return; }
 }
 
+// nice reference implementation
+//  https://github.com/CloudCompare/CloudCompare/blob/master/plugins/core/IO/qE57IO/src/E57Filter.cpp#L1329
+
+PosePtr extractPose(e57::StructureNode& node) {
+    if (!node.isDefined("pose")) return 0;
+
+    StructureNode ep(node.get("pose"));
+    StructureNode tn(ep.get("translation"));
+    StructureNode rn(ep.get("rotation"));
+
+    Pnt3d p;
+    p[0] = e57::FloatNode(tn.get("x")).value();
+    p[1] = e57::FloatNode(tn.get("y")).value();
+    p[2] = e57::FloatNode(tn.get("z")).value();
+
+    OSG::Quaterniond q;
+    q[0] = e57::FloatNode(rn.get("x")).value();
+    q[1] = e57::FloatNode(rn.get("y")).value();
+    q[2] = e57::FloatNode(rn.get("z")).value();
+    q[3] = e57::FloatNode(rn.get("w")).value();
+
+    Matrix4d m;
+    m.setTranslate(p);
+    m.setRotate(q);
+    return Pose::create(m);
+}
+
 void OSG::loadE57(string path, VRTransformPtr res, map<string, string> importOptions) {
     cout << "load e57 pointcloud " << path << endl;
     importOptions["filePath"] = path;
@@ -134,14 +162,18 @@ void OSG::loadE57(string path, VRTransformPtr res, map<string, string> importOpt
         int64_t scanCount = data3D.childCount(); // number of scans in file
         cout << " file read succefully, it contains " << scanCount << " scans" << endl;
 
-        for (int i = 0; i < scanCount; i++) {
-            StructureNode scan(data3D.get(i));
+        for (int scan_i = 0; scan_i < scanCount; scan_i++) {
+            StructureNode scan(data3D.get(scan_i));
             string sname = scan.pathName();
+
+            PosePtr pose = extractPose(scan);
+            if (!scan.isDefined("points")) { cout << " no points found in scan, skip.." << endl; continue; }
 
             CompressedVectorNode points( scan.get("points") );
             string pname = points.pathName();
             auto cN = points.childCount();
-            cout << "  scan " << i << " contains " << cN << " points\n";
+            //cout << "  scan " << scan_i << " dump: " << endl; scan.dump();
+            cout << "  scan " << scan_i << " contains " << cN << " points\n";
 
             auto progress = VRProgress::create();
             progress->setup("process points ", cN);
@@ -150,14 +182,17 @@ void OSG::loadE57(string path, VRTransformPtr res, map<string, string> importOpt
             StructureNode proto(points.prototype());
             bool hasPos = (proto.isDefined("cartesianX") && proto.isDefined("cartesianY") && proto.isDefined("cartesianZ"));
             bool hasCol = (proto.isDefined("colorRed") && proto.isDefined("colorGreen") && proto.isDefined("colorBlue"));
+            bool hasInt = proto.isDefined("intensity");
             if (!hasPos) continue;
 
             if (hasCol) cout << "   scan has colors\n";
             else cout << "   scan has no colors\n";
+            if (hasInt) cout << "   scan has intensity\n";
+            else cout << "   scan has no intensity\n";
 
             for (int i=0; i<proto.childCount(); i++) {
                 auto child = proto.get(i);
-                cout << "    scan data: " << child.pathName() << endl;
+                cout << "    scan data channel: " << child.pathName() << endl;
             }
 
             vector<SourceDestBuffer> destBuffers;
@@ -168,10 +203,13 @@ void OSG::loadE57(string path, VRTransformPtr res, map<string, string> importOpt
             double r[N];
             double g[N];
             double b[N];
+            double i[N];
             if (hasCol) {
                 destBuffers.push_back(SourceDestBuffer(imf, "colorRed", r, N, true));
                 destBuffers.push_back(SourceDestBuffer(imf, "colorGreen", g, N, true));
                 destBuffers.push_back(SourceDestBuffer(imf, "colorBlue", b, N, true));
+            } else if (hasInt) {
+                destBuffers.push_back(SourceDestBuffer(imf, "intensity", i, N, true));
             }
 
             auto pointcloud = VRPointCloud::create("pointcloud");
@@ -179,7 +217,9 @@ void OSG::loadE57(string path, VRTransformPtr res, map<string, string> importOpt
 
             auto pushPoint = [&](int j) {
                 Vec3d pos = Vec3d(x[j], y[j], z[j]);
-                Color3ub col(r[j], g[j], b[j]);
+                Color3ub col(0,0,0);
+                if (hasCol) col = Color3ub(r[j], g[j], b[j]);
+                else if (hasInt) col = Color3ub(i[j], i[j], i[j]);
                 pointcloud->addPoint(pos, col);
             };
 
@@ -224,6 +264,7 @@ void OSG::loadE57(string path, VRTransformPtr res, map<string, string> importOpt
             } while(gotCount);
 
             pointcloud->setupLODs();
+            if (pose) pointcloud->setPose(pose);
             res->addChild(pointcloud);
 
             reader.close();
@@ -389,14 +430,7 @@ void OSG::loadPCB(string path, VRTransformPtr res, map<string, string> importOpt
     auto bounds = extractRegionBounds(path, region);
 
     auto params = VRPointCloud::readPCBHeader(path);
-
-#if !defined _WIN32 && !defined __EMSCRIPTEN__
-    int fileDescr = fileno(::fopen(path.c_str(), "rb"));
-    __gnu_cxx::stdio_filebuf<char> filebuf(fileDescr, std::ios::in);
-    istream stream(&filebuf);
-#else
     ifstream stream(path);
-#endif
 
     int hL = toInt(params["headerLength"]);
     stream.seekg(hL);
@@ -405,6 +439,7 @@ void OSG::loadPCB(string path, VRTransformPtr res, map<string, string> importOpt
     auto cN = toValue<size_t>(params["N_points"]);
     bool hasCol = contains( params["format"], "r");
     bool hasSpl = contains( params["format"], "u");
+    bool hasOct = params.count("partitionStructure");
     //double binSize = toValue<double>(params["binarySize"]);
     cout << "  scan contains " << cN << " points" << endl;
 
@@ -421,24 +456,6 @@ void OSG::loadPCB(string path, VRTransformPtr res, map<string, string> importOpt
     if (hasSpl) cout << "   scan has splats\n";
     else cout << "   scan has no splats\n";
 
-    //VRTransform("tmp"); // to add tmp to the name pool!
-    //VRPointCloud::create("tmp");
-
-    //MemMonitor::enable();
-
-    if (0) { // no memleaks here :D
-        auto i = shared_ptr<int>(new int(5));
-        auto o = VRObject::create("tmp");
-        auto t = VRTransform::create("tmp");
-        auto m = VRMaterial::create("tmp", false);
-        auto p = VRPointCloud::create("tmp");
-        p->applySettings(importOptions);
-        for (int i=0; i<500; i++) p->addPoint( Vec3d(i*0.17347,0.5001,0.5001), Vec3ub(100,101,102) );
-    }
-
-    //MemMonitor::disable();
-    //MemMonitor::enable();
-
     auto pointcloud = VRPointCloud::create("pointcloud");
     pointcloud->applySettings(importOptions);
 
@@ -451,60 +468,65 @@ void OSG::loadPCB(string path, VRTransformPtr res, map<string, string> importOpt
     if (hasSpl) N = VRPointCloud::Splat::size;
     VRPointCloud::Splat pnt;
 
-    auto skip = [&](size_t Nskip) {
+    auto skipBin = [&](size_t Nskip) { // skip N bytes
+        if (Nskip < 50) stream.ignore(Nskip, EOF); // ignore processes all chars
+        else stream.seekg(Nskip, ios::cur); // seek jumps directly, better with increasing jump length
+    };
+
+    auto skip = [&](size_t Nskip) { // skip N points
         size_t Nprocessed = min(Nskip, progress->left());
         if (Nprocessed == 0) return;
-        if (Nprocessed < 10) stream.ignore(N*Nprocessed, EOF); // ignore processes all chars
-        else stream.seekg(N*Nprocessed, ios::cur); // seek jumps directly, better with increasing jump length
+        skipBin(N*Nprocessed);
         progress->update( Nprocessed );
     };
 
-    int boundsID = 0;
-    int Nbounds = bounds.size()*0.5;
-    if (Nbounds > 0 && bounds[0] > 0) skip(bounds[0]);
+    if (hasOct) {
+        // TODO: read octree
+        cout << "---- got octree at " << stream.tellg() << endl;
+        size_t ocBinSize = toInt( params["ocNodeCount"] ) * sizeof(ocSerialNode);
+        skipBin(ocBinSize);
+        cout << "---- skipped octree to " << stream.tellg() << endl;
 
-    // try to optimize file access
-    /**
-    POSIX_FADV_NORMAL Indicates that the application has no advice to give about its access pattern for the specified data. If no advice is given for an open file, this is the default assumption.
-    POSIX_FADV_SEQUENTIAL The application expects to access the specified data sequentially (with lower offsets read before higher ones).
-    POSIX_FADV_RANDOM The specified data will be accessed in random order.
-    POSIX_FADV_NOREUSE The specified data will be accessed only once.
-    POSIX_FADV_WILLNEED The specified data will be accessed in the near future.
-    POSIX_FADV_DONTNEED The specified data will not be accessed in the near future.
-    */
-    //posix_fadvise(fileDescr, 0, 0, POSIX_FADV_RANDOM); // meh, doesn't really improve anything!
+        //TODO:
+        // - add LODs as chunks in VRPointCloud::externalPartition
+        // - read first LOD and pass to pointcloud without it using a octree
+        // - setup pointcloud LOD tree? or somehow add the chunk positions to be loaded
+    }
 
+    if (!hasOct) { // read from a sorted PC
+        int boundsID = 0;
+        int Nbounds = bounds.size()*0.5;
+        if (Nbounds > 0 && bounds[0] > 0) skip(bounds[0]);
 
-    while (stream.read((char*)&pnt, N)) {
-        Vec3d  pos = pnt.p;
-        Vec3ub rgb = pnt.c;
-        if (hasSpl) pointcloud->addPoint(pos, pnt);
-        else pointcloud->addPoint(pos, rgb);
-        progress->update( 1 );
-        if (Nskip>0) skip(Nskip);
+        size_t pointsRead = 0;
+        Vec3d pSum;
+        while (stream.read((char*)&pnt, N)) {
+            Vec3d  pos = pnt.p;
+            if (pos.length() < 1e-6) continue; // ignore zeros..
+            Vec3ub rgb = pnt.c;
+            if (hasSpl) pointcloud->addPoint(pos, pnt);
+            else pointcloud->addPoint(pos, rgb);
+            pointsRead += 1;
+            pSum += pos;
+            progress->update( 1 );
+            if (Nskip>0) skip(Nskip);
 
-        if (boundsID < Nbounds) {
-            size_t upperBound = bounds[boundsID*2+1];
-            if ( upperBound > 0 && progress->current() >= upperBound) {
-                boundsID++;
-                if (boundsID < Nbounds) {
-                    size_t nextLowerBound = bounds[boundsID*2];
-                    skip(nextLowerBound-upperBound);
-                } else break;
+            if (boundsID < Nbounds) {
+                size_t upperBound = bounds[boundsID*2+1];
+                if ( upperBound > 0 && progress->current() >= upperBound) {
+                    boundsID++;
+                    if (boundsID < Nbounds) {
+                        size_t nextLowerBound = bounds[boundsID*2];
+                        skip(nextLowerBound-upperBound);
+                    } else break;
+                }
             }
         }
     }
 
     pointcloud->setupLODs();
     res->addChild(pointcloud); // TODO: threading -> problems with states, re-adding it as child in main thread fixes issue!
-#if !defined _WIN32 && !defined __EMSCRIPTEN__
-    close(fileDescr);
-#else
     stream.close();
-#endif
-
-    //pointcloud.reset();
-    //MemMonitor::disable();
 }
 
 void OSG::loadXYZ(string path, VRTransformPtr res, map<string, string> importOptions) {

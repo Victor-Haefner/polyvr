@@ -32,6 +32,7 @@ int VRProfiler::regStart(string name) {
     Call c;
     c.name = name;
     c.t0 = getTime();
+    c.cpu0 = getCPUTime();
     c.thread = threadIDs[tID];
     current->calls[ID] = c;
     return ID;
@@ -42,6 +43,7 @@ void VRProfiler::regStop(int ID) {
     if (!current || !current->calls.count(ID)) return;
     VRLock lock(mutex);
     current->calls[ID].t1 = getTime();
+    current->calls[ID].cpu1 = getCPUTime();
 }
 
 void VRProfiler::setActive(bool b) { active = b; }
@@ -66,9 +68,13 @@ void VRProfiler::swap() {
     if (!isActive()) return;
 
     VRLock lock(mutex);
-    if (current) current->t1 = getTime();
+    if (current) {
+        current->t1 = getTime();
+        current->cpu1 = getCPUTime();
+    }
     Frame f;
     f.t0 = getTime();
+    f.cpu0 = getCPUTime();
     f.fID = VRGlobals::CURRENT_FRAME;
     f.Nchanged = VRGlobals::NCHANGED;
     f.Ncreated = VRGlobals::NCREATED;

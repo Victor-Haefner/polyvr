@@ -7,6 +7,7 @@
 #include <OpenSG/OSGImage.h>
 #include <OpenSG/OSGLightEngine.h>
 #include "core/objects/VRObjectFwd.h"
+#include "core/objects/material/VRMaterialFwd.h"
 #include "core/scene/VRSceneFwd.h"
 
 OSG_BEGIN_NAMESPACE;
@@ -93,7 +94,7 @@ class VRDefShading {
         void addDSLight(VRLightPtr light);
         void updateLight(VRLightPtr l);
         void subLight(int ID);
-        void setBackground(BackgroundRecPtr bg);
+        void setBackground(BackgroundMTRecPtr bg);
 
         const std::string &getLightVPFile(LightTypeE lightType);
         const std::string &getLightFPFile(LightTypeE lightType, ShadowTypeE shadowType);

@@ -257,6 +257,7 @@
 			<Add option="-lopcuacore" />
 			<Add option="-lxml2" />
 			<Add option="-lredwg" />
+			<Add option="-lmdb" />
 			<Add option="-Wl,-rpath=/usr/lib/x86_64-linux-gnu:/usr/lib/OCE" />
 			<Add directory="/usr/lib/virtuose" />
 			<Add directory="/usr/lib/opensg" />
@@ -411,10 +412,14 @@
 		<Unit filename="src/addons/Engineering/Milling/VRPyMillingMachine.h" />
 		<Unit filename="src/addons/Engineering/Milling/VRPyMillingWorkPiece.cpp" />
 		<Unit filename="src/addons/Engineering/Milling/VRPyMillingWorkPiece.h" />
+		<Unit filename="src/addons/Engineering/Programming/VRLADEngine.cpp" />
+		<Unit filename="src/addons/Engineering/Programming/VRLADEngine.h" />
 		<Unit filename="src/addons/Engineering/Programming/VRLADVariable.cpp" />
 		<Unit filename="src/addons/Engineering/Programming/VRLADVariable.h" />
 		<Unit filename="src/addons/Engineering/Space/VRRocketExhaust.cpp" />
 		<Unit filename="src/addons/Engineering/Space/VRRocketExhaust.h" />
+		<Unit filename="src/addons/Engineering/Space/VRSpaceMission.cpp" />
+		<Unit filename="src/addons/Engineering/Space/VRSpaceMission.h" />
 		<Unit filename="src/addons/Engineering/VREngineeringFwd.h" />
 		<Unit filename="src/addons/Engineering/VRNumberingEngine.cpp" />
 		<Unit filename="src/addons/Engineering/VRNumberingEngine.h" />
@@ -1041,6 +1046,8 @@
 		<Unit filename="src/core/networking/VRNetworkClient.h" />
 		<Unit filename="src/core/networking/VRNetworkManager.cpp" />
 		<Unit filename="src/core/networking/VRNetworkManager.h" />
+		<Unit filename="src/core/networking/VRNetworkServer.cpp" />
+		<Unit filename="src/core/networking/VRNetworkServer.h" />
 		<Unit filename="src/core/networking/VRNetworkingFwd.h" />
 		<Unit filename="src/core/networking/VROPCUA.cpp" />
 		<Unit filename="src/core/networking/VROPCUA.h" />
@@ -1135,6 +1142,17 @@
 		<Unit filename="src/core/objects/geometry/VRSpatialCollisionManager.h" />
 		<Unit filename="src/core/objects/geometry/VRStroke.cpp" />
 		<Unit filename="src/core/objects/geometry/VRStroke.h" />
+		<Unit filename="src/core/objects/geometry/brep/VRBRepBound.cpp" />
+		<Unit filename="src/core/objects/geometry/brep/VRBRepBound.h" />
+		<Unit filename="src/core/objects/geometry/brep/VRBRepEdge.cpp" />
+		<Unit filename="src/core/objects/geometry/brep/VRBRepEdge.h" />
+		<Unit filename="src/core/objects/geometry/brep/VRBRepFwd.h" />
+		<Unit filename="src/core/objects/geometry/brep/VRBRepSurface.cpp" />
+		<Unit filename="src/core/objects/geometry/brep/VRBRepSurface.h" />
+		<Unit filename="src/core/objects/geometry/brep/VRBRepUtils.cpp" />
+		<Unit filename="src/core/objects/geometry/brep/VRBRepUtils.h" />
+		<Unit filename="src/core/objects/geometry/brep/VRPyBRep.cpp" />
+		<Unit filename="src/core/objects/geometry/brep/VRPyBRep.h" />
 		<Unit filename="src/core/objects/geometry/sprite/VRSprite.cpp" />
 		<Unit filename="src/core/objects/geometry/sprite/VRSprite.h" />
 		<Unit filename="src/core/objects/geometry/sprite/VRSpriteResizeTool.cpp" />
@@ -1145,6 +1163,7 @@
 		<Unit filename="src/core/objects/material/VRBricks.h" />
 		<Unit filename="src/core/objects/material/VRMaterial.cpp" />
 		<Unit filename="src/core/objects/material/VRMaterial.h" />
+		<Unit filename="src/core/objects/material/VRMaterialFwd.h" />
 		<Unit filename="src/core/objects/material/VRMaterialT.h" />
 		<Unit filename="src/core/objects/material/VRNormalmap.cpp" />
 		<Unit filename="src/core/objects/material/VRNormalmap.h" />
@@ -1152,6 +1171,8 @@
 		<Unit filename="src/core/objects/material/VRPerlin.h" />
 		<Unit filename="src/core/objects/material/VRShader.cpp" />
 		<Unit filename="src/core/objects/material/VRShader.h" />
+		<Unit filename="src/core/objects/material/VRShaderFactory.cpp" />
+		<Unit filename="src/core/objects/material/VRShaderFactory.h" />
 		<Unit filename="src/core/objects/material/VRTexture.cpp" />
 		<Unit filename="src/core/objects/material/VRTexture.h" />
 		<Unit filename="src/core/objects/material/VRTextureGenerator.cpp" />
@@ -1243,14 +1264,6 @@
 		<Unit filename="src/core/scene/import/GLTF/stb_image.h" />
 		<Unit filename="src/core/scene/import/GLTF/stb_image_write.h" />
 		<Unit filename="src/core/scene/import/GLTF/tiny_gltf.h" />
-		<Unit filename="src/core/scene/import/STEP/VRBRepBound.cpp" />
-		<Unit filename="src/core/scene/import/STEP/VRBRepBound.h" />
-		<Unit filename="src/core/scene/import/STEP/VRBRepEdge.cpp" />
-		<Unit filename="src/core/scene/import/STEP/VRBRepEdge.h" />
-		<Unit filename="src/core/scene/import/STEP/VRBRepSurface.cpp" />
-		<Unit filename="src/core/scene/import/STEP/VRBRepSurface.h" />
-		<Unit filename="src/core/scene/import/STEP/VRBRepUtils.cpp" />
-		<Unit filename="src/core/scene/import/STEP/VRBRepUtils.h" />
 		<Unit filename="src/core/scene/import/STEP/VRSTEP.cpp" />
 		<Unit filename="src/core/scene/import/STEP/VRSTEP.h" />
 		<Unit filename="src/core/scene/import/STEP/VRSTEPExplorer.cpp" />
@@ -1510,14 +1523,11 @@
 		<Unit filename="src/core/setup/tracking/Vive.h" />
 		<Unit filename="src/core/setup/windows/VRGlutWindow.cpp" />
 		<Unit filename="src/core/setup/windows/VRGlutWindow.h" />
-		<Unit filename="src/core/setup/windows/VRGtk2Window.h" />
-		<Unit filename="src/core/setup/windows/VRGtk32Window.h" />
-		<Unit filename="src/core/setup/windows/VRGtk3Window.h" />
 		<Unit filename="src/core/setup/windows/VRGtkWindow.cpp" />
 		<Unit filename="src/core/setup/windows/VRGtkWindow.h" />
 		<Unit filename="src/core/setup/windows/VRHeadMountedDisplay.cpp" />
 		<Unit filename="src/core/setup/windows/VRHeadMountedDisplay.h" />
- 		<Unit filename="src/core/setup/windows/VRMultiWindow.cpp" />
+		<Unit filename="src/core/setup/windows/VRMultiWindow.cpp" />
 		<Unit filename="src/core/setup/windows/VRMultiWindow.h" />
 		<Unit filename="src/core/setup/windows/VRView.cpp" />
 		<Unit filename="src/core/setup/windows/VRView.h" />

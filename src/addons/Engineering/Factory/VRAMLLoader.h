@@ -20,6 +20,10 @@ class VRAMLLoader {
         string AMLDir;
         map<string, VRObjectPtr> assets;
 
+        string parseRole(const string& role);
+        VREntityPtr addEntity(const string& role, VRObjectPtr parent, map<string, string> props = map<string, string>());
+
+        void readLibNode(XMLElementPtr node, VRConceptPtr parent = 0);
         void processElement(XMLElementPtr node, VRTransformPtr obj);
         void readNode(XMLElementPtr node, VRTransformPtr obj);
 

@@ -5,5 +5,6 @@
 
 int APIENTRY main(HINSTANCE hInstance) {
     CefMainArgs args(hInstance);
-    return CefExecuteProcess(args, 0, 0);
+	//CefRefPtr<CefApp> app(0);
+    return CefExecuteProcess(args, nullptr, 0);
 }

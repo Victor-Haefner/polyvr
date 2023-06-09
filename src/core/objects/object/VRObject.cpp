@@ -327,7 +327,16 @@ void VRObject::addChild(VRObjectPtr child, bool osg, int place) {
     updateChildrenIndices(true);
 }
 
-int VRObject::getChildIndex() { return childIndex;}
+int VRObject::getChildIndex() { return childIndex; }
+
+bool VRObject::hasChild(VRObjectPtr child, int place) {
+    if (!child) return false;
+    if (child == ptr()) return false;
+    int target = findChild(child);
+    if (target == -1) return false;
+    if (place <= -1) return true;
+    return (target == place);
+}
 
 void VRObject::subChild(OSGObjectPtr n) { if (osg && osg->node && n) osg->node->subChild(n->node); }
 void VRObject::subChild(VRObjectPtr child, bool doOsg) {

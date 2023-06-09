@@ -3,7 +3,7 @@
   <Objects>
     <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" visible="4294967295">
       <Object ambient="0.3 0.3 0.3 1" base_name="light" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" name_space="__global__" name_suffix="0" on="1" persistency="666" photometricMap="" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" shadowVolume="1e+06 1e+06 1e+06 -1e+06 -1e+06 -1e+06 1" specular="0.1 0.1 0.1 1" type="Light" visible="4294967295">
-        <Object accept_root="1" aspect="1" at="0.0226822 0.224088 0.339247" at_dir="0" base_name="Default" far="512" fov="1.0472" from="0.673979 0.301385 0.552933" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="4294967295">
+        <Object accept_root="1" aspect="1" at="-0.00317654 0.6 0.0373982" at_dir="0" base_name="Default" far="512" fov="1.0472" from="-0.15426 1.01549 1.8846" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="4294967295">
           <attachments>
             <Node base_name="transform" name_space="VRAttachment" name_suffix="0" persistency="666" value=""/>
           </attachments>
@@ -282,6 +282,10 @@
 	c = VR.createPrimitive('core', 'Cylinder 0.05 0.1 32', VR.valvePrototype, VR.materials['metal'])
 	c.setTransform([0,0.2,0], [0,1,0], [0,0,1])
 	
+	VR.outletPrototype = VR.Transform('outlet')
+	c = VR.createPrimitive('core', 'Cylinder 0.05 0.05 32', VR.outletPrototype, VR.materials['metal'])
+	c.setTransform([0,0.2,0], [0,1,0], [0,0,1])
+	
 	VR.gaugePrototype = VR.Transform('gauge')
 	c = VR.createPrimitive('core', 'Cylinder 0.05 0.1 32', VR.gaugePrototype, VR.materials['gauge'])
 	c.setTransform([0,0.2,0], [0,1,0], [0,0,1])
@@ -321,6 +325,8 @@
 
 	addAnchor(VR.valvePrototype, VR.Pose([0,0.2, 0.025], [0,0,-1]))
 	addAnchor(VR.valvePrototype, VR.Pose([0,0.2,-0.025], [0,0, 1]))
+
+	addAnchor(VR.outletPrototype, VR.Pose([0,0.2,-0.025], [0,0, 1]))
 </core>
     </Script>
     <Script base_name="setupEnvironment" group="assets" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
@@ -463,6 +469,43 @@
 	VR.createPipe(getAnchor(v1,0), getAnchor(pp,1))
 	VR.createPipe(getAnchor(pp,0), getAnchor(v2,1))
 	VR.createPipe(getAnchor(v2,0), getAnchor(t2,0))
+</core>
+    </Script>
+    <Script base_name="test2" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+      <core>
+	import VR
+
+	VR.init()
+
+	def add(template, pose):
+		asset = template.duplicate()
+		asset.setPose(pose)
+		asset.addTag('part')
+		VR.environment.addChild(asset)
+		
+		nID = -1
+		n = asset.getName()
+		if 'tank' in n: nID = VR.sim.addNode(n, pose, 'Tank', {'pressure':1.0, 'volume':1.0, 'density':1.0})
+		if 'pump' in n: nID = VR.sim.addNode(n, pose, 'Pump', {'performance':0.0, 'isOpen':0})
+		if 'valve' in n: nID = VR.sim.addNode(n, pose, 'Valve', {'state':0, 'radius':0.01})
+		if 'outlet' in n: nID = VR.sim.addNode(n, pose, 'Outlet', {'radius':0.01})
+		if nID &gt;= 0: asset.setTagValue('simNode', str(nID))
+		return asset
+
+	def getAnchor(obj, i):
+		anchors = obj.getChildrenWithTag('anchor', 1, 1)
+		return anchors[i]
+
+	pp = add(VR.pumpPrototype,  VR.Pose([ 0.0,0.5,0]))
+	v1 = add(VR.valvePrototype, VR.Pose([-0.5,0.5,0], [-1,0,0]))
+	v2 = add(VR.valvePrototype, VR.Pose([ 0.5,0.5,0], [-1,0,0]))
+	o1 = add(VR.outletPrototype, VR.Pose([-1.0,0.5,0], [ 1,0,0]))
+	o2 = add(VR.outletPrototype, VR.Pose([ 1.0,0.5,0], [-1,0,0]))
+	
+	VR.createPipe(getAnchor(o1,0), getAnchor(v1,1))
+	VR.createPipe(getAnchor(v1,0), getAnchor(pp,1))
+	VR.createPipe(getAnchor(pp,0), getAnchor(v2,1))
+	VR.createPipe(getAnchor(v2,0), getAnchor(o2,0))
 </core>
     </Script>
     <Script base_name="updateTool" group="tools" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">

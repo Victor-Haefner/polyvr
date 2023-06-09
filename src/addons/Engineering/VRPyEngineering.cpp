@@ -35,6 +35,7 @@ PyMethodDef VRPyPipeSystem::methods[] = {
     {"remNode", PyWrap( PipeSystem, remNode, "Remove node", void, int ) },
     {"addSegment", PyWrap( PipeSystem, addSegment, "Add segment between nodes (radius, n1, n2)", int, double, int, int ) },
     {"remSegment", PyWrap( PipeSystem, remSegment, "Remove segment", void, int ) },
+    {"setFlowParameters", PyWrap( PipeSystem, setFlowParameters, "Set flow parameters, (latency)", void, float ) },
     {"setDoVisual", PyWrapOpt( PipeSystem, setDoVisual, "Enable visual", "0.1", void, bool, float ) },
     {"setNodePose", PyWrap( PipeSystem, setNodePose, "Set node pose by ID", void, int, PosePtr ) },
     {"disconnect", PyWrap( PipeSystem, disconnect, "Disconnect a node from a segment, keeps the segment by adding a junction to its end (nId, sID)", int, int, int ) },
@@ -148,12 +149,16 @@ PyMethodDef VRPyLADEngine::methods[] = {
     {"read", PyWrap( LADEngine, read, "Read data, first path is full path to tag table 'Default tag table.xml', second path is path to modules folder '../Programmbausteine'", void, string, string ) },
     {"iterate", PyWrap( LADEngine, iterate, "Run iteration", void ) },
     {"getCompileUnits", PyWrap( LADEngine, getCompileUnits, "Return IDs of compile units", vector<string> ) },
-    {"getCompileUnitWires", PyWrapOpt( LADEngine, getCompileUnitWires, "Return IDs of compile units wires, optional pnly powered wired", "0", vector<string>, string, bool ) },
+    {"getCompileUnitWires", PyWrapOpt( LADEngine, getCompileUnitWires, "Return IDs of compile unit wires, optional pnly powered wired", "0", vector<string>, string, bool ) },
+    {"getCompileUnitParts", PyWrap( LADEngine, getCompileUnitParts, "Return IDs of compile unit parts", vector<string>, string ) },
+    {"getCompileUnitVariables", PyWrap( LADEngine, getCompileUnitVariables, "Return IDs of compile unit variables", vector<string>, string ) },
     {"getCompileUnitWireSignal", PyWrap( LADEngine, getCompileUnitWireSignal, "Return IDs of compile unit wire signal", int, string, string ) },
     {"getCompileUnitWireOutParts", PyWrap( LADEngine, getCompileUnitWireOutParts, "Return IDs of compile units parts that are outputs of a wire", vector<string>, string, string ) },
     {"getCompileUnitPartVariable", PyWrap( LADEngine, getCompileUnitPartVariable, "Return LAD variable from part", VRLADVariablePtr, string, string ) },
     {"getCompileUnitPartOutWires", PyWrap( LADEngine, getCompileUnitPartOutWires, "Return IDs of compile units wires that are outputs of a part", vector<string>, string, string ) },
     {"getCompileUnitPartName", PyWrap( LADEngine, getCompileUnitPartName, "Return part name", string, string, string ) },
+    {"addVisual", PyWrap( LADEngine, addVisual, "Create basic visualization", VRTransformPtr ) },
+    {"updateVisual", PyWrap( LADEngine, updateVisual, "Update visualization based on current state", void ) },
     {NULL}
 };
 

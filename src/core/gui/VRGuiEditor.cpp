@@ -35,8 +35,10 @@ string VRGuiEditor::getCore(int i) {
     gtk_text_buffer_get_start_iter(GTK_TEXT_BUFFER(sourceBuffer), &itr_s);
     gtk_text_buffer_get_end_iter(GTK_TEXT_BUFFER(sourceBuffer), &itr_e);
     for (int j=0; j<i; j++) gtk_text_iter_forward_line(&itr_s); // skip head
-    string data = string( gtk_text_buffer_get_text( GTK_TEXT_BUFFER(sourceBuffer), &itr_s, &itr_e, true) );
-    while(data.back() == '\n') data.pop_back();
+    auto txt = gtk_text_buffer_get_text( GTK_TEXT_BUFFER(sourceBuffer), &itr_s, &itr_e, true);
+    string data;
+    if (txt) data = string( txt );
+    while(data.size() > 0 && data.back() == '\n') data.pop_back();
     return data;
 }
 

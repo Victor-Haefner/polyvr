@@ -14,6 +14,7 @@ VROptions::VROptions() : desc("Configuration ") {
 
     addOption<bool>(true, "dofailcheck", "do a fail check of the last startup of PolyVR, may halt startup");
     addOption<bool>(false, "standalone", "start without UI, only GL canvas");
+    addOption<bool>(false, "nogtk", "start without UI, even without GL canvas, you should add a glut window in the setup file");
     addOption<string>("", "application", "specify an application file to load at startup");
     addOption<string>("", "decryption", "pass information to decrypt a secured application, \"key:YOURKEY\"");
     addOption<string>("", "setup", "specify the hardware setup file to load, ommiting this will load the last setup");

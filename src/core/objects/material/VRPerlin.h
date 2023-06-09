@@ -1,6 +1,7 @@
 #ifndef VRPERLIN_H_INCLUDED
 #define VRPERLIN_H_INCLUDED
 
+#include "VRMaterialFwd.h"
 #include "core/math/OSGMathFwd.h"
 #include <OpenSG/OSGColor.h>
 

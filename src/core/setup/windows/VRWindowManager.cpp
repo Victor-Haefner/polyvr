@@ -1,10 +1,12 @@
+#include <OpenSG/OSGGL.h>
+#include <OpenSG/OSGGLUT.h>
+#include <OpenSG/OSGChangeList.h>
+#include <OpenSG/OSGRenderAction.h>
+
 #ifndef WITHOUT_GTK
 #include <gtk/gtk.h>
 #endif
-#include <OpenSG/OSGGL.h>
-#include <OpenSG/OSGGLUT.h>
 #include <OpenSG/OSGGLUTWindow.h>
-#include <OpenSG/OSGChangeList.h>
 #include <thread>
 
 #include "VRWindowManager.h"
@@ -29,6 +31,7 @@
 #include "VRMultiWindow.h"
 #include "VRHeadMountedDisplay.h"
 #endif
+
 
 #ifndef WITHOUT_GTK
 #include "core/gui/VRGuiUtils.h"
@@ -209,15 +212,15 @@ void VRWindowManager::updateWindows() {
         if (VRGlobals::NCHANGED == 0 && VRGlobals::NCREATED == 0) return true;
         //changeListStats.update();
         if (!wait()) return false;
-        /** let the windows merge the change lists, sync and clear **/
+        // let the windows merge the change lists, sync and clear
         if (!wait()) return false;
         for (auto w : getWindows()) {
             if (auto win = dynamic_pointer_cast<VRGlutWindow>(w.second)) win->render();
 #ifndef WITHOUT_GTK
             if (auto win = dynamic_pointer_cast<VRGtkWindow>(w.second)) win->render();
+#endif
 #ifndef WITHOUT_OPENVR
             if (auto win = dynamic_pointer_cast<VRHeadMountedDisplay>(w.second)) win->render();
-#endif
 #endif
         }
 #else
@@ -226,6 +229,7 @@ void VRWindowManager::updateWindows() {
         auto clist = Thread::getCurrentChangeList();
         VRGlobals::NCHANGED = clist->getNumChanged();
         VRGlobals::NCREATED = clist->getNumCreated();
+        // WASM rendering
         for (auto w : getWindows() ) if (auto win = dynamic_pointer_cast<VRGlutWindow>(w.second)) win->render();
 #endif
         clist->clear();

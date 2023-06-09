@@ -70,6 +70,14 @@ OctreeNode<T>* OctreeNode<T>::add(Vec3d pos, T dat, int targetLevel, bool checkP
     };
 
 
+    // TODO: there is a bug if adding millions of zeros..
+    /*static int N = 0;
+    N++;
+    if (N == 100000) {
+        cout << "octreenode add " << this << " " << pos << " rpos " << rpos << " size " << size << " N pnts " << points.size() << " " << reachedPartitionLimit() << " partitionLimit " << partitionLimit << endl;
+        N = 0;
+    }*/
+
 
     if (checkPosition) {
         if ( !inBox(pos, center, size) ) { // not in node
@@ -278,6 +286,16 @@ vector<T> OctreeNode<T>::getAllData() {
     return res;
 }
 
+template<class T>
+size_t OctreeNode<T>::countNodes() {
+    size_t n = 1;
+    for (auto c : children) if (c) n += c->countNodes();
+    return n;
+}
+
+template<class T>
+OctreeNode<T>* OctreeNode<T>::getChild(int i) { if (i >= 0 && i < 8) return children[i]; return 0; }
+
 
 template<class T>
 shared_ptr<Octree<T>> Octree<T>::create(float resolution, float size, string n) {
@@ -303,6 +321,9 @@ OctreeNode<T>* Octree<T>::get(Vec3d p, bool checkPosition) { return root->get(p,
 
 template<class T>
 vector<OctreeNode<T>*> Octree<T>::getAllLeafs() { return root->getRoot()->getLeafs(); }
+
+template<class T>
+size_t Octree<T>::getNodesCount() { return root->getRoot()->countNodes(); }
 
 template<class T>
 OctreeNode<T>* Octree<T>::add(Vec3d p, T data, int targetLevel, bool checkPosition, int partitionLimit) {

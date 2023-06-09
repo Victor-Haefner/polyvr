@@ -920,12 +920,15 @@ PyMethodDef VRPyXMLElement::methods[] = {
 };
 
 PyMethodDef VRPySpreadsheet::methods[] = {
-    {"read", PyWrap(Spreadsheet, read, "Read file", void, string) },
+    {"read", PyWrap(Spreadsheet, read, "Read file, .xlsx, .mdb, .eap", void, string) },
+    {"write", PyWrap(Spreadsheet, write, "Write to folder, (folder, extention)", void, string, string) },
+    {"writeSheet", PyWrap(Spreadsheet, writeSheet, "Write to sheet to file (.csv), (sheet, path)", void, string, string) },
     {"getSheets", PyWrap(Spreadsheet, getSheets, "Get list of sheet names", vector<string>) },
     {"getRow", PyWrap(Spreadsheet, getRow, "Get ith row (sheet, row)", vector<string>, string, size_t) },
     {"getRows", PyWrap(Spreadsheet, getRows, "Get list of rows by sheet name", vector<vector<string>>, string) },
     {"getNColumns", PyWrap(Spreadsheet, getNColumns, "Get N columns of sheet", size_t, string) },
     {"getNRows", PyWrap(Spreadsheet, getNRows, "Get N rows of sheet", size_t, string) },
     {"getCell", PyWrap(Spreadsheet, getCell, "Get cell content (sheet, column, row)", string, string, size_t, size_t) },
+    {"setCell", PyWrap(Spreadsheet, setCell, "Set cell content (sheet, column, row, data)", void, string, size_t, size_t, string) },
     {NULL}  /* Sentinel */
 };

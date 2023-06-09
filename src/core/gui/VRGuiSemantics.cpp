@@ -1,4 +1,3 @@
-#include <gtk/gtk.h>
 #include "VRGuiSemantics.h"
 #include "VRGuiUtils.h"
 #include "VRGuiBuilder.h"
@@ -103,7 +102,7 @@ void VRGuiSemantics::on_open_clicked() {
     VRGuiFile::clearFilter();
     VRGuiFile::addFilter("Ontology", 1, "*.owl");
     VRGuiFile::addFilter("All", 1, "*");
-    VRGuiFile::open( "Load", GTK_FILE_CHOOSER_ACTION_OPEN, "Load ontology" );
+    VRGuiFile::open( "Load", "open", "Load ontology" );
 }
 
 void VRGuiSemantics::setOntology(string name) {
@@ -114,12 +113,13 @@ void VRGuiSemantics::setOntology(string name) {
 }
 
 void VRGuiSemantics::updateCanvas() {
+    VRTimer t;
     int i = 0;
     clear();
 
     function<void(map<int, vector<VRConceptPtr>>&, VRConceptPtr,int,int,VRConceptWidgetPtr)> travConcepts = [&](map<int, vector<VRConceptPtr>>& cMap, VRConceptPtr c, int cID, int lvl, VRConceptWidgetPtr cp) {
         if (auto w = canvas->getWidget(c->ID)) {
-            if (cp) canvas->connect(cp, w, "#00CCFF");
+            if (cp) connect(cp, w, "#00CCFF");
             return;
         }
 
@@ -130,7 +130,7 @@ void VRGuiSemantics::updateCanvas() {
         int x = 150+cID*60;
         int y = 150+40*lvl;
         cw->move(Vec2d(x,y));
-        if (cp) canvas->connect(cp, cw, "#00CCFF");
+        if (cp) connect(cp, cw, "#00CCFF");
 
         i++;
         int child_i = 0;
@@ -148,7 +148,7 @@ void VRGuiSemantics::updateCanvas() {
             canvas->addWidget(ew->ID(), ew);
             canvas->addNode(ew->ID());
             ew->move(Vec2d(150,150));
-            for ( auto c : e.second->getConcepts() ) canvas->connect(canvas->getWidget(c->ID), ew, "#FFEE00");
+            for ( auto c : e.second->getConcepts() ) connect(canvas->getWidget(c->ID), ew, "#FFEE00");
         }
 
         for (auto r : current->rules) {
@@ -157,23 +157,24 @@ void VRGuiSemantics::updateCanvas() {
             canvas->addNode(rw->ID());
             rw->move(Vec2d(150,150));
             if (auto c = current->getConcept( r.second->associatedConcept) )
-                canvas->connect(canvas->getWidget(c->ID), rw, "#00DD00");
+                connect(canvas->getWidget(c->ID), rw, "#00DD00");
         }
     }
 
     gtk_widget_show_all(GTK_WIDGET(canvas->getCanvas()));
     canvas->foldAll(true);
+    cout << "updateCanvas, took " << t.stop() << endl;
 }
 
-void VRGuiSemantics::connect(VRSemanticWidgetPtr w1, VRSemanticWidgetPtr w2, string color) {
+void VRGuiSemantics::connect(VRCanvasWidgetPtr w1, VRCanvasWidgetPtr w2, string color) {
     canvas->connect(w1, w2, color);
 }
 
-void VRGuiSemantics::disconnect(VRSemanticWidgetPtr w1, VRSemanticWidgetPtr w2) {
+void VRGuiSemantics::disconnect(VRCanvasWidgetPtr w1, VRCanvasWidgetPtr w2) {
     canvas->disconnect(w1, w2);
 }
 
-void VRGuiSemantics::disconnectAny(VRSemanticWidgetPtr w) {
+void VRGuiSemantics::disconnectAny(VRCanvasWidgetPtr w) {
     canvas->disconnectAny(w);
 }
 
@@ -215,6 +216,15 @@ VRGuiSemantics::VRGuiSemantics() {
     setCellRendererCallback("cellrenderertext51", bind(VRGuiSemantics_on_name_edited, placeholders::_1, placeholders::_2));
     setWidgetSensitivity("toolbutton15", false);
     setButtonCallback("button33", bind(&VRGuiSemantics::on_query_clicked, this));
+    setNoteBookCallback("notebook3", bind(&VRGuiSemantics::onTabSwitched, this, placeholders::_1, placeholders::_2));
+}
+
+void VRGuiSemantics::onTabSwitched(GtkWidget* page, unsigned int tab) {
+    auto nbook = VRGuiBuilder::get()->get_widget("notebook3");
+    string name = gtk_notebook_get_tab_label_text(GTK_NOTEBOOK(nbook), page);
+    if (name == "Semantics") {
+        updateOntoList();
+    }
 }
 
 void VRGuiSemantics::on_query_clicked() {
@@ -238,20 +248,28 @@ bool VRGuiSemantics::updateOntoList() {
         gtk_tree_store_set(store, itr, 1, type.c_str(), -1);
     };
 
+    auto addToSection = [&](VROntologyPtr o, GtkTreeIter* sec) {
+        GtkTreeIter itr;
+        gtk_tree_store_append(store, &itr, sec);
+        setRow( &itr, o->getName(), o->getFlag());
+    };
+
     auto mgr = getManager();
     if (mgr == 0) return true;
 
-    GtkTreeIter itr_own, itr_lib;
+    GtkTreeIter itr_sce, itr_own, itr_lib;
+    gtk_tree_store_append(store, &itr_sce, NULL);
     gtk_tree_store_append(store, &itr_own, NULL);
     gtk_tree_store_append(store, &itr_lib, NULL);
+    setRow( &itr_sce, "Scene", "section");
     setRow( &itr_own, "Custom", "section");
-    setRow( &itr_lib, "Library", "section");
+    setRow( &itr_lib, "Built-in", "section");
 
     for (auto o : mgr->getOntologies()) {
-        GtkTreeIter itr;
-        if (o->getFlag() == "built-in") gtk_tree_store_append(store, &itr, &itr_lib);
-        if (o->getFlag() == "custom") gtk_tree_store_append(store, &itr, &itr_own);
-        setRow( &itr, o->getName(), o->getFlag());
+        cout << " ontology: " << o->getName() << " " << o->getFlag() << endl;
+        if (o->getFlag() == "internal") addToSection(o, &itr_sce);
+        if (o->getFlag() == "custom") addToSection(o, &itr_own);
+        if (o->getFlag() == "built-in") addToSection(o, &itr_lib);
     }
 
     clear();

@@ -19,6 +19,7 @@ PyMethodDef VRPyMechanism::methods[] = {
     {"addGear", PyWrapOpt(Mechanism, addGear, "Add custom geo as gear, (geo, width, hole, pitch, N_teeth, teeth_size, bevel, axis, offset)", "0 0 -1|0 0 0", void, VRTransformPtr, float, float, float, int, float, float, Vec3d, Vec3d) },
     {"updateNeighbors", PyWrap(Mechanism, updateNeighbors, "updateNeighbors", void) },
     {"updateVisuals", PyWrap(Mechanism, updateVisuals, "update semantic visuals", void) },
+    {"getNParts", PyWrap(Mechanism, getNParts, "get number of parts", int) },
     {NULL}  /* Sentinel */
 };
 

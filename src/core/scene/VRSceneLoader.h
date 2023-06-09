@@ -41,7 +41,7 @@ class VRSceneLoader {
 
         void saveScene(string file, XMLElementPtr guiN = 0, string encryption = "");
         bool loadScene(string file, string encryptionKey = "");
-        VRObjectPtr importScene(string file, string encryptionKey = "", bool offLights = false);
+        VRObjectPtr importScene(string file, string encryptionKey = "", bool offLights = false, bool withRoot = false);
 };
 
 OSG_END_NAMESPACE;

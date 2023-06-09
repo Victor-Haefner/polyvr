@@ -36,3 +36,5 @@ ressources/cefWin/*.exe
 ressources/cefWin/.vs
 tmp
 packages
+PolyVR.desktop
+application-x-polyvr.xml

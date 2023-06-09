@@ -94,6 +94,7 @@
 			<Add option="-DGTK_GL_COMPILATION" />
 			<Add option="-DGTK_SOURCE_COMPILATION" />
 			<Add option="-DWITHOUT_OPENVR" />
+			<Add option="-DWITHOUT_MDB" />
 			<Add directory="/usr/include/pango-1.0" />
 			<Add directory="/usr/include/glib-2.0" />
 			<Add directory="/usr/lib64/glib-2.0/include" />
@@ -1103,6 +1104,7 @@
 		<Unit filename="src/core/objects/material/VRBricks.h" />
 		<Unit filename="src/core/objects/material/VRMaterial.cpp" />
 		<Unit filename="src/core/objects/material/VRMaterial.h" />
+		<Unit filename="src/core/objects/material/VRMaterialFwd.h" />
 		<Unit filename="src/core/objects/material/VRMaterialT.h" />
 		<Unit filename="src/core/objects/material/VRNormalmap.cpp" />
 		<Unit filename="src/core/objects/material/VRNormalmap.h" />
@@ -1110,6 +1112,8 @@
 		<Unit filename="src/core/objects/material/VRPerlin.h" />
 		<Unit filename="src/core/objects/material/VRShader.cpp" />
 		<Unit filename="src/core/objects/material/VRShader.h" />
+		<Unit filename="src/core/objects/material/VRShaderFactory.cpp" />
+		<Unit filename="src/core/objects/material/VRShaderFactory.h" />
 		<Unit filename="src/core/objects/material/VRTexture.cpp" />
 		<Unit filename="src/core/objects/material/VRTexture.h" />
 		<Unit filename="src/core/objects/material/VRTextureGenerator.cpp" />

@@ -7,6 +7,7 @@
 #include <OpenSG/OSGTextureObjChunk.h>
 
 #include "core/objects/object/VRObject.h"
+#include "core/objects/material/VRMaterialFwd.h"
 #include "core/objects/VRObjectFwd.h"
 
 OSG_BEGIN_NAMESPACE;

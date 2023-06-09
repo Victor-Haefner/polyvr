@@ -26,7 +26,6 @@ class VRSyncNode : public VRTransform {
         vector<UInt32> createdNodes; //IDs of the currently created nodes/children
 
         bool peerConnectionOk = false;
-        vector<string> initMsgQueue;
         function<void(string)> onEventCb;
 
         size_t selfNodeID = 0;
@@ -39,7 +38,7 @@ class VRSyncNode : public VRTransform {
         VRTransformPtr avatarDeviceTransform;
         VRTransformPtr avatarDeviceAnchor;
 
-        VRSyncChangelistPtr changelist;
+        VRSyncChangefilterPtr changefilter;
 
         string UUID;
         map<UInt32, bool> container; // local containers, sub-set of containers which need to be synced for collaboration
@@ -114,7 +113,7 @@ class VRSyncNode : public VRTransform {
 
         void startInterface(int port);
         string interfaceHandler(string msg, size_t sID);
-        string handleMessage(string msg, VRSyncConnectionWeakPtr weakRemote);
+        string handleMessage(string msg, VRSyncConnectionWeakPtr weakRemote, size_t sID);
         void update();
         void broadcast(string message);
         size_t getContainerCount();
@@ -140,7 +139,7 @@ class VRSyncNode : public VRTransform {
         void addExternalContainer(UInt32 id, UInt32 mask);
         vector<UInt32> registerNode(Node* c); //returns all registered IDs
         void setAvatarBeacons(VRTransformPtr headTransform, VRTransformPtr devTransform, VRTransformPtr devAnchor);
-        void addRemoteAvatar(string remoteID, VRTransformPtr headTransform, VRTransformPtr devTransform, VRTransformPtr devAnchor);
+        void addRemoteAvatar(string remoteID, string name, VRTransformPtr headTransform, VRTransformPtr devTransform, VRTransformPtr devAnchor);
 
         map<FieldContainer*, vector<FieldContainer*>> getAllSubContainers(FieldContainer* node);
         map<UInt32, VRObjectWeakPtr> getMappedFCs();

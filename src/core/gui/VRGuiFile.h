@@ -48,7 +48,7 @@ class VRGuiFile {
         static void on_filename_edited();
 
     public:
-        static void open(string button, int action, string title);
+        static void open(string button, string action, string title);
         static void close();
         static void apply();
         static void activate(_GtkTreePath* path, _GtkTreeViewColumn* column);

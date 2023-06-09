@@ -59,22 +59,13 @@ class VRSocket : public VRName {
         HTTPServer* http_serv = 0;
 
         void trigger();
-
         void handle(string s);
-
-        void scanUnix(VRThreadWeakPtr t);
-        void scanTCP(VRThreadWeakPtr t);
-        void scanHTTP();
-
         void update();
 
     public:
         VRSocket(string name = "socket");
         virtual ~VRSocket();
         static VRSocketPtr create(string name = "socket");
-
-        void initServer(CONNECTION_TYPE t, int _port);
-        void sendHTTPGet(string uri);
 
         void setName(string s);
         void setType(string s);

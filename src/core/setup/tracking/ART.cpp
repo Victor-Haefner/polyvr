@@ -15,6 +15,7 @@
 #include "core/utils/VRStorage_template.h"
 #include "core/setup/devices/VRSignal.h"
 #include "core/utils/VRMutex.h"
+#include "core/utils/VRProfiler.h"
 #include "core/gui/VRGuiConsole.h"
 
 OSG_BEGIN_NAMESPACE;
@@ -66,7 +67,7 @@ void ART_device::init() {
         auto scene = VRScene::getCurrent();
         if (scene) {
             scene->initFlyWalk(scene->getActiveCamera(), dev);
-            scene->setActiveNavigation("FlyWalk");
+            //scene->setActiveNavigation("FlyWalk");
             dev->clearDynTrees();
             dev->addDynTree(scene->getRoot());
         }
@@ -179,10 +180,13 @@ void ART::updateL() { if (active) updateT( weak_ptr<VRThread>() ); }
 //update thread
 void ART::updateT( weak_ptr<VRThread>  t) {
     if (!active) {
+        auto prof_id = VRProfiler::get()->regStart("ART idle sleep");
         osgSleep(1);
+        VRProfiler::get()->regStop(prof_id);
         return;
     }
 
+    auto prof_id = VRProfiler::get()->regStart("ART tracking");
     setARTPort(port);
     if (!active || dtrack == 0) return;
 
@@ -192,6 +196,7 @@ void ART::updateT( weak_ptr<VRThread>  t) {
         if(dtrack->udperror())      cout << "--- ART: error while receiving udp data" << endl;
         if(dtrack->parseerror())    cout << "--- ART: error while parsing udp data" << endl;
     }
+    VRProfiler::get()->regStop(prof_id);
 }
 
 void ART::update_setup() {
@@ -231,6 +236,7 @@ void ART::checkNewDevices(int type, int N) {
 }
 
 void ART::applyEvents() {
+    if (!active) return;
     //if (VRGlobals::CURRENT_FRAME < 10) return;
     VRLock lock(*mutex);
     //updateL();

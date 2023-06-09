@@ -118,6 +118,36 @@ void VREmbankment::createGeometry() {
 }
 
 
+VRTerrainGrid::VRTerrainGrid() {}
+
+void VRTerrainGrid::setRectangle(double width, double height) {
+    p00 = Vec3d(-width*0.5, 0, -height*0.5);
+    p10 = Vec3d( width*0.5, 0, -height*0.5);
+    p01 = Vec3d(-width*0.5, 0,  height*0.5);
+    p11 = Vec3d( width*0.5, 0,  height*0.5);
+}
+
+Vec2d VRTerrainGrid::approxSize() {
+    double W = (p10[0] - p00[0] + p11[0] - p01[0])*0.5;
+    double H = (p01[2] - p00[2] + p11[2] - p10[2])*0.5;
+    return Vec2d(W, H);
+}
+
+Vec2d VRTerrainGrid::computeTexel(VRTexturePtr tex, int margin) {
+    Vec3i s = tex->getSize();
+    return Vec2d(1.0/(s[0]-margin), 1.0/(s[1]-margin));
+}
+
+Vec2d VRTerrainGrid::computeTexelSize(VRTexturePtr tex) {
+    Vec2d gs = approxSize();
+    Vec2d texel = computeTexel(tex, 1);
+    Vec2d tSize;
+    tSize[0] = gs[0]*texel[0];
+    tSize[1] = gs[1]*texel[1];
+    return tSize;
+}
+
+
 VRTerrain::VRTerrain(string name, bool localized) : VRGeometry(name) {
     hide("SHADOW");
     localMesh = localized;
@@ -139,13 +169,14 @@ void VRTerrain::clear() {
 }
 
 void VRTerrain::setParameters( Vec2d s, double r, double h, float w, float aT, Color3f aC, bool isLit) {
-    size = s;
+    grid.setRectangle(s[0], s[1]);
+
     resolution = r;
     heightScale = h;
 #ifdef __EMSCRIPTEN__
-    grid = r;
+    grid.grid = r;
 #else
-    grid = r*64;
+    grid.grid = r*64;
 #endif
     mat->setShaderParameter("resolution", resolution);
     mat->setShaderParameter("heightScale", heightScale);
@@ -226,12 +257,10 @@ void VRTerrain::paintHeights(VRTexturePtr tex, Color4f mCol, float mAmount, Vec4
 
 void VRTerrain::updateTexelSize() {
     if (!heigthsTex) return;
-    Vec3i s = heigthsTex->getSize();
-    Vec2f texel = Vec2f(1.0/(s[0]-1), 1.0/(s[1]-1));
-    texelSize[0] = size[0]*texel[0];
-    texelSize[1] = size[1]*texel[1];
-	mat->setShaderParameter("texel", texel);
-	mat->setShaderParameter("texelSize", texelSize);
+    texelSize = grid.computeTexelSize(heigthsTex);
+    Vec2d texel = grid.computeTexel(heigthsTex, 1);
+	mat->setShaderParameter("texel", Vec2f(texel));
+	mat->setShaderParameter("texelSize", Vec2f(texelSize));
 }
 
 void VRTerrain::curveMesh(VRPlanetPtr p, Vec2d c, PosePtr s) {
@@ -241,8 +270,8 @@ void VRTerrain::curveMesh(VRPlanetPtr p, Vec2d c, PosePtr s) {
     pSectorInv = s;
 }
 
-Vec2d computeGridSpacing(Vec2d size, Vec2d gridSize, double res) {
-    Vec2i gridN = Vec2i(round(size[0]*1.0/res-0.5), round(size[1]*1.0/res-0.5));
+Vec2d computeGridSpacing(Vec2d gSize, Vec2d gridSize, double res) {
+    Vec2i gridN = Vec2i(round(gSize[0]*1.0/res-0.5), round(gSize[1]*1.0/res-0.5));
     if (gridN[0] < 1) gridN[0] = 1;
     if (gridN[1] < 1) gridN[1] = 1;
     Vec2d gridS = gridSize;
@@ -260,21 +289,21 @@ bool VRTerrain::createMultiGrid(VRCameraPtr cam, double res) {
         return false;
     };
 
-    double sectorSizeX = size[0];
-    double sectorSizeY = size[1];
-    double N1 = -size[0]*0.5;
-    double N2 =  size[0]*0.5;
-    double E1 = -size[1]*0.5;
-    double E2 =  size[1]*0.5;
+    Vec2d gSize = grid.approxSize();
+    Vec2d sectorSize = gSize;
+    double N1 = -sectorSize[0]*0.5;
+    double N2 =  sectorSize[0]*0.5;
+    double E1 = -sectorSize[1]*0.5;
+    double E2 =  sectorSize[1]*0.5;
 
     auto pla = planet.lock();
     if (pla) {
-        sectorSizeX = pla->getSectorSize();
-        sectorSizeY = pla->getSectorSize();
+        sectorSize[0] = pla->getSectorSize();
+        sectorSize[1] = pla->getSectorSize();
         N1 = planetCoords[0];
-        N2 = planetCoords[0]+sectorSizeX;
+        N2 = planetCoords[0]+sectorSize[0];
         E1 = planetCoords[1];
-        E2 = planetCoords[1]+sectorSizeY;
+        E2 = planetCoords[1]+sectorSize[1];
     }
 
 #ifdef __EMSCRIPTEN__
@@ -297,15 +326,15 @@ bool VRTerrain::createMultiGrid(VRCameraPtr cam, double res) {
 
     if (pla) res *= 32;
     else res *= 64;
-    Vec2d r1 = computeGridSpacing(size, Vec2d(sectorSizeX, sectorSizeY), res);
+    Vec2d r1 = computeGridSpacing(gSize, sectorSize, res);
     if (!checkChange(vector<double>({res, r1[0], r1[1], NE[0], NE[1]}))) return false;
 #else
-    Vec2d r1 = computeGridSpacing(size, Vec2d(sectorSizeX, sectorSizeY), res);
+    Vec2d r1 = computeGridSpacing(gSize, sectorSize, res);
 #endif
 
     /*if (camPose) cout << " ---- camPose " << camPose->pos() << endl;
     cout << " ---- NE " << NE << endl;
-    cout << " ---- grid " << grid << endl;
+    cout << " ---- grid " << grid.grid << endl;
     cout << " ---- resolution " << resolution << endl;
     cout << " ---- res " << res << endl;
     cout << " ---- r1 " << r1 << endl;*/
@@ -344,10 +373,10 @@ bool VRTerrain::createMultiGrid(VRCameraPtr cam, double res) {
     }
 
     if (!heigthsTex) return false;
-    auto texSize = heigthsTex->getSize();
-    Vec2d texel = Vec2d( 1.0/texSize[0], 1.0/texSize[1] );
+    Vec2d texel = grid.computeTexel(heigthsTex, 1);
 
     VRGeoData data(ptr());
+    if (!getMesh() || !getMesh()->geo) return false;
 
     auto positions = getMesh()->geo->getPositions();
     for (size_t i=0; i<positions->size(); i++) {
@@ -371,8 +400,8 @@ bool VRTerrain::createMultiGrid(VRCameraPtr cam, double res) {
         } else {
             double tcx = texel[0]*0.5 + tn*((heightsRect[2]-heightsRect[0])-texel[0]);
             double tcy = texel[1]*0.5 + te*((heightsRect[3]-heightsRect[1])-texel[1]);
-            data.pushTexCoord(Vec2d(heightsRect[0]+tcx, 1.0 - (heightsRect[1]+tcy)), 0); // depth
-            data.pushTexCoord(Vec2d(satRect[0]+tn*(satRect[2]-satRect[0]), 1.0 - (satRect[1]+te*(satRect[3]-satRect[1]))), 1);   // sat
+            data.pushTexCoord(Vec2d(heightsRect[0]+tcx, (heightsRect[1]+tcy)), 0); // depth
+            data.pushTexCoord(Vec2d(satRect[0]+tn*(satRect[2]-satRect[0]), (satRect[1]+te*(satRect[3]-satRect[1]))), 1);   // sat
         }
     }
 
@@ -383,7 +412,7 @@ bool VRTerrain::createMultiGrid(VRCameraPtr cam, double res) {
 
 void VRTerrain::setupGeo(VRCameraPtr cam) {
     //cout << "VRTerrain::setupGeo" << endl;
-    if (!createMultiGrid(cam, grid)) return;
+    if (!createMultiGrid(cam, grid.grid)) return;
 
 #ifndef __EMSCRIPTEN__
     setType(GL_PATCHES);
@@ -413,7 +442,7 @@ vector<Vec3d> VRTerrain::probeHeight( Vec2d p ) {
 
     Vec2d p0 = fromUVSpace( Vec2d(i,j) );
     Vec2d p1 = fromUVSpace( Vec2d(i+1,j+1) );
-    //cout << " probeHeight uv:" << uv << " i:" << i << " j:" << j << " size:" << size << " p0:" << p0 << " p1:" << p1 << endl;
+    //cout << " probeHeight uv:" << uv << " i:" << i << " j:" << j << " size:" << grid.size << " p0:" << p0 << " p1:" << p1 << endl;
     for (auto e : embankments) if (e.second->isInside(p)) return e.second->probeHeight(p);
 
     return {Vec3d(p[0], h, p[1]),
@@ -424,7 +453,7 @@ vector<Vec3d> VRTerrain::probeHeight( Vec2d p ) {
 }
 
 VRTexturePtr VRTerrain::getMap() { return heigthsTex; }
-Vec2f VRTerrain::getTexelSize() { return texelSize; }
+Vec2d VRTerrain::getTexelSize() { return texelSize; }
 
 void VRTerrain::vrPhysicalize() {
 #ifndef WITHOUT_BULLET
@@ -446,10 +475,14 @@ void VRTerrain::physicalize(bool b) {
 
 Boundingbox VRTerrain::getBoundingBox() {
     Boundingbox bb;
+    bb.update( grid.p00 );
+    bb.update( grid.p10 );
+    bb.update( grid.p01 );
+    bb.update( grid.p11 );
     if (!heigthsTex) return bb;
+
     float hmax = -1e30;
     float hmin = 1e30;
-
     for (int i=0; i<heigthsTex->getSize()[0]; i++) {
         for (int j=0; j<heigthsTex->getSize()[1]; j++) {
             auto h = heigthsTex->getPixelVec(Vec3i(i,j,0))[0];
@@ -458,8 +491,8 @@ Boundingbox VRTerrain::getBoundingBox() {
         }
     }
 
-    bb.update( Vec3d( size[0]*0.5, hmax,  size[1]*0.5) );
-    bb.update( Vec3d(-size[0]*0.5, hmin, -size[1]*0.5) );
+    bb.update( Vec3d(0, hmax, 0) );
+    bb.update( Vec3d(0, hmin, 0) );
     return bb;
 }
 
@@ -498,21 +531,6 @@ void VRTerrain::setHeightTexture(VRTexturePtr t) {
 }
 
 void VRTerrain::setupMat() {
-    /*auto defaultMat = VRMaterial::get("defaultTerrain");
-    setHeightTexture(defaultMat->getTexture());
-    Vec2f texel = Vec2f(1,1);
-    if (!heigthsTex) {
-        Color4f w(0,0,0,0);
-        VRTextureGenerator tg;
-        tg.setSize(Vec3i(128,128,1),true);
-        tg.drawFill(w);
-        setHeightTexture( tg.compose(0) );
-        defaultMat->setTexture(heigthsTex);
-        defaultMat->clearTransparency();
-        auto texSize = heigthsTex->getSize();
-        texel = Vec2f( 1.0/texSize[0], 1.0/texSize[1] );
-    }*/
-
     mat = VRMaterial::create("terrain");
 #ifndef OSG_OGL_ES2
 	mat->setVertexShader(vertexShader, "terrainVS");
@@ -527,10 +545,6 @@ void VRTerrain::setupMat() {
     mat->setShaderParameter("texture", 0);
     mat->setShaderParameter("channel", 3);
     mat->setZOffset(1,1);
-	/*mat->setShaderParameter("resolution", resolution);
-	mat->setShaderParameter("texel", texel);
-	mat->setShaderParameter("texelSize", texelSize);
-	setMap(heigthsTex);*/
 }
 
 bool VRTerrain::applyIntersectionAction(Action* action) {
@@ -573,44 +587,87 @@ bool VRTerrain::applyIntersectionAction(Action* action) {
     return true;
 }
 
+/**
+
+TODO: implement this in getTexCoord
+
+
+The approach of the bilinear interpolation
+p1 := a + ( b - a ) * u
+p2 := d + ( c - d ) * u
+p := p1 + ( p2 - p1 ) * v
+
+means that there is a line between p1 and p2 that passes through p. Expressing this line the other way, namely
+p + l = p1
+p + k * l = p2
+so that l + k * l (where k is obviously need to be a negative number) is the said line.
+Considering that this is done in 3D, we have 5 equations with 5 unkowns (k, lx, ly, lz, and u)
+where k * lx, k * ly and k * lz are the problems.
+
+Fortunately, from the lower of the both equations, we can isolate
+k * lx = dx - px + ( cx - dx ) * u
+k * ly = dy - py + ( cy - dy ) * u
+k * lz = dz - pz + ( cz - dz ) * u
+
+and divide both of these, so that
+lx / ly = [ dx - px + ( cx - dx ) * u ] / [ dy - py + ( cy - dy ) * u ]
+lx / lz = [ dx - px + ( cx - dx ) * u ] / [ dz - pz + ( cz - dz ) * u ]
+
+Now, using the upper of the equations to get
+lx = ax - px + ( bx - ax ) * u
+ly = ay - py + ( by - ay ) * u
+lz = az - pz + ( bz - az ) * u
+and setting these into the above lx / ly, we get quadratic equations solely in u
+
+[ dx - px + ( cx - dx ) * u ] / [ dy - py + ( cy - dy ) * u ] = [ax - px + ( bx - ax ) * u] / [ay - py + ( by - ay ) * u]
+
+=>
+[ dx - px + ( cx - dx ) * u ] * [ay - py + ( by - ay ) * u] = [ax - px + ( bx - ax ) * u] * [ dy - py + ( cy - dy ) * u ]
+
+=>
+
+...... TODO: solve for u then k
+
+*/
+
 Vec2d VRTerrain::getTexCoord( Vec2d p ) {
     if (!heigthsTex) return Vec2d();
-    auto texSize = heigthsTex->getSize();
-    Vec2d texel = Vec2d( 1.0/texSize[0], 1.0/texSize[1] );
+    Vec2d texel = grid.computeTexel(heigthsTex, 1);
 
-    // normalized x y
-    //double x = p[0]/size[0];
-    //double y = p[1]/size[1];
-    double x = p[0]/size[0];
-    double y = p[1]/size[1];
+    // normalized coords
+    Vec2d gSize = grid.approxSize();
+    double U = p[0]/gSize[0];
+    double V = p[1]/gSize[1];
 
-    double u = (1.0-texel[0])*x + 0.5;
-    double v = (1.0-texel[1])*y + 0.5;
+    double u = (1.0-texel[0])*U + 0.5;
+    double v = (1.0-texel[1])*V + 0.5;
     if (doInvertTopoY) return Vec2d(u,1.0-v);
     else return Vec2d(u,v);
 }
 
 Vec2d VRTerrain::toUVSpace(Vec2d p) {
     if (!heigthsTex) return Vec2d();
+    Vec3i texSize = heigthsTex->getSize();
     Vec2d uv = getTexCoord(p);
-    int W = heigthsTex->getSize()[0]-1;
-    int H = heigthsTex->getSize()[1]-1;
+    int W = texSize[0]-1;
+    int H = texSize[1]-1;
     return Vec2d(uv[0]*W, uv[1]*H);
 }
 
 Vec2d VRTerrain::fromUVSpace(Vec2d uv) {
     if (!heigthsTex) return Vec2d();
 
-    auto texSize = heigthsTex->getSize();
-    Vec2d texel = Vec2d( 1.0/texSize[0], 1.0/texSize[1] );
+    Vec2d texel = grid.computeTexel(heigthsTex, 1);
+    Vec3i texSize = heigthsTex->getSize();
     double W = texSize[0]-1;
     double H = texSize[1]-1;
     uv[0] /= W;
     uv[1] /= H;
     if (doInvertTopoY) uv[1] = 1.0-uv[1];
 
-    double x = (uv[0]-0.5)*size[0]/(1.0-texel[0]);
-    double z = (uv[1]-0.5)*size[1]/(1.0-texel[1]);
+    Vec2d gSize = grid.approxSize();
+    double x = (uv[0]-0.5)*gSize[0]/(1.0-texel[0]);
+    double z = (uv[1]-0.5)*gSize[1]/(1.0-texel[1]);
     return Vec2d(x,z);
 }
 
@@ -715,7 +772,8 @@ void VRTerrain::flatten(vector<Vec2d> perimeter, float h) {
     VRLock lock(mtx());
     VRPolygonPtr poly = VRPolygon::create();
     for (auto p : perimeter) poly->addPoint(p);
-    poly->scale( Vec3d(1.0/size[0], 1, 1.0/size[1]) );
+    Vec2d gSize = grid.approxSize();
+    poly->scale( Vec3d(1.0/gSize[0], 1, 1.0/gSize[1]) );
     poly->translate( Vec3d(0.5,0,0.5) );
 
     auto dim = heigthsTex->getSize();
@@ -821,8 +879,8 @@ void VRTerrain::addEmbankment(string ID, PathPtr p1, PathPtr p2, PathPtr p3, Pat
     embankments[ID] = e;
 }
 
-Vec2d VRTerrain::getSize() { return size; }
-double VRTerrain::getGrid() { return grid; }
+Vec2d VRTerrain::getSize() { return grid.approxSize(); }
+double VRTerrain::getGrid() { return grid.grid; }
 
 // --------------------------------- shader ------------------------------------
 

@@ -11,6 +11,8 @@
 #include "VRGuiFwd.h"
 #include "addons/Algorithms/VRAlgorithmsFwd.h"
 
+struct _GtkWidget;
+
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
@@ -29,6 +31,7 @@ class VRGuiSemantics {
         void on_query_clicked();
 
         void setOntology(string name);
+        void onTabSwitched(_GtkWidget* page, unsigned int tab);
 
         VRSemanticManagerPtr getManager();
 
@@ -42,9 +45,9 @@ class VRGuiSemantics {
         bool updateOntoList();
         void updateCanvas();
 
-        void connect(VRSemanticWidgetPtr p1, VRSemanticWidgetPtr p2, string color);
-        void disconnect(VRSemanticWidgetPtr p1, VRSemanticWidgetPtr p2);
-        void disconnectAny(VRSemanticWidgetPtr p1);
+        void connect(VRCanvasWidgetPtr p1, VRCanvasWidgetPtr p2, string color);
+        void disconnect(VRCanvasWidgetPtr p1, VRCanvasWidgetPtr p2);
+        void disconnectAny(VRCanvasWidgetPtr p1);
 
         void copyConcept(VRConceptWidget* w);
         void addEntity(VRConceptWidget* w);

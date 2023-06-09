@@ -172,7 +172,7 @@ bool VRSceneLoader::loadScene(string path, string encryptionKey) {
     return true;
 }
 
-VRObjectPtr VRSceneLoader::importScene(string path, string encryptionKey, bool offLights) {
+VRObjectPtr VRSceneLoader::importScene(string path, string encryptionKey, bool offLights, bool withRoot) {
     XML xml;
     if (!exists(path)) return 0;
 
@@ -198,10 +198,12 @@ VRObjectPtr VRSceneLoader::importScene(string path, string encryptionKey, bool o
 
     auto scene = VRScene::getCurrent();
     auto rootNode = VRObject::create("sceneProxy");
-    rootNode->load(root);
-    rootNode->setPersistency(0);
+    if (withRoot) {
+        rootNode->load(root);
+        rootNode->setPersistency(0);
+    }
     scene->importScene(sceneN, path);
-    scene->getRoot()->addChild(rootNode);
+    if (withRoot) scene->getRoot()->addChild(rootNode);
 
     if (offLights) {
         for (auto obj : rootNode->getChildren(true, "Light")) {

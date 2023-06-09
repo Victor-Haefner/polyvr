@@ -1,3 +1,5 @@
+#include <OpenSG/OSGRenderAction.h>
+
 #include <gtk/gtk.h>
 #include "VRGuiFile.h"
 #include "VRGuiUtils.h"
@@ -111,7 +113,10 @@ void VRGuiFile::init() {
     disableDestroyDiag(GTK_WIDGET(VRGuiFile::dialog));
 }
 
-void VRGuiFile::open(string button, int action, string title) {
+void VRGuiFile::open(string button, string action, string title) {
+    GtkFileChooserAction gtkAction = GTK_FILE_CHOOSER_ACTION_OPEN;
+    if (action == "save") gtkAction = GTK_FILE_CHOOSER_ACTION_SAVE;
+
     if (dialog == 0) init();
     gtk_widget_show_all(GTK_WIDGET(VRGuiFile::dialog));
 
@@ -120,7 +125,7 @@ void VRGuiFile::open(string button, int action, string title) {
 
     gtk_window_set_title((GtkWindow*)dialog, title.c_str());
     if (!useCustomWidget) {
-        gtk_file_chooser_set_action((GtkFileChooser*)dialog, GtkFileChooserAction(action));
+        gtk_file_chooser_set_action((GtkFileChooser*)dialog, gtkAction);
     }
 }
 

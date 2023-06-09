@@ -52,6 +52,8 @@ class VRSpreadsheet : public std::enable_shared_from_this<VRSpreadsheet> {
 		VRSpreadsheetPtr ptr();
 
 		void read(string path);
+		void write(string folder, string ext);
+		void writeSheet(string sheet, string path);
 
 		vector<string> getSheets();
 		size_t getNColumns(string sheet);
@@ -59,6 +61,8 @@ class VRSpreadsheet : public std::enable_shared_from_this<VRSpreadsheet> {
 		vector<string> getRow(string sheet, size_t i);
 		vector< vector<string> > getRows(string sheet);
 		string getCell(string sheet, size_t i, size_t j);
+
+		void setCell(string sheet, size_t i, size_t j, string c);
 };
 
 OSG_END_NAMESPACE;

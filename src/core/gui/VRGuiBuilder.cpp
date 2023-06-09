@@ -236,6 +236,13 @@ GtkWidget* addButton(string ID, string label) {
     return n;
 }
 
+GtkWidget* addToggleButton(string ID, string label) {
+    auto n = gtk_toggle_button_new();
+    gtk_button_set_label(GTK_BUTTON(n), label.c_str());
+    VRGuiBuilder::get()->reg_widget(n, ID);
+    return n;
+}
+
 GtkWidget* addImgButton(string ID, string stockID, string tooltip) {
     auto n = gtk_button_new();
     auto img = gtk_image_new_from_stock(stockID.c_str(), GTK_ICON_SIZE_SMALL_TOOLBAR);
@@ -319,10 +326,13 @@ GtkWidget* addCheckbutton(string ID, string label) {
     return n;
 }
 
-pair<GtkWidget*,GtkWidget*> addTreeview(string ID, string mID, GtkTreeModel* m, bool hscroll = false, bool vscroll = true) {
+pair<GtkWidget*,GtkWidget*> addTreeview(string ID, string mID, GtkTreeModel* m, bool hscroll = false, bool vscroll = true, bool sortable = false) {
+    GtkTreeModel* ms = 0;
+    if (sortable) ms = gtk_tree_model_sort_new_with_model( GTK_TREE_MODEL(m) );
+
     auto f = gtk_frame_new(NULL);
     auto w = gtk_scrolled_window_new(0,0);
-    auto n = gtk_tree_view_new_with_model(m);
+    auto n = gtk_tree_view_new_with_model(ms?ms:m);
     VRGuiBuilder::get()->reg_widget(n, ID);
     VRGuiBuilder::get()->reg_object(G_OBJECT(m), mID);
     gtk_container_add(GTK_CONTAINER(f), w);
@@ -418,10 +428,11 @@ GtkTreeViewColumn* addTreecolumn(string ID, string title) {
     return c;
 }
 
-void addTreeviewTextcolumn(GtkWidget* treeview, string cName, string rID, int pos, bool editable = false) {
+void addTreeviewTextcolumn(GtkWidget* treeview, string cName, string rID, int pos, bool editable = false, bool sortable = false) {
     auto c = addTreecolumn(cName+"ID", cName);
     auto r = addCellrenderer(rID, c, editable);
     gtk_tree_view_column_add_attribute(c, r, "text", pos);
+    if (sortable) gtk_tree_view_column_set_sort_column_id(c, pos);
     gtk_tree_view_append_column(GTK_TREE_VIEW(treeview), c);
 }
 
@@ -597,9 +608,8 @@ void VRGuiBuilder::buildBaseUI() {
     auto hbox1 = addBox("hbox1", GTK_ORIENTATION_HORIZONTAL); // bar above 3d view
     auto glarea = addGLWidget();
     auto label5 = addLabel("label5", "Camera:");
-    auto label45 = addLabel("label45", "Navigation:");
     auto combobox4 = addCombobox("combobox4", "cameras");
-    auto combobox9 = addCombobox("combobox9", "nav_presets");
+    auto navButton = addToggleButton("navButton", "Navigation");
     auto hseparator5 = addSeparator("hseparator5", GTK_ORIENTATION_HORIZONTAL);
     auto hseparator6 = addSeparator("hseparator6", GTK_ORIENTATION_HORIZONTAL);
     auto toolbar6 = addToolbar("toolbar6", GTK_ICON_SIZE_LARGE_TOOLBAR, GTK_ORIENTATION_HORIZONTAL);
@@ -613,13 +623,30 @@ void VRGuiBuilder::buildBaseUI() {
     g_signal_connect(hbox1, "size-allocate", G_CALLBACK(set3DViewBarHeight), hbox1_layout);
     g_signal_connect(hpaned1, "notify::position", (GCallback)set3DViewBarWidth, hbox1_viewport);
 
+    gtk_widget_set_margin_left(label5, 5);
+    gtk_widget_set_margin_right(label5, 5);
+    gtk_widget_set_margin_left(navButton, 15);
+    gtk_widget_set_margin_right(navButton, 15);
+
+    auto glareaOverlayer = gtk_overlay_new();
+    auto glareaOverlay = addGrid("glareaOverlay");
+    gtk_container_add(GTK_CONTAINER(glareaOverlayer), glarea);
+    gtk_overlay_add_overlay(GTK_OVERLAY(glareaOverlayer), glareaOverlay);
+    gtk_overlay_set_overlay_pass_through(GTK_OVERLAY(glareaOverlayer), glareaOverlay, true);
+
+    auto navOverlay = addBox("navOverlay", GTK_ORIENTATION_VERTICAL);
+    gtk_widget_set_size_request(navOverlay, 120, -1);
+    gtk_widget_set_margin_top(navOverlay, 10);
+    gtk_widget_set_margin_left(navOverlay, 10);
+    setWidgetBackgroundColor(navOverlay, OSG::Color4f(1,1,1,0.7));
+    gtk_grid_attach(GTK_GRID(glareaOverlay), navOverlay, 0,0,1,1);
+
     gtk_box_pack_start(GTK_BOX(vbox5), hbox1_layout, false, true, 0);
-    gtk_box_pack_start(GTK_BOX(vbox5), glarea, false, true, 0);
+    gtk_box_pack_start(GTK_BOX(vbox5), glareaOverlayer, false, true, 0);
     gtk_box_pack_start(GTK_BOX(hbox1), label5, false, true, 0);
     gtk_box_pack_start(GTK_BOX(hbox1), combobox4, false, true, 0);
     gtk_box_pack_start(GTK_BOX(hbox1), hseparator5, false, true, 0);
-    gtk_box_pack_start(GTK_BOX(hbox1), label45, false, true, 0);
-    gtk_box_pack_start(GTK_BOX(hbox1), combobox9, false, true, 0);
+    gtk_box_pack_start(GTK_BOX(hbox1), navButton, false, true, 0);
     gtk_box_pack_start(GTK_BOX(hbox1), hseparator6, false, true, 0);
     gtk_box_pack_start(GTK_BOX(hbox1), toolbar6, false, true, 0);
 
@@ -800,8 +827,8 @@ void VRGuiBuilder::buildBaseUI() {
     auto Tframe = addLabel("Tframe", "0 ms");
     auto Nchanges = addLabel("Nchanges", "0");
     auto Ncreated = addLabel("Ncreated", "0");
-    auto prof_fkts = gtk_list_store_new(3, G_TYPE_STRING, G_TYPE_UINT, G_TYPE_STRING);
-    auto treeview15_and_frame = addTreeview("treeview15", "prof_fkts", GTK_TREE_MODEL(prof_fkts));
+    auto prof_fkts = gtk_list_store_new(5, G_TYPE_STRING, G_TYPE_UINT, G_TYPE_UINT, G_TYPE_UINT, G_TYPE_STRING);
+    auto treeview15_and_frame = addTreeview("treeview15", "prof_fkts", GTK_TREE_MODEL(prof_fkts), false, true, true);
     gtk_grid_attach(GTK_GRID(table31), table47, 0,0,1,1);
     gtk_grid_attach(GTK_GRID(table31), scrolledwindow1, 1,0,1,2);
     gtk_grid_attach(GTK_GRID(table31), treeview15_and_frame.second, 0,1,1,1);
@@ -821,8 +848,10 @@ void VRGuiBuilder::buildBaseUI() {
 
     auto treeview15 = treeview15_and_frame.first;
     gtk_widget_set_vexpand(treeview15, true);
-    addTreeviewTextcolumn(treeview15, "function", "cellrenderertext30", 0);
-    addTreeviewTextcolumn(treeview15, "time (μs)", "cellrenderertext48", 1);
+    addTreeviewTextcolumn(treeview15, "function", "cellrenderertext30", 0, false, true);
+    addTreeviewTextcolumn(treeview15, "time (μs)", "cellrenderertext48", 1, false, true);
+    addTreeviewTextcolumn(treeview15, "cpu (%/call)", "cellrenderertext_cpu1", 2, false, true);
+    addTreeviewTextcolumn(treeview15, "cpu (%/frame)", "cellrenderertext_cpu2", 3, false, true);
 
     cout << " build VR Setup" << endl;
     /* ---------- VR Setup ---------------------- */
@@ -2000,6 +2029,12 @@ void VRGuiBuilder::buildBaseUI() {
     gtk_grid_attach(GTK_GRID(table38), label141, 0,0,1,1);
     gtk_grid_attach(GTK_GRID(table38), label145, 1,0,1,1);
     gtk_grid_attach(GTK_GRID(table38), treeview11_and_frame.second, 0,1,2,1);
+
+
+    // -------------- initial tabs ------------------
+    gtk_widget_show_all(notebook1); // needed to set the page below!
+    setNotebookPage("notebook3", 2);
+    setNotebookPage("notebook1", 0);
 
     cout << " ..building all widgets done!" << endl;
 }

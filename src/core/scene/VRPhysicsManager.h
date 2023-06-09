@@ -9,6 +9,7 @@
 #include "core/utils/VRFunctionFwd.h"
 #include "core/utils/VRUtilsFwd.h"
 #include "core/objects/VRObjectFwd.h"
+#include "core/objects/material/VRMaterialFwd.h"
 
 class btBroadphaseInterface;
 class btDefaultCollisionConfiguration;

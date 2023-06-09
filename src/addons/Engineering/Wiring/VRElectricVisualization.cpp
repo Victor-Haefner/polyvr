@@ -10,7 +10,7 @@
 
 using namespace OSG;
 
-VRElectricVisualization::VRElectricVisualization() {}
+VRElectricVisualization::VRElectricVisualization() : VRObject("eVisual") {}
 VRElectricVisualization::~VRElectricVisualization() {}
 
 VRElectricVisualizationPtr VRElectricVisualization::create() {

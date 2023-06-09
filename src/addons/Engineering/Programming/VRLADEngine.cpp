@@ -39,6 +39,22 @@ vector<string> VRLADEngine::getCompileUnitWires(string cuID, bool powered) {
     return res;
 }
 
+vector<string> VRLADEngine::getCompileUnitParts(string cuID) {
+    vector<string> res;
+    if (!compileUnits.count(cuID)) return res;
+    auto cu = compileUnits[cuID];
+    for (auto w : cu->parts) res.push_back(w.first);
+    return res;
+}
+
+vector<string> VRLADEngine::getCompileUnitVariables(string cuID) {
+    vector<string> res;
+    if (!compileUnits.count(cuID)) return res;
+    auto cu = compileUnits[cuID];
+    for (auto w : cu->variables) res.push_back(w.first);
+    return res;
+}
+
 vector<string> VRLADEngine::getCompileUnitWireOutParts(string cuID, string wID) {
     vector<string> res;
     if (!compileUnits.count(cuID)) return res;
@@ -639,7 +655,6 @@ VRTransformPtr VRLADEngine::addVisual() {
 	double H = 2.4;
 	double S = 0.5 ; // 0.2;
 
-	Vec3d P0(-21,2,0.3);
 	Vec3d p0(-1.5,0,0);
 
 	ladViz = VRTransform::create("ladViz");
@@ -659,8 +674,8 @@ VRTransformPtr VRLADEngine::addVisual() {
 	lines->setMaterial(m);
 
 	auto bg = VRGeometry::create("bg");
-	bg->setPrimitive("Plane 6 3 1 1");
-	bg->setTransform(Vec3d(-0.4,-1.2,-0.02), Vec3d(0,0,-1), Vec3d(0,1,0));
+	bg->setPrimitive("Plane 6 3.5 1 1");
+	bg->setTransform(Vec3d(1.2,-1.5,-0.02), Vec3d(0,0,-1), Vec3d(0,1,0));
 	bg->setMaterial(m);
 	ladViz->addChild(bg);
 
@@ -692,7 +707,7 @@ VRTransformPtr VRLADEngine::addVisual() {
 	};
 
 	map<string, Pnt3d> partMap;
-	vector<ComponentPtr> drawnComponent;
+	vector<string> drawnComponent;
 	int lblID = 0;
 
 	function<void(string, string, Pnt3d)> computeNextPartsPosition = [&](string cuID, string part, Pnt3d pos) {
@@ -700,7 +715,7 @@ VRTransformPtr VRLADEngine::addVisual() {
 		for (int j = 0; j< wires.size(); j++) {
             auto wire2 = wires[j];
 		    auto parts = getOutParts(cuID, wire2);
-            for (int k = 0; k<wires.size(); k++) {
+            for (int k = 0; k<parts.size(); k++) {
                 auto part2 = parts[k];
 				Pnt3d pos2 = pos + Vec3d(L,0,0);
 				if (partMap.count(part2)) {
@@ -726,133 +741,251 @@ VRTransformPtr VRLADEngine::addVisual() {
 		}
 	};
 
-    // TODO ..
-	/*auto drawConnection = [&](cuID, wID, p1, p2, k = 0) ) {
-		; //v = wire->lastComputationResult;
-		v = lsystem->getCompileUnitWireSignal(cuID, wID);
-		c = [1,0,0];
-		if (v == 1) c = [0,1,0];
+	auto drawConnection = [&](string cuID, string wID, string p1, string p2, int k = 0) {
+		// v = wire->lastComputationResult;
+		int v = getCompileUnitWireSignal(cuID, wID);
+		Color3f c(1,0,0);
+		if (v == 1) c = Color3f(0,1,0);
 
-		if (!p1) f = partMap["-1"];
-		else: f = partMap[p1];
-		t = partMap[p2];
-		d = t-f;
-		if (k == 0) l = f+[d[0],0,0];
-		if (k == 1) l = f+[0,d[1],0];
+		Pnt3d f;
+		if (!partMap.count(p1)) f = partMap["-1"];
+		else f = partMap[p1];
+		Pnt3d t = partMap[p2];
+		Vec3d d = t-f;
+		Pnt3d l;
+		if (k == 0) l = f+Vec3d(d[0],0,0);
+		if (k == 1) l = f+Vec3d(0,d[1],0);
 		addLine(f, l, c);
 		addLine(l, t, c);
 	};
 
-	auto drawPart = [&](pID) ) {
-		if (pID in drawnComponent) return;
-		drawnComponent->append(pID);
-		v = lsystem->getCompileUnitPartVariable(cuID, pID);
-		n = lsystem->getCompileUnitPartName(cuID, pID);
-		; //v = p->getVariable()[0];
-		if (v ) {
-			pos = partMap[pID];
-			addPoint(pos, [0,0,1]);
-			if (n == "Contact" ) {
-				addLine(pos+[-0.01, 0.01, 0], pos+[-0.01, -0.01, 0], [0,0,0]);
-				addLine(pos+[ 0.01, 0.01, 0], pos+[ 0.01, -0.01, 0], [0,0,0]);
-			};
-			elif n == "Coil" ) {
-				addLine(pos+[-0.006, 0.01, 0], pos+[-0.01, 0.003, 0], [0,0,0]);
-				addLine(pos+[-0.01, 0.003, 0], pos+[-0.01, -0.003, 0], [0,0,0]);
-				addLine(pos+[-0.01, -0.003, 0], pos+[-0.006, -0.01, 0], [0,0,0]);
-				addLine(pos+[ 0.006, 0.01, 0], pos+[ 0.01, 0.003, 0], [0,0,0]);
-				addLine(pos+[ 0.01, 0.003, 0], pos+[ 0.01, -0.003, 0], [0,0,0]);
-				addLine(pos+[ 0.01, -0.003, 0], pos+[ 0.006, -0.01, 0], [0,0,0]);
-			};
-			elif n == "Move" ) {
-				addLine(pos+[-0.01, 0.01, 0], pos+[-0.01, -0.01, 0], [0,0,0]);
-				addLine(pos+[ 0.01, 0.01, 0], pos+[ 0.01, -0.01, 0], [0,0,0]);
-				addLine(pos+[-0.01, 0.01, 0], pos+[ 0.01,  0.01, 0], [0,0,0]);
-				addLine(pos+[-0.01,-0.01, 0], pos+[ 0.01, -0.01, 0], [0,0,0]);
-			};
-			elif n == "Calc" ) {
-				addLine(pos+[-0.01, 0.01, 0], pos+[-0.01, -0.01, 0], [0,1,0]);
-				addLine(pos+[ 0.01, 0.01, 0], pos+[ 0.01, -0.01, 0], [0,1,0]);
-				addLine(pos+[-0.01, 0.01, 0], pos+[ 0.01,  0.01, 0], [0,1,0]);
-				addLine(pos+[-0.01,-0.01, 0], pos+[ 0.01, -0.01, 0], [0,1,0]);
-			};
-			elif n == "PContact": ; // TODO;
-				addLine(pos+[-0.01, 0.01, 0], pos+[-0.01, -0.01, 0], [1,0,1]);
-				addLine(pos+[ 0.01, 0.01, 0], pos+[ 0.01, -0.01, 0], [1,0,1]);
-			};
-			elif n == "RCoil": ; // TODO;
-				addLine(pos+[-0.01, 0.01, 0], pos+[-0.01, -0.01, 0], [0,0,1]);
-				addLine(pos+[ 0.01, 0.01, 0], pos+[ 0.01, -0.01, 0], [0,0,1]);
-			};
-			elif n == "SCoil": ; // TODO;
-				addLine(pos+[-0.01, 0.01, 0], pos+[-0.01, -0.01, 0], [0,1,1]);
-				addLine(pos+[ 0.01, 0.01, 0], pos+[ 0.01, -0.01, 0], [0,1,1]);
-			};
-			elif n == "Ge": ; // TODO;
-				addLine(pos+[-0.015, 0.015, 0], pos+[-0.015, -0.015, 0], [0,0,0]);
-				addLine(pos+[ 0.015, 0.015, 0], pos+[ 0.015, -0.015, 0], [0,0,0]);
-				addLine(pos+[-0.01, 0.015, 0], pos+[ 0, 0.01, 0], [0,0,0]);
-				addLine(pos+[-0.01, 0.005, 0], pos+[ 0, 0.01, 0], [0,0,0]);
-				addLine(pos+[0, 0.013, 0], pos+[ 0.01, 0.013, 0], [0,0,0]);
-				addLine(pos+[0, 0.007, 0], pos+[ 0.01, 0.007, 0], [0,0,0]);
-			};
-			else: print n;
+	auto drawPart = [&](string cuID, string pID) {
+		if (count(drawnComponent.begin(), drawnComponent.end(), pID)) return;
+		drawnComponent.push_back(pID);
 
-			for (i,l : enumerate(v->getName()->split("_")) ) {
-				labels->set(lblID, pos+[-0.05,0.015-i*2*F,0.02], l);
-				lblID += 1	;
+		VRLADVariablePtr v = getCompileUnitPartVariable(cuID, pID);
+		string n = getCompileUnitPartName(cuID, pID);
+		//v = p->getVariable()[0];
+		if (v) {
+			Pnt3d pos = partMap[pID];
+			addPoint(pos, Color3f(0,0,1));
+			if (n == "Contact" ) {
+				addLine(pos+Vec3d(-0.01, 0.01, 0), pos+Vec3d(-0.01, -0.01, 0), Color3f(0,0,0));
+				addLine(pos+Vec3d( 0.01, 0.01, 0), pos+Vec3d( 0.01, -0.01, 0), Color3f(0,0,0));
+			} else if (n == "Coil" ) {
+				addLine(pos+Vec3d(-0.006, 0.01, 0), pos+Vec3d(-0.01, 0.003, 0), Color3f(0,0,0));
+				addLine(pos+Vec3d(-0.01, 0.003, 0), pos+Vec3d(-0.01, -0.003, 0), Color3f(0,0,0));
+				addLine(pos+Vec3d(-0.01, -0.003, 0), pos+Vec3d(-0.006, -0.01, 0), Color3f(0,0,0));
+				addLine(pos+Vec3d( 0.006, 0.01, 0), pos+Vec3d( 0.01, 0.003, 0), Color3f(0,0,0));
+				addLine(pos+Vec3d( 0.01, 0.003, 0), pos+Vec3d( 0.01, -0.003, 0), Color3f(0,0,0));
+				addLine(pos+Vec3d( 0.01, -0.003, 0), pos+Vec3d( 0.006, -0.01, 0), Color3f(0,0,0));
+			} else if (n == "Move" ) {
+				addLine(pos+Vec3d(-0.01, 0.01, 0), pos+Vec3d(-0.01, -0.01, 0), Color3f(0,0,0));
+				addLine(pos+Vec3d( 0.01, 0.01, 0), pos+Vec3d( 0.01, -0.01, 0), Color3f(0,0,0));
+				addLine(pos+Vec3d(-0.01, 0.01, 0), pos+Vec3d( 0.01,  0.01, 0), Color3f(0,0,0));
+				addLine(pos+Vec3d(-0.01,-0.01, 0), pos+Vec3d( 0.01, -0.01, 0), Color3f(0,0,0));
+			} else if (n == "Calc" ) {
+				addLine(pos+Vec3d(-0.01, 0.01, 0), pos+Vec3d(-0.01, -0.01, 0), Color3f(0,1,0));
+				addLine(pos+Vec3d( 0.01, 0.01, 0), pos+Vec3d( 0.01, -0.01, 0), Color3f(0,1,0));
+				addLine(pos+Vec3d(-0.01, 0.01, 0), pos+Vec3d( 0.01,  0.01, 0), Color3f(0,1,0));
+				addLine(pos+Vec3d(-0.01,-0.01, 0), pos+Vec3d( 0.01, -0.01, 0), Color3f(0,1,0));
+			} else if (n == "PContact") { // TODO;
+				addLine(pos+Vec3d(-0.01, 0.01, 0), pos+Vec3d(-0.01, -0.01, 0), Color3f(1,0,1));
+				addLine(pos+Vec3d( 0.01, 0.01, 0), pos+Vec3d( 0.01, -0.01, 0), Color3f(1,0,1));
+			} else if (n == "RCoil") { // TODO;
+				addLine(pos+Vec3d(-0.01, 0.01, 0), pos+Vec3d(-0.01, -0.01, 0), Color3f(0,0,1));
+				addLine(pos+Vec3d( 0.01, 0.01, 0), pos+Vec3d( 0.01, -0.01, 0), Color3f(0,0,1));
+			}
+			else if (n == "SCoil") { // TODO;
+				addLine(pos+Vec3d(-0.01, 0.01, 0), pos+Vec3d(-0.01, -0.01, 0), Color3f(0,1,1));
+				addLine(pos+Vec3d( 0.01, 0.01, 0), pos+Vec3d( 0.01, -0.01, 0), Color3f(0,1,1));
+			} else if (n == "Ge") { // TODO;
+				addLine(pos+Vec3d(-0.015, 0.015, 0), pos+Vec3d(-0.015, -0.015, 0), Color3f(0,0,0));
+				addLine(pos+Vec3d( 0.015, 0.015, 0), pos+Vec3d( 0.015, -0.015, 0), Color3f(0,0,0));
+				addLine(pos+Vec3d(-0.01, 0.015, 0), pos+Vec3d( 0, 0.01, 0), Color3f(0,0,0));
+				addLine(pos+Vec3d(-0.01, 0.005, 0), pos+Vec3d( 0, 0.01, 0), Color3f(0,0,0));
+				addLine(pos+Vec3d(0, 0.013, 0), pos+Vec3d( 0.01, 0.013, 0), Color3f(0,0,0));
+				addLine(pos+Vec3d(0, 0.007, 0), pos+Vec3d( 0.01, 0.007, 0), Color3f(0,0,0));
+			} else cout << n << endl;
+
+			auto idParts = splitString(v->getName(), '_');
+			for (int i = 0; i<idParts.size(); i++) {
+                string l = idParts[i];
+                Vec3d p = Vec3d( pos+Vec3d(-0.05,0.015-i*2*F,0.02) );
+				labels->set(lblID, p, l);
+				lblID += 1;
 			}
 		}
 	};
 
-	auto drawNextWires = [&](cuID, part) ) {
-		drawPart(part);
-		for (j,wire : enumerate(getOutWires(cuID, part)) ) {
-			for (k,part2 : enumerate(getOutParts(cuID, wire)) ) {
+	function<void(string, string)> drawNextWires = [&](string cuID, string part) {
+		drawPart(cuID, part);
+		auto wires = getOutWires(cuID, part);
+		for (int j = 0; j<wires.size(); j++ ) {
+            auto wire = wires[j];
+            auto parts = getOutParts(cuID, wire);
+			for (int k = 0; k<parts.size(); k++) {
+			    auto part2 = parts[k];
 				drawConnection(cuID, wire, part, part2);
 				drawNextWires(cuID, part2);
 			}
 		}
 	};
 
-	auto drawCompilationUnit = [&](cuID, p0) ) {
+	auto drawCompilationUnit = [&](string cuID, Pnt3d p0) {
 		computePartPositions(cuID, p0);
-		for (wire : getPowerWires(cuID) ) {
-			for (i,part : enumerate(getOutParts(cuID, wire)) ) {
-				drawConnection(cuID, wire, None, part, 1);
+		for (auto wire : getPowerWires(cuID) ) {
+            auto parts = getOutParts(cuID, wire);
+			for (int i = 0; i<parts.size(); i++) {
+			    auto part = parts[i];
+				drawConnection(cuID, wire, "", part, 1);
 				drawNextWires(cuID, part);
 			}
 		}
 	};
 
-	; //drawCompilationUnit(compileUnits["2E"], Vec3([-2,0.5,0]));
+	//drawCompilationUnit(compileUnits["2E"], Vec3([-2,0.5,0]));
 
 	auto getHeight = [&]() {
-		S = [1e6,-1e6];
-		for (ID,pos : partMap ) {
-			if (pos[1] < S[0]) S[0] = pos[1] ;
-			if (pos[1] > S[1]) S[1] = pos[1] ;
+		Vec2d S(1e6,-1e6);
+		for (auto& p : partMap) {
+            string ID = p.first;
+            Pnt3d pos = p.second;
+			if (pos[1] < S[0]) S[0] = pos[1];
+			if (pos[1] > S[1]) S[1] = pos[1];
 		};
 		return S[1]-S[0];
 	};
 
-	ladViz->setFrom(P0);
-	ladViz->setScale([S,S,S]);
-	for (i, cuID : enumerate(lsystem->getCompileUnits()) ) {
-		partMap = {};
-		drawnComponent = [];
+	ladViz->setTransform(Vec3d(-22,2,1), Vec3d(-1,0,-1));
+	ladViz->setScale(Vec3d(S,S,S));
+	for (auto cuID : getCompileUnits()) {
+		partMap.clear();
+		drawnComponent.clear();
 		drawCompilationUnit(cuID, p0);
-		d = getHeight();
-		p0 += [0,-d-D*0.5,0];
+		double d = getHeight();
+		p0 += Vec3d(0,-d-D*0.5,0);
 		if (p0[1] < -H) {
 			p0[0] += W;
 			p0[1] = 0;
 		}
-	}*/
+	}
+
+	ldata.apply(lines);
 
     return ladViz;
 }
 
 void VRLADEngine::updateVisual() {
-    ;
+	if (!ladViz) return;
+	if (!ladViz->isVisible()) return;
+
+	VRGeometryPtr lines = dynamic_pointer_cast<VRGeometry>( ladViz->getChild(0) );
+	if (!lines) return;
+	VRGeoData ldata(lines);
+	size_t i = 0;
+
+	auto addLine = [&](const Color3f& c) {
+		ldata.setColor(i  , c);
+		ldata.setColor(i+1, c);
+		i += 2;
+	};
+
+	auto addPoint = [&](const Color3f& c) {
+		ldata.setColor(i, c);
+		i += 1;
+	};
+
+	auto getOutParts = [&](string cuID, string wID) {
+		return getCompileUnitWireOutParts(cuID, wID);
+	};
+
+	auto getOutWires = [&](string cuID, string pID) {
+		return getCompileUnitPartOutWires(cuID, pID);
+	};
+
+	auto getPowerWires = [&](string cuID) {
+		return getCompileUnitWires(cuID, true);
+	};
+
+	vector<string> drawnComponent;
+
+	auto drawConnection = [&](string cuID, string wID) {
+		auto v = getCompileUnitWireSignal(cuID, wID);
+		Color3f c(1,0,0);
+		if (v == 1) c = Color3f(0,1,0);
+		addLine(c);
+		addLine(c);
+	};
+
+	auto drawPart = [&](string cuID, string pID) {
+		if (std::find(drawnComponent.begin(), drawnComponent.end(), pID) != drawnComponent.end()) return;
+		drawnComponent.push_back(pID);
+		auto v = getCompileUnitPartVariable(cuID, pID);
+		auto n = getCompileUnitPartName(cuID, pID);
+		if (v) {
+			addPoint(Color3f(0,0,1));
+			if (n == "Contact" ) {
+				addLine(Color3f(0,0,0));
+				addLine(Color3f(0,0,0));
+			} else if ( n == "Coil" ) {
+				addLine(Color3f(0,0,0));
+				addLine(Color3f(0,0,0));
+				addLine(Color3f(0,0,0));
+				addLine(Color3f(0,0,0));
+				addLine(Color3f(0,0,0));
+				addLine(Color3f(0,0,0));
+			} else if ( n == "Move" ) {
+				addLine(Color3f(0,0,0));
+				addLine(Color3f(0,0,0));
+				addLine(Color3f(0,0,0));
+				addLine(Color3f(0,0,0));
+			} else if ( n == "Calc" ) {
+				addLine(Color3f(0,1,0));
+				addLine(Color3f(0,1,0));
+				addLine(Color3f(0,1,0));
+				addLine(Color3f(0,1,0));
+			} else if ( n == "PContact" ) { // TODO;
+				addLine(Color3f(1,0,1));
+				addLine(Color3f(1,0,1));
+			} else if ( n == "RCoil" ) { // TODO;
+				addLine(Color3f(0,0,1));
+				addLine(Color3f(0,0,1));
+			} else if ( n == "SCoil" ) { // TODO;
+				addLine(Color3f(0,1,1));
+				addLine(Color3f(0,1,1));
+			} else if ( n == "Ge" ) { // TODO;
+				addLine(Color3f(0,0,0));
+				addLine(Color3f(0,0,0));
+				addLine(Color3f(0,0,0));
+				addLine(Color3f(0,0,0));
+				addLine(Color3f(0,0,0));
+				addLine(Color3f(0,0,0));
+			}
+		}
+	};
+
+	function<void(string, string)> drawNextWires = [&](string cuID, string part) {
+		drawPart(cuID, part);
+		for (auto wire : getOutWires(cuID, part)) {
+			for (auto part2 : getOutParts(cuID, wire)) {
+				drawConnection(cuID, wire);
+				drawNextWires(cuID, part2);
+			}
+		}
+	};
+
+	auto drawCompilationUnit = [&](string cuID) {
+		for (auto wire : getPowerWires(cuID)) {
+			for (auto part : getOutParts(cuID, wire)) {
+				drawConnection(cuID, wire);
+				drawNextWires(cuID, part);
+			}
+		}
+	};
+
+	for (auto cuID : getCompileUnits()) {
+		drawnComponent.clear();
+		drawCompilationUnit(cuID);
+	}
 }

@@ -48,6 +48,9 @@ class VRNavPreset : public VRName {
 
         void updateBinding(VRNavBinding& b);
 
+        void setActive(bool b);
+        bool isActive();
+
         void setDevice(VRDevicePtr _dev);
         void setTarget(VRTransformPtr _target);
         void setSpeed(float vt, float vr);
@@ -64,11 +67,10 @@ class VRNavPreset : public VRName {
 };
 
 class VRNavigator_base : public VRStorage {
-    private:
+    protected:
         map<string, VRDeviceCbPtr> library;
-        VRNavPresetPtr current;
-        string current_name;
         map<string, VRNavPresetPtr> presets;
+        map<string, bool> presetStates;
 
     public:
         VRNavigator_base();
@@ -77,12 +79,11 @@ class VRNavigator_base : public VRStorage {
         void addNavigation(VRNavPresetPtr ps);
         void remNavigation(string name);
 
-        void setActiveNavigation(string s);
-        string getActiveNavigation();
         VRNavPresetPtr getNavigation(string s);
         map<string, VRNavPresetPtr> getNavigations();
         vector<string> getNavigationNames();
         string getNavigationTip(string name);
+        void setNavigationState(string name, bool active);
 
         void storeNavigationCallback(VRDeviceCbPtr cb);
         map<string, VRDeviceCbPtr>& getNavigationCallbacks();

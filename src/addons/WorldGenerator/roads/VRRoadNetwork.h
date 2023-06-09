@@ -8,6 +8,7 @@
 #include "core/math/partitioning/graph.h"
 #include "core/math/VRMathFwd.h"
 #include "core/objects/object/VRObject.h"
+#include "core/objects/material/VRMaterialFwd.h"
 
 using namespace std;
 OSG_BEGIN_NAMESPACE;
