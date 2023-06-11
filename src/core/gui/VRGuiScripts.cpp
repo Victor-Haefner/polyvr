@@ -1188,7 +1188,7 @@ VRGuiScripts::VRGuiScripts() {
     mgr->addCallback("scripts_toolbar_save", [&](OSG::VRGuiSignals::Options o) { on_save_clicked(); return true; }, true );
     mgr->addCallback("scripts_toolbar_execute", [&](OSG::VRGuiSignals::Options o) { on_exec_clicked(); return true; }, true );
     //mgr->addCallback("scripts_toolbar_search", [&](OSG::VRGuiSignals::Options o) { on_exec_clicked(); return true; } );
-    //mgr->addCallback("scripts_toolbar_documentation", [&](OSG::VRGuiSignals::Options o) { on_exec_clicked(); return true; } );
+    mgr->addCallback("scripts_toolbar_documentation", [&](OSG::VRGuiSignals::Options o) { on_help_clicked(); return true; } );
     mgr->addCallback("scripts_toolbar_performance", [&](OSG::VRGuiSignals::Options o) { on_perf_toggled(toBool(o["state"])); return true; } );
     mgr->addCallback("script_editor_text_changed", [&](OSG::VRGuiSignals::Options o) { on_buffer_changed(); return true; } );
 
@@ -1214,7 +1214,7 @@ VRGuiScripts::VRGuiScripts() {
     disableDestroyDiag("find_dialog");
     disableDestroyDiag("scriptTemplates");
 
-öü##########2145, m    setToolButtonCallback("toolbutton6", bind(&VRGuiScripts::on_new_clicked, this) );
+    setToolButtonCallback("toolbutton6", bind(&VRGuiScripts::on_new_clicked, this) );
     setToolButtonCallback("toolbutton29", bind(&VRGuiScripts::on_template_clicked, this) );
     setToolButtonCallback("toolbutton7", bind(&VRGuiScripts::on_save_clicked, this) );
     setToolButtonCallback("toolbutton8", bind(&VRGuiScripts::on_exec_clicked, this) 888);

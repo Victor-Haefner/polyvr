@@ -283,17 +283,17 @@ void ImScripting::render() {
     // toolbar
     ImGui::Spacing();
     ImGui::Indent(5);  if (ImGui::Button("New")) uiSignal("scripts_toolbar_new");
-    ImGui::SameLine(); if (ImGui::Button("Template")) uiSignal("scripts_toolbar_template");
+    ImGui::SameLine(); if (ImGui::Button("Template")) uiSignal("ui_toggle_popup", {{"name","template"}, {"width","400"}, {"height","300"}});
     ImGui::SameLine(); if (ImGui::Button("Group")) uiSignal("scripts_toolbar_group");
-    ImGui::SameLine(); if (ImGui::Button("Import")) uiSignal("scripts_toolbar_import");
+    ImGui::SameLine(); if (ImGui::Button("Import")) uiSignal("ui_toggle_popup", {{"name","import"}, {"width","400"}, {"height","300"}});
     ImGui::SameLine(); if (ImGui::Button("Delete")) uiSignal("scripts_toolbar_delete");
     ImGui::SameLine(); if (ImGui::Checkbox("Pause Scripts", &pause)) uiSignal("scripts_toolbar_pause", {{"state",toString(pause)}});
     ImGui::SameLine(); if (ImGui::Button("CPP")) uiSignal("scripts_toolbar_cpp");
 
                        if (ImGui::Button("Save")) uiSignal("scripts_toolbar_save");
     ImGui::SameLine(); if (ImGui::Button("Execute")) uiSignal("scripts_toolbar_execute");
-    ImGui::SameLine(); if (ImGui::Button("Search")) uiSignal("scripts_toolbar_search");
-    ImGui::SameLine(); if (ImGui::Button("Documentation")) uiSignal("scripts_toolbar_documentation");
+    ImGui::SameLine(); if (ImGui::Button("Search")) uiSignal("ui_toggle_popup", {{"name","search"}, {"width","400"}, {"height","300"}});
+    ImGui::SameLine(); if (ImGui::Button("Documentation")) uiSignal("ui_toggle_popup", {{"name","documentation"}, {"width","400"}, {"height","500"}});
     ImGui::SameLine(); if (ImGui::Checkbox("Performance", &perf)) uiSignal("scripts_toolbar_performance", {{"state",toString(perf)}});
     ImGui::Unindent();
 

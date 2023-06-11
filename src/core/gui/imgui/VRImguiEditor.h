@@ -94,6 +94,36 @@ class ImRecorderDialog : public ImDialog {
         void begin() override;
 };
 
+class ImDocDialog : public ImDialog {
+    public:
+        ImDocDialog();
+        void begin() override;
+};
+
+class ImSearchDialog : public ImDialog {
+    public:
+        ImSearchDialog();
+        void begin() override;
+};
+
+class ImProfDialog : public ImDialog {
+    public:
+        ImProfDialog();
+        void begin() override;
+};
+
+class ImTemplateDialog : public ImDialog {
+    public:
+        ImTemplateDialog();
+        void begin() override;
+};
+
+class ImImportDialog : public ImDialog {
+    public:
+        ImImportDialog();
+        void begin() override;
+};
+
 class VRImguiEditor {
     private:
         Signal signal;
@@ -109,6 +139,11 @@ class VRImguiEditor {
         ImOpenDialog openDialog = ImOpenDialog();
         ImSaveasDialog saveasDialog = ImSaveasDialog();
         ImRecorderDialog recorderDialog = ImRecorderDialog();
+        ImDocDialog docDialog = ImDocDialog();
+        ImSearchDialog searchDialog = ImSearchDialog();
+        ImProfDialog profDialog = ImProfDialog();
+        ImImportDialog importDialog = ImImportDialog();
+        ImTemplateDialog templateDialog = ImTemplateDialog();
 
         void resolveResize(const string& name, const ResizeEvent& resizer);
 

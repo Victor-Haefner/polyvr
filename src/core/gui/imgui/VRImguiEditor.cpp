@@ -141,7 +141,7 @@ void ImToolbar::begin() {
     ImGui::SameLine(); if (ImGui::Button("Close")) uiSignal("toolbar_close");
     ImGui::SameLine(); if (ImGui::Button("Exit")) uiSignal("toolbar_exit");
     ImGui::SameLine(); if (ImGui::Button("About")) uiSignal("ui_toggle_popup", {{"name","about"}, {"width","400"}, {"height","500"}});
-    ImGui::SameLine(); if (ImGui::Button("Profiler")) uiSignal("toolbar_profiler");
+    ImGui::SameLine(); if (ImGui::Button("Profiler")) uiSignal("ui_toggle_popup", {{"name","profiler"}, {"width","600"}, {"height","500"}});
     ImGui::SameLine(); if (ImGui::Button("Recorder")) uiSignal("ui_toggle_popup", {{"name","recorder"}, {"width","400"}, {"height","200"}});
 }
 
@@ -167,6 +167,11 @@ void VRImguiEditor::resizePopup(const Surface& parent) {
     openDialog.resize(parent);
     saveasDialog.resize(parent);
     recorderDialog.resize(parent);
+    docDialog.resize(parent);
+    searchDialog.resize(parent);
+    profDialog.resize(parent);
+    importDialog.resize(parent);
+    templateDialog.resize(parent);
     ImGui_ImplGLUT_ReshapeFunc(parent.width, parent.height);
 }
 
@@ -257,6 +262,11 @@ void VRImguiEditor::init(Signal signal, ResizeSignal resizeSignal) {
     openDialog.signal = signal;
     saveasDialog.signal = signal;
     recorderDialog.signal = signal;
+    docDialog.signal = signal;
+    searchDialog.signal = signal;
+    profDialog.signal = signal;
+    importDialog.signal = signal;
+    templateDialog.signal = signal;
 }
 
 void VRImguiEditor::initPopup() {
@@ -355,6 +365,11 @@ void VRImguiEditor::renderPopup(OSG::VRGuiSignals::Options options) {
     if (name == "open") openDialog.render();
     if (name == "saveas") saveasDialog.render();
     if (name == "recorder") recorderDialog.render();
+    if (name == "documentation") docDialog.render();
+    if (name == "search") searchDialog.render();
+    if (name == "profiler") profDialog.render();
+    if (name == "import") importDialog.render();
+    if (name == "template") templateDialog.render();
 
     // Rendering
     ImGui::Render();
@@ -415,16 +430,16 @@ void ImAboutDialog::begin() {
 ImNewDialog::ImNewDialog() : ImDialog("new") {}
 ImOpenDialog::ImOpenDialog() : ImDialog("open") {}
 ImSaveasDialog::ImSaveasDialog() : ImDialog("saveas") {}
+ImRecorderDialog::ImRecorderDialog() : ImDialog("recorder") {}
+ImDocDialog::ImDocDialog() : ImDialog("documentation") {}
+ImSearchDialog::ImSearchDialog() : ImDialog("search") {}
+ImProfDialog::ImProfDialog() : ImDialog("profiler") {}
+ImImportDialog::ImImportDialog() : ImDialog("import") {}
+ImTemplateDialog::ImTemplateDialog() : ImDialog("template") {}
 
 void ImNewDialog::begin() { renderFileDialog("ui_new_file"); }
 void ImOpenDialog::begin() { renderFileDialog("ui_open_file"); }
 void ImSaveasDialog::begin() { renderFileDialog("ui_saveas_file"); }
-
-
-
-ImRecorderDialog::ImRecorderDialog() : ImDialog("recorder") {
-    ;
-}
 
 void ImRecorderDialog::begin() {
     ImSection::begin();
@@ -437,5 +452,35 @@ void ImRecorderDialog::begin() {
     centeredText("Authors:");
     //for (auto& a : authors) centeredText(a);
 }
+
+void ImDocDialog::begin() {
+    ImSection::begin();
+    centeredText("Documentation");
+}
+
+void ImSearchDialog::begin() {
+    ImSection::begin();
+    centeredText("Search");
+}
+
+void ImProfDialog::begin() {
+    ImSection::begin();
+    centeredText("Perforamnce");
+}
+
+void ImImportDialog::begin() {
+    ImSection::begin();
+    centeredText("Search");
+}
+
+void ImTemplateDialog::begin() {
+    ImSection::begin();
+    centeredText("Perforamnce");
+}
+
+
+
+
+
 
 
