@@ -91,10 +91,11 @@ class VRGuiScripts {
         void on_trigrem_clicked(string tID);
 
         void updateDocumentation();
-        void on_select_help();
+        //void on_select_help(string obj, string type, string cla, string mod);
+        void on_select_help(string treeview, string node);
         void on_help_clicked();
         void on_help_close_clicked();
-        void on_doc_filter_edited();
+        void on_doc_filter_edited(string filter);
         //bool on_help_close_frame_clicked(_GdkEvent* event);
 
         void updateTemplates();

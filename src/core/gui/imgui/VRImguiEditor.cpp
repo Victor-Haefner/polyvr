@@ -431,11 +431,19 @@ ImNewDialog::ImNewDialog() : ImDialog("new") {}
 ImOpenDialog::ImOpenDialog() : ImDialog("open") {}
 ImSaveasDialog::ImSaveasDialog() : ImDialog("saveas") {}
 ImRecorderDialog::ImRecorderDialog() : ImDialog("recorder") {}
-ImDocDialog::ImDocDialog() : ImDialog("documentation") {}
-ImSearchDialog::ImSearchDialog() : ImDialog("search") {}
+ImSearchDialog::ImSearchDialog() : ImDialog("search"), filter("scriptSearch", "Search:", "") {}
 ImProfDialog::ImProfDialog() : ImDialog("profiler") {}
 ImImportDialog::ImImportDialog() : ImDialog("import") {}
 ImTemplateDialog::ImTemplateDialog() : ImDialog("template") {}
+
+ImDocDialog::ImDocDialog() : ImDialog("documentation"), filter("docSearch", "Search:", ""), tree("docTree") {
+    auto mgr = OSG::VRGuiSignals::get();
+    mgr->addCallback("on_change_doc_text", [&](OSG::VRGuiSignals::Options o){ text = o["text"]; return true; } );
+    mgr->addCallback("on_doc_filter_tree_clear", [&](OSG::VRGuiSignals::Options o){ treeClear(); return true; } );
+    mgr->addCallback("on_doc_filter_tree_append", [&](OSG::VRGuiSignals::Options o) {
+            treeAppend(o["ID"], o["label"], o["parent"], o["type"], o["cla"], o["mod"], o["col"]);
+        return true; } );
+}
 
 void ImNewDialog::begin() { renderFileDialog("ui_new_file"); }
 void ImOpenDialog::begin() { renderFileDialog("ui_open_file"); }
@@ -453,9 +461,40 @@ void ImRecorderDialog::begin() {
     //for (auto& a : authors) centeredText(a);
 }
 
+void ImDocDialog::treeClear() { tree.clear(); }
+
+void ImDocDialog::treeAppend(string ID, string label, string parent, string type, string cla, string mod, string col) {
+    //cout << "treeAppend, ID: " << ID << ", parent: " << parent << endl;
+    //tree.add([parent].push_back({label, type, cla, mod, col});
+    tree.add(ID, label, 0, parent);
+}
+
 void ImDocDialog::begin() {
     ImSection::begin();
     centeredText("Documentation");
+
+    if (filter.render()) uiSignal("on_change_doc_filter", {{"filter",filter.value}});
+
+    //uiSignal("on_change_doc_selection", {{"obj","Geometry"},{"type","class"},{"class","Geometry"},{"mod","VR"}});
+
+    auto region1 = ImGui::GetContentRegionAvail();
+    auto region2 = ImGui::GetContentRegionAvail();
+    region1.x *= 0.3;
+    region2.x *= 0.7;
+    ImGuiWindowFlags flags = ImGuiWindowFlags_None;
+
+    // doc mod tree
+    ImGui::BeginChild("docTree", region1, false, flags);
+    tree.render();
+    ImGui::EndChild();
+
+    ImGui::SameLine();
+
+    // doc text
+    ImGui::BeginChild("docText", region2, false, flags);
+    ImGui::Text(text.c_str());
+    ImGui::EndChild();
+
 }
 
 void ImSearchDialog::begin() {

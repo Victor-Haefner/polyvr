@@ -7,6 +7,8 @@
 #include <vector>
 
 #include "VRImguiUtils.h"
+#include "imWidgets/VRImguiInput.h"
+#include "imWidgets/VRImguiTreeview.h"
 #include <imgui.h>
 #include <core/utils/VRFwdDeclTemplate.h>
 #include <core/gui/VRGuiSignals.h>
@@ -96,12 +98,22 @@ class ImRecorderDialog : public ImDialog {
 
 class ImDocDialog : public ImDialog {
     public:
+        ImInput filter;
+        ImTreeview tree;
+        string text;
+
         ImDocDialog();
         void begin() override;
+
+        void treeClear();
+        void treeAppend(string ID, string label, string parent, string type, string cla, string mod, string col);
 };
 
 class ImSearchDialog : public ImDialog {
     public:
+        ImInput filter;
+        string text;
+
         ImSearchDialog();
         void begin() override;
 };

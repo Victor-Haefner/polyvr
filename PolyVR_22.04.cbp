@@ -655,6 +655,10 @@
 		<Unit filename="src/core/gui/imgui/imEditor/TextEditor.cpp" />
 		<Unit filename="src/core/gui/imgui/imEditor/TextEditor.h" />
 		<Unit filename="src/core/gui/imgui/imFileDialog/ImGuiFileDialog.cpp" />
+		<Unit filename="src/core/gui/imgui/imWidgets/VRImguiInput.cpp" />
+		<Unit filename="src/core/gui/imgui/imWidgets/VRImguiInput.h" />
+		<Unit filename="src/core/gui/imgui/imWidgets/VRImguiTreeview.cpp" />
+		<Unit filename="src/core/gui/imgui/imWidgets/VRImguiTreeview.h" />
 		<Unit filename="src/core/gui/widgets/VRAppLauncher.cpp" />
 		<Unit filename="src/core/gui/widgets/VRAppLauncher.h" />
 		<Unit filename="src/core/gui/widgets/VRAppPanel.cpp" />

@@ -678,8 +678,7 @@ void VRGuiScripts::openHelp(string search) {
 }
 
 void VRGuiScripts::updateDocumentation() {
-    /*auto store = (GtkTreeStore*)VRGuiBuilder::get()->get_object("bindings");
-    gtk_tree_store_clear(store);
+    uiSignal("on_doc_filter_tree_clear", {{}});
 
     auto scene = VRScene::getCurrent();
     if (scene == 0) return;
@@ -724,65 +723,56 @@ void VRGuiScripts::updateDocumentation() {
         }
     }
 
-    auto setRow = [&](GtkTreeIter* itr, string label, string type, string cla, string mod, string col = "#FFFFFF") {
-        gtk_tree_store_set (store, itr,  0, label.c_str(),
-                                                        1, type.c_str(),
-                                                        2, cla.c_str(),
-                                                        3, mod.c_str(),
-                                                        4, col.c_str(), -1);
-    };
-
-    GtkTreeIter itr0, itr1, itr2;
     for (auto mod : filtered) {
-        gtk_tree_store_append(store, &itr0, NULL);
         string modname = (mod.first == "VR") ? "VR" : "VR."+mod.first;
-        setRow(&itr0, modname, "module", "", "", "#BBDDFF");
+        string mID = modname;
+        uiSignal("on_doc_filter_tree_append", {{"ID",mID}, {"parent",""}, {"label",modname}, {"type","module"}, {"cla",""}, {"mod",""}, {"col","#BBDDFF"}});
         for (auto typ : mod.second) {
-            gtk_tree_store_append(store, &itr1, &itr0);
-            setRow(&itr1, typ.first, "class", typ.first, mod.first);
+            string cID = mID+":"+typ.first;
+            uiSignal("on_doc_filter_tree_append", {{"ID",cID}, {"parent",mID}, {"label",typ.first}, {"type","class"}, {"cla",typ.first}, {"mod",mod.first}, {"col","#FFFFFF"}});
             for (auto fkt : typ.second) {
-                gtk_tree_store_append(store, &itr2, &itr1);
-                setRow(&itr2, fkt.first, "method", typ.first, mod.first);
+                string fID = cID+":"+fkt.first;
+                uiSignal("on_doc_filter_tree_append", {{"ID",fID}, {"parent",cID}, {"label",fkt.first}, {"type","method"}, {"cla",typ.first}, {"mod",mod.first}, {"col","#FFFFFF"}});
             }
         }
     }
 
-    if (docs_filter != "") VRGuiTreeView("treeview3").expandAll();*/
+    //if (docs_filter != "") VRGuiTreeView("treeview3").expandAll();
 }
 
-void VRGuiScripts::on_select_help() {
-    /*VRGuiTreeView tree_view("treeview3");
-    if (!tree_view.hasSelection()) return;
-
-    // get selected object
-    string obj  = tree_view.getSelectedStringValue(0);
-    string type = tree_view.getSelectedStringValue(1);
-    string cla  = tree_view.getSelectedStringValue(2);
-    string mod  = tree_view.getSelectedStringValue(3);
+//void VRGuiScripts::on_select_help(string obj, string type, string cla, string mod) {
+void VRGuiScripts::on_select_help(string treeview, string node) {
+    if (treeview != "docTree") return;
 
     auto scene = VRScene::getCurrent();
     if (scene == 0) return;
-    auto tb = (GtkTextBuffer*)VRGuiBuilder::get()->get_object("pydoc");
-    gtk_text_buffer_set_text(tb, "", 0);
 
-    if (type == "class") {
-        string doc = scene->getPyVRDescription(mod, obj) + "\n\n";
+    auto data = splitString(node, ':');
+    if (data.size() < 2) return;
+
+    string mod = data[0];
+    string obj = data[data.size()-1];
+    string cla = data[1];
+    string current_doc_text = "";
+
+    if (data.size() == 2) { // class
+        current_doc_text = scene->getPyVRDescription(mod, obj) + "\n\n";
         for (auto method : scene->getPyVRMethods(mod, obj)) {
             string d = scene->getPyVRMethodDoc(mod, cla, method);
-            doc += method + "\n\t" + d + "\n\n";
+            current_doc_text += method + "\n\t" + d + "\n\n";
         }
-        gtk_text_buffer_set_text(tb, doc.c_str(), doc.size());
     }
 
-    if (type == "method") {
-        string doc = "\n" + scene->getPyVRMethodDoc(mod, cla, obj);
-        gtk_text_buffer_set_text(tb, doc.c_str(), doc.size());
-    }*/
+    if (data.size() == 3) { // method
+        current_doc_text = "\n" + scene->getPyVRMethodDoc(mod, cla, obj);
+    }
+
+    uiSignal("on_change_doc_text", {{"text",current_doc_text}});
 }
 
-void VRGuiScripts::on_doc_filter_edited() {
-    //docs_filter = getTextEntry("entry25");
-    //updateDocumentation();
+void VRGuiScripts::on_doc_filter_edited(string filter) {
+    docs_filter = filter;
+    updateDocumentation();
 }
 
 // script search dialog
@@ -1209,6 +1199,9 @@ VRGuiScripts::VRGuiScripts() {
     mgr->addCallback("script_editor_change_trigger_device", [&](OSG::VRGuiSignals::Options o) { on_trigdev_edited(o["idKey"], o["newValue"]); return true; }, true );
     mgr->addCallback("script_editor_change_trigger_key", [&](OSG::VRGuiSignals::Options o) { on_trigkey_edited(o["idKey"], o["inputNew"]); return true; }, true );
     mgr->addCallback("script_editor_change_trigger_state", [&](OSG::VRGuiSignals::Options o) { on_trigstate_edited(o["idKey"], o["newValue"]); return true; }, true );
+
+    mgr->addCallback("on_change_doc_filter", [&](OSG::VRGuiSignals::Options o) { on_doc_filter_edited(o["filter"]); return true; }, true );
+    mgr->addCallback("treeview_select", [&](OSG::VRGuiSignals::Options o) { on_select_help(o["treeview"], o["node"]); return true; }, true );
 
     /*disableDestroyDiag("pybindings-docs");
     disableDestroyDiag("find_dialog");
