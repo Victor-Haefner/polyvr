@@ -190,7 +190,13 @@ void VRPointCloud::addPoint(Vec3d p, Color3ub c) {
 void VRPointCloud::setupLODs() {
     lodsSetUp = true;
 
-    for (auto leaf : octree->getAllLeafs()) {
+    auto leafs = octree->getAllLeafs();
+
+    auto progress = VRProgress::create();
+    progress->setup("setup pointcloud LODs ", leafs.size());
+    progress->reset();
+
+    for (auto leaf : leafs) {
         Vec3d center = leaf->getCenter();
 
         auto lod = VRLod::create("chunk");
@@ -216,12 +222,12 @@ void VRPointCloud::setupLODs() {
                     chunk.pushTexCoord(Vec2d(data.w,0), 2);
                 }
                 chunk.pushPoint();
-
             }
             if (chunk.size() > 0) chunk.apply( geo );
         }
 
         if (!keepOctree) leaf->clearContent();
+        progress->update(1);
     }
 
     //addChild(octree->getVisualization());

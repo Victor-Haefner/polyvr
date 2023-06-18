@@ -60,7 +60,7 @@ class E57Scan {
         }
 
         PosePtr extractPose(StructureNode& node) {
-            if (!node.isDefined("pose")) return 0;
+            if (!node.isDefined("pose")) return Pose::create();
 
             StructureNode ep(node.get("pose"));
             StructureNode tn(ep.get("translation"));
@@ -76,6 +76,10 @@ class E57Scan {
             q[1] = e57::FloatNode(rn.get("y")).value();
             q[2] = e57::FloatNode(rn.get("z")).value();
             q[3] = e57::FloatNode(rn.get("w")).value();
+
+            p -= Vec3d(458500, 5.4303e+06, 0);
+
+            cout << "  extractPose p: " << p << " q: " << q << endl;
 
             Matrix4d m;
             m.setTranslate(p);
@@ -218,10 +222,12 @@ void OSG::convertE57(vector<string> pathsIn, string pathOut) {
 
     ofstream stream(pathOut, ios::app);
 
+    Boundingbox bb;
     auto onPoints = [&](E57Scan& scan, E57Loader::CBData& data) {
         Vec3d P = scan.pose->transform(data.P);
         stream.write((const char*)&P[0], sizeof(Vec3d));
-        stream.write((const char*)&data.C[0], sizeof(Vec3ub));
+        if (hasCol) stream.write((const char*)&data.C[0], sizeof(Vec3ub));
+        bb.update(P);
         progress->update(1);
     };
 
@@ -229,6 +235,7 @@ void OSG::convertE57(vector<string> pathsIn, string pathOut) {
         E57Loader loader(pathIn);
         loader.process(onPoints);
     }
+    cout << " convertE57 final BB, center: " << bb.center() << " size: " << bb.size() << endl;
 
     stream.close();
 }
@@ -264,8 +271,12 @@ void OSG::loadE57(string path, VRTransformPtr res, map<string, string> importOpt
     loader.process(onPoint, 1, Nskip);
 
     pointcloud->setupLODs();
-    for (auto& scan : loader.scans)
-        if (scan.pose) pointcloud->setPose(scan.pose);
+    for (auto& scan : loader.scans) {
+        if (scan.pose) {
+            pointcloud->setPose(scan.pose);
+            cout << " scan pose: " << toString(scan.pose) << endl;
+        }
+    }
     res->addChild(pointcloud);
 }
 
@@ -629,6 +640,7 @@ void OSG::loadPCB(string path, VRTransformPtr res, map<string, string> importOpt
     pointcloud->setupLODs();
     res->addChild(pointcloud); // TODO: threading -> problems with states, re-adding it as child in main thread fixes issue!
     stream.close();
+    cout << "  PCB import finished" << endl;
 }
 
 void OSG::loadXYZ(string path, VRTransformPtr res, map<string, string> importOptions) {
