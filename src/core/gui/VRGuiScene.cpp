@@ -345,14 +345,14 @@ void VRGuiScene::updateObjectForms(bool disable) {
     setWidgetVisibility("expander14", false, true);
     setWidgetVisibility("expander15", false, true);
     setWidgetVisibility("expander16", false, true);
-    setWidgetVisibility("expander27", false, true);
+    setWidgetVisibility("expander27", false, true);*/
     if (disable) return;
 
     VRObjectPtr obj = getSelected();
     if (obj == 0) return;
 
     // set object label && path
-    setLabel( "current_object_lab", obj->getName() + "\npath " + obj->getPath() );
+    uiSignal("set_sg_title", {{ "title", obj->getName() + "\npath " + obj->getPath() }} );
 
     string type = obj->getType();
     trigger_cbs = false;
@@ -371,7 +371,7 @@ void VRGuiScene::updateObjectForms(bool disable) {
 
     //if (type == "CSGGeometry") setCSG((CSGGeometryPtr)obj);
 
-    trigger_cbs = true;*/
+    trigger_cbs = true;
 }
 
 // --------------------------
@@ -414,12 +414,13 @@ void VRGuiScene::setSGRow( VRObjectPtr o) {
     gtk_tree_store_set (tree_store, itr, 5, o->getID(), -1);*/
 }
 
-void VRGuiScene::parseSGTree(VRObjectPtr o) {
+void VRGuiScene::parseSGTree(VRObjectPtr o, string parent) {
     if (o == 0) return;
-    /*GtkTreeIter nItr;
-    gtk_tree_store_append(tree_store, &nItr, itr);
-    setSGRow( &nItr, o );
-    for (uint i=0; i<o->getChildrenCount(); i++) parseSGTree( o->getChild(i), &nItr );*/
+
+    string ID = toString(o->getID());
+    uiSignal("on_sg_tree_append", {{ "ID",ID }, { "label",o->getName() }, { "parent",parent }});
+    //setSGRow( &nItr, o );
+    for (uint i=0; i<o->getChildrenCount(); i++) parseSGTree( o->getChild(i), ID );
 }
 
 void VRGuiScene::removeTreeStoreBranch(bool self) {
@@ -440,22 +441,14 @@ void VRGuiScene::syncSGTree(VRObjectPtr o) {
     //for (uint i=0; i<o->getChildrenCount(); i++) parseSGTree( o->getChild(i), itr );
 }
 
-void VRGuiScene::on_treeview_select() {
-    /*GtkTreeSelection* sel = gtk_tree_view_get_selection(tree_view);
-    GtkTreeModel* model = gtk_tree_view_get_model(tree_view);
-
-    if (!selected_itr) selected_itr = new GtkTreeIter();
-    if (!gtk_tree_selection_get_selected(sel, &model, selected_itr)) return;
-
-    setWidgetSensitivity("table11", true);
-
-    updateObjectForms(true);
-    gtk_tree_model_get(model, selected_itr, 5, &selected, -1);
+void VRGuiScene::on_treeview_select(string selected) {
+    //setWidgetSensitivity("table11", true);
+    //updateObjectForms(true);
     updateObjectForms();
 
     selected_geometry.reset();
     if (getSelected() == 0) return;
-    if (getSelected()->hasTag("geometry")) selected_geometry = static_pointer_cast<VRGeometry>(getSelected());*/
+    if (getSelected()->hasTag("geometry")) selected_geometry = static_pointer_cast<VRGeometry>(getSelected());
 }
 
 void VRGuiScene::on_edit_object_name(const char* path_string, const char* new_text) {
@@ -1338,21 +1331,24 @@ VRGuiScene::VRGuiScene() { // TODO: reduce callbacks with templated functions
     menu->appendItem("GeoMenu", "Print", bind(&VRGuiScene::on_geo_menu_print, this));
 
     updateObjectForms();*/
+
+    auto mgr = OSG::VRGuiSignals::get();
+    mgr->addCallback("ui_change_scene_tab", [&](OSG::VRGuiSignals::Options o) { cout << " ----- " << toString(o) << endl; if (o["tab"] == "Scenegraph") updateTreeView(); return true; } );
 }
 
 // new scene, update stuff here
 bool VRGuiScene::updateTreeView() {
-	/*cout << "VRGuiScene::updateTreeView" << endl;
+	cout << "VRGuiScene::updateTreeView" << endl;
     auto scene = VRScene::getCurrent();
     if (scene == 0) return true;
 
-    gtk_tree_store_clear(tree_store);
+    uiSignal("on_sg_tree_clear");
     VRObjectPtr root = scene->getRoot();
     parseSGTree( root );
-    gtk_tree_view_expand_all(tree_view);
+    //gtk_tree_view_expand_all(tree_view);
 
-    setWidgetSensitivity("table11", false);
-    return true;*/
+    //setWidgetSensitivity("table11", false);
+    return true;
 }
 
 // check if currently getSelected() object has been modified

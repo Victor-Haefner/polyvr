@@ -34,6 +34,7 @@ class E57Scan {
         bool hasPos;
         bool hasCol;
         bool hasInt;
+        Vec3d pointOffset; // TODO: add as pointcloud option
         CompressedVectorNode points;
         PosePtr pose;
 
@@ -77,9 +78,9 @@ class E57Scan {
             q[2] = e57::FloatNode(rn.get("z")).value();
             q[3] = e57::FloatNode(rn.get("w")).value();
 
-            p -= Vec3d(458500, 5.4303e+06, 0);
+            p -= pointOffset;
 
-            cout << "  extractPose p: " << p << " q: " << q << endl;
+            cout << "  scan, extractPose p: " << p << " q: " << q << endl;
 
             Matrix4d m;
             m.setTranslate(p);

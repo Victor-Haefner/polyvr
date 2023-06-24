@@ -69,6 +69,7 @@ void VRPointCloud::applySettings(map<string, string> options) {
         if (options.count(l)) {
             Vec2d lod;
             toValue(options[l], lod);
+            cout << " .. add lod stream " << l << ", " << lod << endl;
             addLevel(lod[0], lod[1]);
         }
     }
@@ -188,6 +189,7 @@ void VRPointCloud::addPoint(Vec3d p, Color3ub c) {
 }
 
 void VRPointCloud::setupLODs() {
+    cout << " VRPointCloud::setupLODs" << endl;
     lodsSetUp = true;
 
     auto leafs = octree->getAllLeafs();
@@ -389,10 +391,13 @@ void VRPointCloud::externalPartition(string path) {
     if (!params.count("binSize")) { cout << "  externalPartition needs a sorted PCB, please run externalSort on it first!" << endl; return; }
 
     bool hasCol = contains( params["format"], "r");
+    bool hasSpl = contains( params["format"], "u");
     auto cN = toValue<size_t>( params["N_points"] );
 
     int N1 = sizeof(Vec3d);
-    if (hasCol) N1 += sizeof(Vec3ub);
+    //if (hasCol) N1 += sizeof(Vec3ub);
+    if (hasCol) N1 = VRPointCloud::PntCol::size;
+    if (hasSpl) N1 = VRPointCloud::Splat::size;
 
     ifstream stream(path);
     int hL = toInt(params["headerLength"]);
@@ -405,6 +410,7 @@ void VRPointCloud::externalPartition(string path) {
 
     map<void*, ocChunkRef> chunkRefs;
 
+    size_t openStreams = 0;
     size_t Nwritten1 = 0;
     VRPointCloud::Splat splat;
     for (size_t i = 0; i<cN; i++) {
@@ -415,24 +421,49 @@ void VRPointCloud::externalPartition(string path) {
         progress->update(1);
 
         void* key = node;
-        if (!chunkRefs.count(key)) {
+        if (!chunkRefs.count(key)) { // intial open
             string path = "ocChnk"+toString(key)+".dat";
             chunkRefs[key].path = path;
-            chunkRefs[key].stream.open( path );
+            chunkRefs[key].stream.open( chunkRefs[key].path );
             if (!chunkRefs[key].stream) {
-                cout << " ERROR! cannot create more files to store chunks: " << chunkRefs.size() << endl;
-                break;
+                cout << " ERROR1! cannot create more files to store chunks: " << openStreams << " / " << chunkRefs.size() << " / " << cN << ", err: " << strerror(errno) << endl;
+                for (auto& ref : chunkRefs) removeFile(ref.second.path);
+                return;
             }
+            chunkRefs[key].isOpen = true;
+            openStreams++;
+        }
+
+        if (!chunkRefs[key].isOpen) { // reopen if necessary
+            chunkRefs[key].stream.open( chunkRefs[key].path, ios::app );
+            if (!chunkRefs[key].stream) {
+                cout << " ERROR2! cannot create more files to store chunks: " << openStreams << " / " << chunkRefs.size() << " / " << cN << ", err: " << strerror(errno) << endl;
+                for (auto& ref : chunkRefs) removeFile(ref.second.path);
+                return;
+            }
+            chunkRefs[key].isOpen = true;
+            openStreams++;
         }
 
         chunkRefs[key].size += 1;
         chunkRefs[key].stream.write((char*)&splat, N1);
         Nwritten1 += 1;
+
+        if (openStreams > 200) { // close streams if too many open to avoid system issues
+            for (auto& ref : chunkRefs) {
+                if (ref.second.isOpen) {
+                    ref.second.stream.close();
+                    ref.second.isOpen = false;
+                    openStreams--;
+                    if (openStreams < 50) break;
+                }
+            }
+        }
     }
     cout << " written N in chunks: " << Nwritten1 << endl;
     stream.close();
 
-    for (auto& ref : chunkRefs) ref.second.stream.close();
+    for (auto& ref : chunkRefs) if (ref.second.isOpen) { ref.second.stream.close(); ref.second.isOpen = false; openStreams--; }
 
     size_t ocNodeBinSize = sizeof(ocSerialNode);
     string wpath = path+".tmp.pcb";
@@ -490,7 +521,7 @@ void VRPointCloud::externalPartition(string path) {
     cout << "---- writing points " << Nwritten << endl;
 
     wstream.close();
-    rename(wpath.c_str(), path.c_str());
+    //rename(wpath.c_str(), path.c_str());
 }
 
 void VRPointCloud::externalSort(string path, size_t chunkSize, double binSize) {

@@ -109,11 +109,12 @@ void VRGuiManager::init() {
     VRGuiSignals::get()->getSignal("scene_changed")->add( fkt );
     VRGuiSignals::get()->getSignal("scriptlist_changed")->add( fkt );
     guiSignalCbs.push_back(fkt);
+
+    g_scene = new VRGuiScene();
     return;
 
     //gtk_rc_parse("gui/gtkrc");
     g_mon = new VRGuiMonitor();
-    g_scene = new VRGuiScene();
     g_nav = new VRGuiNav();
     g_net = new VRGuiNetwork();
     g_sem = new VRGuiSemantics();

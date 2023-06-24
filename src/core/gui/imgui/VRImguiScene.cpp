@@ -10,6 +10,15 @@ ImSceneEditor::ImSceneEditor() : ImWidget("SceneEditor") {
 }
 
 void ImSceneEditor::begin() {
+
+    auto setCurrentTab = [&](string t) {
+        if (t != currentTab) {
+            currentTab = t;
+            uiSignal("ui_change_scene_tab", {{"tab",currentTab}});
+            cout << "  setCurrentTab " << currentTab << " -> " << t << endl;
+        }
+    };
+
     if (ImGui::BeginTabBar("AppPanelsTabBar", ImGuiTabBarFlags_None)) {
         ImGuiWindowFlags flags = ImGuiWindowFlags_None;
 
@@ -19,6 +28,7 @@ void ImSceneEditor::begin() {
             rendering.render();
             ImGui::EndChild();
             ImGui::EndTabItem();
+            setCurrentTab("Rendering");
         }
 
         if (ImGui::BeginTabItem("Scenegraph")) {
@@ -27,11 +37,13 @@ void ImSceneEditor::begin() {
             scenegraph.render();
             ImGui::EndChild();
             ImGui::EndTabItem();
+            setCurrentTab("Scenegraph");
         }
 
         if (ImGui::BeginTabItem("Scripting")) {
             scripting.render();
             ImGui::EndTabItem();
+            setCurrentTab("Scripting");
         }
 
         if (ImGui::BeginTabItem("Navigation")) {
@@ -40,6 +52,7 @@ void ImSceneEditor::begin() {
             navigation.render();
             ImGui::EndChild();
             ImGui::EndTabItem();
+            setCurrentTab("Navigation");
         }
 
         if (ImGui::BeginTabItem("Semantics")) {
@@ -48,6 +61,7 @@ void ImSceneEditor::begin() {
             semantics.render();
             ImGui::EndChild();
             ImGui::EndTabItem();
+            setCurrentTab("Semantics");
         }
 
         if (ImGui::BeginTabItem("Network")) {
@@ -56,6 +70,7 @@ void ImSceneEditor::begin() {
             network.render();
             ImGui::EndChild();
             ImGui::EndTabItem();
+            setCurrentTab("Network");
         }
 
         ImGui::EndTabBar();

@@ -46,10 +46,10 @@ class VRGuiScene {
         // --------------------------
 
         // ---------TreeView---------
-        void on_treeview_select();
+        void on_treeview_select(string selected);
         void getTypeColors(VRObjectPtr o, string& fg, string& bg);
         void setSGRow(VRObjectPtr o);
-        void parseSGTree(VRObjectPtr o);
+        void parseSGTree(VRObjectPtr o, string parent = "");
         void removeTreeStoreBranch(bool self = true);
         void syncSGTree(VRObjectPtr o);
         // ----------------------------------------------

@@ -16,6 +16,7 @@ struct ocChunkRef {
     size_t offset = 0;
     size_t size = 0;
     ofstream stream;
+    bool isOpen = false;
 };
 
 struct ocSerialNode {
