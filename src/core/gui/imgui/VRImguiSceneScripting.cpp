@@ -141,6 +141,7 @@ ImScriptEditor::ImScriptEditor() {
     mgr->addCallback("script_editor_clear_trigs_and_args", [&](OSG::VRGuiSignals::Options o){ clearTrigsAndArgs(); return true; } );
     mgr->addCallback("script_editor_add_trigger", [&](OSG::VRGuiSignals::Options o){ addTrigger(o["name"], o["trigger"], o["parameter"], o["device"], o["key"], o["state"]); return true; } );
     mgr->addCallback("script_editor_add_argument", [&](OSG::VRGuiSignals::Options o){ addArgument(o["name"], o["type"], o["value"]); return true; } );
+    mgr->addCallback("editor_cmd", [&](OSG::VRGuiSignals::Options o){ editorCommand(o["cmd"]); return true; } );
     imEditor.SetShowWhitespaces(false); // TODO: add as feature!
     imEditor.SetLanguageDefinition(TextEditor::LanguageDefinition::Python());
 
@@ -149,6 +150,52 @@ ImScriptEditor::ImScriptEditor() {
     triggerTypes = {"None", "on_scene_load", "on_scene_close", "on_scene_import", "on_timeout", "on_device", "on_socket"};
     device_types = {"None", "mouse", "multitouch", "keyboard", "flystick", "haptic", "server1", "leap", "vrpn_device"};
     trigger_states = {"Pressed", "Released", "Drag", "Drop", "To edge", "From edge"};
+}
+
+void ImScriptEditor::editorCommand(string cmd) {
+    if (cmd == "toggleLine") {
+        auto p = imEditor.GetCursorPosition();
+        if (p.mLine <= 1) return;
+
+        // select current line
+        p.mColumn = 0;
+        imEditor.SetSelectionStart(p);
+        p.mLine += 1;
+        imEditor.SetSelectionEnd(p);
+
+        // copy current line and delete
+        auto ct = ImGui::GetClipboardText();
+        string cts = ct?ct:"";
+        imEditor.Copy();
+        imEditor.Delete();
+
+        // paste above
+        p.mLine -= 2;
+        imEditor.SetSelectionStart(p);
+        imEditor.SetSelectionEnd(p);
+        imEditor.SetCursorPosition(p);
+        imEditor.Paste();
+        ImGui::SetClipboardText(cts.c_str());
+    }
+
+    if (cmd == "duplicateLine") {
+        if (!imEditor.HasSelection()) {
+            auto p = imEditor.GetCursorPosition();
+            p.mColumn = 0;
+            imEditor.SetSelectionStart(p);
+            p.mLine += 1;
+            imEditor.SetSelectionEnd(p);
+        }
+
+        auto ct = ImGui::GetClipboardText();
+        string cts = ct?ct:"";
+        imEditor.Copy();
+        imEditor.Paste();// instead of two pastes do unselect
+        imEditor.Paste();
+        ImGui::SetClipboardText(cts.c_str());
+    }
+
+    uiSignal("script_editor_text_changed");
 }
 
 void ImScriptEditor::getBuffer(int skipLines) {
@@ -279,6 +326,8 @@ void ImScripting::render() {
     if (io.KeyCtrl && io.KeysDown['s']) { io.KeysDown['s'] = false; uiSignal("scripts_toolbar_save"); }
     if (io.KeyCtrl && io.KeysDown['e']) { io.KeysDown['e'] = false; uiSignal("scripts_toolbar_execute"); }
     if (io.KeyCtrl && io.KeysDown['w']) { io.KeysDown['w'] = false; uiSignal("clearConsoles"); }
+    if (io.KeyCtrl && io.KeysDown['t']) { io.KeysDown['t'] = false; uiSignal("editor_cmd", {{"cmd","toggleLine"}}); }
+    if (io.KeyCtrl && io.KeysDown['d']) { io.KeysDown['d'] = false; uiSignal("editor_cmd", {{"cmd","duplicateLine"}}); }
 
     // toolbar
     ImGui::Spacing();

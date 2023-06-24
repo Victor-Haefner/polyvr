@@ -71,6 +71,7 @@ class ImScriptEditor {
         void addGroup(string name, string ID);
         void addTrigger(string name, string trigger, string parameter, string device, string key, string state);
         void addArgument(string name, string type, string value);
+        void editorCommand(string cmd);
 
     public:
         ImScriptEditor();
