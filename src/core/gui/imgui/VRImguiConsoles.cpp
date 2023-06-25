@@ -2,6 +2,7 @@
 
 #include "core/utils/toString.h"
 #include "core/gui/VRGuiManager.h"
+#include <imgui_internal.h>
 
 ImConsole::ImConsole(string ID) : ID(ID), name(ID) {}
 
@@ -9,7 +10,16 @@ void ImConsole::render() {
     if (!sensitive) ImGui::BeginDisabled();
 
     if (ImGui::BeginTabItem(name.c_str())) {
-        ImGui::Text(data.c_str());
+        auto r = ImGui::GetContentRegionAvail();
+        string wID = "##"+name+"_text";
+
+        if (changed > 0) {
+            size_t N = countLines(data);
+            ImGui::SetNextWindowScroll(ImVec2(-1, N * ImGui::GetTextLineHeight()));
+            changed -= 1; // for some reason needs two passes
+        }
+
+		ImGui::InputTextMultiline(wID.c_str(), &data[0], data.size(), r, ImGuiInputTextFlags_ReadOnly);
         ImGui::EndTabItem();
     }
 
@@ -44,6 +54,7 @@ void ImConsoles::pushConsole(string ID, string data) {
     //cout << " - - - - - - - ImConsoles::pushConsole " << ID << "  " << data << endl;
     if (!consoles.count(ID)) return;
     consoles[ID].data += data;
+    consoles[ID].changed = 2;
 }
 
 ImViewControls::ImViewControls() {

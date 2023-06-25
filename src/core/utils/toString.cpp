@@ -18,6 +18,13 @@ using namespace OSG;
 using namespace boost::algorithm;
 
 
+size_t countLines(const string& s) {
+    size_t N = 0;
+    for (const char& c : s) if (c == '\n') N++;
+    return N;
+}
+
+
 string genUUID() {
     boost::uuids::uuid u = boost::uuids::random_generator()();
     return boost::uuids::to_string(u);

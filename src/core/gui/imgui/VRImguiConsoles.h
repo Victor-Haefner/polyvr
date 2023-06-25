@@ -29,6 +29,7 @@ class ImViewControls {
 class ImConsole {
     public:
         bool sensitive = true;
+        int changed = 2;
         string ID;
         string name;
         string data;

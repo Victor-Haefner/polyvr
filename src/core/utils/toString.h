@@ -25,6 +25,7 @@ string subString(const string& s, int beg, int len = -1);
 bool startsWith(const string& s, const string& s2, bool caseSensitive = true);
 bool endsWith(const string& s, const string& s2, bool caseSensitive = true);
 bool contains(const string& s, const string& s2, bool caseSensitive = true);
+size_t countLines(const string& s);
 
 template<typename T> string toString(const T& s);
 string toString(const double& f, int d = -1);
