@@ -545,7 +545,7 @@ void VRScript::pyErrPrint(string channel) {
 PyObject* VRScript::getFunction() { return fkt; }
 
 void VRScript::compile( PyObject* pGlobal, PyObject* pModVR ) {
-    cout << "VRScript::compile " << getName() << ", \"" << getScript() << "\"" << endl;
+    //cout << "VRScript::compile " << getName() << ", \"" << getScript() << "\"" << endl;
     setFunction( 0 );
     PyObject* pCode = Py_CompileString(getScript().c_str(), getName().c_str(), Py_file_input);
     if (!pCode) { pyErrPrint("Syntax"); return; }

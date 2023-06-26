@@ -89,7 +89,13 @@ void VRGuiManager::init() {
     }
 
     imguiMgr = new VRImguiManager();
-    VRSetupManager::get()->load("Desktop", "setup/Desktop.xml");
+
+    string setupFile = "Desktop";
+    ifstream f1("setup/.local");
+    ifstream f2("setup/.default");
+    if (f1.good()) getline(f1, setupFile);
+    else if (f2.good()) getline(f2, setupFile);
+    VRSetupManager::get()->load("Desktop", "setup/"+setupFile+".xml");
 
     g_demos = new VRAppManager();
     g_bits = new VRGuiBits();

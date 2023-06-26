@@ -141,6 +141,7 @@ void VRMultiWindow::render(bool fromThread) {
     if (state == CONNECTED) {
         try {
             int pID = VRProfiler::get()->regStart("Multiwindow render "+getName());
+            //cout << "VRMultiWindow::render " << fromThread << ", " << pID << endl;
             state = RENDERING;
             OSG_render(_win, ract);
             state = CONNECTED;

@@ -67,7 +67,7 @@ void VRAppLauncher::setup(VRAppManager* mgr) {
     uiSignal("setupAppLauncher", {{"ID",ID},{"name",path}});
 
     auto sigs = OSG::VRGuiSignals::get();
-    sigs->addCallback("on_toggle_app", [&](OSG::VRGuiSignals::Options o) { if (o["ID"] == ID) mgr->toggleDemo( shared_from_this() ); return true; } );
+    sigs->addCallback("on_toggle_app", [&](OSG::VRGuiSignals::Options o) { if (o["ID"] == ID) mgr->toggleDemo( shared_from_this() ); return true; }, true );
 
     // prep icons
     /*imgPlay = (GtkImage*)gtk_image_new_from_icon_name("media-playback-start", GTK_ICON_SIZE_BUTTON);
