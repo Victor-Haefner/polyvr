@@ -838,6 +838,10 @@ void VRPointCloud::externalComputeSplats(string path) {
     rename(wpath.c_str(), path.c_str());
 }
 
+void VRPointCloud::externalColorize(string path, string images) {
+    ;
+}
+
 string VRPointCloud::splatFP =
 "#version 120\n"
 GLSL(
