@@ -87,11 +87,14 @@ struct VRSnappingEngine::Rule {
         return snapP;
     }
 
-    void snap(Matrix4d& m) {
+    void snap(Matrix4d& m, PosePtr o = 0) {
         if (csys) C = csys->getWorldMatrix();
 
+        PosePtr O = prim_o;
+        if (o) O = prim_o->multRight(o);
+
         if (orientation == POINT) {
-            MatrixLookAt(m, snapP, snapP+prim_o->dir(), prim_o->up());
+            MatrixLookAt(m, snapP, snapP+O->dir(), O->up());
             if (csys) {
                 m.multLeft(C);
             }
@@ -300,18 +303,22 @@ void VRSnappingEngine::handleDraggedObject(VRDevicePtr dev, VRTransformPtr obj, 
                     for (auto& B : anchors[r->csys]) {
                         if (A.snpgrp != B.grp) continue;
                         Matrix4d ma2L = B.a->getMatrix();
+                        cout << "maL " << A.a->getName() << endl;
+                        cout << " ma2L " << B.a->getName() << endl;
                         //Matrix4d ma2W = m; ma2W.mult(maL);
                         //Vec3d pa2 = Vec3d(ma2W[3]);
                         Vec3d pa2 = Vec3d(ma2L[3]);
                         snapID++;
                         if (!r->inRange(paW-pa2, dmin)) continue;
 
+                        ma2L[3] = Vec4d(0,0,0,1);
+                        Matrix4d ma2Li;
+                        ma2L.inverse(ma2Li);
+
                         r->snapP += pa2;
                         Matrix4d mm = m;
-                        r->snap(mm);
+                        r->snap(mm, B.a->getPose());
                         mm.mult(maLi);
-                        //ma2L.invert();
-                        //mm.mult(ma2L);
                         event->set(obj, r->csys, mm, dev, 1, snapID);
                     }
                 } else { // just check if anchor snapps to rule
