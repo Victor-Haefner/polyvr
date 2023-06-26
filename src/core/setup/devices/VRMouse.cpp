@@ -230,12 +230,10 @@ void VRMouse::updatePosition(int x, int y) {
 */
 void VRMouse::mouse(int button, int state, int x, int y, bool delayed) {
     //cout << "VRMouse::mouse " << Vec4i(button, state, x, y) << ", delayed " << delayed << endl;
-#ifndef WITHOUT_GTK
     if (delayed) {
         delayedEvents.push_back( {button,state,x,y} );
         return;
     }
-#endif
 
     motion(x,y,false);
     bool pressed = bool(state == 0);
@@ -244,12 +242,10 @@ void VRMouse::mouse(int button, int state, int x, int y, bool delayed) {
 
 void VRMouse::motion(int x, int y, bool delayed) {
     //cout << VRGlobals::CURRENT_FRAME << " VRMouse::motion " << x << " " << y << endl;
-#ifndef WITHOUT_GTK
     if (delayed) {
         delayedEvents.push_back( {x,y} );
         return;
     }
-#endif
 
     auto sv = view.lock();
     if (!sv) return;

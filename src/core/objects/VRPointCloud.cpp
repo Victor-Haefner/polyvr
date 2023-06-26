@@ -7,10 +7,12 @@
 #include "core/math/partitioning/Octree.h"
 #include "core/math/partitioning/OctreeT.h"
 #include "core/math/pose.h"
+#include "core/math/path.h"
 #include "core/utils/toString.h"
 #include "core/utils/VRProgress.h"
 #include "core/utils/VRFunction.h"
 #include "core/utils/system/VRSystem.h"
+#include "core/tools/VRPathtool.h"
 #include "core/scene/import/VRImport.h"
 #include "core/scene/import/E57/E57.h"
 
@@ -838,8 +840,46 @@ void VRPointCloud::externalComputeSplats(string path) {
     rename(wpath.c_str(), path.c_str());
 }
 
-void VRPointCloud::externalColorize(string path, string images) {
-    ;
+void VRPointCloud::externalColorize(string path, string imgTable) {
+    // crawl images and create image table and path
+    string line;
+    ifstream imgData(imgTable);
+
+    auto imgPath = Path::create();
+
+    int i=0;
+    Vec3d lp;
+    while(getline(imgData, line)){
+        auto data = splitString(line, '|');
+
+        string path = data[0];
+
+        double lat = toFloat(data[2]) + toFloat(data[3])/60.0 + toFloat(data[4]+"."+data[5])/3600.0;
+        double lon = toFloat(data[6]) + toFloat(data[7])/60.0 + toFloat(data[8]+"."+data[9])/3600.0;
+
+        lat -= 49.035;
+        lon -= 0.1394;
+
+        float s = 1000;
+
+        Vec3d p = Vec3d(lat*s, 0, lon*s);
+
+        if (i > 0)
+            imgPath->addPoint(*Pose::create(p, p-lp));
+
+        cout << toString(data) << ", " << lat << ", " << lon << "  " << p << endl;
+
+        lp = p;
+        i++;
+        if (i > 10) break;
+    }
+
+    imgPath->compute(16);
+
+    auto pathTool = VRPathtool::create();
+    pathTool->addPath(imgPath);
+    addChild(pathTool);
+    pathTool->update();
 }
 
 string VRPointCloud::splatFP =

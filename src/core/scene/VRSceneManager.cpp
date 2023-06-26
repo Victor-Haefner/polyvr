@@ -316,6 +316,7 @@ void VRSceneManager::update() {
         if (auto setup = VRSetup::getCurrent()) {
             setup->updateTracking(); // tracking
             setup->updateDevices(); // device beacon update
+            setup->updateUIEvents(); // delayed ui events
         }
 #ifndef WASM
         profiler->regStop(pID5);

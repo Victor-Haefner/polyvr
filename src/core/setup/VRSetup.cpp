@@ -104,15 +104,13 @@ VRScriptPtr VRSetup::addScript(string name) { auto s = VRScript::create(name); s
 VRScriptPtr VRSetup::getScript(string name) { return scripts[name]; }
 map<string, VRScriptPtr> VRSetup::getScripts() { return scripts; }
 
-void VRSetup::updateGtkDevices() {
-#ifndef WITHOUT_GTK
+void VRSetup::updateUIEvents() {
     for (auto dev : getDevices()) {
         auto m = dynamic_pointer_cast<VRMouse>(dev.second);
         auto k = dynamic_pointer_cast<VRKeyboard>(dev.second);
         if (m) m->applyEvents();
         if (k) k->applyEvents();
     }
-#endif
 }
 
 void VRSetup::updateTracking() {

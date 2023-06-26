@@ -80,7 +80,7 @@ class VRSetup : public VRViewManager, public VRWindowManager, public VRDeviceMan
 
         void printOSG();
         void updateTracking();
-        void updateGtkDevices();
+        void updateUIEvents();
 
         void save(string file = "");
         void load(string file);

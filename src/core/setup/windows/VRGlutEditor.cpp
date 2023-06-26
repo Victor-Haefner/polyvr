@@ -196,12 +196,12 @@ void VRGlutEditor::onMouse(int b, int s, int x, int y) {
     else if (b == 4) b = 3;
 
     //cout << "VRGlutEditor::onMouse " << Vec4i(b, s, x, y) << endl;
-    if (auto m = getMouse()) m->mouse(b, s, x, y, 0);
+    if (auto m = getMouse()) m->mouse(b, s, x, y, 1);
 }
 
 void VRGlutEditor::onMotion(int x, int y) {
     //cout << "VRGlutEditor::onMotion " << Vec2i(x, y) << endl;
-    if (auto m = getMouse()) m->motion(x, y, 0);
+    if (auto m = getMouse()) m->motion(x, y, 1);
 }
 
 void VRGlutEditor::onKeyboard(int c, int s, int x, int y) {
