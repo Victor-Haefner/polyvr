@@ -3,6 +3,7 @@
 #include <string>
 #include <regex>
 #include <cmath>
+#include <iostream>
 
 #include "TextEditor.h"
 
@@ -784,8 +785,10 @@ void TextEditor::HandleMouseInputs()
 
 	if (ImGui::IsWindowHovered())
 	{
+	    //std::cout << "TextEditor::HandleMouseInputs " << shift << std::endl;
 		if (!shift && !alt)
 		{
+            //std::cout << " ->! " << std::endl;
 			auto click = ImGui::IsMouseClicked(0);
 			auto doubleClick = ImGui::IsMouseDoubleClicked(0);
 			auto t = ImGui::GetTime();
