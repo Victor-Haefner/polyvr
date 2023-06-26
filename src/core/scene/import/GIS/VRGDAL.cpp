@@ -72,7 +72,7 @@ void loadSHP(string path, VRTransformPtr res, map<string, string> opts) {
                 return Vec3d( p.getX(), p.getZ(), -p.getY() );
             };
 
-            auto handleGeometry = [&](OGRGeometry* geo, VRGeoDataPtr data) {
+            auto handleGeometry = [&](OGRGeometry* geo, VRGeoDataPtr data, int gi) {
                 auto type = wkbFlatten(geo->getGeometryType());
                 OGRPoint pnt;
 
@@ -93,10 +93,10 @@ void loadSHP(string path, VRTransformPtr res, map<string, string> opts) {
                     Vec3d p21 = toVec3d(*pnt) - x1*W2 + x2*W2 + H;
                     Vec3d p22 = toVec3d(*pnt) - x1*W2 - x2*W2 + H;
 
-                    data->pushVert(p11, Vec3d(0,1,0));
-                    data->pushVert(p12, Vec3d(0,1,0));
-                    data->pushVert(p22, Vec3d(0,1,0));
-                    data->pushVert(p21, Vec3d(0,1,0));
+                    data->pushVert(p11, Vec3d(0,1,0), Vec2d(gi, 1));
+                    data->pushVert(p12, Vec3d(0,1,0), Vec2d(gi, 1));
+                    data->pushVert(p22, Vec3d(0,1,0), Vec2d(gi, 1));
+                    data->pushVert(p21, Vec3d(0,1,0), Vec2d(gi, 1));
                     data->pushQuad();
 
                     //cout << "  point " << pos << endl;
@@ -131,10 +131,10 @@ void loadSHP(string path, VRTransformPtr res, map<string, string> opts) {
                                 Vec3d p21 = p2 + x*W;
                                 Vec3d p22 = p2 - x*W;
 
-                                data->pushVert(p11, Vec3d(0,1,0));
-                                data->pushVert(p21, Vec3d(0,1,0));
-                                data->pushVert(p22, Vec3d(0,1,0));
-                                data->pushVert(p12, Vec3d(0,1,0));
+                                data->pushVert(p11, Vec3d(0,1,0), Vec2d(gi, 1));
+                                data->pushVert(p21, Vec3d(0,1,0), Vec2d(gi, 1));
+                                data->pushVert(p22, Vec3d(0,1,0), Vec2d(gi, 1));
+                                data->pushVert(p12, Vec3d(0,1,0), Vec2d(gi, 1));
 
                                 if (i != 0){
                                     data->pushQuad();
@@ -187,7 +187,8 @@ void loadSHP(string path, VRTransformPtr res, map<string, string> opts) {
                         //cout << endl;
                     }
 
-                    t.append(data, false);
+                    size_t N = t.append(data, false);
+                    for (size_t i=0; i<N; i++) data->pushTexCoord(Vec2d(gi, 1));
 
 
                     return;
@@ -225,7 +226,7 @@ void loadSHP(string path, VRTransformPtr res, map<string, string> opts) {
                     auto entLayer = ontology->addEntity("layer", "Layer");
 
 
-                    GeoVec2fPropertyMTRecPtr tcs1 = GeoVec2fProperty::create();
+                    //GeoVec2fPropertyMTRecPtr tcs1 = GeoVec2fProperty::create();
                     //auto entShape = ontology->addEntity("shape", "Shape");
 
                     OGRFeature* poFeature = 0;
@@ -246,7 +247,7 @@ void loadSHP(string path, VRTransformPtr res, map<string, string> opts) {
                             //entShape->add(name, poFeature->GetFieldAsString(field));
                             entShape->set(name, poFeature->GetFieldAsString(field));
                             //entLayer->set(name, poFeature->GetFieldAsString(field));
-                            tcs1->addValue(Vec2d(gi, 1));
+                            //tcs1->addValue(Vec2d(gi, 1));
 
                             cout << name;
                             if ( poFieldDefn->GetType() == OFTInteger ) printf( "  %d, ", poFeature->GetFieldAsInteger(field) );
@@ -259,7 +260,7 @@ void loadSHP(string path, VRTransformPtr res, map<string, string> opts) {
 
                         //VRGeoDataPtr data = VRGeoData::create();
                         OGRGeometry* geo = poFeature->GetGeometryRef();
-                        if (geo) handleGeometry(geo, data);
+                        if (geo) handleGeometry(geo, data, gi);
                         OGRFeature::DestroyFeature( poFeature );
                         /*auto vshape = data->asGeometry(layer_name);
                         vshape->setTexCoords(tcs1);
@@ -271,7 +272,7 @@ void loadSHP(string path, VRTransformPtr res, map<string, string> opts) {
 
                     if (data->size() > 0) {
                         auto vlayer = data->asGeometry(layer_name);
-                        vlayer->setTexCoords(tcs1);
+                        //vlayer->setTexCoords(tcs1);
                         vlayer->setEntity(entLayer);
                         res->addChild(vlayer);
                     }

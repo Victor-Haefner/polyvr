@@ -75,11 +75,13 @@ VRGeometryPtr Triangulator::compute() {
     return geo ? geo->asGeometry("tessellation") : 0;
 }
 
-void Triangulator::append(VRGeoDataPtr data, bool aN) {
+size_t Triangulator::append(VRGeoDataPtr data, bool aN) {
+    size_t N0 = data->size();
     addNormals = aN;
     geo = data;
     tessellate();
     geo = 0;
+    return data->size() - N0;
 }
 
 // GLU_TESS CALLBACKS
