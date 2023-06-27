@@ -113,8 +113,10 @@ void ImToolbar::begin() {
 
     if (ImGui::Button("New")) {
         string filters = "PolyVR Project (.pvr .pvc){.pvr,.pvc,.xml}";
-        ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgKey", "Choose File", filters.c_str(), "~/", "myApp.pvr");
-        uiSignal("ui_toggle_popup", {{"name","new"}, {"width","400"}, {"height","500"}});
+        uiSignal("set_file_dialog_signal", {{"signal","ui_new_file"}});
+        uiSignal("set_file_dialog_filter", {{"filter",filters}});
+        uiSignal("set_file_dialog_setup", {{"title","Choose File"}, {"dir","~/"}, {"file","myApp.pvr"}});
+        uiSignal("ui_toggle_popup", {{"name","file"}, {"width","400"}, {"height","500"}});
     }
 
     ImGui::SameLine();
@@ -124,8 +126,10 @@ void ImToolbar::begin() {
         filters += ",CAD Model (.step .ifc .dxf){.STEP,.STP,.step,.stp,.ifc,.dxf}";
         filters += ",Pointcloud (.e57 .xyz){.e57,.xyz}";
         filters += ",Geo Data (.hgt .tiff .pdf .shp){.hgt,.tif,.tiff,.pdf,.shp}";
-        ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgKey", "Open File", filters.c_str(), "~/");
-        uiSignal("ui_toggle_popup", {{"name","open"}, {"width","400"}, {"height","500"}});
+        uiSignal("set_file_dialog_signal", {{"signal","ui_open_file"}});
+        uiSignal("set_file_dialog_filter", {{"filter",filters}});
+        uiSignal("set_file_dialog_setup", {{"title","Open File"}, {"dir","~/"}, {"file",""}});
+        uiSignal("ui_toggle_popup", {{"name","file"}, {"width","400"}, {"height","500"}});
     }
 
     ImGui::SameLine(); if (ImGui::Button("Save")) uiSignal("toolbar_save");
@@ -133,8 +137,10 @@ void ImToolbar::begin() {
     ImGui::SameLine();
     if (ImGui::Button("Save..")) {
         string filters = "PolyVR Project (.pvr .pvc){.pvr,.pvc,.xml}";
-        ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgKey", "Save as..", filters.c_str(), ".", "myApp.pvr");
-        uiSignal("ui_toggle_popup", {{"name","saveas"}, {"width","400"}, {"height","500"}});
+        uiSignal("set_file_dialog_signal", {{"signal","ui_saveas_file"}});
+        uiSignal("set_file_dialog_filter", {{"filter",filters}});
+        uiSignal("set_file_dialog_setup", {{"title","Save as.."}, {"dir","."}, {"file","myApp.pvr"}});
+        uiSignal("ui_toggle_popup", {{"name","file"}, {"width","400"}, {"height","500"}});
     }
 
     ImGui::SameLine(); if (ImGui::Button("Export")) uiSignal("toolbar_export");
@@ -163,9 +169,7 @@ void VRImguiEditor::resizeUI(const Surface& parent) {
 void VRImguiEditor::resizePopup(const Surface& parent) {
     ImGui::SetCurrentContext(popupContext);
     aboutDialog.resize(parent);
-    newDialog.resize(parent);
-    openDialog.resize(parent);
-    saveasDialog.resize(parent);
+    fileDialog.resize(parent);
     recorderDialog.resize(parent);
     docDialog.resize(parent);
     searchDialog.resize(parent);
@@ -273,9 +277,7 @@ void VRImguiEditor::init(Signal signal, ResizeSignal resizeSignal) {
     sidePanel.signal = signal;
     consoles.signal = signal;
     glArea.signal = signal;
-    newDialog.signal = signal;
-    openDialog.signal = signal;
-    saveasDialog.signal = signal;
+    fileDialog.signal = signal;
     recorderDialog.signal = signal;
     docDialog.signal = signal;
     searchDialog.signal = signal;
@@ -376,9 +378,7 @@ void VRImguiEditor::renderPopup(OSG::VRGuiSignals::Options options) {
 
     string name = options["name"];
     if (name == "about") aboutDialog.render();
-    if (name == "new") newDialog.render();
-    if (name == "open") openDialog.render();
-    if (name == "saveas") saveasDialog.render();
+    if (name == "file") fileDialog.render();
     if (name == "recorder") recorderDialog.render();
     if (name == "documentation") docDialog.render();
     if (name == "search") searchDialog.render();
@@ -396,23 +396,6 @@ void VRImguiEditor::renderPopup(OSG::VRGuiSignals::Options options) {
 
 ImDialog::ImDialog(string n) : ImSection(n, {0,1,0,1}) {
     flags |= ImGuiWindowFlags_NoResize;
-}
-
-void ImDialog::renderFileDialog(string sig) {
-    ImSection::begin();
-    ImVec2 minSize = ImGui::GetWindowSize();
-    ImGui::SetNextWindowPos(ImVec2(surface.x, surface.y)); // ImGuiCond_FirstUseEver
-    //ImGui::SetNextWindowSize(ImVec2(surface.width, surface.height));
-    if (ImGuiFileDialog::Instance()->Display("ChooseFileDlgKey", flags, minSize, minSize)) {
-        if (ImGuiFileDialog::Instance()->IsOk()) {
-            std::string fileName = ImGuiFileDialog::Instance()->GetFilePathName();
-            std::string filePath = ImGuiFileDialog::Instance()->GetCurrentPath();
-            signal(sig, {{"fileName",fileName},{"filePath",filePath}});
-        }
-
-        ImGuiFileDialog::Instance()->Close();
-        signal("ui_close_popup", {});
-    }
 }
 
 ImAboutDialog::ImAboutDialog() : ImDialog("about") {
@@ -442,9 +425,6 @@ void ImAboutDialog::begin() {
     for (auto& a : authors) centeredText(a);
 }
 
-ImNewDialog::ImNewDialog() : ImDialog("new") {}
-ImOpenDialog::ImOpenDialog() : ImDialog("open") {}
-ImSaveasDialog::ImSaveasDialog() : ImDialog("saveas") {}
 ImRecorderDialog::ImRecorderDialog() : ImDialog("recorder") {}
 ImSearchDialog::ImSearchDialog() : ImDialog("search"), filter("scriptSearch", "Search:", "") {}
 ImProfDialog::ImProfDialog() : ImDialog("profiler") {}
@@ -460,9 +440,35 @@ ImDocDialog::ImDocDialog() : ImDialog("documentation"), filter("docSearch", "Sea
         return true; } );
 }
 
-void ImNewDialog::begin() { renderFileDialog("ui_new_file"); }
-void ImOpenDialog::begin() { renderFileDialog("ui_open_file"); }
-void ImSaveasDialog::begin() { renderFileDialog("ui_saveas_file"); }
+ImFileDialog::ImFileDialog() : ImDialog("file") {
+    auto mgr = OSG::VRGuiSignals::get();
+    mgr->addCallback("set_file_dialog_filter", [&](OSG::VRGuiSignals::Options o){ filters = o["filter"]; return true; } );
+    mgr->addCallback("set_file_dialog_signal", [&](OSG::VRGuiSignals::Options o){ sig = o["signal"]; return true; } );
+    mgr->addCallback("set_file_dialog_setup", [&](OSG::VRGuiSignals::Options o){ title = o["title"]; startDir = o["dir"]; startFile = o["file"]; return true; } );
+}
+
+void ImFileDialog::begin() {
+    if (!internalOpened) {
+        internalOpened = true;
+        ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgKey", title.c_str(), filters.c_str(), startDir.c_str(), startFile.c_str());
+    }
+
+    ImSection::begin();
+    ImVec2 minSize = ImGui::GetWindowSize();
+    ImGui::SetNextWindowPos(ImVec2(surface.x, surface.y)); // ImGuiCond_FirstUseEver
+    //ImGui::SetNextWindowSize(ImVec2(surface.width, surface.height));
+    if (ImGuiFileDialog::Instance()->Display("ChooseFileDlgKey", flags, minSize, minSize)) {
+        if (ImGuiFileDialog::Instance()->IsOk()) {
+            std::string fileName = ImGuiFileDialog::Instance()->GetFilePathName();
+            std::string filePath = ImGuiFileDialog::Instance()->GetCurrentPath();
+            signal(sig, {{"fileName",fileName},{"filePath",filePath}});
+        }
+
+        ImGuiFileDialog::Instance()->Close();
+        signal("ui_close_popup", {});
+        internalOpened = false;
+    }
+}
 
 void ImRecorderDialog::begin() {
     ImSection::begin();

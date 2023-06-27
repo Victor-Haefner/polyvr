@@ -13,7 +13,7 @@
 using namespace OSG;
 
 VRAppLauncher::VRAppLauncher(VRAppPanelPtr s) : section(s) {
-    cout << " ----------------- VRAppLauncher " << ID << " / " << s->getName() << endl;
+    //cout << " ----------------- VRAppLauncher " << ID << " / " << s->getName() << endl;
     ID = VRGuiManager::genUUID();
     uiSignal("newAppLauncher", {{"panel",s->getName()}, {"ID",ID}});
 }

@@ -72,21 +72,16 @@ class ImAboutDialog : public ImDialog {
         void begin() override;
 };
 
-class ImNewDialog : public ImDialog {
+class ImFileDialog : public ImDialog {
     public:
-        ImNewDialog();
-        void begin() override;
-};
+        bool internalOpened = false;
+        string sig = "ui_open_file";
+        string filters = "*";
+        string title = "File";
+        string startDir = "~/";
+        string startFile = "";
 
-class ImOpenDialog : public ImDialog {
-    public:
-        ImOpenDialog();
-        void begin() override;
-};
-
-class ImSaveasDialog : public ImDialog {
-    public:
-        ImSaveasDialog();
+        ImFileDialog();
         void begin() override;
 };
 
@@ -147,9 +142,7 @@ class VRImguiEditor {
         ImSection glArea = ImSection("glArea", {0.3,1,0.3,0.95});
 
         ImAboutDialog aboutDialog = ImAboutDialog();
-        ImNewDialog newDialog = ImNewDialog();
-        ImOpenDialog openDialog = ImOpenDialog();
-        ImSaveasDialog saveasDialog = ImSaveasDialog();
+        ImFileDialog fileDialog = ImFileDialog();
         ImRecorderDialog recorderDialog = ImRecorderDialog();
         ImDocDialog docDialog = ImDocDialog();
         ImSearchDialog searchDialog = ImSearchDialog();

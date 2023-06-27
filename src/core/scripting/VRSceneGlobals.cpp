@@ -380,34 +380,39 @@ PyObject* VRSceneGlobals::stackCall(VRSceneGlobals* self, PyObject *args) {
     Py_RETURN_TRUE;
 }
 
-void on_py_file_diag_cb(PyObject* pyFkt) {
-#ifndef WITHOUT_GTK
-    /*string res = VRGuiFile::getRelativePath_toWorkdir();
+void callPyFileCb(PyObject* pyFkt, string fileName, string filePath, double scale, string preset) {
+    string path = filePath + "/" + fileName;
+    cout << "callPyFileCb " << path << endl;
     PyObject *pArgs = PyTuple_New(3);
-    PyTuple_SetItem( pArgs, 0, PyString_FromString(res.c_str()) );
-    PyTuple_SetItem( pArgs, 1, PyFloat_FromDouble( VRGuiFile::getScale() ) );
-    PyTuple_SetItem( pArgs, 2, PyString_FromString( VRGuiFile::getPreset().c_str() ) );
-    execCall( pyFkt, pArgs, 0 );*/
-#endif
+    PyTuple_SetItem( pArgs, 0, PyString_FromString(path.c_str()) );
+    PyTuple_SetItem( pArgs, 1, PyFloat_FromDouble( scale ) );
+    PyTuple_SetItem( pArgs, 2, PyString_FromString( preset.c_str() ) );
+    execCall( pyFkt, pArgs, 0 );
 }
 
 PyObject* VRSceneGlobals::openFileDialog(VRSceneGlobals* self, PyObject *args) {
-#ifndef WITHOUT_GTK
-    /*PyObject *cb, *mode, *title, *default_path, *filter;
+    PyObject *cb, *mode, *title, *default_path, *filter;
     if (! PyArg_ParseTuple(args, "OOOOO", &cb, &mode, &title, &default_path, &filter)) return NULL;
     Py_IncRef(cb);
 
-    VRGuiFile::clearFilter();
-    VRGuiFile::gotoPath( PyString_AsString(default_path) );
-    VRGuiFile::setFile( PyString_AsString(default_path) );
-    VRGuiFile::setCallbacks( bind(on_py_file_diag_cb, cb) );
+    /*string filters = "PolyVR Project (.pvr .pvc){.pvr,.pvc,.xml}";
+    filters += ",Mesh Model (.dae .wrl .obj .3ds .ply){.dae,.wrl,.obj,.3ds,.3DS,.ply}";
+    filters += ",CAD Model (.step .ifc .dxf){.STEP,.STP,.step,.stp,.ifc,.dxf}";
+    filters += ",Pointcloud (.e57 .xyz){.e57,.xyz}";
+    filters += ",Geo Data (.hgt .tiff .pdf .shp){.hgt,.tif,.tiff,.pdf,.shp}";*/
+
+    // TODO: pass scale and preset somehow..
+    auto mgr = OSG::VRGuiSignals::get();
+    mgr->addCallback("on_script_file_dialog_ok", [&](OSG::VRGuiSignals::Options o){ callPyFileCb(cb, o["fileName"], o["filePath"], 1.0, "OSG"); return true; }, true );
 
     string m = PyString_AsString(mode);
-    string action = "open";
-    if (m == "Save" || m == "New" || m == "Create") action = "save";
-    else VRGuiFile::setGeoLoadWidget();
-    VRGuiFile::open( m, action, PyString_AsString(title) );*/
-#endif
+    //string action = "on_script_open_file";
+    //if (m == "Save" || m == "New" || m == "Create") action = "on_script_save_file";
+    //else VRGuiFile::setGeoLoadWidget();
+    uiSignal("set_file_dialog_signal", {{"signal","on_script_file_dialog_ok"}});
+    uiSignal("set_file_dialog_filter", {{"filter",PyString_AsString(filter)}});
+    uiSignal("set_file_dialog_setup", {{"title",PyString_AsString(title)}, {"dir",PyString_AsString(default_path)}, {"file",""}});
+    uiSignal("ui_toggle_popup", {{"name","file"}, {"width","400"}, {"height","500"}});
     Py_RETURN_TRUE;
 }
 
