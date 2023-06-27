@@ -440,11 +440,12 @@ ImDocDialog::ImDocDialog() : ImDialog("documentation"), filter("docSearch", "Sea
         return true; } );
 }
 
-ImFileDialog::ImFileDialog() : ImDialog("file") {
+ImFileDialog::ImFileDialog() : ImDialog("file"), scaleInput("geoScale", "Scale:", "1.0"), presetInput("geoPreset", "Preset:", "OSG") {
     auto mgr = OSG::VRGuiSignals::get();
     mgr->addCallback("set_file_dialog_filter", [&](OSG::VRGuiSignals::Options o){ filters = ".*,"+o["filter"]; return true; } );
     mgr->addCallback("set_file_dialog_signal", [&](OSG::VRGuiSignals::Options o){ sig = o["signal"]; return true; } );
     mgr->addCallback("set_file_dialog_setup", [&](OSG::VRGuiSignals::Options o){ title = o["title"]; startDir = o["dir"]; startFile = o["file"]; return true; } );
+    mgr->addCallback("set_file_dialog_options", [&](OSG::VRGuiSignals::Options o){ options = o["options"]; return true; } );
 }
 
 void ImFileDialog::begin() {
@@ -453,10 +454,12 @@ void ImFileDialog::begin() {
         ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgKey", title.c_str(), filters.c_str(), startDir.c_str(), startFile.c_str());
     }
 
+    bool doGeoOpts = bool(options == "geoOpts");
+
     ImSection::begin();
     ImVec2 minSize = ImGui::GetWindowSize();
-    ImGui::SetNextWindowPos(ImVec2(surface.x, surface.y)); // ImGuiCond_FirstUseEver
-    //ImGui::SetNextWindowSize(ImVec2(surface.width, surface.height));
+    if (doGeoOpts) minSize.y *= 0.9;
+    ImGui::SetNextWindowPos(ImVec2(surface.x, surface.y));
     if (ImGuiFileDialog::Instance()->Display("ChooseFileDlgKey", flags, minSize, minSize)) {
         if (ImGuiFileDialog::Instance()->IsOk()) {
             std::string fileName = ImGuiFileDialog::Instance()->GetFilePathName();
@@ -467,6 +470,19 @@ void ImFileDialog::begin() {
         ImGuiFileDialog::Instance()->Close();
         signal("ui_close_popup", {});
         internalOpened = false;
+    }
+
+    if (doGeoOpts) {
+        ImVec2 winSize = ImGui::GetWindowSize();
+        winSize.y *= 0.1;
+        ImGui::SetNextWindowPos(ImVec2(0, minSize.y));
+        ImGui::SetNextWindowSize(winSize);
+        //ImGui::Begin("##geoOpts", ImVec2(minSize.x,0), false, flags);
+        ImGui::Begin("##geoOpts", 0, flags);
+        if (scaleInput.render()) uiSignal("on_change_import_scale", {{"scale",scaleInput.value}});
+        if (presetInput.render()) uiSignal("on_change_import_preset", {{"preset",presetInput.value}});
+        //ImGui::SameLine();
+        ImGui::End();
     }
 }
 

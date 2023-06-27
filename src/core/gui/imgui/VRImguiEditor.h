@@ -80,6 +80,9 @@ class ImFileDialog : public ImDialog {
         string title = "File";
         string startDir = "~/";
         string startFile = "";
+        string options = "";
+        ImInput scaleInput;
+        ImInput presetInput;
 
         ImFileDialog();
         void begin() override;

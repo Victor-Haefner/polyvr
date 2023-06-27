@@ -396,19 +396,24 @@ PyObject* VRSceneGlobals::openFileDialog(VRSceneGlobals* self, PyObject *args) {
     if (! PyArg_ParseTuple(args, "OOOOO", &cb, &mode, &title, &default_path, &filter)) return NULL;
     Py_IncRef(cb);
 
+    static float scale = 1.0;
+    static string preset = "OSG";
+
     /*string filters = "PolyVR Project (.pvr .pvc){.pvr,.pvc,.xml}";
     filters += ",Mesh Model (.dae .wrl .obj .3ds .ply){.dae,.wrl,.obj,.3ds,.3DS,.ply}";
     filters += ",CAD Model (.step .ifc .dxf){.STEP,.STP,.step,.stp,.ifc,.dxf}";
     filters += ",Pointcloud (.e57 .xyz){.e57,.xyz}";
     filters += ",Geo Data (.hgt .tiff .pdf .shp){.hgt,.tif,.tiff,.pdf,.shp}";*/
 
-    auto cbf = [](OSG::VRGuiSignals::Options o, PyObject* cb) {
-        // TODO: pass scale and preset somehow..
-         callPyFileCb(cb, o["fileName"], o["filePath"], 1.0, "OSG"); return true;
+    auto cbf = [&](OSG::VRGuiSignals::Options o, PyObject* cb) {
+        // TODO: pass preset..
+         callPyFileCb(cb, o["fileName"], o["filePath"], scale, preset); return true;
     };
 
     auto mgr = OSG::VRGuiSignals::get();
     mgr->addCallback("on_script_file_dialog_ok", bind(cbf, std::placeholders::_1, cb), true );
+    mgr->addCallback("on_change_import_scale", [&](OSG::VRGuiSignals::Options o){ scale = toFloat(o["scale"]); return true; } );
+    mgr->addCallback("on_change_import_preset", [&](OSG::VRGuiSignals::Options o){ preset = o["preset"]; return true; } );
 
     string m = PyString_AsString(mode);
     //string action = "on_script_open_file";
@@ -421,6 +426,7 @@ PyObject* VRSceneGlobals::openFileDialog(VRSceneGlobals* self, PyObject *args) {
     uiSignal("set_file_dialog_signal", {{"signal","on_script_file_dialog_ok"}});
     uiSignal("set_file_dialog_filter", {{"filter",PyString_AsString(filter)}});
     uiSignal("set_file_dialog_setup", {{"title",PyString_AsString(title)}, {"dir",openPath}, {"file",""}});
+    uiSignal("set_file_dialog_options", {{"options","geoOpts"}});
     uiSignal("ui_toggle_popup", {{"name","file"}, {"width","600"}, {"height","500"}});
     Py_RETURN_TRUE;
 }
