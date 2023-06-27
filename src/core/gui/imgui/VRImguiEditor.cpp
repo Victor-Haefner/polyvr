@@ -115,8 +115,8 @@ void ImToolbar::begin() {
         string filters = "PolyVR Project (.pvr .pvc){.pvr,.pvc,.xml}";
         uiSignal("set_file_dialog_signal", {{"signal","ui_new_file"}});
         uiSignal("set_file_dialog_filter", {{"filter",filters}});
-        uiSignal("set_file_dialog_setup", {{"title","Choose File"}, {"dir","~/"}, {"file","myApp.pvr"}});
-        uiSignal("ui_toggle_popup", {{"name","file"}, {"width","400"}, {"height","500"}});
+        uiSignal("set_file_dialog_setup", {{"title","Choose File"}, {"dir","."}, {"file","myApp.pvr"}});
+        uiSignal("ui_toggle_popup", {{"name","file"}, {"width","600"}, {"height","500"}});
     }
 
     ImGui::SameLine();
@@ -128,8 +128,8 @@ void ImToolbar::begin() {
         filters += ",Geo Data (.hgt .tiff .pdf .shp){.hgt,.tif,.tiff,.pdf,.shp}";
         uiSignal("set_file_dialog_signal", {{"signal","ui_open_file"}});
         uiSignal("set_file_dialog_filter", {{"filter",filters}});
-        uiSignal("set_file_dialog_setup", {{"title","Open File"}, {"dir","~/"}, {"file",""}});
-        uiSignal("ui_toggle_popup", {{"name","file"}, {"width","400"}, {"height","500"}});
+        uiSignal("set_file_dialog_setup", {{"title","Open File"}, {"dir","."}, {"file",""}});
+        uiSignal("ui_toggle_popup", {{"name","file"}, {"width","600"}, {"height","500"}});
     }
 
     ImGui::SameLine(); if (ImGui::Button("Save")) uiSignal("toolbar_save");
@@ -140,7 +140,7 @@ void ImToolbar::begin() {
         uiSignal("set_file_dialog_signal", {{"signal","ui_saveas_file"}});
         uiSignal("set_file_dialog_filter", {{"filter",filters}});
         uiSignal("set_file_dialog_setup", {{"title","Save as.."}, {"dir","."}, {"file","myApp.pvr"}});
-        uiSignal("ui_toggle_popup", {{"name","file"}, {"width","400"}, {"height","500"}});
+        uiSignal("ui_toggle_popup", {{"name","file"}, {"width","600"}, {"height","500"}});
     }
 
     ImGui::SameLine(); if (ImGui::Button("Export")) uiSignal("toolbar_export");
@@ -442,7 +442,7 @@ ImDocDialog::ImDocDialog() : ImDialog("documentation"), filter("docSearch", "Sea
 
 ImFileDialog::ImFileDialog() : ImDialog("file") {
     auto mgr = OSG::VRGuiSignals::get();
-    mgr->addCallback("set_file_dialog_filter", [&](OSG::VRGuiSignals::Options o){ filters = o["filter"]; return true; } );
+    mgr->addCallback("set_file_dialog_filter", [&](OSG::VRGuiSignals::Options o){ filters = ".*,"+o["filter"]; return true; } );
     mgr->addCallback("set_file_dialog_signal", [&](OSG::VRGuiSignals::Options o){ sig = o["signal"]; return true; } );
     mgr->addCallback("set_file_dialog_setup", [&](OSG::VRGuiSignals::Options o){ title = o["title"]; startDir = o["dir"]; startFile = o["file"]; return true; } );
 }

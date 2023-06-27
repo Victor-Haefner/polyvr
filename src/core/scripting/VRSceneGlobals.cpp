@@ -3,6 +3,7 @@
 #include "core/scene/VRSceneLoader.h"
 #include "core/scene/VRSceneManager.h"
 #include "core/setup/VRSetup.h"
+#include "core/utils/system/VRSystem.h"
 
 #include "core/scene/import/VRDWG.h"
 #include "core/scripting/VRPyGeometry.h"
@@ -381,7 +382,7 @@ PyObject* VRSceneGlobals::stackCall(VRSceneGlobals* self, PyObject *args) {
 }
 
 void callPyFileCb(PyObject* pyFkt, string fileName, string filePath, double scale, string preset) {
-    string path = filePath + "/" + fileName;
+    string path = fileName;
     cout << "callPyFileCb " << path << endl;
     PyObject *pArgs = PyTuple_New(3);
     PyTuple_SetItem( pArgs, 0, PyString_FromString(path.c_str()) );
@@ -401,18 +402,26 @@ PyObject* VRSceneGlobals::openFileDialog(VRSceneGlobals* self, PyObject *args) {
     filters += ",Pointcloud (.e57 .xyz){.e57,.xyz}";
     filters += ",Geo Data (.hgt .tiff .pdf .shp){.hgt,.tif,.tiff,.pdf,.shp}";*/
 
-    // TODO: pass scale and preset somehow..
+    auto cbf = [](OSG::VRGuiSignals::Options o, PyObject* cb) {
+        // TODO: pass scale and preset somehow..
+         callPyFileCb(cb, o["fileName"], o["filePath"], 1.0, "OSG"); return true;
+    };
+
     auto mgr = OSG::VRGuiSignals::get();
-    mgr->addCallback("on_script_file_dialog_ok", [&](OSG::VRGuiSignals::Options o){ callPyFileCb(cb, o["fileName"], o["filePath"], 1.0, "OSG"); return true; }, true );
+    mgr->addCallback("on_script_file_dialog_ok", bind(cbf, std::placeholders::_1, cb), true );
 
     string m = PyString_AsString(mode);
     //string action = "on_script_open_file";
     //if (m == "Save" || m == "New" || m == "Create") action = "on_script_save_file";
     //else VRGuiFile::setGeoLoadWidget();
+
+    string openPath = PyString_AsString(default_path);
+    if (!exists(openPath)) openPath = ".";
+
     uiSignal("set_file_dialog_signal", {{"signal","on_script_file_dialog_ok"}});
     uiSignal("set_file_dialog_filter", {{"filter",PyString_AsString(filter)}});
-    uiSignal("set_file_dialog_setup", {{"title",PyString_AsString(title)}, {"dir",PyString_AsString(default_path)}, {"file",""}});
-    uiSignal("ui_toggle_popup", {{"name","file"}, {"width","400"}, {"height","500"}});
+    uiSignal("set_file_dialog_setup", {{"title",PyString_AsString(title)}, {"dir",openPath}, {"file",""}});
+    uiSignal("ui_toggle_popup", {{"name","file"}, {"width","600"}, {"height","500"}});
     Py_RETURN_TRUE;
 }
 
