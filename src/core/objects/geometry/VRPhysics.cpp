@@ -588,7 +588,7 @@ vector<OSG::VRGeometryPtr> VRPhysics::getGeometries() {
     if (!obj) return res;
 
     if (physTree) {
-        for (auto o : obj->getObjectListByType("Geometry")) {
+        for (auto o : obj->getChildren(true, "", true)) {
             OSG::VRGeometryPtr geo = static_pointer_cast<OSG::VRGeometry>( o );
             if (geo) res.push_back( geo );
         }

@@ -206,8 +206,10 @@ void VRSnappingEngine::remObject(VRTransformPtr obj) {
 }
 
 void VRSnappingEngine::addTree(VRObjectPtr obj, int group) {
-    vector<VRObjectPtr> objs = obj->getObjectListByType("Geometry");
-    for (auto o : objs) addObject(static_pointer_cast<VRTransform>(o), group);
+    vector<VRObjectPtr> objs = obj->getChildren(true, "", true);
+    for (auto o : objs) {
+        if (auto geo = dynamic_pointer_cast<VRGeometry>(o)) addObject(geo, group);
+    }
 }
 
 VRSignalPtr VRSnappingEngine::getSignalSnap() { return snapSignal; }

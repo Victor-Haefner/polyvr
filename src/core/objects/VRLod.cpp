@@ -95,7 +95,7 @@ vector<float> VRLod::getDistances() {
 }
 
 void VRLod::decimateGeometries(VRObjectPtr o, float f) {
-    vector<VRObjectPtr> v = o->getObjectListByType("Geometry");
+    vector<VRObjectPtr> v = o->getChildren(true, "Geometry", true);
     for (auto o : v) {
         VRGeometryPtr g = static_pointer_cast<VRGeometry>(o);
         string n = g->getName();

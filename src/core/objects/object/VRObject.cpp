@@ -466,18 +466,6 @@ vector<VRObjectPtr> VRObject::getChildren(bool recursive, string type, bool incl
     return res;
 }
 
-vector<VRObjectPtr> VRObject::getObjectListByType(string _type) {
-    vector<VRObjectPtr> v;
-    getObjectListByType(_type, v);
-    return v;
-}
-
-void VRObject::getObjectListByType(string _type, vector<VRObjectPtr>& list) {
-    if (type == "Camera") return;
-    if (type == _type) list.push_back(ptr());
-    for (auto c : children) c->getObjectListByType(_type, list);
-}
-
 VRObjectPtr VRObject::find(OSGObjectPtr n, string indent) {
     //cout << endl << indent << getName() << " " << node << " " << ptr() << flush;
     if (osg->node == n->node) return ptr();
@@ -543,13 +531,6 @@ VRObjectPtr VRObject::getRoot() {
     VRObjectPtr o = ptr();
     while (o->getParent()) o = o->getParent();
     return o;
-}
-
-vector<VRObjectPtr> VRObject::filterByType(string Type, vector<VRObjectPtr> res) {
-    if (type == Type) res.push_back(ptr());
-    for (unsigned int i=0;i<children.size();i++)
-        res = children[i]->filterByType(Type, res);
-    return res;
 }
 
 VRObjectPtr VRObject::findPickableAncestor() {

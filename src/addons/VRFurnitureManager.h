@@ -36,7 +36,7 @@ class VRFurnitureManager {
                     //scene->addToGroup(o, types[scene]->at(i), false);
             for (uint i=0;i<types->size();i++) {
                 if (name.find(types->at(i)) != string::npos) {
-                    vector<VRObjectPtr>* geos = o->getObjectListByType("Geometry");
+                    vector<VRObjectPtr>* geos = o->getChildren(true, "Geometry", true);
                     for (uint j=0;j<geos->size();j++) {
                         VRGeometryPtr geo = static_pointer_cast<VRGeometry>((geos->at(j));
                         scene->addToGroup(geo, types->at(i), false);
