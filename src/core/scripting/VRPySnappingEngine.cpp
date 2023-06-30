@@ -24,7 +24,7 @@ template<> bool toValue(PyObject* o, VRSnappingEngine::VRSnapCbPtr& e) {
 
 template<> PyObject* VRPyTypeCaster::cast(const VRSnappingEngine::EventSnapWeakPtr& we) {
     auto e = we.lock();
-    auto res = PyTuple_New(6);
+    auto res = PyTuple_New(8);
     if (!e) return res;
     PyTuple_SetItem(res, 0, PyInt_FromLong(e->snap));
     PyTuple_SetItem(res, 1, PyInt_FromLong(e->snapID));
@@ -32,6 +32,8 @@ template<> PyObject* VRPyTypeCaster::cast(const VRSnappingEngine::EventSnapWeakP
     PyTuple_SetItem(res, 3, VRPyTransform::fromSharedPtr(e->o2));
     PyTuple_SetItem(res, 4, VRPyPose::fromMatrix(e->m));
     PyTuple_SetItem(res, 5, VRPyDevice::fromSharedPtr(e->dev));
+    PyTuple_SetItem(res, 6, VRPyTransform::fromSharedPtr(e->a1));
+    PyTuple_SetItem(res, 7, VRPyTransform::fromSharedPtr(e->a2));
     return res;
 }
 

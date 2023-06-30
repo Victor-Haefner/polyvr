@@ -50,11 +50,13 @@ class VRSnappingEngine {
             int snapID = 0;
             VRTransformPtr o1 = 0;
             VRTransformPtr o2 = 0;
+            VRTransformPtr a1 = 0;
+            VRTransformPtr a2 = 0;
             Matrix4d m;
             VRDevicePtr dev = 0;
 
-            void set(VRTransformPtr O1, VRTransformPtr O2, Matrix4d M, VRDevicePtr DEV, int Snap, int SnapID) {
-                o1 = O1; o2 = O2; m = M; dev = DEV; snap = Snap; snapID = SnapID;
+            void set(VRTransformPtr O1, VRTransformPtr O2, Matrix4d M, VRDevicePtr DEV, int Snap, int SnapID, VRTransformPtr A1, VRTransformPtr A2) {
+                o1 = O1; o2 = O2; a1 = A1; a2 = A2; m = M; dev = DEV; snap = Snap; snapID = SnapID;
             }
 
             shared_ptr<EventSnap> ptr() { return shared_from_this(); }
