@@ -117,6 +117,12 @@ void VRGuiManager::init() {
     guiSignalCbs.push_back(fkt);
 
     g_scene = new VRGuiScene();
+    g_gen = new VRGuiGeneral();
+
+    fkt = VRDeviceCb::create("GUI_updateRendering", bind(&VRGuiGeneral::updateScene, g_gen) );
+    VRGuiSignals::get()->getSignal("scene_changed")->add( fkt );
+    guiSignalCbs.push_back(fkt);
+
     return;
 
     //gtk_rc_parse("gui/gtkrc");
@@ -125,8 +131,6 @@ void VRGuiManager::init() {
     g_net = new VRGuiNetwork();
     g_sem = new VRGuiSemantics();
     g_di = new VRGuiSetup();
-    g_gen = new VRGuiGeneral();
-    g_scene->updateTreeView();
 
 
 
@@ -149,10 +153,6 @@ void VRGuiManager::init() {
         VRGuiSignals::get()->getSignal("scene_changed")->add( fkt );
         guiSignalCbs.push_back(fkt);
     }
-
-    fkt = VRDeviceCb::create("GUI_updateBackground", bind(&VRGuiGeneral::updateScene, g_gen) );
-    VRGuiSignals::get()->getSignal("scene_changed")->add( fkt );
-    guiSignalCbs.push_back(fkt);
 
 
     /*GtkWindow* top = (GtkWindow*)VRGuiBuilder::get()->get_widget("window1");

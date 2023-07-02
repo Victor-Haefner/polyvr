@@ -2,6 +2,7 @@
 #include <OpenSG/OSGSceneFileHandler.h>
 
 #include "VRGuiGeneral.h"
+#include "VRGuiManager.h"
 //#include "VRGuiUtils.h"
 //#include "VRGuiFile.h"
 
@@ -20,9 +21,13 @@ using namespace OSG;
 // --------------------------
 
 VRGuiGeneral::VRGuiGeneral() {
-    /*setCheckButtonCallback("radiobutton5", bind(&VRGuiGeneral::setMode, this) );
-    setCheckButtonCallback("radiobutton18", bind(&VRGuiGeneral::setMode, this) );
-    setCheckButtonCallback("radiobutton4", bind(&VRGuiGeneral::setMode, this) );
+    auto mgr = OSG::VRGuiSignals::get();
+    mgr->addCallback("on_toggle_bg", [&](OSG::VRGuiSignals::Options o){ setBGType(o["type"]); return true; }, true );
+    mgr->addCallback("on_change_bg_color", [&](OSG::VRGuiSignals::Options o){ setBGColor(o["color"]); return true; }, true );
+    mgr->addCallback("on_change_bg_path", [&](OSG::VRGuiSignals::Options o){ setBGPath(o["path"]); return true; }, true );
+    mgr->addCallback("on_change_bg_ext", [&](OSG::VRGuiSignals::Options o){ setBGExt(o["ext"]); return true; }, true );
+
+    /*
     setCheckButtonCallback("checkbutton_01", bind(&VRGuiGeneral::toggleFrustumCulling, this) );
     setCheckButtonCallback("checkbutton_02", bind(&VRGuiGeneral::toggleOcclusionCulling, this) );
     setCheckButtonCallback("checkbutton_3", bind(&VRGuiGeneral::toggleDeferredShader, this) );
@@ -34,10 +39,6 @@ VRGuiGeneral::VRGuiGeneral() {
     setSliderCallback("hscale1", bind(&VRGuiGeneral::setSSAOradius, this, placeholders::_1, placeholders::_2) );
     setSliderCallback("hscale2", bind(&VRGuiGeneral::setSSAOkernel, this, placeholders::_1, placeholders::_2) );
     setSliderCallback("hscale3", bind(&VRGuiGeneral::setSSAOnoise, this, placeholders::_1, placeholders::_2) );
-    setColorChooser("bg_solid", bind(&VRGuiGeneral::setColor, this, placeholders::_1) );
-    setEntryCallback("entry42", bind(&VRGuiGeneral::setPath, this));
-    setEntryCallback("entry14", bind(&VRGuiGeneral::setExtension, this));
-    setButtonCallback("button18", bind(&VRGuiGeneral::openBGpath, this));
     setButtonCallback("button22", bind(&VRGuiGeneral::dumpOSG, this));
     setRadioButtonCallback("radiobutton13", bind(&VRGuiGeneral::toggleDRendChannel, this));
     setRadioButtonCallback("radiobutton14", bind(&VRGuiGeneral::toggleDRendChannel, this));
@@ -49,16 +50,38 @@ VRGuiGeneral::VRGuiGeneral() {
     setComboboxCallback("tfpsCombobox", bind(&VRGuiGeneral::on_tfps_changed, this) );*/
 }
 
-void VRGuiGeneral::on_bg_path_choose() {
-    /*string path = VRGuiFile::getPath();
-    setTextEntry("entry42", path);*/
-    setPath();
+bool VRGuiGeneral::setBGColor(string c) {
+    if (updating) return true;
+    auto parts = splitString(c, '|');
+    Color4f col;
+    col[0] = toFloat(parts[0]);
+    col[1] = toFloat(parts[1]);
+    col[2] = toFloat(parts[2]);
+    col[3] = toFloat(parts[3]);
+    auto scene = VRScene::getCurrent();
+    scene->setBackgroundColor(toColor3f(col));
+    return true;
 }
 
-void VRGuiGeneral::openBGpath() {
-    /*VRGuiFile::gotoPath("./");
-    VRGuiFile::setCallbacks(bind(&VRGuiGeneral::on_bg_path_choose, this));
-    VRGuiFile::open("Open", "open", "Choose image");*/
+void VRGuiGeneral::setBGPath(string p) {
+    if (updating) return;
+    auto scene = VRScene::getCurrent();
+    scene->setBackgroundPath( p );
+}
+
+void VRGuiGeneral::setBGExt(string e) {
+    if (updating) return;
+    auto scene = VRScene::getCurrent();
+    scene->setSkyBGExtension( e );
+}
+
+void VRGuiGeneral::setBGType(string t) {
+    if (updating) return;
+    auto scene = VRScene::getCurrent();
+    if (t == "solid") scene->setBackground( VRBackground::SOLID );
+    if (t == "image") scene->setBackground( VRBackground::IMAGE );
+    if (t == "skybox") scene->setBackground( VRBackground::SKYBOX );
+    if (t == "sky") scene->setBackground( VRBackground::SKY );
 }
 
 void VRGuiGeneral::on_tfps_changed() {
@@ -105,45 +128,6 @@ void VRGuiGeneral::dumpOSG() {
         if (rL) { cout << "\nrLEFT " << endl; VRObject::printOSGTree( rL->getRoot()->getNode() ); }
         if (rR) { cout << "\nrRIGHT " << endl; VRObject::printOSGTree( rR->getRoot()->getNode() ); }
     }
-}
-
-/*bool VRGuiGeneral::setColor(GdkEventButton* b) {
-    if (updating) return true;
-
-    auto scene = VRScene::getCurrent();
-    Color3f col = scene->getBackgroundColor();
-    Color4f c = chooseColor("bg_solid", toColor4f(col));
-    scene->setBackgroundColor(toColor3f(c));
-    return true;
-}*/
-
-void VRGuiGeneral::setPath() {
-    if (updating) return;
-    auto scene = VRScene::getCurrent();
-    if (scene == 0) return;
-    //scene->setBackgroundPath( getTextEntry("entry42") );
-}
-
-void VRGuiGeneral::setExtension() {
-    if (updating) return;
-    auto scene = VRScene::getCurrent();
-    if (scene == 0) return;
-    //scene->setSkyBGExtension( getTextEntry("entry14") );
-}
-
-void VRGuiGeneral::setMode() {
-    if (updating) return;
-
-    VRBackground::TYPE t = VRBackground::SOLID;
-    /*if ( getCheckButtonState("radiobutton4") ) t = VRBackground::IMAGE;
-    if ( getCheckButtonState("radiobutton5") ) t = VRBackground::SKYBOX;
-    if ( getCheckButtonState("radiobutton18") ) t = VRBackground::SKY;*/
-    auto scene = VRScene::getCurrent();
-    scene->setBackground( t );
-
-    /*setWidgetSensitivity("entry14", t == VRBackground::SKYBOX);
-    setWidgetSensitivity("entry42", t == VRBackground::SKYBOX || t == VRBackground::IMAGE);
-    setWidgetSensitivity("button18", t == VRBackground::IMAGE);*/
 }
 
 void VRGuiGeneral::toggleDeferredShader() {
@@ -214,20 +198,20 @@ bool VRGuiGeneral::updateScene() {
     updating = true;
 
     // background
-    Color3f col = scene->getBackgroundColor();
+    Color3f color = scene->getBackgroundColor();
     VRBackground::TYPE t = scene->getBackgroundType();
 
-    /*setColorChooserColor("bg_solid", Color3f(col[0], col[1], col[2]));
-    setTextEntry("entry42", scene->getBackgroundPath());
-    setWidgetSensitivity("entry14", t == VRBackground::SKYBOX);
-    if (t == VRBackground::SKYBOX) setTextEntry("entry14", scene->getSkyBGExtension());
+    uiSignal("set_bg_solid_color", {{"color",toString(color[0])+"|"+toString(color[1])+"|"+toString(color[2])+"|1"}});
+    uiSignal("set_bg_path", {{"path",scene->getBackgroundPath()}});
+    uiSignal("set_bg_file_ext", {{"ext",scene->getSkyBGExtension()}});
 
-    setToggleButton("radiobutton18", t == VRBackground::SKY);
-    setToggleButton("radiobutton5", t == VRBackground::SKYBOX);
-    setToggleButton("radiobutton4", t == VRBackground::IMAGE);
+    if (t == VRBackground::SOLID) uiSignal("set_bg_type", {{"type","solid"}});
+    if (t == VRBackground::IMAGE) uiSignal("set_bg_type", {{"type","image"}});
+    if (t == VRBackground::SKYBOX) uiSignal("set_bg_type", {{"type","skybox"}});
+    if (t == VRBackground::SKY) uiSignal("set_bg_type", {{"type","sky"}});
 
-    // rendering
-    setToggleButton("checkbutton_01", scene->getFrustumCulling() );
+    // rendering TODO
+    /*setToggleButton("checkbutton_01", scene->getFrustumCulling() );
     setToggleButton("checkbutton_02", scene->getOcclusionCulling() );
     setToggleButton("checkbutton_3", scene->getDefferedShading() );
     setToggleButton("checkbutton_4", scene->getSSAO() );

@@ -15,12 +15,10 @@ class VRGuiGeneral {
         bool updating = false;
 
         // background signals
-        bool setColor(_GdkEventButton* b);
-        void setExtension();
-        void setPath();
-        void setMode();
-        void openBGpath();
-        void on_bg_path_choose();
+        void setBGType(string t);
+        bool setBGColor(string c);
+        void setBGPath(string p);
+        void setBGExt(string e);
 
         // rendering signals
         void toggleFrustumCulling();
