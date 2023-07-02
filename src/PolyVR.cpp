@@ -172,15 +172,6 @@ void printOSGImportCapabilities() {
     cout << endl;
 }
 
-void testGLCapabilities() {
-    cout << "Check OpenGL capabilities:" << endl;
-    cout << " OpenGL vendor: " << VRRenderManager::getGLVendor() << endl;
-    cout << " OpenGL version: " << VRRenderManager::getGLVersion() << endl;
-    cout << " GLSL version: " << VRRenderManager::getGLSLVersion() << endl;
-    cout << " has geometry shader: " << VRRenderManager::hasGeomShader() << endl;
-    cout << " has tesselation shader: " << VRRenderManager::hasTessShader() << endl;
-}
-
 void PolyVR::initEnvironment() {
     initTime();
     setlocale(LC_ALL, "C");
@@ -249,7 +240,6 @@ void PolyVR::initUI() {
 
 void PolyVR::initFinalize() {
     removeFile("setup/.startup"); // remove startup failsafe
-    testGLCapabilities();
     initiated = true;
 }
 

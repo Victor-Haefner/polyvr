@@ -40,6 +40,15 @@ void glutESpecial(int k, int x, int y) { getCurrentEditor()->onKeyboard_special(
 void glutEKeyboardUp(unsigned char k, int x, int y) { getCurrentEditor()->onKeyboard(k, 0, x, y); }
 void glutESpecialUp(int k, int x, int y) { getCurrentEditor()->onKeyboard_special(k, 0, x, y); }
 
+void testGLCapabilities() {
+    cout << "Check OpenGL capabilities:" << endl;
+    cout << " OpenGL vendor: " << VRRenderManager::getGLVendor() << endl;
+    cout << " OpenGL version: " << VRRenderManager::getGLVersion() << endl;
+    cout << " GLSL version: " << VRRenderManager::getGLSLVersion() << endl;
+    cout << " has geometry shader: " << VRRenderManager::hasGeomShader() << endl;
+    cout << " has tesselation shader: " << VRRenderManager::hasTessShader() << endl;
+}
+
 VRGlutEditor::VRGlutEditor() {
     cout << "Glut: New Editor" << endl;
     type = "glutEditor";
@@ -55,6 +64,8 @@ VRGlutEditor::VRGlutEditor() {
     glutEditors[topWin] = this;
     glutReshapeFunc( onMainReshape );
     glutCloseFunc( onMainClose );
+
+    testGLCapabilities();
 
     /** IDE Window **/
     winUI = glutCreateSubWindow(topWin, 0, 0, width, height);
