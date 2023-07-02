@@ -311,9 +311,10 @@ void VRSky::reloadShader() {
 
 string VRSky::skyVP =
 #ifdef __EMSCRIPTEN__
-"#version 300 es"
+"#version 300 es\n"
 #else
-"#extension GL_ARB_gpu_shader5 : enable"
+"#version 140\n"
+"#extension GL_ARB_gpu_shader5 : enable\n"
 #endif
 GLSL(
 \n
