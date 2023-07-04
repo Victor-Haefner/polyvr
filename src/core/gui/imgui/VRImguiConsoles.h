@@ -33,6 +33,7 @@ class ImConsole {
         string ID;
         string name;
         string data;
+        unsigned int color = 0;
 
         ImConsole() {}
         ImConsole(string ID);
@@ -49,6 +50,7 @@ class ImConsoles : public ImWidget {
         void clearConsole(string ID);
         void setupConsole(string ID, string name);
         void pushConsole(string ID, string data);
+        void setConsoleLabelColor(string ID, string color);
 
         ImConsoles();
         void begin() override;

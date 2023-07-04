@@ -104,10 +104,7 @@ void VRConsoleWidget::setOpen(bool b) {
 }
 
 void VRConsoleWidget::setColor(string colorStr) {
-    /*GdkColor color;
-    gdk_color_parse(colorStr.c_str(), &color);
-    gtk_widget_modify_fg((GtkWidget*)label, GTK_STATE_ACTIVE , &color );
-    gtk_widget_modify_fg((GtkWidget*)label, GTK_STATE_NORMAL , &color );*/
+    uiSignal("setConsoleLabelColor", {{"ID",ID}, {"color",colorStr}});
 }
 
 void VRConsoleWidget::configColor( string c ) { notifyColor = c; }

@@ -4,12 +4,19 @@
 #include "core/gui/VRGuiManager.h"
 #include <imgui_internal.h>
 
-ImConsole::ImConsole(string ID) : ID(ID), name(ID) {}
+ImConsole::ImConsole(string ID) : ID(ID), name(ID) {
+    color = ImGui::GetColorU32(ImVec4(255,255,255,255));
+}
 
 void ImConsole::render() {
     if (!sensitive) ImGui::BeginDisabled();
 
-    if (ImGui::BeginTabItem(name.c_str())) {
+    ImGui::PushStyleColor(ImGuiCol_Text, color);
+    bool tabOpen = ImGui::BeginTabItem(name.c_str());
+    ImGui::PopStyleColor();
+
+    if (tabOpen) {
+        color = ImGui::GetColorU32(ImVec4(255,255,255,255)); // reset color
         auto r = ImGui::GetContentRegionAvail();
         string wID = "##"+name+"_text";
 
@@ -33,6 +40,32 @@ ImConsoles::ImConsoles() : ImWidget("Consoles") {
     mgr->addCallback("pushConsole", [&](OSG::VRGuiSignals::Options o){ pushConsole(o["ID"], o["string"]); return true; } );
     mgr->addCallback("clearConsole", [&](OSG::VRGuiSignals::Options o){ clearConsole(o["ID"]); return true; } );
     mgr->addCallback("clearConsoles", [&](OSG::VRGuiSignals::Options o){ for (auto& c : consoles) c.second.data = ""; return true; } );
+    mgr->addCallback("setConsoleLabelColor", [&](OSG::VRGuiSignals::Options o){ setConsoleLabelColor(o["ID"], o["color"]); return true; } );
+}
+
+ImVec4 colorFromString(const string& c) {
+    auto conv = [](char c1, char c2) {
+        if (c1 >= 'A' && c1 <= 'F') c1 -= ('A'-'a');
+        if (c2 >= 'A' && c2 <= 'F') c2 -= ('A'-'a');
+        int C1 = c1-'0';
+        int C2 = c2-'0';
+        if (c1 >= 'a' && c1 <= 'f') C1 = (c1-'a')+10;
+        if (c2 >= 'a' && c2 <= 'f') C2 = (c2-'a')+10;
+        return (C1*16+C2)/256.0;
+    };
+
+    if (c[0] == '#') {
+        if (c.size() == 4) return ImVec4(conv(c[1],'f'), conv(c[2],'f'), conv(c[3],'f'), 255);
+        if (c.size() == 5) return ImVec4(conv(c[1],'f'), conv(c[2],'f'), conv(c[3],'f'), conv(c[4],'f'));
+        if (c.size() == 7) return ImVec4(conv(c[1],c[2]), conv(c[3],c[4]), conv(c[5],c[6]), 255);
+        if (c.size() == 9) return ImVec4(conv(c[1],c[2]), conv(c[3],c[4]), conv(c[5],c[6]), conv(c[7],c[8]));
+    }
+    return ImVec4(255,255,255,255);
+}
+
+void ImConsoles::setConsoleLabelColor(string ID, string color) {
+    auto c = colorFromString(color);
+    consoles[ID].color = ImGui::GetColorU32(c);
 }
 
 void ImConsoles::newConsole(string ID) {
