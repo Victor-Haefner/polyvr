@@ -2,8 +2,7 @@
 #include "VRGuiManager.h"
 #include "core/utils/VRFunction.h"
 #include "core/utils/VRMutex.h"
-
-#include "core/utils/VRMutex.h"
+#include "core/utils/toString.h"
 
 using namespace OSG;
 
@@ -123,8 +122,8 @@ void VRConsoleWidget::addStyle( string style, string fg, string bg, bool italic,
     g_object_set(tag, "background", bg.c_str(), NULL);
     if (underlined) g_object_set(tag, "underline", PANGO_UNDERLINE_SINGLE, NULL);
     if (italic) g_object_set(tag, "style", PANGO_STYLE_ITALIC, NULL);
-    if (bold) g_object_set(tag, "weight", PANGO_WEIGHT_BOLD, NULL);
-    styles[style] = tag;*/
+    if (bold) g_object_set(tag, "weight", PANGO_WEIGHT_BOLD, NULL);*/
+    styles[style] = "";
 }
 
 bool VRConsoleWidget::on_link_activate(string object, string event, string itr) {
@@ -160,22 +159,18 @@ void VRConsoleWidget::update() {
     while(!msg_queue.empty()) {
         if (!isOpen) setColor(notifyColor);
         auto& msg = msg_queue.front();
-    //cout << " - - - - - - - VRConsoleWidget::update " << msg.msg << endl;
-        //cout << "VRConsoleWidget::update message: '" << msg.msg << "'" << endl;
-        /*GtkTextIter itr;
-        if (styles.count( msg.style )) {
-            auto tag = styles[msg.style];
-            gtk_text_buffer_get_end_iter(buffer, &itr);
-            gtk_text_buffer_insert_with_tags(buffer, &itr, msg.msg.c_str(), msg.msg.size(), tag, NULL);
-            GtkTextMark* mark = gtk_text_buffer_create_mark(buffer, NULL, &itr, true);
-            if (msg.link) links[mark] = msg;
-        }
-        else {
-            gtk_text_buffer_get_end_iter(buffer, &itr);
-            gtk_text_buffer_insert(buffer, &itr, msg.msg.c_str(), msg.msg.size());
-        }*/
 
-        uiSignal("pushConsole", {{"ID",ID}, {"string",msg.msg}});
+        string tag;
+        //if (styles.count( msg.style )) tag = styles[msg.style];
+        if (styles.count( msg.style )) tag = msg.style;
+
+        string mark;
+        if (msg.link) {
+                mark = genUUID();
+                links[mark] = msg;
+        }
+
+        uiSignal("pushConsole", {{"ID",ID}, {"string",msg.msg}, {"style",tag}, {"mark",mark}});
 		msg_queue.pop();
     }
 }

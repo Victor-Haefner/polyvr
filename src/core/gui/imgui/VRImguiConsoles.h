@@ -49,7 +49,7 @@ class ImConsoles : public ImWidget {
         void newConsole(string ID);
         void clearConsole(string ID);
         void setupConsole(string ID, string name);
-        void pushConsole(string ID, string data);
+        void pushConsole(string ID, string data, string style, string mark);
         void setConsoleLabelColor(string ID, string color);
 
         ImConsoles();

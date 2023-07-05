@@ -27,6 +27,11 @@ void ImConsole::render() {
         }
 
 		ImGui::InputTextMultiline(wID.c_str(), &data[0], data.size(), r, ImGuiInputTextFlags_ReadOnly);
+        /*bool hovered = ImGui::IsItemHovered();
+        if (hovered) {
+            cout << "hovered" << endl;
+        }*/
+
         ImGui::EndTabItem();
     }
 
@@ -37,7 +42,7 @@ ImConsoles::ImConsoles() : ImWidget("Consoles") {
     auto mgr = OSG::VRGuiSignals::get();
     mgr->addCallback("newConsole", [&](OSG::VRGuiSignals::Options o){ newConsole(o["ID"]); return true; } );
     mgr->addCallback("setupConsole", [&](OSG::VRGuiSignals::Options o){ setupConsole(o["ID"], o["name"]); return true; } );
-    mgr->addCallback("pushConsole", [&](OSG::VRGuiSignals::Options o){ pushConsole(o["ID"], o["string"]); return true; } );
+    mgr->addCallback("pushConsole", [&](OSG::VRGuiSignals::Options o){ pushConsole(o["ID"], o["string"], o["style"], o["mark"]); return true; } );
     mgr->addCallback("clearConsole", [&](OSG::VRGuiSignals::Options o){ clearConsole(o["ID"]); return true; } );
     mgr->addCallback("clearConsoles", [&](OSG::VRGuiSignals::Options o){ for (auto& c : consoles) c.second.data = ""; return true; } );
     mgr->addCallback("setConsoleLabelColor", [&](OSG::VRGuiSignals::Options o){ setConsoleLabelColor(o["ID"], o["color"]); return true; } );
@@ -83,8 +88,8 @@ void ImConsoles::setupConsole(string ID, string name) {
     consoles[ID].name = name;
 }
 
-void ImConsoles::pushConsole(string ID, string data) {
-    //cout << " - - - - - - - ImConsoles::pushConsole " << ID << "  " << data << endl;
+void ImConsoles::pushConsole(string ID, string data, string style, string mark) {
+    //cout << " - - - - - - - ImConsoles::pushConsole " << ID << "  " << data << "  " << style << "  " << mark << endl;
     if (!consoles.count(ID)) return;
     consoles[ID].data += data;
     consoles[ID].changed = 2;
