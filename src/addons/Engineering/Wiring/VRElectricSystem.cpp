@@ -123,7 +123,7 @@ void VRElectricSystem::buildECADgraph() {
 	}
 }
 
-void VRElectricSystem::importECAD() {
+void VRElectricSystem::importEPLAN(string epjPath, string bmkPath, string edcPath) {
 	auto join = [&](string plantID1, string plantID2, string id1, string kind, string id2) -> string {
 		if (plantID1 == "" || (id1 == "" && id2 == "")) return "";
 
@@ -194,7 +194,7 @@ void VRElectricSystem::importECAD() {
 
 	// get ecad components;
 	auto bmk = XML::create();
-	bmk->read("data/ECAD/EDC/bmk.edc");
+	bmk->read(bmkPath);
 	for (auto node : bmk->getRoot()->getChildren("O17", true) ) {
 		string ecadID = node->getAttribute("P20006");
 		string name = node->getAttribute("P20100_1");
@@ -206,7 +206,7 @@ void VRElectricSystem::importECAD() {
 
 	// get ecad wires;
 	auto edges = XML::create();
-	edges->read("data/ECAD/EDC/Verbindungen.edc");
+	edges->read(edcPath);
 	for (auto edge : edges->getRoot()->getChildren("O18", true) ) {
 		string targetData = edge->getAttribute("P31020");
 		string sourceData = edge->getAttribute("P31019");
@@ -245,7 +245,7 @@ void VRElectricSystem::importECAD() {
 	}
 
 	auto ecadProject = XML::create();
-	ecadProject->read("data/ECAD/EPJ/217155 SOBCO Algerien Ball Forming Line.epj");
+	ecadProject->read(epjPath);
 	for (auto i : ecadProject->getRoot()->getChildren("O117", true) ) {
 		for (auto j : i->getChildren("P11", true)) { // get ecad -> mcad mapping data;
 			if (!j->hasAttribute("P22003") || !j->hasAttribute("P22001")) continue;
