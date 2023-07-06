@@ -97,7 +97,7 @@ class VRPointCloud : public VRTransform {
         void externalSort(string path, size_t chunkSize, double binSize);
         void externalPartition(string path);
         void externalComputeSplats(string path);
-        void externalColorize(string path, string images);
+        void externalColorize(string path, string images, float pDist, int i1, int i2);
 
         shared_ptr<Octree<PntData>>& getOctree();
         VRGeometryPtr getOctreeVisual();

@@ -6,6 +6,7 @@
 #include "core/objects/VRLod.h"
 #include "core/math/partitioning/Octree.h"
 #include "core/math/partitioning/OctreeT.h"
+#include "core/math/partitioning/Quadtree.h"
 #include "core/math/pose.h"
 #include "core/math/path.h"
 #include "core/utils/toString.h"
@@ -840,45 +841,95 @@ void VRPointCloud::externalComputeSplats(string path) {
     rename(wpath.c_str(), path.c_str());
 }
 
-void VRPointCloud::externalColorize(string path, string imgTable) {
+void VRPointCloud::externalColorize(string path, string imgTable, float pDist, int i1, int i2) {
+    cout << "externalColorize " << path << endl;
+
     // crawl images and create image table and path
     string line;
     ifstream imgData(imgTable);
 
-    auto imgPath = Path::create();
+    struct Viewpoint {
+        string imgPath;
+        double lat;
+        double lon;
+        Pose pose;
+    };
 
-    int i=0;
+    // load viewpoints
     Vec3d lp;
-    while(getline(imgData, line)){
+    vector<Viewpoint> viewpoints;
+    while (getline(imgData, line)) {
+        Viewpoint vp;
         auto data = splitString(line, '|');
 
-        string path = data[0];
+        vp.imgPath = data[0];
+        vp.lat = toFloat(data[2]) + toFloat(data[3])/60.0 + toFloat(data[4]+"."+data[5])/3600.0;
+        vp.lon = toFloat(data[7]) + toFloat(data[8])/60.0 + toFloat(data[9]+"."+data[10])/3600.0;
 
-        double lat = toFloat(data[2]) + toFloat(data[3])/60.0 + toFloat(data[4]+"."+data[5])/3600.0;
-        double lon = toFloat(data[6]) + toFloat(data[7])/60.0 + toFloat(data[8]+"."+data[9])/3600.0;
-
-        lat -= 49.035;
-        lon -= 0.1394;
+        vp.lat -= 49.035;
+        vp.lon -= 8.366;
 
         float s = 1000;
+        Vec3d p = Vec3d(vp.lat*s, 0, vp.lon*s);
+        Vec3d d = p-lp;
+        d.normalize();
+        vp.pose.set(p, d);
 
-        Vec3d p = Vec3d(lat*s, 0, lon*s);
+        //cout << toString(data) << ", " << vp.lat << ", " << vp.lon << "  " << p << endl;
+        viewpoints.push_back(vp);
+        lp = p;
+    }
 
-        if (i > 0)
-            imgPath->addPoint(*Pose::create(p, p-lp));
+    cout << " sort viewpoints" << endl;
+    sort(viewpoints.begin(), viewpoints.end(), [](const Viewpoint& a, const Viewpoint& b) -> bool {
+        return a.imgPath > b.imgPath;
+    });
+    cout << "  sort done" << endl;
 
-        cout << toString(data) << ", " << lat << ", " << lon << "  " << p << endl;
+    // quadtree and path
+    auto vpTree = Quadtree::create(1.0);
+    vector<PathPtr> vpPaths;
+    auto vpPath = Path::create();
+    int i=0;
+    for (auto& vp : viewpoints) {
+        Vec3d p = vp.pose.pos();
+        vpTree->add(p, &vp);
+
+        if (i > 0 && i > i1 && i < i2) {
+            double d = p.dist(lp);
+            if (d > 1e-5) {
+                Vec3d D = p-lp;
+                D.normalize();
+                if (d > pDist) {
+                    if (vpPath->size() > 2) {
+                        vpPath->compute(8);
+                        vpPaths.push_back(vpPath);
+                    }
+                    vpPath = Path::create();
+                } else {
+                    cout << "  add point: " << vp.pose.pos() << " " << vp.pose.dir() << " " << vp.pose.dir().dot(D) << endl;
+                    vpPath->addPoint(vp.pose);
+                }
+            }
+        }
 
         lp = p;
         i++;
-        if (i > 10) break;
+        //if (i > 1000) break;
+    }
+    if (vpPath->size() > 2) {
+        vpPath->compute(2);
+        vpPaths.push_back(vpPath);
     }
 
-    imgPath->compute(16);
+    cout << "add " << vpPaths.size() << " paths" << endl;
 
+    // pathtool
     auto pathTool = VRPathtool::create();
-    pathTool->addPath(imgPath);
+    for (auto p : vpPaths) pathTool->addPath(p);
     addChild(pathTool);
+    pathTool->setVisuals(0,1);
+    pathTool->setBezierVisuals(0,0);
     pathTool->update();
 }
 
