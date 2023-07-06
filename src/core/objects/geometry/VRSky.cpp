@@ -391,10 +391,10 @@ out vec4 fragColor;
 \n
 #else
 \n
-in vec3 norm;
-in vec4 pos;
-in vec2 tcs;
-in mat4 mFragInv;
+varying vec3 norm;
+varying vec4 pos;
+varying vec2 tcs;
+varying mat4 mFragInv;
 \n
 #endif
 \n

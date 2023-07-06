@@ -32,7 +32,7 @@ class ImConsole {
         int changed = 2;
         string ID;
         string name;
-        string data;
+        vector<string> lines;
         unsigned int color = 0;
 
         ImConsole() {}
