@@ -301,6 +301,8 @@ void VRSky::reloadShader() {
     string resDir = VRSceneManager::get()->getOriginalWorkdir() + "/shader/Sky/";
     mat->setVertexShader(skyVP, "skyVP");
     mat->setFragmentShader(skyFP, "skyFP");
+    mat->enableShaderParameter("OSGModelViewMatrix");
+    mat->enableShaderParameter("OSGProjectionMatrix");
 #ifndef __EMSCRIPTEN__
     mat->readFragmentShader(resDir + "Sky.dfp", true); // TODO
 #endif
@@ -330,13 +332,15 @@ in vec2 osg_MultiTexCoord0;
 \n
 #else
 \n
-varying vec3 norm;
-varying vec4 pos;
-varying vec2 tcs;
-varying mat4 mFragInv;
-attribute vec4 osg_Vertex;
-attribute vec3 osg_Normal;
-attribute vec2 osg_MultiTexCoord0;
+out vec3 norm;
+out vec4 pos;
+out vec2 tcs;
+out mat4 mFragInv;
+in vec4 osg_Vertex;
+in vec3 osg_Normal;
+in vec2 osg_MultiTexCoord0;
+uniform mat4 OSGModelViewMatrix;
+uniform mat4 OSGProjectionMatrix;
 \n
 #endif
 \n
@@ -354,7 +358,7 @@ void main() {
 \n
 #else
 \n
-    mFragInv = gl_ModelViewProjectionMatrix; // this is the only working solution for cave
+    mFragInv = OSGProjectionMatrix * OSGModelViewMatrix; // this is the only working solution for cave
     mFragInv[3] = vec4(0,0,0,mFragInv[3][3]);
     mFragInv = inverse(mFragInv);
 \n
@@ -387,10 +391,10 @@ out vec4 fragColor;
 \n
 #else
 \n
-varying vec3 norm;
-varying vec4 pos;
-varying vec2 tcs;
-varying mat4 mFragInv;
+in vec3 norm;
+in vec4 pos;
+in vec2 tcs;
+in mat4 mFragInv;
 \n
 #endif
 \n
