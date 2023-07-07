@@ -24,6 +24,7 @@ PyMethodDef VRPyMachiningCode::methods[] = {
 };
 
 PyMethodDef VRPyMachiningKinematics::methods[] = {
+    {"setEndEffector", PyWrap(MachiningKinematics, setEndEffector, "Set end effector position", void, PosePtr) },
     {NULL}  /* Sentinel */
 };
 
