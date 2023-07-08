@@ -207,6 +207,8 @@ void ImScriptEditor::getBuffer(int skipLines) {
 }
 
 void ImScriptEditor::setBuffer(string data) {
+    TextEditor::Coordinates c;
+    imEditor.SetSelection(c,c); // deselect
     imEditor.SetText(data);
     sensitive = true;
     if (data == "") sensitive = false;
@@ -312,6 +314,17 @@ void ImScriptEditor::render() {
     if (sensitive) {
         imEditor.Render("Editor");
         if (imEditor.IsTextChanged()) uiSignal("script_editor_text_changed");
+
+        if (ImGui::IsItemHovered()) { // shift selection
+            if( ImGui::IsMouseReleased(0) ) {
+                static TextEditor::Coordinates lastCoords = imEditor.GetCursorPosition();
+                auto coords = imEditor.GetCursorPosition();
+
+                ImGuiIO& io = ImGui::GetIO();
+                if (io.KeyShift) imEditor.SetSelection(lastCoords, coords, TextEditor::SelectionMode::Normal);
+                else lastCoords = coords;
+            }
+        }
     }
 
     if (!sensitive) ImGui::EndDisabled();
@@ -369,7 +382,9 @@ void ImScripting::render() {
         if (io.KeyCtrl && io.KeysDown['t']) { io.KeysDown['t'] = false; uiSignal("editor_cmd", {{"cmd","toggleLine"}}); }
         if (io.KeyCtrl && io.KeysDown['d']) { io.KeysDown['d'] = false; uiSignal("editor_cmd", {{"cmd","duplicateLine"}}); }
     }
+
     editor.render();
+
     ImGui::EndChild();
     ImGui::EndGroup();
 }
