@@ -286,6 +286,7 @@ void VRGlutEditor::on_gl_display() {
     //cout << "  Glut::on_gl_display " << endl;
     if (winGL < 0) return;
     glutSetWindow(winGL);
+    glutSetCursor(GLUT_CURSOR_RIGHT_ARROW);
     int w = glutGet(GLUT_WINDOW_WIDTH); // calling glutGet somehow magically fixes the resize glitches..
     int h = glutGet(GLUT_WINDOW_HEIGHT);
     //if (signal) signal( "glutRenderGL", {} );

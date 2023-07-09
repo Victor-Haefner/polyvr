@@ -54,6 +54,18 @@ void ImSection::begin() {
 }
 
 void ImSection::end() {
+    auto mc = ImGui::GetMouseCursor();
+    if (mc == ImGuiMouseCursor_None) glutSetCursor(GLUT_CURSOR_NONE);
+    if (mc == ImGuiMouseCursor_Arrow) glutSetCursor(GLUT_CURSOR_RIGHT_ARROW);
+    if (mc == ImGuiMouseCursor_TextInput) glutSetCursor(GLUT_CURSOR_TEXT);
+    if (mc == ImGuiMouseCursor_ResizeAll) glutSetCursor(GLUT_CURSOR_FULL_CROSSHAIR);
+    if (mc == ImGuiMouseCursor_ResizeNS) glutSetCursor(GLUT_CURSOR_UP_DOWN);
+    if (mc == ImGuiMouseCursor_ResizeEW) glutSetCursor(GLUT_CURSOR_LEFT_RIGHT);
+    if (mc == ImGuiMouseCursor_ResizeNESW) glutSetCursor(GLUT_CURSOR_FULL_CROSSHAIR);
+    if (mc == ImGuiMouseCursor_ResizeNWSE) glutSetCursor(GLUT_CURSOR_FULL_CROSSHAIR);
+    if (mc == ImGuiMouseCursor_Hand) glutSetCursor(GLUT_CURSOR_INFO);
+    if (mc == ImGuiMouseCursor_NotAllowed) glutSetCursor(GLUT_CURSOR_DESTROY);
+
     ImGui::End();
 }
 
