@@ -28,11 +28,17 @@ class ImViewControls {
 
 class ImConsole {
     public:
+        struct Attributes {
+            string mark;
+            string style;
+        };
+
         bool sensitive = true;
         int changed = 2;
         string ID;
         string name;
         vector<string> lines;
+        map<size_t, Attributes> attributes;
         unsigned int color = 0;
 
         ImConsole() {}

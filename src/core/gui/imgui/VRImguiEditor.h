@@ -45,6 +45,8 @@ class ImSidePanel : public ImSection {
 
         ImSidePanel(Rectangle r);
         void begin() override;
+
+        void openTabs(string tab1, string tab2);
 };
 
 class ImConsolesSection : public ImSection {

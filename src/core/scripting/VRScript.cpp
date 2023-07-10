@@ -341,10 +341,8 @@ int VRScript::getHeadSize() { // number of head lines
 }
 
 void VRScript::on_err_link_clicked(errLink link, string s) {
-    //VRGuiManager::get()->focusScript(getName(), link.line, link.column);
-#ifndef WITHOUT_GTK
+    cout << "VRScript::on_err_link_clicked " << s << endl;
     VRGuiManager::get()->focusScript(link.filename, link.line, link.column);
-#endif
 }
 
 VRScript::errLink::errLink(string f, int l, int c) : filename(f), line(l), column(c) {}
@@ -400,9 +398,7 @@ finally:
 
 void print_error_text(int offset, char *text) {
     auto print = [&]( string m, string style = "", shared_ptr< VRFunction<string> > link = 0 ) {
-#ifndef WITHOUT_GTK
         VRConsoleWidget::get( "Syntax" )->write( m, style, link );
-#endif
     };
 
     char *nl;
@@ -434,9 +430,7 @@ void print_error_text(int offset, char *text) {
 
 void VRScript::printSyntaxError(PyObject *exception, PyObject *value, PyObject *tb) {
     auto print = [&]( string m, string style = "", shared_ptr< VRFunction<string> > link = 0 ) {
-#ifndef WITHOUT_GTK
         VRConsoleWidget::get( "Syntax" )->write( m, style, link );
-#endif
     };
 
     int err = 0;
@@ -470,11 +464,7 @@ void VRScript::pyErrPrint(string channel) {
     if (!PyErr_Occurred()) return;
 
     auto print = [&]( string m, string style = "", shared_ptr< VRFunction<string> > link = 0 ) {
-#ifndef WITHOUT_GTK
         VRConsoleWidget::get( channel )->write( m, style, link );
-#else
-        cout << m << endl;
-#endif
     };
 
     auto getTracebackFrame = [](PyTracebackObject* tb, vector<PyFrameObject*>& frames) {
@@ -490,9 +480,7 @@ void VRScript::pyErrPrint(string channel) {
         return frames;
     };
 
-#ifndef WITHOUT_GTK
     VRConsoleWidget::get( channel )->addStyle( "redLink", "#ff3311", "#ffffff", false, false, true, false );
-#endif
 
     struct Line {
         shared_ptr<VRFunction<string>> fkt;

@@ -828,8 +828,7 @@ void VRGuiScripts::selectScript(string name) {
 }
 
 void VRGuiScripts::focusScript(string name, int line, int column) {
-    /*setNotebookPage("notebook1", 2);
-    setNotebookPage("notebook3", 2);
+    uiSignal("openUiTabs", {{"tab1", "Scene"}, {"tab2", "Scripting"}});
     selectScript(name); // messes with editor cursor position etc.. queueJob fixes it
 
     auto focusLine = [](shared_ptr<VRGuiEditor> editor, int line, int column) {
@@ -838,7 +837,7 @@ void VRGuiScripts::focusScript(string name, int line, int column) {
     };
 
     auto fkt = VRUpdateCb::create("gui_focus_script", bind(focusLine, editor, line, column));
-    VRSceneManager::get()->queueJob(fkt, 0);*/
+    VRSceneManager::get()->queueJob(fkt, 0);
 }
 
 void VRGuiScripts::getLineFocus(int& line, int& column) {

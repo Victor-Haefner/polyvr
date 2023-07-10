@@ -36,15 +36,25 @@ void ImConsole::render() {
 		ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0,0));
 		size_t i = 0;
 		for (auto& l : lines) {
-            string lID = wID + toString(i); i++;
+            string lID = wID + toString(i);
+
+            bool colorized = false;
+            if (attributes.count(i)) {
+                auto& a = attributes[i];
+                ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(255,0,0,255));
+                colorized = true;
+            }
+
             ImGui::InputText(lID.c_str(), &l[0], l.size(), ImGuiInputTextFlags_ReadOnly);
-            bool hovered = ImGui::IsItemHovered();
-            if (hovered) {
-                cout << "hovered " << l << endl;
-                if( ImGui::IsMouseReleased( 0 ) ) {
-                    // TODO: if has a link, trigger signal!
+            if (colorized) ImGui::PopStyleColor();
+
+            if (ImGui::IsItemHovered() && ImGui::IsMouseReleased( 0 ) ) {
+                if (attributes.count(i)) {
+                    auto& a = attributes[i];
+                    uiSignal("clickConsole", {{"mark",a.mark}, {"ID",ID}});
                 }
             }
+            i++;
 		}
 		ImGui::PopStyleVar();
 		ImGui::PopStyleVar();
@@ -102,6 +112,7 @@ void ImConsoles::newConsole(string ID) {
 void ImConsoles::clearConsole(string ID) {
     if (!consoles.count(ID)) return;
     consoles[ID].lines.clear();
+    consoles[ID].attributes.clear();
 }
 
 void ImConsoles::setupConsole(string ID, string name) {
@@ -115,10 +126,14 @@ void ImConsoles::pushConsole(string ID, string data, string style, string mark) 
     if (!consoles.count(ID)) return;
     consoles[ID].changed = 2;
     auto& lns = consoles[ID].lines;
+    auto& att = consoles[ID].attributes;
     auto dataV = splitString(data, '\n');
     for (int i=0; i<dataV.size(); i++) {
         if (i == 0 && lns.size() > 0) lns[lns.size()-1] += dataV[i];
         else lns.push_back(dataV[i]);
+
+        if (mark.size() > 0)  att[lns.size()-1].mark = mark;
+        if (style.size() > 0) att[lns.size()-1].style = style;
     }
     if (data[data.size()-1] == '\n') lns.push_back("");
 }

@@ -92,11 +92,20 @@ ImSidePanel::ImSidePanel(Rectangle r) : ImSection("SidePanel", r) {
     appManager = ImWidgetPtr(new ImAppManager());
     setupManager = ImWidgetPtr(new ImSetupManager());
     sceneEditor = ImWidgetPtr(new ImSceneEditor());
+
+    auto mgr = OSG::VRGuiSignals::get();
+    mgr->addCallback("openUiTabs", [&](OSG::VRGuiSignals::Options o){ openTabs(o["tab1"], o["tab2"]); return true; } );
+}
+
+//uiSignal("openUiTabs", {{"tab1", "Scene"}, {"tab2", "Scripting"}});
+void ImSidePanel::openTabs(string tab1, string tab2) {
+    ;
 }
 
 void ImSidePanel::begin() {
     ImSection::begin();
     ImGuiTabBarFlags tab_bar_flags = ImGuiTabBarFlags_None;
+
     if (ImGui::BeginTabBar("MyTabBar", tab_bar_flags)) {
         if (ImGui::BeginTabItem("Apps")) {
             appManager->render();
