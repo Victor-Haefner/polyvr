@@ -43,6 +43,8 @@ class ImSidePanel : public ImSection {
         ImWidgetPtr setupManager;
         ImWidgetPtr sceneEditor;
 
+        string selected = "Apps";
+
         ImSidePanel(Rectangle r);
         void begin() override;
 

@@ -94,7 +94,7 @@ ImSidePanel::ImSidePanel(Rectangle r) : ImSection("SidePanel", r) {
     sceneEditor = ImWidgetPtr(new ImSceneEditor());
 
     auto mgr = OSG::VRGuiSignals::get();
-    mgr->addCallback("openUiTabs", [&](OSG::VRGuiSignals::Options o){ openTabs(o["tab1"], o["tab2"]); return true; } );
+    mgr->addCallback("openUiTabs", [&](OSG::VRGuiSignals::Options o){ selected = o["tab1"]; return true; } );
 }
 
 //uiSignal("openUiTabs", {{"tab1", "Scene"}, {"tab2", "Scripting"}});
@@ -106,18 +106,28 @@ void ImSidePanel::begin() {
     ImSection::begin();
     ImGuiTabBarFlags tab_bar_flags = ImGuiTabBarFlags_None;
 
+    ImGuiTabItemFlags flags1, flags2, flags3;
+    flags1 = flags2 = flags3 = 0;
+
+    if (selected != "") {
+        if (selected == "Apps") flags1 = ImGuiTabItemFlags_SetSelected;
+        if (selected == "Setup") flags2 = ImGuiTabItemFlags_SetSelected;
+        if (selected == "Scene") flags3 = ImGuiTabItemFlags_SetSelected;
+        selected = "";
+    }
+
     if (ImGui::BeginTabBar("MyTabBar", tab_bar_flags)) {
-        if (ImGui::BeginTabItem("Apps")) {
+        if (ImGui::BeginTabItem("Apps", NULL, flags1)) {
             appManager->render();
             ImGui::EndTabItem();
         }
 
-        if (ImGui::BeginTabItem("Setup")) {
+        if (ImGui::BeginTabItem("Setup", NULL, flags2)) {
             setupManager->render();
             ImGui::EndTabItem();
         }
 
-        if (ImGui::BeginTabItem("Scene")) {
+        if (ImGui::BeginTabItem("Scene", NULL, flags3)) {
             sceneEditor->render();
             ImGui::EndTabItem();
         }

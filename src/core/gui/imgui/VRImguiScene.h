@@ -14,6 +14,7 @@ using namespace std;
 class ImSceneEditor : public ImWidget {
     private:
         string currentTab = "Scripting";
+        string selected = "Scripting";
 
     public:
         ImRendering rendering;
