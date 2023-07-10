@@ -792,8 +792,8 @@ void VRGuiScripts::on_find_diag_cancel_clicked() {
 
 VRGuiScripts::searchResult::searchResult(string s, int l, int c) : scriptName(s), line(l), column(c) {}
 
-void VRGuiScripts::selectScript(string name) {
-    /*auto store = (GtkTreeStore*)VRGuiBuilder::get()->get_object("script_tree");
+/*void VRGuiScripts::selectScript(string name) {
+    auto store = (GtkTreeStore*)VRGuiBuilder::get()->get_object("script_tree");
     auto tree_view = (GtkTreeView*)VRGuiBuilder::get()->get_widget("treeview5");
 
     auto selectScript = [&](GtkTreeIter* itr) {
@@ -824,12 +824,14 @@ void VRGuiScripts::selectScript(string name) {
     };
 
     // select script in tree view
-    selectScript2();*/
-}
+    selectScript2();
+}*/
 
 void VRGuiScripts::focusScript(string name, int line, int column) {
     uiSignal("openUiTabs", {{"tab1", "Scene"}, {"tab2", "Scripting"}});
-    selectScript(name); // messes with editor cursor position etc.. queueJob fixes it
+    uiSignal("openUiScript", {{"name", name}, {"line", toString(line)}, {"column", toString(column)}});
+
+    /*selectScript(name); // messes with editor cursor position etc.. queueJob fixes it
 
     auto focusLine = [](shared_ptr<VRGuiEditor> editor, int line, int column) {
         editor->grabFocus();
@@ -837,7 +839,7 @@ void VRGuiScripts::focusScript(string name, int line, int column) {
     };
 
     auto fkt = VRUpdateCb::create("gui_focus_script", bind(focusLine, editor, line, column));
-    VRSceneManager::get()->queueJob(fkt, 0);
+    VRSceneManager::get()->queueJob(fkt, 0);*/
 }
 
 void VRGuiScripts::getLineFocus(int& line, int& column) {
@@ -1117,12 +1119,12 @@ bool VRGuiScripts::updateList() {
 
     if (selected == "") {
         cout << "No script open, selecting a script.." << endl;
-        if (scene->getScript("init")) selectScript("init");
+        if (scene->getScript("init")) uiSignal("openUiScript", {{"name", "init"}, {"line", "0"}, {"column", "0"}});
         else {
             auto scs = scene->getScripts();
             if (scs.size() > 0) {
                 auto sc = scs.begin()->second;
-                if (sc) selectScript(sc->getName());
+                if (sc) uiSignal("openUiScript", {{"name", sc->getName()}, {"line", "0"}, {"column", "0"}});
             }
         }
     }

@@ -72,6 +72,7 @@ class ImScriptEditor {
         void addTrigger(string name, string trigger, string parameter, string device, string key, string state);
         void addArgument(string name, string type, string value);
         void editorCommand(string cmd);
+        void focusOn(string line, string column);
 
     public:
         ImScriptEditor();

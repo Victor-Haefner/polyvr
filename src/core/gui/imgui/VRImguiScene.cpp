@@ -10,7 +10,6 @@ ImSceneEditor::ImSceneEditor() : ImWidget("SceneEditor") {
 }
 
 void ImSceneEditor::begin() {
-
     auto setCurrentTab = [&](string t) {
         if (t != currentTab) {
             currentTab = t;
