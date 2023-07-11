@@ -161,9 +161,9 @@ class VRGuiScene {
         void on_change_group();
 
         void on_toggle_liveupdate();
-        void on_toggle_visible();
-        void on_toggle_pickable();
-        void on_toggle_throw_shadow();
+        void on_toggle_visible(bool b);
+        void on_toggle_pickable(bool b);
+        void on_toggle_throw_shadow(bool b);
         void on_toggle_rc();
         void on_toggle_T_constraint();
         void on_toggle_R_constraint();

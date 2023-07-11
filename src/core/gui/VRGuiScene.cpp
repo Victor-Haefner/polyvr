@@ -58,17 +58,17 @@ VRObjectPtr VRGuiScene::getSelected() {
 }
 
 void VRGuiScene::setObject(VRObjectPtr o) {
-    /*setWidgetVisibility("expander2", true, true);
-
-    // set object properties
-    setToggleButton("checkbutton6", o->isVisible());
-    setToggleButton("checkbutton43", o->isVisible("SHADOW"));
-    setToggleButton("checkbutton15", o->isPickable());
-
     VRObjectPtr parent = o->getParent();
     string pName = parent ? parent->getName() : "";
-    setTextEntry("entry17", pName);
-    setTextEntry("entry21", toString(o->getPersistency()) );*/
+
+    uiSignal( "on_sg_setup_obj", {
+        {"parent", pName},
+        {"name", o->getName()},
+        {"persistency", toString(o->getPersistency())},
+        {"visible", toString(o->isVisible())},
+        {"pickable", toString(o->isPickable())},
+        {"castShadow", toString(o->isVisible("SHADOW"))}
+    } );
 }
 
 void VRGuiScene::setTransform(VRTransformPtr e) {
@@ -441,9 +441,12 @@ void VRGuiScene::syncSGTree(VRObjectPtr o) {
     //for (uint i=0; i<o->getChildrenCount(); i++) parseSGTree( o->getChild(i), itr );
 }
 
-void VRGuiScene::on_treeview_select(string selected) {
+void VRGuiScene::on_treeview_select(string sID) {
+    cout << " VRGuiScene::on_treeview_select " << sID << endl;
     //setWidgetSensitivity("table11", true);
     //updateObjectForms(true);
+    selected = toInt(sID);
+    //selected = VRScene::getCurrent()->find();
     updateObjectForms();
 
     selected_geometry.reset();
@@ -465,16 +468,9 @@ void VRGuiScene::on_edit_object_name(const char* path_string, const char* new_te
 // --------------------------
 
 // VRObjects
-void VRGuiScene::on_toggle_visible() {
-    if (trigger_cbs) getSelected()->toggleVisible();
-    //setSGRow(selected_itr, getSelected());
-}
-
-void VRGuiScene::on_toggle_throw_shadow() {
-    if (trigger_cbs) getSelected()->toggleVisible("SHADOW");
-}
-
-void VRGuiScene::on_toggle_pickable() { if (trigger_cbs) getSelected()->setPickable(!getSelected()->isPickable()); }
+void VRGuiScene::on_toggle_visible(bool b) { getSelected()->setVisible(b); }
+void VRGuiScene::on_toggle_throw_shadow(bool b) { getSelected()->setVisible(b, "SHADOW"); }
+void VRGuiScene::on_toggle_pickable(bool b) { getSelected()->setPickable(b); }
 
 // VRGroup
 void VRGuiScene::on_groupsync_clicked() {
@@ -1264,8 +1260,6 @@ VRGuiScene::VRGuiScene() { // TODO: reduce callbacks with templated functions
 
     // object form
     setToggleButtonCallback("checkbutton16", bind(&VRGuiScene::on_toggle_liveupdate, this));
-    setToggleButtonCallback("checkbutton6", bind(&VRGuiScene::on_toggle_visible, this));
-    setToggleButtonCallback("checkbutton15", bind(&VRGuiScene::on_toggle_pickable, this));
     setToggleButtonCallback("checkbutton18", bind(&VRGuiScene::on_toggle_rc, this));
     setToggleButtonCallback("checkbutton19", bind(&VRGuiScene::on_toggle_rc, this));
     setToggleButtonCallback("checkbutton20", bind(&VRGuiScene::on_toggle_rc, this));
@@ -1281,7 +1275,6 @@ VRGuiScene::VRGuiScene() { // TODO: reduce callbacks with templated functions
     setToggleButtonCallback("checkbutton13", bind(&VRGuiScene::on_toggle_phys, this) );
     setToggleButtonCallback("checkbutton33", bind(&VRGuiScene::on_toggle_dynamic, this) );
     setToggleButtonCallback("checkbutton35", bind(&VRGuiScene::on_lod_decimate_changed, this) );
-    setToggleButtonCallback("checkbutton43", bind(&VRGuiScene::on_toggle_throw_shadow, this) );
 
     setComboboxCallback("combobox14", bind(&VRGuiScene::on_change_group, this));
     setComboboxCallback("combobox23", bind(&VRGuiScene::on_change_cam_proj, this));
@@ -1333,7 +1326,12 @@ VRGuiScene::VRGuiScene() { // TODO: reduce callbacks with templated functions
     updateObjectForms();*/
 
     auto mgr = OSG::VRGuiSignals::get();
-    mgr->addCallback("ui_change_scene_tab", [&](OSG::VRGuiSignals::Options o) { cout << " ----- " << toString(o) << endl; if (o["tab"] == "Scenegraph") updateTreeView(); return true; } );
+    mgr->addCallback("ui_change_scene_tab", [&](OSG::VRGuiSignals::Options o) { if (o["tab"] == "Scenegraph") updateTreeView(); return true; } );
+    mgr->addCallback("treeview_select", [&](OSG::VRGuiSignals::Options o) { if (o["treeview"] == "scenegraph") on_treeview_select( o["node"] ); return true; } );
+
+    mgr->addCallback("sg_toggle_visible", [&](OSG::VRGuiSignals::Options o) { on_toggle_visible(toBool(o["visible"])); return true; } );
+    mgr->addCallback("sg_toggle_pickable", [&](OSG::VRGuiSignals::Options o) { on_toggle_pickable(toBool(o["pickable"])); return true; } );
+    mgr->addCallback("sg_toggle_cast_shadow", [&](OSG::VRGuiSignals::Options o) { on_toggle_throw_shadow(toBool(o["castShadow"])); return true; } );
 }
 
 // new scene, update stuff here
