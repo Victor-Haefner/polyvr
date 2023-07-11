@@ -122,7 +122,7 @@ VRGlutEditorPtr VRGlutEditor::ptr() { return static_pointer_cast<VRGlutEditor>( 
 VRGlutEditorPtr VRGlutEditor::create() { return VRGlutEditorPtr(new VRGlutEditor() ); }
 
 void VRGlutEditor::onMain_Keyboard_special(int k) {
-    cout << " VRGlutEditor::onMain_Keyboard_special " << k << endl;
+    //cout << " VRGlutEditor::onMain_Keyboard_special " << k << endl;
 }
 
 void VRGlutEditor::setFullscreen(bool b) {
