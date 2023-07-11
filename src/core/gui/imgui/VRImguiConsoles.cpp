@@ -184,6 +184,15 @@ void ImViewControls::render() {
 
     ImGui::SameLine();
     if (ImGui::Button("Fullscreen")) uiSignal("toolbar_fullscreen");
+
+    ImGui::SameLine(ImGui::GetWindowWidth()-100);
+    ImGui::SetNextItemWidth(100);
+    if (ImGui::BeginCombo("##UItheme", "Theme", 0)) {
+        if (ImGui::RadioButton("Light", &uiTheme, 0)) ImGui::StyleColorsLight();
+        if (ImGui::RadioButton("Dark", &uiTheme, 1)) ImGui::StyleColorsDark();
+        if (ImGui::RadioButton("Classic", &uiTheme, 2)) ImGui::StyleColorsClassic();
+        ImGui::EndCombo();
+    }
 }
 
 void ImConsoles::begin() {
