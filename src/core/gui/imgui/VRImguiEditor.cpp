@@ -199,7 +199,9 @@ void handleMouseWheel(int b, int s) {
 void handleSpecial(int b, int s) { // TODO: for some reason the imgui state is inverted..
     ImGuiIO& io = ImGui::GetIO();
     if (b == 112) io.KeyShift = s;
+    if (b == 113) io.KeyShift = s;
     if (b == 114) io.KeyCtrl = s;
+    if (b == 115) io.KeyCtrl = s;
     if (b == 116) io.KeyAlt = s;
     //cout << "handleSpecial " << b << " " << s << " " << io.KeyAlt << endl;
 }
