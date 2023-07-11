@@ -54,6 +54,18 @@ void ImSection::begin() {
 }
 
 void ImSection::end() {
+    auto mc = ImGui::GetMouseCursor();
+    if (mc == ImGuiMouseCursor_None) glutSetCursor(GLUT_CURSOR_NONE);
+    if (mc == ImGuiMouseCursor_Arrow) glutSetCursor(GLUT_CURSOR_RIGHT_ARROW);
+    if (mc == ImGuiMouseCursor_TextInput) glutSetCursor(GLUT_CURSOR_TEXT);
+    if (mc == ImGuiMouseCursor_ResizeAll) glutSetCursor(GLUT_CURSOR_FULL_CROSSHAIR);
+    if (mc == ImGuiMouseCursor_ResizeNS) glutSetCursor(GLUT_CURSOR_UP_DOWN);
+    if (mc == ImGuiMouseCursor_ResizeEW) glutSetCursor(GLUT_CURSOR_LEFT_RIGHT);
+    if (mc == ImGuiMouseCursor_ResizeNESW) glutSetCursor(GLUT_CURSOR_FULL_CROSSHAIR);
+    if (mc == ImGuiMouseCursor_ResizeNWSE) glutSetCursor(GLUT_CURSOR_FULL_CROSSHAIR);
+    if (mc == ImGuiMouseCursor_Hand) glutSetCursor(GLUT_CURSOR_INFO);
+    if (mc == ImGuiMouseCursor_NotAllowed) glutSetCursor(GLUT_CURSOR_DESTROY);
+
     ImGui::End();
 }
 
@@ -80,23 +92,42 @@ ImSidePanel::ImSidePanel(Rectangle r) : ImSection("SidePanel", r) {
     appManager = ImWidgetPtr(new ImAppManager());
     setupManager = ImWidgetPtr(new ImSetupManager());
     sceneEditor = ImWidgetPtr(new ImSceneEditor());
+
+    auto mgr = OSG::VRGuiSignals::get();
+    mgr->addCallback("openUiTabs", [&](OSG::VRGuiSignals::Options o){ selected = o["tab1"]; return true; } );
+}
+
+//uiSignal("openUiTabs", {{"tab1", "Scene"}, {"tab2", "Scripting"}});
+void ImSidePanel::openTabs(string tab1, string tab2) {
+    ;
 }
 
 void ImSidePanel::begin() {
     ImSection::begin();
     ImGuiTabBarFlags tab_bar_flags = ImGuiTabBarFlags_None;
+
+    ImGuiTabItemFlags flags1, flags2, flags3;
+    flags1 = flags2 = flags3 = 0;
+
+    if (selected != "") {
+        if (selected == "Apps") flags1 = ImGuiTabItemFlags_SetSelected;
+        if (selected == "Setup") flags2 = ImGuiTabItemFlags_SetSelected;
+        if (selected == "Scene") flags3 = ImGuiTabItemFlags_SetSelected;
+        selected = "";
+    }
+
     if (ImGui::BeginTabBar("MyTabBar", tab_bar_flags)) {
-        if (ImGui::BeginTabItem("Apps")) {
+        if (ImGui::BeginTabItem("Apps", NULL, flags1)) {
             appManager->render();
             ImGui::EndTabItem();
         }
 
-        if (ImGui::BeginTabItem("Setup")) {
+        if (ImGui::BeginTabItem("Setup", NULL, flags2)) {
             setupManager->render();
             ImGui::EndTabItem();
         }
 
-        if (ImGui::BeginTabItem("Scene")) {
+        if (ImGui::BeginTabItem("Scene", NULL, flags3)) {
             sceneEditor->render();
             ImGui::EndTabItem();
         }

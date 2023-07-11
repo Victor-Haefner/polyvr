@@ -13,6 +13,10 @@ VRConsoleWidget::message::message(string m, string s, shared_ptr< VRFunction<str
 VRConsoleWidget::VRConsoleWidget() {
     ID = VRGuiManager::genUUID();
     uiSignal("newConsole", {{"ID",ID}});
+
+    auto sigs = OSG::VRGuiSignals::get();
+    sigs->addCallback("clickConsole", [&](OSG::VRGuiSignals::Options o) { if (o["ID"] == ID) on_link_activate( o["mark"] ); return true; }, true );
+
     /*buffer = gtk_text_buffer_new(0);
     GtkTextView* term_view = (GtkTextView*)gtk_text_view_new_with_buffer(buffer);
     PangoFontDescription* fdesc = pango_font_description_new();
@@ -126,7 +130,8 @@ void VRConsoleWidget::addStyle( string style, string fg, string bg, bool italic,
     styles[style] = "";
 }
 
-bool VRConsoleWidget::on_link_activate(string object, string event, string itr) {
+//bool VRConsoleWidget::on_link_activate(string object, string event, string itr) {
+void VRConsoleWidget::on_link_activate(string mark) {
     /*GdkEventButton* event_btn = (GdkEventButton*)event;
     if (event->type == GDK_BUTTON_PRESS && event_btn->button == 1) {
         GtkTextIter markItr, tagToggle, lineEnd;
@@ -150,7 +155,12 @@ bool VRConsoleWidget::on_link_activate(string object, string event, string itr) 
         g_slist_free(marks);
         return true;
     }*/
-    return false;
+
+    if (links.count(mark)) {
+        if (auto l = links[mark].link) {
+            (*l)( links[mark].msg );
+        }
+    }
 }
 
 void VRConsoleWidget::update() {

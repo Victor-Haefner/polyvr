@@ -328,6 +328,8 @@ TextEditor::Coordinates TextEditor::ScreenPosToCoordinates(const ImVec2& aPositi
 	ImVec2 local(aPosition.x - origin.x, aPosition.y - origin.y);
 
 	int lineNo = std::max(0, (int)floor(local.y / mCharAdvance.y));
+	//int lineNo = std::max(0, (int)floor(local.y / mCharAdvance.y));
+	//std::cout << "   " << lineNo << ", " << local.y << std::endl;
 
 	int columnCoord = 0;
 
@@ -785,8 +787,8 @@ void TextEditor::HandleMouseInputs()
 
 	if (ImGui::IsWindowHovered())
 	{
-	    //std::cout << "TextEditor::HandleMouseInputs " << shift << std::endl;
-		if (!shift && !alt)
+	    //std::cout << "TextEditor::HandleMouseInputs " << !alt << std::endl;
+		if (/*!shift &&*/ !alt)
 		{
             //std::cout << " ->! " << std::endl;
 			auto click = ImGui::IsMouseClicked(0);
@@ -844,11 +846,16 @@ void TextEditor::HandleMouseInputs()
 				mLastClick = (float)ImGui::GetTime();
 			}
 			// Mouse left button dragging (=> update selection)
-			else if (ImGui::IsMouseDragging(0) && ImGui::IsMouseDown(0))
-			{
-				io.WantCaptureMouse = true;
-				mState.mCursorPosition = mInteractiveEnd = ScreenPosToCoordinates(ImGui::GetMousePos());
-				SetSelection(mInteractiveStart, mInteractiveEnd, mSelectionMode);
+			else {
+                //std::cout << " editor - hover " << ImGui::IsMouseDown(0) << ", " << ImGui::IsMouseDragging(0) << std::endl;
+                    //if (ImGui::IsMouseDragging(0) && ImGui::IsMouseDown(0))
+                    if (ImGui::IsMouseDown(0))
+                {
+                    io.WantCaptureMouse = true;
+                    mState.mCursorPosition = mInteractiveEnd = ScreenPosToCoordinates(ImGui::GetMousePos());
+                    SetSelection(mInteractiveStart, mInteractiveEnd, mSelectionMode);
+                    //std::cout << " editor - update drag selection " << mInteractiveStart.mColumn << ", " << mInteractiveEnd.mColumn << std::endl;
+                }
 			}
 		}
 	}

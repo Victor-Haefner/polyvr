@@ -36,7 +36,7 @@ class VRConsoleWidget {
         bool isOpen = 0;
         string notifyColor = "#006fe0";
 
-        bool on_link_activate(string object, string event, string itr);
+        void on_link_activate(string mark);
 
     public:
         VRConsoleWidget();

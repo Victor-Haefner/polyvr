@@ -40,6 +40,11 @@ ImScriptList::ImScriptList() {
     mgr->addCallback("scripts_list_clear", [&](OSG::VRGuiSignals::Options o){ clear(); return true; } );
     mgr->addCallback("scripts_list_add_group", [&](OSG::VRGuiSignals::Options o){ addGroup(o["name"], o["ID"]); return true; } );
     mgr->addCallback("scripts_list_add_script", [&](OSG::VRGuiSignals::Options o){ addScript(o["name"], o["group"]); return true; } );
+    mgr->addCallback("openUiScript", [&](OSG::VRGuiSignals::Options o) {
+        selected = o["name"];
+        uiSignal("select_script", {{"script",selected}});
+        return true;
+    } );
 }
 
 void ImScriptList::clear() {
@@ -142,6 +147,8 @@ ImScriptEditor::ImScriptEditor() {
     mgr->addCallback("script_editor_add_trigger", [&](OSG::VRGuiSignals::Options o){ addTrigger(o["name"], o["trigger"], o["parameter"], o["device"], o["key"], o["state"]); return true; } );
     mgr->addCallback("script_editor_add_argument", [&](OSG::VRGuiSignals::Options o){ addArgument(o["name"], o["type"], o["value"]); return true; } );
     mgr->addCallback("editor_cmd", [&](OSG::VRGuiSignals::Options o){ editorCommand(o["cmd"]); return true; } );
+    mgr->addCallback("openUiScript", [&](OSG::VRGuiSignals::Options o){ focusOn(o["line"], o["column"]); return true; } );
+
     imEditor.SetShowWhitespaces(false); // TODO: add as feature!
     imEditor.SetLanguageDefinition(TextEditor::LanguageDefinition::Python());
 
@@ -150,6 +157,11 @@ ImScriptEditor::ImScriptEditor() {
     triggerTypes = {"None", "on_scene_load", "on_scene_close", "on_scene_import", "on_timeout", "on_device", "on_socket"};
     device_types = {"None", "mouse", "multitouch", "keyboard", "flystick", "haptic", "server1", "leap", "vrpn_device"};
     trigger_states = {"Pressed", "Released", "Drag", "Drop", "To edge", "From edge"};
+}
+
+void ImScriptEditor::focusOn(string line, string column) {
+    TextEditor::Coordinates coords(max(0,toInt(line)-1), toInt(column));
+    imEditor.SetCursorPosition(coords);
 }
 
 void ImScriptEditor::editorCommand(string cmd) {
@@ -207,6 +219,8 @@ void ImScriptEditor::getBuffer(int skipLines) {
 }
 
 void ImScriptEditor::setBuffer(string data) {
+    TextEditor::Coordinates c;
+    imEditor.SetSelection(c,c); // deselect
     imEditor.SetText(data);
     sensitive = true;
     if (data == "") sensitive = false;
@@ -312,6 +326,17 @@ void ImScriptEditor::render() {
     if (sensitive) {
         imEditor.Render("Editor");
         if (imEditor.IsTextChanged()) uiSignal("script_editor_text_changed");
+
+        if (ImGui::IsItemHovered()) { // shift selection
+            if( ImGui::IsMouseReleased(0) ) {
+                static TextEditor::Coordinates lastCoords = imEditor.GetCursorPosition();
+                auto coords = imEditor.GetCursorPosition();
+
+                ImGuiIO& io = ImGui::GetIO();
+                if (io.KeyShift) imEditor.SetSelection(lastCoords, coords, TextEditor::SelectionMode::Normal);
+                else lastCoords = coords;
+            }
+        }
     }
 
     if (!sensitive) ImGui::EndDisabled();
@@ -369,7 +394,9 @@ void ImScripting::render() {
         if (io.KeyCtrl && io.KeysDown['t']) { io.KeysDown['t'] = false; uiSignal("editor_cmd", {{"cmd","toggleLine"}}); }
         if (io.KeyCtrl && io.KeysDown['d']) { io.KeysDown['d'] = false; uiSignal("editor_cmd", {{"cmd","duplicateLine"}}); }
     }
+
     editor.render();
+
     ImGui::EndChild();
     ImGui::EndGroup();
 }
