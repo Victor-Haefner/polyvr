@@ -3,6 +3,7 @@
 #include "GLTF/GLTF.h"
 #include "E57/E57.h"
 #include "COLLADA/VRCOLLADA.h"
+#include "GIS/VRGDAL.h"
 #ifndef WITHOUT_DWG
 #include "VRDWG.h"
 #endif
@@ -41,6 +42,7 @@ void VRExport::write(VRObjectPtr obj, string path, map<string, string> options) 
 #ifndef WITHOUT_COLLADA
     if (ext == ".dae") { writeCollada(obj, path, options); }
 #endif
+    if (ext == ".shp") { writeSHP(obj, path, options); }
 }
 
 

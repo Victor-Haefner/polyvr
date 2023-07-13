@@ -240,8 +240,43 @@ void loadSHP(string path, VRTransformPtr res, map<string, string> opts) {
 #endif
 }
 
-void writeSHP(string path, VRObjectPtr obj) {
-    ;
+void writeSHP(VRObjectPtr obj, string path, map<string, string> options) {
+    OGRRegisterAll();
+
+    GDALDriver* driver = GetGDALDriverManager()->GetDriverByName("ESRI Shapefile");
+    if (driver == NULL) { cout << " Error: SHP file driver not found!" << endl; return; }
+    GDALDataset* dataset = driver->Create(path.c_str(), 0, 0, 0, GDT_Unknown, nullptr);
+    if (dataset == NULL) { cout << " Error: SHP dataset creation failed!" << endl; return; }
+
+    for (auto child : obj->getChildren("Gometry")) {
+        auto geo = dynamic_pointer_cast<VRGeometry>(child);
+        if (!geo) continue;
+
+        OGRLayer* layer = dataset->CreateLayer(geo->getBaseName().c_str(), nullptr, wkbPoint, nullptr); // TODO: role of wkbPoint?
+        if (layer == NULL) { cout << " Error: SHP layer creation failed!" << endl; continue; }
+
+        //OGRFieldDefn fieldDefn("field_name", OFTString);
+        //if (layer->CreateField(&fieldDefn) != OGRERR_NONE) { cout << " Error: SHP field creation failed!" << endl; continue; }
+
+        VRGeoData data(geo);
+
+        vector<Vec2i> features;
+
+        for (size_t i=0; i<data.size(); i++) {
+            Pnt3d p = data.getPosition(i);
+            Vec2d t = data.getTexCoord(i);
+            OGRFeature* feature = OGRFeature::CreateFeature(layer->GetLayerDefn());
+            OGRPoint point;
+            point.setX(p[0]);
+            point.setY(p[2]);
+            feature->SetGeometry(&point);
+            //feature->SetField("field_name", "attribute_value");
+            if (layer->CreateFeature(feature) != OGRERR_NONE) { cout << " Error: SHP feature creation failed!" << endl; continue; }
+            OGRFeature::DestroyFeature(feature);
+        }
+    }
+
+    GDALClose(dataset);
 }
 
 void loadTIFF(string path, VRTransformPtr res, map<string, string> opts) {
