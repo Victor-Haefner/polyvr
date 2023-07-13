@@ -32,7 +32,7 @@ class Triangulator {
 
         void add(VRPolygon p, bool outer = true);
 
-        void append(VRGeoDataPtr data, bool addNormals);
+        int append(VRGeoDataPtr data, bool addNormals);
         VRGeometryPtr compute();
         VRGeometryPtr computeBounds();
 };
