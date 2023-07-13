@@ -1577,3 +1577,13 @@ string VRMaterial::diff(VRMaterialPtr m) {
     }
     return res;
 }
+
+void VRMaterial::applyPBR() {
+
+
+}
+
+void VRMaterial::setPBRcolor(Color3f c) {
+
+
+}

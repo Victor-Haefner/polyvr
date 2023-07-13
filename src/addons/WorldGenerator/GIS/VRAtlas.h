@@ -15,11 +15,6 @@ OSG_BEGIN_NAMESPACE;
 
 class VRAtlas : public std::enable_shared_from_this<VRAtlas>  {
     private:
-        enum TYPE {
-            INNERQUAD = 0,
-            INNERRING = 1,
-            OUTERRING = 2
-        };
         struct Boundary {
             double minEast = 0.0;
             double maxEast = 0.0;
@@ -30,10 +25,11 @@ class VRAtlas : public std::enable_shared_from_this<VRAtlas>  {
             Boundary();
             ~Boundary();
         };
+
         struct Patch {
             string id;
+            vector<string> children;
             int LODlvl;
-            int type;
             VRTerrainPtr terrain;
             VRMapManagerPtr mapMgr;
             Vec2d coords = Vec2d(0,0);
@@ -42,90 +38,60 @@ class VRAtlas : public std::enable_shared_from_this<VRAtlas>  {
             float localHeightoffset = 0.0;
             string orthoPic;
             string heightPic;
-            bool recent = false;
-            bool active = false;
+            string east;
+            string north;
+            string els;
+            bool visible = false;
+            bool visibleToBe = false;
+            bool allowedToDeload = false;
+            bool loaded = false;
 
             void paint();
-            Patch(string sid, int lvl, VRTerrainPtr ter);
+            Patch(string sid, int lvl);
             Patch();
             ~Patch();
         };
-        struct Level {
-            int LODlvl;
-            float edgeLength;
-            Vec2i shift = Vec2i(0,0);
-            Vec2d coordOrigin = Vec2d(0,0);
-            Vec3d currentOrigin = Vec3d(0,0,0);
-            int type;
-            vector<vector<Patch>> patches;
-            Level(int t, int lvl);
-            Level();
-            ~Level();
-        };
-        struct Layout {
-            int currentLODlvl = 0;
-            int currentMaxLODlvl = 0;
-            Vec3d origin = Vec3d(0,0,0);
-            Vec2d coordOrigin = Vec2d(0,0);
-            list<Level> levels;
-            bool debugMode = false;
-            string localPathOrtho = "";
-            string localPathHeight = "";
-            Level innerQuad;
-            bool steady = false;
-            //Level* innerRing;
-            //Level* outerRing;
-            list<Patch> toDestroy;
-            list<Patch> toGenerate;
-            void shiftEastIns(Level& lev, list<Level>::iterator it, bool traverse = true);
-            void shiftEastOut(Level& lev, list<Level>::iterator it);
-            void shiftWestIns(Level& lev, list<Level>::iterator it, bool traverse = true);
-            void shiftWestOut(Level& lev, list<Level>::iterator it);
-            void shiftNorthIns(Level& lev, list<Level>::iterator it, bool traverse = true);
-            void shiftNorthOut(Level& lev, list<Level>::iterator it);
-            void shiftSouthIns(Level& lev, list<Level>::iterator it, bool traverse = true);
-            void shiftSouthOut(Level& lev, list<Level>::iterator it);
-            void setCoords(Patch& pat, Vec3d co3, int p_type);
-            void debugPaint();
-            void paintAll();
-            void reset(Vec3d camPos);
-            Layout();
-            ~Layout();
-        };
+
         float size = 100.0;
         float LODviewHeight = 500.0;
         float scaling = 1.0;
+        Vec3d origin = Vec3d(0,0,0);
         Vec2d atlasOrigin = Vec2d(0.0,0.0);
         Boundary bounds;
         int LODMax = 0;
-        int patchcount = 0;
         bool stop = false;
-        bool justPainted = false;
-        deque<Patch> patchQueue;
+        deque<string> patchQueue;
+        deque<string> invisQueue;
         VRMapManagerPtr mapMgr;
 
         bool isValid();
 
+        map<string,Patch> allPatchesByID;
+        map<string,int> loadedPatches;
+        map<string,int> visiblePatchesByID;
+        map<string,int> levelPatchesByID;
+
         string filepath;
         VRTransformPtr atlas;
         VRUpdateCbPtr updatePtr;
-        string serverURL = "";
         string localPathOrtho = "";
         string localPathHeight = "";
         int sinceLastMovement = 0;
         Vec3d lastPos = Vec3d(0,0,0);
         VRGeometryPtr debugQuad;
         bool debugMode = false;
-        Layout layout;
+        bool toBeReset = false;
 
         void update();
-        void downSize();
-        void upSize();
+
         void addInnerQuad(int lvl, Vec2d nOrigin);
         void addInnerRing(int lvl, Vec2d nOrigin);
         void addOuterRing(int lvl, Vec2d nOrigin);
         void handleJobQueue();
         void resetJobQueue();
+
+        void setCoords(Patch& pat);
+        void debugPaint();
 
         VRGeometryPtr generatePatch(string id);
         VRTerrainPtr generateTerrain(string id, int lvlh);
@@ -139,7 +105,6 @@ class VRAtlas : public std::enable_shared_from_this<VRAtlas>  {
         VRTransformPtr setup();
         void setCoordOrigin(double east, double north);
         void setBoundary(double minEast, double maxEast, double minNorth, double maxNorth);
-        void setServerURL(string url);
         void setLocalPaths(string ortho, string height);
         void setScale(float s);
         //void setParameters();
