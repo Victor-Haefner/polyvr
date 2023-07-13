@@ -20,6 +20,7 @@ using namespace std;
 
 class VRGuiManager {
     private:
+        bool nogtk = false;
         bool standalone = false;
 	    VRUpdateCbPtr updatePtr;
         VRThreadCbPtr gtkUpdateCb;

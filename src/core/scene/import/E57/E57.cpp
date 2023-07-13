@@ -9,6 +9,7 @@
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/VRPointCloud.h"
 #include "core/objects/VRLod.h"
+#include "core/math/pose.h"
 #include "core/math/partitioning/boundingbox.h"
 #include "core/math/partitioning/Octree.h"
 #include "core/utils/VRProgress.h"
@@ -113,6 +114,33 @@ void OSG::convertE57(string pathIn, string pathOut) {
     catch (...) { cerr << "Got an unknown exception" << endl; return; }
 }
 
+// nice reference implementation
+//  https://github.com/CloudCompare/CloudCompare/blob/master/plugins/core/IO/qE57IO/src/E57Filter.cpp#L1329
+
+PosePtr extractPose(e57::StructureNode& node) {
+    if (!node.isDefined("pose")) return 0;
+
+    StructureNode ep(node.get("pose"));
+    StructureNode tn(ep.get("translation"));
+    StructureNode rn(ep.get("rotation"));
+
+    Pnt3d p;
+    p[0] = e57::FloatNode(tn.get("x")).value();
+    p[1] = e57::FloatNode(tn.get("y")).value();
+    p[2] = e57::FloatNode(tn.get("z")).value();
+
+    OSG::Quaterniond q;
+    q[0] = e57::FloatNode(rn.get("x")).value();
+    q[1] = e57::FloatNode(rn.get("y")).value();
+    q[2] = e57::FloatNode(rn.get("z")).value();
+    q[3] = e57::FloatNode(rn.get("w")).value();
+
+    Matrix4d m;
+    m.setTranslate(p);
+    m.setRotate(q);
+    return Pose::create(m);
+}
+
 void OSG::loadE57(string path, VRTransformPtr res, map<string, string> importOptions) {
     cout << "load e57 pointcloud " << path << endl;
     importOptions["filePath"] = path;
@@ -134,14 +162,18 @@ void OSG::loadE57(string path, VRTransformPtr res, map<string, string> importOpt
         int64_t scanCount = data3D.childCount(); // number of scans in file
         cout << " file read succefully, it contains " << scanCount << " scans" << endl;
 
-        for (int i = 0; i < scanCount; i++) {
-            StructureNode scan(data3D.get(i));
+        for (int scan_i = 0; scan_i < scanCount; scan_i++) {
+            StructureNode scan(data3D.get(scan_i));
             string sname = scan.pathName();
+
+            PosePtr pose = extractPose(scan);
+            if (!scan.isDefined("points")) { cout << " no points found in scan, skip.." << endl; continue; }
 
             CompressedVectorNode points( scan.get("points") );
             string pname = points.pathName();
             auto cN = points.childCount();
-            cout << "  scan " << i << " contains " << cN << " points\n";
+            //cout << "  scan " << scan_i << " dump: " << endl; scan.dump();
+            cout << "  scan " << scan_i << " contains " << cN << " points\n";
 
             auto progress = VRProgress::create();
             progress->setup("process points ", cN);
@@ -150,14 +182,17 @@ void OSG::loadE57(string path, VRTransformPtr res, map<string, string> importOpt
             StructureNode proto(points.prototype());
             bool hasPos = (proto.isDefined("cartesianX") && proto.isDefined("cartesianY") && proto.isDefined("cartesianZ"));
             bool hasCol = (proto.isDefined("colorRed") && proto.isDefined("colorGreen") && proto.isDefined("colorBlue"));
+            bool hasInt = proto.isDefined("intensity");
             if (!hasPos) continue;
 
             if (hasCol) cout << "   scan has colors\n";
             else cout << "   scan has no colors\n";
+            if (hasInt) cout << "   scan has intensity\n";
+            else cout << "   scan has no intensity\n";
 
             for (int i=0; i<proto.childCount(); i++) {
                 auto child = proto.get(i);
-                cout << "    scan data: " << child.pathName() << endl;
+                cout << "    scan data channel: " << child.pathName() << endl;
             }
 
             vector<SourceDestBuffer> destBuffers;
@@ -168,10 +203,13 @@ void OSG::loadE57(string path, VRTransformPtr res, map<string, string> importOpt
             double r[N];
             double g[N];
             double b[N];
+            double i[N];
             if (hasCol) {
                 destBuffers.push_back(SourceDestBuffer(imf, "colorRed", r, N, true));
                 destBuffers.push_back(SourceDestBuffer(imf, "colorGreen", g, N, true));
                 destBuffers.push_back(SourceDestBuffer(imf, "colorBlue", b, N, true));
+            } else if (hasInt) {
+                destBuffers.push_back(SourceDestBuffer(imf, "intensity", i, N, true));
             }
 
             auto pointcloud = VRPointCloud::create("pointcloud");
@@ -179,7 +217,9 @@ void OSG::loadE57(string path, VRTransformPtr res, map<string, string> importOpt
 
             auto pushPoint = [&](int j) {
                 Vec3d pos = Vec3d(x[j], y[j], z[j]);
-                Color3ub col(r[j], g[j], b[j]);
+                Color3ub col(0,0,0);
+                if (hasCol) col = Color3ub(r[j], g[j], b[j]);
+                else if (hasInt) col = Color3ub(i[j], i[j], i[j]);
                 pointcloud->addPoint(pos, col);
             };
 
@@ -224,6 +264,7 @@ void OSG::loadE57(string path, VRTransformPtr res, map<string, string> importOpt
             } while(gotCount);
 
             pointcloud->setupLODs();
+            if (pose) pointcloud->setPose(pose);
             res->addChild(pointcloud);
 
             reader.close();

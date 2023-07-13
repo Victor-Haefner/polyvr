@@ -77,6 +77,7 @@ void addSchemaPath(string p) {
 }
 
 void VRGuiManager::setWindowTitle(string title) {
+    if (nogtk) return;
     GtkWindow* top = (GtkWindow*)VRGuiBuilder::get()->get_widget("window1");
     gtk_window_set_title(top, title.c_str());
 }
@@ -84,7 +85,14 @@ void VRGuiManager::setWindowTitle(string title) {
 VRGuiManager::VRGuiManager() {
     cout << "Init VRGuiManager.." << endl;
     mtx = new VRMutex();
-    standalone = VROptions::get()->getOption<bool>("standalone");
+    nogtk = VROptions::get()->getOption<bool>("nogtk");
+    standalone = VROptions::get()->getOption<bool>("standalone") || nogtk;
+
+    if (nogtk) {
+        cout << " start in nogtk mode\n";
+        VRSetupManager::get()->load("Glut", "setup/Glut.xml");
+        return;
+    }
 
     int argc = 0;
     gtk_disable_setlocale();
@@ -216,11 +224,11 @@ void VRGuiManager::selectObject(VRObjectPtr obj) {
 }
 
 void VRGuiManager::openHelp(string search) {
-    g_sc->openHelp(search);
+    if (g_sc) g_sc->openHelp(search);
 }
 
 void VRGuiManager::updateSystemInfo() {
-    g_mon->updateSystemInfo();
+    if (g_mon) g_mon->updateSystemInfo();
 }
 
 void VRGuiManager::startThreadedUpdate() {
@@ -238,12 +246,14 @@ VRGuiManager* VRGuiManager::get(bool init) {
 }
 
 void VRGuiManager::focusScript(string name, int line, int column) {
-    g_sc->focusScript(name, line, column);
+    if (g_sc) g_sc->focusScript(name, line, column);
 }
 
 void VRGuiManager::getScriptFocus(VRScriptPtr& script, int& line, int& column) {
-    script = g_sc->getSelectedScript();
-    g_sc->getLineFocus(line, column);
+    if (g_sc) {
+        script = g_sc->getSelectedScript();
+        g_sc->getLineFocus(line, column);
+    }
 }
 
 void VRGuiManager::broadcast(string sig) {
@@ -273,6 +283,7 @@ void vr_gtk_main_do_event(GdkEvent* e) {
 }
 
 void VRGuiManager::updateGtk() {
+    if (nogtk) return;
     //cout << VRGlobals::CURRENT_FRAME << "VRGuiManager::updateGtk" << endl;
     gdk_event_handler_set((GdkEventFunc)vr_gtk_main_do_event, NULL, NULL);
 

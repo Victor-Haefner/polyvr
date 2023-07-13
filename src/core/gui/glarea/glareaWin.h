@@ -45,6 +45,14 @@ typedef struct Win32CursorTheme {
     GHashTable* named_cursors;
 } _Win32CursorTheme;
 
+typedef enum _GdkWin32GLContextType
+{
+    GDK_WIN32_GL_PENDING,
+    GDK_WIN32_GL_NONE,
+    GDK_WIN32_GL_WGL,
+    GDK_WIN32_GL_EGL
+} GdkWin32GLContextType;
+
 typedef struct {
     _GdkDisplay display;
 
@@ -58,19 +66,24 @@ typedef struct {
     HWND hwnd;
     HWND clipboard_hwnd;
 
-    /* WGL/OpenGL Items */
-    guint have_wgl : 1;
+    /* OpenGL Items */
+    GdkWin32GLContextType gl_type;
     guint gl_version;
-    HDC gl_hdc;
-    HWND gl_hwnd;
 
-    GPtrArray* monitors;
-
+    /* WGL Items */
     guint hasWglARBCreateContext : 1;
     guint hasWglEXTSwapControl : 1;
     guint hasWglOMLSyncControl : 1;
     guint hasWglARBPixelFormat : 1;
     guint hasWglARBmultisample : 1;
+
+    /* compensate around Intel OpenGL driver issues on blitting, see issue #3487 */
+    guint needIntelGLWorkaround : 1;
+
+    /* EGL (Angle) Items */
+    HDC hdc_egl_temp;
+
+    GPtrArray* monitors;
 
     /* HiDPI Items */
     guint have_at_least_win81 : 1;
@@ -80,6 +93,8 @@ typedef struct {
 
     GdkWin32ShcoreFuncs shcore_funcs;
     GdkWin32User32DPIFuncs user32_dpi_funcs;
+
+    /* Running CPU items */
 } _GdkWin32Display;
 
 typedef struct
@@ -412,6 +427,7 @@ static HGLRC vr_create_gl_context_with_attribs(HDC hdc, HGLRC hglrc_base, int fl
     };
 
     hglrc = wglCreateContextAttribsARB(hdc, NULL, attribs);
+    printf("vr_create_gl_context_with_attribs done\n");
     return hglrc;
 }
 

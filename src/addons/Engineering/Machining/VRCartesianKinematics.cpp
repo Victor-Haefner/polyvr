@@ -27,9 +27,9 @@ void VRCartesianKinematics::setEndEffector(PosePtr pose) {
 	double x = pose->pos()[0];
 	double y = pose->pos()[1];
 	double z = pose->pos()[2];
-	if (axisX) axisX->setFrom(Vec3d(x, 0, 0));
-	if (axisY) axisY->setFrom(Vec3d(0, y, 0));
-	if (axisZ) axisZ->setFrom(Vec3d(0, 0, -z));
-	if (axisY == axisZ && axisZ) axisZ->setFrom(Vec3d(0, y, -z));
+	if (axisX) { auto p = axisX->getFrom(); axisX->setFrom(Vec3d(x, p[1], p[2])); }
+	if (axisY) { auto p = axisY->getFrom(); axisY->setFrom(Vec3d(p[0], y, p[2])); }
+	if (axisZ) { auto p = axisZ->getFrom(); axisZ->setFrom(Vec3d(p[0], p[1], -z)); }
+	if (axisY == axisZ && axisZ) { auto p = axisZ->getFrom(); axisZ->setFrom(Vec3d(p[0], y, -z)); }
 }
 

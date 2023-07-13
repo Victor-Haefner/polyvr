@@ -1,4 +1,5 @@
-#include <gtk/gtk.h>
+#include <OpenSG/OSGRenderAction.h>
+
 #include "VRGuiScene.h"
 
 #include <iostream>
@@ -776,7 +777,7 @@ void VRGuiScene::on_menu_add_file() {
     VRGuiFile::addFilter("3DS", 1, "*.3ds");
     VRGuiFile::addFilter("OBJ", 1, "*.obj");
     VRGuiFile::setGeoLoadWidget();
-    VRGuiFile::open( "Load", GTK_FILE_CHOOSER_ACTION_OPEN, "Load geometric data" );
+    VRGuiFile::open( "Load", "open", "Load geometric data" );
 }
 
 void VRGuiScene::on_menu_add_light() {

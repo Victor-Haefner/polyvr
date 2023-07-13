@@ -273,9 +273,9 @@ void PolyVR::update() {
         (*cp)();
         cout << "> init step: " << cp->name << " done after " << t.stop() << endl;
         initQueueItr++;
-	static int i = 0;
-	float d = float(i)/(initQueue.size()-1);
-	i++;
+        static int i = 0;
+        float d = float(i)/(initQueue.size()-1);
+        i++;
         VRSetup::sendToBrowser("setProgress|"+toString(d)+"|"+cp->name);
         return;
     }

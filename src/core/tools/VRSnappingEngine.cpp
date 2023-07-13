@@ -87,11 +87,14 @@ struct VRSnappingEngine::Rule {
         return snapP;
     }
 
-    void snap(Matrix4d& m) {
+    void snap(Matrix4d& m, PosePtr o = 0) {
         if (csys) C = csys->getWorldMatrix();
 
+        PosePtr O = prim_o;
+        if (o) O = prim_o->multRight(o);
+
         if (orientation == POINT) {
-            MatrixLookAt(m, snapP, snapP+prim_o->dir(), prim_o->up());
+            MatrixLookAt(m, snapP, snapP+O->dir(), O->up());
             if (csys) {
                 m.multLeft(C);
             }
@@ -203,8 +206,10 @@ void VRSnappingEngine::remObject(VRTransformPtr obj) {
 }
 
 void VRSnappingEngine::addTree(VRObjectPtr obj, int group) {
-    vector<VRObjectPtr> objs = obj->getObjectListByType("Geometry");
-    for (auto o : objs) addObject(static_pointer_cast<VRTransform>(o), group);
+    vector<VRObjectPtr> objs = obj->getChildren(true, "", true);
+    for (auto o : objs) {
+        if (auto geo = dynamic_pointer_cast<VRGeometry>(o)) addObject(geo, group);
+    }
 }
 
 VRSignalPtr VRSnappingEngine::getSignalSnap() { return snapSignal; }
@@ -300,19 +305,23 @@ void VRSnappingEngine::handleDraggedObject(VRDevicePtr dev, VRTransformPtr obj, 
                     for (auto& B : anchors[r->csys]) {
                         if (A.snpgrp != B.grp) continue;
                         Matrix4d ma2L = B.a->getMatrix();
+                        cout << "maL " << A.a->getName() << endl;
+                        cout << " ma2L " << B.a->getName() << endl;
                         //Matrix4d ma2W = m; ma2W.mult(maL);
                         //Vec3d pa2 = Vec3d(ma2W[3]);
                         Vec3d pa2 = Vec3d(ma2L[3]);
                         snapID++;
                         if (!r->inRange(paW-pa2, dmin)) continue;
 
+                        ma2L[3] = Vec4d(0,0,0,1);
+                        Matrix4d ma2Li;
+                        ma2L.inverse(ma2Li);
+
                         r->snapP += pa2;
                         Matrix4d mm = m;
-                        r->snap(mm);
+                        r->snap(mm, B.a->getPose());
                         mm.mult(maLi);
-                        //ma2L.invert();
-                        //mm.mult(ma2L);
-                        event->set(obj, r->csys, mm, dev, 1, snapID);
+                        event->set(obj, r->csys, mm, dev, 1, snapID, A.a, B.a);
                     }
                 } else { // just check if anchor snapps to rule
                     snapID++;
@@ -320,7 +329,7 @@ void VRSnappingEngine::handleDraggedObject(VRDevicePtr dev, VRTransformPtr obj, 
                     Matrix4d mm = m;
                     r->snap(mm);
                     mm.mult(maLi);
-                    event->set(obj, r->csys, mm, dev, 1, snapID);
+                    event->set(obj, r->csys, mm, dev, 1, snapID, A.a, 0);
                 }
             }
         } else { // simple snap, obj origin
@@ -328,7 +337,7 @@ void VRSnappingEngine::handleDraggedObject(VRDevicePtr dev, VRTransformPtr obj, 
             if (!r->inRange(p, dmin)) continue;
             Matrix4d mm = m;
             r->snap(mm);
-            event->set(obj, r->csys, mm, dev, 1, snapID);
+            event->set(obj, r->csys, mm, dev, 1, snapID, 0, 0);
         }
     }
 

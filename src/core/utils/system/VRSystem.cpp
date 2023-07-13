@@ -5,6 +5,7 @@
 #include <sys/stat.h>
 #include <errno.h>
 #include <iostream>
+#include <fstream>
 #include <boost/filesystem.hpp>
 #ifndef WITHOUT_EXECINFO
 #include <execinfo.h>
@@ -18,6 +19,7 @@
 #ifdef _WIN32
 #define _AMD64_
 #include <fileapi.h>
+#include <windows.h>
 #endif
 
 #include <thread>
@@ -202,6 +204,12 @@ bool compileCodeblocksProject(string path) {
 }
 
 long long cpu_time() {
+#ifdef _WIN32
+    FILETIME unused;
+    FILETIME utime;
+    GetThreadTimes(GetCurrentThread(), &unused, &unused, &unused, &utime);
+    return ((utime.dwLowDateTime) / 10);
+#else
     thread_local bool initialized(false);
     thread_local clockid_t clock_id;
     thread_local timespec t0;
@@ -215,6 +223,7 @@ long long cpu_time() {
     timespec result;
     clock_gettime(clock_id, &result);
     return (result.tv_nsec - t0.tv_nsec) / 1000;
+#endif
 }
 
 typedef chrono::time_point<chrono::high_resolution_clock, chrono::nanoseconds> timePoint;

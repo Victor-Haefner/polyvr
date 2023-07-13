@@ -27,7 +27,9 @@ using namespace OSG;
 VRVideo::VRVideo(VRMaterialPtr mat) {
     //avMutex = new boost::mutex();
     material = mat;
+#ifndef _WIN32
     av_register_all(); // Register all formats && codecs
+#endif
 }
 
 VRVideo::~VRVideo() {
@@ -60,9 +62,8 @@ VRVideoPtr VRVideo::create(VRMaterialPtr mat) { return VRVideoPtr( new VRVideo(m
 
 int VRVideo::getStream(int j) {
     if (vFile == 0) return -1;
-
     int k = 0;
-    for(int i=0; i<(int)vFile->nb_streams; i++) if(vFile->streams[i]->codec->codec_type == AVMEDIA_TYPE_VIDEO) {
+    for(int i=0; i<(int)vFile->nb_streams; i++) if(vFile->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_VIDEO) {
         if (k != j) continue;
         return i;
     }
@@ -102,6 +103,23 @@ int getNColors(AVPixelFormat pfmt) {
 
     return 3;
 }
+
+#ifdef _WIN32
+int avcodec_decode_video2(AVCodecContext* video_ctx, AVFrame* frame, int* got_frame, AVPacket* pkt) {
+    int used = 0;
+    if (video_ctx->codec_type == AVMEDIA_TYPE_VIDEO || video_ctx->codec_type == AVMEDIA_TYPE_AUDIO) {
+        used = avcodec_send_packet(video_ctx, pkt);
+        if (used < 0 && used != AVERROR(EAGAIN) && used != AVERROR_EOF) {
+            
+        } else {
+            if (used >= 0) pkt->size = 0;
+            used = avcodec_receive_frame(video_ctx, frame);
+            if (used >= 0) *got_frame = 1;
+        }
+    }
+    return used;
+}
+#endif
 
 VRTexturePtr VRVideo::convertFrame(int stream, AVPacket* packet) {
     if (!vStreams.count(stream)) { cout << " unknown stream " << stream << endl; return 0; }
@@ -171,7 +189,10 @@ void VRVideo::open(string f) {
     aStreams.clear();
     for (int i=0; i<(int)vFile->nb_streams; i++) {
         AVStream* avStream = vFile->streams[i];
-        AVCodecContext* avCodec = avStream->codec;
+        AVCodecParameters* avCodec = avStream->codecpar;
+        const AVCodec* c = avcodec_find_decoder(avCodec->codec_id);
+        AVCodecContext* avContext = avcodec_alloc_context3(c);
+        if (avcodec_parameters_to_context(avContext, avCodec) < 0) continue;
         if (avCodec == 0) continue;
 
         bool isVideo = (avCodec->codec_type == AVMEDIA_TYPE_VIDEO);
@@ -179,14 +200,14 @@ void VRVideo::open(string f) {
 
         if (isVideo) {
             vStreams[i] = VStream();
-            vStreams[i].vCodec = avCodec;
+            vStreams[i].vCodec = avContext;
             vStreams[i].fps = av_q2d(avStream->avg_frame_rate);
 
             // Find the decoder for the video stream
             AVDictionary* optionsDict = 0;
-            AVCodec* c = avcodec_find_decoder(avCodec->codec_id);
+
             if (c == 0) { fprintf(stderr, "Unsupported codec!\n"); return; } // Codec not found
-            if (avcodec_open2(avCodec, c, &optionsDict)<0) return; // Could not open codec
+            if (avcodec_open2(avContext, c, &optionsDict)<0) return; // Could not open codec
         }
 
         if (isAudio) {
@@ -196,10 +217,9 @@ void VRVideo::open(string f) {
 
             // Find the decoder for the audio stream
             AVDictionary* optionsDict = 0;
-            AVCodec* c = avcodec_find_decoder(avCodec->codec_id);
             if (c == 0) { fprintf(stderr, "Unsupported codec!\n"); continue; } // Codec not found
-            if (avcodec_open2(avCodec, c, &optionsDict)<0) continue; // Could not open codec
-            aStreams[i].audio->initWithCodec(avCodec);
+            if (avcodec_open2(avContext, c, &optionsDict)<0) continue; // Could not open codec
+            aStreams[i].audio->initWithCodec(avContext);
         }
     }
 

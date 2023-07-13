@@ -1,3 +1,7 @@
+#include <OpenSG/OSGRenderAction.h>
+#include <OpenSG/OSGFrameBufferObject.h>
+#include <OpenSG/OSGRenderBuffer.h>
+
 #include <gtk/gtk.h>
 #include <gdk/gdk.h>
 #include "VRGtkWindow.h"
@@ -21,9 +25,6 @@
 #include "core/objects/object/VRObject.h"
 #include "core/objects/OSGObject.h"
 #include "core/utils/system/VRSystem.h"
-
-#include <OpenSG/OSGFrameBufferObject.h>
-#include <OpenSG/OSGRenderBuffer.h>
 
 using namespace OSG;
 using namespace std;

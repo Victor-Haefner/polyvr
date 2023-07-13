@@ -325,6 +325,7 @@ void VRRenderStudio::setCamera(OSGCameraPtr cam) {
 }
 
 void VRRenderStudio::setBackground(BackgroundMTRecPtr bg) {
+    //auto defSSAO = stages["ssao"]->getRendering();
     //if (defShading) defShading->setBackground(bg);
     //if (defSSAO) defSSAO->setBackground(bg);
     //if (defBlur) defBlur->setBackground(bg);

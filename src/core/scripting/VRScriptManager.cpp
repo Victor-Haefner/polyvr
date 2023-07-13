@@ -285,7 +285,7 @@ void VRScriptManager::initPyModules() {
     sceneModules.setup(this, pModVR);
     cout << "  Added scene modules" << endl;
 
-	if (!VROptions::get()->getOption<bool>("standalone")) {
+	if (!VROptions::get()->getOption<bool>("standalone") && !VROptions::get()->getOption<bool>("nogtk")) {
         redirectPyOutput("stdout", "Console");
         redirectPyOutput("stderr", "Errors");
 	}
