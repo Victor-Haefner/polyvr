@@ -83,6 +83,7 @@ class VRRobotArm {
         void setLengths(vector<float> lengths);
         void setSpeed(float s);
         void setMaxSpeed(float s);
+        VRTransformPtr genKinematics();
 
         vector<VRTransformPtr> getParts();
         vector<float> getAngles();

@@ -25,20 +25,23 @@ VRRobotArm::VRRobotArm(string type) : type(type) {
 #endif
 
     animPtr = VRFunction<float>::create("animOnPath", bind(&VRRobotArm::animOnPath, this, placeholders::_1 ) );
-    anim->addUnownedCallback(animPtr);
+    //anim->addUnownedCallback(animPtr);
+    anim->addCallback(animPtr);
 
     updatePtr = VRUpdateCb::create("run engines", bind(&VRRobotArm::update, this) );
     VRScene::getCurrent()->addUpdateFkt(updatePtr, 999);
 }
 
-VRRobotArm::~VRRobotArm() {}
+VRRobotArm::~VRRobotArm() {
+    anim->stop();
+}
 
 shared_ptr<VRRobotArm> VRRobotArm::create(string type) { return shared_ptr<VRRobotArm>(new VRRobotArm(type)); }
 
 void VRRobotArm::setParts(vector<VRTransformPtr> parts) {
     this->parts.clear();
     for (auto p : parts) if (p) this->parts.push_back(p);
-    if (ageo) ageo->switchParent(parts[0]->getParent());
+    if (ageo && parts[0]) ageo->switchParent(parts[0]->getParent());
 }
 
 void VRRobotArm::setEventCallback(VRMessageCbPtr mCb) { eventCb = mCb; }
@@ -54,6 +57,31 @@ vector<float> VRRobotArm::getTargetAngles() {
     return res;
 }
 
+VRTransformPtr VRRobotArm::genKinematics() {
+    auto base = VRTransform::create("base");
+    auto baseUpper = VRTransform::create("baseUpper");
+    auto beam1 = VRTransform::create("beam1");
+    auto elbow = VRTransform::create("elbow");
+    auto beam2 = VRTransform::create("beam2");
+    auto wrist = VRTransform::create("wrist");
+
+    base->addChild(baseUpper);
+    baseUpper->addChild(beam1);
+    beam1->addChild(elbow);
+    elbow->addChild(beam2);
+    beam2->addChild(wrist);
+
+    //vector<VRTransformPtr> objs = { baseUpper, beam1, elbow, beam2 };
+
+    baseUpper->setFrom(Vec3d(0,lengths[0],0));
+    beam1->setFrom(Vec3d(0,0,0));
+    elbow->setFrom(Vec3d(0,lengths[1],0));
+    beam2->setFrom(Vec3d(0,0,0));
+    wrist->setFrom(Vec3d(0,lengths[2],0));
+
+    return base;
+}
+
 double clamp(double f, double a = -1, double b = 1) { return f<a ? a : f>b ? b : f; }
 
 void VRRobotArm::applyAngles() {
@@ -61,7 +89,7 @@ void VRRobotArm::applyAngles() {
     for (int i=0; i<N; i++) {
         Vec3d euler;
         euler[axis[i]] = angles[i];
-        parts[i]->setEuler(euler);
+        if (parts[i]) parts[i]->setEuler(euler);
     }
 }
 
@@ -93,7 +121,9 @@ bool VRRobotArm::isMoving() { return anim->isActive() || moving; }
 
 void VRRobotArm::grab(VRTransformPtr obj) {
     if (dragged) drop();
+    if (parts.size() == 0) return;
     auto ee = parts[parts.size()-1];
+    if (!ee) return;
     obj->drag(ee);
     dragged = obj;
     //cout << "VRRobotArm::grab obj " << obj << ", ee " << ee << endl;
@@ -116,7 +146,7 @@ Bodies:
 - body 1 -> first beam
 - body 2 -> elbow part
 - body 3 -> second beam,
-- body 4 -> tool interface, last robot part without tool
+- body 4 -> wrist, last robot part without tool
 - body 5 -> tool base
 - body 6 -> tool finger 1
 - body 7 -> tool finger 2
@@ -477,7 +507,7 @@ void VRRobotArm::moveTo(PosePtr p2, bool local) {
     //p1->setUp(-p1->up());
     //p1->setUp(Vec3d(0,1,0));
 
-    //cout << "VRRobotArm::moveTo " << p1->toString() << "   ->   " << p2->toString() << endl;
+    cout << "VRRobotArm::moveTo " << p1->toString() << "   ->   " << p2->toString() << endl;
 
     animPath->clear();
     animPath->addPoint( *p1 );

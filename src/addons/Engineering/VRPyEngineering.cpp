@@ -188,7 +188,8 @@ PyMethodDef VRPyNumberingEngine::methods[] = {
 
 PyMethodDef VRPyRobotArm::methods[] = {
     {"showAnalytics", PyWrap(RobotArm, showAnalytics, "Shows a visualization of the analytic model", void, bool ) },
-    {"setParts", PyWrap(RobotArm, setParts, "Set robot parts", void, vector<VRTransformPtr> ) },
+    {"setParts", PyWrap(RobotArm, setParts, "Set robot parts\n kuka: [upperBase, beam, elbow, beam, wrist {, tool, finger1, finger2 } ]", void, vector<VRTransformPtr> ) },
+    {"genKinematics", PyWrap(RobotArm, genKinematics, "Gen kinematics: base > upperBase > beam > elbow > beam > wrist", VRTransformPtr ) },
     {"setAngleOffsets", PyWrap(RobotArm, setAngleOffsets, "Set angle offset for each part", void, vector<float> ) },
     {"setAngleDirections", PyWrap(RobotArm, setAngleDirections, "Set angles rotation direction - setAngleDirections([1/-1])", void, vector<int> ) },
     {"setAxis", PyWrap(RobotArm, setAxis, "Set rotation axis for each part - setAxis([int a])\n a: 0 = 'x', 1 = 'y', 2 = 'z'", void, vector<int> ) },
