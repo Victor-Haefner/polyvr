@@ -788,7 +788,7 @@ void TextEditor::HandleMouseInputs()
 	if (ImGui::IsWindowHovered())
 	{
 	    //std::cout << "TextEditor::HandleMouseInputs " << !alt << std::endl;
-		if (/*!shift &&*/ !alt)
+		//if (/*!shift &&*/ !alt)
 		{
             //std::cout << " ->! " << std::endl;
 			auto click = ImGui::IsMouseClicked(0);

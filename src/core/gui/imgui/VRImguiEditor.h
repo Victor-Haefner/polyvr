@@ -158,6 +158,7 @@ class VRImguiEditor {
         ImTemplateDialog templateDialog = ImTemplateDialog();
 
         void resolveResize(const string& name, const ResizeEvent& resizer);
+        void handleRelayedKey(int key, int state, bool special);
 
     public:
         void init(Signal signal, ResizeSignal resizeSignal);

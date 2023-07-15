@@ -18,6 +18,7 @@
 #include "VRImguiScene.h"
 #include "imFileDialog/ImGuiFileDialog.h"
 #include "../clipboard/clip.h"
+#include "../VRGuiManager.h"
 
 ImGuiContext* mainContext = 0;
 ImGuiContext* popupContext = 0;
@@ -222,7 +223,7 @@ void handleSpecial(int b, int s) { // TODO: for some reason the imgui state is i
     if (b == 114) io.KeyCtrl = s;
     if (b == 115) io.KeyCtrl = s;
     if (b == 116) io.KeyAlt = s;
-    //cout << "handleSpecial " << b << " " << s << " " << io.KeyAlt << endl;
+    cout << "handleSpecial imgui" << b << " " << s << " alt: " << io.KeyAlt << endl;
 }
 
 void ImGui_ImplGLUT_KeyboardFunc_main(unsigned char c, int x, int y) { ImGui::SetCurrentContext(mainContext); ImGui_ImplGLUT_KeyboardFunc(c,x,y); }
@@ -231,7 +232,12 @@ void ImGui_ImplGLUT_SpecialFunc_main(int k, int x, int y) { ImGui::SetCurrentCon
 void ImGui_ImplGLUT_SpecialUpFunc_main(int k, int x, int y) { ImGui::SetCurrentContext(mainContext); ImGui_ImplGLUT_SpecialUpFunc(k,x,y); handleSpecial(k,0); }
 void ImGui_ImplGLUT_ReshapeFunc_main(int x, int y) { ImGui::SetCurrentContext(mainContext); ImGui_ImplGLUT_ReshapeFunc(x,y); }
 void ImGui_ImplGLUT_MotionFunc_main(int x, int y) { ImGui::SetCurrentContext(mainContext); ImGui_ImplGLUT_MotionFunc(x,y); }
-void ImGui_ImplGLUT_MouseFunc_main(int b, int s, int x, int y) { ImGui::SetCurrentContext(mainContext); ImGui_ImplGLUT_MouseFunc(b,s,x,y); handleMouseWheel(b,s); }
+void ImGui_ImplGLUT_MouseFunc_main(int b, int s, int x, int y) {
+    ImGui::SetCurrentContext(mainContext);
+    ImGui_ImplGLUT_MouseFunc(b,s,x,y);
+    handleMouseWheel(b,s);
+    uiSignal("uiGrabFocus", {});
+}
 
 void ImGui_ImplGLUT_KeyboardFunc_popup(unsigned char c, int x, int y) { ImGui::SetCurrentContext(popupContext); ImGui_ImplGLUT_KeyboardFunc(c,x,y); }
 void ImGui_ImplGLUT_KeyboardUpFunc_popup(unsigned char c, int x, int y) { ImGui::SetCurrentContext(popupContext); ImGui_ImplGLUT_KeyboardUpFunc(c,x,y); }
@@ -276,6 +282,17 @@ const char* IMGUIGetClipboardText(void* user_data) {
     else return 0;
 }
 
+void VRImguiEditor::handleRelayedKey(int key, int state, bool special) {
+    if (special) {
+        if (state) ImGui_ImplGLUT_SpecialFunc_main(key, 0, 0);
+        else ImGui_ImplGLUT_SpecialUpFunc_main(key, 0, 0);
+    } else {
+        unsigned char c = key;
+        if (state) ImGui_ImplGLUT_KeyboardFunc_main(c, 0, 0);
+        else ImGui_ImplGLUT_KeyboardUpFunc_main(c, 0, 0);
+    }
+}
+
 void VRImguiEditor::init(Signal signal, ResizeSignal resizeSignal) {
     this->signal = signal;
     this->resizeSignal = resizeSignal;
@@ -305,6 +322,10 @@ void VRImguiEditor::init(Signal signal, ResizeSignal resizeSignal) {
     profDialog.signal = signal;
     importDialog.signal = signal;
     templateDialog.signal = signal;
+
+    auto mgr = OSG::VRGuiSignals::get();
+    mgr->addCallback("relayedKeySignal", [&](OSG::VRGuiSignals::Options o){ handleRelayedKey(toInt(o["key"]), toInt(o["state"]), false); return true; } );
+    mgr->addCallback("relayedSpecialKeySignal", [&](OSG::VRGuiSignals::Options o){ handleRelayedKey(toInt(o["key"]), toInt(o["state"]), true); return true; } );
 }
 
 void VRImguiEditor::initPopup() {

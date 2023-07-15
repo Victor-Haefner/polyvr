@@ -17,6 +17,7 @@ class VRGlutEditor: public VRWindow {
         int winUI = -1;
         int winPopup = -1;
         bool fullscreen = false;
+        bool glViewFocussed = true;
         string popup;
 
         typedef function<void(string, map<string, string>)> Signal;

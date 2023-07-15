@@ -32,6 +32,7 @@ void onPopupDisplay() { getCurrentEditor()->on_popup_display(); }
 void onPopupReshape(int w, int h) { getCurrentEditor()->on_popup_resize(w, h); }
 void onPopupClose() { getCurrentEditor()->on_popup_close(); }
 
+// callbacks for GL view
 void glutEResize(int w, int h) { getCurrentEditor()->on_gl_resize(w, h); }
 void glutEMouse(int b, int s, int x, int y) { getCurrentEditor()->onMouse(b ,s ,x ,y); }
 void glutEMotion(int x, int y) { getCurrentEditor()->onMotion(x, y); }
@@ -109,6 +110,7 @@ VRGlutEditor::VRGlutEditor() {
     mgr->addCallback("ui_close_popup", [&](VRGuiSignals::Options o) { closePopupWindow(); return true; } );
     mgr->addCallback("ui_toggle_popup", [&](VRGuiSignals::Options o) { togglePopupWindow(o["name"], toInt(o["width"]), toInt(o["height"])); return true; }, true );
     mgr->addCallback("set_editor_fullscreen", [&](VRGuiSignals::Options o) { setFullscreen(toBool(o["fullscreen"])); return true; } );
+    mgr->addCallback("uiGrabFocus", [&](VRGuiSignals::Options o) { glViewFocussed = false; return true; } );
 }
 
 VRGlutEditor::~VRGlutEditor() {
@@ -202,6 +204,8 @@ void VRGlutEditor::save(XMLElementPtr node) { VRWindow::save(node); }
 void VRGlutEditor::load(XMLElementPtr node) { VRWindow::load(node); }
 
 void VRGlutEditor::onMouse(int b, int s, int x, int y) {
+    glViewFocussed = true;
+
     // swap mouse wheel
     if (b == 3) b = 4;
     else if (b == 4) b = 3;
@@ -216,13 +220,15 @@ void VRGlutEditor::onMotion(int x, int y) {
 }
 
 void VRGlutEditor::onKeyboard(int c, int s, int x, int y) {
-    if (auto k = getKeyboard()) k->keyboard(c, s, x, y, 1);
+    if (!glViewFocussed) if (signal) signal("relayedKeySignal", {{"key",toString(c)},{"state",toString(s)}});
+    else if (auto k = getKeyboard()) k->keyboard(c, s, x, y, 1);
 }
 
 void VRGlutEditor::onKeyboard_special(int c, int s, int x, int y) {
     if (s == 0 && c == 11) setFullscreen(!fullscreen);
+    if (!glViewFocussed) if (signal) signal("relayedSpecialKeySignal", {{"key",toString(c)},{"state",toString(s)}});
     //cout << " VRGlutEditor::onKeyboard_special " << c << " " << s << " " << x << " " << y << endl;
-    if (auto k = getKeyboard()) k->keyboard_special(c, s, x, y, 1);
+    else if (auto k = getKeyboard()) k->keyboard_special(c, s, x, y, 1);
 }
 
 void VRGlutEditor::render(bool fromThread) {
