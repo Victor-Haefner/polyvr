@@ -770,8 +770,9 @@ void TextEditor::HandleKeyboardInputs()
 			for (int i = 0; i < io.InputQueueCharacters.Size; i++)
 			{
 				auto c = io.InputQueueCharacters[i];
-				if (c != 0 && (c == '\n' || c >= 32))
+				if (c != 0 && c != 127 && (c == '\n' || c >= 32)) {
 					EnterCharacter(c, shift);
+				}
 			}
 			io.InputQueueCharacters.resize(0);
 		}
