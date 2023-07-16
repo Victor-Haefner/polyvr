@@ -148,6 +148,7 @@ ImScriptEditor::ImScriptEditor() {
     mgr->addCallback("script_editor_add_argument", [&](OSG::VRGuiSignals::Options o){ addArgument(o["name"], o["type"], o["value"]); return true; } );
     mgr->addCallback("editor_cmd", [&](OSG::VRGuiSignals::Options o){ editorCommand(o["cmd"]); return true; } );
     mgr->addCallback("openUiScript", [&](OSG::VRGuiSignals::Options o){ focusOn(o["line"], o["column"]); return true; } );
+    mgr->addCallback("shiftTab", [&](OSG::VRGuiSignals::Options o){ handleShiftTab(toInt(o["state"])); return true; }, true );
 
     imEditor.SetShowWhitespaces(false); // TODO: add as feature!
     imEditor.SetLanguageDefinition(TextEditor::LanguageDefinition::Python());
@@ -157,6 +158,12 @@ ImScriptEditor::ImScriptEditor() {
     triggerTypes = {"None", "on_scene_load", "on_scene_close", "on_scene_import", "on_timeout", "on_device", "on_socket"};
     device_types = {"None", "mouse", "multitouch", "keyboard", "flystick", "haptic", "server1", "leap", "vrpn_device"};
     trigger_states = {"Pressed", "Released", "Drag", "Drop", "To edge", "From edge"};
+}
+
+void ImScriptEditor::handleShiftTab(int state) {
+	ImGuiIO& io = ImGui::GetIO();
+	io.AddInputCharacter('\t');
+	io.KeysDown[int('\t')] = state;
 }
 
 void ImScriptEditor::focusOn(string line, string column) {

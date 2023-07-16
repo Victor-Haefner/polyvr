@@ -223,7 +223,6 @@ void handleSpecial(int b, int s) { // TODO: for some reason the imgui state is i
     if (b == 114) io.KeyCtrl = s;
     if (b == 115) io.KeyCtrl = s;
     if (b == 116) io.KeyAlt = s;
-    cout << "handleSpecial imgui" << b << " " << s << " alt: " << io.KeyAlt << endl;
 }
 
 void ImGui_ImplGLUT_KeyboardFunc_main(unsigned char c, int x, int y) { ImGui::SetCurrentContext(mainContext); ImGui_ImplGLUT_KeyboardFunc(c,x,y); }

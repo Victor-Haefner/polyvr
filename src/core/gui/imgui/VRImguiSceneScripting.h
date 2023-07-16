@@ -73,6 +73,7 @@ class ImScriptEditor {
         void addArgument(string name, string type, string value);
         void editorCommand(string cmd);
         void focusOn(string line, string column);
+        void handleShiftTab(int state);
 
     public:
         ImScriptEditor();
