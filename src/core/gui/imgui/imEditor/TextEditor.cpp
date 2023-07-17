@@ -2335,7 +2335,24 @@ void TextEditor::ColorizeInternal()
 					if (firstChar && c == mLanguageDefinition.mPreprocChar)
 						withinPreproc = true;
 
-					if (isStrChar(c, mLanguageDefinition))
+                    auto pred = [](const char& a, const Glyph& b) { return a == b.mChar; };
+                    auto from = line.begin() + currentIndex;
+                    auto& startStr = mLanguageDefinition.mCommentStart;
+                    auto& endStr = mLanguageDefinition.mCommentEnd;
+                    auto& singleStartStr = mLanguageDefinition.mSingleLineComment;
+
+                    bool startMultiLineComment = bool(!inComment && !withinSingleLineComment && currentIndex + startStr.size() <= line.size() &&
+							equals(startStr.begin(), startStr.end(), from, from + startStr.size(), pred));
+
+                    bool endMultiLineComment = bool(currentIndex + 1 >= (int)endStr.size() &&
+							equals(endStr.begin(), endStr.end(), from + 1 - endStr.size(), from + 1, pred));
+
+                    if (endMultiLineComment) {
+						bool startEqualEnd = (commentStartLine == currentLine && currentIndex == commentStartIndex + startStr.size()-1 );
+						if (startEqualEnd) endMultiLineComment = false;
+                    }
+
+					if (isStrChar(c, mLanguageDefinition) && !startMultiLineComment && !endMultiLineComment && !inComment)
 					{
 						withinString = true;
 						openingStrChar = c;
@@ -2343,32 +2360,24 @@ void TextEditor::ColorizeInternal()
 					}
 					else
 					{
-						auto pred = [](const char& a, const Glyph& b) { return a == b.mChar; };
-						auto from = line.begin() + currentIndex;
-						auto& startStr = mLanguageDefinition.mCommentStart;
-						auto& singleStartStr = mLanguageDefinition.mSingleLineComment;
-
 						if (singleStartStr.size() > 0 &&
 							currentIndex + singleStartStr.size() <= line.size() &&
 							equals(singleStartStr.begin(), singleStartStr.end(), from, from + singleStartStr.size(), pred))
 						{
 							withinSingleLineComment = true;
 						}
-						else if (!withinSingleLineComment && currentIndex + startStr.size() <= line.size() &&
-							equals(startStr.begin(), startStr.end(), from, from + startStr.size(), pred))
+						else if (startMultiLineComment)
 						{
 							commentStartLine = currentLine;
 							commentStartIndex = currentIndex;
 						}
 
-						inComment = inComment = (commentStartLine < currentLine || (commentStartLine == currentLine && commentStartIndex <= currentIndex));
+						inComment = (commentStartLine < currentLine || (commentStartLine == currentLine && commentStartIndex <= currentIndex));
 
 						line[currentIndex].mMultiLineComment = inComment;
 						line[currentIndex].mComment = withinSingleLineComment;
 
-						auto& endStr = mLanguageDefinition.mCommentEnd;
-						if (currentIndex + 1 >= (int)endStr.size() &&
-							equals(endStr.begin(), endStr.end(), from + 1 - endStr.size(), from + 1, pred))
+						if (endMultiLineComment)
 						{
 							commentStartIndex = endIndex;
 							commentStartLine = endLine;
