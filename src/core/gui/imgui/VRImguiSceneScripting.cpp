@@ -196,7 +196,9 @@ void ImScriptEditor::editorCommand(string cmd) {
     }
 
     if (cmd == "duplicateLine") {
+        bool duplicateLine = false;
         if (!imEditor.HasSelection()) {
+            duplicateLine = true;
             auto p = imEditor.GetCursorPosition();
             p.mColumn = 0;
             imEditor.SetSelectionStart(p);
@@ -210,6 +212,12 @@ void ImScriptEditor::editorCommand(string cmd) {
         imEditor.Paste();// instead of two pastes do unselect
         imEditor.Paste();
         ImGui::SetClipboardText(cts.c_str());
+
+        if (duplicateLine) {
+            auto p = imEditor.GetCursorPosition();
+            p.mLine -= 1;
+            imEditor.SetCursorPosition(p);
+        }
     }
 
     uiSignal("script_editor_text_changed");
