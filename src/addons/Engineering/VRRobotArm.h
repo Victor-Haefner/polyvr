@@ -52,7 +52,8 @@ class VRRobotArm {
         vector<float> angle_targets;
         vector<float> angle_offsets;
         vector<int> angle_directions;
-        vector<float> lengths;
+        vector<float> lengths = {0,0,0,0,0};
+        vector<float> axis_offsets = {0};
         vector<int> axis;
 
         vector<float> calcReverseKinematicsKuka(PosePtr p);
@@ -81,6 +82,7 @@ class VRRobotArm {
         void setAngleDirections(vector<int> directions);
         void setAxis(vector<int> axis);
         void setLengths(vector<float> lengths);
+        void setAxisOffsets(vector<float> offsets);
         void setSpeed(float s);
         void setMaxSpeed(float s);
         VRTransformPtr genKinematics();

@@ -50,6 +50,7 @@ void VRRobotArm::setAngleOffsets(vector<float> offsets) { angle_offsets = offset
 void VRRobotArm::setAngleDirections(vector<int> dirs) { angle_directions = dirs; }
 void VRRobotArm::setAxis(vector<int> axis) { this->axis = axis; }
 void VRRobotArm::setLengths(vector<float> lengths) { this->lengths = lengths; }
+void VRRobotArm::setAxisOffsets(vector<float> offsets) { this->axis_offsets = offsets; }
 vector<float> VRRobotArm::getAngles() { return angles; }
 vector<float> VRRobotArm::getTargetAngles() {
     vector<float> res;
@@ -74,7 +75,7 @@ VRTransformPtr VRRobotArm::genKinematics() {
     //vector<VRTransformPtr> objs = { baseUpper, beam1, elbow, beam2 };
 
     baseUpper->setFrom(Vec3d(0,lengths[0],0));
-    beam1->setFrom(Vec3d(0,0,0));
+    beam1->setFrom(Vec3d(0,0,axis_offsets[0]));
     elbow->setFrom(Vec3d(0,lengths[1],0));
     beam2->setFrom(Vec3d(0,0,0));
     wrist->setFrom(Vec3d(0,lengths[2],0));
@@ -205,6 +206,7 @@ PosePtr VRRobotArm::calcForwardKinematicsKuka(vector<float> angles) {
 
     Pose pB(Vec3d(0,lengths[0],0)); // ok
     Pose pA0(Vec3d()                        , Vec3d(-sin(f), 0, -cos(f))    , Vec3d(cos(f), 0, -sin(f))); // ok
+    Pose pA01(Vec3d(0,0,axis_offsets[0])); // ok
     Pose pA1(Vec3d(-r1*sin(a),0,r1*cos(a))  , Vec3d(-sin(a), 0, cos(a))); // ok
     Pose pA2(Vec3d()                        , Vec3d( sin(a2), 0, cos(a2))); // ok
     Pose pA3(Vec3d(0,0,r2)                  , Vec3d(0,0,-1)                 , Vec3d(-sin(a3), cos(a3), 0)); // ok
@@ -213,6 +215,7 @@ PosePtr VRRobotArm::calcForwardKinematicsKuka(vector<float> angles) {
 
     auto mB = pB.asMatrix();
     mB.mult(pA0.asMatrix());
+    mB.mult(pA01.asMatrix());
     mB.mult(pA1.asMatrix());
     mB.mult(pA2.asMatrix());
     mB.mult(pA3.asMatrix());
@@ -245,6 +248,13 @@ vector<float> VRRobotArm::calcReverseKinematicsKuka(PosePtr p) {
     vector<float> resultingAngles = angle_targets;
 
     pos[1] -= lengths[0];
+
+    float f = atan2(pos[0], pos[2]);
+    resultingAngles[0] = f;
+    Vec3d e0 = Vec3d(cos(-f),0,sin(-f));
+
+    pos += e0 * axis_offsets[0];
+
     float r1 = lengths[1];
     float r2 = lengths[2];
     float L = pos.length();
@@ -255,12 +265,8 @@ vector<float> VRRobotArm::calcReverseKinematicsKuka(PosePtr p) {
 	resultingAngles[1] = a - Pi*0.5;
 	//resultingAngles[1] = a;
 
-    float f = atan2(pos[0], pos[2]);
-    resultingAngles[0] = f;
-
     // end effector
     float e = a+b; // counter angle
-    Vec3d e0 = Vec3d(cos(-f),0,sin(-f));
     Vec3d av = Vec3d(-cos(e)*sin(f), -sin(e), -cos(e)*cos(f));
     Vec3d e1 = dir.cross(av);
     e1.normalize();
@@ -282,6 +288,7 @@ vector<float> VRRobotArm::calcReverseKinematicsKuka(PosePtr p) {
     if (showModel && ageo) {
         float sA = 0.05;
         Vec3d pJ0 = Vec3d(0,lengths[0],0); // base joint
+        pJ0 += Vec3d(sin(f), 0, cos(f)) * axis_offsets[0]; // base joint
         Vec3d pJ1 = pJ0 + Vec3d(cos(a)*sin(f), sin(a), cos(a)*cos(f)) * lengths[1]; // elbow joint
         Vec3d pJ2 = pJ1 + av * lengths[2]; // wrist joint
 
