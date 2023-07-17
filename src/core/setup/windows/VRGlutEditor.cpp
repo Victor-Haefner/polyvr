@@ -16,6 +16,7 @@
 #include <X11/Xlib.h>
 #include <X11/keysym.h>
 #include <X11/Xutil.h>
+#include <GL/glx.h>
 #include <thread>
 
 OSG_BEGIN_NAMESPACE;
@@ -57,9 +58,8 @@ void testGLCapabilities() {
 
 static bool doGrabShiftTab = true;
 
-void listenForKey() { // TODO: add windows and wayland versions
+void listenForKey(XID grab_window) { // TODO: add windows and wayland versions
     Display* dpy = XOpenDisplay(0);
-    auto grab_window = DefaultRootWindow(dpy); // TODO: this grabs the tab key system wide!
     unsigned int modifiers1 = ShiftMask;
     unsigned int modifiers2 = ShiftMask | Mod2Mask;
     KeyCode keycode = XKeysymToKeycode(dpy, XK_Tab);
@@ -78,8 +78,8 @@ void listenForKey() { // TODO: add windows and wayland versions
     XCloseDisplay(dpy);
 }
 
-void startGrabShiftTab() {
-    static thread listener(listenForKey);
+void startGrabShiftTab(XID grab_window) {
+    static thread listener(listenForKey, grab_window);
 }
 
 VRGlutEditor::VRGlutEditor() {
@@ -98,6 +98,7 @@ VRGlutEditor::VRGlutEditor() {
     glutReshapeFunc( onMainReshape );
     glutCloseFunc( onMainClose );
 
+    XID x11window = glXGetCurrentDrawable();
     testGLCapabilities();
 
     /** IDE Window **/
@@ -112,7 +113,7 @@ VRGlutEditor::VRGlutEditor() {
     signal = [&](string name, map<string,string> opts) -> bool { return VRGuiManager::trigger(name,opts); };
     resizeSignal = [&](string name, int x, int y, int w, int h) -> bool { return VRGuiManager::triggerResize(name,x,y,w,h); };
 
-    startGrabShiftTab();
+    startGrabShiftTab(x11window);
 
     /** OpenSG Window **/
     glutSetWindow(topWin);
