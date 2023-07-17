@@ -2262,6 +2262,12 @@ void TextEditor::ColorizeInternal()
 	if (mLines.empty() || !mColorizerEnabled)
 		return;
 
+    auto isStrChar = [](char c, LanguageDefinition& defs) {
+        for (auto& sc : defs.mStrChars)
+            if (sc == c) return true;
+        return false;
+    };
+
 	if (mCheckComments)
 	{
 		auto endLine = mLines.size();
@@ -2275,6 +2281,7 @@ void TextEditor::ColorizeInternal()
 		auto concatenate = false;		// '\' on the very end of the line
 		auto currentLine = 0;
 		auto currentIndex = 0;
+		char openingStrChar = 0;
 		while (currentLine < endLine || currentIndex < endIndex)
 		{
 			auto& line = mLines[currentLine];
@@ -2305,9 +2312,9 @@ void TextEditor::ColorizeInternal()
 				{
 					line[currentIndex].mMultiLineComment = inComment;
 
-					if (c == '\"')
+					if (c == openingStrChar)
 					{
-						if (currentIndex + 1 < (int)line.size() && line[currentIndex + 1].mChar == '\"')
+						if (currentIndex + 1 < (int)line.size() && line[currentIndex + 1].mChar == openingStrChar)
 						{
 							currentIndex += 1;
 							if (currentIndex < (int)line.size())
@@ -2328,9 +2335,10 @@ void TextEditor::ColorizeInternal()
 					if (firstChar && c == mLanguageDefinition.mPreprocChar)
 						withinPreproc = true;
 
-					if (c == '\"')
+					if (isStrChar(c, mLanguageDefinition))
 					{
 						withinString = true;
+						openingStrChar = c;
 						line[currentIndex].mMultiLineComment = inComment;
 					}
 					else
@@ -2529,18 +2537,18 @@ void TextEditor::UndoRecord::Redo(TextEditor * aEditor)
 	aEditor->EnsureCursorVisible();
 }
 
-static bool TokenizeCStyleString(const char * in_begin, const char * in_end, const char *& out_begin, const char *& out_end)
+static bool TokenizeCStyleString(const char * in_begin, const char * in_end, const char *& out_begin, const char *& out_end, char str_char = '"')
 {
 	const char * p = in_begin;
 
-	if (*p == '"')
+	if (*p == str_char)
 	{
 		p++;
 
 		while (p < in_end)
 		{
 			// handle end of string
-			if (*p == '"')
+			if (*p == str_char)
 			{
 				out_begin = in_begin;
 				out_end = p + 1;
@@ -2548,7 +2556,7 @@ static bool TokenizeCStyleString(const char * in_begin, const char * in_end, con
 			}
 
 			// handle escape character for "
-			if (*p == '\\' && p + 1 < in_end && p[1] == '"')
+			if (*p == '\\' && p + 1 < in_end && p[1] == str_char)
 				p++;
 
 			p++;
@@ -2560,18 +2568,15 @@ static bool TokenizeCStyleString(const char * in_begin, const char * in_end, con
 
 static bool TokenizeCStyleCharacterLiteral(const char * in_begin, const char * in_end, const char *& out_begin, const char *& out_end)
 {
-	const char * p = in_begin;
+    const char * p = in_begin;
 
 	if (*p == '\'')
 	{
 		p++;
 
 		// handle escape characters
-		if (p < in_end && *p == '\\')
-			p++;
-
-		if (p < in_end)
-			p++;
+		if (p < in_end && *p == '\\') p++;
+		if (p < in_end) p++;
 
 		// handle end of character literal
 		if (p < in_end && *p == '\'')
@@ -2779,8 +2784,9 @@ const TextEditor::LanguageDefinition& TextEditor::LanguageDefinition::Python() {
 				out_end = in_end;
 				paletteIndex = PaletteIndex::Default;
 			}
-			else if (TokenizeCStyleString(in_begin, in_end, out_begin, out_end)) paletteIndex = PaletteIndex::String;
-			else if (TokenizeCStyleCharacterLiteral(in_begin, in_end, out_begin, out_end)) paletteIndex = PaletteIndex::String;
+			else if (TokenizeCStyleString(in_begin, in_end, out_begin, out_end, '"')) paletteIndex = PaletteIndex::String;
+			else if (TokenizeCStyleCharacterLiteral(in_begin, in_end, out_begin, out_end)) paletteIndex = PaletteIndex::CharLiteral;
+			else if (TokenizeCStyleString(in_begin, in_end, out_begin, out_end, '\'')) paletteIndex = PaletteIndex::String;
 			else if (TokenizeCStyleIdentifier(in_begin, in_end, out_begin, out_end)) paletteIndex = PaletteIndex::Identifier;
 			else if (TokenizeCStyleNumber(in_begin, in_end, out_begin, out_end)) paletteIndex = PaletteIndex::Number;
 			else if (TokenizeCStylePunctuation(in_begin, in_end, out_begin, out_end)) paletteIndex = PaletteIndex::Punctuation;
@@ -2790,6 +2796,7 @@ const TextEditor::LanguageDefinition& TextEditor::LanguageDefinition::Python() {
 		langDef.mCommentStart = "\"\"\"";
 		langDef.mCommentEnd = "\"\"\"";
 		langDef.mSingleLineComment = "#";
+		langDef.mStrChars = "\"'";
 
 		langDef.mCaseSensitive = true;
 		langDef.mAutoIndentation = true;

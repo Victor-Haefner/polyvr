@@ -54,7 +54,6 @@ void ImScriptList::clear() {
 }
 
 void ImScriptList::addGroup(string name, string ID) {
-    cout << " ----- addGroup " << name << ", " << ID << endl;
     if (groups.count(ID)) return;
     groups[ID] = ImScriptGroup(name);
     groupsList.push_back(ID);
@@ -62,7 +61,6 @@ void ImScriptList::addGroup(string name, string ID) {
 
 void ImScriptList::addScript(string name, string groupID) {
     if (groupID == "") groupID = "__default__";
-    cout << " ----- addScript " << name << ", " << groupID << endl;
     groups[groupID].scripts.push_back(name);
 }
 

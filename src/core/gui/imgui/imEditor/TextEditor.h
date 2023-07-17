@@ -159,6 +159,7 @@ public:
 		Identifiers mIdentifiers;
 		Identifiers mPreprocIdentifiers;
 		std::string mCommentStart, mCommentEnd, mSingleLineComment;
+		std::string mStrChars = "\"";
 		char mPreprocChar;
 		bool mAutoIndentation;
 
