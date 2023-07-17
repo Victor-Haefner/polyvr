@@ -376,6 +376,12 @@ TextEditor::Coordinates TextEditor::ScreenPosToCoordinates(const ImVec2& aPositi
 	return SanitizeCoordinates(Coordinates(lineNo, columnCoord));
 }
 
+bool TextEditor::isStrChar(char c) const {
+    for (auto& sc : mLanguageDefinition.mStrChars)
+        if (sc == c) return true;
+    return false;
+}
+
 TextEditor::Coordinates TextEditor::FindWordStart(const Coordinates & aFrom) const
 {
 	Coordinates at = aFrom;
@@ -397,7 +403,7 @@ TextEditor::Coordinates TextEditor::FindWordStart(const Coordinates & aFrom) con
 		auto c = line[cindex].mChar;
 		if ((c & 0xC0) != 0x80)	// not UTF code sequence 10xxxxxx
 		{
-			if (c <= 32 && isspace(c))
+			if (c <= 32 && isspace(c) || isStrChar((char)c))
 			{
 				cindex++;
 				break;
@@ -430,6 +436,8 @@ TextEditor::Coordinates TextEditor::FindWordEnd(const Coordinates & aFrom) const
 		auto d = UTF8CharLength(c);
 		if (cstart != (PaletteIndex)line[cindex].mColorIndex)
 			break;
+
+        if (isStrChar((char)c)) break;
 
 		if (prevspace != !!isspace(c))
 		{
@@ -2262,12 +2270,6 @@ void TextEditor::ColorizeInternal()
 	if (mLines.empty() || !mColorizerEnabled)
 		return;
 
-    auto isStrChar = [](char c, LanguageDefinition& defs) {
-        for (auto& sc : defs.mStrChars)
-            if (sc == c) return true;
-        return false;
-    };
-
 	if (mCheckComments)
 	{
 		auto endLine = mLines.size();
@@ -2352,7 +2354,7 @@ void TextEditor::ColorizeInternal()
 						if (startEqualEnd) endMultiLineComment = false;
                     }
 
-					if (isStrChar(c, mLanguageDefinition) && !startMultiLineComment && !endMultiLineComment && !inComment)
+					if (isStrChar(c) && !startMultiLineComment && !endMultiLineComment && !inComment)
 					{
 						withinString = true;
 						openingStrChar = c;
