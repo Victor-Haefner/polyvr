@@ -253,13 +253,17 @@ vector<float> VRRobotArm::calcReverseKinematicsKuka(PosePtr p) {
     resultingAngles[0] = f;
     Vec3d e0 = Vec3d(cos(-f),0,sin(-f));
 
-    pos += e0 * axis_offsets[0];
+    Vec3d aD = Vec3d(sin(f), 0, cos(f));
+    cout << " aD: " << aD << ", pos: " << pos << ", " << pos.length();
+    pos -= aD * axis_offsets[0];
 
     float r1 = lengths[1];
     float r2 = lengths[2];
     float L = pos.length();
     float b = acos( clamp( (L*L-r1*r1-r2*r2)/(-2*r1*r2) ) );
     resultingAngles[2] = -b + Pi;
+
+    cout << " -> " << pos << ", L " << L << endl;
 
     float a = asin( clamp( r2*sin(b)/L ) ) + asin( clamp( pos[1]/L ) );
 	resultingAngles[1] = a - Pi*0.5;
@@ -287,10 +291,16 @@ vector<float> VRRobotArm::calcReverseKinematicsKuka(PosePtr p) {
     // analytics visualization ---------------------------------------------------------
     if (showModel && ageo) {
         float sA = 0.05;
+        Vec3d r2 = e0*2*sA; // rotation axis base joint and elbow
+
         Vec3d pJ0 = Vec3d(0,lengths[0],0); // base joint
-        pJ0 += Vec3d(sin(f), 0, cos(f)) * axis_offsets[0]; // base joint
-        Vec3d pJ1 = pJ0 + Vec3d(cos(a)*sin(f), sin(a), cos(a)*cos(f)) * lengths[1]; // elbow joint
-        Vec3d pJ2 = pJ1 + av * lengths[2]; // wrist joint
+        Vec3d pJ01 = pJ0 + Vec3d(sin(f), 0, cos(f)) * axis_offsets[0]; // base joint
+        Vec3d pJ1 = pJ01 + Vec3d(cos(a)*sin(f), sin(a), cos(a)*cos(f)) * lengths[1]; // elbow joint
+        //Vec3d a10 = r2.cross(pJ1-pJ01); a10.normalize();
+        double oa = b+a-Pi*0.5;
+        Vec3d a10 = Vec3d(cos(oa)*sin(f), sin(oa), cos(oa)*cos(f));
+        Vec3d pJ11 = pJ1 + a10 * axis_offsets[1];
+        Vec3d pJ2 = pJ11 + av * lengths[2]; // wrist joint
 
         // EE
         ageo->setVector(0, Vec3d(), pJ2, Color3f(0.6,0.8,1), "");
@@ -298,15 +308,18 @@ vector<float> VRRobotArm::calcReverseKinematicsKuka(PosePtr p) {
         ageo->setVector(2, pJ2, up*0.1, Color3f(1,0,0), "");
 
         // rot axis
-        ageo->setVector(3, pJ0 - Vec3d(0,sA,0), Vec3d(0,2*sA,0), Color3f(1,1,0.5), "");
-        ageo->setVector(4, pJ0 - e0*sA, e0*2*sA, Color3f(1,1,0.5), "");
-        ageo->setVector(5, pJ1 - e0*sA, e0*2*sA, Color3f(1,1,0.5), "");
+        ageo->setVector(3, pJ01 - Vec3d(0,sA,0), Vec3d(0,2*sA,0), Color3f(1,1,0.5), "");
+        ageo->setVector(4, pJ01 - e0*sA, r2, Color3f(1,1,0.5), "");
+        ageo->setVector(5, pJ1 - e0*sA, r2, Color3f(1,1,0.5), "");
         ageo->setVector(6, pJ2 - e1*sA, e1*2*sA, Color3f(1,1,0.5), "");
 
         // beams
         ageo->setVector(7, Vec3d(), pJ0, Color3f(1,1,1), "l0");
-        ageo->setVector(8, pJ0, pJ1-pJ0, Color3f(1,1,1), "r1");
-        ageo->setVector(9, pJ1, pJ2-pJ1, Color3f(1,1,1), "r2");
+        ageo->setVector(8, pJ01, pJ1-pJ01, Color3f(1,1,1), "r1");
+        ageo->setVector(9, pJ11, pJ2-pJ11, Color3f(1,1,1), "r2");
+
+        ageo->setVector(10, pJ0, pJ01-pJ0, Color3f(0.7,0.7,0.7), "");
+        ageo->setVector(11, pJ1, pJ11-pJ1, Color3f(0.7,0.7,0.7), "");
     }
 
     //calcForwardKinematicsKuka(resultingAngles); // temp, remove once debugged!
