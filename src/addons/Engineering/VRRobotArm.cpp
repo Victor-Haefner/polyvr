@@ -254,20 +254,17 @@ vector<float> VRRobotArm::calcReverseKinematicsKuka(PosePtr p) {
     Vec3d e0 = Vec3d(cos(-f),0,sin(-f));
 
     Vec3d aD = Vec3d(sin(f), 0, cos(f));
-    cout << " aD: " << aD << ", pos: " << pos << ", " << pos.length();
     pos -= aD * axis_offsets[0];
 
     float r1 = lengths[1];
-    float r2 = lengths[2];
+    float r2 = sqrt(lengths[2]*lengths[2] + axis_offsets[1]*axis_offsets[1]);
     float L = pos.length();
+    float ba = atan(axis_offsets[1] / lengths[2]);
     float b = acos( clamp( (L*L-r1*r1-r2*r2)/(-2*r1*r2) ) );
-    resultingAngles[2] = -b + Pi;
-
-    cout << " -> " << pos << ", L " << L << endl;
+    resultingAngles[2] = -b + Pi + ba;
 
     float a = asin( clamp( r2*sin(b)/L ) ) + asin( clamp( pos[1]/L ) );
 	resultingAngles[1] = a - Pi*0.5;
-	//resultingAngles[1] = a;
 
     // end effector
     float e = a+b; // counter angle
@@ -278,29 +275,27 @@ vector<float> VRRobotArm::calcReverseKinematicsKuka(PosePtr p) {
     float det = av.dot( e1.cross(e0) );
     float g = clamp( -e1.dot(e0) );
     resultingAngles[3] = det < 0 ? -acos(g) : acos(g);
-    resultingAngles[4] = acos( av.dot(dir) );
-    //cout << " a4 targt " << av.length() << " " << dir.length() << endl;
+    resultingAngles[4] = acos( av.dot(dir) ) - ba; // TODO: ba is not enough as its not in the same plane, resultingAngles[3] needs to be factored in..
 
     if (resultingAngles.size() > 4) {
         float det = dir.dot( e1.cross(up) );
         resultingAngles[5] = det < 0 ? -acos( e1.dot(up) ) : acos( e1.dot(up) );
-        //cout << "up: " << up << ", e1: " << e1 << ", a: " << resultingAngles[5] << endl;
     }
 
 
     // analytics visualization ---------------------------------------------------------
     if (showModel && ageo) {
         float sA = 0.05;
-        Vec3d r2 = e0*2*sA; // rotation axis base joint and elbow
+        Vec3d ra2 = e0*2*sA; // rotation axis base joint and elbow
+        Vec3d ra3 = e1*2*sA; // rotation axis wrist
 
         Vec3d pJ0 = Vec3d(0,lengths[0],0); // base joint
         Vec3d pJ01 = pJ0 + Vec3d(sin(f), 0, cos(f)) * axis_offsets[0]; // base joint
         Vec3d pJ1 = pJ01 + Vec3d(cos(a)*sin(f), sin(a), cos(a)*cos(f)) * lengths[1]; // elbow joint
-        //Vec3d a10 = r2.cross(pJ1-pJ01); a10.normalize();
-        double oa = b+a-Pi*0.5;
+        double oa = b+a-Pi*0.5-ba;
         Vec3d a10 = Vec3d(cos(oa)*sin(f), sin(oa), cos(oa)*cos(f));
         Vec3d pJ11 = pJ1 + a10 * axis_offsets[1];
-        Vec3d pJ2 = pJ11 + av * lengths[2]; // wrist joint
+        Vec3d pJ2 = pJ1 + av * r2; // wrist joint
 
         // EE
         ageo->setVector(0, Vec3d(), pJ2, Color3f(0.6,0.8,1), "");
@@ -309,9 +304,9 @@ vector<float> VRRobotArm::calcReverseKinematicsKuka(PosePtr p) {
 
         // rot axis
         ageo->setVector(3, pJ01 - Vec3d(0,sA,0), Vec3d(0,2*sA,0), Color3f(1,1,0.5), "");
-        ageo->setVector(4, pJ01 - e0*sA, r2, Color3f(1,1,0.5), "");
-        ageo->setVector(5, pJ1 - e0*sA, r2, Color3f(1,1,0.5), "");
-        ageo->setVector(6, pJ2 - e1*sA, e1*2*sA, Color3f(1,1,0.5), "");
+        ageo->setVector(4, pJ01 - e0*sA, ra2, Color3f(1,1,0.5), "");
+        ageo->setVector(5, pJ1 - e0*sA, ra2, Color3f(1,1,0.5), "");
+        ageo->setVector(6, pJ2 - e1*sA, ra3, Color3f(1,1,0.5), "");
 
         // beams
         ageo->setVector(7, Vec3d(), pJ0, Color3f(1,1,1), "l0");
