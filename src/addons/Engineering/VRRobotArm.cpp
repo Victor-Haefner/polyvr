@@ -267,7 +267,7 @@ vector<float> VRRobotArm::calcReverseKinematicsKuka(PosePtr p) {
 	resultingAngles[1] = a - Pi*0.5;
 
     // end effector
-    float e = a+b; // counter angle
+    float e = a+b-ba; // counter angle
     Vec3d av = Vec3d(-cos(e)*sin(f), -sin(e), -cos(e)*cos(f));
     Vec3d e1 = dir.cross(av);
     e1.normalize();
@@ -275,7 +275,7 @@ vector<float> VRRobotArm::calcReverseKinematicsKuka(PosePtr p) {
     float det = av.dot( e1.cross(e0) );
     float g = clamp( -e1.dot(e0) );
     resultingAngles[3] = det < 0 ? -acos(g) : acos(g);
-    resultingAngles[4] = acos( av.dot(dir) ) - ba; // TODO: ba is not enough as its not in the same plane, resultingAngles[3] needs to be factored in..
+    resultingAngles[4] = acos( av.dot(dir) );
 
     if (resultingAngles.size() > 4) {
         float det = dir.dot( e1.cross(up) );
@@ -295,7 +295,7 @@ vector<float> VRRobotArm::calcReverseKinematicsKuka(PosePtr p) {
         double oa = b+a-Pi*0.5-ba;
         Vec3d a10 = Vec3d(cos(oa)*sin(f), sin(oa), cos(oa)*cos(f));
         Vec3d pJ11 = pJ1 + a10 * axis_offsets[1];
-        Vec3d pJ2 = pJ1 + av * r2; // wrist joint
+        Vec3d pJ2 = pJ11 + av * r2; // wrist joint
 
         // EE
         ageo->setVector(0, Vec3d(), pJ2, Color3f(0.6,0.8,1), "");
