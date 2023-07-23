@@ -188,12 +188,21 @@ void ImViewControls::render() {
     ImGui::SameLine();
     if (ImGui::Button("Fullscreen")) uiSignal("toolbar_fullscreen");
 
-    ImGui::SameLine(ImGui::GetWindowWidth()-100);
+    ImGui::SameLine(ImGui::GetWindowWidth()-220);
     ImGui::SetNextItemWidth(100);
     if (ImGui::BeginCombo("##UItheme", "Theme", 0)) {
         if (ImGui::RadioButton("Light", &uiTheme, 0)) ImGui::StyleColorsLight();
         if (ImGui::RadioButton("Dark", &uiTheme, 1)) ImGui::StyleColorsDark();
         if (ImGui::RadioButton("Classic", &uiTheme, 2)) ImGui::StyleColorsClassic();
+        ImGui::EndCombo();
+    }
+    ImGui::SameLine();
+    ImGui::SetNextItemWidth(100);
+    if (ImGui::BeginCombo("##FontSize", "Font", 0)) {
+        ImGuiIO& io = ImGui::GetIO();
+        if (ImGui::RadioButton("Normal", &uiFont, 0)) io.FontGlobalScale = 1.0f;
+        if (ImGui::RadioButton("Big", &uiFont, 1)) io.FontGlobalScale = 1.4f;
+        if (ImGui::RadioButton("Huge", &uiFont, 2)) io.FontGlobalScale = 2.2f;
         ImGui::EndCombo();
     }
 }

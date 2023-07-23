@@ -10,6 +10,7 @@ class ImViewControls {
         vector<string> cameras;
         int current_camera = 0;
         int uiTheme = 1;
+        int uiFont = 0;
 
         map<string, bool> navigations;
 
