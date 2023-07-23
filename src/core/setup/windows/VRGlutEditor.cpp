@@ -12,12 +12,7 @@
 
 #include "core/gui/VRGuiManager.h"
 #include "core/gui/imgui/VRImguiManager.h"
-
-#include <X11/Xlib.h>
-#include <X11/keysym.h>
-#include <X11/Xutil.h>
-#include <GL/glx.h>
-#include <thread>
+#include "glut/VRGlutExtensions.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -56,32 +51,6 @@ void testGLCapabilities() {
     cout << " has tesselation shader: " << VRRenderManager::hasTessShader() << endl;
 }
 
-static bool doGrabShiftTab = true;
-
-void listenForKey(XID grab_window) { // TODO: add windows and wayland versions
-    Display* dpy = XOpenDisplay(0);
-    unsigned int modifiers1 = ShiftMask;
-    unsigned int modifiers2 = ShiftMask | Mod2Mask;
-    KeyCode keycode = XKeysymToKeycode(dpy, XK_Tab);
-
-    XGrabKey(dpy, keycode, modifiers1, grab_window, False, GrabModeAsync, GrabModeAsync);
-    XGrabKey(dpy, keycode, modifiers2, grab_window, False, GrabModeAsync, GrabModeAsync);
-    XSelectInput(dpy, grab_window, KeyPressMask | KeyReleaseMask);
-    XEvent ev;
-    while(doGrabShiftTab) {
-         XNextEvent(dpy, &ev);
-         if (ev.type == KeyPress) uiSignal("shiftTab", {{"state","1"}});
-         if (ev.type == KeyRelease) uiSignal("shiftTab", {{"state","0"}});
-    }
-    XUngrabKey(dpy, keycode, modifiers1, grab_window);
-    XUngrabKey(dpy, keycode, modifiers2, grab_window);
-    XCloseDisplay(dpy);
-}
-
-void startGrabShiftTab(XID grab_window) {
-    static thread listener(listenForKey, grab_window);
-}
-
 VRGlutEditor::VRGlutEditor() {
     cout << "Glut: New Editor" << endl;
     type = "glutEditor";
@@ -98,7 +67,12 @@ VRGlutEditor::VRGlutEditor() {
     glutReshapeFunc( onMainReshape );
     glutCloseFunc( onMainClose );
 
-    XID x11window = glXGetCurrentDrawable();
+    initGlutExtensions(); // just after top level window creation
+
+    IconList iconList;
+    iconList.load("ressources/gui/logo_icon.png");
+    iconList.apply();
+
     testGLCapabilities();
 
     /** IDE Window **/
@@ -113,7 +87,7 @@ VRGlutEditor::VRGlutEditor() {
     signal = [&](string name, map<string,string> opts) -> bool { return VRGuiManager::trigger(name,opts); };
     resizeSignal = [&](string name, int x, int y, int w, int h) -> bool { return VRGuiManager::triggerResize(name,x,y,w,h); };
 
-    startGrabShiftTab(x11window);
+    startGrabShiftTab();
 
     /** OpenSG Window **/
     glutSetWindow(topWin);
@@ -149,7 +123,7 @@ VRGlutEditor::VRGlutEditor() {
 }
 
 VRGlutEditor::~VRGlutEditor() {
-    doGrabShiftTab = false;
+    cleanupGlutExtensions();
     glutDestroyWindow(winGL);
     glutDestroyWindow(winUI);
     glutDestroyWindow(topWin);
@@ -256,13 +230,13 @@ void VRGlutEditor::onMotion(int x, int y) {
 }
 
 void VRGlutEditor::onKeyboard(int c, int s, int x, int y) {
-    if (!glViewFocussed) if (signal) signal("relayedKeySignal", {{"key",toString(c)},{"state",toString(s)}});
+    if (!glViewFocussed) { if (signal) signal("relayedKeySignal", {{"key",toString(c)},{"state",toString(s)}}); }
     else if (auto k = getKeyboard()) k->keyboard(c, s, x, y, 1);
 }
 
 void VRGlutEditor::onKeyboard_special(int c, int s, int x, int y) {
     if (s == 0 && c == 11) setFullscreen(!fullscreen);
-    if (!glViewFocussed) if (signal) signal("relayedSpecialKeySignal", {{"key",toString(c)},{"state",toString(s)}});
+    if (!glViewFocussed) { if (signal) signal("relayedSpecialKeySignal", {{"key",toString(c)},{"state",toString(s)}}); }
     //cout << " VRGlutEditor::onKeyboard_special " << c << " " << s << " " << x << " " << y << endl;
     else if (auto k = getKeyboard()) k->keyboard_special(c, s, x, y, 1);
 }

@@ -44,7 +44,7 @@ class VRTexture : public std::enable_shared_from_this<VRTexture> {
         int getPixelByteN();
         int getPixelByteSize();
         size_t getNPixel();
-        vector<Color4f> getPixels();
+        vector<Color4f> getPixels(bool invertY = false);
         ImageMTRecPtr getImage();
 
         void convertToBytes();
@@ -54,9 +54,9 @@ class VRTexture : public std::enable_shared_from_this<VRTexture> {
         int getChannels();
         Vec3i getSize();
         float getAspectRatio();
-        Color4f getPixelUV(Vec2d uv);
-        Color4f getPixelVec(Vec3i p);
-        Color4f getPixel(int i);
+        Color4f getPixelUV(Vec2d uv, bool invertY = false);
+        Color4f getPixelVec(Vec3i p, bool invertY = false);
+        Color4f getPixel(int i, bool invertY = false);
 
         void resize(Vec3i size, bool scale, Vec3i offset);
         void downsize();

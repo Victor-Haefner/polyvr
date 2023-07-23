@@ -2,6 +2,7 @@
 #include "../VRTimer.h"
 #include "../toString.h"
 #include <stdlib.h>
+#include <cstdlib>
 #include <sys/stat.h>
 #include <errno.h>
 #include <iostream>
@@ -28,6 +29,11 @@
 #ifdef WASM
 #include <sys/stat.h>
 #endif
+
+string getSystemVariable(string name) {
+    const char* val = getenv(name.c_str());
+    return val ? val : "";
+}
 
 void printBacktrace() {
 #ifndef WITHOUT_EXECINFO

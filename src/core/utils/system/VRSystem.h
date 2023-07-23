@@ -6,6 +6,8 @@
 
 using namespace std;
 
+string getSystemVariable(string name);
+
 void printBacktrace();
 
 bool exists(string path);

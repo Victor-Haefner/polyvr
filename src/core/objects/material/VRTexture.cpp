@@ -338,14 +338,14 @@ void VRTexture::clampToImage(Vec3i& p) {
     if (p[2] >= img->getDepth()) p[2] = img->getDepth()-1;
 }
 
-vector<Color4f> VRTexture::getPixels() {
+vector<Color4f> VRTexture::getPixels(bool invertY) {
     vector<Color4f> res;
     size_t N = getNPixel();
-    for (size_t i=0; i<N; i++) res.push_back(getPixel(i));
+    for (size_t i=0; i<N; i++) res.push_back(getPixel(i, invertY));
     return res;
 }
 
-Color4f VRTexture::getPixelVec(Vec3i p) {
+Color4f VRTexture::getPixelVec(Vec3i p, bool invertY) {
     auto res = Color4f(0,0,0,1);
     if (!img) return res;
     //int N = getChannels();
@@ -356,20 +356,20 @@ Color4f VRTexture::getPixelVec(Vec3i p) {
     clampToImage(p);
     int i = p[0] + p[1]*w + p[2]*w*h;
 
-    return getPixel(i);
+    return getPixel(i, invertY);
 }
 
-Color4f VRTexture::getPixelUV(Vec2d uv) {
+Color4f VRTexture::getPixelUV(Vec2d uv, bool invertY) {
     auto res = Color4f(0,0,0,1);
     if (!img) return res;
     int w = img->getWidth();
     int h = img->getHeight();
     int x = uv[0]*(w-1);
     int y = uv[1]*(h-1);
-    return getPixelVec(Vec3i(x,y,0));
+    return getPixelVec(Vec3i(x,y,0), invertY);
 }
 
-Color4f VRTexture::getPixel(int i) {
+Color4f VRTexture::getPixel(int i, bool invertY) {
     auto res = Color4f(0,0,0,1);
     if (!img) return res;
     int N = getChannels();
@@ -380,6 +380,13 @@ Color4f VRTexture::getPixel(int i) {
     size_t S = s[0]*s[1]*s[2];
     bool valid = bool(i >= 0 && i < (int)S);
     if (!valid) return Color4f();
+
+    if (invertY) { // TODO: extend for 3D texture
+        int x = i%s[0];
+        int y = i/s[0];
+        y = s[1]-1 - y;
+        i = x + y*s[0];
+    }
 
     if (N == 1) {
         float d = 0;
