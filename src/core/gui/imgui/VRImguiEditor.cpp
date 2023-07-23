@@ -581,9 +581,10 @@ void ImDocDialog::begin() {
     ImGui::SameLine();
 
     // doc text
-    ImGui::BeginChild("docText", region2, false, flags);
-    ImGui::Text(text.c_str());
-    ImGui::EndChild();
+    //ImGui::BeginChild("docText", region2, false, flags);
+    ImGui::InputTextMultiline("docText", &text[0], text.size(), region2, ImGuiInputTextFlags_ReadOnly);
+    //ImGui::Text(text.c_str());
+    //ImGui::EndChild();
 
 }
 
