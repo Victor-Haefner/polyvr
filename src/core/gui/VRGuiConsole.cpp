@@ -11,8 +11,9 @@ VRMutex mtx;
 VRConsoleWidget::message::message(string m, string s, shared_ptr< VRFunction<string> > l) : msg(m), style(s), link(l) {}
 
 VRConsoleWidget::VRConsoleWidget() {
+    notifyColor = "#00aaff";
     ID = VRGuiManager::genUUID();
-    uiSignal("newConsole", {{"ID",ID}});
+    uiSignal("newConsole", {{"ID",ID}, {"color",notifyColor}});
 
     auto sigs = OSG::VRGuiSignals::get();
     sigs->addCallback("clickConsole", [&](OSG::VRGuiSignals::Options o) { if (o["ID"] == ID) on_link_activate( o["mark"] ); return true; }, true );
@@ -90,7 +91,6 @@ void VRConsoleWidget::clear() {
     VRLock lock(mtx);
     std::queue<message>().swap(msg_queue);
     uiSignal("clearConsole", {{"ID",ID}});
-    resetColor();
 }
 
 string VRConsoleWidget::getWindow() { return swin; }
@@ -101,20 +101,9 @@ void VRConsoleWidget::setLabel(string lbl) {
     uiSignal("setupConsole", {{"ID",ID}, {"name",lbl}});
 }
 
-void VRConsoleWidget::setOpen(bool b) {
-    isOpen = b;
-    if (!b) resetColor();
-}
-
-void VRConsoleWidget::setColor(string colorStr) {
-    uiSignal("setConsoleLabelColor", {{"ID",ID}, {"color",colorStr}});
-}
-
-void VRConsoleWidget::configColor( string c ) { notifyColor = c; }
-
-void VRConsoleWidget::resetColor() {
-    //gtk_widget_modify_fg((GtkWidget*)label, GTK_STATE_ACTIVE , 0 );
-    //gtk_widget_modify_fg((GtkWidget*)label, GTK_STATE_NORMAL , 0 );
+void VRConsoleWidget::configColor( string c ) {
+    notifyColor = c;
+    uiSignal("setConsoleLabelColor", {{"ID",ID}, {"color",c}});
 }
 
 void VRConsoleWidget::addStyle( string style, string fg, string bg, bool italic, bool bold, bool underlined, bool editable ) {
@@ -167,7 +156,6 @@ void VRConsoleWidget::update() {
     VRLock lock(mtx);
     if (msg_queue.size() > 0) cout << "VRConsoleWidget::update " << msg_queue.size() << endl;
     while(!msg_queue.empty()) {
-        if (!isOpen) setColor(notifyColor);
         auto& msg = msg_queue.front();
 
         string tag;

@@ -190,22 +190,14 @@ static PyObject* modErr = 0;
 static PyObject* writeOut(PyObject *self, PyObject *args) {
     const char *what;
     if (!PyArg_ParseTuple(args, "s", &what)) return NULL;
-#ifndef WITHOUT_GTK
     if (auto c = VRConsoleWidget::get(pyOutConsole)) c->write(what);
-#else
-    cout << what;
-#endif
     return Py_BuildValue("");
 }
 
 static PyObject* writeErr(PyObject *self, PyObject *args) {
     const char *what;
     if (!PyArg_ParseTuple(args, "s", &what)) return NULL;
-#ifndef WITHOUT_GTK
     if (auto c = VRConsoleWidget::get(pyErrConsole)) c->write(what);
-#else
-    cout << what;
-#endif
     return Py_BuildValue("");
 }
 

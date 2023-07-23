@@ -34,7 +34,7 @@ class VRConsoleWidget {
         std::queue<message> msg_queue;
         bool paused = 0;
         bool isOpen = 0;
-        string notifyColor = "#006fe0";
+        string notifyColor;
 
         void on_link_activate(string mark);
 
@@ -47,11 +47,8 @@ class VRConsoleWidget {
 
         void clear();
         void pause();
-        void setOpen(bool b);
         void setLabel(string lbl);
-        void setColor(string color);
         void configColor(string color);
-        void resetColor();
         void forward();
         void write(string s, string style = "", shared_ptr< VRFunction<string> > link = 0);
         void addStyle( string style, string fg, string bg, bool italiq, bool bold, bool underlined, bool editable );

@@ -11,12 +11,14 @@ ImConsole::ImConsole(string ID) : ID(ID), name(ID) {
 void ImConsole::render() {
     if (!sensitive) ImGui::BeginDisabled();
 
-    ImGui::PushStyleColor(ImGuiCol_Text, color);
-    bool tabOpen = ImGui::BeginTabItem(name.c_str());
-    ImGui::PopStyleColor();
+    static int tick = 0; tick = (tick+1)%100;
+    bool colorLabel = (!tabOpen && changed && tick < 50);
+
+    if (colorLabel) ImGui::PushStyleColor(ImGuiCol_Text, color);
+    tabOpen = ImGui::BeginTabItem(name.c_str());
+    if (colorLabel) ImGui::PopStyleColor();
 
     if (tabOpen) {
-        color = ImGui::GetColorU32(ImVec4(255,255,255,255)); // reset color
         auto r = ImGui::GetContentRegionAvail();
         string wID = "##"+name+"_text";
 
@@ -71,7 +73,7 @@ void ImConsole::render() {
 
 ImConsoles::ImConsoles() : ImWidget("Consoles") {
     auto mgr = OSG::VRGuiSignals::get();
-    mgr->addCallback("newConsole", [&](OSG::VRGuiSignals::Options o){ newConsole(o["ID"]); return true; } );
+    mgr->addCallback("newConsole", [&](OSG::VRGuiSignals::Options o){ newConsole(o["ID"], o["color"]); return true; } );
     mgr->addCallback("setupConsole", [&](OSG::VRGuiSignals::Options o){ setupConsole(o["ID"], o["name"]); return true; } );
     mgr->addCallback("pushConsole", [&](OSG::VRGuiSignals::Options o){ pushConsole(o["ID"], o["string"], o["style"], o["mark"]); return true; } );
     mgr->addCallback("clearConsole", [&](OSG::VRGuiSignals::Options o){ clearConsole(o["ID"]); return true; } );
@@ -104,9 +106,10 @@ void ImConsoles::setConsoleLabelColor(string ID, string color) {
     consoles[ID].color = ImGui::GetColorU32(c);
 }
 
-void ImConsoles::newConsole(string ID) {
+void ImConsoles::newConsole(string ID, string color) {
     consoles[ID] = ImConsole(ID);
     consolesOrder.push_back(ID);
+    setConsoleLabelColor(ID, color);
 }
 
 void ImConsoles::clearConsole(string ID) {

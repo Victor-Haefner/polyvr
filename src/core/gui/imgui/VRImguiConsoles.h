@@ -35,7 +35,8 @@ class ImConsole {
         };
 
         bool sensitive = true;
-        int changed = 2;
+        bool tabOpen = false;
+        int changed = 0;
         string ID;
         string name;
         vector<string> lines;
@@ -53,7 +54,7 @@ class ImConsoles : public ImWidget {
         vector<string> consolesOrder;
         map<string,ImConsole> consoles;
 
-        void newConsole(string ID);
+        void newConsole(string ID, string color);
         void clearConsole(string ID);
         void setupConsole(string ID, string name);
         void pushConsole(string ID, string data, string style, string mark);

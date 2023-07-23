@@ -18,7 +18,6 @@ using namespace std;
 class VRGuiBits {
     private:
         bool update_ward = false;
-        VRConsoleWidgetPtr openConsole;
         string terminal;
         map<string, VRConsoleWidgetPtr> consoles;
 
@@ -42,7 +41,6 @@ class VRGuiBits {
         void on_fullscreen_clicked();
 
         void on_internal_close_clicked();
-        void on_console_switch(string name);
 
         void updateWebPortRessources();
         void on_web_cancel();

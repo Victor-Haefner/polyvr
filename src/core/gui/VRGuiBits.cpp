@@ -414,8 +414,8 @@ VRGuiBits::VRGuiBits() {
     addTermTab("Console");
     auto err1Tab = addTermTab("Errors");
     auto err2Tab = addTermTab("Syntax");
-    err1Tab->configColor("#e03000");
-    err2Tab->configColor("#e03000");
+    err1Tab->configColor("#ff5555");
+    err2Tab->configColor("#ff5555");
     addTermTab("Search results");
     addTermTab("Reasoning");
     addTermTab("Tracking");
@@ -424,24 +424,12 @@ VRGuiBits::VRGuiBits() {
     colTab->addStyle( "red", "#ff3311", "#ffffff", false, false, false, true );
     colTab->addStyle( "green", "#00cc11", "#ffffff", false, false, false, true );
 
-    openConsole = consoles["Console"];
-    openConsole->setOpen(true);
-
     /*GtkWidget* box = VRGuiBuilder::get()->get_widget("hbox15");
     gtk_box_pack_start((GtkBox*)box, (GtkWidget*)terminal, true, true, 0);
-    gtk_widget_show_all(box);
-    connect_signal<void, GtkWidget*, guint>(terminal, bind(&VRGuiBits::on_console_switch, this, placeholders::_1, placeholders::_2), "switch_page");*/
+    gtk_widget_show_all(box);*/
 
     updatePtr = VRUpdateCb::create( "IntMonitor_guiUpdate", VRGuiBits_on_internal_update );
     VRSceneManager::get()->addUpdateFkt(updatePtr);
-}
-
-void VRGuiBits::on_console_switch(string name) {
-    //auto p = gtk_notebook_get_nth_page(terminal, page_num);
-    //string name = gtk_notebook_get_tab_label_text(terminal, p);
-    openConsole->setOpen(false);
-    openConsole = consoles[name];
-    openConsole->setOpen(true);
 }
 
 bool VRGuiBits::update() { // scene changed
