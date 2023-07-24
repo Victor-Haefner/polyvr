@@ -1175,10 +1175,9 @@ VRGuiScripts::VRGuiScripts() {
     mgr->addCallback("scripts_toolbar_import", [&](OSG::VRGuiSignals::Options o) { on_import_clicked(); return true; } );
     mgr->addCallback("scripts_toolbar_delete", [&](OSG::VRGuiSignals::Options o) { on_del_clicked(); return true; } );
     mgr->addCallback("scripts_toolbar_pause", [&](OSG::VRGuiSignals::Options o) { on_pause_toggled(toBool(o["state"])); return true; } );
-    //mgr->addCallback("scripts_toolbar_cpp", [&](OSG::VRGuiSignals::Options o) { on_exec_clicked(); return true; } );
+    mgr->addCallback("scripts_toolbar_cpp", [&](OSG::VRGuiSignals::Options o) { on_convert_cpp_clicked(); return true; } );
     mgr->addCallback("scripts_toolbar_save", [&](OSG::VRGuiSignals::Options o) { on_save_clicked(); return true; }, true );
     mgr->addCallback("scripts_toolbar_execute", [&](OSG::VRGuiSignals::Options o) { on_exec_clicked(); return true; }, true );
-    //mgr->addCallback("scripts_toolbar_search", [&](OSG::VRGuiSignals::Options o) { on_exec_clicked(); return true; } );
     mgr->addCallback("scripts_toolbar_documentation", [&](OSG::VRGuiSignals::Options o) { on_help_clicked(); return true; } );
     mgr->addCallback("scripts_toolbar_performance", [&](OSG::VRGuiSignals::Options o) { on_perf_toggled(toBool(o["state"])); return true; } );
     mgr->addCallback("script_editor_text_changed", [&](OSG::VRGuiSignals::Options o) { on_buffer_changed(); return true; } );
