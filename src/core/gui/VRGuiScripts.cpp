@@ -775,21 +775,6 @@ void VRGuiScripts::on_doc_filter_edited(string filter) {
     updateDocumentation();
 }
 
-// script search dialog
-
-void VRGuiScripts::on_find_clicked() {
-    /*setToggleButton("checkbutton38", true);
-    setWidgetSensitivity("entry11", false);
-    string txt = editor->getSelection();
-    setTextEntry("entry10", txt);
-    VRGuiWidget("entry10").grabFocus();
-    showDialog("find_dialog");*/
-}
-
-void VRGuiScripts::on_find_diag_cancel_clicked() {
-    //hideDialog("find_dialog");
-}
-
 VRGuiScripts::searchResult::searchResult(string s, int l, int c) : scriptName(s), line(l), column(c) {}
 
 /*void VRGuiScripts::selectScript(string name) {
@@ -852,21 +837,20 @@ void VRGuiScripts::on_search_link_clicked(searchResult res, string s) {
     focusScript(res.scriptName, res.line, res.column);
 }
 
-void VRGuiScripts::on_find_diag_find_clicked() {
-    /*bool sa = getCheckButtonState("checkbutton38");
-    //bool rep = getCheckButtonState("checkbutton12");
-    string search = getTextEntry("entry10");
+// TODO: implement replace function
+void VRGuiScripts::on_find_diag_find_clicked(string search, string scope, string replace) {
     if (search == "") return;
-    hideDialog("find_dialog");
+
+    bool searchProject = bool(scope == "project");
 
     VRScriptPtr s = getSelectedScript();
-    if (!sa && s == 0) return;
+    if (!searchProject && s == 0) return;
 
     auto scene = VRScene::getCurrent();
     if (scene == 0) return;
 
     vector<VRScriptPtr> results;
-    if (!sa) results = scene->searchScript(search, s);
+    if (!searchProject) results = scene->searchScript(search, s);
     else results = scene->searchScript(search);
 
     auto print = [&]( string m, string style = "", shared_ptr< VRFunction<string> > link = 0 ) {
@@ -892,7 +876,7 @@ void VRGuiScripts::on_find_diag_find_clicked() {
         print( "\n" );
     }
     print( "\n" );
-    updateList();*/
+    updateList();
 }
 
 void VRGuiScripts::on_toggle_find_replace() {
@@ -1200,21 +1184,12 @@ VRGuiScripts::VRGuiScripts() {
     mgr->addCallback("script_editor_change_trigger_key", [&](OSG::VRGuiSignals::Options o) { on_trigkey_edited(o["idKey"], o["inputNew"]); return true; }, true );
     mgr->addCallback("script_editor_change_trigger_state", [&](OSG::VRGuiSignals::Options o) { on_trigstate_edited(o["idKey"], o["newValue"]); return true; }, true );
 
+    mgr->addCallback("on_run_script_search", [&](OSG::VRGuiSignals::Options o) { on_find_diag_find_clicked(o["search"], o["scope"], o["replace"]); return true; }, true );
+
     mgr->addCallback("on_change_doc_filter", [&](OSG::VRGuiSignals::Options o) { on_doc_filter_edited(o["filter"]); return true; }, true );
     mgr->addCallback("treeview_select", [&](OSG::VRGuiSignals::Options o) { on_select_help(o["treeview"], o["node"]); return true; }, true );
 
-    /*disableDestroyDiag("pybindings-docs");
-    disableDestroyDiag("find_dialog");
-    disableDestroyDiag("scriptTemplates");
-
-    setToolButtonCallback("toolbutton6", bind(&VRGuiScripts::on_new_clicked, this) );
-    setToolButtonCallback("toolbutton29", bind(&VRGuiScripts::on_template_clicked, this) );
-    setToolButtonCallback("toolbutton7", bind(&VRGuiScripts::on_save_clicked, this) );
-    setToolButtonCallback("toolbutton8", bind(&VRGuiScripts::on_exec_clicked, this) 888);
-    setToolButtonCallback("toolbutton9", bind(&VRGuiScripts::on_del_clicked, this) );
-    setToolButtonCallback("toolbutton16", bind(&VRGuiScripts::on_help_clicked, this) );
-    setToolButtonCallback("toolbutton20", bind(&VRGuiScripts::on_addSep_clicked, this) );
-    setToolButtonCallback("toolbutton22", bind(&VRGuiScripts::on_import_clicked, this) );
+    /*
     setToolButtonCallback("toolbutton23", bind(&VRGuiScripts::on_find_clicked, this) );
     setToolButtonCallback("toggletoolbutton1", bind(&VRGuiScripts::on_perf_toggled, this) );
     setToolButtonCallback("toggletoolbutton2", bind(&VRGuiScripts::on_pause_toggled, this) );
@@ -1243,10 +1218,10 @@ VRGuiScripts::VRGuiScripts() {
     setTreeviewDoubleclickCallback("ttreeview1", bind(&VRGuiScripts::on_doubleclick_templ, this, PL::_1, PL::_2) );*/
 
     editor = shared_ptr<VRGuiEditor>( new VRGuiEditor("scrolledwindow4") );
-    editor->addKeyBinding("find", VRUpdateCb::create("findCb", bind(&VRGuiScripts::on_find_clicked, this)));
+    /*editor->addKeyBinding("find", VRUpdateCb::create("findCb", bind(&VRGuiScripts::on_find_clicked, this)));
     editor->addKeyBinding("help", VRUpdateCb::create("helpCb", bind(&VRGuiScripts::on_help_clicked, this)));
     editor->addKeyBinding("save", VRUpdateCb::create("saveCb", bind(&VRGuiScripts::on_save_clicked, this)));
-    editor->addKeyBinding("exec", VRUpdateCb::create("execCb", bind(&VRGuiScripts::on_exec_clicked, this)));
+    editor->addKeyBinding("exec", VRUpdateCb::create("execCb", bind(&VRGuiScripts::on_exec_clicked, this)));*/
     /*connect_signal<void, GdkEvent*>(editor->getEditor(), bind(&VRGuiScripts::on_focus_out_changed, this, PL::_1), "focus-out-event");
 
     setEntryCallback("entry10", bind(&VRGuiScripts::on_find_diag_find_clicked, this), false, false);

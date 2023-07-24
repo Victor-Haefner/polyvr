@@ -30,9 +30,15 @@ class ImViewControls {
 
 class ImConsole {
     public:
+        struct Attribute {
+            string value;
+            int c0 = 0;
+            int L = 0;
+        };
+
         struct Attributes {
-            string mark;
-            string style;
+            vector<Attribute> marks;
+            vector<Attribute> styles;
         };
 
         bool sensitive = true;

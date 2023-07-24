@@ -486,7 +486,9 @@ ImNotifyDialog::ImNotifyDialog() : ImDialog("notify") {
 }
 
 ImRecorderDialog::ImRecorderDialog() : ImDialog("recorder") {}
-ImSearchDialog::ImSearchDialog() : ImDialog("search"), filter("scriptSearch", "Search:", "") {}
+ImSearchDialog::ImSearchDialog() : ImDialog("search")
+                                    , searchField("scriptSearch", "Search:", "", ImGuiInputTextFlags_EnterReturnsTrue)
+                                    , replaceField("scriptReplace", "Replace:", "", ImGuiInputTextFlags_EnterReturnsTrue) {}
 ImProfDialog::ImProfDialog() : ImDialog("profiler") {}
 ImImportDialog::ImImportDialog() : ImDialog("import") {}
 ImTemplateDialog::ImTemplateDialog() : ImDialog("template") {}
@@ -597,7 +599,24 @@ void ImDocDialog::begin() {
 
 void ImSearchDialog::begin() {
     ImSection::begin();
-    centeredText("Search");
+    centeredText("Find");
+
+    bool filterEnter = searchField.render();
+    bool replaceEnter = replaceField.render();
+
+    static string scope = "script";
+    if (ImGui::RadioButton("Script", &searchScope, 0)) scope = "script";
+    if (ImGui::RadioButton("Project", &searchScope, 1)) scope = "project";
+
+    bool clickSearch = ImGui::Button("Search");
+
+    if (filterEnter || replaceEnter || clickSearch) {
+        uiSignal("ui_close_popup");
+        uiSignal("on_run_script_search", {{"search",searchField.value}, {"scope",scope}, {"replace",replaceField.value}});
+    }
+
+    ImGui::SameLine();
+    if (ImGui::Button("Cancel")) uiSignal("ui_close_popup");
 }
 
 void ImNotifyDialog::open(string msg1, string msg2, string sig) {

@@ -125,7 +125,9 @@ class ImDocDialog : public ImDialog {
 
 class ImSearchDialog : public ImDialog {
     public:
-        ImInput filter;
+        ImInput searchField;
+        ImInput replaceField;
+        int searchScope = 0;
         string text;
 
         ImSearchDialog();

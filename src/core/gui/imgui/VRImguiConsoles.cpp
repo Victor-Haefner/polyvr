@@ -52,8 +52,28 @@ void ImConsole::render() {
 
             if (ImGui::IsItemHovered() && ImGui::IsMouseReleased( 0 ) ) {
                 if (attributes.count(i)) {
+                    float mP = ImGui::GetMousePos().x;
+                    float r0 = ImGui::GetItemRectMin().x;
+                    ImFont* font = ImGui::GetFont();
+
+                    int cM = 0; // mouse column clicked in editor
+                    float pC = r0;
+                    for (int j=0; j<l.size(); j++) {
+                        auto& c = l[j];
+                        pC += font->CalcTextSizeA(font->FontSize, FLT_MAX, 0, &c, &c + 1).x;
+                        if (mP < pC) {
+                            cM = j;
+                            break;
+                        }
+                    }
+
                     auto& a = attributes[i];
-                    uiSignal("clickConsole", {{"mark",a.mark}, {"ID",ID}});
+                    for (auto& mark : a.marks) {
+                        if (cM > mark.c0 && cM < mark.c0+mark.L) {
+                            uiSignal("clickConsole", {{"mark",mark.value}, {"ID",ID}});
+                            break;
+                        }
+                    }
                 }
             }
             i++;
@@ -124,7 +144,7 @@ void ImConsoles::setupConsole(string ID, string name) {
 }
 
 void ImConsoles::pushConsole(string ID, string data, string style, string mark) {
-    //cout << " - - - - - - - ImConsoles::pushConsole " << ID << "  " << data << "  " << style << "  " << mark << endl;
+    //cout << " - - - - - - - ImConsoles::pushConsole " << ID << "  '" << data << "'  " << style << "  " << mark << endl;
     if (data.size() == 0) return;
     if (!consoles.count(ID)) return;
     consoles[ID].changed = 2;
@@ -132,11 +152,15 @@ void ImConsoles::pushConsole(string ID, string data, string style, string mark) 
     auto& att = consoles[ID].attributes;
     auto dataV = splitString(data, '\n');
     for (int i=0; i<dataV.size(); i++) {
+        int c0 = 0;
+        if (lns.size() > 0) c0 = lns[lns.size()-1].size();
+        int L = dataV[i].size();
+
         if (i == 0 && lns.size() > 0) lns[lns.size()-1] += dataV[i];
         else lns.push_back(dataV[i]);
 
-        if (mark.size() > 0)  att[lns.size()-1].mark = mark;
-        if (style.size() > 0) att[lns.size()-1].style = style;
+        if (mark.size() > 0)  att[lns.size()-1].marks.push_back({mark, c0, L});
+        if (style.size() > 0) att[lns.size()-1].styles.push_back({style, c0, L});
     }
     if (data[data.size()-1] == '\n') lns.push_back("");
 }
