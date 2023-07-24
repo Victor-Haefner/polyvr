@@ -188,6 +188,7 @@ void VRImguiEditor::resizeUI(const Surface& parent) {
 
 void VRImguiEditor::resizePopup(const Surface& parent) {
     ImGui::SetCurrentContext(popupContext);
+    notifyDialog.resize(parent);
     aboutDialog.resize(parent);
     fileDialog.resize(parent);
     recorderDialog.resize(parent);
@@ -430,6 +431,7 @@ void VRImguiEditor::renderPopup(OSG::VRGuiSignals::Options options) {
     ImGui_ImplGLUT_NewFrame();
 
     string name = options["name"];
+    if (name == "notify") notifyDialog.render();
     if (name == "about") aboutDialog.render();
     if (name == "file") fileDialog.render();
     if (name == "recorder") recorderDialog.render();
@@ -476,6 +478,11 @@ void ImAboutDialog::begin() {
     ImGui::Spacing();
     centeredText("Authors:");
     for (auto& a : authors) centeredText(a);
+}
+
+ImNotifyDialog::ImNotifyDialog() : ImDialog("notify") {
+    auto mgr = OSG::VRGuiSignals::get();
+    mgr->addCallback("askUser", [&](OSG::VRGuiSignals::Options o){ open(o["msg1"], o["msg2"], o["sig"]); return true; } );
 }
 
 ImRecorderDialog::ImRecorderDialog() : ImDialog("recorder") {}
@@ -591,6 +598,25 @@ void ImDocDialog::begin() {
 void ImSearchDialog::begin() {
     ImSection::begin();
     centeredText("Search");
+}
+
+void ImNotifyDialog::open(string msg1, string msg2, string sig) {
+    message1 = msg1;
+    message2 = msg2;
+    signal = sig;
+    uiSignal("ui_toggle_popup", {{"name","notify"}, {"width","400"}, {"height","200"}});
+}
+
+void ImNotifyDialog::begin() {
+    ImSection::begin();
+    centeredText(message1);
+    centeredText(message2);
+    if (ImGui::Button("Ok")) {
+        uiSignal("ui_close_popup");
+        uiSignal(signal);
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("Cancel")) uiSignal("ui_close_popup");
 }
 
 void ImProfDialog::begin() {

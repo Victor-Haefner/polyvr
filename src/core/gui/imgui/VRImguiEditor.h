@@ -66,6 +66,18 @@ class ImDialog : public ImSection {
         void renderFileDialog(string signal);
 };
 
+class ImNotifyDialog : public ImDialog {
+    public:
+        string message1;
+        string message2;
+        string signal;
+
+        ImNotifyDialog();
+
+        void open(string msg1, string msg2, string sig);
+        void begin() override;
+};
+
 class ImAboutDialog : public ImDialog {
     public:
         string version;
@@ -148,6 +160,7 @@ class VRImguiEditor {
         ImConsolesSection consoles = ImConsolesSection({0.3,1.0,0,0.3});
         ImSection glArea = ImSection("glArea", {0.3,1,0.3,0.95});
 
+        ImNotifyDialog notifyDialog = ImNotifyDialog();
         ImAboutDialog aboutDialog = ImAboutDialog();
         ImFileDialog fileDialog = ImFileDialog();
         ImRecorderDialog recorderDialog = ImRecorderDialog();

@@ -371,7 +371,7 @@ void ImScripting::render() {
     ImGui::SameLine(); if (ImGui::Button("Template")) uiSignal("ui_toggle_popup", {{"name","template"}, {"width","400"}, {"height","300"}});
     ImGui::SameLine(); if (ImGui::Button("Group")) uiSignal("scripts_toolbar_group");
     ImGui::SameLine(); if (ImGui::Button("Import")) uiSignal("ui_toggle_popup", {{"name","import"}, {"width","400"}, {"height","300"}});
-    ImGui::SameLine(); if (ImGui::Button("Delete")) uiSignal("scripts_toolbar_delete");
+    ImGui::SameLine(); if (ImGui::Button("Delete")) uiSignal("askUser", {{"msg1","This will remove the selected script!"}, {"msg2","Are you sure?"}, {"sig","scripts_toolbar_delete"}});
     ImGui::SameLine(); if (ImGui::Checkbox("Pause Scripts", &pause)) uiSignal("scripts_toolbar_pause", {{"state",toString(pause)}});
     ImGui::SameLine(); if (ImGui::Button("CPP")) uiSignal("scripts_toolbar_cpp");
 
