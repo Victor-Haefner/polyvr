@@ -564,19 +564,8 @@ void VRGuiScripts::on_trigstate_edited(string name, string new_val) {
 
 // templates dialog
 
-void VRGuiScripts::on_template_clicked() {
-    /*VRGuiScripts::updateTemplates();
-
-    auto tb  = VRGuiBuilder::get()->get_object("scripttemplates");
-    gtk_text_buffer_set_text((GtkTextBuffer*)tb, "", 0);
-
-    showDialog("scriptTemplates");
-    VRGuiWidget("tentry1").grabFocus();*/
-}
-
-void VRGuiScripts::updateTemplates() {
-    /*auto store = (GtkTreeStore*)VRGuiBuilder::get()->get_object("templates");
-    gtk_tree_store_clear(store);
+void VRGuiScripts::updateTemplates(string templ_filter) {
+    uiSignal("script_templates_clear");
 
     auto scene = VRScene::getCurrent();
     if (scene == 0) return;
@@ -600,63 +589,36 @@ void VRGuiScripts::updateTemplates() {
         }
     } else filtered = templates;
 
-    auto setRow = [&](GtkTreeIter* itr, string label) {
-        gtk_tree_store_set(store, itr,  0, label.c_str(), -1);
+    auto setRow = [&](string parent, string label) {
+        uiSignal("on_script_template_tree_append", {{ "ID",label }, { "label",label }, { "parent",parent }});
     };
 
-    GtkTreeIter itr0, itr1;
     for (auto tv : filtered) {
-        gtk_tree_store_append(store, &itr0, NULL);
-        setRow(&itr0, tv.first);
-        for (auto t : tv.second) {
-            gtk_tree_store_append(store, &itr1, &itr0);
-            setRow(&itr1, t);
-        }
+        setRow("", tv.first);
+        for (auto t : tv.second) setRow(tv.first, t);
     }
-
-    if (templ_filter != "") VRGuiTreeView("ttreeview1").expandAll();*/
 }
 
-void VRGuiScripts::on_select_templ() {
-    /*VRGuiTreeView tree_view("ttreeview1");
-    if (!tree_view.hasSelection()) return;
-
+void VRGuiScripts::on_select_templ(string ID) {
     auto scene = VRScene::getCurrent();
     if (scene == 0) return;
 
     // get selected object
-    string templ  = tree_view.getSelectedStringValue(0);
-
-    string core = scene->getTemplateCore(templ);
-
-    auto tb = (GtkTextBuffer*)VRGuiBuilder::get()->get_object("scripttemplates");
-    gtk_text_buffer_set_text(tb, core.c_str(), core.size());*/
+    string core = scene->getTemplateCore(ID);
+    uiSignal("set_script_template", {{"script", core}});
 }
 
 /*void VRGuiScripts::on_doubleclick_templ(GtkTreePath* p, GtkTreeViewColumn* c) {
     //on_templ_import_clicked();
 }*/
 
-void VRGuiScripts::on_templ_close_clicked() { /*hideDialog("scriptTemplates");*/ }
-
-void VRGuiScripts::on_templ_import_clicked() {
-    /*hideDialog("scriptTemplates");
-
-    VRGuiTreeView tree_view("ttreeview1");
-    if (!tree_view.hasSelection()) return;
-
+void VRGuiScripts::on_templ_import_clicked(string ID) {
     auto scene = VRScene::getCurrent();
     if (scene == 0) return;
 
     // get selected object
-    string templ = tree_view.getSelectedStringValue(0);
-    scene->importTemplate(templ);
-    updateList();*/
-}
-
-void VRGuiScripts::on_templ_filter_edited() {
-    //templ_filter = getTextEntry("tentry1");
-    updateTemplates();
+    scene->importTemplate(ID);
+    updateList();
 }
 
 // help dialog
@@ -1154,7 +1116,6 @@ VRGuiScripts::VRGuiScripts() {
     mgr->addCallback("rename_script", [&](OSG::VRGuiSignals::Options o) { on_rename_script(o["name"]); return true; } );
     mgr->addCallback("rename_group", [&](OSG::VRGuiSignals::Options o) { on_rename_group(o["name"]); return true; } );
     mgr->addCallback("scripts_toolbar_new", [&](OSG::VRGuiSignals::Options o) { on_new_clicked(); return true; }, true );
-    mgr->addCallback("scripts_toolbar_template", [&](OSG::VRGuiSignals::Options o) { on_template_clicked(); return true; } );
     mgr->addCallback("scripts_toolbar_group", [&](OSG::VRGuiSignals::Options o) { on_addSep_clicked(); return true; } );
     mgr->addCallback("scripts_toolbar_import", [&](OSG::VRGuiSignals::Options o) { on_import_clicked(); return true; } );
     mgr->addCallback("scripts_toolbar_delete", [&](OSG::VRGuiSignals::Options o) { on_del_clicked(); return true; } );
@@ -1188,6 +1149,10 @@ VRGuiScripts::VRGuiScripts() {
 
     mgr->addCallback("on_change_doc_filter", [&](OSG::VRGuiSignals::Options o) { on_doc_filter_edited(o["filter"]); return true; }, true );
     mgr->addCallback("treeview_select", [&](OSG::VRGuiSignals::Options o) { on_select_help(o["treeview"], o["node"]); return true; }, true );
+
+    mgr->addCallback("ui_request_script_templates", [&](OSG::VRGuiSignals::Options o) { updateTemplates(o["filter"]); return true; }, true );
+    mgr->addCallback("select_script_template", [&](OSG::VRGuiSignals::Options o) { on_select_templ(o["ID"]); return true; }, true );
+    mgr->addCallback("import_script_template", [&](OSG::VRGuiSignals::Options o) { on_templ_import_clicked(o["ID"]); return true; }, true );
 
     /*
     setToolButtonCallback("toolbutton23", bind(&VRGuiScripts::on_find_clicked, this) );

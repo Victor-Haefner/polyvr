@@ -142,8 +142,18 @@ class ImProfDialog : public ImDialog {
 
 class ImTemplateDialog : public ImDialog {
     public:
+        bool initiated = false;
+        ImInput filter;
+        ImTreeview tree;
+        string script;
+        string selected;
+
         ImTemplateDialog();
         void begin() override;
+
+        void clear();
+        void add(string ID, string label, string parent);
+        void selectTemplate(string node);
 };
 
 class ImImportDialog : public ImDialog {

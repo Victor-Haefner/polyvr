@@ -4716,10 +4716,6 @@
 			<Option target="Release" />
 			<Option target="PVR-Utils-d" />
 		</Unit>
-		<Unit filename="src/core/utils/toStringBis.h">
-			<Option target="Release" />
-			<Option target="PVR-Utils-d" />
-		</Unit>
 		<Unit filename="src/core/utils/xml.cpp">
 			<Option target="Release" />
 			<Option target="PVR-Utils-d" />

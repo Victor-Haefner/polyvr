@@ -491,7 +491,27 @@ ImSearchDialog::ImSearchDialog() : ImDialog("search")
                                     , replaceField("scriptReplace", "Replace:", "", ImGuiInputTextFlags_EnterReturnsTrue) {}
 ImProfDialog::ImProfDialog() : ImDialog("profiler") {}
 ImImportDialog::ImImportDialog() : ImDialog("import") {}
-ImTemplateDialog::ImTemplateDialog() : ImDialog("template") {}
+
+ImTemplateDialog::ImTemplateDialog() : ImDialog("template"), filter("templSearch", "Search:", ""), tree("templTree") {
+    auto mgr = OSG::VRGuiSignals::get();
+    mgr->addCallback("script_templates_clear", [&](OSG::VRGuiSignals::Options o){ clear(); return true; } );
+    mgr->addCallback("on_script_template_tree_append", [&](OSG::VRGuiSignals::Options o){ add(o["ID"], o["label"], o["parent"]); return true; } );
+    mgr->addCallback("treeview_select", [&](OSG::VRGuiSignals::Options o){ if(o["treeview"] == "templTree") selectTemplate(o["node"]); return true; } );
+    mgr->addCallback("set_script_template", [&](OSG::VRGuiSignals::Options o){ script = o["script"]; return true; } );
+}
+
+void ImTemplateDialog::selectTemplate(string node) {
+    uiSignal("select_script_template", {{"ID", node}});
+    selected = node;
+}
+
+void ImTemplateDialog::clear() {
+    tree.clear();
+}
+
+void ImTemplateDialog::add(string ID, string label, string parent) {
+    tree.add(ID, label, 0, parent);
+}
 
 ImDocDialog::ImDocDialog() : ImDialog("documentation"), filter("docSearch", "Search:", ""), tree("docTree") {
     auto mgr = OSG::VRGuiSignals::get();
@@ -650,7 +670,35 @@ void ImImportDialog::begin() {
 
 void ImTemplateDialog::begin() {
     ImSection::begin();
-    centeredText("Perforamnce");
+    centeredText("Script Templates");
+
+    bool filterChanged = filter.render();
+    if (!initiated || filterChanged) {
+        uiSignal("ui_request_script_templates", {{"filter", filter.value}});
+        initiated = true;
+    }
+
+    auto region1 = ImGui::GetContentRegionAvail();
+    auto region2 = ImGui::GetContentRegionAvail();
+    region1.x *= 0.25;
+    region2.x *= 0.75;
+    region1.y -= 50;
+    region2.y -= 50;
+
+    ImGui::BeginChild("templatesTree", region1, false, ImGuiWindowFlags_None);
+    tree.render();
+    ImGui::EndChild();
+
+    ImGui::SameLine();
+    ImGui::InputTextMultiline("templatesScriptView", &script[0], script.size(), region2, ImGuiInputTextFlags_ReadOnly);
+
+
+    if (ImGui::Button("Ok")) {
+        uiSignal("ui_close_popup");
+        uiSignal("import_script_template", {{"ID", selected}});
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("Cancel")) uiSignal("ui_close_popup");
 }
 
 
