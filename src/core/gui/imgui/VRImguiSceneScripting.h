@@ -6,14 +6,23 @@
 
 using namespace std;
 
+struct ImScriptEntry {
+    string name;
+    float perf = 0;
+    ImScriptEntry() {}
+    ImScriptEntry(string name);
+};
+
 struct ImScriptGroup {
-    vector<string> scripts;
+    vector<ImScriptEntry> scripts;
     string name;
     ImScriptGroup() {}
     ImScriptGroup(string name);
 };
 
 class ImScriptList {
+    public:
+        bool doPerf = false;
     private:
         map<string, ImScriptGroup> groups;
         vector<string> groupsList;
@@ -21,8 +30,8 @@ class ImScriptList {
 
         void clear();
         void addGroup(string name, string ID);
-        void addScript(string name, string groupID);
-        void renderScriptEntry(string& script);
+        void addScript(string name, string groupID, float time);
+        void renderScriptEntry(ImScriptEntry& script);
         void renderGroupEntry(string& group);
 
     public:

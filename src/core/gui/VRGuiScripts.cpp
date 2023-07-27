@@ -91,11 +91,6 @@ void VRGuiScripts::setScriptListRow(GtkTreeIter* itr, VRScriptPtr script, bool o
     if (trig_lvl >= 128) tbg = "#AACCFF";
     if (trig_lvl >= 256) tbg = "#CCAAFF";
 
-    string time = " ";
-    float exec_time = script->getExecutionTime();
-    if (exec_time >= 60*1000) time = toString( exec_time*0.001/60 ) + " min";
-    else if (exec_time >= 1000) time = toString( exec_time*0.001 ) + " s";
-    else if (exec_time >= 0) time = toString( exec_time ) + " ms";
 
     auto getUserFocus = []() {
         auto win1 = (GtkWindow*)VRGuiBuilder::get()->get_widget("window1");
@@ -269,12 +264,11 @@ void VRGuiScripts::on_exec_clicked() {
 }
 
 void VRGuiScripts::on_perf_toggled(bool b) {
-    //doPerf = getToggleToolButtonState("toggletoolbutton1");
     doPerf = b;
+    if (b) updateList();
 }
 
 void VRGuiScripts::on_pause_toggled(bool b) {
-    //bool b = getToggleToolButtonState("toggletoolbutton2");
     VRScene::getCurrent()->pauseScripts(b);
 }
 
@@ -1049,11 +1043,12 @@ bool VRGuiScripts::updateList() {
         auto k = script.second.get();
         string grp = script.second->getGroup();
         string name = script.second->getName();
-        if (!grpIter.count(grp)) uiSignal("scripts_list_add_script", {{"name",name},{"group",""}});
+        float perf = script.second->getExecutionTime();
+        if (!grpIter.count(grp)) uiSignal("scripts_list_add_script", {{"name",name},{"group",""},{"perf",toString(perf)}});
         else {
             auto& g = groups[grpIter[grp]];
             g.scripts.push_back(script.second);
-            uiSignal("scripts_list_add_script", {{"name",name},{"group",toString(g.ID)}});
+            uiSignal("scripts_list_add_script", {{"name",name},{"group",toString(g.ID)},{"perf",toString(perf)}});
         }
         //scriptRows.push_back( pair<VRScriptPtr, GtkTreeIter>(s,itr) );
         //setScriptListRow(&itr, s);
@@ -1156,7 +1151,6 @@ VRGuiScripts::VRGuiScripts() {
 
     /*
     setToolButtonCallback("toolbutton23", bind(&VRGuiScripts::on_find_clicked, this) );
-    setToolButtonCallback("toggletoolbutton1", bind(&VRGuiScripts::on_perf_toggled, this) );
     setToolButtonCallback("toggletoolbutton2", bind(&VRGuiScripts::on_pause_toggled, this) );
     setToolButtonCallback("toolbutton30", bind(&VRGuiScripts::on_convert_cpp_clicked, this) );
 

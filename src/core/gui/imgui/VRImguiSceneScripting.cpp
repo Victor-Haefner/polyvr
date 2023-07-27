@@ -33,13 +33,22 @@ void renderCombo(string& opt, vector<string>& options, string ID, string signal,
     }
 }
 
+string formatPerformance(float exec_time) {
+    string time = " ";
+    if (exec_time >= 60*1000) time = toString( exec_time*0.001/60 ) + " min";
+    else if (exec_time >= 1000) time = toString( exec_time*0.001 ) + " s";
+    else if (exec_time >= 0) time = toString( exec_time ) + " ms";
+    return time;
+}
+
 ImScriptGroup::ImScriptGroup(string name) : name(name) {}
+ImScriptEntry::ImScriptEntry(string name) : name(name) {}
 
 ImScriptList::ImScriptList() {
     auto mgr = OSG::VRGuiSignals::get();
     mgr->addCallback("scripts_list_clear", [&](OSG::VRGuiSignals::Options o){ clear(); return true; } );
     mgr->addCallback("scripts_list_add_group", [&](OSG::VRGuiSignals::Options o){ addGroup(o["name"], o["ID"]); return true; } );
-    mgr->addCallback("scripts_list_add_script", [&](OSG::VRGuiSignals::Options o){ addScript(o["name"], o["group"]); return true; } );
+    mgr->addCallback("scripts_list_add_script", [&](OSG::VRGuiSignals::Options o){ addScript(o["name"], o["group"], toFloat(o["perf"])); return true; } );
     mgr->addCallback("openUiScript", [&](OSG::VRGuiSignals::Options o) {
         selected = o["name"];
         uiSignal("select_script", {{"script",selected}});
@@ -59,12 +68,15 @@ void ImScriptList::addGroup(string name, string ID) {
     groupsList.push_back(ID);
 }
 
-void ImScriptList::addScript(string name, string groupID) {
+void ImScriptList::addScript(string name, string groupID, float time) {
     if (groupID == "") groupID = "__default__";
-    groups[groupID].scripts.push_back(name);
+    ImScriptEntry se(name);
+    se.perf = time;
+    groups[groupID].scripts.push_back(se);
 }
 
-void ImScriptList::renderScriptEntry(string& script) {
+void ImScriptList::renderScriptEntry(ImScriptEntry& scriptEntry) {
+    string& script = scriptEntry.name;
     //ImVec4 colorSelected(0.3f, 0.5f, 1.0f, 1.0f);
     bool isSelected = bool(selected == script);
     //if (isSelected) ImGui::PushStyleColor(ImGuiCol_Button, colorSelected);
@@ -84,6 +96,13 @@ void ImScriptList::renderScriptEntry(string& script) {
             uiSignal("select_script", {{"script",script}});
         }
     }
+
+    if (doPerf) {
+        string pTime = formatPerformance(scriptEntry.perf);
+        ImGui::SameLine();
+        ImGui::Text(pTime.c_str());
+    }
+
     //if (isSelected) ImGui::PopStyleColor();
 }
 
@@ -379,7 +398,7 @@ void ImScripting::render() {
     ImGui::SameLine(); if (ImGui::Button("Execute")) uiSignal("scripts_toolbar_execute");
     ImGui::SameLine(); if (ImGui::Button("Search")) uiSignal("ui_toggle_popup", {{"name","search"}, {"width","400"}, {"height","300"}}); // TODO: pass current editor selection
     ImGui::SameLine(); if (ImGui::Button("Documentation")) uiSignal("ui_toggle_popup", {{"name","documentation"}, {"width","800"}, {"height","600"}});
-    ImGui::SameLine(); if (ImGui::Checkbox("Performance", &perf)) uiSignal("scripts_toolbar_performance", {{"state",toString(perf)}});
+    ImGui::SameLine(); if (ImGui::Checkbox("Performance", &perf)) { scriptlist.doPerf = perf; uiSignal("scripts_toolbar_performance", {{"state",toString(perf)}}); }
     ImGui::Unindent();
 
     ImGui::Spacing();
