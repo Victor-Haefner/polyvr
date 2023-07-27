@@ -7,7 +7,7 @@ ImAppLauncher::ImAppLauncher(string ID) : ID(ID), name(ID) {}
 
 void ImAppLauncher::render(string filter) {
     if (filter != "") {
-        if (!contains(name, filter)) return;
+        if (!contains(name, filter, false)) return;
     }
 
     string label = name;
