@@ -1246,6 +1246,8 @@
 		<Unit filename="src/core/setup/windows/VRWindow.h" />
 		<Unit filename="src/core/setup/windows/VRWindowManager.cpp" />
 		<Unit filename="src/core/setup/windows/VRWindowManager.h" />
+		<Unit filename="src/core/setup/windows/glut/VRGlutExtensions.cpp" />
+		<Unit filename="src/core/setup/windows/glut/VRGlutExtensions.h" />
 		<Unit filename="src/core/tools/VRAnalyticGeometry.cpp" />
 		<Unit filename="src/core/tools/VRAnalyticGeometry.h" />
 		<Unit filename="src/core/tools/VRAnnotationEngine.cpp" />
