@@ -1,5 +1,14 @@
 #include "CEF.h"
 
+#ifdef PLOG
+#undef PLOG
+#endif
+
+#include "include/cef_app.h"
+#include "include/cef_client.h"
+#include "include/cef_render_handler.h"
+#include "include/cef_load_handler.h"
+
 #include <OpenSG/OSGGeoProperties.h>
 #include <OpenSG/OSGTextureEnvChunk.h>
 #include <OpenSG/OSGTextureObjChunk.h>
@@ -25,6 +34,71 @@ using namespace OSG;
 
 vector< weak_ptr<CEF> > instances;
 bool cef_gl_init = false;
+
+
+
+class CEF_handler : public CefRenderHandler, public CefLoadHandler, public CefContextMenuHandler, public CefDialogHandler, public CefDisplayHandler {
+    private:
+        VRTexturePtr image = 0;
+        int width = 1024;
+        int height = 1024;
+
+    public:
+        CEF_handler();
+        ~CEF_handler();
+
+#ifdef _WIN32
+        void GetViewRect(CefRefPtr<CefBrowser> browser, CefRect& rect);
+#else
+        bool GetViewRect(CefRefPtr<CefBrowser> browser, CefRect& rect) override;
+#endif
+
+        void OnBeforeContextMenu(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, CefRefPtr<CefContextMenuParams> params, CefRefPtr<CefMenuModel> model);
+        bool OnContextMenuCommand(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, CefRefPtr<CefContextMenuParams> params, int command_id, EventFlags event_flags);
+
+        void OnPaint(CefRefPtr<CefBrowser> browser, PaintElementType type, const RectList& dirtyRects, const void* buffer, int width, int height) override;
+        VRTexturePtr getImage();
+        void resize(int resolution, float aspect);
+
+        void OnLoadEnd( CefRefPtr< CefBrowser > browser, CefRefPtr< CefFrame > frame, int httpStatusCode ) override;
+        void OnLoadError( CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, ErrorCode errorCode, const CefString& errorText, const CefString& failedUrl ) override;
+        void OnLoadStart( CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, TransitionType transition_type ) override;
+
+#ifdef _WIN32
+        bool OnFileDialog( CefRefPtr< CefBrowser > browser, CefDialogHandler::FileDialogMode mode, const CefString& title, const CefString& default_file_path, const std::vector< CefString >& accept_filters, CefRefPtr< CefFileDialogCallback > callback) override;
+#else
+        bool OnFileDialog( CefRefPtr< CefBrowser > browser, CefDialogHandler::FileDialogMode mode, const CefString& title, const CefString& default_file_path, const std::vector< CefString >& accept_filters, int selected_accept_filter, CefRefPtr< CefFileDialogCallback > callback ) override;
+#endif
+
+
+        void on_link_clicked(string source, int line, string s);
+        bool OnConsoleMessage( CefRefPtr< CefBrowser > browser, cef_log_severity_t level, const CefString& message, const CefString& source, int line ) override;
+
+        IMPLEMENT_REFCOUNTING(CEF_handler);
+};
+
+class CEF_client : public CefClient {
+    private:
+        CefRefPtr<CEF_handler> handler;
+
+    public:
+        CEF_client();
+        ~CEF_client();
+
+        CefRefPtr<CEF_handler> getHandler();
+        CefRefPtr<CefRenderHandler> GetRenderHandler() override;
+        CefRefPtr<CefLoadHandler> GetLoadHandler() override;
+        CefRefPtr<CefContextMenuHandler> GetContextMenuHandler() override;
+        CefRefPtr<CefDialogHandler> GetDialogHandler() override;
+        CefRefPtr<CefDisplayHandler> GetDisplayHandler() override;
+
+        IMPLEMENT_REFCOUNTING(CEF_client);
+};
+
+struct CEFInternals {
+    CefRefPtr<CefBrowser> browser;
+    CefRefPtr<CEF_client> client;
+};
 
 CEF_handler::CEF_handler() {
     VRTextureGenerator g;
@@ -136,15 +210,17 @@ CefRefPtr<CefDisplayHandler> CEF_client::GetDisplayHandler() { return handler; }
 
 CEF::CEF() {
     global_initiate();
-    client = new CEF_client();
+    internals = new CEFInternals();
+    internals->client = new CEF_client();
     update_callback = VRUpdateCb::create("webkit_update", bind(&CEF::update, this));
     auto scene = VRScene::getCurrent();
     if (scene) scene->addUpdateFkt(update_callback);
 }
 
 CEF::~CEF() {
-    cout << "CEF destroyed " << client->HasOneRef() << " " << browser->HasOneRef() << endl;
-    browser->GetHost()->CloseBrowser(false);
+    cout << "CEF destroyed " << internals->client->HasOneRef() << " " << internals->browser->HasOneRef() << endl;
+    internals->browser->GetHost()->CloseBrowser(false);
+    if (internals) delete internals;
 }
 
 void CEF::shutdown() { if (!cef_gl_init) return; cout << "CEF shutdown\n"; CefShutdown(); }
@@ -231,27 +307,27 @@ void CEF::initiate() {
 
 #ifdef _WIN32
     //requestContext = CefRequestContext::CreateContext(handler.get());
-    browser = CefBrowserHost::CreateBrowserSync(win, client, "", browser_settings, nullptr, nullptr);
-    browser->GetHost()->WasResized();
+    internals->browser = CefBrowserHost::CreateBrowserSync(win, client, "", browser_settings, nullptr, nullptr);
+    internals->browser->GetHost()->WasResized();
 #else
-    browser = CefBrowserHost::CreateBrowserSync(win, client, "", browser_settings, 0);
+    internals->browser = CefBrowserHost::CreateBrowserSync(win, internals->client, "", browser_settings, 0);
 #endif
 }
 
 void CEF::setMaterial(VRMaterialPtr mat) {
     if (!mat) return;
-    if (!client->getHandler()) return;
+    if (!internals->client->getHandler()) return;
     this->mat = mat;
-    mat->setTexture(client->getHandler()->getImage());
+    mat->setTexture(internals->client->getHandler()->getImage());
     mat->setTextureWrapping(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
 }
 
 string CEF::getSite() { return site; }
-void CEF::reload() { if (browser) browser->Reload(); if (auto m = mat.lock()) m->updateDeferredShader(); }
+void CEF::reload() { if (internals->browser) internals->browser->Reload(); if (auto m = mat.lock()) m->updateDeferredShader(); }
 
 void CEF::update() {
-    if (!init || !client->getHandler()) return;
-    auto img = client->getHandler()->getImage();
+    if (!init || !internals->client->getHandler()) return;
+    auto img = internals->client->getHandler()->getImage();
     int dim1= img->getImage()->getDimension();
     CefDoMessageLoopWork();
     int dim2= img->getImage()->getDimension();
@@ -262,19 +338,19 @@ void CEF::update() {
 void CEF::open(string site) {
     if (!init) initiate();
     this->site = site;
-    if (browser) {
-        browser->GetMainFrame()->LoadURL(site);
-        //bool b = browser->IsLoading();
+    if (internals->browser) {
+        internals->browser->GetMainFrame()->LoadURL(site);
+        //bool b = internals->browser->IsLoading();
 #ifdef _WIN32
-        browser->GetHost()->WasResized();
+        internals->browser->GetHost()->WasResized();
 #endif
     }
 }
 
 void CEF::resize() {
-    if (!client->getHandler()) return;
-    client->getHandler()->resize(resolution, aspect);
-    if (init && browser) browser->GetHost()->WasResized();
+    if (!internals->client->getHandler()) return;
+    internals->client->getHandler()->resize(resolution, aspect);
+    if (init && internals->browser) internals->browser->GetHost()->WasResized();
     if (init) reload();
 }
 
@@ -343,8 +419,8 @@ void CEF::mouse_move(VRDeviceWeakPtr d) {
     CefMouseEvent me;
     me.x = ins->texel[0]*resolution;
     me.y = ins->texel[1]*(resolution/aspect);
-    if (!browser) return;
-    auto host = browser->GetHost();
+    if (!internals->browser) return;
+    auto host = internals->browser->GetHost();
     if (!host) return;
     if (me.x != mX || me.y != mY) {
         host->SendMouseMoveEvent(me, false);
@@ -390,8 +466,8 @@ bool CEF::mouse(int lb, int rb, int wu, int wd, VRDeviceWeakPtr d) {
         VRLog::log("net", ss.str());
     }
 
-    if (!browser) return true;
-    auto host = browser->GetHost();
+    if (!internals->browser) return true;
+    auto host = internals->browser->GetHost();
     if (!host) return true;
 #ifdef _WIN32
     if (!ins->hit) { host->SetFocus(false); focus = false; return true; }
@@ -440,16 +516,16 @@ bool CEF::keyboard(VRDeviceWeakPtr d) {
     VRKeyboardPtr keyboard = dynamic_pointer_cast<VRKeyboard>(dev);
     if (!keyboard) return true;
     auto event = keyboard->getEvent();
-    if (!browser) return true;
-    auto host = browser->GetHost();
+    if (!internals->browser) return true;
+    auto host = internals->browser->GetHost();
     if (!host) return true;
 
     cout << "CEF::keyboard " << event.keyval << " " << ctrlUsed << " " << keyboard->ctrlDown() << endl;
 
     if (keyboard->ctrlDown() && event.state == 1) {
-        if (event.keyval == 'a') { browser->GetFocusedFrame()->SelectAll(); ctrlUsed = true; }
-        if (event.keyval == 'c') { browser->GetFocusedFrame()->Copy(); ctrlUsed = true; }
-        if (event.keyval == 'v') { browser->GetFocusedFrame()->Paste(); ctrlUsed = true; }
+        if (event.keyval == 'a') { internals->browser->GetFocusedFrame()->SelectAll(); ctrlUsed = true; }
+        if (event.keyval == 'c') { internals->browser->GetFocusedFrame()->Copy(); ctrlUsed = true; }
+        if (event.keyval == 'v') { internals->browser->GetFocusedFrame()->Paste(); ctrlUsed = true; }
         return false;
     }
 

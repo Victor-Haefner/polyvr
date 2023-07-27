@@ -1,89 +1,23 @@
 #ifndef CEF_H_INCLUDED
 #define CEF_H_INCLUDED
 
+#include <vector>
 #include <OpenSG/OSGConfig.h>
 
 #include "core/utils/VRFunctionFwd.h"
 #include "core/objects/VRObjectFwd.h"
 #include "core/objects/material/VRMaterialFwd.h"
 
-#ifdef PLOG
-#undef PLOG
-#endif
-
-#include "include/cef_app.h"
-#include "include/cef_client.h"
-#include "include/cef_render_handler.h"
-#include "include/cef_load_handler.h"
-
+struct CEFInternals;
 
 using namespace std;
 OSG_BEGIN_NAMESPACE;
 
 class VRDevice;
 
-class CEF_handler : public CefRenderHandler, public CefLoadHandler, public CefContextMenuHandler, public CefDialogHandler, public CefDisplayHandler {
-    private:
-        VRTexturePtr image = 0;
-        int width = 1024;
-        int height = 1024;
-
-    public:
-        CEF_handler();
-        ~CEF_handler();
-
-#ifdef _WIN32
-        void GetViewRect(CefRefPtr<CefBrowser> browser, CefRect& rect);
-#else
-        bool GetViewRect(CefRefPtr<CefBrowser> browser, CefRect& rect) override;
-#endif
-
-        void OnBeforeContextMenu(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, CefRefPtr<CefContextMenuParams> params, CefRefPtr<CefMenuModel> model);
-        bool OnContextMenuCommand(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, CefRefPtr<CefContextMenuParams> params, int command_id, EventFlags event_flags);
-
-        void OnPaint(CefRefPtr<CefBrowser> browser, PaintElementType type, const RectList& dirtyRects, const void* buffer, int width, int height) override;
-        VRTexturePtr getImage();
-        void resize(int resolution, float aspect);
-
-        void OnLoadEnd( CefRefPtr< CefBrowser > browser, CefRefPtr< CefFrame > frame, int httpStatusCode ) override;
-        void OnLoadError( CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, ErrorCode errorCode, const CefString& errorText, const CefString& failedUrl ) override;
-        void OnLoadStart( CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, TransitionType transition_type ) override;
-
-#ifdef _WIN32
-        bool OnFileDialog( CefRefPtr< CefBrowser > browser, CefDialogHandler::FileDialogMode mode, const CefString& title, const CefString& default_file_path, const std::vector< CefString >& accept_filters, CefRefPtr< CefFileDialogCallback > callback) override;
-#else
-        bool OnFileDialog( CefRefPtr< CefBrowser > browser, CefDialogHandler::FileDialogMode mode, const CefString& title, const CefString& default_file_path, const std::vector< CefString >& accept_filters, int selected_accept_filter, CefRefPtr< CefFileDialogCallback > callback ) override;
-#endif
-
-
-        void on_link_clicked(string source, int line, string s);
-        bool OnConsoleMessage( CefRefPtr< CefBrowser > browser, cef_log_severity_t level, const CefString& message, const CefString& source, int line ) override;
-
-        IMPLEMENT_REFCOUNTING(CEF_handler);
-};
-
-class CEF_client : public CefClient {
-    private:
-        CefRefPtr<CEF_handler> handler;
-
-    public:
-        CEF_client();
-        ~CEF_client();
-
-        CefRefPtr<CEF_handler> getHandler();
-        CefRefPtr<CefRenderHandler> GetRenderHandler() override;
-        CefRefPtr<CefLoadHandler> GetLoadHandler() override;
-        CefRefPtr<CefContextMenuHandler> GetContextMenuHandler() override;
-        CefRefPtr<CefDialogHandler> GetDialogHandler() override;
-        CefRefPtr<CefDisplayHandler> GetDisplayHandler() override;
-
-        IMPLEMENT_REFCOUNTING(CEF_client);
-};
-
 class CEF {
     private:
-        CefRefPtr<CefBrowser> browser;
-        CefRefPtr<CEF_client> client;
+        CEFInternals* internals = 0;
 
         string site;
         VRMaterialWeakPtr mat;
