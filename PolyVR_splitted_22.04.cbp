@@ -545,42 +545,42 @@
 		</Unit>
 		<Unit filename="src/addons/CEF/CEF.cpp">
 			<Option target="Release" />
-			<Option target="PVR-Addons-d" />
+			<Option target="Debug" />
 		</Unit>
 		<Unit filename="src/addons/CEF/CEF.h">
 			<Option target="Release" />
-			<Option target="PVR-Addons-d" />
+			<Option target="Debug" />
 		</Unit>
 		<Unit filename="src/addons/CEF/CEFWindowsKey.h">
 			<Option target="Release" />
-			<Option target="PVR-Addons-d" />
+			<Option target="Debug" />
 		</Unit>
 		<Unit filename="src/addons/CEF/CEFkeyssymdef.h">
-			<Option target="PVR-Addons-d" />
+			<Option target="Debug" />
 		</Unit>
 		<Unit filename="src/addons/CEF/VRPyCEF.cpp">
 			<Option target="Release" />
-			<Option target="PVR-Addons-d" />
+			<Option target="Debug" />
 		</Unit>
 		<Unit filename="src/addons/CEF/VRPyCEF.h">
 			<Option target="Release" />
-			<Option target="PVR-Addons-d" />
+			<Option target="Debug" />
 		</Unit>
 		<Unit filename="src/addons/CEF/VRPyWebCam.cpp">
 			<Option target="Release" />
-			<Option target="PVR-Addons-d" />
+			<Option target="Debug" />
 		</Unit>
 		<Unit filename="src/addons/CEF/VRPyWebCam.h">
 			<Option target="Release" />
-			<Option target="PVR-Addons-d" />
+			<Option target="Debug" />
 		</Unit>
 		<Unit filename="src/addons/CEF/VRWebCam.cpp">
 			<Option target="Release" />
-			<Option target="PVR-Addons-d" />
+			<Option target="Debug" />
 		</Unit>
 		<Unit filename="src/addons/CEF/VRWebCam.h">
 			<Option target="Release" />
-			<Option target="PVR-Addons-d" />
+			<Option target="Debug" />
 		</Unit>
 		<Unit filename="src/addons/CaveKeeper/CKOctree.cpp">
 			<Option target="Release" />
