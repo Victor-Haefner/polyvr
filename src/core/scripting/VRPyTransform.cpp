@@ -131,6 +131,7 @@ PyMethodDef VRPyTransform::methods[] = {
     {"getPhysicsDynamic", PyWrap(Transform, getPhysicsDynamic, "get if dynamic physics object", bool ) },
     {"setPhysicsDynamic", PyWrap(Transform, setPhysicsDynamic, "set if dynamic physics object", void, bool ) },
     {"resetForces", PyWrap(Transform, resetForces, "Reset velocity and forces to zero", void ) },
+    {"showCoordAxis", PyWrapOpt(Transform, showCoordAxis, "Show the coord system axis (visible, scale = 1.0)", "1", void, bool, float ) },
 #endif
     {NULL}  /* Sentinel */
 };

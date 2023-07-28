@@ -163,7 +163,7 @@ class VRTransform : public VRObject {
 
         //-------------------------------------
 
-        void showCoordAxis(bool b);
+        void showCoordAxis(bool b, float scale = 1.0);
 
         void rotate(float a, Vec3d v = Vec3d(0,1,0), Vec3d o = Vec3d(0,0,0));
         void rotateWorld(float a, Vec3d v = Vec3d(0,1,0), Vec3d o = Vec3d(0,0,0));

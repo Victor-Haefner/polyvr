@@ -567,7 +567,7 @@ void VRTransform::initCoords() {
     geo->setMaterial(mat);
 }
 
-void VRTransform::showCoordAxis(bool b) {
+void VRTransform::showCoordAxis(bool b, float scaleF) {
     initCoords();
     if (b) {
         coords->node->setTravMask(0xffffffff);
@@ -577,7 +577,7 @@ void VRTransform::showCoordAxis(bool b) {
         GeoPnt3fPropertyMTRecPtr pos = (GeoPnt3fProperty*)geo->getPositions();
         for (int i : {0,1,2}) {
             Pnt3f p;
-            p[i] = 0.3*scale[i];
+            p[i] = 0.3*scale[i]*scaleF;
             pos->setValue(p,i*2+1);
         }
     }
