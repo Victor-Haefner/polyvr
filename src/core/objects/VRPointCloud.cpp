@@ -16,6 +16,7 @@
 #include "core/tools/VRPathtool.h"
 #include "core/scene/import/VRImport.h"
 #include "core/scene/import/E57/E57.h"
+#include "addons/WorldGenerator/terrain/VRPlanet.h"
 
 #define GLSL(shader) #shader
 
@@ -56,6 +57,8 @@ void VRPointCloud::applySettings(map<string, string> options) {
     if (options.count("pointSize")) pointSize = toInt(options["pointSize"]);
     if (options.count("keepOctree")) keepOctree = toInt(options["keepOctree"]);
     if (options.count("partitionLimit")) partitionLimit = toInt(options["partitionLimit"]);
+    if (options.count("geoLocationN")) geoLocationN = toFloat(options["geoLocationN"]);
+    if (options.count("geoLocationE")) geoLocationE = toFloat(options["geoLocationE"]);
 
     bool doSplats = false;
     double splatMod = 1.0;
@@ -841,7 +844,7 @@ void VRPointCloud::externalComputeSplats(string path) {
     rename(wpath.c_str(), path.c_str());
 }
 
-void VRPointCloud::externalColorize(string path, string imgTable, float pDist, int i1, int i2) {
+void VRPointCloud::externalColorize(string path, string imgTable, float localNorth, float localEast, float pDist, int i1, int i2) {
     cout << "externalColorize " << path << endl;
 
     // crawl images and create image table and path
@@ -855,6 +858,9 @@ void VRPointCloud::externalColorize(string path, string imgTable, float pDist, i
         Pose pose;
     };
 
+    VRPlanet earth("earth");
+    earth.localize(localNorth, localEast);
+
     // load viewpoints
     Vec3d lp;
     vector<Viewpoint> viewpoints;
@@ -866,11 +872,7 @@ void VRPointCloud::externalColorize(string path, string imgTable, float pDist, i
         vp.lat = toFloat(data[2]) + toFloat(data[3])/60.0 + toFloat(data[4]+"."+data[5])/3600.0;
         vp.lon = toFloat(data[7]) + toFloat(data[8])/60.0 + toFloat(data[9]+"."+data[10])/3600.0;
 
-        vp.lat -= 49.035;
-        vp.lon -= 8.366;
-
-        float s = 1000;
-        Vec3d p = Vec3d(vp.lat*s, 0, vp.lon*s);
+        Vec3d p = earth.fromLatLongPosition(vp.lat, vp.lon, true);
         Vec3d d = p-lp;
         d.normalize();
         vp.pose.set(p, d);

@@ -49,6 +49,8 @@ class VRPointCloud : public VRTransform {
         int levels = 1;
         bool keepOctree = 0;
         bool lodsSetUp = 0;
+        double geoLocationN = 0;
+        double geoLocationE = 0;
         vector<int> downsamplingRate = {1};
         vector<float> lodDistances;
         VRImportCbPtr onImport;
@@ -97,7 +99,7 @@ class VRPointCloud : public VRTransform {
         void externalSort(string path, size_t chunkSize, double binSize);
         void externalPartition(string path);
         void externalComputeSplats(string path);
-        void externalColorize(string path, string images, float pDist, int i1, int i2);
+        void externalColorize(string path, string images, float localNorth, float localEast, float pDist, int i1, int i2);
 
         shared_ptr<Octree<PntData>>& getOctree();
         VRGeometryPtr getOctreeVisual();

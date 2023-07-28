@@ -87,9 +87,9 @@ void VRPlanet::localize(double north, double east) {
     auto p = fromLatLongPose(north, east);
     auto localOrigin = p->pos();
     p->invert();
-    origin->setPose(p);
+    if (origin) origin->setPose(p);
 
-    lod->hide(); // TODO: work around due to problems with intersection action!!
+    if (lod) lod->hide(); // TODO: work around due to problems with intersection action!!
 
     int nSec = 0;
     VRWorldGeneratorPtr sec1;
@@ -147,7 +147,7 @@ PosePtr VRPlanet::getSurfacePose( double north, double east, bool local, bool se
         }
     }
 
-    if (local) {
+    if (local && origin) {
         auto poseOrigin = origin->getPose()->multRight(poseG); //localized with transformed planed origin
         poseG = poseOrigin;
     }
@@ -220,7 +220,7 @@ PosePtr VRPlanet::fromLatLongElevationPose(double north, double east, double ele
     Vec3d up = poseG->up();
     PosePtr newPose = Pose::create(f,d,up); //global pose
 
-    if (local) {
+    if (local && origin) {
         auto poseOrigin = origin->getPose()->multRight(newPose); //localized with transformed planed origin
         newPose = poseOrigin;
     }
@@ -269,7 +269,7 @@ Vec2d VRPlanet::fromLatLongSize(double north1, double east1, double north2, doub
 
 Vec2d VRPlanet::fromPosLatLong(Pnt3d p, bool local, bool doOptimize) { // TODO: increase resolution by enhancing getWorldMatrix
     Pnt3d p1 = p;
-    if (local) {
+    if (local && origin) {
         auto m = origin->getWorldMatrix();
         m.invert();
         m.mult(p,p1);
@@ -399,7 +399,7 @@ void VRPlanet::setupMetaGeo() {
     auto ae = metaGeo->getAnnotationEngine();
     ae->setOutline(4, Color4f(1,1,1,1));
     //ae->setScreenSpace(1);
-    origin->addChild(metaGeo);
+    if (origin) origin->addChild(metaGeo);
 }
 
 int VRPlanet::addPin( string label, double north, double east, double length ) {

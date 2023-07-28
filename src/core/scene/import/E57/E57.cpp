@@ -113,6 +113,8 @@ class E57Loader {
                 StructureNode root = imf.root();
                 if (!root.isDefined("/data3D")) { cout << "File doesn't contain 3D images" << endl; return; }
 
+                //root.dump();
+
                 e57::Node n = root.get("/data3D");
                 if (n.type() != E57_VECTOR) { cout << "bad file" << endl; return; }
 
