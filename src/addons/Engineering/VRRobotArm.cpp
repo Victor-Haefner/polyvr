@@ -65,23 +65,28 @@ VRTransformPtr VRRobotArm::genKinematics() {
     auto elbow = VRTransform::create("elbow");
     auto beam2 = VRTransform::create("beam2");
     auto wrist = VRTransform::create("wrist");
-    //auto effector = VRTransform::create("effector");
 
     base->addChild(baseUpper);
     baseUpper->addChild(beam1);
     beam1->addChild(elbow);
     elbow->addChild(beam2);
     beam2->addChild(wrist);
-    //wrist->addChild(effector);
 
     //vector<VRTransformPtr> objs = { baseUpper, beam1, elbow, beam2 };
 
+    // TODO: rotate vectors according to axis parameters, axis, direction, angle offsets
     baseUpper->setFrom(Vec3d(0,lengths[0],0));
-    beam1->setFrom(Vec3d(axis_offsets[0],0,0));
+
+    double f = -convertAngle(0,0);
+    Vec3d p = Vec3d(sin(f), 0, cos(f)) * axis_offsets[0];
+    beam1->setFrom(p);
+
     elbow->setFrom(Vec3d(0,lengths[1],0));
     beam2->setFrom(Vec3d(0,axis_offsets[1],0));
-    wrist->setFrom(Vec3d(lengths[2],0,0));
-    //effector->setFrom(Vec3d(lengths[2]*0.5,0,0));
+
+    p = Vec3d(sin(f), 0, cos(f)) * lengths[2];
+    wrist->setFrom(p);
+    //wrist->setFrom(Vec3d(lengths[2],0,0));
 
     return base;
 }
@@ -91,6 +96,7 @@ double clamp(double f, double a = -1, double b = 1) { return f<a ? a : f>b ? b :
 void VRRobotArm::applyAngles() {
     //cout << "VRRobotArm::applyAngles " << N << endl;
     for (int i=0; i<N; i++) {
+        if (i >= axis.size() || i >= angles.size() || i >= parts.size()) break;
         Vec3d euler;
         euler[axis[i]] = angles[i];
         if (parts[i]) parts[i]->setEuler(euler);
