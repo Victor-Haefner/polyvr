@@ -337,6 +337,10 @@ void VRImguiEditor::initPopup() {
     ImGui_ImplGLUT_Init();
     ImGui_ImplGLUT_InstallFuncs_popup();
 
+    ImGuiIO& io = ImGui::GetIO();
+    io.SetClipboardTextFn = IMGUISetClipboardText;
+    io.GetClipboardTextFn = IMGUIGetClipboardText;
+
     ImGui::SetCurrentContext(mainContext);
 }
 
