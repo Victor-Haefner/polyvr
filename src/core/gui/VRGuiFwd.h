@@ -19,6 +19,7 @@ ptrFwd(VRRuleWidget);
 ptrFwd(VRConnectorWidget);
 ptrFwd(VRVisualLayer);
 ptrFwd(VRSignal);
+ptrFwd(VRGui);
 
 }
 

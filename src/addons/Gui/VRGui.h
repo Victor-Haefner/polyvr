@@ -1,5 +1,5 @@
-#ifndef CEF_H_INCLUDED
-#define CEF_H_INCLUDED
+#ifndef VRGUI_H_INCLUDED
+#define VRGUI_H_INCLUDED
 
 #include <vector>
 #include <OpenSG/OSGConfig.h>
@@ -7,17 +7,20 @@
 #include "core/utils/VRFunctionFwd.h"
 #include "core/objects/VRObjectFwd.h"
 #include "core/objects/material/VRMaterialFwd.h"
+#include "core/gui/VRGuiFwd.h"
 
-struct CEFInternals;
+struct VRGuiInternals;
 
 using namespace std;
 OSG_BEGIN_NAMESPACE;
 
 class VRDevice;
 
-class CEF {
+class VRGui {
     private:
-        CEFInternals* internals = 0;
+        VRGuiInternals* internals = 0;
+        int width = 800;
+        int height = 800;
 
         string site;
         VRMaterialWeakPtr mat;
@@ -46,10 +49,10 @@ class CEF {
         void mouse_move(VRDeviceWeakPtr dev);
         bool keyboard(VRDeviceWeakPtr dev);
 
-        CEF();
+        VRGui();
     public:
-        ~CEF();
-        static shared_ptr<CEF> create();
+        ~VRGui();
+        static shared_ptr<VRGui> create();
 
         void setResolution(float a);
         void setAspectRatio(float a);
@@ -60,17 +63,15 @@ class CEF {
         void toggleInput(bool keyboard, bool mouse);
 
         void open(string site);
-        void reload();
         string getSite();
         void resize();
 
-        static vector< shared_ptr<CEF> > getInstances();
+        static vector< shared_ptr<VRGui> > getInstances();
         static void reloadScripts(string path);
-        static void shutdown();
 };
 
-typedef shared_ptr<CEF> CEFPtr;
+typedef shared_ptr<VRGui> VRGuiPtr;
 
 OSG_END_NAMESPACE;
 
-#endif // CEF_H_INCLUDED
+#endif // VRGUI_H_INCLUDED

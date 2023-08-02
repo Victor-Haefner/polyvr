@@ -411,6 +411,7 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPyMultiTouch>("MultiTouch", pModVR, VRPyDevice::typeRef);
 #endif
 
+    sm->registerModule<VRPyGui>("Gui", pModVR);
 #ifndef WITHOUT_CEF
     sm->registerModule<VRPyCEF>("CEF", pModVR);
 #ifndef WITHOUT_AV

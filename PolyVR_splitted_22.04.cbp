@@ -1052,6 +1052,12 @@
 			<Option target="Release" />
 			<Option target="PVR-Addons-d" />
 		</Unit>
+		<Unit filename="src/addons/Gui/VRGui.cpp">
+			<Option target="PVR-Addons-d" />
+		</Unit>
+		<Unit filename="src/addons/Gui/VRGui.h">
+			<Option target="PVR-Addons-d" />
+		</Unit>
 		<Unit filename="src/addons/LeapMotion/VRHandGeo.cpp">
 			<Option target="Release" />
 			<Option target="PVR-Addons-d" />
