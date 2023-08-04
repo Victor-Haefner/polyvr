@@ -12,7 +12,7 @@ int imguiInputCb(ImGuiInputTextCallbackData* data) { // the callback reacts on a
     return 0;
 }
 
-bool ImInput::render() {
+bool ImInput::render(int width) {
     if (label != "") {
         ImGui::Text(label.c_str());
         ImGui::SameLine();
@@ -23,10 +23,13 @@ bool ImInput::render() {
     memcpy(str0, value.c_str(), N);
     str0[N] = 0;
 
+    bool ret = false;
+    ImGui::PushItemWidth(width);
     if (ImGui::InputText(ID.c_str(), str0, 128, flags | ImGuiInputTextFlags_CallbackEdit, imguiInputCb, this) ) {
         value = string(str0);
-        return true;
+        ret = true;
     }
+    ImGui::PopItemWidth();
 
-    return false;
+    return ret;
 }

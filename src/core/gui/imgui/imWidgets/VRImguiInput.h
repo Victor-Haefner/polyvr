@@ -16,7 +16,7 @@ class ImInput {
     public:
         ImInput(string ID, string label, string value, int flags = 0);
 
-        bool render();
+        bool render(int width);
 };
 
 #endif // VRIMGUIINPUT_H_INCLUDED

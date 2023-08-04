@@ -2,6 +2,7 @@
 #include "core/gui/VRGuiManager.h"
 
 #include <iostream>
+#include "imWidgets/VRImguiInput.h"
 #include "core/utils/toString.h"
 
 using namespace std;
@@ -60,6 +61,7 @@ void ImScriptList::clear() {
     groups.clear();
     groupsList.clear();
     addGroup("__default__", "__default__");
+    computeMinWidth();
 }
 
 void ImScriptList::addGroup(string name, string ID) {
@@ -73,6 +75,18 @@ void ImScriptList::addScript(string name, string groupID, float time) {
     ImScriptEntry se(name);
     se.perf = time;
     groups[groupID].scripts.push_back(se);
+    computeMinWidth();
+}
+
+void ImScriptList::computeMinWidth() {
+    ImGuiStyle& style = ImGui::GetStyle();
+    width = 50;
+    for (auto& g : groups) {
+        for (auto& s : g.second.scripts) {
+            auto R = ImGui::CalcTextSize( s.name.c_str() ).x + style.FramePadding.x * 2.0f;
+            width = max(width, R+20);
+        }
+    }
 }
 
 void ImScriptList::renderScriptEntry(ImScriptEntry& scriptEntry) {
@@ -86,14 +100,14 @@ void ImScriptList::renderScriptEntry(ImScriptEntry& scriptEntry) {
             uiSignal("select_script", {{"script",script}});
         }
     } else {
-        static char str0[128] = "Script0";
-        memcpy(str0, script.c_str(), script.size());
-        str0[script.size()] = 0;
-        if (ImGui::InputText("##renameScript", str0, 128, ImGuiInputTextFlags_EnterReturnsTrue) ) {
-            script = string(str0);
+        if (!input) input = new ImInput("##renameScript", "", "Script0", ImGuiInputTextFlags_EnterReturnsTrue);
+        input->value = script;
+        if (input->render(-1)) {
+            script = input->value;
             selected = script;
-            uiSignal("rename_script", {{"name",string(str0)}});
+            uiSignal("rename_script", {{"name",script}});
             uiSignal("select_script", {{"script",script}});
+            computeMinWidth();
         }
     }
 
@@ -114,13 +128,12 @@ void ImScriptList::renderGroupEntry(string& group) {
             uiSignal("select_group", {{"group",group}});
         }
     } else {
-        static char str0[128] = "Group0";
-        memcpy(str0, group.c_str(), group.size());
-        str0[group.size()] = 0;
-        if (ImGui::InputText("##renameGroup", str0, 128, ImGuiInputTextFlags_EnterReturnsTrue) ) {
-            group = string(str0);
+        if (!input) input = new ImInput("##renameGroup", "", "Group0", ImGuiInputTextFlags_EnterReturnsTrue);
+        input->value = group;
+        if (input->render(-1)) {
+            group = input->value;
             selected = group;
-            uiSignal("rename_group", {{"name",string(str0)}});
+            uiSignal("rename_group", {{"name",group}});
         }
     }
 }
@@ -409,9 +422,12 @@ void ImScripting::render() {
     float w = ImGui::GetContentRegionAvail().x;
     float h = ImGui::GetContentRegionAvail().y;
 
+    float w1 = min(float(w*0.5), scriptlist.width);
+    float w2 = w - w1;
+
     ImGui::BeginGroup();
     ImGui::Spacing();
-    ImGui::BeginChild("ScriptListPanel", ImVec2(w*0.3, h), true, flags);
+    ImGui::BeginChild("ScriptListPanel", ImVec2(w1, h), true, flags);
     scriptlist.render();
     ImGui::EndChild();
     ImGui::EndGroup();
@@ -421,7 +437,7 @@ void ImScripting::render() {
     // script editor
     ImGui::BeginGroup();
     ImGui::Spacing();
-    ImGui::BeginChild("ScriptEditorPanel", ImVec2(w*0.7, h), false, flags);
+    ImGui::BeginChild("ScriptEditorPanel", ImVec2(w2, h), false, flags);
     if (ImGui::IsWindowFocused(ImGuiFocusedFlags_ChildWindows)) {
         if (io.KeyCtrl && io.KeysDown['t']) { io.KeysDown['t'] = false; uiSignal("editor_cmd", {{"cmd","toggleLine"}}); }
         if (io.KeyCtrl && io.KeysDown['d']) { io.KeysDown['d'] = false; uiSignal("editor_cmd", {{"cmd","duplicateLine"}}); }

@@ -21,7 +21,7 @@ void ImTreeview::Node::renderEditable() {
     if (!isSelected) renderButton();
     else {
         if (!input) input = new ImInput(ID+"_input", "", label, ImGuiInputTextFlags_EnterReturnsTrue);
-        if (input->render()) {
+        if (input->render(-1)) {
             isSelected = false;
             uiSignal("treeview_rename", {{"treeview",tvID}, {"node",ID}, {"name",input->value}});
             uiSignal("treeview_select", {{"treeview",tvID}, {"node",ID}});

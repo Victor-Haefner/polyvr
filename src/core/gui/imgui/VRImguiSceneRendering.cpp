@@ -54,12 +54,12 @@ void ImRendering::render() {
         }
 
         if (bgType == 1) {
-            if (pathInput.render()) uiSignal("on_change_bg_path", {{"path",pathInput.value}});
+            if (pathInput.render(-1)) uiSignal("on_change_bg_path", {{"path",pathInput.value}});
         }
 
         if (bgType == 2) {
-            if (pathInput.render()) uiSignal("on_change_bg_path", {{"path",pathInput.value}});
-            if (extInput.render()) uiSignal("on_change_bg_ext", {{"ext",pathInput.value}});
+            if (pathInput.render(-1)) uiSignal("on_change_bg_path", {{"path",pathInput.value}});
+            if (extInput.render(-1)) uiSignal("on_change_bg_ext", {{"ext",pathInput.value}});
         }
 
         if (bgType == 3) {

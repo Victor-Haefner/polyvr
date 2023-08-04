@@ -6,6 +6,8 @@
 
 using namespace std;
 
+class ImInput;
+
 struct ImScriptEntry {
     string name;
     float perf = 0;
@@ -23,10 +25,13 @@ struct ImScriptGroup {
 class ImScriptList {
     public:
         bool doPerf = false;
+        float width = 50;
+
     private:
         map<string, ImScriptGroup> groups;
         vector<string> groupsList;
         string selected;
+        ImInput* input = 0;
 
         void clear();
         void addGroup(string name, string ID);
@@ -37,6 +42,7 @@ class ImScriptList {
     public:
         ImScriptList();
         void render();
+        void computeMinWidth();
 };
 
 class ImScriptEditor {

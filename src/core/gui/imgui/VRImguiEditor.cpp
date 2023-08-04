@@ -565,8 +565,8 @@ void ImFileDialog::begin() {
         ImGui::SetNextWindowSize(winSize);
         //ImGui::Begin("##geoOpts", ImVec2(minSize.x,0), false, flags);
         ImGui::Begin("##geoOpts", 0, flags);
-        if (scaleInput.render()) uiSignal("on_change_import_scale", {{"scale",scaleInput.value}});
-        if (presetInput.render()) uiSignal("on_change_import_preset", {{"preset",presetInput.value}});
+        if (scaleInput.render(-1)) uiSignal("on_change_import_scale", {{"scale",scaleInput.value}});
+        if (presetInput.render(-1)) uiSignal("on_change_import_preset", {{"preset",presetInput.value}});
         //ImGui::SameLine();
         ImGui::End();
     }
@@ -596,7 +596,7 @@ void ImDocDialog::begin() {
     ImSection::begin();
     centeredText("Documentation");
 
-    if (filter.render()) uiSignal("on_change_doc_filter", {{"filter",filter.value}});
+    if (filter.render(-1)) uiSignal("on_change_doc_filter", {{"filter",filter.value}});
 
     //uiSignal("on_change_doc_selection", {{"obj","Geometry"},{"type","class"},{"class","Geometry"},{"mod","VR"}});
 
@@ -625,8 +625,8 @@ void ImSearchDialog::begin() {
     ImSection::begin();
     centeredText("Find");
 
-    bool filterEnter = searchField.render();
-    bool replaceEnter = replaceField.render();
+    bool filterEnter = searchField.render(-1);
+    bool replaceEnter = replaceField.render(-1);
 
     static string scope = "script";
     if (ImGui::RadioButton("Script", &searchScope, 0)) scope = "script";
@@ -676,7 +676,7 @@ void ImTemplateDialog::begin() {
     ImSection::begin();
     centeredText("Script Templates");
 
-    bool filterChanged = filter.render();
+    bool filterChanged = filter.render(-1);
     if (!initiated || filterChanged) {
         uiSignal("ui_request_script_templates", {{"filter", filter.value}});
         initiated = true;
