@@ -3,9 +3,6 @@
 
 #include <OpenSG/OSGMatrix.h>
 
-
-
-
 using namespace OSG;
 
 VRMachiningCode::VRMachiningCode() {}
@@ -87,25 +84,16 @@ void VRMachiningCode::readGCode(string path, double speedMultiplier) {
 	string code;
 	int lastCommand = 1;
 
-	cout<<"Reading Gcode"<<endl;
-
 	while (getline(file, code)) {
 		map<char, double> params;
 		for (auto i : splitString(code)) {
-
-            if(i.size()>0){
-                //params[i[0]] = toFloat(subString(i, 1, i.size()));
-                params[i[0]] = toFloat(subString(i, 1, i.size()-1));
-                cout<<i[0]<<" : "<<params[i[0]]<<endl;
-            }
-            else{
-                cout<<"size of i is ZERO!"<<endl;
-            }
+            if (i.size() <= 1) { cout << " Warning! empty command '" << code << "'" << endl; continue; }
+            params[i[0]] = toFloat(subString(i, 1));
 		}
 
 		if (!params.count('V')) params['V'] = 50; // standard speed
 		if (!params.count('G')) params['G'] = lastCommand; // standard movement
-        else lastCommand = int(params.count('G'));
+        else lastCommand = int(params['G']);
 
 		double v = 1.0;
 
@@ -118,20 +106,17 @@ void VRMachiningCode::readGCode(string path, double speedMultiplier) {
 		}
 
 		if (params['G'] == 0 || params['G'] == 1) { // translate
-            cout<<"Translatting!"<<endl;
 			translate(vec0, vec1, v);
 			vec0 = vec1;
 		}
 
 		if (params['G'] == 2) { // rotate clockwise
-            cout<<"Rotating CW!"<<endl;
 			Vec3d m = Vec3d(params['I'], params['J'], vec1[2]);
 			rotate(vec0,vec1,m,v,1);
 			vec0 = vec1;
 		}
 
 		if (params['G'] == 3) { // rotate counterclockwise
-            cout<<"Rotating CCW!"<<endl;
 			Vec3d m = Vec3d(params['I'], params['J'], vec1[2]);
 			m *= 0.001;
 			rotate(vec0, vec1, m, v, -1);
@@ -142,17 +127,12 @@ void VRMachiningCode::readGCode(string path, double speedMultiplier) {
 	}
 
 	cout << " read " << instructions.size() << " instructions" << endl;
-
-
 }
 
 //Implement here to plot the gcode path
 
 VRGeometryPtr VRMachiningCode::asGeometry() {
-
     VRGeoData data;
-
-    cout << "plotting the simulation path"<<endl;
 
     // Print all elements of the vector
     for (const auto& element : instructions) {
@@ -164,7 +144,6 @@ VRGeometryPtr VRMachiningCode::asGeometry() {
 
         data.pushVert(element.p0, Vec3d(0,1,0));
         data.pushLine();
-
     }
 
     return data.asGeometry("ncCode");
