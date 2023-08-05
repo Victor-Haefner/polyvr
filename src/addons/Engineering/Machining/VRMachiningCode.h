@@ -7,6 +7,10 @@
 #include <OpenSG/OSGConfig.h>
 #include <OpenSG/OSGVector.h>
 
+#include "core/objects/geometry/VRGeoData.h"
+#include "core/objects/geometry/VRGeometry.h"
+
+
 #include "../VREngineeringFwd.h"
 
 using namespace std;
@@ -44,6 +48,10 @@ class VRMachiningCode : public std::enable_shared_from_this<VRMachiningCode> {
 
 		void clear();
 		void readGCode(string path, double speedMultiplier);
+
+		VRGeometryPtr asGeometry();
+		//VRGeometryPtr asGeometry(VRTransformPtr res);
+		//void asGeometry();
 };
 
 OSG_END_NAMESPACE;
