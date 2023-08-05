@@ -1903,7 +1903,8 @@ void TextEditor::Backspace()
 
 			u.mRemovedStart = u.mRemovedEnd = GetActualCursorCoordinates();
 			--u.mRemovedStart.mColumn;
-			--mState.mCursorPosition.mColumn;
+			//--mState.mCursorPosition.mColumn;
+			mState.mCursorPosition.mColumn = GetCharacterColumn(mState.mCursorPosition.mLine, cindex);
 
 			while (cindex < line.size() && cend-- > cindex)
 			{
