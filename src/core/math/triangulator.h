@@ -31,8 +31,7 @@ class Triangulator {
         static shared_ptr<Triangulator> create();
 
         void add(VRPolygon p, bool outer = true);
-
-        int append(VRGeoDataPtr data, bool addNormals);
+        size_t append(VRGeoDataPtr data, bool addNormals);
         VRGeometryPtr compute();
         VRGeometryPtr computeBounds();
 };

@@ -223,7 +223,6 @@ PyMethodDef VRPyAtlas::methods[] = {
     {"setup", PyWrap( Atlas, setup, "setup function", VRTransformPtr, void ) },
     {"setCoordOrigin", PyWrap( Atlas, setCoordOrigin, "setCoordOrigin - East, North - uses EPSG UTM 32N: 25832 for now", void, double, double ) },
     {"setBoundary", PyWrap( Atlas, setBoundary, "setBoundary - (double minEast, double maxEast, double minNorth, double maxNorth)", void, double, double, double, double ) },
-    {"setServerURL", PyWrap( Atlas, setServerURL, "sets remote Server URL", void, string ) },
     {"setLocalPaths", PyWrap( Atlas, setLocalPaths, "sets local paths to dir of ( ortho, height ) pictures", void, string, string ) },
     {"setMapManager", PyWrap( Atlas, setMapManager, "Set map manager", void, VRMapManagerPtr ) },
     {"getLocalPos", PyWrap( Atlas, getLocalPos, "returns local position of coordinates use ( east, north ), EPSG UTM 32N: 25832", Vec3d, double, double ) },

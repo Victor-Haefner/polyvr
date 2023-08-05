@@ -206,8 +206,10 @@ void VRSnappingEngine::remObject(VRTransformPtr obj) {
 }
 
 void VRSnappingEngine::addTree(VRObjectPtr obj, int group) {
-    vector<VRObjectPtr> objs = obj->getObjectListByType("Geometry");
-    for (auto o : objs) addObject(static_pointer_cast<VRTransform>(o), group);
+    vector<VRObjectPtr> objs = obj->getChildren(true, "", true);
+    for (auto o : objs) {
+        if (auto geo = dynamic_pointer_cast<VRGeometry>(o)) addObject(geo, group);
+    }
 }
 
 VRSignalPtr VRSnappingEngine::getSignalSnap() { return snapSignal; }
@@ -319,7 +321,7 @@ void VRSnappingEngine::handleDraggedObject(VRDevicePtr dev, VRTransformPtr obj, 
                         Matrix4d mm = m;
                         r->snap(mm, B.a->getPose());
                         mm.mult(maLi);
-                        event->set(obj, r->csys, mm, dev, 1, snapID);
+                        event->set(obj, r->csys, mm, dev, 1, snapID, A.a, B.a);
                     }
                 } else { // just check if anchor snapps to rule
                     snapID++;
@@ -327,7 +329,7 @@ void VRSnappingEngine::handleDraggedObject(VRDevicePtr dev, VRTransformPtr obj, 
                     Matrix4d mm = m;
                     r->snap(mm);
                     mm.mult(maLi);
-                    event->set(obj, r->csys, mm, dev, 1, snapID);
+                    event->set(obj, r->csys, mm, dev, 1, snapID, A.a, 0);
                 }
             }
         } else { // simple snap, obj origin
@@ -335,7 +337,7 @@ void VRSnappingEngine::handleDraggedObject(VRDevicePtr dev, VRTransformPtr obj, 
             if (!r->inRange(p, dmin)) continue;
             Matrix4d mm = m;
             r->snap(mm);
-            event->set(obj, r->csys, mm, dev, 1, snapID);
+            event->set(obj, r->csys, mm, dev, 1, snapID, 0, 0);
         }
     }
 

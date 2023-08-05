@@ -131,15 +131,11 @@ class VRObject : public std::enable_shared_from_this<VRObject>, public VRName, p
         bool shareAncestry(VRObjectPtr obj);
         VRObjectPtr findPickableAncestor();
 
-        vector<VRObjectPtr> getObjectListByType( string _type );
-        void getObjectListByType( string _type, vector<VRObjectPtr>& list );
-
         VRObjectPtr find(VRObjectPtr obj);
         VRObjectPtr find(string Name);
         VRObjectPtr findFirst(string Name);
         VRObjectPtr find(int id);
         vector<VRObjectPtr> findAll(string Name, vector<VRObjectPtr> res = vector<VRObjectPtr>() );
-        vector<VRObjectPtr> filterByType(string Type, vector<VRObjectPtr> res = vector<VRObjectPtr>() );
 
         void setEntity(VREntityPtr e);
         VREntityPtr getEntity();

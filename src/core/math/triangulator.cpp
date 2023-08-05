@@ -75,7 +75,7 @@ VRGeometryPtr Triangulator::compute() {
     return geo ? geo->asGeometry("tessellation") : 0;
 }
 
-int Triangulator::append(VRGeoDataPtr data, bool aN) {
+size_t Triangulator::append(VRGeoDataPtr data, bool aN) {
     addNormals = aN;
     size_t n0 = data->size();
     geo = data;
