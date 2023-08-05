@@ -298,11 +298,19 @@ int TextEditor::InsertTextAt(Coordinates& /* inout */ aWhere, const char * aValu
 			auto d = UTF8CharLength(*aValue);
 			while (d-- > 0 && *aValue != '\0')
 				line.insert(line.begin() + cindex++, Glyph(*aValue++, PaletteIndex::Default));
-			++aWhere.mColumn;
+
+            // TODO: should avoid the call to GetCharacterColumn below, but doesnt work..
+            /*if (*aValue == '\t')
+                aWhere.mColumn = (aWhere.mColumn / mTabSize) * mTabSize + mTabSize;
+            else
+                aWhere.mColumn++;*/
+            aWhere.mColumn++;
 		}
 
 		mTextChanged = true;
 	}
+
+	aWhere.mColumn = GetCharacterColumn(aWhere.mLine, aWhere.mColumn);
 
 	return totalLines;
 }
@@ -1485,10 +1493,14 @@ void TextEditor::InsertText(const std::string & aValue)
 	InsertText(aValue.c_str());
 }
 
+std::ostream& operator<<(std::ostream& os, const TextEditor::Coordinates& c) {
+    os << c.mLine << '/' << c.mColumn;
+    return os;
+}
+
 void TextEditor::InsertText(const char * aValue)
 {
-	if (aValue == nullptr)
-		return;
+	if (aValue == nullptr) return;
 
 	auto pos = GetActualCursorCoordinates();
 	auto start = std::min(pos, mState.mSelectionStart);
