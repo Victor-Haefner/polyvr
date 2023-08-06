@@ -1,5 +1,6 @@
 #include "VRMachiningCode.h"
 #include "core/utils/toString.h"
+#include "core/objects/material/VRMaterial.h"
 
 #include <OpenSG/OSGMatrix.h>
 
@@ -31,7 +32,7 @@ void VRMachiningCode::translate(Vec3d vec_0, Vec3d vec_1, double v) { // G01 tra
 
 	double L = vecf.length();
 	double T = L / v * 1000;
-	if (T * (skippedSteps + 1) > 1.0 / 60) {
+	if (T * (skippedSteps + 1) > 1.0 / 60 || true) {
 		Instruction i;
 		i.G = 0;
 		i.d = vecf;
@@ -42,36 +43,39 @@ void VRMachiningCode::translate(Vec3d vec_0, Vec3d vec_1, double v) { // G01 tra
 	} else skippedSteps += 1;
 }
 
-void VRMachiningCode::rotate(Vec3d vec_0, Vec3d vec_1, Vec3d m_0, double v_0, int mode) { // G02 and G03 rotation
+void VRMachiningCode::rotate(Vec3d start, Vec3d end, Vec3d center, Vec3d axis, double v_0, int mode) { // G02 and G03 rotation
 	double a = 0;
 	if (mode == 1) a = 1;
 	else a = -1;
 
 	// vector
-	Vec3d r0 = vec_0 - m_0;
-	Vec3d r1 = vec_1 - m_0;
+	Vec3d r0 = start - center;
+	Vec3d r1 = end - center;
 
 	// theta
 	double theta = 0;
 	if ( (r0.dot(r1) / (r0.length() * r1.length())) > 1 ) theta = acos(1);
 	else theta = acos(r0.dot(r1) / (r0.length() * r1.length()));
-	double dtheta = a * theta / arcPrecision;
+	int N = max(1.0, theta / (2*Pi/arcPrecision) );
+	double dtheta = a * theta / N;
+    Quaterniond Q(axis, dtheta);
 
-	// matrix of rotation
-	Matrix4d m = {	cos(dtheta), -sin(dtheta), 0, 0,
-					sin(dtheta),  cos(dtheta), 0, 0,
-					0, 0, 0, 0,
-					0, 0, 0, 0 };
+    cout << "rotate theta " << theta << ", N " << N << " -> dtheta " << dtheta << endl;
 
 	// move
-	for (int q = 0; q < arcPrecision; q++) {
+	double A = 0;
+	for (int q = 0; q < N; q++) {
 		// rotate vector 0 around dtheta degrees
 		Vec3d r;
-		m.mult(r0, r);
-		translate(r0 + m_0, r + m_0, v_0);
+		Q.multVec(r0, r);
+		translate(r0 + center, r + center, v_0);
 		r0 = r;
+		A += dtheta;
+        cout << " rotate " << q << ", A " << A << endl;
 	}
 }
+
+// https://ncviewer.com/
 
 void VRMachiningCode::readGCode(string path, double speedMultiplier) {
 	cout << "VRMachiningCode::readGCode " << path << " " << speedMultiplier << endl;
@@ -81,47 +85,64 @@ void VRMachiningCode::readGCode(string path, double speedMultiplier) {
 	file.open(path);
 	if (!file.is_open()) { cout << "ERROR in VRMachiningCode::readGCode : file '" << path << "' not found!" << endl; return; }
 
-	string code;
-	int lastCommand = 1;
+	// state variables
+	int motionMode = 1; // G0, G1, G2, G3
+	float speed = 50;
+	Vec3d rotationAxis = Vec3d(0,-1,0);
+	Vec3d cursor;
+	Vec3d target;
+	Vec3d rotationCenter;
 
-	while (getline(file, code)) {
-		map<char, double> params;
-		for (auto i : splitString(code)) {
-            if (i.size() <= 1) { cout << " Warning! empty command '" << code << "'" << endl; continue; }
-            params[i[0]] = toFloat(subString(i, 1));
+	struct Command {
+        char code = 'G';
+        float value = 0;
+	};
+
+	string line;
+	while (getline(file, line)) {
+		// parse commands
+		vector<Command> commands;
+		for (auto i : splitString(line)) {
+            if (i.size() <= 1) { cout << " Warning! empty line: '" << line << "'" << endl; continue; }
+            commands.push_back( { i[0], toFloat(subString(i, 1)) } );
 		}
 
-		if (!params.count('V')) params['V'] = 50; // standard speed
-		if (!params.count('G')) params['G'] = lastCommand; // standard movement
-        else lastCommand = int(params['G']);
+		// apply commands to current state
+		rotationCenter = cursor;
+		for (auto& cmd : commands) {
+            if (cmd.code == 'V') speed = cmd.value * speedMultiplier;
 
-		double v = 1.0;
+            if (cmd.code == 'G') {
+                if (cmd.value > -1 && cmd.value < 4 ) motionMode = cmd.value;
+                if (cmd.value > 16 && cmd.value < 20) {  // G17 (Y), G18 (Z), G19 (X)
+                    if (cmd.value == 17) rotationAxis = Vec3d(0,-1,0);
+                    if (cmd.value == 18) rotationAxis = Vec3d(0,0,1);
+                    if (cmd.value == 19) rotationAxis = Vec3d(1,0,0);
+                }
+            }
 
-		if (params['G'] < 4) { // get speed
-			vec1 = vec0;
-			v = params['V']*speedMultiplier;
-			if (params.count('X')) vec1[0] = params['X'];
-			if (params.count('Y')) vec1[1] = params['Y'];
-			if (params.count('Z')) vec1[2] = params['Z'];
+            if (cmd.code == 'X') target[0] =  cmd.value;
+            if (cmd.code == 'Y') target[2] = -cmd.value;
+            if (cmd.code == 'Z') target[1] =  cmd.value;
+
+            if (cmd.code == 'I') rotationCenter[0] = cursor[0] + cmd.value;
+            if (cmd.code == 'J') rotationCenter[2] = cursor[2] - cmd.value;
+            if (cmd.code == 'K') rotationCenter[1] = cursor[1] + cmd.value;
 		}
 
-		if (params['G'] == 0 || params['G'] == 1) { // translate
-			translate(vec0, vec1, v);
-			vec0 = vec1;
+		if (motionMode == 0 || motionMode == 1) { // translate
+			translate(cursor, target, speed);
 		}
 
-		if (params['G'] == 2) { // rotate clockwise
-			Vec3d m = Vec3d(params['I'], params['J'], vec1[2]);
-			rotate(vec0,vec1,m,v,1);
-			vec0 = vec1;
+		if (motionMode == 2) { // rotate clockwise
+			rotate(cursor, target, rotationCenter, rotationAxis, speed, 1);
 		}
 
-		if (params['G'] == 3) { // rotate counterclockwise
-			Vec3d m = Vec3d(params['I'], params['J'], vec1[2]);
-			m *= 0.001;
-			rotate(vec0, vec1, m, v, -1);
-			vec0 = vec1;
+		if (motionMode == 3) { // rotate counterclockwise
+			rotate(cursor, target, rotationCenter, rotationAxis, speed, -1);
 		}
+
+		cursor = target;
 
 		//implementation of the other G Code commands!
 	}
@@ -146,7 +167,12 @@ VRGeometryPtr VRMachiningCode::asGeometry() {
         data.pushLine();
     }
 
-    return data.asGeometry("ncCode");
+    auto geo = data.asGeometry("ncCode");
+    auto m = VRMaterial::create("ncCode");
+    m->setLit(0);
+    m->setLineWidth(2);
+    geo->setMaterial(m);
+    return geo;
 }
 
 

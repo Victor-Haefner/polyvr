@@ -29,11 +29,11 @@ class VRMachiningCode : public std::enable_shared_from_this<VRMachiningCode> {
 		vector< Instruction > instructions;
 		size_t pointer = 0;
 
-		int arcPrecision = 256;
+		int arcPrecision = 64;
 		int skippedSteps = 0;
 
 		void translate(Vec3d vec_0, Vec3d vec_1, double v);
-		void rotate(Vec3d vec_0, Vec3d vec_1, Vec3d m_0, double v_0, int mode);
+		void rotate(Vec3d start, Vec3d end, Vec3d center, Vec3d axis, double v_0, int mode);
 
 	public:
 		VRMachiningCode();
