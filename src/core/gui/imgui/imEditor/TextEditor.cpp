@@ -264,53 +264,41 @@ int TextEditor::InsertTextAt(Coordinates& /* inout */ aWhere, const char * aValu
 
 	int cindex = GetCharacterIndex(aWhere);
 	int totalLines = 0;
-	while (*aValue != '\0')
-	{
+	while (*aValue != '\0') {
 		assert(!mLines.empty());
 
-		if (*aValue == '\r')
-		{
-			// skip
-			++aValue;
-		}
-		else if (*aValue == '\n')
-		{
-			if (cindex < (int)mLines[aWhere.mLine].size())
-			{
+		if (*aValue == '\r') ++aValue; // skip
+		else if (*aValue == '\n') {
+			if (cindex < (int)mLines[aWhere.mLine].size()) {
 				auto& newLine = InsertLine(aWhere.mLine + 1);
 				auto& line = mLines[aWhere.mLine];
 				newLine.insert(newLine.begin(), line.begin() + cindex, line.end());
 				line.erase(line.begin() + cindex, line.end());
 			}
-			else
-			{
-				InsertLine(aWhere.mLine + 1);
-			}
+			else InsertLine(aWhere.mLine + 1);
 			++aWhere.mLine;
 			aWhere.mColumn = 0;
 			cindex = 0;
 			++totalLines;
 			++aValue;
-		}
-		else
-		{
+		} else {
 			auto& line = mLines[aWhere.mLine];
 			auto d = UTF8CharLength(*aValue);
-			while (d-- > 0 && *aValue != '\0')
+			bool isTab = bool(*aValue == '\t');
+			while (d-- > 0 && *aValue != '\0') {
 				line.insert(line.begin() + cindex++, Glyph(*aValue++, PaletteIndex::Default));
+			}
 
-            // TODO: should avoid the call to GetCharacterColumn below, but doesnt work..
-            /*if (*aValue == '\t')
+            if (isTab) {
                 aWhere.mColumn = (aWhere.mColumn / mTabSize) * mTabSize + mTabSize;
-            else
-                aWhere.mColumn++;*/
-            aWhere.mColumn++;
+            } else {
+                aWhere.mColumn++;
+            }
+            //aWhere.mColumn++;
 		}
 
 		mTextChanged = true;
 	}
-
-	aWhere.mColumn = GetCharacterColumn(aWhere.mLine, aWhere.mColumn);
 
 	return totalLines;
 }
