@@ -58,6 +58,7 @@ class VRTextureRenderer : public VRObject {
 
         void setActive(bool b);
         VRMaterialPtr getMaterial();
+        VRMaterialPtr copyMaterial();
         VRCameraPtr getCamera();
 
         VRTexturePtr renderOnce(CHANNEL c = RENDER);

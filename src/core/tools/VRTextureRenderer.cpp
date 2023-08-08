@@ -189,6 +189,14 @@ VRTextureRenderer::VRTextureRenderer(string name, bool readback) : VRObject(name
     updateBackground();
 }
 
+VRMaterialPtr VRTextureRenderer::copyMaterial() {
+    if (!data) return 0;
+    auto mat = VRMaterial::create("VRTextureRenderer");
+    mat->setTexture(data->fboTex, 0);
+    mat->setTexture(data->fboDTex, 1);
+    return mat;
+}
+
 VRTextureRenderer::~VRTextureRenderer() { stopServer(); delete data; }
 
 VRTextureRendererPtr VRTextureRenderer::create(string name, bool readback) {
