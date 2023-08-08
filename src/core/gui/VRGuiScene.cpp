@@ -1090,8 +1090,8 @@ bool VRGuiScene::setShadow_color() {
     VRLightPtr obj = static_pointer_cast<VRLight>( getSelected() );
     if (!obj) return true;
     /*Color4f c = chooseColor("shadow_col", obj->getShadowColor());
-    obj->setShadowColor(c);
-    return true;*/
+    obj->setShadowColor(c);*/
+    return true;
 }
 
 bool VRGuiScene::setLight_diff_color() {
@@ -1099,8 +1099,8 @@ bool VRGuiScene::setLight_diff_color() {
     VRLightPtr obj = static_pointer_cast<VRLight>( getSelected() );
     if (!obj) return true;
     /*Color4f c = chooseColor("light_diff", obj->getDiffuse());
-    obj->setDiffuse(c);
-    return true;*/
+    obj->setDiffuse(c);*/
+    return true;
 }
 
 bool VRGuiScene::setLight_amb_color() {
@@ -1108,8 +1108,8 @@ bool VRGuiScene::setLight_amb_color() {
     VRLightPtr obj = static_pointer_cast<VRLight>( getSelected() );
     /*if (!obj) return true;
     Color4f c = chooseColor("light_amb", obj->getAmbient());
-    obj->setAmbient(c);
-    return true;*/
+    obj->setAmbient(c);*/
+    return true;
 }
 
 bool VRGuiScene::setLight_spec_color() {
@@ -1117,8 +1117,8 @@ bool VRGuiScene::setLight_spec_color() {
     VRLightPtr obj = static_pointer_cast<VRLight>( getSelected() );
     if (!obj) return true;
     /*Color4f c = chooseColor("light_spec", obj->getSpecular());
-    obj->setSpecular(c);
-    return true;*/
+    obj->setSpecular(c);*/
+    return true;
 }
 // ----------------------------------------------
 

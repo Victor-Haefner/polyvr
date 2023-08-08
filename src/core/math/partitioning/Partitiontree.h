@@ -45,6 +45,21 @@ class PartitiontreeNode {
         vector<Vec3d>& getPoints() { return points; }
 
         size_t dataSize() { return data.size(); }
+        size_t getClosest(Vec3d p) {
+            size_t iMin = 0;
+            double dMin = 1e6;
+
+            for (size_t i=0; i<data.size(); i++) {
+                double d = p.dist(points[i]);
+                if (d < dMin) {
+                    dMin = d;
+                    iMin = i;
+                }
+            }
+
+            return iMin;
+        }
+
         T& getData(size_t i) { return data[i]; }
         Vec3d getPoint(size_t i) { return points[i]; }
 

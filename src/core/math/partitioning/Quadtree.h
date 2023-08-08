@@ -86,6 +86,7 @@ class Quadtree : public Partitiontree {
         vector<void*> radiusSearch(Vec3d p, float r, int d = -1);
         vector<Vec3d> radiusPointSearch(Vec3d p, float r, int d = -1, bool getAll = true);
         vector<void*> boxSearch(const Boundingbox& b, int d = -1);
+        void* getClosest(Vec3d p);
 
         void test();
 
