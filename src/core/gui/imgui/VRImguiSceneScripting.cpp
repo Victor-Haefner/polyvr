@@ -229,6 +229,8 @@ void ImScriptEditor::editorCommand(string cmd) {
 
     if (cmd == "duplicateLine") {
         bool duplicateLine = false;
+        auto p0 = imEditor.GetCursorPosition();
+
         if (!imEditor.HasSelection()) {
             duplicateLine = true;
             auto p = imEditor.GetCursorPosition();
@@ -241,13 +243,14 @@ void ImScriptEditor::editorCommand(string cmd) {
         auto ct = ImGui::GetClipboardText();
         string cts = ct?ct:"";
         imEditor.Copy();
-        imEditor.Paste();// instead of two pastes do unselect
+        imEditor.Paste(); // instead of two pastes do unselect
         imEditor.Paste();
         ImGui::SetClipboardText(cts.c_str());
 
         if (duplicateLine) {
             auto p = imEditor.GetCursorPosition();
             p.mLine -= 1;
+            p.mColumn = p0.mColumn;
             imEditor.SetCursorPosition(p);
         }
     }
