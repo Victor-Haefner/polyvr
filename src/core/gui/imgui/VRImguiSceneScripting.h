@@ -10,6 +10,8 @@ class ImInput;
 
 struct ImScriptEntry {
     string name;
+    string fg = "#000000";
+    string bg = "#FFFFFF";
     float perf = 0;
     ImScriptEntry() {}
     ImScriptEntry(string name);
@@ -36,6 +38,7 @@ class ImScriptList {
         void clear();
         void addGroup(string name, string ID);
         void addScript(string name, string groupID, float time);
+        void setColor(string name, string fg, string bg);
         void renderScriptEntry(ImScriptEntry& script);
         void renderGroupEntry(string& group);
 

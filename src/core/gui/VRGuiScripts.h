@@ -56,7 +56,7 @@ class VRGuiScripts {
         void initEditor();
         void printViewerLanguages();
         //void setGroupListRow(_GtkTreeIter* itr, group& g);
-        //void setScriptListRow(_GtkTreeIter* itr, VRScriptPtr script, bool onlyTime = false);
+        void updateScriptColor(VRScriptPtr script);
 
         void on_new_clicked();
         void on_addSep_clicked();

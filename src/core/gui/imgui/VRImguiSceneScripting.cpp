@@ -50,6 +50,7 @@ ImScriptList::ImScriptList() {
     mgr->addCallback("scripts_list_clear", [&](OSG::VRGuiSignals::Options o){ clear(); return true; } );
     mgr->addCallback("scripts_list_add_group", [&](OSG::VRGuiSignals::Options o){ addGroup(o["name"], o["ID"]); return true; } );
     mgr->addCallback("scripts_list_add_script", [&](OSG::VRGuiSignals::Options o){ addScript(o["name"], o["group"], toFloat(o["perf"])); return true; } );
+    mgr->addCallback("scripts_list_set_color", [&](OSG::VRGuiSignals::Options o){ setColor(o["name"], o["fg"], o["bg"]); return true; } );
     mgr->addCallback("openUiScript", [&](OSG::VRGuiSignals::Options o) {
         selected = o["name"];
         uiSignal("select_script", {{"script",selected}});
@@ -78,6 +79,18 @@ void ImScriptList::addScript(string name, string groupID, float time) {
     computeMinWidth();
 }
 
+void ImScriptList::setColor(string name, string fg, string bg) {
+    for (auto& g : groups) {
+        for (auto& s : g.second.scripts) {
+            if (s.name == name) {
+                s.fg = fg;
+                s.bg = bg;
+                return;
+            }
+        }
+    }
+}
+
 void ImScriptList::computeMinWidth() {
     ImGuiStyle& style = ImGui::GetStyle();
     width = 50;
@@ -95,11 +108,22 @@ void ImScriptList::renderScriptEntry(ImScriptEntry& scriptEntry) {
     bool isSelected = bool(selected == script);
     //if (isSelected) ImGui::PushStyleColor(ImGuiCol_Button, colorSelected);
     if (!isSelected) {
+		ImGui::PushStyleColor(ImGuiCol_Text, colorFromString(scriptEntry.fg));
+		ImGui::PushStyleColor(ImGuiCol_Button, colorFromString(scriptEntry.bg));
+
         if (ImGui::Button(script.c_str())) {
             selected = script;
             uiSignal("select_script", {{"script",script}});
         }
+
+		ImGui::PopStyleColor();
+		ImGui::PopStyleColor();
     } else {
+		ImGui::PushStyleColor(ImGuiCol_Text, colorFromString(scriptEntry.fg));
+		ImGui::PushStyleColor(ImGuiCol_FrameBg, colorFromString(scriptEntry.bg));
+		ImGui::PushStyleColor(ImGuiCol_Border, colorFromString("#66AAFF"));
+		ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 2);
+
         if (!input) input = new ImInput("##renameScript", "", "Script0", ImGuiInputTextFlags_EnterReturnsTrue);
         input->value = script;
         if (input->render(-1)) {
@@ -109,6 +133,11 @@ void ImScriptList::renderScriptEntry(ImScriptEntry& scriptEntry) {
             uiSignal("select_script", {{"script",script}});
             computeMinWidth();
         }
+
+		ImGui::PopStyleVar();
+		ImGui::PopStyleColor();
+		ImGui::PopStyleColor();
+		ImGui::PopStyleColor();
     }
 
     if (doPerf) {
