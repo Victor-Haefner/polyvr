@@ -104,15 +104,16 @@ void ImScriptList::computeMinWidth() {
 
 void ImScriptList::renderScriptEntry(ImScriptEntry& scriptEntry) {
     string& script = scriptEntry.name;
+    string bID = script + "##script";
     //ImVec4 colorSelected(0.3f, 0.5f, 1.0f, 1.0f);
-    bool isSelected = bool(selected == script);
+    bool isSelected = bool(selected == bID);
     //if (isSelected) ImGui::PushStyleColor(ImGuiCol_Button, colorSelected);
     if (!isSelected) {
 		ImGui::PushStyleColor(ImGuiCol_Text, colorFromString(scriptEntry.fg));
 		ImGui::PushStyleColor(ImGuiCol_Button, colorFromString(scriptEntry.bg));
 
-        if (ImGui::Button(script.c_str())) {
-            selected = script;
+        if (ImGui::Button(bID.c_str())) {
+            selected = bID;
             uiSignal("select_script", {{"script",script}});
         }
 
@@ -128,7 +129,7 @@ void ImScriptList::renderScriptEntry(ImScriptEntry& scriptEntry) {
         input->value = script;
         if (input->render(-1)) {
             script = input->value;
-            selected = script;
+            selected = bID;
             uiSignal("rename_script", {{"name",script}});
             uiSignal("select_script", {{"script",script}});
             computeMinWidth();
@@ -150,10 +151,12 @@ void ImScriptList::renderScriptEntry(ImScriptEntry& scriptEntry) {
 }
 
 void ImScriptList::renderGroupEntry(string& group) {
-    bool isSelected = bool(selected == group);
+    string bID = group + "##group";
+
+    bool isSelected = bool(selected == bID);
     if (!isSelected) {
-        if (ImGui::Button(group.c_str())) {
-            selected = group;
+        if (ImGui::Button(bID.c_str())) {
+            selected = bID;
             uiSignal("select_group", {{"group",group}});
         }
     } else {
@@ -161,7 +164,7 @@ void ImScriptList::renderGroupEntry(string& group) {
         input->value = group;
         if (input->render(-1)) {
             group = input->value;
-            selected = group;
+            selected = bID;
             uiSignal("rename_group", {{"name",group}});
         }
     }
