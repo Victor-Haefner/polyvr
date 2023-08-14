@@ -60,6 +60,7 @@ class VRTextureRenderer : public VRObject {
         VRMaterialPtr getMaterial();
         VRMaterialPtr copyMaterial();
         VRCameraPtr getCamera();
+        Vec2i getResolution();
 
         VRTexturePtr renderOnce(CHANNEL c = RENDER);
         vector<VRTexturePtr> createCubeMaps(VRTransformPtr focusObject);
