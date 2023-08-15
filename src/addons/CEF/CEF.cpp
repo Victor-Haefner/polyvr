@@ -383,13 +383,13 @@ void CEF::setAspectRatio(float a) { aspect = a; resize(); }
 
 // dev callbacks:
 
-void CEF::addMouse(VRDevicePtr dev, VRObjectPtr obj, int lb, int rb, int wu, int wd) {
+void CEF::addMouse(VRDevicePtr dev, VRObjectPtr obj, int lb, int mb, int rb, int wu, int wd) {
     if (!obj) obj = this->obj.lock();
     if (dev == 0 || obj == 0) return;
     this->obj = obj;
 
     auto k = dev.get();
-    if (!mouse_dev_callback.count(k)) mouse_dev_callback[k] = VRFunction<VRDeviceWeakPtr, bool>::create( "CEF::MOUSE", bind(&CEF::mouse, this, lb,rb,wu,wd,_1 ) );
+    if (!mouse_dev_callback.count(k)) mouse_dev_callback[k] = VRFunction<VRDeviceWeakPtr, bool>::create( "CEF::MOUSE", bind(&CEF::mouse, this, lb,mb,rb,wu,wd,_1 ) );
     dev->newSignal(-1,0)->add(mouse_dev_callback[k], -1);
     dev->newSignal(-1,1)->add(mouse_dev_callback[k], -1);
 
@@ -434,15 +434,17 @@ void CEF::toggleInput(bool m, bool k) {
     doKeyboard = k;
 }
 
-bool CEF::mouse(int lb, int rb, int wu, int wd, VRDeviceWeakPtr d) {
+bool CEF::mouse(int lb, int mb, int rb, int wu, int wd, VRDeviceWeakPtr d) {
     if (!doMouse) return true;
     //cout << "CEF::mouse " << lb << " " << rb << " " << wu << " " << wd << endl;
     auto dev = d.lock();
     if (!dev) return true;
     int b = dev->key();
     bool down = dev->getState();
+    //cout << " CEF::mouse b: " << b << " s: " << down << endl;
 
     if (b == lb) b = 0;
+    else if (b == mb) b = 1;
     else if (b == rb) b = 2;
     else if (b == wu) b = 3;
     else if (b == wd) b = 4;
@@ -474,6 +476,7 @@ bool CEF::mouse(int lb, int rb, int wu, int wd, VRDeviceWeakPtr d) {
     if (iobj != geo) { host->SetFocus(false); focus = false; return true; }
     host->SetFocus(true); focus = true;
 #else
+    //cout << " CEF::mouse ins->hit: " << ins->hit << ", iobj != geo: " << bool(iobj != geo) << endl;
     if (!ins->hit) { host->SendFocusEvent(false); focus = false; return true; }
     if (iobj != geo) { host->SendFocusEvent(false); focus = false; return true; }
     host->SendFocusEvent(true); focus = true;

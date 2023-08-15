@@ -579,7 +579,7 @@ PyObject* VRPyLine::intersect(VRPyLine* self, PyObject *args) {
 		Vec3f n3 = n1.cross(n2);
 		float N3 = n3.dot(n3);
 		if (N3 == 0) N3 = 1.0;
-		float s = d.cross(n2).dot(n1.cross(n2))/N3;
+		float s = d.cross(n2).dot(n3)/N3;
 		return Vec3d(Vec3f(p1) + n1*s);
     };
 
