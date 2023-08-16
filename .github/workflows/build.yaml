@@ -1,18 +1,16 @@
-name: Build
+name: Test
 
 on:
   release:
     types: [created]
-  workflow_dispatch:
-
+  workflow_dispatch: # Put here!!
+  
 jobs:
   build:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-        
-      - name: Echo test
-        run: |
-          echo "hi! this works!"
-          dir
+      - uses: actions/checkout@v2
+
+      - name: Run a one-line script
+        run: echo Hello, world!
