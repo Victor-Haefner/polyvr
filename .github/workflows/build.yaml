@@ -5,6 +5,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
+        
+      - name: Echo test
         run: |
           echo "hi! this works!"
           dir
