@@ -72,8 +72,6 @@ void VRGuiScene::setObject(VRObjectPtr o) {
 }
 
 void VRGuiScene::setTransform(VRTransformPtr e) {
-    //setWidgetVisibility("expander1", true, true);
-
     Vec3d f,a,u,d,s;
     if (transformModeLocal) {
         f = e->getFrom();
@@ -86,25 +84,22 @@ void VRGuiScene::setTransform(VRTransformPtr e) {
         a = e->getWorldAt();
         u = e->getWorldUp();
         d = e->getWorldDirection();
-        //s = e->getWorldScale(); TODO!
-        s = e->getScale();
+        s = e->getWorldScale();
     }
+
+    uiSignal( "on_sg_setup_trans", {
+        {"pos", toString(f)},
+        {"at", toString(a)},
+        {"dir", toString(u)},
+        {"up", toString(d)},
+        {"scale", toString(s)},
+        {"useAt", toString(e->get_orientation_mode())},
+        {"local", toString(transformModeLocal)}
+    } );
 
     /*auto c = e->getConstraint();
     Vec3d tc = c->getTConstraint();
     Vec3d rc = c->getRConstraint();*/
-
-    posEntry.set(f);
-    atEntry.set(a);
-    dirEntry.set(d);
-    upEntry.set(u);
-    scaleEntry.set(s);
-    //ctEntry.set(tc);
-
-    atEntry.setFontColor(Vec3d(0, 0, 0));
-    dirEntry.setFontColor(Vec3d(0, 0, 0));
-    if (e->get_orientation_mode())  atEntry.setFontColor(Vec3d(0.7, 0.7, 0.7));
-    else                            dirEntry.setFontColor(Vec3d(0.7, 0.7, 0.7));
 
     /*bool doTc = c->hasTConstraint();
     bool doRc = c->hasRConstraint();
@@ -454,13 +449,12 @@ void VRGuiScene::on_treeview_select(string sID) {
     if (getSelected()->hasTag("geometry")) selected_geometry = static_pointer_cast<VRGeometry>(getSelected());
 }
 
-void VRGuiScene::on_edit_object_name(const char* path_string, const char* new_text) {
+void VRGuiScene::on_treeview_rename(string ID, string name) {
     if(!trigger_cbs) return;
-    /*getSelected()->setName(new_text);
-    VRGuiTreeView tree_view("treeview6");
-    tree_view.setSelectedStringValue(0, getSelected()->getName());
-    updateObjectForms();
-    if (getSelected()->getType() == "Camera") VRGuiSignals::get()->getSignal("camera_added")->triggerAll<VRDevice>();*/
+    auto obj = getSelected();
+    obj->setName(name);
+    if (obj->getType() == "Camera") VRGuiSignals::get()->getSignal("camera_added")->triggerAll<VRDevice>();
+    uiSignal("on_tv_node_rename", {{"treeview","scenegraph"}, {"node",toString(obj->getID())}, {"name",obj->getName()}});
 }
 
 // --------------------------
@@ -1144,8 +1138,8 @@ bool VRGuiScene::setMaterial_diffuse() {
     c[3] = geo->getMaterial()->getTransparency();
     c = chooseColor("mat_diffuse", c);
     geo->getMaterial()->setDiffuse(toColor3f(c));
-    geo->getMaterial()->setTransparency(c[3]);
-    return true;*/
+    geo->getMaterial()->setTransparency(c[3]);*/
+    return true;
 }
 
 bool VRGuiScene::setMaterial_specular() {
@@ -1153,8 +1147,8 @@ bool VRGuiScene::setMaterial_specular() {
     auto geo = selected_geometry.lock();
     if(!geo) return true;
     /*Color4f c = chooseColor("mat_specular", toColor4f(geo->getMaterial()->getSpecular()));
-    geo->getMaterial()->setSpecular(toColor3f(c));
-    return true;*/
+    geo->getMaterial()->setSpecular(toColor3f(c));*/
+    return true;
 }
 
 bool VRGuiScene::setMaterial_ambient() {
@@ -1162,8 +1156,8 @@ bool VRGuiScene::setMaterial_ambient() {
     auto geo = selected_geometry.lock();
     if(!geo) return true;
     /*Color4f c = chooseColor("mat_ambient", toColor4f(geo->getMaterial()->getAmbient()));
-    geo->getMaterial()->setAmbient(toColor3f(c));
-    return true;*/
+    geo->getMaterial()->setAmbient(toColor3f(c));*/
+    return true;
 }
 
 void VRGuiScene::setMaterial_pointsize() { // TODO
@@ -1243,7 +1237,6 @@ VRGuiScene::VRGuiScene() { // TODO: reduce callbacks with templated functions
     connect_signal<void, GdkDragContext*>((GtkWidget*)tree_view, bind(&VRGuiScene::on_drag_end, this, placeholders::_1), "drag_end" );
     connect_signal<void, GdkDragContext*, int, int, GtkSelectionData*, guint, guint>((GtkWidget*)tree_view, bind(&VRGuiScene::on_drag_data_receive, this, placeholders::_1, placeholders::_2, placeholders::_3, placeholders::_4, placeholders::_5, placeholders::_6), "drag_data_received" );
 
-    setCellRendererCallback("cellrenderertext7", bind(&VRGuiScene::on_edit_object_name, this, placeholders::_1, placeholders::_2) );
     setCellRendererCallback("cellrenderertext4", bind(&VRGuiScene::on_edit_distance, this, placeholders::_1, placeholders::_2) );
     setCellRendererCallback("cellrenderertext33", bind(&VRGuiScene::on_edit_primitive_params, this, placeholders::_1, placeholders::_2) );
 
@@ -1328,6 +1321,7 @@ VRGuiScene::VRGuiScene() { // TODO: reduce callbacks with templated functions
     auto mgr = OSG::VRGuiSignals::get();
     mgr->addCallback("ui_change_scene_tab", [&](OSG::VRGuiSignals::Options o) { if (o["tab"] == "Scenegraph") updateTreeView(); return true; } );
     mgr->addCallback("treeview_select", [&](OSG::VRGuiSignals::Options o) { if (o["treeview"] == "scenegraph") on_treeview_select( o["node"] ); return true; } );
+    mgr->addCallback("treeview_rename", [&](OSG::VRGuiSignals::Options o) { if (o["treeview"] == "scenegraph") on_treeview_rename( o["node"], o["name"] ); return true; } );
 
     mgr->addCallback("sg_toggle_visible", [&](OSG::VRGuiSignals::Options o) { on_toggle_visible(toBool(o["visible"])); return true; } );
     mgr->addCallback("sg_toggle_pickable", [&](OSG::VRGuiSignals::Options o) { on_toggle_pickable(toBool(o["pickable"])); return true; } );

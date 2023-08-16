@@ -23,11 +23,11 @@ class ImTreeview {
             ImInput* input = 0;
             int options;
             bool isSelected = false;
-            vector<Node> children;
+            vector<Node*> children;
 
             Node() {}
             Node(string ID, string tvID, string label, int options);
-            Node& add(string childID, string child, int options);
+            Node* add(string childID, string child, int options);
             bool render(int lvl = 0);
             void renderButton();
             void renderEditable();
@@ -35,13 +35,17 @@ class ImTreeview {
 
     public:
         string ID;
+        string selected;
         Node root;
         map<string, Node*> nodes;
+
+        void handleSelection(string node);
 
     public:
         ImTreeview(string ID);
 
-        Node& add(string ID, string label, int options, string parent = "");
+        Node* add(string ID, string label, int options, string parent = "");
+        void rename(string ID, string label);
         void render();
         void clear();
 };
