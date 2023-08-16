@@ -63,7 +63,7 @@ class VRGuiScene {
         void on_scale_changed(Vec3d v);
         void on_change_lod_center(Vec3d v);
         void on_edit_T_constraint(Vec3d v);
-        void on_toggle_T_mode();
+        void on_toggle_global(bool global);
         void on_toggle_T_constraint_mode();
         void on_toggle_phys();
         void on_toggle_dynamic();

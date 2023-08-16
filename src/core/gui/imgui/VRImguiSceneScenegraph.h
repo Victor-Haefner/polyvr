@@ -11,14 +11,6 @@ using namespace std;
 class ImScenegraph {
     private:
         ImTreeview tree;
-
-        Im_Vector position;
-        Im_Vector atvector;
-        Im_Vector direction;
-        Im_Vector upvector;
-        Im_Vector scale;
-
-
         string title;
         string selected;
 
@@ -27,6 +19,13 @@ class ImScenegraph {
         bool visible;
         bool pickable;
         bool castShadow;
+
+        Im_Vector position;
+        Im_Vector atvector;
+        Im_Vector direction;
+        Im_Vector upvector;
+        Im_Vector scale;
+        bool global;
 
     public:
         ImScenegraph();
