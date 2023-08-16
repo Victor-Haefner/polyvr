@@ -24,6 +24,7 @@ class VRMachiningSimulation : public std::enable_shared_from_this<VRMachiningSim
 		double run_time = 0;
 		Vec3d eeD;
 		Vec3d eeP0;
+		Vec3d origin;
 
 		VRTimer timer;
 		VRAnimationPtr anim;
@@ -41,6 +42,7 @@ class VRMachiningSimulation : public std::enable_shared_from_this<VRMachiningSim
 		void setKinematics(VRMachiningKinematicsPtr kinematics);
 		void setCode(VRMachiningCodePtr code);
 		void setOnFinish(VRUpdateCbPtr cb);
+		void setOrigin(Vec3d O);
 
 		void start(double sM = 1.0);
 		void stop();
