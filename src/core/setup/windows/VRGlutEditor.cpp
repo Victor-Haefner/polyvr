@@ -94,6 +94,7 @@ VRGlutEditor::VRGlutEditor() {
     /** OpenSG Window **/
     glutSetWindow(topWin);
     winGL = glutCreateSubWindow(topWin, 0,0,width*0.6, height*0.6);
+    glutPopWindow();
     glutEditors[winGL] = this;
 
     cout << " Glut create window" << endl;
