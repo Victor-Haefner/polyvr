@@ -15,7 +15,7 @@ ostream& operator<<(ostream& os, const ImVec2& s) {
     return os;
 }
 
-ostream& operator<<(ostream& os, const Rectangle& s) {
+ostream& operator<<(ostream& os, const ImRectangle& s) {
     os << "[" << s.left << ", " << s.right << ", " << s.top << ", " << s.bottom << "]";
     return os;
 }
@@ -25,7 +25,7 @@ ostream& operator<<(ostream& os, const Surface& s) {
     return os;
 }
 
-void Surface::compute(const Surface& parent, const Rectangle& area) {
+void Surface::compute(const Surface& parent, const ImRectangle& area) {
     width  = round( parent.width * (area.right - area.left) );
     height = round( parent.height * (area.top - area.bottom) );
     width = max(width, 10);

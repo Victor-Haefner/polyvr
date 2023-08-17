@@ -148,23 +148,23 @@ class E57Loader {
                 E57Scan& scan = scans[scanI];
 
                 vector<SourceDestBuffer> destBuffers;
-                double x[N];
-                double y[N];
-                double z[N];
-                double r[N];
-                double g[N];
-                double b[N];
-                double i[N];
+                vector<double> x(N, 0);
+                vector<double> y(N, 0);
+                vector<double> z(N, 0);
+                vector<double> r(N, 0);
+                vector<double> g(N, 0);
+                vector<double> b(N, 0);
+                vector<double> i(N, 0);
 
-                destBuffers.push_back(SourceDestBuffer(imf, "cartesianX", x, N, true));
-                destBuffers.push_back(SourceDestBuffer(imf, "cartesianY", y, N, true));
-                destBuffers.push_back(SourceDestBuffer(imf, "cartesianZ", z, N, true));
+                destBuffers.push_back(SourceDestBuffer(imf, "cartesianX", &x[0], N, true));
+                destBuffers.push_back(SourceDestBuffer(imf, "cartesianY", &y[0], N, true));
+                destBuffers.push_back(SourceDestBuffer(imf, "cartesianZ", &z[0], N, true));
                 if (scan.hasCol) {
-                    destBuffers.push_back(SourceDestBuffer(imf, "colorRed", r, N, true));
-                    destBuffers.push_back(SourceDestBuffer(imf, "colorGreen", g, N, true));
-                    destBuffers.push_back(SourceDestBuffer(imf, "colorBlue", b, N, true));
+                    destBuffers.push_back(SourceDestBuffer(imf, "colorRed", &r[0], N, true));
+                    destBuffers.push_back(SourceDestBuffer(imf, "colorGreen", &g[0], N, true));
+                    destBuffers.push_back(SourceDestBuffer(imf, "colorBlue", &b[0], N, true));
                 } else if (scan.hasInt) {
-                    destBuffers.push_back(SourceDestBuffer(imf, "intensity", i, N, true));
+                    destBuffers.push_back(SourceDestBuffer(imf, "intensity", &i[0], N, true));
                 }
 
                 int gotCount = 0;

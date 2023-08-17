@@ -22,13 +22,13 @@ void renderInput(string& label, string ID, string signal, string idKey) {
 void renderCombo(string& opt, vector<string>& options, string ID, string signal, string idKey) {
     ID = "##"+ID;
     int labelI = 0;
-    const char* optionsCstr[options.size()];
+    vector<const char*> optionsCstr(options.size(),0);
     for (int i=0; i<options.size(); i++) {
         optionsCstr[i] = options[i].c_str();
         if (options[i] == opt) labelI = i;
     }
 
-    if (ImGui::Combo(ID.c_str(), &labelI, optionsCstr, options.size())) {
+    if (ImGui::Combo(ID.c_str(), &labelI, &optionsCstr[0], optionsCstr.size())) {
         opt = options[labelI];
         uiSignal(signal, {{"idKey",idKey}, {"newValue",opt}});
     }
@@ -350,20 +350,20 @@ void ImScriptEditor::render() {
     if (ImGui::CollapsingHeader("Options", flags)) {
         ImGui::Text("Type: ");
         ImGui::SameLine();
-        const char* types[typeList.size()];
+        vector<const char*> types(typeList.size(),0);
         for (int i=0; i<typeList.size(); i++) types[i] = typeList[i].c_str();
-        if (ImGui::Combo("##scriptTypesCombo", &current_type, types, typeList.size())) {
+        if (ImGui::Combo("##scriptTypesCombo", &current_type, &types[0], types.size())) {
             string type = "Python";
             if (current_type == 1) type = "GLSL";
             if (current_type == 2) type = "HTML";
             uiSignal("script_editor_change_type", {{"type",type}});
         }
 
-        const char* groupsCstr[groupList.size()];
+        vector<const char*> groupsCstr(groupList.size(),0);
         for (int i=0; i<groupList.size(); i++) groupsCstr[i] = groupList[i].c_str();
         ImGui::Text("Group:");
         ImGui::SameLine();
-        if (ImGui::Combo("##groupsCombo", &current_group, groupsCstr, groupList.size())) {
+        if (ImGui::Combo("##groupsCombo", &current_group, &groupsCstr[0], groupsCstr.size())) {
             string group = groups[groupList[current_group]];
             uiSignal("script_editor_change_group", {{"group",group}});
         }

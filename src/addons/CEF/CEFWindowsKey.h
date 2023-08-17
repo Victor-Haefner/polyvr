@@ -1,13 +1,7 @@
 #ifndef CEFWINDOWSKEY_H_INCLUDED
 #define CEFWINDOWSKEY_H_INCLUDED
 
-/*#include <gdk/gdkkeysyms.h>
-#ifdef _WIN32
-#include <gdk/gdkwin32.h>
-#endif
 #ifndef _WIN32
-#include <gdk/gdkx.h>
-#include <gdk/gdkkeysyms-compat.h>*/
 #define XK_3270  // for XK_3270_BackTab
 #include <X11/keysym.h>
 #include <X11/XF86keysym.h>
@@ -17,6 +11,7 @@
 #define XK_XKB_KEYS
 #define XK_LATIN1
 #define XK_KOREAN
+#define XK_3270
 #include "CEFkeyssymdef.h"
 #endif
 
@@ -722,3 +717,5 @@ int GetControlCharacter(KeyboardCode windows_key_code, bool shift) {
     }
   }
 }
+
+#endif

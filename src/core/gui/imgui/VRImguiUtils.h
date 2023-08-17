@@ -12,7 +12,7 @@
 
 using namespace std;
 
-struct Rectangle {
+struct ImRectangle {
     float left = 0;
     float right = 1;
     float bottom = 0;
@@ -25,7 +25,7 @@ struct Surface {
     int width = 10;
     int height = 10;
 
-    void compute(const Surface& parent, const Rectangle& area);
+    void compute(const Surface& parent, const ImRectangle& area);
 };
 
 struct ResizeEvent {

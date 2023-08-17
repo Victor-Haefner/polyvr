@@ -17,13 +17,13 @@ using namespace std;
 
 class ImSection : public ImWidget {
     public:
-        Rectangle layout;
+        ImRectangle layout;
         Surface surface;
         Surface parentSurface;
         ResizeEvent resizer;
         ImGuiWindowFlags flags = 0;
 
-        ImSection(string n, Rectangle r);
+        ImSection(string n, ImRectangle r);
         void resize(const Surface& parent);
         void updateLayout(const Surface& newSize);
 
@@ -33,7 +33,7 @@ class ImSection : public ImWidget {
 
 class ImToolbar : public ImSection {
     public:
-        ImToolbar(Rectangle r);
+        ImToolbar(ImRectangle r);
         void begin() override;
 };
 
@@ -45,7 +45,7 @@ class ImSidePanel : public ImSection {
 
         string selected = "Apps";
 
-        ImSidePanel(Rectangle r);
+        ImSidePanel(ImRectangle r);
         void begin() override;
 
         void openTabs(string tab1, string tab2);
@@ -55,7 +55,7 @@ class ImConsolesSection : public ImSection {
     public:
         ImWidgetPtr consoles;
 
-        ImConsolesSection(Rectangle r);
+        ImConsolesSection(ImRectangle r);
         void begin() override;
 };
 

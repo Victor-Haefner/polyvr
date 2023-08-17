@@ -1,3 +1,7 @@
+#ifdef _WIN32
+#include <GL/glew.h>
+#endif
+
 #include "VRGui.h"
 
 #include <OpenSG/OSGGeoProperties.h>
@@ -20,7 +24,11 @@
 #include "core/gui/VRGuiConsole.h"
 
 #include <imgui.h>
+#ifdef _WIN32
+#include <imgui_impl_opengl3.h>
+#else
 #include <backends/imgui_impl_opengl3.h>
+#endif
 #include <GL/gl.h>
 #include <GL/glext.h>
 

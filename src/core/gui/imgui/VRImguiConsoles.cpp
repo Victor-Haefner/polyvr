@@ -156,13 +156,13 @@ ImViewControls::ImViewControls() {
 }
 
 void ImViewControls::render() {
-    const char* tmpCameras[cameras.size()];
+    vector<const char*> tmpCameras(cameras.size(), 0);
     for (int i=0; i<cameras.size(); i++) tmpCameras[i] = cameras[i].c_str();
     ImGui::SameLine();
     ImGui::Text("Camera:");
     ImGui::SameLine();
     ImGui::SetNextItemWidth(150);
-    if (ImGui::Combo("##Cameras", &current_camera, tmpCameras, IM_ARRAYSIZE(tmpCameras))) {
+    if (ImGui::Combo("##Cameras", &current_camera, &tmpCameras[0], tmpCameras.size())) {
         uiSignal("view_switch_camera", {{"cam",cameras[current_camera]}});
     }
 

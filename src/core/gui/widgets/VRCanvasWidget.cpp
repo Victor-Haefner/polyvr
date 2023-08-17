@@ -50,6 +50,7 @@ Vec3d VRCanvasWidget::getSize() {
     /*int W = gtk_widget_get_allocated_width(GTK_WIDGET(widget));
     int H = gtk_widget_get_allocated_height(GTK_WIDGET(widget));
     return Vec3d(W*0.5, H*0.5, 0);*/
+    return Vec3d();
 }
 
 Vec2d VRCanvasWidget::getAnchorPoint(Vec2d p) {

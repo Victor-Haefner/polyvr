@@ -5,8 +5,13 @@
 #include <GL/glew.h>
 #include <GL/glut.h>
 
+#ifdef _WIN32
+#include <imgui_impl_glut.h>
+#include <imgui_impl_opengl3.h>
+#else
 #include <backends/imgui_impl_glut.h>
 #include <backends/imgui_impl_opengl3.h>
+#endif
 
 #include <core/gui/VRGuiSignals.h>
 #include <core/gui/VRGuiManager.h>
@@ -23,7 +28,7 @@
 ImGuiContext* mainContext = 0;
 ImGuiContext* popupContext = 0;
 
-ImSection::ImSection(string n, Rectangle r) : ImWidget(n), layout(r) {
+ImSection::ImSection(string n, ImRectangle r) : ImWidget(n), layout(r) {
     resize({0,0,800,800});
 
     flags |= ImGuiWindowFlags_NoTitleBar;
@@ -75,9 +80,9 @@ void ImSection::resize(const Surface& parent) {
     resizer.size = ImVec2(surface.width, surface.height);
 }
 
-ImToolbar::ImToolbar(Rectangle r) : ImSection("Toolbar", r) {}
+ImToolbar::ImToolbar(ImRectangle r) : ImSection("Toolbar", r) {}
 
-ImSidePanel::ImSidePanel(Rectangle r) : ImSection("SidePanel", r) {
+ImSidePanel::ImSidePanel(ImRectangle r) : ImSection("SidePanel", r) {
     appManager = ImWidgetPtr(new ImAppManager());
     setupManager = ImWidgetPtr(new ImSetupManager());
     sceneEditor = ImWidgetPtr(new ImSceneEditor());
@@ -124,7 +129,7 @@ void ImSidePanel::begin() {
     }
 }
 
-ImConsolesSection::ImConsolesSection(Rectangle r) : ImSection("Consoles", r) {
+ImConsolesSection::ImConsolesSection(ImRectangle r) : ImSection("Consoles", r) {
     consoles = ImWidgetPtr(new ImConsoles());
 }
 
@@ -365,7 +370,7 @@ void VRImguiEditor::resolveResize(const string& name, const ResizeEvent& resizer
 
     //cout << "     resolveResize " << name << ", " << resizer << endl;
     if (name == "SidePanel") {
-        sidePanel.updateLayout({ resizer.pos.x, resizer.pos.y, resizer.size.x, resizer.size.y });
+        sidePanel.updateLayout({ int(resizer.pos.x), int(resizer.pos.y), int(resizer.size.x), int(resizer.size.y) });
         consoles.layout.left = sidePanel.layout.right;
         consoles.resize(consoles.parentSurface);
         toolbar.layout.bottom = sidePanel.layout.top;
@@ -377,7 +382,7 @@ void VRImguiEditor::resolveResize(const string& name, const ResizeEvent& resizer
     }
 
     if (name == "Consoles") {
-        consoles.updateLayout({ resizer.pos.x, resizer.pos.y, resizer.size.x, resizer.size.y });
+        consoles.updateLayout({ int(resizer.pos.x), int(resizer.pos.y), int(resizer.size.x), int(resizer.size.y) });
         sidePanel.layout.right = consoles.layout.left;
         sidePanel.resize(sidePanel.parentSurface);
         glArea.layout.left = consoles.layout.left;

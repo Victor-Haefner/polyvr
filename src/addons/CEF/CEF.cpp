@@ -307,7 +307,7 @@ void CEF::initiate() {
 
 #ifdef _WIN32
     //requestContext = CefRequestContext::CreateContext(handler.get());
-    internals->browser = CefBrowserHost::CreateBrowserSync(win, client, "", browser_settings, nullptr, nullptr);
+    internals->browser = CefBrowserHost::CreateBrowserSync(win, internals->client, "", browser_settings, nullptr, nullptr);
     internals->browser->GetHost()->WasResized();
 #else
     internals->browser = CefBrowserHost::CreateBrowserSync(win, internals->client, "", browser_settings, 0);
