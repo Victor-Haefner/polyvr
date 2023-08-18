@@ -53,4 +53,6 @@ class ImWidget {
         virtual void end();
 };
 
+ImVec4 colorFromString(const string& c);
+
 #endif // VRIMGUIUTILS_H_INCLUDED

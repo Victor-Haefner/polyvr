@@ -91,6 +91,8 @@ class VRPointCloud : public VRTransform {
         void addPoint(Vec3d p, Color3ub c);
         void addPoint(Vec3d p, Splat c);
 
+        vector<Vec3d> radiusSearch(Vec3d p, double r);
+
         void convert(string pathIn, string pathOut);
         void convertMerge(vector<string> pathIn, string pathOut);
         void genTestFile(string path, size_t N, bool doColor);

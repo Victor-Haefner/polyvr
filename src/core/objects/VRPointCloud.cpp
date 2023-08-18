@@ -697,6 +697,11 @@ void VRPointCloud::externalSort(string path, size_t chunkSize, double binSize) {
     mergeAllChunks();
 }
 
+vector<Vec3d> VRPointCloud::radiusSearch(Vec3d p, double r) {
+    vector<Vec3d> res = octree->radiusPointSearch(p, r);
+    return res;
+}
+
 void VRPointCloud::externalComputeSplats(string path) {
     auto params = readPCBHeader(path);
     cout << "  externalComputeSplats headers " << toString(params) << endl;
@@ -1117,7 +1122,6 @@ void main( void ) {
 
 string VRPointCloud::splatGP =
 "#version 150\n"
-"#extension GL_EXT_geometry_shader4 : enable\n"
 GLSL(
 layout (points) in;
 layout (triangle_strip, max_vertices=6) out;

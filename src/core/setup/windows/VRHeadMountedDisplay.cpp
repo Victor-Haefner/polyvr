@@ -342,7 +342,7 @@ void VRHeadMountedDisplay::addController(int devID) {
 		dev->clearDynTrees();
 		dev->addDynTree(scene->getRoot());
 
-		for (auto cef : CEF::getInstances()) cef->addMouse(dev, 0, 0, -1, -1, -1);
+		for (auto cef : CEF::getInstances()) cef->addMouse(dev, 0, 0, -1, -1, -1, -1);
 		for (auto script : scene->getScripts()) script.second->updateDeviceTrigger();
 
 #ifndef WITHOUT_GTK

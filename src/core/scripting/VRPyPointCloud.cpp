@@ -24,5 +24,6 @@ PyMethodDef VRPyPointCloud::methods[] = {
     {"genTestFile", PyWrap( PointCloud, genTestFile, "Generate a pointcloud, regular cube grid, (.pcb) file (path, Npoints, doColors)", void, string, size_t, bool ) },
     {"genTestFile2", PyWrap( PointCloud, genTestFile2, "Generate a pointcloud, ico sphere surface, (.pcb) file (path, Niterations, doColors, splatSize[mm])", void, string, size_t, bool, int ) },
     {"projectOnPanorama", PyWrap( PointCloud, projectOnPanorama, "Project point onto panorama image", Vec3ub, Vec3d, VRTexturePtr, PosePtr ) },
+    {"radiusSearch", PyWrap( PointCloud, radiusSearch, "Executes a radius search and returns point positions around P inside radius r, (P, r)", vector<Vec3d>, Vec3d, double ) },
     {NULL}  /* Sentinel */
 };

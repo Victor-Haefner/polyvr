@@ -205,6 +205,10 @@ VRTextureRendererPtr VRTextureRenderer::create(string name, bool readback) {
     return tg;
 }
 
+Vec2i VRTextureRenderer::getResolution() {
+    return Vec2i(data->fboWidth, data->fboHeight);
+}
+
 void VRTextureRenderer::updateSceneBackground() {
     for (auto i : TRinstances) {
         auto tg = i.lock();
