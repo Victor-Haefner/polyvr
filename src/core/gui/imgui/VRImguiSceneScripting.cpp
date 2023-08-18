@@ -22,13 +22,13 @@ void renderInput(string& label, string ID, string signal, string idKey) {
 void renderCombo(string& opt, vector<string>& options, string ID, string signal, string idKey) {
     ID = "##"+ID;
     int labelI = 0;
-    const char* optionsCstr[options.size()];
+    vector<const char*> optionsCstr(options.size(),0);
     for (int i=0; i<options.size(); i++) {
         optionsCstr[i] = options[i].c_str();
         if (options[i] == opt) labelI = i;
     }
 
-    if (ImGui::Combo(ID.c_str(), &labelI, optionsCstr, options.size())) {
+    if (ImGui::Combo(ID.c_str(), &labelI, &optionsCstr[0], optionsCstr.size())) {
         opt = options[labelI];
         uiSignal(signal, {{"idKey",idKey}, {"newValue",opt}});
     }
@@ -50,6 +50,7 @@ ImScriptList::ImScriptList() {
     mgr->addCallback("scripts_list_clear", [&](OSG::VRGuiSignals::Options o){ clear(); return true; } );
     mgr->addCallback("scripts_list_add_group", [&](OSG::VRGuiSignals::Options o){ addGroup(o["name"], o["ID"]); return true; } );
     mgr->addCallback("scripts_list_add_script", [&](OSG::VRGuiSignals::Options o){ addScript(o["name"], o["group"], toFloat(o["perf"])); return true; } );
+    mgr->addCallback("scripts_list_set_color", [&](OSG::VRGuiSignals::Options o){ setColor(o["name"], o["fg"], o["bg"]); return true; } );
     mgr->addCallback("openUiScript", [&](OSG::VRGuiSignals::Options o) {
         selected = o["name"];
         uiSignal("select_script", {{"script",selected}});
@@ -78,6 +79,18 @@ void ImScriptList::addScript(string name, string groupID, float time) {
     computeMinWidth();
 }
 
+void ImScriptList::setColor(string name, string fg, string bg) {
+    for (auto& g : groups) {
+        for (auto& s : g.second.scripts) {
+            if (s.name == name) {
+                s.fg = fg;
+                s.bg = bg;
+                return;
+            }
+        }
+    }
+}
+
 void ImScriptList::computeMinWidth() {
     ImGuiStyle& style = ImGui::GetStyle();
     width = 50;
@@ -91,24 +104,41 @@ void ImScriptList::computeMinWidth() {
 
 void ImScriptList::renderScriptEntry(ImScriptEntry& scriptEntry) {
     string& script = scriptEntry.name;
+    string bID = script + "##script";
     //ImVec4 colorSelected(0.3f, 0.5f, 1.0f, 1.0f);
-    bool isSelected = bool(selected == script);
+    bool isSelected = bool(selected == bID);
     //if (isSelected) ImGui::PushStyleColor(ImGuiCol_Button, colorSelected);
     if (!isSelected) {
-        if (ImGui::Button(script.c_str())) {
-            selected = script;
+		ImGui::PushStyleColor(ImGuiCol_Text, colorFromString(scriptEntry.fg));
+		ImGui::PushStyleColor(ImGuiCol_Button, colorFromString(scriptEntry.bg));
+
+        if (ImGui::Button(bID.c_str())) {
+            selected = bID;
             uiSignal("select_script", {{"script",script}});
         }
+
+		ImGui::PopStyleColor();
+		ImGui::PopStyleColor();
     } else {
+		ImGui::PushStyleColor(ImGuiCol_Text, colorFromString(scriptEntry.fg));
+		ImGui::PushStyleColor(ImGuiCol_FrameBg, colorFromString(scriptEntry.bg));
+		ImGui::PushStyleColor(ImGuiCol_Border, colorFromString("#66AAFF"));
+		ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 2);
+
         if (!input) input = new ImInput("##renameScript", "", "Script0", ImGuiInputTextFlags_EnterReturnsTrue);
         input->value = script;
         if (input->render(-1)) {
             script = input->value;
-            selected = script;
+            selected = bID;
             uiSignal("rename_script", {{"name",script}});
             uiSignal("select_script", {{"script",script}});
             computeMinWidth();
         }
+
+		ImGui::PopStyleVar();
+		ImGui::PopStyleColor();
+		ImGui::PopStyleColor();
+		ImGui::PopStyleColor();
     }
 
     if (doPerf) {
@@ -121,10 +151,12 @@ void ImScriptList::renderScriptEntry(ImScriptEntry& scriptEntry) {
 }
 
 void ImScriptList::renderGroupEntry(string& group) {
-    bool isSelected = bool(selected == group);
+    string bID = group + "##group";
+
+    bool isSelected = bool(selected == bID);
     if (!isSelected) {
-        if (ImGui::Button(group.c_str())) {
-            selected = group;
+        if (ImGui::Button(bID.c_str())) {
+            selected = bID;
             uiSignal("select_group", {{"group",group}});
         }
     } else {
@@ -132,7 +164,7 @@ void ImScriptList::renderGroupEntry(string& group) {
         input->value = group;
         if (input->render(-1)) {
             group = input->value;
-            selected = group;
+            selected = bID;
             uiSignal("rename_group", {{"name",group}});
         }
     }
@@ -229,6 +261,8 @@ void ImScriptEditor::editorCommand(string cmd) {
 
     if (cmd == "duplicateLine") {
         bool duplicateLine = false;
+        auto p0 = imEditor.GetCursorPosition();
+
         if (!imEditor.HasSelection()) {
             duplicateLine = true;
             auto p = imEditor.GetCursorPosition();
@@ -241,13 +275,14 @@ void ImScriptEditor::editorCommand(string cmd) {
         auto ct = ImGui::GetClipboardText();
         string cts = ct?ct:"";
         imEditor.Copy();
-        imEditor.Paste();// instead of two pastes do unselect
+        imEditor.Paste(); // instead of two pastes do unselect
         imEditor.Paste();
         ImGui::SetClipboardText(cts.c_str());
 
         if (duplicateLine) {
             auto p = imEditor.GetCursorPosition();
             p.mLine -= 1;
+            p.mColumn = p0.mColumn;
             imEditor.SetCursorPosition(p);
         }
     }
@@ -315,20 +350,20 @@ void ImScriptEditor::render() {
     if (ImGui::CollapsingHeader("Options", flags)) {
         ImGui::Text("Type: ");
         ImGui::SameLine();
-        const char* types[typeList.size()];
+        vector<const char*> types(typeList.size(),0);
         for (int i=0; i<typeList.size(); i++) types[i] = typeList[i].c_str();
-        if (ImGui::Combo("##scriptTypesCombo", &current_type, types, typeList.size())) {
+        if (ImGui::Combo("##scriptTypesCombo", &current_type, &types[0], types.size())) {
             string type = "Python";
             if (current_type == 1) type = "GLSL";
             if (current_type == 2) type = "HTML";
             uiSignal("script_editor_change_type", {{"type",type}});
         }
 
-        const char* groupsCstr[groupList.size()];
+        vector<const char*> groupsCstr(groupList.size(),0);
         for (int i=0; i<groupList.size(); i++) groupsCstr[i] = groupList[i].c_str();
         ImGui::Text("Group:");
         ImGui::SameLine();
-        if (ImGui::Combo("##groupsCombo", &current_group, groupsCstr, groupList.size())) {
+        if (ImGui::Combo("##groupsCombo", &current_group, &groupsCstr[0], groupsCstr.size())) {
             string group = groups[groupList[current_group]];
             uiSignal("script_editor_change_group", {{"group",group}});
         }

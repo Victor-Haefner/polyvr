@@ -1,5 +1,6 @@
 #include "VRPointCloud.h"
 #include "core/objects/material/VRMaterial.h"
+#include "core/objects/material/VRTexture.h"
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/geometry/VRGeoData.h"
 #include "core/objects/geometry/VRPrimitive.h"
@@ -291,7 +292,7 @@ Vec2ub VRPointCloud::toSpherical(const Vec3d& v) {
     return Vec2ub(255.0*a/Pi, 255.0*b/(2*Pi));
 }
 
-void VRPointCloud::genTestFile2(string path, size_t N_itr, bool doColor) {
+void VRPointCloud::genTestFile2(string path, size_t N_itr, bool doColor, int splatSize) {
     auto sphere = VRGeometry::create("spherePC");
     sphere->setPrimitive("Sphere 1 "+toString(N_itr));
     VRGeoData data(sphere);
@@ -325,7 +326,7 @@ void VRPointCloud::genTestFile2(string path, size_t N_itr, bool doColor) {
         Vec3d v = O.up();
         Vec2ub U = toSpherical(u);
         Vec2ub V = toSpherical(v);
-        char W = 46; // mm
+        char W = splatSize; // mm
 
         stream.write((const char*)&P[0], sizeof(Vec3d));
         if (doColor) stream.write((const char*)&C[0], sizeof(Vec3ub));
@@ -696,6 +697,11 @@ void VRPointCloud::externalSort(string path, size_t chunkSize, double binSize) {
     mergeAllChunks();
 }
 
+vector<Vec3d> VRPointCloud::radiusSearch(Vec3d p, double r) {
+    vector<Vec3d> res = octree->radiusPointSearch(p, r);
+    return res;
+}
+
 void VRPointCloud::externalComputeSplats(string path) {
     auto params = readPCBHeader(path);
     cout << "  externalComputeSplats headers " << toString(params) << endl;
@@ -844,7 +850,7 @@ void VRPointCloud::externalComputeSplats(string path) {
     rename(wpath.c_str(), path.c_str());
 }
 
-void VRPointCloud::externalColorize(string path, string imgTable, float localNorth, float localEast, float pDist, int i1, int i2) {
+void VRPointCloud::externalColorize(string path, string imgTable, PosePtr pcPose, float localNorth, float localEast, float pDist, int i1, int i2) {
     cout << "externalColorize " << path << endl;
 
     // crawl images and create image table and path
@@ -856,30 +862,28 @@ void VRPointCloud::externalColorize(string path, string imgTable, float localNor
         double lat;
         double lon;
         Pose pose;
+        int index = 0;
     };
 
     VRPlanet earth("earth");
     earth.localize(localNorth, localEast);
 
     // load viewpoints
-    Vec3d lp;
+    string imgDir = getFolderName(imgTable);
     vector<Viewpoint> viewpoints;
     while (getline(imgData, line)) {
         Viewpoint vp;
         auto data = splitString(line, '|');
 
-        vp.imgPath = data[0];
+        vp.imgPath = imgDir+"/"+data[0];
         vp.lat = toFloat(data[2]) + toFloat(data[3])/60.0 + toFloat(data[4]+"."+data[5])/3600.0;
         vp.lon = toFloat(data[7]) + toFloat(data[8])/60.0 + toFloat(data[9]+"."+data[10])/3600.0;
 
         Vec3d p = earth.fromLatLongPosition(vp.lat, vp.lon, true);
-        Vec3d d = p-lp;
-        d.normalize();
-        vp.pose.set(p, d);
+        vp.pose.set(p);
 
         //cout << toString(data) << ", " << vp.lat << ", " << vp.lon << "  " << p << endl;
         viewpoints.push_back(vp);
-        lp = p;
     }
 
     cout << " sort viewpoints" << endl;
@@ -887,6 +891,19 @@ void VRPointCloud::externalColorize(string path, string imgTable, float localNor
         return a.imgPath > b.imgPath;
     });
     cout << "  sort done" << endl;
+
+    int j = 0;
+    Vec3d lp = viewpoints[1].pose.pos();
+    for (auto& vp : viewpoints) { // recompute directions AFTER sort!
+        Vec3d p = vp.pose.pos();
+        Vec3d d = p-lp;
+        if (j == 0) d = lp - p;
+        d.normalize();
+        vp.pose.setDir(d);
+        vp.index = j;
+        lp = p;
+        j++;
+    }
 
     // quadtree and path
     auto vpTree = Quadtree::create(1.0);
@@ -897,19 +914,19 @@ void VRPointCloud::externalColorize(string path, string imgTable, float localNor
         Vec3d p = vp.pose.pos();
         vpTree->add(p, &vp);
 
-        if (i > 0 && i > i1 && i < i2) {
-            double d = p.dist(lp);
+        double d = p.dist(lp);
+        if (i > i1 && i < i2) {
             if (d > 1e-5) {
                 Vec3d D = p-lp;
                 D.normalize();
                 if (d > pDist) {
                     if (vpPath->size() > 2) {
-                        vpPath->compute(8);
+                        vpPath->compute(2);
                         vpPaths.push_back(vpPath);
                     }
                     vpPath = Path::create();
                 } else {
-                    //cout << "  add point: " << vp.pose.pos() << " " << vp.pose.dir() << " " << vp.pose.dir().dot(D) << endl;
+                    //cout << "  add point: " << vp.pose.pos() << "   " << vp.pose.dir() << "   " << vp.pose.dir().dot(D) << endl;
                     vpPath->addPoint(vp.pose);
                 }
             }
@@ -933,6 +950,120 @@ void VRPointCloud::externalColorize(string path, string imgTable, float localNor
     pathTool->setVisuals(0,1);
     pathTool->setBezierVisuals(0,0);
     pathTool->update();
+
+
+    // go through pc and change color
+
+    auto params = readPCBHeader(path);
+    cout << "  externalColorize headers " << toString(params) << endl;
+
+    bool hasCol = contains( params["format"], "r");
+    bool hasSpl = contains( params["format"], "u");
+    bool hasOct = params.count("partitionStructure");
+    auto cN = toValue<size_t>( params["N_points"] );
+
+    auto progress = addProgress("process points ", cN);
+
+    int N1 = sizeof(Vec3d);
+    if (hasCol) N1 = VRPointCloud::PntCol::size;
+    if (hasSpl) N1 = VRPointCloud::Splat::size;
+
+    string wpath = path+".tmp.pcb";
+    writePCBHeader(wpath, params);
+    ofstream wstream(wpath, ios::app);
+
+    ifstream stream(path);
+    int hL = toInt(params["headerLength"]);
+    stream.seekg(hL);
+
+    Vec3ub c(255,255,0);
+    VRPointCloud::Splat splat;
+    map<string, VRTexturePtr> images;
+    VRGeoData links;
+
+    auto getImage = [&](string path) {
+        if (images.size() > 100) images.clear();
+        if (!images.count(path)) {
+            VRTexturePtr tex = VRTexture::create();
+            tex->read(path);
+            images[path] = tex;
+        }
+        return images[path];
+    };
+
+    auto heightTooLow = [&](Vec3d P, Viewpoint* vP) {
+        Vec3d D = P - vP->pose.pos();
+        D.normalize();
+        double z = D.dot(vP->pose.up());
+        double v = asin(z)/Pi + 0.5;
+        //return bool(v < 0.38);
+        //return bool(v < 0.45);
+        return bool(v < 0.48);
+    };
+
+    for (size_t i = 0; i<cN; i++) {
+        stream.read((char*)&splat, N1);
+        splat.c = c;
+
+        Vec3d P = pcPose->transform(splat.p);
+        Viewpoint* vP = (Viewpoint*)vpTree->getClosest(P);
+        int dir = 1;
+        bool reframed = false;
+        while (vP && heightTooLow(P, vP)) {
+            int ix = vP->index + dir;
+            if (ix >= 0 && ix < viewpoints.size()) vP = &viewpoints[ix];
+            else dir *= -1;
+            reframed = true;
+        }
+
+        if (vP) {
+            //if (abs(P[1]) < 0.1) {
+            /*if (reframed) {
+                links.pushVert(P);
+                links.pushVert(vP->pose.pos());
+                links.pushLine();
+            }*/
+
+            auto tex = getImage(vP->imgPath);
+            splat.c = projectOnPanorama(P, tex, Pose::create(vP->pose));
+        }
+        // get closest path point
+        wstream.write((const char*)&splat, N1);
+        progress->update(1);
+    }
+
+    /*auto lg = links.asGeometry("testLinks");
+    auto m = VRMaterial::create("white");
+    m->setLit(0);
+    lg->setMaterial(m);
+    addChild(lg);*/
+
+    stream.close();
+    wstream.close();
+    rename(wpath.c_str(), path.c_str());
+}
+
+Vec3ub VRPointCloud::projectOnPanorama(Vec3d P, VRTexturePtr tex, PosePtr vP) {
+    Vec3d vPd = vP->dir();
+    Vec3d vPx = vP->x();
+    Vec3d vPu = vP->up();
+    Vec3d D = P - vP->pos();
+    D.normalize();
+
+    double y = -D.dot(vPx);
+    double x = D.dot(vPd);
+    double z = D.dot(vPu);
+    double u = atan2(y,x)/(2*Pi) + 0.5;
+    double v = asin(z)/Pi + 0.5;
+
+    //return Vec3ub(u*255, v*255, 0);
+
+    Color4f C = tex->getPixelUV( Vec2d(u,v) );
+    Vec3ub c;
+    c[0] = C[0]*255;
+    c[1] = C[1]*255;
+    c[2] = C[2]*255;
+    return c;
 }
 
 string VRPointCloud::splatFP =
@@ -981,6 +1112,7 @@ void main( void ) {
     vec2 u = osg_MultiTexCoord0;
     vec2 v = osg_MultiTexCoord1;
     float size = osg_MultiTexCoord2.x*splatModifier; // mm
+    //float size = 0.1;
 	tangentU = vecFromAngles(u)*size;
 	tangentV = vecFromAngles(v)*size;
     mwp = gl_ModelViewProjectionMatrix;
@@ -990,7 +1122,6 @@ void main( void ) {
 
 string VRPointCloud::splatGP =
 "#version 150\n"
-"#extension GL_EXT_geometry_shader4 : enable\n"
 GLSL(
 layout (points) in;
 layout (triangle_strip, max_vertices=6) out;

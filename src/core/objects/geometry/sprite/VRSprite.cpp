@@ -106,9 +106,9 @@ void VRSprite::webOpen(string path, int res, float ratio) {
         VRDevicePtr flystick = setup->getDevice("flystick");
         VRDevicePtr multitouch = setup->getDevice("multitouch");
 
-        if (mouse) web->addMouse(mouse, ptr(), 0, 2, 3, 4);
-        if (flystick) web->addMouse(flystick, ptr(), 0, -1, -1, -1);
-        if (multitouch) web->addMouse(multitouch, ptr(), 0, 2, 3, 4);
+        if (mouse) web->addMouse(mouse, ptr(), 0, 1, 2, 3, 4);
+        if (flystick) web->addMouse(flystick, ptr(), 0, -1, -1, -1, -1);
+        if (multitouch) web->addMouse(multitouch, ptr(), 0, 1, 2, 3, 4);
         if (keyboard) web->addKeyboard(keyboard);
     }
 

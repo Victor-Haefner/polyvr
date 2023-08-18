@@ -55,18 +55,14 @@ VRGuiScripts::group* VRGuiScripts::getSelectedGroup() {
                         7, "",
                         8, g.ID,
                         -1);
-}
+}*/
 
-void VRGuiScripts::setScriptListRow(GtkTreeIter* itr, VRScriptPtr script, bool onlyTime) {
+void VRGuiScripts::updateScriptColor(VRScriptPtr script) {
     if (script == 0) return;
-    string color = "#000000";
-    string background = "#FFFFFF";
     string tfg = "#000000";
     string tbg = "#FFFFFF";
 
-    if (script->getPersistency() == 0) { // imported script
-        color = "#0000FF";
-    }
+    if (script->getPersistency() == 0) tfg = "#2244FF"; // imported script
 
     int trig_lvl = 0;
     for (auto trig : script->getTriggers()) {
@@ -91,46 +87,8 @@ void VRGuiScripts::setScriptListRow(GtkTreeIter* itr, VRScriptPtr script, bool o
     if (trig_lvl >= 128) tbg = "#AACCFF";
     if (trig_lvl >= 256) tbg = "#CCAAFF";
 
-
-    auto getUserFocus = []() {
-        auto win1 = (GtkWindow*)VRGuiBuilder::get()->get_widget("window1");
-        GtkWidget* wdg = gtk_window_get_focus(win1);
-        if (!wdg) return "";
-        auto wn = gtk_widget_get_name(wdg);
-        return wn?wn:"";
-    };
-
-    string name = getUserFocus();
-    bool user_focus = false;
-    if(!user_focus) user_focus = ("GtkTreeView" == name);
-    if(!user_focus) user_focus = ("GtkEntry" == name); // TODO: be more specific
-    if(onlyTime && (user_focus || !doPerf)) return;
-
-    int Nf = script->getSearch().N;
-    string icon, Nfound;
-    if (Nf) {
-        icon = "gtk-find";
-        Nfound = toString(Nf);
-    }
-
-    auto store = (GtkTreeStore*)VRGuiBuilder::get()->get_object("script_tree");
-    if (onlyTime) gtk_tree_store_set (store, itr,
-                        3, time.c_str(),
-                        4, tfg.c_str(),
-                        5, tbg.c_str(),
-                        -1);
-    else gtk_tree_store_set (store, itr,
-                        0, script->getName().c_str(),
-                        1, color.c_str(),
-                        2, background.c_str(),
-                        3, time.c_str(),
-                        4, tfg.c_str(),
-                        5, tbg.c_str(),
-                        6, icon.c_str(),
-                        7, Nfound.c_str(),
-                        8, -1,
-                        -1);
-}*/
+    uiSignal("scripts_list_set_color", {{"name",script->getName()},{"fg",tfg},{"bg",tbg}});
+}
 
 void VRGuiScripts::on_new_clicked() {
     auto scene = VRScene::getCurrent();
@@ -480,6 +438,7 @@ void VRGuiScripts::on_trigrem_clicked(string tID) {
     script->remTrigger(tID);
     on_select_script(selected);
     on_save_clicked();
+    updateScriptColor(script);
 }
 
 void VRGuiScripts::on_argname_edited(string name, string new_name) {
@@ -518,6 +477,7 @@ void VRGuiScripts::on_trigger_edited(string name, string new_val) {
     script->changeTrigger(name, new_val);
     on_select_script(selected);
     on_save_clicked();
+    updateScriptColor(script);
 }
 
 void VRGuiScripts::on_trigdev_edited(string name, string new_val) {
@@ -771,16 +731,6 @@ VRGuiScripts::searchResult::searchResult(string s, int l, int c) : scriptName(s)
 void VRGuiScripts::focusScript(string name, int line, int column) {
     uiSignal("openUiTabs", {{"tab1", "Scene"}, {"tab2", "Scripting"}});
     uiSignal("openUiScript", {{"name", name}, {"line", toString(line)}, {"column", toString(column)}});
-
-    /*selectScript(name); // messes with editor cursor position etc.. queueJob fixes it
-
-    auto focusLine = [](shared_ptr<VRGuiEditor> editor, int line, int column) {
-        editor->grabFocus();
-        editor->setCursorPosition(line, column);
-    };
-
-    auto fkt = VRUpdateCb::create("gui_focus_script", bind(focusLine, editor, line, column));
-    VRSceneManager::get()->queueJob(fkt, 0);*/
 }
 
 void VRGuiScripts::getLineFocus(int& line, int& column) {
@@ -850,6 +800,7 @@ void VRGuiScripts::on_change_script_type(string type) {
     script->setType(type);
     on_select_script(selected);
     on_save_clicked();
+    updateScriptColor(script);
 }
 
 void VRGuiScripts::on_change_group(string group) {
@@ -1038,7 +989,6 @@ bool VRGuiScripts::updateList() {
         }
     }
 
-    //scriptRows.clear();
     for (auto script : scene->getScripts()) {
         auto k = script.second.get();
         string grp = script.second->getGroup();
@@ -1050,8 +1000,7 @@ bool VRGuiScripts::updateList() {
             g.scripts.push_back(script.second);
             uiSignal("scripts_list_add_script", {{"name",name},{"group",toString(g.ID)},{"perf",toString(perf)}});
         }
-        //scriptRows.push_back( pair<VRScriptPtr, GtkTreeIter>(s,itr) );
-        //setScriptListRow(&itr, s);
+        updateScriptColor(script.second);
 
         if (oldpages.count(name)) pages[name] = oldpages[name];
         else pages[name] = pagePos();

@@ -91,15 +91,19 @@ class VRPointCloud : public VRTransform {
         void addPoint(Vec3d p, Color3ub c);
         void addPoint(Vec3d p, Splat c);
 
+        vector<Vec3d> radiusSearch(Vec3d p, double r);
+
         void convert(string pathIn, string pathOut);
         void convertMerge(vector<string> pathIn, string pathOut);
         void genTestFile(string path, size_t N, bool doColor);
-        void genTestFile2(string path, size_t N, bool doColor);
+        void genTestFile2(string path, size_t N, bool doColor, int splatSize);
 
         void externalSort(string path, size_t chunkSize, double binSize);
         void externalPartition(string path);
         void externalComputeSplats(string path);
-        void externalColorize(string path, string images, float localNorth, float localEast, float pDist, int i1, int i2);
+        void externalColorize(string path, string images, PosePtr pcPose, float localNorth, float localEast, float pDist, int i1, int i2);
+
+        Vec3ub projectOnPanorama(Vec3d P, VRTexturePtr tex, PosePtr vP);
 
         shared_ptr<Octree<PntData>>& getOctree();
         VRGeometryPtr getOctreeVisual();

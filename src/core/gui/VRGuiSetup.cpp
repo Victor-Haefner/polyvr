@@ -1150,6 +1150,7 @@ void VRGuiSetup::on_toggle_vrpn_verbose() {
 VRScriptPtr VRGuiSetup::getSelectedScript() {
     /*auto script = (VRScript*)selected_object;
     return script->ptr();*/
+    return 0;
 }
 
 void VRGuiSetup::on_script_save_clicked() {

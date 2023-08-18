@@ -23,6 +23,7 @@ VRGlutEditor* getCurrentEditor() {
     return glutEditors[glutGetWindow()];
 }
 
+void onMainDisplay() { ; }
 void onMainReshape(int w, int h) { getCurrentEditor()->on_resize_window(w,h); }
 void onMainClose() { getCurrentEditor()->on_close_window(); }
 void onUIDisplay() { getCurrentEditor()->on_ui_display(); }
@@ -64,6 +65,7 @@ VRGlutEditor::VRGlutEditor() {
     glutInitWindowSize(width, height);
     topWin = glutCreateWindow("PolyVR");
     glutEditors[topWin] = this;
+    glutDisplayFunc( onMainDisplay );
     glutReshapeFunc( onMainReshape );
     glutCloseFunc( onMainClose );
 
@@ -92,6 +94,7 @@ VRGlutEditor::VRGlutEditor() {
     /** OpenSG Window **/
     glutSetWindow(topWin);
     winGL = glutCreateSubWindow(topWin, 0,0,width*0.6, height*0.6);
+    glutPopWindow();
     glutEditors[winGL] = this;
 
     cout << " Glut create window" << endl;

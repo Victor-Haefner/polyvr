@@ -15,7 +15,7 @@ ostream& operator<<(ostream& os, const ImVec2& s) {
     return os;
 }
 
-ostream& operator<<(ostream& os, const Rectangle& s) {
+ostream& operator<<(ostream& os, const ImRectangle& s) {
     os << "[" << s.left << ", " << s.right << ", " << s.top << ", " << s.bottom << "]";
     return os;
 }
@@ -25,7 +25,7 @@ ostream& operator<<(ostream& os, const Surface& s) {
     return os;
 }
 
-void Surface::compute(const Surface& parent, const Rectangle& area) {
+void Surface::compute(const Surface& parent, const ImRectangle& area) {
     width  = round( parent.width * (area.right - area.left) );
     height = round( parent.height * (area.top - area.bottom) );
     width = max(width, 10);
@@ -60,3 +60,25 @@ void ImWidget::render() {
     begin();
     end();
 }
+
+ImVec4 colorFromString(const string& c) {
+    auto conv = [](char c1, char c2) {
+        if (c1 >= 'A' && c1 <= 'F') c1 -= ('A'-'a');
+        if (c2 >= 'A' && c2 <= 'F') c2 -= ('A'-'a');
+        int C1 = c1-'0';
+        int C2 = c2-'0';
+        if (c1 >= 'a' && c1 <= 'f') C1 = (c1-'a')+10;
+        if (c2 >= 'a' && c2 <= 'f') C2 = (c2-'a')+10;
+        return (C1*16+C2)/256.0;
+    };
+
+    if (c[0] == '#') {
+        if (c.size() == 4) return ImVec4(conv(c[1],'f'), conv(c[2],'f'), conv(c[3],'f'), 255);
+        if (c.size() == 5) return ImVec4(conv(c[1],'f'), conv(c[2],'f'), conv(c[3],'f'), conv(c[4],'f'));
+        if (c.size() == 7) return ImVec4(conv(c[1],c[2]), conv(c[3],c[4]), conv(c[5],c[6]), 255);
+        if (c.size() == 9) return ImVec4(conv(c[1],c[2]), conv(c[3],c[4]), conv(c[5],c[6]), conv(c[7],c[8]));
+    }
+    return ImVec4(255,255,255,255);
+}
+
+

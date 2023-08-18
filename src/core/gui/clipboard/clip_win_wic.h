@@ -58,7 +58,7 @@ private:
 
 bool write_png_on_stream(const image& image,
                          IStream* stream) {
-  const image_spec& spec = image.spec();
+  /*const image_spec& spec = image.spec();
 
   comptr<IWICBitmapEncoder> encoder;
   HRESULT hr = CoCreateInstance(CLSID_WICPngEncoder,
@@ -136,11 +136,12 @@ bool write_png_on_stream(const image& image,
   if (FAILED(hr))
     return false;
 
-  return true;
+  return true;*/
+  return false;
 }
 
 HGLOBAL write_png(const image& image) {
-  coinit com;
+  /*coinit com;
 
   comptr<IStream> stream;
   HRESULT hr = CreateStreamOnHGlobal(nullptr, false, &stream);
@@ -154,7 +155,7 @@ HGLOBAL write_png(const image& image) {
   if (result)
     return handle;
 
-  GlobalFree(handle);
+  GlobalFree(handle);*/
   return nullptr;
 }
 
@@ -165,7 +166,7 @@ bool read_png(const uint8_t* buf,
               const UINT len,
               image* output_image,
               image_spec* output_spec) {
-  coinit com;
+  /*coinit com;
 
   comptr<IStream> stream(SHCreateMemStream(buf, len));
   if (!stream)
@@ -244,7 +245,8 @@ bool read_png(const uint8_t* buf,
     std::swap(*output_image, img);
   }
 
-  return true;
+  return true;*/
+  return false;
 }
 
 } // namespace win

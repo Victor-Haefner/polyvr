@@ -150,6 +150,7 @@ int VRGuiNetwork::addFlow(Vec2i pos, void* key) {
     if (!flows.count(key)) flows[key] = vector<int>();
     flows[key].push_back( dfw->wID );
     return dfw->wID;*/
+    return 0;
 }
 
 int VRGuiNetwork::addNode(string label, Vec2i pos) {
@@ -157,6 +158,7 @@ int VRGuiNetwork::addNode(string label, Vec2i pos) {
     canvas->addWidget(cw->wID, cw);
     cw->move(Vec2d(pos));
     return cw->wID;*/
+    return 0;
 }
 
 void VRGuiNetwork::connectNodes(int n1, int n2, string color) {

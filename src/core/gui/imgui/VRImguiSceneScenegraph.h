@@ -4,6 +4,7 @@
 #include "VRImguiUtils.h"
 #include "core/gui/VRGuiSignals.h"
 #include "imWidgets/VRImguiTreeview.h"
+#include "imWidgets/VRImguiVector.h"
 
 using namespace std;
 
@@ -19,6 +20,13 @@ class ImScenegraph {
         bool pickable;
         bool castShadow;
 
+        Im_Vector position;
+        Im_Vector atvector;
+        Im_Vector direction;
+        Im_Vector upvector;
+        Im_Vector scale;
+        bool global;
+
     public:
         ImScenegraph();
         void render();
@@ -27,6 +35,7 @@ class ImScenegraph {
         void treeAppend(string ID, string label, string parent, string type, string cla, string mod, string col);
 
         void setupObject(OSG::VRGuiSignals::Options o);
+        void setupTransform(OSG::VRGuiSignals::Options o);
 };
 
 #endif // VRIMGUISCENESCENEGRAPH_H_INCLUDED

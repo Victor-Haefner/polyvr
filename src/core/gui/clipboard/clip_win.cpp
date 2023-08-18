@@ -72,7 +72,7 @@ private:
   HGLOBAL m_handle;
 };
 
-struct BitmapInfo {
+/*struct BitmapInfo {
   BITMAPV5HEADER* b5 = nullptr;
   BITMAPINFO* bi = nullptr;
   int width = 0;
@@ -202,7 +202,7 @@ struct BitmapInfo {
     }
   }
 
-};
+};*/
 
 }
 
@@ -406,7 +406,7 @@ size_t lock::impl::get_data_length(format f) const {
 }
 
 bool lock::impl::set_image(const image& image) {
-  const image_spec& spec = image.spec();
+  /*const image_spec& spec = image.spec();
 
   // Add the PNG clipboard format for images with alpha channel
   // (useful to communicate with some Windows programs that only use
@@ -508,14 +508,15 @@ bool lock::impl::set_image(const image& image) {
 
   GlobalUnlock(hmem);
   SetClipboardData(CF_DIBV5, hmem);
-  return true;
+  return true;*/
+  return false;
 }
 
 bool lock::impl::get_image(image& output_img) const {
   // Get the "PNG" clipboard format (this is useful only for 32bpp
   // images with alpha channel, in other case we can use the regular
   // DIB format)
-  UINT png_format = RegisterClipboardFormatA("PNG");
+  /*UINT png_format = RegisterClipboardFormatA("PNG");
   if (png_format && IsClipboardFormatAvailable(png_format)) {
     HANDLE png_handle = GetClipboardData(png_format);
     if (png_handle) {
@@ -607,11 +608,12 @@ bool lock::impl::get_image(image& output_img) const {
   }
 
   std::swap(output_img, img);
-  return true;
+  return true;*/
+  return false;
 }
 
 bool lock::impl::get_image_spec(image_spec& spec) const {
-  UINT png_format = RegisterClipboardFormatA("PNG");
+  /*UINT png_format = RegisterClipboardFormatA("PNG");
   if (png_format && IsClipboardFormatAvailable(png_format)) {
     HANDLE png_handle = GetClipboardData(png_format);
     if (png_handle) {
@@ -628,7 +630,8 @@ bool lock::impl::get_image_spec(image_spec& spec) const {
   if (!bi.is_valid())
     return false;
   bi.fill_spec(spec);
-  return true;
+  return true;*/
+  return false;
 }
 
 format register_format(const std::string& name) {

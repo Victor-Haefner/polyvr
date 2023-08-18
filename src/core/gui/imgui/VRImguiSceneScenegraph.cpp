@@ -6,7 +6,12 @@
 
 using namespace OSG;
 
-ImScenegraph::ImScenegraph() : tree("scenegraph") {
+ImScenegraph::ImScenegraph() :  tree("scenegraph"),
+                                position("pos", "pos"),
+                                atvector("at", "at"),
+                                direction("dir", "dir"),
+                                upvector("up", "up"),
+                                scale("scale", "scale") {
     auto mgr = OSG::VRGuiSignals::get();
     mgr->addCallback("set_sg_title", [&](OSG::VRGuiSignals::Options o){ title = o["title"]; return true; } );
     mgr->addCallback("on_sg_tree_clear", [&](OSG::VRGuiSignals::Options o){ treeClear(); return true; } );
@@ -14,6 +19,7 @@ ImScenegraph::ImScenegraph() : tree("scenegraph") {
             treeAppend(o["ID"], o["label"], o["parent"], o["type"], o["cla"], o["mod"], o["col"]);
         return true; } );
     mgr->addCallback("on_sg_setup_obj", [&](OSG::VRGuiSignals::Options o){ setupObject(o); return true; } );
+    mgr->addCallback("on_sg_setup_trans", [&](OSG::VRGuiSignals::Options o){ setupTransform(o); return true; } );
 }
 
 void ImScenegraph::render() {
@@ -33,9 +39,20 @@ void ImScenegraph::render() {
         ImGui::Text(("Object: " + selected).c_str());
         ImGui::Text(("Parent: " + parent).c_str());
         ImGui::Text(("Persistency: " + persistency).c_str());
-        if (ImGui::Checkbox("visible:", &visible)) uiSignal( "sg_toggle_visible", {{"visible",toString(visible)}} );
-        if (ImGui::Checkbox("pickable:", &pickable)) uiSignal( "sg_toggle_pickable", {{"pickable",toString(pickable)}} );
-        if (ImGui::Checkbox("castShadow:", &castShadow)) uiSignal( "sg_toggle_cast_shadow", {{"castShadow",toString(castShadow)}} );
+
+        if (ImGui::Checkbox("visible", &visible)) uiSignal( "sg_toggle_visible", {{"visible",toString(visible)}} );
+        ImGui::SameLine();
+        if (ImGui::Checkbox("pickable", &pickable)) uiSignal( "sg_toggle_pickable", {{"pickable",toString(pickable)}} );
+        ImGui::SameLine();
+        if (ImGui::Checkbox("cast shadow", &castShadow)) uiSignal( "sg_toggle_cast_shadow", {{"castShadow",toString(castShadow)}} );
+
+        position.render(region2.x);
+        atvector.render(region2.x);
+        direction.render(region2.x);
+        upvector.render(region2.x);
+        scale.render(region2.x);
+
+        if (ImGui::Checkbox("global", &global)) uiSignal( "sg_toggle_global", {{"global",toString(global)}} );
     ImGui::EndChild();
 }
 
@@ -46,6 +63,25 @@ void ImScenegraph::setupObject(OSG::VRGuiSignals::Options o) {
     pickable = toBool(o["pickable"]);
     castShadow = toBool(o["castShadow"]);
     selected = o["name"];
+}
+
+void ImScenegraph::setupTransform(OSG::VRGuiSignals::Options o) {
+    auto setVector = [&](Im_Vector& vec, string opt) {
+        vector<float> v;
+        toValue(o[opt], v);
+        vec.set3(v[0], v[1], v[2]);
+    };
+
+    //useAt = toBool(o["useAt"]);
+    global = !toBool(o["local"]);
+
+    setVector(position, "pos");
+    setVector(atvector, "at");
+    setVector(direction, "dir");
+    setVector(upvector, "up");
+    setVector(scale, "scale");
+
+    cout << "  ImScenegraph::setupTransform " << o["pos"] << endl;
 }
 
 void ImScenegraph::treeClear() { tree.clear(); }

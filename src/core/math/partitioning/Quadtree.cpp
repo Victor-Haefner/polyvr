@@ -297,6 +297,34 @@ void Quadtree::updateRoot() { while (auto p = root->getParent()) root = p; }
 
 vector<void*> Quadtree::getAllData() { return getRoot()->getAllData(); }
 
+void* Quadtree::getClosest(Vec3d p) {
+    QuadtreeNode* node = get(p);
+    if (!node) return 0;
+
+    QuadtreeNode* parent = node;
+    while(parent && parent->getLeafs().size() == 0) parent = parent->getParent();
+    if (!parent || !parent->getParent()) return 0;
+    parent = parent->getParent();
+
+    void* dataMin = 0;
+    double dMin = 1e6;
+
+    auto subtree = parent->getSubtree();
+    for (auto& node : subtree) {
+        auto& data = node->getData();
+        auto& points = node->getPoints();
+        for (size_t i=0; i<data.size(); i++) {
+            double d = p.dist(points[i]);
+            if (d < dMin) {
+                dMin = d;
+                dataMin = data[i];
+            }
+        }
+    }
+
+    return dataMin;
+}
+
 vector<void*> Quadtree::radiusSearch(Vec3d p, float r, int d) {
     vector<void*> res;
     getRoot()->findInSphere(p, r, d, res);

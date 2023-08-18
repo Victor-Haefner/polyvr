@@ -13,6 +13,7 @@
 
 using namespace OSG;
 
+
 Partitiontree::Partitiontree(float res, float s, string n) : resolution(res), firstSize(s), name(n) { if (s < res) firstSize = res; }
 Partitiontree::~Partitiontree() { ; }
 
