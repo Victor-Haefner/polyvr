@@ -32,5 +32,6 @@ PyMethodDef VRPyMachiningKinematics::methods[] = {
 PyMethodDef VRPyCartesianKinematics::methods[] = {
     {"setComponents", PyWrap(CartesianKinematics, setComponents, "Set kinematic components", void, VRTransformPtr, VRTransformPtr, VRTransformPtr) },
     {"setAxisParams", PyWrap(CartesianKinematics, setAxisParams, "Set axis parameters", void, int, int, int) },
+    {"setOrigin", PyWrap(CartesianKinematics, setOrigin, "Set Origin", void, PosePtr) },
     {NULL}  /* Sentinel */
 };
