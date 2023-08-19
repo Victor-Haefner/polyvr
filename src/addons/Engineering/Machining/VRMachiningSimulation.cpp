@@ -57,7 +57,7 @@ void VRMachiningSimulation::runInstruction(float delay) {
 
 void VRMachiningSimulation::run(float t) {
 	if (doStop) return;
-	Vec3d ee = eeP0 + eeD * t;
+	Vec3d ee = origin + eeP0 + eeD * t;
 	kinematics->setEndEffector(Pose::create(ee));
 	if (t == 1) runInstruction();
 }
