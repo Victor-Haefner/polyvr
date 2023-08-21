@@ -26,6 +26,11 @@ VRGlutEditor* getCurrentEditor() {
 void onMainDisplay() { ; }
 void onMainReshape(int w, int h) { getCurrentEditor()->on_resize_window(w,h); }
 void onMainClose() { getCurrentEditor()->on_close_window(); }
+void onMainKeyboard(unsigned char k, int x, int y) { getCurrentEditor()->onKeyboard(k, 1, x, y); }
+void onMainSpecial(int k, int x, int y) { getCurrentEditor()->onKeyboard_special(k, 1, x, y); }
+void onMainKeyboardUp(unsigned char k, int x, int y) { getCurrentEditor()->onKeyboard(k, 0, x, y); }
+void onMainSpecialUp(int k, int x, int y) { getCurrentEditor()->onKeyboard_special(k, 0, x, y); }
+
 void onUIDisplay() { getCurrentEditor()->on_ui_display(); }
 void onGLDisplay() { getCurrentEditor()->on_gl_display(); }
 void onUIReshape(int w, int h) { getCurrentEditor()->on_ui_resize(w, h); }
@@ -68,6 +73,10 @@ VRGlutEditor::VRGlutEditor() {
     glutDisplayFunc( onMainDisplay );
     glutReshapeFunc( onMainReshape );
     glutCloseFunc( onMainClose );
+    glutKeyboardFunc( onMainKeyboard );
+    glutSpecialFunc( onMainSpecial );
+    glutKeyboardUpFunc( onMainKeyboardUp );
+    glutSpecialUpFunc( onMainSpecialUp );
 
     initGlutExtensions(); // just after top level window creation
 
