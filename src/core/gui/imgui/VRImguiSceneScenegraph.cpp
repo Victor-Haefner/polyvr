@@ -11,7 +11,12 @@ ImScenegraph::ImScenegraph() :  tree("scenegraph"),
                                 atvector("at", "at"),
                                 direction("dir", "dir"),
                                 upvector("up", "up"),
-                                scale("scale", "scale") {
+                                scale("scale", "scale"),
+                                constrTranslation("cTrans", "cTrans"),
+                                camAspect("sgCamAspect", "aspect", "1"),
+                                camFov("sgCamFov", "fov", "1.0472"),
+                                camNear("sgCamNear", "near", "0.1"),
+                                camFar("sgCamFar", "far", "512") {
     auto mgr = OSG::VRGuiSignals::get();
     mgr->addCallback("set_sg_title", [&](OSG::VRGuiSignals::Options o){ title = o["title"]; return true; } );
     mgr->addCallback("on_sg_tree_clear", [&](OSG::VRGuiSignals::Options o){ treeClear(); return true; } );
@@ -36,7 +41,9 @@ void ImScenegraph::render() {
     ImGui::SameLine();
 
     ImGui::BeginChild("scProps", region2, false, flags);
+        // object
         ImGui::Text(("Object: " + selected).c_str());
+        ImGui::Indent(10);
         ImGui::Text(("Parent: " + parent).c_str());
         ImGui::Text(("Persistency: " + persistency).c_str());
 
@@ -45,14 +52,99 @@ void ImScenegraph::render() {
         if (ImGui::Checkbox("pickable", &pickable)) uiSignal( "sg_toggle_pickable", {{"pickable",toString(pickable)}} );
         ImGui::SameLine();
         if (ImGui::Checkbox("cast shadow", &castShadow)) uiSignal( "sg_toggle_cast_shadow", {{"castShadow",toString(castShadow)}} );
+        ImGui::Unindent(10);
 
-        position.render(region2.x);
-        atvector.render(region2.x);
-        direction.render(region2.x);
-        upvector.render(region2.x);
-        scale.render(region2.x);
+        // transform
+        ImGui::Separator();
+        ImGui::Text("Transformation:");
+        ImGui::Indent(10);
+        if (ImGui::Button("Focus")) uiSignal( "sg_focus_transform");
+        ImGui::SameLine();
+        if (ImGui::Button("Identity")) uiSignal( "sg_set_identity");
+
+        position.render(region2.x-10);
+        atvector.render(region2.x-10);
+        direction.render(region2.x-10);
+        upvector.render(region2.x-10);
+        scale.render(region2.x-10);
 
         if (ImGui::Checkbox("global", &global)) uiSignal( "sg_toggle_global", {{"global",toString(global)}} );
+        ImGui::Unindent(10);
+
+        ImGui::Text("Constraints:");
+        ImGui::Indent(10);
+        if (ImGui::Checkbox("translation:", &doConstrTranslation)) ;//uiSignal( "sg_toggle_global", {{"global",toString(global)}} );
+        if (doConstrTranslation) {
+            ImGui::Indent(10);
+            constrTranslation.render(region2.x-20);
+            if (ImGui::RadioButton("point", &cTransMode, 0)) ;
+            ImGui::SameLine();
+            if (ImGui::RadioButton("line", &cTransMode, 1)) ;
+            ImGui::SameLine();
+            if (ImGui::RadioButton("plane", &cTransMode, 2)) ;
+            ImGui::Unindent(10);
+        }
+        if (ImGui::Checkbox("rotation:", &doConstrRotation)) ;//uiSignal( "sg_toggle_global", {{"global",toString(global)}} );
+        if (doConstrRotation) {
+            ImGui::Indent(10);
+            if (ImGui::Checkbox("x", &cRotX)) ;
+            ImGui::SameLine();
+            if (ImGui::Checkbox("y", &cRotY)) ;
+            ImGui::SameLine();
+            if (ImGui::Checkbox("z", &cRotZ)) ;
+            ImGui::Unindent(10);
+        }
+        ImGui::Unindent(10);
+
+        ImGui::Text("Physics:");
+        ImGui::Indent(10);
+        if (ImGui::Checkbox("physicalize:", &doPhysicalize)) ;//uiSignal( "sg_toggle_global", {{"global",toString(global)}} );
+        if (doPhysicalize) {
+            ImGui::Indent(10);
+            // combobox for shape type
+            // mass
+            if (ImGui::Checkbox("dynamic", &physDynamic)) ;
+            ImGui::Unindent(10);
+        }
+        ImGui::Unindent(10);
+
+        // geometry
+        ImGui::Separator();
+        ImGui::Text("Geometry:");
+        ImGui::Indent(10);
+        ImGui::Unindent(10);
+
+        // material
+        ImGui::Separator();
+        ImGui::Text("Material:");
+        ImGui::Indent(10);
+        ImGui::Unindent(10);
+
+        // camera
+        ImGui::Separator();
+        ImGui::Text("Camera:");
+        ImGui::Indent(10);
+        if (ImGui::Checkbox("accept setup root:", &doAcceptRoot)) ;
+        camAspect.render(50);
+        ImGui::SameLine();
+        camFov.render(50);
+        camNear.render(50);
+        ImGui::SameLine();
+        camFar.render(50);
+        ImGui::Unindent(10);
+
+        // light
+        ImGui::Separator();
+        ImGui::Text("Light:");
+        ImGui::Indent(10);
+        ImGui::Unindent(10);
+
+        // lod
+        ImGui::Separator();
+        ImGui::Text("LoD:");
+        ImGui::Indent(10);
+        ImGui::Unindent(10);
+
     ImGui::EndChild();
 }
 

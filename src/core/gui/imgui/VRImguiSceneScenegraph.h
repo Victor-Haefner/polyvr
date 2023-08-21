@@ -16,16 +16,30 @@ class ImScenegraph {
 
         string parent;
         string persistency;
-        bool visible;
-        bool pickable;
-        bool castShadow;
+        bool visible = true;
+        bool pickable = false;
+        bool castShadow = true;
 
         Im_Vector position;
         Im_Vector atvector;
         Im_Vector direction;
         Im_Vector upvector;
         Im_Vector scale;
-        bool global;
+        Im_Vector constrTranslation;
+        bool global = false;
+        bool doConstrTranslation = false;
+        bool doConstrRotation = false;
+        int cTransMode = 0;
+        bool cRotX = false;
+        bool cRotY = false;
+        bool cRotZ = false;
+        bool doPhysicalize = false;
+        bool doAcceptRoot = false;
+        bool physDynamic = false;
+        ImInput camAspect;
+        ImInput camFov;
+        ImInput camNear;
+        ImInput camFar;
 
     public:
         ImScenegraph();
