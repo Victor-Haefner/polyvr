@@ -224,7 +224,6 @@ ImScriptEditor::ImScriptEditor() {
 
 void ImScriptEditor::handleShiftTab(int state) {
 	ImGuiIO& io = ImGui::GetIO();
-	io.AddInputCharacter('\t');
 	io.KeysDown[int('\t')] = state;
 }
 

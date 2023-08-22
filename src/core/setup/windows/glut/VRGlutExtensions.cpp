@@ -117,9 +117,11 @@ void listenForKey(XID grab_window) { // TODO: add windows and wayland versions
     XSelectInput(dpy, grab_window, KeyPressMask | KeyReleaseMask);
     XEvent ev;
     while(doGrabShiftTab) {
-         XNextEvent(dpy, &ev);
-         if (ev.type == KeyPress) uiSignal("shiftTab", {{"state","1"}});
-         if (ev.type == KeyRelease) uiSignal("shiftTab", {{"state","0"}});
+        XNextEvent(dpy, &ev);
+        if (ev.xkey.keycode == 23) { // TODO: why 23?? its not XK_Tab..
+            if (ev.type == KeyPress) uiSignal("shiftTab", {{"state","1"}});
+            if (ev.type == KeyRelease) uiSignal("shiftTab", {{"state","0"}});
+        }
     }
     XUngrabKey(dpy, keycode, modifiers1, grab_window);
     XUngrabKey(dpy, keycode, modifiers2, grab_window);
