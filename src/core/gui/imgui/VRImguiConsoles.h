@@ -53,6 +53,7 @@ class ImConsole {
         ImConsole() {}
         ImConsole(string ID);
         void render();
+        void clear();
 };
 
 class ImConsoles : public ImWidget {

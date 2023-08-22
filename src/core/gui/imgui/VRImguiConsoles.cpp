@@ -91,13 +91,19 @@ void ImConsole::render() {
     if (!sensitive) ImGui::EndDisabled();
 }
 
+void ImConsole::clear() {
+    lines.clear();
+    attributes.clear();
+    changed = 0;
+}
+
 ImConsoles::ImConsoles() : ImWidget("Consoles") {
     auto mgr = OSG::VRGuiSignals::get();
     mgr->addCallback("newConsole", [&](OSG::VRGuiSignals::Options o){ newConsole(o["ID"], o["color"]); return true; } );
     mgr->addCallback("setupConsole", [&](OSG::VRGuiSignals::Options o){ setupConsole(o["ID"], o["name"]); return true; } );
     mgr->addCallback("pushConsole", [&](OSG::VRGuiSignals::Options o){ pushConsole(o["ID"], o["string"], o["style"], o["mark"]); return true; } );
-    mgr->addCallback("clearConsole", [&](OSG::VRGuiSignals::Options o){ clearConsole(o["ID"]); return true; } );
-    mgr->addCallback("clearConsoles", [&](OSG::VRGuiSignals::Options o){ for (auto& c : consoles) c.second.lines.clear(); return true; } );
+    mgr->addCallback("clearConsole", [&](OSG::VRGuiSignals::Options o){ o["ID"].clear(); return true; } );
+    mgr->addCallback("clearConsoles", [&](OSG::VRGuiSignals::Options o){ for (auto& c : consoles) c.second.clear(); return true; } );
     mgr->addCallback("setConsoleLabelColor", [&](OSG::VRGuiSignals::Options o){ setConsoleLabelColor(o["ID"], o["color"]); return true; } );
 }
 
@@ -114,8 +120,7 @@ void ImConsoles::newConsole(string ID, string color) {
 
 void ImConsoles::clearConsole(string ID) {
     if (!consoles.count(ID)) return;
-    consoles[ID].lines.clear();
-    consoles[ID].attributes.clear();
+    consoles[ID].clear();
 }
 
 void ImConsoles::setupConsole(string ID, string name) {
