@@ -569,8 +569,7 @@ void VRGuiScene::on_scale_changed(Vec3d v) {
     VRTransformPtr obj = static_pointer_cast<VRTransform>( getSelected() );
     if (!obj) return;
     if (transformModeLocal) obj->setScale(v);
-    //else obj->setWorldScale(v); TODO
-    else obj->setScale(v);
+    else obj->setWorldScale(v);
     updateObjectForms();
 }
 
@@ -1281,11 +1280,6 @@ VRGuiScene::VRGuiScene() { // TODO: reduce callbacks with templated functions
     setEntryCallback("entry46", bind(&VRGuiScene::on_edit_light_attenuation, this) );
     setEntryCallback("entry36", bind(&VRGuiScene::on_toggle_light_shadow_volume, this) );
 
-    posEntry.init("pos_entry", "from", bind(&VRGuiScene::on_change_from, this, placeholders::_1));
-    atEntry.init("at_entry", "at", bind(&VRGuiScene::on_change_at, this, placeholders::_1));
-    dirEntry.init("dir_entry", "dir", bind(&VRGuiScene::on_change_dir, this, placeholders::_1));
-    upEntry.init("up_entry", "up", bind(&VRGuiScene::on_change_up, this, placeholders::_1));
-    scaleEntry.init("scale_entry", "scale", bind(&VRGuiScene::on_scale_changed, this, placeholders::_1));
     lodCEntry.init("lod_center", "center", bind(&VRGuiScene::on_change_lod_center, this, placeholders::_1));
     ctEntry.init("ct_entry", "", bind(&VRGuiScene::on_edit_T_constraint, this, placeholders::_1));
 
@@ -1326,6 +1320,12 @@ VRGuiScene::VRGuiScene() { // TODO: reduce callbacks with templated functions
     mgr->addCallback("sg_toggle_pickable", [&](OSG::VRGuiSignals::Options o) { on_toggle_pickable(toBool(o["pickable"])); return true; } );
     mgr->addCallback("sg_toggle_cast_shadow", [&](OSG::VRGuiSignals::Options o) { on_toggle_throw_shadow(toBool(o["castShadow"])); return true; } );
     mgr->addCallback("sg_toggle_global", [&](OSG::VRGuiSignals::Options o) { on_toggle_global(toBool(o["global"])); return true; } );
+
+    mgr->addCallback("sg_set_position", [&](OSG::VRGuiSignals::Options o) { on_change_from(Vec3d(toFloat(o["x"]), toFloat(o["y"]), toFloat(o["z"]))); return true; } );
+    mgr->addCallback("sg_set_atvector", [&](OSG::VRGuiSignals::Options o) { on_change_at(Vec3d(toFloat(o["x"]), toFloat(o["y"]), toFloat(o["z"]))); return true; } );
+    mgr->addCallback("sg_set_direction", [&](OSG::VRGuiSignals::Options o) { on_change_dir(Vec3d(toFloat(o["x"]), toFloat(o["y"]), toFloat(o["z"]))); return true; } );
+    mgr->addCallback("sg_set_upvector", [&](OSG::VRGuiSignals::Options o) { on_change_up(Vec3d(toFloat(o["x"]), toFloat(o["y"]), toFloat(o["z"]))); return true; } );
+    mgr->addCallback("sg_set_scale", [&](OSG::VRGuiSignals::Options o) { on_scale_changed(Vec3d(toFloat(o["x"]), toFloat(o["y"]), toFloat(o["z"]))); return true; } );
 }
 
 // new scene, update stuff here
