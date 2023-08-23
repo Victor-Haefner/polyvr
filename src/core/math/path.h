@@ -27,7 +27,7 @@ class Path : public VRStorage {
         vector<Vec3d> up_vectors;
         vector<Vec3d> colors;
 
-        Vec3d interp(vector<Vec3d>& vec, float t, int i = 0, int j = 0);
+        Vec3d interp(vector<Vec3d>& vec, float t, int i = 0, int j = 0, bool verbose = false);
         Vec3d projectInPlane(Vec3d v, Vec3d n, bool keep_length);
         void cubicBezier(Vec3d* container, int N, Vec3d p0, Vec3d p1, Vec3d n0, Vec3d n1);
         void quadraticBezier(Vec3d* container, int N, Vec3d p0, Vec3d p1, Vec3d n);

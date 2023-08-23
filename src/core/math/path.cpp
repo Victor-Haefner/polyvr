@@ -378,6 +378,8 @@ void Path::compute(int N) {
             linearBezier   (_cls+(N-1)*i, N, Vec3d(c1), Vec3d(c2));
         }
     }
+
+    for (auto& d : directions) d.normalize();
 }
 
 void Path::computeUpVectors(Vec3d* container, Vec3d* dirs, int N, Vec3d u0, Vec3d u1) {
@@ -431,7 +433,7 @@ void Path::close() {
 
 bool Path::isClosed() { return closed; }
 
-Vec3d Path::interp(vector<Vec3d>& vec, float t, int i, int j) {
+Vec3d Path::interp(vector<Vec3d>& vec, float t, int i, int j, bool verbose) {
     if (t <= 0) t = 0;
     if (t >= 1) t = 1; // clamp t
     if (direction == -1) t = 1-t;
@@ -451,7 +453,7 @@ Vec3d Path::interp(vector<Vec3d>& vec, float t, int i, int j) {
     if (i+ti < 0 || i+ti >= (int)vec.size()) return Vec3d();
     if (i+ti+1 < 0 || i+ti+1 >= (int)vec.size()) return Vec3d();
 
-    //cout << "i j ti x v[ti+i] v[ti+i+1]" << i << " " << j << " " << ti << " " << x << " " << vec[i+ti] << " " << vec[i+ti+1] << endl;
+    if (verbose) cout << "i j ti x v[ti+i] v[ti+i+1]" << i << " " << j << " " << ti << " " << x << " " << vec[i+ti] << " " << vec[i+ti+1] << endl;
     return vec[i+ti]*(1-x) + vec[i+ti+1]*x;
 }
 
@@ -486,6 +488,9 @@ void Path::getOrientation(float t, Vec3d& dir, Vec3d& up, int i, int j, bool fas
     if (fast) {
         dir = interp(directions, t, i, j)*direction;
         up  = interp(up_vectors, t, i, j);
+
+        dir.normalize();
+        up.normalize();
     } else {
         if (degree == 2) { // TODO: stretch t over i-j segment!
             auto& p1 = points[2*i];
@@ -511,7 +516,8 @@ void Path::getOrientation(float t, Vec3d& dir, Vec3d& up, int i, int j, bool fas
 }
 
 PosePtr Path::getPose(float t, int i, int j, bool fast) {
-    Vec3d d,u; getOrientation(t,d,u,i,j,fast);
+    Vec3d d,u;
+    getOrientation(t,d,u,i,j,fast);
     return Pose::create(getPosition(t,i,j,fast), d, u);
 }
 
