@@ -62,11 +62,11 @@ void ImScenegraph::render() {
         ImGui::SameLine();
         if (ImGui::Button("Identity")) uiSignal( "sg_set_identity");
 
-        position.render(region2.x-10);
-        atvector.render(region2.x-10);
-        direction.render(region2.x-10);
-        upvector.render(region2.x-10);
-        scale.render(region2.x-10);
+        if (position.render(region2.x-10)) position.signal("sg_set_position");
+        if (atvector.render(region2.x-10)) atvector.signal("sg_set_atvector");
+        if (direction.render(region2.x-10)) direction.signal("sg_set_direction");
+        if (upvector.render(region2.x-10)) upvector.signal("sg_set_upvector");
+        if (scale.render(region2.x-10)) scale.signal("sg_set_scale");
 
         if (ImGui::Checkbox("global", &global)) uiSignal( "sg_toggle_global", {{"global",toString(global)}} );
         ImGui::Unindent(10);

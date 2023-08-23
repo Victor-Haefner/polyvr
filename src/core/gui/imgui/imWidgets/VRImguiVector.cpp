@@ -1,5 +1,6 @@
 #include "VRImguiVector.h"
 #include "core/utils/toString.h"
+#include "core/gui/VRGuiManager.h"
 
 #include <iostream>
 using namespace std;
@@ -13,6 +14,10 @@ Im_Vector::Im_Vector(string ID, string label, int flags) :  ID("##"+ID), label(l
 
 void Im_Vector::set2(double x, double y) { vX = x; vY = y; iX.value = toString(x); iY.value = toString(y); Nfields = 2; }
 void Im_Vector::set3(double x, double y, double z) { vX = x; vY = y; vZ = z; iX.value = toString(x); iY.value = toString(y); iZ.value = toString(z); Nfields = 3; }
+
+void Im_Vector::signal(string sig) {
+    uiSignal( sig, {{"x",iX.value}, {"y",iY.value}, {"z",iZ.value}});
+}
 
 bool Im_Vector::render(int width) {
     int Nparts = Nfields;

@@ -28,6 +28,7 @@ class Im_Vector {
         void set3(double x, double y, double z);
 
         bool render(int width);
+        void signal(string sig);
 };
 
 #endif // VRIMGUIVECTOR_H_INCLUDED
