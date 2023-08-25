@@ -352,11 +352,8 @@ void VRGuiSetup::on_new_clicked() {
     guard = false;
 }
 
-void VRGuiSetup::on_foto_clicked() {
-    if (auto s = current_setup.lock()) {
-        /*bool b = getToggleToolButtonState("toolbutton19");
-        s->setFotoMode(b);*/
-    }
+void VRGuiSetup::on_foto_clicked(bool b) {
+    if (auto s = VRSetup::getCurrent()) s->setFotoMode(b);
 }
 
 void VRGuiSetup::on_del_clicked() { //TODO, should delete setup
@@ -1258,7 +1255,6 @@ VRGuiSetup::VRGuiSetup() {
     setToolButtonCallback("toolbutton11", bind( &VRGuiSetup::on_del_clicked, this) );
     setToolButtonCallback("toolbutton12", bind( &VRGuiSetup::on_save_clicked, this) );
     setToolButtonCallback("toolbutton13", bind( &VRGuiSetup::on_save_as_clicked, this) );
-    setToolButtonCallback("toolbutton19", bind( &VRGuiSetup::on_foto_clicked, this) );
     //setToolButtonCallback("toolbutton27", bind( &VRGuiSetup::on_script_save_clicked, this) );
     //setToolButtonCallback("toolbutton26", bind( &VRGuiSetup::on_script_exec_clicked, this) );
 
@@ -1392,6 +1388,9 @@ VRGuiSetup::VRGuiSetup() {
 
     setWidgetSensitivity("table7", false);
     setWidgetSensitivity("table8", false);*/
+
+    auto mgr = OSG::VRGuiSignals::get();
+    mgr->addCallback("ui_toggle_fotomode", [&](OSG::VRGuiSignals::Options o) { on_foto_clicked(toBool(o["active"])); return true; }, true );
 
     updateSetupCb = VRDeviceCb::create("update gui setup", bind(&VRGuiSetup::updateSetup, this) );
 

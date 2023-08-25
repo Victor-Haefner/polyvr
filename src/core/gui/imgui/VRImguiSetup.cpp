@@ -9,4 +9,5 @@ ImSetupManager::ImSetupManager() : ImWidget("SetupManager") {
 }
 
 void ImSetupManager::begin() {
+    if (ImGui::Checkbox("Fotomode", &fotomode)) uiSignal("ui_toggle_fotomode", {{"active",toString(fotomode)}});
 }

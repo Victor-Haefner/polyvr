@@ -6,6 +6,9 @@
 using namespace std;
 
 class ImSetupManager : public ImWidget {
+    private:
+        bool fotomode = false;
+
     public:
         ImSetupManager();
         void begin() override;
