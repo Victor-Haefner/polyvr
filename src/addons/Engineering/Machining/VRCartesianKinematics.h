@@ -29,7 +29,7 @@ class VRCartesianKinematics : public VRMachiningKinematics {
 		void setComponents(VRTransformPtr aX, VRTransformPtr aY, VRTransformPtr aZ);
 		void setAxisParams(int dirX, int dirY, int dirZ);
 		void setEndEffector(PosePtr pose) override;
-		void setOrigin(PosePtr pos);
+
 };
 
 OSG_END_NAMESPACE;
