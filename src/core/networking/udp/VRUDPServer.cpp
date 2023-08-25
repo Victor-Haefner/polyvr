@@ -10,6 +10,7 @@
 #include <memory>
 
 #include "core/scene/VRSceneManager.h"
+#include "core/scene/VRScene.h"
 
 //#ifdef _WINDOWS // TODO
 //#include <ws2tcpip.h>
@@ -34,6 +35,7 @@ class UDPServer {
         udp::endpoint remote_endpoint;
 
         function<string (string)> onMessageCb;
+        bool deferredMessaging = false;
 
         void wait() {
             auto cb = boost::bind(&UDPServer::read_handler, this, boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred);
@@ -55,15 +57,21 @@ class UDPServer {
             }
 
             if (onMessageCb) {
-                string res = onMessageCb(msg);
-                if (res != "") {
-                    boost::system::error_code ec;
-                    auto N = socket.send_to(boost::asio::buffer(res), remote_endpoint, 0, ec);
+                if (!deferredMessaging) {
+                    string res = onMessageCb(msg);
+                    if (res != "") {
+                        boost::system::error_code ec;
+                        auto N = socket.send_to(boost::asio::buffer(res), remote_endpoint, 0, ec);
 
-                    if (parent) {
-                        auto& oFlow = parent->getOutFlow();
-                        oFlow.logFlow(N*0.001);
+                        if (parent) {
+                            auto& oFlow = parent->getOutFlow();
+                            oFlow.logFlow(N*0.001);
+                        }
                     }
+                } else {
+                    auto scene = VRScene::getCurrent();
+                    auto cb = VRUpdateCb::create("udpDeferred", [&](){onMessageCb(msg);});
+                    scene->queueJob(cb);
                 }
             }
             wait();
@@ -76,7 +84,7 @@ class UDPServer {
 
         ~UDPServer() { close(); }
 
-        void onMessage( function<string (string)> f ) { onMessageCb = f; }
+        void onMessage( function<string (string)> f, bool b ) { onMessageCb = f; deferredMessaging = b; }
 
         void listen(int port) {
             cout << "UDPServer listen on port " << port << endl;
@@ -109,7 +117,7 @@ VRUDPServerPtr VRUDPServer::create(string name) {
     return s;
 }
 
-void VRUDPServer::onMessage( function<string(string)> f ) { server->onMessage(f); }
+void VRUDPServer::onMessage( function<string(string)> f, bool b ) { server->onMessage(f, b); }
 void VRUDPServer::listen(int port) { this->port = port; server->listen(port); }
 void VRUDPServer::close() { server->close(); }
 int VRUDPServer::getPort() { return port; }

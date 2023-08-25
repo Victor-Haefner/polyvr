@@ -98,7 +98,7 @@ PyMethodDef VRPyUDPClient::methods[] = {
 PyMethodDef VRPyUDPServer::methods[] = {
     {"listen", PyWrapOpt(UDPServer, listen, "Listen on port", "", void, int) },
     {"close", PyWrap(UDPServer, close, "Close server", void) },
-    {"onMessage", PyWrap(UDPServer, onMessage, "Set onMessage callback", void, function<string(string)>) },
+    {"onMessage", PyWrapOpt(UDPServer, onMessage, "Set onMessage callback", "0", void, function<string(string)>, bool) },
     {NULL}  /* Sentinel */
 };
 

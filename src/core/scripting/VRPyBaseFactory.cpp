@@ -42,6 +42,8 @@ template<> bool toValue(PyObject* o, float& v) { if (!PyNumber_Check(o)) return 
 template<> bool toValue(PyObject* o, double& v) { if (!PyNumber_Check(o)) return 0; v = PyFloat_AsDouble(o); return 1; }
 
 template<> bool toValue(PyObject* o, string& v) {
+    if (o == 0) return 1;
+
     //cout << "toValue->string " << bool(o == Py_None) << " " << o << endl;
     //cout << "toValue->string " << o->ob_type->tp_name << endl;
     if (string(o->ob_type->tp_name) == "tuple") {

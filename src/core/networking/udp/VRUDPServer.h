@@ -22,7 +22,7 @@ class VRUDPServer : public VRNetworkServer {
 
 		static VRUDPServerPtr create(string name = "none");
 
-        void onMessage( function<string(string)> f );
+        void onMessage( function<string(string)> f, bool deferred = false );
 
 		void listen(int port);
         void close();
