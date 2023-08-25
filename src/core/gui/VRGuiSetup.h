@@ -63,7 +63,7 @@ class VRGuiSetup {
         void on_diag_save_as_clicked();
         void on_del_clicked();
         void on_new_clicked();
-        void on_foto_clicked();
+        void on_foto_clicked(bool b);
         void on_setup_changed();
         bool on_treeview_rightclick();
 
