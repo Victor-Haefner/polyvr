@@ -354,13 +354,13 @@ void VRGuiScene::updateObjectForms(bool disable) {
     trigger_cbs = false;
 
     setObject(obj);
-    if (obj->hasTag("transform")) setTransform(static_pointer_cast<VRTransform>(obj));
-    if (obj->hasTag("geometry")) setGeometry(static_pointer_cast<VRGeometry>(obj));
+    if (obj->hasTag("transform")) setTransform(dynamic_pointer_cast<VRTransform>(obj));
+    if (obj->hasTag("geometry")) setGeometry(dynamic_pointer_cast<VRGeometry>(obj));
 
-    if (type == "Light") setLight(static_pointer_cast<VRLight>(obj));
-    if (type == "Camera") setCamera(static_pointer_cast<VRCamera>(obj));
-    if (type == "Group") setGroup(static_pointer_cast<VRGroup>(obj));
-    if (type == "Lod") setLod(static_pointer_cast<VRLod>(obj));
+    if (type == "Light") setLight(dynamic_pointer_cast<VRLight>(obj));
+    if (type == "Camera") setCamera(dynamic_pointer_cast<VRCamera>(obj));
+    if (type == "Group") setGroup(dynamic_pointer_cast<VRGroup>(obj));
+    if (type == "Lod") setLod(dynamic_pointer_cast<VRLod>(obj));
 
     auto entity = obj->getEntity();
     if (entity) setEntity(entity);
@@ -446,7 +446,7 @@ void VRGuiScene::on_treeview_select(string sID) {
 
     selected_geometry.reset();
     if (getSelected() == 0) return;
-    if (getSelected()->hasTag("geometry")) selected_geometry = static_pointer_cast<VRGeometry>(getSelected());
+    if (getSelected()->hasTag("geometry")) selected_geometry = dynamic_pointer_cast<VRGeometry>(getSelected());
 }
 
 void VRGuiScene::on_treeview_rename(string ID, string name) {
@@ -471,7 +471,7 @@ void VRGuiScene::on_groupsync_clicked() {
     if(!trigger_cbs) return;
     /*if(!selected_itr) return;
 
-    VRGroupPtr obj = static_pointer_cast<VRGroup>( getSelected() );
+    VRGroupPtr obj = dynamic_pointer_cast<VRGroup>( getSelected() );
     obj->sync();
     syncSGTree(obj, selected_itr);*/
 }
@@ -484,7 +484,7 @@ void VRGuiScene::on_groupapply_clicked() {
     if(!trigger_cbs) return;
     /*if(!selected_itr) return;
 
-    VRGroupPtr obj = static_pointer_cast<VRGroup>( getSelected() );
+    VRGroupPtr obj = dynamic_pointer_cast<VRGroup>( getSelected() );
     obj->apply();
 
     vector<VRGroupWeakPtr> grps = obj->getGroupObjects();
@@ -502,14 +502,14 @@ void VRGuiScene::on_groupapply_clicked() {
 void VRGuiScene::on_change_group() {
     if(!trigger_cbs) return;
 
-    VRGroupPtr obj = static_pointer_cast<VRGroup>( getSelected() );
+    VRGroupPtr obj = dynamic_pointer_cast<VRGroup>( getSelected() );
     //obj->setGroup(getComboboxText("combobox14"));
 }
 
 void VRGuiScene::on_group_edited() {
     if(!trigger_cbs) return;
 
-    VRGroupPtr obj = static_pointer_cast<VRGroup>( getSelected() );
+    VRGroupPtr obj = dynamic_pointer_cast<VRGroup>( getSelected() );
     if (!obj) return;
     /*string old_group = getComboboxText("combobox14");
     string new_group = getTextEntry("entry41");
@@ -529,8 +529,9 @@ void VRGuiScene::on_group_edited() {
 
 // VR3DEntities
 void VRGuiScene::on_change_from(Vec3d v) {
+    cout << "on_change_from " << v << endl;
     if(!trigger_cbs) return;
-    VRTransformPtr obj = static_pointer_cast<VRTransform>( getSelected() );
+    VRTransformPtr obj = dynamic_pointer_cast<VRTransform>( getSelected() );
     if (!obj) return;
     if (transformModeLocal) obj->setFrom(v);
     else obj->setWorldPosition(v);
@@ -539,7 +540,7 @@ void VRGuiScene::on_change_from(Vec3d v) {
 
 void VRGuiScene::on_change_at(Vec3d v) {
     if(!trigger_cbs) return;
-    VRTransformPtr obj = static_pointer_cast<VRTransform>( getSelected() );
+    VRTransformPtr obj = dynamic_pointer_cast<VRTransform>( getSelected() );
     if (!obj) return;
     if (transformModeLocal) obj->setAt(v);
     else obj->setWorldAt(v);
@@ -548,7 +549,7 @@ void VRGuiScene::on_change_at(Vec3d v) {
 
 void VRGuiScene::on_change_dir(Vec3d v) {
     if(!trigger_cbs) return;
-    VRTransformPtr obj = static_pointer_cast<VRTransform>( getSelected() );
+    VRTransformPtr obj = dynamic_pointer_cast<VRTransform>( getSelected() );
     if (!obj) return;
     if (transformModeLocal) obj->setDir(v);
     else obj->setWorldDir(v);
@@ -557,7 +558,7 @@ void VRGuiScene::on_change_dir(Vec3d v) {
 
 void VRGuiScene::on_change_up(Vec3d v) {
     if(!trigger_cbs) return;
-    VRTransformPtr obj = static_pointer_cast<VRTransform>( getSelected() );
+    VRTransformPtr obj = dynamic_pointer_cast<VRTransform>( getSelected() );
     if (!obj) return;
     if (transformModeLocal) obj->setUp(v);
     else obj->setWorldUp(v);
@@ -566,7 +567,7 @@ void VRGuiScene::on_change_up(Vec3d v) {
 
 void VRGuiScene::on_scale_changed(Vec3d v) {
     if(!trigger_cbs) return;
-    VRTransformPtr obj = static_pointer_cast<VRTransform>( getSelected() );
+    VRTransformPtr obj = dynamic_pointer_cast<VRTransform>( getSelected() );
     if (!obj) return;
     if (transformModeLocal) obj->setScale(v);
     else obj->setWorldScale(v);
@@ -575,7 +576,7 @@ void VRGuiScene::on_scale_changed(Vec3d v) {
 
 void VRGuiScene::on_change_lod_center(Vec3d v) {
     if(!trigger_cbs) return;
-    VRLodPtr obj = static_pointer_cast<VRLod>( getSelected() );
+    VRLodPtr obj = dynamic_pointer_cast<VRLod>( getSelected() );
     if (!obj) return;
     obj->setCenter(v);
     updateObjectForms();
@@ -583,7 +584,7 @@ void VRGuiScene::on_change_lod_center(Vec3d v) {
 
 void VRGuiScene::on_focus_clicked() {
     if(!trigger_cbs) return;
-    VRTransformPtr obj = static_pointer_cast<VRTransform>( getSelected() );
+    VRTransformPtr obj = dynamic_pointer_cast<VRTransform>( getSelected() );
     if (!obj) return;
     auto scene = VRScene::getCurrent();
     if (scene) scene->getActiveCamera()->focusObject( obj );
@@ -591,7 +592,7 @@ void VRGuiScene::on_focus_clicked() {
 
 void VRGuiScene::on_identity_clicked() {
     if(!trigger_cbs) return;
-    VRTransformPtr obj = static_pointer_cast<VRTransform>( getSelected() );
+    VRTransformPtr obj = dynamic_pointer_cast<VRTransform>( getSelected() );
     if (!obj) return;
     obj->setIdentity();
     updateObjectForms();
@@ -599,13 +600,13 @@ void VRGuiScene::on_identity_clicked() {
 
 void VRGuiScene::on_edit_T_constraint(Vec3d v) {
     if(!trigger_cbs) return;
-    VRTransformPtr obj = static_pointer_cast<VRTransform>( getSelected() );
+    VRTransformPtr obj = dynamic_pointer_cast<VRTransform>( getSelected() );
     //obj->getConstraint()->setTConstraint(v, obj->getConstraint()->getTMode());
 }
 
 void VRGuiScene::on_toggle_T_constraint() {
     if(!trigger_cbs) return;
-    VRTransformPtr obj = static_pointer_cast<VRTransform>( getSelected() );
+    VRTransformPtr obj = dynamic_pointer_cast<VRTransform>( getSelected() );
 
     /*bool bT = getCheckButtonState("checkbutton21");
     bool bR = getCheckButtonState("checkbutton22");
@@ -614,7 +615,7 @@ void VRGuiScene::on_toggle_T_constraint() {
 
 void VRGuiScene::on_toggle_R_constraint() {
     if(!trigger_cbs) return;
-    VRTransformPtr obj = static_pointer_cast<VRTransform>( getSelected() );
+    VRTransformPtr obj = dynamic_pointer_cast<VRTransform>( getSelected() );
 
     /*bool bT = getCheckButtonState("checkbutton21");
     bool bR = getCheckButtonState("checkbutton22");
@@ -623,7 +624,7 @@ void VRGuiScene::on_toggle_R_constraint() {
 
 void VRGuiScene::on_toggle_rc() {
     if(!trigger_cbs) return;
-    VRTransformPtr obj = static_pointer_cast<VRTransform>( getSelected() );
+    VRTransformPtr obj = dynamic_pointer_cast<VRTransform>( getSelected() );
 
     Vec3d rc;
     /*if (getCheckButtonState("checkbutton18") ) rc[0] = 1;
@@ -638,7 +639,7 @@ void VRGuiScene::on_change_primitive() {
     if(!trigger_cbs) return;
     /*string prim = getComboboxText("combobox21");
 
-    VRGeometryPtr obj = static_pointer_cast<VRGeometry>( getSelected() );
+    VRGeometryPtr obj = dynamic_pointer_cast<VRGeometry>( getSelected() );
 
     obj->setPrimitive(prim);
     updateObjectForms();*/
@@ -668,13 +669,13 @@ void VRGuiScene::on_edit_primitive_params(const char* path_string, const char* n
         if (i<N-1) args += " ";
     }
 
-    VRGeometryPtr obj = static_pointer_cast<VRGeometry>( getSelected() );
+    VRGeometryPtr obj = dynamic_pointer_cast<VRGeometry>( getSelected() );
     obj->setPrimitive(prim + " " + args);*/
 }
 
 void VRGuiScene::on_edit_distance(const char* path_string, const char* new_text) {
     if(!trigger_cbs) return;
-    VRLodPtr lod = static_pointer_cast<VRLod>( getSelected() );
+    VRLodPtr lod = dynamic_pointer_cast<VRLod>( getSelected() );
 
     /*VRGuiTreeView tree_view("treeview8");
     tree_view.setSelectedStringValue(1, new_text);
@@ -686,7 +687,7 @@ void VRGuiScene::on_edit_distance(const char* path_string, const char* new_text)
 
 void VRGuiScene::on_lod_decimate_changed() {
     if(!trigger_cbs) return;
-    VRLodPtr lod = static_pointer_cast<VRLod>( getSelected() );
+    VRLodPtr lod = dynamic_pointer_cast<VRLod>( getSelected() );
     //lod->setDecimate(getCheckButtonState("checkbutton35"), toInt(getTextEntry("entry9")));
 }
 
@@ -713,7 +714,7 @@ void on_change_CSG_operation(GtkComboBox* cb, gpointer data) {
 
 void VRGuiScene::on_toggle_camera_accept_realroot() {
     if(!trigger_cbs) return;
-    VRCameraPtr obj = static_pointer_cast<VRCamera>( getSelected() );
+    VRCameraPtr obj = dynamic_pointer_cast<VRCamera>( getSelected() );
 
     /*bool b = getCheckButtonState("checkbutton17");
     obj->setAcceptRoot(b);*/
@@ -892,13 +893,13 @@ void VRGuiScene::on_toggle_global(bool global) {
 
     VRObjectPtr obj = getSelected();
     if (obj) {
-        if (obj->hasTag("transform")) setTransform(static_pointer_cast<VRTransform>(obj));
+        if (obj->hasTag("transform")) setTransform(dynamic_pointer_cast<VRTransform>(obj));
     }
 }
 
 void VRGuiScene::on_toggle_T_constraint_mode() {
     if(!trigger_cbs) return;
-    VRTransformPtr obj = static_pointer_cast<VRTransform>( getSelected() );
+    VRTransformPtr obj = dynamic_pointer_cast<VRTransform>( getSelected() );
 
     //bool plane = getRadioButtonState("radiobutton2");
     //obj->getConstraint()->setTConstraint( obj->getConstraint()->getTConstraint(), plane? OSG::VRConstraint::PLANE : OSG::VRConstraint::LINE);
@@ -906,7 +907,7 @@ void VRGuiScene::on_toggle_T_constraint_mode() {
 
 void VRGuiScene::on_toggle_phys() {
     if(!trigger_cbs) return;
-    VRTransformPtr obj = static_pointer_cast<VRTransform>( getSelected() );
+    VRTransformPtr obj = dynamic_pointer_cast<VRTransform>( getSelected() );
 
     /*bool phys = getCheckButtonState("checkbutton13");
 #ifndef WITHOUT_BULLET
@@ -917,7 +918,7 @@ void VRGuiScene::on_toggle_phys() {
 
 void VRGuiScene::on_toggle_dynamic() {
     if(!trigger_cbs) return;
-    VRTransformPtr obj = static_pointer_cast<VRTransform>( getSelected() );
+    VRTransformPtr obj = dynamic_pointer_cast<VRTransform>( getSelected() );
 
     /*bool dyn = getCheckButtonState("checkbutton33");
 #ifndef WITHOUT_BULLET
@@ -927,7 +928,7 @@ void VRGuiScene::on_toggle_dynamic() {
 
 void VRGuiScene::on_mass_changed() {
     if(!trigger_cbs) return;
-    VRTransformPtr obj = static_pointer_cast<VRTransform>( getSelected() );
+    VRTransformPtr obj = dynamic_pointer_cast<VRTransform>( getSelected() );
 
     /*string m = getTextEntry("entry59");
 #ifndef WITHOUT_BULLET
@@ -937,7 +938,7 @@ void VRGuiScene::on_mass_changed() {
 
 void VRGuiScene::on_change_phys_shape() {
     if(!trigger_cbs) return;
-    VRTransformPtr obj = static_pointer_cast<VRTransform>( getSelected() );
+    VRTransformPtr obj = dynamic_pointer_cast<VRTransform>( getSelected() );
     /*string t = getComboboxText("combobox8");
 #ifndef WITHOUT_BULLET
     if (obj->getPhysics()) obj->getPhysics()->setShape(t);
@@ -987,35 +988,35 @@ void VRGuiScene::setGeometry_face_count() {
 // ------------- camera -----------------------
 void VRGuiScene::on_cam_aspect_changed() {
     if(!trigger_cbs) return;
-    VRCameraPtr obj = static_pointer_cast<VRCamera>( getSelected() );
+    VRCameraPtr obj = dynamic_pointer_cast<VRCamera>( getSelected() );
     /*string a = getTextEntry("entry60");
     obj->setAspect(toFloat(a));*/
 }
 
 void VRGuiScene::on_cam_fov_changed() {
     if(!trigger_cbs) return;
-    VRCameraPtr obj = static_pointer_cast<VRCamera>( getSelected() );
+    VRCameraPtr obj = dynamic_pointer_cast<VRCamera>( getSelected() );
     /*string f = getTextEntry("entry61");
     obj->setFov(toFloat(f));*/
 }
 
 void VRGuiScene::on_cam_near_changed() {
     if(!trigger_cbs) return;
-    VRCameraPtr obj = static_pointer_cast<VRCamera>( getSelected() );
+    VRCameraPtr obj = dynamic_pointer_cast<VRCamera>( getSelected() );
     /*string f = getTextEntry("entry6");
     obj->setNear(toFloat(f));*/
 }
 
 void VRGuiScene::on_cam_far_changed() {
     if(!trigger_cbs) return;
-    VRCameraPtr obj = static_pointer_cast<VRCamera>( getSelected() );
+    VRCameraPtr obj = dynamic_pointer_cast<VRCamera>( getSelected() );
     /*string f = getTextEntry("entry7");
     obj->setFar(toFloat(f));*/
 }
 
 void VRGuiScene::on_change_cam_proj() {
     if(!trigger_cbs) return;
-    VRCameraPtr obj = static_pointer_cast<VRCamera>( getSelected() );
+    VRCameraPtr obj = dynamic_pointer_cast<VRCamera>( getSelected() );
     //obj->setType(getComboboxI("combobox23"));
 }
 // ----------------------------------------------
@@ -1023,7 +1024,7 @@ void VRGuiScene::on_change_cam_proj() {
 // ------------- light -----------------------
 void VRGuiScene::on_toggle_light() {
     if(!trigger_cbs) return;
-    VRLightPtr obj = static_pointer_cast<VRLight>( getSelected() );
+    VRLightPtr obj = dynamic_pointer_cast<VRLight>( getSelected() );
     if (!obj) return;
     /*bool b = getCheckButtonState("checkbutton31");
     obj->setOn(b);*/
@@ -1031,7 +1032,7 @@ void VRGuiScene::on_toggle_light() {
 
 void VRGuiScene::on_toggle_light_shadow() {
     if(!trigger_cbs) return;
-    VRLightPtr obj = static_pointer_cast<VRLight>( getSelected() );
+    VRLightPtr obj = dynamic_pointer_cast<VRLight>( getSelected() );
     if (!obj) return;
     /*bool b = getCheckButtonState("checkbutton32");
     obj->setShadows(b);*/
@@ -1039,7 +1040,7 @@ void VRGuiScene::on_toggle_light_shadow() {
 
 void VRGuiScene::on_toggle_light_shadow_volume() {
     if(!trigger_cbs) return;
-    VRLightPtr obj = static_pointer_cast<VRLight>( getSelected() );
+    VRLightPtr obj = dynamic_pointer_cast<VRLight>( getSelected() );
     if (!obj) return;
     /*bool b = getCheckButtonState("checkbutton2");
     float D = toFloat( getTextEntry("entry36") );
@@ -1054,7 +1055,7 @@ void VRGuiScene::on_toggle_light_shadow_volume() {
 
 void VRGuiScene::on_change_light_type() {
     if(!trigger_cbs) return;
-    VRLightPtr obj = static_pointer_cast<VRLight>( getSelected() );
+    VRLightPtr obj = dynamic_pointer_cast<VRLight>( getSelected() );
     /*if (!obj) return;
     string t = getComboboxText("combobox2");
     obj->setType(t);*/
@@ -1062,7 +1063,7 @@ void VRGuiScene::on_change_light_type() {
 
 void VRGuiScene::on_change_light_shadow() {
     if(!trigger_cbs) return;
-    VRLightPtr obj = static_pointer_cast<VRLight>( getSelected() );
+    VRLightPtr obj = dynamic_pointer_cast<VRLight>( getSelected() );
     /*if (!obj) return;
     string t = getComboboxText("combobox22");
     obj->setShadowMapRes(toInt(t));*/
@@ -1070,7 +1071,7 @@ void VRGuiScene::on_change_light_shadow() {
 
 void VRGuiScene::on_edit_light_attenuation() {
     if(!trigger_cbs) return;
-    VRLightPtr obj = static_pointer_cast<VRLight>( getSelected() );
+    VRLightPtr obj = dynamic_pointer_cast<VRLight>( getSelected() );
     if (!obj) return;
     /*string ac = getTextEntry("entry44");
     string al = getTextEntry("entry45");
@@ -1080,7 +1081,7 @@ void VRGuiScene::on_edit_light_attenuation() {
 
 bool VRGuiScene::setShadow_color() {
     if(!trigger_cbs) return true;
-    VRLightPtr obj = static_pointer_cast<VRLight>( getSelected() );
+    VRLightPtr obj = dynamic_pointer_cast<VRLight>( getSelected() );
     if (!obj) return true;
     /*Color4f c = chooseColor("shadow_col", obj->getShadowColor());
     obj->setShadowColor(c);*/
@@ -1089,7 +1090,7 @@ bool VRGuiScene::setShadow_color() {
 
 bool VRGuiScene::setLight_diff_color() {
     if(!trigger_cbs) return true;
-    VRLightPtr obj = static_pointer_cast<VRLight>( getSelected() );
+    VRLightPtr obj = dynamic_pointer_cast<VRLight>( getSelected() );
     if (!obj) return true;
     /*Color4f c = chooseColor("light_diff", obj->getDiffuse());
     obj->setDiffuse(c);*/
@@ -1098,7 +1099,7 @@ bool VRGuiScene::setLight_diff_color() {
 
 bool VRGuiScene::setLight_amb_color() {
     if(!trigger_cbs) return true;
-    VRLightPtr obj = static_pointer_cast<VRLight>( getSelected() );
+    VRLightPtr obj = dynamic_pointer_cast<VRLight>( getSelected() );
     /*if (!obj) return true;
     Color4f c = chooseColor("light_amb", obj->getAmbient());
     obj->setAmbient(c);*/
@@ -1107,7 +1108,7 @@ bool VRGuiScene::setLight_amb_color() {
 
 bool VRGuiScene::setLight_spec_color() {
     if(!trigger_cbs) return true;
-    VRLightPtr obj = static_pointer_cast<VRLight>( getSelected() );
+    VRLightPtr obj = dynamic_pointer_cast<VRLight>( getSelected() );
     if (!obj) return true;
     /*Color4f c = chooseColor("light_spec", obj->getSpecular());
     obj->setSpecular(c);*/
@@ -1312,20 +1313,20 @@ VRGuiScene::VRGuiScene() { // TODO: reduce callbacks with templated functions
     updateObjectForms();*/
 
     auto mgr = OSG::VRGuiSignals::get();
-    mgr->addCallback("ui_change_scene_tab", [&](OSG::VRGuiSignals::Options o) { if (o["tab"] == "Scenegraph") updateTreeView(); return true; } );
-    mgr->addCallback("treeview_select", [&](OSG::VRGuiSignals::Options o) { if (o["treeview"] == "scenegraph") on_treeview_select( o["node"] ); return true; } );
-    mgr->addCallback("treeview_rename", [&](OSG::VRGuiSignals::Options o) { if (o["treeview"] == "scenegraph") on_treeview_rename( o["node"], o["name"] ); return true; } );
+    mgr->addCallback("ui_change_scene_tab", [&](OSG::VRGuiSignals::Options o) { if (o["tab"] == "Scenegraph") updateTreeView(); return true; }, true );
+    mgr->addCallback("treeview_select", [&](OSG::VRGuiSignals::Options o) { if (o["treeview"] == "scenegraph") on_treeview_select( o["node"] ); return true; }, true );
+    mgr->addCallback("treeview_rename", [&](OSG::VRGuiSignals::Options o) { if (o["treeview"] == "scenegraph") on_treeview_rename( o["node"], o["name"] ); return true; }, true );
 
-    mgr->addCallback("sg_toggle_visible", [&](OSG::VRGuiSignals::Options o) { on_toggle_visible(toBool(o["visible"])); return true; } );
-    mgr->addCallback("sg_toggle_pickable", [&](OSG::VRGuiSignals::Options o) { on_toggle_pickable(toBool(o["pickable"])); return true; } );
-    mgr->addCallback("sg_toggle_cast_shadow", [&](OSG::VRGuiSignals::Options o) { on_toggle_throw_shadow(toBool(o["castShadow"])); return true; } );
-    mgr->addCallback("sg_toggle_global", [&](OSG::VRGuiSignals::Options o) { on_toggle_global(toBool(o["global"])); return true; } );
+    mgr->addCallback("sg_toggle_visible", [&](OSG::VRGuiSignals::Options o) { on_toggle_visible(toBool(o["visible"])); return true; }, true );
+    mgr->addCallback("sg_toggle_pickable", [&](OSG::VRGuiSignals::Options o) { on_toggle_pickable(toBool(o["pickable"])); return true; }, true );
+    mgr->addCallback("sg_toggle_cast_shadow", [&](OSG::VRGuiSignals::Options o) { on_toggle_throw_shadow(toBool(o["castShadow"])); return true; }, true );
+    mgr->addCallback("sg_toggle_global", [&](OSG::VRGuiSignals::Options o) { on_toggle_global(toBool(o["global"])); return true; }, true );
 
-    mgr->addCallback("sg_set_position", [&](OSG::VRGuiSignals::Options o) { on_change_from(Vec3d(toFloat(o["x"]), toFloat(o["y"]), toFloat(o["z"]))); return true; } );
-    mgr->addCallback("sg_set_atvector", [&](OSG::VRGuiSignals::Options o) { on_change_at(Vec3d(toFloat(o["x"]), toFloat(o["y"]), toFloat(o["z"]))); return true; } );
-    mgr->addCallback("sg_set_direction", [&](OSG::VRGuiSignals::Options o) { on_change_dir(Vec3d(toFloat(o["x"]), toFloat(o["y"]), toFloat(o["z"]))); return true; } );
-    mgr->addCallback("sg_set_upvector", [&](OSG::VRGuiSignals::Options o) { on_change_up(Vec3d(toFloat(o["x"]), toFloat(o["y"]), toFloat(o["z"]))); return true; } );
-    mgr->addCallback("sg_set_scale", [&](OSG::VRGuiSignals::Options o) { on_scale_changed(Vec3d(toFloat(o["x"]), toFloat(o["y"]), toFloat(o["z"]))); return true; } );
+    mgr->addCallback("sg_set_position", [&](OSG::VRGuiSignals::Options o) { on_change_from(Vec3d(toFloat(o["x"]), toFloat(o["y"]), toFloat(o["z"]))); return true; }, true );
+    mgr->addCallback("sg_set_atvector", [&](OSG::VRGuiSignals::Options o) { on_change_at(Vec3d(toFloat(o["x"]), toFloat(o["y"]), toFloat(o["z"]))); return true; }, true );
+    mgr->addCallback("sg_set_direction", [&](OSG::VRGuiSignals::Options o) { on_change_dir(Vec3d(toFloat(o["x"]), toFloat(o["y"]), toFloat(o["z"]))); return true; }, true );
+    mgr->addCallback("sg_set_upvector", [&](OSG::VRGuiSignals::Options o) { on_change_up(Vec3d(toFloat(o["x"]), toFloat(o["y"]), toFloat(o["z"]))); return true; }, true );
+    mgr->addCallback("sg_set_scale", [&](OSG::VRGuiSignals::Options o) { on_scale_changed(Vec3d(toFloat(o["x"]), toFloat(o["y"]), toFloat(o["z"]))); return true; }, true );
 }
 
 // new scene, update stuff here
@@ -1364,7 +1365,7 @@ void VRGuiScene::selectObject(VRObjectPtr obj) {
     updateObjectForms();
 
     selected_geometry.reset();
-    if (obj && obj->hasTag("geometry")) selected_geometry = static_pointer_cast<VRGeometry>(obj);*/
+    if (obj && obj->hasTag("geometry")) selected_geometry = dynamic_pointer_cast<VRGeometry>(obj);*/
 }
 
 OSG_END_NAMESPACE;
