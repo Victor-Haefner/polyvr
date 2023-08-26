@@ -905,6 +905,13 @@ void TextEditor::Render()
 	snprintf(buf, 16, " %d ", globalLineMax);
 	mTextStart = ImGui::GetFont()->CalcTextSizeA(ImGui::GetFontSize(), FLT_MAX, -1.0f, buf, nullptr, nullptr).x + mLeftMargin;
 
+	std::string currentSelection = GetSelectedText();
+
+	auto highlight = [&](ImVec2 start, ImVec2 size) {
+	    ImVec2 end(start.x + size.x, start.y + size.y);
+        drawList->AddRectFilled(start, end, mPalette[(int)PaletteIndex::Selection]);
+	};
+
 	if (!mLines.empty())
 	{
 		float spaceSize = ImGui::GetFont()->CalcTextSizeA(ImGui::GetFontSize(), FLT_MAX, -1.0f, " ", nullptr, nullptr).x;
@@ -1038,6 +1045,7 @@ void TextEditor::Render()
 					const ImVec2 newOffset(textScreenPos.x + bufferOffset.x, textScreenPos.y + bufferOffset.y);
 					drawList->AddText(newOffset, prevColor, mLineBuffer.c_str());
 					auto textSize = ImGui::GetFont()->CalcTextSizeA(ImGui::GetFontSize(), FLT_MAX, -1.0f, mLineBuffer.c_str(), nullptr, nullptr);
+                    if (HasSelection() && mLineBuffer == currentSelection) highlight(newOffset, textSize);
 					bufferOffset.x += textSize.x;
 					mLineBuffer.clear();
 				}
@@ -1089,6 +1097,8 @@ void TextEditor::Render()
 			{
 				const ImVec2 newOffset(textScreenPos.x + bufferOffset.x, textScreenPos.y + bufferOffset.y);
 				drawList->AddText(newOffset, prevColor, mLineBuffer.c_str());
+                auto textSize = ImGui::GetFont()->CalcTextSizeA(ImGui::GetFontSize(), FLT_MAX, -1.0f, mLineBuffer.c_str(), nullptr, nullptr);
+                if (HasSelection() && mLineBuffer == currentSelection) highlight(newOffset, textSize);
 				mLineBuffer.clear();
 			}
 
