@@ -19,7 +19,7 @@ Vec3d PCA::computeCentroid() {
     int N = pnts.size();
     for (auto& p : pnts) res += p;
     if (N > 0) res *= 1.0/N;
-    cout << " centroid: " << res << endl;
+    //cout << " centroid: " << res << endl;
     return res;
 }
 
@@ -40,7 +40,7 @@ Matrix4d PCA::computeCovMatrix() {
         res[1][2] += p[1]*p[2];
     }
 
-    cout << "PCA::computeCovMatrix " << center << " " << N << endl;
+    //cout << "PCA::computeCovMatrix " << center << " " << N << endl;
 
     for (int i=0; i<3; i++)
         for (int j=i; j<3; j++) res[i][j] *= 1.0/N;
@@ -53,7 +53,7 @@ Matrix4d PCA::computeCovMatrix() {
     res[3][1] = center[1];
     res[3][2] = center[2];
 
-    cout << " covariance matrix: " << res[0][0] << " " << res[1][1] << " " << res[2][2] << " " << res[0][1] << " " << res[0][2] << " " << res[1][2] << endl;
+    //cout << " covariance matrix: " << res[0][0] << " " << res[1][1] << " " << res[2][2] << " " << res[0][1] << " " << res[0][2] << " " << res[1][2] << endl;
     return res;
 }
 
@@ -82,7 +82,7 @@ Matrix4d PCA::computeEigenvectors(Matrix4d m) {
     double a[9] = { m[0][0], m[1][0], m[2][0], m[0][1], m[1][1], m[2][1], m[0][2], m[1][2], m[2][2] };
 
     //LAPACK_COL_MAJOR LAPACK_ROW_MAJOR
-    cout << " PCA::computeEigenvectors, run dgeev on:" << endl << m[0][0] <<" "<< m[1][0] << " " << m[2][0] << " " << m[0][1] << " " << m[1][1] << " " << m[2][1] << " " << m[0][2] << " " << m[1][2] << " " << m[2][2] << endl;
+    //cout << " PCA::computeEigenvectors, run dgeev on:" << endl << m[0][0] <<" "<< m[1][0] << " " << m[2][0] << " " << m[0][1] << " " << m[1][1] << " " << m[2][1] << " " << m[0][2] << " " << m[1][2] << " " << m[2][2] << endl;
 #ifdef _WIN32
     //info = dgeev(LAPACK_COL_MAJOR, 'V', 'V', n, a, lda, wr, wi, vl, ldvl, vr, ldvr);
     lwork = -1;
@@ -99,7 +99,7 @@ Matrix4d PCA::computeEigenvectors(Matrix4d m) {
     info = dgeev( LAPACK_COL_MAJOR, 'V', 'V', n, a, lda, wr, wi, vl, ldvl, vr, ldvr,  work, lwork);
     delete work;
 #endif
-    cout << "   dgeev done" << endl;
+    //cout << "   dgeev done" << endl;
 
     if ( info > 0 ) { cout << "Warning: computeEigenvalues failed!\n"; return Matrix4d(); } // Check for convergence
 
@@ -107,7 +107,7 @@ Matrix4d PCA::computeEigenvectors(Matrix4d m) {
     if (wr[o[0]] < wr[o[1]]) swap(o[0], o[1]);
     if (wr[o[1]] < wr[o[2]]) swap(o[1], o[2]);
     if (wr[o[0]] < wr[o[1]]) swap(o[0], o[1]);
-    cout << " pca reorder: " << o << ",  ew: " << Vec3d(wr[0], wr[1], wr[2]) << " -> " << Vec3d(wr[o[0]], wr[o[1]], wr[o[2]]) << endl;
+    //cout << " pca reorder: " << o << ",  ew: " << Vec3d(wr[0], wr[1], wr[2]) << " -> " << Vec3d(wr[o[0]], wr[o[1]], wr[o[2]]) << endl;
 
     Matrix4d res;
     res[0] = Vec4d(vl[o[0]*3], vl[o[0]*3+1], vl[o[0]*3+2], 0);

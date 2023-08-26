@@ -7,6 +7,16 @@ using namespace OSG;
 
 simpleVRPyType(PointCloud, New_VRObjects_ptr);
 
+template<> PyObject* VRPyTypeCaster::cast(const VRPointCloud::Splat& splat) {
+    PyObject* pySplat = PyTuple_New(5);
+    PyTuple_SetItem(pySplat, 0, VRPyTypeCaster::cast(splat.p));
+    PyTuple_SetItem(pySplat, 1, VRPyTypeCaster::cast(splat.c));
+    PyTuple_SetItem(pySplat, 2, VRPyTypeCaster::cast(splat.v1));
+    PyTuple_SetItem(pySplat, 3, VRPyTypeCaster::cast(splat.v2));
+    PyTuple_SetItem(pySplat, 4, VRPyTypeCaster::cast(splat.w));
+    return pySplat;
+}
+
 PyMethodDef VRPyPointCloud::methods[] = {
     {"getOctreeVisual", PyWrap( PointCloud, getOctreeVisual, "Visual of internal octree", VRGeometryPtr ) },
     {"addPoint", PyWrap( PointCloud, addPoint, "Add a point, position and color", void, Vec3d, Color3ub ) },
@@ -24,6 +34,6 @@ PyMethodDef VRPyPointCloud::methods[] = {
     {"genTestFile", PyWrap( PointCloud, genTestFile, "Generate a pointcloud, regular cube grid, (.pcb) file (path, Npoints, doColors)", void, string, size_t, bool ) },
     {"genTestFile2", PyWrap( PointCloud, genTestFile2, "Generate a pointcloud, ico sphere surface, (.pcb) file (path, Niterations, doColors, splatSize[mm])", void, string, size_t, bool, int ) },
     {"projectOnPanorama", PyWrap( PointCloud, projectOnPanorama, "Project point onto panorama image", Vec3ub, Vec3d, VRTexturePtr, PosePtr ) },
-    {"radiusSearch", PyWrap( PointCloud, radiusSearch, "Executes a radius search and returns point positions around P inside radius r, (P, r)", vector<Vec3d>, Vec3d, double ) },
+    {"radiusSearch", PyWrap( PointCloud, radiusSearch, "Executes a radius search and returns point positions around P inside radius r, (P, r)", vector<VRPointCloud::Splat>, Vec3d, double ) },
     {NULL}  /* Sentinel */
 };

@@ -697,8 +697,21 @@ void VRPointCloud::externalSort(string path, size_t chunkSize, double binSize) {
     mergeAllChunks();
 }
 
-vector<Vec3d> VRPointCloud::radiusSearch(Vec3d p, double r) {
-    vector<Vec3d> res = octree->radiusPointSearch(p, r);
+vector<VRPointCloud::Splat> VRPointCloud::radiusSearch(Vec3d p, double r) {
+    vector<Vec3d> points = octree->radiusPointSearch(p, r);
+    vector<PntData> data = octree->radiusSearch(p, r);
+
+    int N = min(points.size(), data.size());
+    vector<Splat> res;
+    for (int i=0; i<N; i++) {
+        Splat s;
+        s.p = points[i];
+        s.c = data[i].c;
+        s.v1 = data[i].v1;
+        s.v2 = data[i].v2;
+        s.w = data[i].w;
+        res.push_back(s);
+    }
     return res;
 }
 

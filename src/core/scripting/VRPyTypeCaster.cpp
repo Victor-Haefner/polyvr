@@ -90,7 +90,9 @@ template<> PyObject* VRPyTypeCaster::cast(const Pnt3d& b) { return toPyObject(Ve
 template<> PyObject* VRPyTypeCaster::cast(const Vec2i& b) { return VRPyBase::toPyTuple(b); }
 template<> PyObject* VRPyTypeCaster::cast(const Vec3i& b) { return VRPyBase::toPyTuple(b); }
 template<> PyObject* VRPyTypeCaster::cast(const Vec4i& b) { return VRPyBase::toPyTuple(b); }
+template<> PyObject* VRPyTypeCaster::cast(const Vec2ub& b) { return VRPyBase::toPyTuple(Vec2i(b[0], b[1])); }
 template<> PyObject* VRPyTypeCaster::cast(const Vec3ub& b) { return VRPyBase::toPyTuple(Vec3i(b[0], b[1], b[2])); }
+template<> PyObject* VRPyTypeCaster::cast(const Color3ub& b) { return VRPyBase::toPyTuple(Vec3i(b[0], b[1], b[2])); }
 template<> PyObject* VRPyTypeCaster::cast(const Color3f& b) { return toPyObject(Vec3d(b)); }
 template<> PyObject* VRPyTypeCaster::cast(const Color4f& b) { return VRPyBase::toPyTuple(Vec4d(b)); }
 //template<> PyObject* VRPyTypeCaster::cast(const Line& b) {}
@@ -98,8 +100,8 @@ template<> PyObject* VRPyTypeCaster::cast(const Boundingbox& b) { return VRPyBou
 
 template<> PyObject* VRPyTypeCaster::cast(const Line& l) {
     auto L = PyTuple_New(2);
-    PyTuple_SetItem(L,0,VRPyBase::toPyTuple(Vec3d(l.getPosition())));
-    PyTuple_SetItem(L,1,VRPyBase::toPyTuple(Vec3d(l.getDirection())));
+    PyTuple_SetItem(L,0,toPyObject(Vec3d(l.getPosition())));
+    PyTuple_SetItem(L,1,toPyObject(Vec3d(l.getDirection())));
     return L;
 }
 
