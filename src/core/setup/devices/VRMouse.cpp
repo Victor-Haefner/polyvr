@@ -114,9 +114,11 @@ bool VRMouse::calcViewRay(VRCameraPtr cam, Line &line, float x, float y, int W, 
         auto c = v->getCameraDecoratorLeft();
         c->getProjection(proj, W, H);
         c->getProjectionTranslation(projtrans, W, H);
+        //proj[3][2] *= 0.5; // 2*near -> near // not sure if this works with cameradecorators
     } else {
         cam->getCam()->cam->getProjection(proj, W, H);
         cam->getCam()->cam->getProjectionTranslation(projtrans, W, H);
+        proj[3][2] *= 0.5; // 2*near -> near
     }
 
     Matrix wctocc;
@@ -139,6 +141,7 @@ bool VRMouse::calcViewRay(VRCameraPtr cam, Line &line, float x, float y, int W, 
         from[2] = 0;
     }
 
+    //cout << "VRMouse::calcViewRay xy " << Vec2i(x,y) << " \nfrom " << from << " \ncam  " << cam->getWorldPosition() << " near: " << cam->getNear() << "    " << proj << "  p11 " << proj[3][2] << endl;
     //cout << "VRMouse::calcViewRay xy " << Vec2i(x,y) << " from " << from << " at " << at << " dir " << dir << endl;
     line.setValue(from, dir);
     return true;
