@@ -344,6 +344,7 @@ void ImScriptEditor::addGroup(string name, string ID) {
 
 void ImScriptEditor::render() {
     if (!sensitive) ImGui::BeginDisabled();
+    ImGuiIO& io = ImGui::GetIO();
 
     ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_CollapsingHeader;
     if (ImGui::CollapsingHeader("Options", flags)) {
@@ -403,17 +404,16 @@ void ImScriptEditor::render() {
     }
 
     if (sensitive) {
+        static TextEditor::Coordinates lastCoords = imEditor.GetCursorPosition();
+        if (!io.KeyShift && !imEditor.HasSelection()) lastCoords = imEditor.GetCursorPosition();
+
         imEditor.Render("Editor");
         if (imEditor.IsTextChanged()) uiSignal("script_editor_text_changed");
 
         if (ImGui::IsItemHovered()) { // shift selection
             if( ImGui::IsMouseReleased(0) ) {
-                static TextEditor::Coordinates lastCoords = imEditor.GetCursorPosition();
                 auto coords = imEditor.GetCursorPosition();
-
-                ImGuiIO& io = ImGui::GetIO();
                 if (io.KeyShift) imEditor.SetSelection(lastCoords, coords, TextEditor::SelectionMode::Normal);
-                else lastCoords = coords;
             }
         }
     }
