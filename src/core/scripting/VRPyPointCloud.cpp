@@ -7,6 +7,15 @@ using namespace OSG;
 
 simpleVRPyType(PointCloud, New_VRObjects_ptr);
 
+template<> bool toValue(PyObject* obj, VRPointCloud::Splat& e) {
+    toValue<Vec3d>(PyTuple_GetItem(obj, 0), e.p);
+    toValue<Color3ub>(PyTuple_GetItem(obj, 1), e.c);
+    toValue<Vec2ub>(PyTuple_GetItem(obj, 2), e.v1);
+    toValue<Vec2ub>(PyTuple_GetItem(obj, 3), e.v2);
+    toValue<char>(PyTuple_GetItem(obj, 4), e.w);
+    return true;
+}
+
 template<> PyObject* VRPyTypeCaster::cast(const VRPointCloud::Splat& splat) {
     PyObject* pySplat = PyTuple_New(5);
     PyTuple_SetItem(pySplat, 0, VRPyTypeCaster::cast(splat.p));
@@ -27,13 +36,19 @@ PyMethodDef VRPyPointCloud::methods[] = {
     {"applySettings", PyWrap( PointCloud, applySettings, "Setup parameters", void, map<string, string> ) },
     {"convert", PyWrapOpt( PointCloud, convert, "Convert a E57 pointcloud to PCB, if out path provided it will export to the same path but with '.pcb' at the end", "", void, string, string ) },
     {"convertMerge", PyWrapOpt( PointCloud, convertMerge, "Convert E57 pointclouds to a single PCB, if out path provided it will export to the same path but with '.pcb' at the end", "", void, vector<string>, string ) },
+    {"externalTransform", PyWrap( PointCloud, externalTransform, "External transform of the points (path, pose)", void, string, PosePtr ) },
     {"externalSort", PyWrap( PointCloud, externalSort, "External sort, merge sort, only for PCB files, chunkSize in bytes to sort internal, bin size in m (path, chunkSize, binSize)", void, string, size_t, double ) },
     {"externalPartition", PyWrap( PointCloud, externalPartition, "External partitioning, only for PCB files", void, string) },
-    {"externalComputeSplats", PyWrap( PointCloud, externalComputeSplats, "External algorithm to compute surface tangents and splat sizes", void, string) },
+    {"externalComputeSplats", PyWrapOpt( PointCloud, externalComputeSplats, "External algorithm to compute surface tangents and splat sizes, (path, splatRadius = 0.1)", "0.1", void, string, float) },
     {"externalColorize", PyWrap( PointCloud, externalColorize, "External algorithm to colorize a pointcloud from panorama images, use the extras/utils/extractEXIF.sh script and give the path to the resulting dat file as second argument", void, string, string, PosePtr, float, float, float, int, int) },
     {"genTestFile", PyWrap( PointCloud, genTestFile, "Generate a pointcloud, regular cube grid, (.pcb) file (path, Npoints, doColors)", void, string, size_t, bool ) },
     {"genTestFile2", PyWrap( PointCloud, genTestFile2, "Generate a pointcloud, ico sphere surface, (.pcb) file (path, Niterations, doColors, splatSize[mm])", void, string, size_t, bool, int ) },
     {"projectOnPanorama", PyWrap( PointCloud, projectOnPanorama, "Project point onto panorama image", Vec3ub, Vec3d, VRTexturePtr, PosePtr ) },
+    {"computeSplat", PyWrap( PointCloud, computeSplat, "Compute splat, normal and size, from point and neightbors", VRPointCloud::Splat, Vec3d, vector<VRPointCloud::Splat> ) },
     {"radiusSearch", PyWrap( PointCloud, radiusSearch, "Executes a radius search and returns point positions around P inside radius r, (P, r)", vector<VRPointCloud::Splat>, Vec3d, double ) },
+    {"externalRadiusSearch", PyWrap( PointCloud, externalRadiusSearch, "Executes a radius search and returns point positions around P inside radius r, (path, P, r)", vector<VRPointCloud::Splat>, string, Vec3d, double ) },
     {NULL}  /* Sentinel */
 };
+
+
+

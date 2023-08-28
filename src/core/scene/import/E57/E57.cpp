@@ -221,7 +221,7 @@ void OSG::convertE57(vector<string> pathsIn, string pathOut) {
     params["N_points"] = toString(cN);
     params["format"] = "x8y8z8";
     if (hasCol) params["format"] += "r1g1b1";
-    VRPointCloud::writePCBHeader(pathOut, params);
+    VRExternalPointCloud::writePCBHeader(pathOut, params);
 
     ofstream stream(pathOut, ios::app);
 
@@ -286,7 +286,7 @@ void OSG::loadE57(string path, VRTransformPtr res, map<string, string> importOpt
 vector<size_t> extractSortedRegionBounds(string path, vector<double> region) {
     if (region.size() != 6) return {};
 
-    auto params = VRPointCloud::readPCBHeader(path);
+    auto params = VRExternalPointCloud::readPCBHeader(path);
     ifstream stream(path);
     int hL = toInt(params["headerLength"]);
     stream.seekg(hL);
@@ -427,7 +427,7 @@ vector<size_t> extractSortedRegionBounds(string path, vector<double> region) {
 vector<size_t> extractOctreeRegionBounds(string path, vector<double> region) {
     if (region.size() != 6) return {};
 
-    auto params = VRPointCloud::readPCBHeader(path);
+    auto params = VRExternalPointCloud::readPCBHeader(path);
     ifstream stream(path);
     int hL = toInt(params["headerLength"]);
     stream.seekg(hL);
@@ -537,7 +537,7 @@ void OSG::loadPCB(string path, VRTransformPtr res, map<string, string> importOpt
     float downsampling = 1;
     if (importOptions.count("downsampling")) downsampling = toFloat(importOptions["downsampling"]);
 
-    auto params = VRPointCloud::readPCBHeader(path);
+    auto params = VRExternalPointCloud::readPCBHeader(path);
     ifstream stream(path);
 
     int hL = toInt(params["headerLength"]);

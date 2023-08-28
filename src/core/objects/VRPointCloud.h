@@ -11,6 +11,30 @@
 
 OSG_BEGIN_NAMESPACE;
 
+class VRExternalPointCloud {
+    public:
+        string path;
+        map<string, string> params;
+
+        bool valid = false;
+        bool hasColors = false;
+        bool hasSplats = false;
+        bool isSorted = false;
+        bool hasOctree = false;
+
+        int binPntSize = 0;
+        size_t size = 0;
+        int headerLength = 0;
+        int binPntsStart = 0;
+
+    public:
+        VRExternalPointCloud(string path);
+        ~VRExternalPointCloud();
+
+        static map<string, string> readPCBHeader(string path);
+        static void writePCBHeader(string path, map<string, string> params);
+};
+
 class VRPointCloud : public VRTransform {
     public:
         enum POINTTYPE {
@@ -92,24 +116,24 @@ class VRPointCloud : public VRTransform {
         void addPoint(Vec3d p, Splat c);
 
         vector<Splat> radiusSearch(Vec3d p, double r);
+        vector<Splat> externalRadiusSearch(string path, Vec3d p, double r);
 
         void convert(string pathIn, string pathOut);
         void convertMerge(vector<string> pathIn, string pathOut);
         void genTestFile(string path, size_t N, bool doColor);
         void genTestFile2(string path, size_t N, bool doColor, int splatSize);
 
+        void externalTransform(string path, PosePtr p);
         void externalSort(string path, size_t chunkSize, double binSize);
         void externalPartition(string path);
-        void externalComputeSplats(string path);
+        void externalComputeSplats(string path, float neighborsRadius = 0.1);
         void externalColorize(string path, string images, PosePtr pcPose, float localNorth, float localEast, float pDist, int i1, int i2);
 
         Vec3ub projectOnPanorama(Vec3d P, VRTexturePtr tex, PosePtr vP);
+        Splat computeSplat(Vec3d p0, vector<Splat> neighbors);
 
         shared_ptr<Octree<PntData>>& getOctree();
         VRGeometryPtr getOctreeVisual();
-
-        static map<string, string> readPCBHeader(string path);
-        static void writePCBHeader(string path, map<string, string> params);
 };
 
 OSG_END_NAMESPACE;
