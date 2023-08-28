@@ -428,6 +428,8 @@ vector<size_t> extractOctreeRegionBounds(string path, vector<double> region) {
     if (region.size() != 6) return {};
 
     VRExternalPointCloud epc(path);
+
+
     ifstream stream(path);
     stream.seekg(epc.headerLength);
     size_t ocTree = stream.tellg();
@@ -440,17 +442,17 @@ vector<size_t> extractOctreeRegionBounds(string path, vector<double> region) {
         return {};
     }
 
-    VRPointCloud::Splat pnt;
-
     //cout << " extractRegionBounds - headers: " << toString(params) << ", cN: " << cN << endl;
     double regionSize = region[1]-region[0]; // xmax-xmin
     Vec3d regionCenter = Vec3d((region[0]+region[1])*0.5, (region[2]+region[3])*0.5, (region[4]+region[5])*0.5);
-    double rootSize = toValue<double>(epc.params["ocRootSize"]);
-    Vec3d rootCenter = toValue<Vec3d>(epc.params["ocRootCenter"]);
+    auto ocNode = epc.getOctreeNode(regionCenter);
+
     size_t nodeCount = toValue<size_t>(epc.params["ocNodeCount"]);
+    size_t ocNodeBinSize = sizeof(VRExternalPointCloud::OcSerialNode);
+    /*double rootSize = toValue<double>(epc.params["ocRootSize"]);
+    Vec3d rootCenter = toValue<Vec3d>(epc.params["ocRootCenter"]);
 
     // get correct octree node based on region
-    size_t ocNodeBinSize = sizeof(ocSerialNode);
     size_t rOffset = (nodeCount-1) * ocNodeBinSize; // root is last node written
     ocSerialNode ocNode;
     stream.seekg(ocTree + rOffset, ios::beg);
@@ -460,7 +462,8 @@ vector<size_t> extractOctreeRegionBounds(string path, vector<double> region) {
     int jumps = 0;
     double nodeSize = rootSize;
     Vec3d nodeCenter = rootCenter; // root is on 0, 0, 0
-    while (/*nodeSize > regionSize*1.01*/ true) { // traverse tree until node size corresponds to region
+    //while (nodeSize > regionSize*1.01) { // traverse tree until node size corresponds to region
+    while (true) { // traverse tree until node size corresponds to region
         // compute child octant
         //Vec3d rp = nodeCenter - regionCenter;
         Vec3d rp = regionCenter - nodeCenter;
@@ -493,7 +496,7 @@ vector<size_t> extractOctreeRegionBounds(string path, vector<double> region) {
         stream.seekg(ocTree + cOffset, ios::beg);
         //cout << " get child from " << ocTree + cOffset << ", " << ocNode.chunkOffset << ", " << ocNode.chunkSize << endl;
         stream.read((char*)&ocNode, ocNodeBinSize);
-    }
+    }*/
 
     //cout << "  + + found node with chunk at " << ocNode.chunkOffset << " and chunk size " << ocNode.chunkSize << endl;
 

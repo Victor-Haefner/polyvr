@@ -13,6 +13,23 @@ OSG_BEGIN_NAMESPACE;
 
 class VRExternalPointCloud {
     public:
+        struct OcChunkRef {
+            string path;
+            size_t offset = 0;
+            size_t size = 0;
+            ofstream stream;
+            bool isOpen = false;
+        };
+
+        struct OcSerialNode {
+            //double size = 0;
+            //Vec3d center;
+            size_t chunkOffset = 0;
+            size_t chunkSize = 0;
+            int children[8] = {0,0,0,0,0,0,0,0};
+        };
+
+    public:
         string path;
         map<string, string> params;
 
@@ -30,6 +47,9 @@ class VRExternalPointCloud {
     public:
         VRExternalPointCloud(string path);
         ~VRExternalPointCloud();
+
+        OcSerialNode getOctreeNode(Vec3d p);
+        void printOctree();
 
         static map<string, string> readPCBHeader(string path);
         static void writePCBHeader(string path, map<string, string> params);

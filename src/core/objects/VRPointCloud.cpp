@@ -48,7 +48,7 @@ VRExternalPointCloud::VRExternalPointCloud(string path) {
     binPntsStart = headerLength;
     if (hasOctree) {
         size_t Nnodes = toInt( params["ocNodeCount"] );
-        size_t ocNodeBinSize = sizeof(ocSerialNode);
+        size_t ocNodeBinSize = sizeof(OcSerialNode);
         binPntsStart += Nnodes * ocNodeBinSize;
     }
 
@@ -89,6 +89,103 @@ void VRExternalPointCloud::writePCBHeader(string path, map<string, string> param
     stream << endl;
     stream.close();
 }
+
+void VRExternalPointCloud::printOctree() {
+    if (!hasOctree) {
+        cout << "Error in printOctree: no octree!" << endl;
+        return;
+    }
+
+    double rootSize = toValue<double>(params["ocRootSize"]);
+    Vec3d rootCenter = toValue<Vec3d>(params["ocRootCenter"]);
+    size_t nodeCount = toValue<size_t>(params["ocNodeCount"]);
+
+    // get correct octree node based on region
+    size_t ocNodeBinSize = sizeof(OcSerialNode);
+    size_t rOffset = (nodeCount-1) * ocNodeBinSize; // root is last node written
+    OcSerialNode ocNode;
+
+    ifstream stream(path);
+    stream.seekg(headerLength);
+    size_t ocTree = stream.tellg();
+
+    stream.seekg(ocTree + rOffset, ios::beg);
+    stream.read((char*)&ocNode, ocNodeBinSize); // read tree root
+
+
+    function<void(OcSerialNode, string)> printNode = [&](OcSerialNode node, string indent) {
+        cout << indent << "node: " << node.chunkOffset << ", " << node.chunkSize << endl;
+        for (int i=0; i<8; i++) {
+            int cOffset = node.children[i];
+            if (cOffset != 0) {
+                stream.seekg(ocTree + cOffset, ios::beg);
+                OcSerialNode child;
+                stream.read((char*)&child, ocNodeBinSize);
+                printNode(child, indent+" ");
+            }
+        }
+    };
+
+    printNode(ocNode, "");
+}
+
+VRExternalPointCloud::OcSerialNode VRExternalPointCloud::getOctreeNode(Vec3d p) {
+    if (!hasOctree) {
+        cout << "Error in getOctreeNode: no octree!" << endl;
+        return OcSerialNode();
+    }
+
+    double rootSize = toValue<double>(params["ocRootSize"]);
+    Vec3d rootCenter = toValue<Vec3d>(params["ocRootCenter"]);
+    size_t nodeCount = toValue<size_t>(params["ocNodeCount"]);
+
+    // get correct octree node based on region
+    size_t ocNodeBinSize = sizeof(OcSerialNode);
+    size_t rOffset = (nodeCount-1) * ocNodeBinSize; // root is last node written
+    OcSerialNode ocNode;
+
+    ifstream stream(path);
+    stream.seekg(headerLength);
+    size_t ocTree = stream.tellg();
+
+    stream.seekg(ocTree + rOffset, ios::beg);
+    stream.read((char*)&ocNode, ocNodeBinSize); // read tree root
+
+    int jumps = 0;
+    double nodeSize = rootSize;
+    Vec3d nodeCenter = rootCenter; // root is on 0, 0, 0
+    while (true) { // traverse tree
+        // compute child octant
+        //Vec3d rp = nodeCenter - p;
+        Vec3d rp = p - nodeCenter;
+        int octant = 0;
+        if (rp[0] < 0) octant += 1;
+        if (rp[1] < 0) octant += 2;
+        if (rp[2] < 0) octant += 4;
+
+        // get child address
+        int cOffset = ocNode.children[octant];
+        if (cOffset == 0) break;
+
+        // compute new node size and center
+        nodeSize *= 0.5;
+        Vec3d c = Vec3d(nodeSize, nodeSize, nodeSize)*0.5;
+        if (rp[0] < 0) c[0] -= nodeSize;
+        if (rp[1] < 0) c[1] -= nodeSize;
+        if (rp[2] < 0) c[2] -= nodeSize;
+        nodeCenter += c;
+        jumps++;
+
+        // get child node
+        stream.seekg(ocTree + cOffset, ios::beg);
+        cout << " get child from " << ocTree + cOffset << ", " << ocNode.chunkOffset << ", " << ocNode.chunkSize << endl;
+        stream.read((char*)&ocNode, ocNodeBinSize);
+    }
+
+    return ocNode;
+}
+
+
 
 VRPointCloud::VRPointCloud(string name) : VRTransform(name) {
     octree = Octree<PntData>::create(10);
@@ -441,7 +538,7 @@ void VRPointCloud::externalPartition(string path) {
     float binSize = toFloat(epc.params["binSize"]);
     auto oc = Octree<bool>::create(binSize);
 
-    map<void*, ocChunkRef> chunkRefs;
+    map<void*, VRExternalPointCloud::OcChunkRef> chunkRefs;
 
     size_t openStreams = 0;
     size_t Nwritten1 = 0;
@@ -498,7 +595,7 @@ void VRPointCloud::externalPartition(string path) {
 
     for (auto& ref : chunkRefs) if (ref.second.isOpen) { ref.second.stream.close(); ref.second.isOpen = false; openStreams--; }
 
-    size_t ocNodeBinSize = sizeof(ocSerialNode);
+    size_t ocNodeBinSize = sizeof(VRExternalPointCloud::OcSerialNode);
     string wpath = path+".tmp.pcb";
     epc.params["partitionStructure"] = "octree";
     epc.params["ocRootSize"] = toString(oc->getRoot()->size);
@@ -515,7 +612,7 @@ void VRPointCloud::externalPartition(string path) {
     }
 
     function<void(OctreeNode<bool>*, ofstream&, int&)> writeOutOcNode = [&](OctreeNode<bool>* node, ofstream& wstream, int& nOffset) {
-        ocSerialNode sNode;
+        VRExternalPointCloud::OcSerialNode sNode;
         for (int i=0; i<8; i++) {
             auto c = node->getChild(i);
             if (c) {
@@ -739,21 +836,39 @@ vector<VRPointCloud::Splat> VRPointCloud::externalRadiusSearch(string path, Vec3
     VRExternalPointCloud epc(path);
     auto progress = addProgress("search points ", epc.size);
 
+    epc.printOctree();
+
     ifstream stream(path);
     stream.seekg(epc.binPntsStart);
+
+    // TODO, debug:  print external octree
 
     // 1) get the octree nodes touching the sphere
     // 2) for each chunk get its points and do a radius search on it
 
+    auto node = epc.getOctreeNode(p);
+    cout << " getOctreeNode: " << node.chunkOffset << ", " << node.chunkSize << endl;
+
     vector<Splat> res;
     Splat splat;
+
+
+    /*stream.seekg(epc.binPntsStart + node.chunkOffset);
+    for (size_t i = 0; i<node.chunkSize; i++) { // TODO: optimize using octree structure
+        stream.read((char*)&splat, epc.binPntSize);
+        res.push_back(splat);
+        //double D = splat.p.dist(p);
+        //if (D < r) res.push_back(splat);
+    }
+    stream.close();
+    return res;*/
+
     for (size_t i = 0; i<epc.size; i++) { // TODO: optimize using octree structure
         stream.read((char*)&splat, epc.binPntSize);
         double D = splat.p.dist(p);
         if (D < r) res.push_back(splat);
         progress->update(1);
     }
-
     stream.close();
     return res;
 }
