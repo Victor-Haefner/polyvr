@@ -427,34 +427,27 @@ vector<size_t> extractSortedRegionBounds(string path, vector<double> region) {
 vector<size_t> extractOctreeRegionBounds(string path, vector<double> region) {
     if (region.size() != 6) return {};
 
-    auto params = VRExternalPointCloud::readPCBHeader(path);
+    VRExternalPointCloud epc(path);
     ifstream stream(path);
-    int hL = toInt(params["headerLength"]);
-    stream.seekg(hL);
+    stream.seekg(epc.headerLength);
     size_t ocTree = stream.tellg();
 
-    auto cN = toValue<size_t>(params["N_points"]);
-    if (cN == 0) return {};
+    if (epc.size == 0) return {};
 
-    bool hasCol = contains( params["format"], "r");
-    bool hasSpl = contains( params["format"], "u");
-    double binSize = toValue<double>(params["binSize"]);
+    double binSize = toValue<double>(epc.params["binSize"]);
     if (binSize == 0) {
         cout << " extractRegionBounds failed, binSize is 0!" << endl;
         return {};
     }
 
-    int N = sizeof(Vec3d);
-    if (hasCol) N = VRPointCloud::PntCol::size;
-    if (hasSpl) N = VRPointCloud::Splat::size;
     VRPointCloud::Splat pnt;
 
     //cout << " extractRegionBounds - headers: " << toString(params) << ", cN: " << cN << endl;
     double regionSize = region[1]-region[0]; // xmax-xmin
     Vec3d regionCenter = Vec3d((region[0]+region[1])*0.5, (region[2]+region[3])*0.5, (region[4]+region[5])*0.5);
-    double rootSize = toValue<double>(params["ocRootSize"]);
-    Vec3d rootCenter = toValue<Vec3d>(params["ocRootCenter"]);
-    size_t nodeCount = toValue<size_t>(params["ocNodeCount"]);
+    double rootSize = toValue<double>(epc.params["ocRootSize"]);
+    Vec3d rootCenter = toValue<Vec3d>(epc.params["ocRootCenter"]);
+    size_t nodeCount = toValue<size_t>(epc.params["ocNodeCount"]);
 
     // get correct octree node based on region
     size_t ocNodeBinSize = sizeof(ocSerialNode);
@@ -521,7 +514,7 @@ vector<size_t> extractOctreeRegionBounds(string path, vector<double> region) {
     //return {37089059,37089059}; // TEMP
 
     vector<size_t> bounds;
-    size_t bound0 = (ocNode.chunkOffset - ocTree - nodeCount * ocNodeBinSize) / N; // bounds are offsets relative to the first point
+    size_t bound0 = (ocNode.chunkOffset - ocTree - nodeCount * ocNodeBinSize) / epc.binPntSize; // bounds are offsets relative to the first point
     size_t bound1 = bound0 + ocNode.chunkSize; // N;
     bounds.push_back(bound0);
     bounds.push_back(bound1);
@@ -537,43 +530,22 @@ void OSG::loadPCB(string path, VRTransformPtr res, map<string, string> importOpt
     float downsampling = 1;
     if (importOptions.count("downsampling")) downsampling = toFloat(importOptions["downsampling"]);
 
-    auto params = VRExternalPointCloud::readPCBHeader(path);
+    VRExternalPointCloud epc(path);
     ifstream stream(path);
+    stream.seekg(epc.binPntsStart);
 
-    int hL = toInt(params["headerLength"]);
-    stream.seekg(hL);
-    //cout << "  headers: " << toString(params) << endl;
-
-    auto cN = toValue<size_t>(params["N_points"]);
-    bool hasCol = contains( params["format"], "r");
-    bool hasSpl = contains( params["format"], "u");
-    bool hasOct = params.count("partitionStructure");
-    //double binSize = toValue<double>(params["binarySize"]);
-    //cout << "  scan contains " << cN << " points" << endl;
-
-    if (hasSpl) importOptions["doSplats"] = "1";
-    if (params.count("splatMod")) importOptions["splatMod"] = params["splatMod"];
+    if (epc.hasSplats) importOptions["doSplats"] = "1";
+    if (epc.params.count("splatMod")) importOptions["splatMod"] = epc.params["splatMod"];
     else importOptions["splatMod"] = "0.001"; // in mm
 
     auto progress = VRProgress::create();
-    progress->setup("process points ", cN);
+    progress->setup("process points ", epc.size);
     progress->reset();
-
-    /*if (hasCol) cout << "   scan has colors\n";
-    else cout << "   scan has no colors\n";
-    if (hasSpl) cout << "   scan has splats\n";
-    else cout << "   scan has no splats\n";*/
 
     auto pointcloud = VRPointCloud::create("pointcloud");
     pointcloud->applySettings(importOptions);
 
     size_t Nskip = round(1.0/downsampling) - 1;
-    //size_t count = 0;
-    //int Nskipped = 0;
-
-    int N = sizeof(Vec3d);
-    if (hasCol) N = VRPointCloud::PntCol::size;
-    if (hasSpl) N = VRPointCloud::Splat::size;
     VRPointCloud::Splat pnt;
 
     auto skipBin = [&](size_t Nskip) { // skip N bytes
@@ -584,27 +556,17 @@ void OSG::loadPCB(string path, VRTransformPtr res, map<string, string> importOpt
     auto skip = [&](size_t Nskip) { // skip N points
         size_t Nprocessed = min(Nskip, progress->left());
         if (Nprocessed == 0) return;
-        skipBin(N*Nprocessed);
+        skipBin(epc.binPntSize*Nprocessed);
         progress->update( Nprocessed );
     };
 
     // get binary bounds of region
     auto region = toValue<vector<double>>(importOptions["region"]);
     vector<size_t> bounds;
-    if (hasOct) bounds = extractOctreeRegionBounds(path, region);
+    if (epc.hasOctree) bounds = extractOctreeRegionBounds(path, region);
     else bounds = extractSortedRegionBounds(path, region);
 
-    // skip octree
-    if (hasOct) {
-        //cout << "---- got octree at " << stream.tellg() << endl;
-        size_t Nnodes = toInt( params["ocNodeCount"] );
-        size_t ocNodeBinSize = sizeof(ocSerialNode);
-        size_t ocBinSize = Nnodes * ocNodeBinSize;
-        skipBin(ocBinSize);
-        //cout << "---- end of octree at " << stream.tellg() << endl;
-    }
-
-    if (!hasOct || true) { // read from a sorted PC // TODO: is this also valid for octrees?
+    if (!epc.hasOctree || true) { // read from a sorted PC // TODO: is this also valid for octrees?
         int boundsID = 0;
         int Nbounds = bounds.size()*0.5;
         if (Nbounds > 0 && bounds[0] > 0) {
@@ -614,11 +576,11 @@ void OSG::loadPCB(string path, VRTransformPtr res, map<string, string> importOpt
         size_t pointsRead = 0;
         Vec3d pSum;
         //if (Nbounds > 0) cout << endl << " + + try read points " << bounds[1]-bounds[0] << " at " << bounds[0] << ", N: " << N << endl;
-        while (stream.read((char*)&pnt, N)) {
+        while (stream.read((char*)&pnt, epc.binPntSize)) {
             Vec3d  pos = pnt.p;
             if (pos.length() < 1e-6) continue; // ignore zeros..
             Vec3ub rgb = pnt.c;
-            if (hasSpl) pointcloud->addPoint(pos, pnt);
+            if (epc.hasSplats) pointcloud->addPoint(pos, pnt);
             else pointcloud->addPoint(pos, rgb);
             pointsRead += 1;
             pSum += pos;

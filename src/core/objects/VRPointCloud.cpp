@@ -742,6 +742,9 @@ vector<VRPointCloud::Splat> VRPointCloud::externalRadiusSearch(string path, Vec3
     ifstream stream(path);
     stream.seekg(epc.binPntsStart);
 
+    // 1) get the octree nodes touching the sphere
+    // 2) for each chunk get its points and do a radius search on it
+
     vector<Splat> res;
     Splat splat;
     for (size_t i = 0; i<epc.size; i++) { // TODO: optimize using octree structure
