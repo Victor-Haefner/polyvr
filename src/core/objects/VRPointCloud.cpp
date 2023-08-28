@@ -558,19 +558,13 @@ void VRPointCloud::externalPartition(string path) {
 }
 
 void VRPointCloud::externalSort(string path, size_t chunkSize, double binSize) {
-    auto params = VRExternalPointCloud::readPCBHeader(path);
-    params["binSize"] = toString(binSize);
-    cout << "  externalSort headers " << toString(params) << endl;
+    VRExternalPointCloud epc(path);
+    epc.params["binSize"] = toString(binSize);
+    cout << "  externalSort headers " << toString(epc.params) << endl;
+    cout << "  externalSort scan '" << path << "' contains " << epc.size << " points" << endl;
 
-    bool hasCol = contains( params["format"], "r");
-    auto cN = toValue<size_t>( params["N_points"] );
-    cout << "  externalSort scan '" << path << "' contains " << cN << " points" << endl;
-
-    int N = sizeof(Vec3d);
-    if (hasCol) N += sizeof(Vec3ub);
-
-    size_t Nchunks = cN/chunkSize;
-    size_t lastChunkSize = cN - Nchunks*chunkSize;
+    size_t Nchunks = epc.size/chunkSize;
+    size_t lastChunkSize = epc.size - Nchunks*chunkSize;
     cout << "  externalSort Nchunks: " << Nchunks << ", chunkSize: " << chunkSize << ", lastChunkSize: " << lastChunkSize << endl;
 
     auto calcBin = [&](double& a) {
@@ -592,8 +586,7 @@ void VRPointCloud::externalSort(string path, size_t chunkSize, double binSize) {
 
     auto createChunks = [&]() {
         ifstream stream(path);
-        int hL = toInt(params["headerLength"]);
-        stream.seekg(hL);
+        stream.seekg(epc.binPntsStart);
 
         vector<PntCol> buffer;
         buffer.resize(chunkSize);
@@ -602,11 +595,11 @@ void VRPointCloud::externalSort(string path, size_t chunkSize, double binSize) {
         for (size_t i = 0; i<=Nchunks; i++) { // write sorted chunks to disk, +1 for last partial chunk
             if (i == Nchunks) buffer.resize(lastChunkSize);
             if (buffer.size() > 0) {
-                for (size_t j = 0; j<buffer.size(); j++) stream.read((char*)&buffer[j], N);
+                for (size_t j = 0; j<buffer.size(); j++) stream.read((char*)&buffer[j], epc.binPntSize);
                 sort(buffer.begin(), buffer.end(), compPoints);
                 string cPath = path+".chunk."+toString(i);
                 ofstream cStream(cPath);
-                for (size_t j = 0; j<buffer.size(); j++) cStream.write((char*)&buffer[j], N);
+                for (size_t j = 0; j<buffer.size(); j++) cStream.write((char*)&buffer[j], epc.binPntSize);
                 cStream.close();
             }
             progressChunks->update(1);
@@ -615,13 +608,13 @@ void VRPointCloud::externalSort(string path, size_t chunkSize, double binSize) {
         stream.close();
     };
 
-    auto mergeChunks = [compPoints, N](size_t levelSize, vector<ifstream>& inStreams, ofstream& wStream, VRProgressPtr progress, bool verbose = false) {
+    auto mergeChunks = [compPoints, epc](size_t levelSize, vector<ifstream>& inStreams, ofstream& wStream, VRProgressPtr progress, bool verbose = false) {
         size_t Nstreams = inStreams.size();
         vector<MergeHead> mergeHeads;
         mergeHeads.resize(Nstreams, MergeHead());
 
         for (size_t i = 0; i<Nstreams; i++) {
-            inStreams[i].read((char*)&mergeHeads[i].point, N); // read first point
+            inStreams[i].read((char*)&mergeHeads[i].point, epc.binPntSize); // read first point
             if (!inStreams[i]) mergeHeads[i].done = true; // end of stream reached
             if (verbose) cout << "   start point " << i << ": " << mergeHeads[i].point.p << endl;
         }
@@ -638,10 +631,10 @@ void VRPointCloud::externalSort(string path, size_t chunkSize, double binSize) {
             }
             if (kNext >= Nstreams) break; // all done!
 
-            wStream.write((char*)&mergeHeads[kNext].point, N);
+            wStream.write((char*)&mergeHeads[kNext].point, epc.binPntSize);
             progress->update(1);
             mergeHeads[kNext].pointer++;
-            if (inStreams[kNext]) inStreams[kNext].read((char*)&mergeHeads[kNext].point, N); // read next point
+            if (inStreams[kNext]) inStreams[kNext].read((char*)&mergeHeads[kNext].point, epc.binPntSize); // read next point
             if (!inStreams[kNext]) mergeHeads[kNext].done = true; // end of stream reached
 
             if (verbose) {
@@ -661,7 +654,7 @@ void VRPointCloud::externalSort(string path, size_t chunkSize, double binSize) {
         bool finalPass = (NlvlChunks == 1);
         cout << " pass " << lvl << ", NlvlChunks: " << NlvlChunks << endl;
 
-        auto progress = addProgress("process level "+toString(lvl)+" ", cN);
+        auto progress = addProgress("process level "+toString(lvl)+" ", epc.size);
 
         for (size_t j=0; j<NlvlChunks; j++) {
             // prepare in streams
@@ -681,7 +674,7 @@ void VRPointCloud::externalSort(string path, size_t chunkSize, double binSize) {
             ofstream wStream;
             if (finalPass) {
                 cout << "  sort, write final pass to: " << wPath << endl;
-                VRExternalPointCloud::writePCBHeader(wPath, params);
+                VRExternalPointCloud::writePCBHeader(wPath, epc.params);
                 wStream.open(wPath, ios::app);
             } else {
                 wStream.open(wPath);
@@ -751,10 +744,9 @@ vector<VRPointCloud::Splat> VRPointCloud::externalRadiusSearch(string path, Vec3
 
     vector<Splat> res;
     Splat splat;
-    for (size_t i = 0; i<epc.size; i++) {
+    for (size_t i = 0; i<epc.size; i++) { // TODO: optimize using octree structure
         stream.read((char*)&splat, epc.binPntSize);
         double D = splat.p.dist(p);
-        //cout << " externalRadiusSearch " << i << "/" << epc.size << "  " << splat.p << " -> " << D << endl;
         if (D < r) res.push_back(splat);
         progress->update(1);
     }
@@ -818,51 +810,28 @@ VRPointCloud::Splat VRPointCloud::computeSplat(Vec3d p0, vector<Splat> neighbors
 }
 
 void VRPointCloud::externalComputeSplats(string path, float neighborsRadius) {
-    auto params = VRExternalPointCloud::readPCBHeader(path);
-    cout << "  externalComputeSplats headers " << toString(params) << endl;
-    if (!params.count("octree")) { cout << "  externalPartition needs a PCB with an octree partition, please run externalSort and externalPartition on it first!" << endl; return; }
+    VRExternalPointCloud epc(path);
+    cout << "  externalComputeSplats headers " << toString(epc.params) << endl;
+    if (!epc.hasOctree) { cout << "  externalPartition needs a PCB with an octree partition, please run externalSort and externalPartition on it first!" << endl; return; }
 
-    bool hasCol = contains( params["format"], "r");
-    auto cN = toValue<size_t>( params["N_points"] );
-
-    auto progress = addProgress("process splats ", cN);
-
-    int N1 = sizeof(Vec3d);
-    if (hasCol) N1 += sizeof(Vec3ub);
+    auto progress = addProgress("process splats ", epc.size);
 
     string wpath = path+".tmp.pcb";
-    params["format"] = "x8y8z8r1g1b1u2v2s1";
-    params["splatMod"] = "0.001";
-    VRExternalPointCloud::writePCBHeader(wpath, params);
+    epc.params["format"] = "x8y8z8r1g1b1u2v2s1";
+    epc.params["splatMod"] = "0.001";
+    VRExternalPointCloud::writePCBHeader(wpath, epc.params);
     ofstream wstream(wpath, ios::app);
 
     ifstream stream(path);
-    int hL = toInt(params["headerLength"]);
-    stream.seekg(hL);
+    stream.seekg(epc.binPntsStart);
 
-    double threshhold = 0.1;
-    size_t Nn = 6; // number of neighbors to get
-    int Nb = 100; // half of buffer size
-    vector<VRPointCloud::Splat> buffer;
-    buffer.resize(Nb*2+1);
-    double meanSplatSize = threshhold;
-    size_t meanCount = 0;
-
-    size_t wi = 0;
-    for (size_t i = 0; i<cN; i++) {
-        stream.read((char*)&buffer[i%buffer.size()], N1);
-
-        if (i >= buffer.size()-1 || i+1 == cN) { // buffer full
-            while (wi <= i) {
-                int Wi = wi%buffer.size();
-                VRPointCloud::Splat& splat = buffer[Wi];
-                vector<Splat> neighbors = externalRadiusSearch(path, splat.p, neighborsRadius);
-                splat = computeSplat(splat.p, neighbors);
-                wstream.write((const char*)&splat, Splat::size);
-                wi++;
-                progress->update(1);
-            }
-        }
+    VRPointCloud::Splat splat;
+    for (size_t i = 0; i<epc.size; i++) {
+        stream.read((char*)&splat, epc.binPntSize);
+        vector<Splat> neighbors = externalRadiusSearch(path, splat.p, neighborsRadius);
+        splat = computeSplat(splat.p, neighbors);
+        wstream.write((const char*)&splat, Splat::size);
+        progress->update(1);
     }
 
     stream.close();
@@ -973,33 +942,19 @@ void VRPointCloud::externalColorize(string path, string imgTable, PosePtr pcPose
 
 
     // go through pc and change color
-
-    auto params = VRExternalPointCloud::readPCBHeader(path);
-    cout << "  externalColorize headers " << toString(params) << endl;
-
-    bool hasCol = contains( params["format"], "r" );
-    bool hasSpl = contains( params["format"], "u" );
-    bool hasOct = params.count("partitionStructure");
-    auto cN = toValue<size_t>( params["N_points"] );
-
-    auto progress = addProgress("process points ", cN);
-
-    int N1 = sizeof(Vec3d);
-    if (hasCol) N1 = VRPointCloud::PntCol::size;
-    if (hasSpl) N1 = VRPointCloud::Splat::size;
+    VRExternalPointCloud epc(path);
+    auto progress = addProgress("process points ", epc.size);
 
     string wpath = path+".tmp.pcb";
-    VRExternalPointCloud::writePCBHeader(wpath, params);
+    VRExternalPointCloud::writePCBHeader(wpath, epc.params);
     ofstream wstream(wpath, ios::app);
 
     ifstream stream(path);
-    int hL = toInt(params["headerLength"]);
-    stream.seekg(hL);
+    stream.seekg(epc.binPntsStart);
 
     Vec3ub c(255,255,0);
     VRPointCloud::Splat splat;
     map<string, VRTexturePtr> images;
-    VRGeoData links;
 
     auto getImage = [&](string path) {
         if (images.size() > 100) images.clear();
@@ -1021,42 +976,28 @@ void VRPointCloud::externalColorize(string path, string imgTable, PosePtr pcPose
         return bool(v < 0.48);
     };
 
-    for (size_t i = 0; i<cN; i++) {
-        stream.read((char*)&splat, N1);
+    for (size_t i = 0; i<epc.size; i++) {
+        stream.read((char*)&splat, epc.binPntSize);
         splat.c = c;
 
         Vec3d P = pcPose->transform(splat.p);
         Viewpoint* vP = (Viewpoint*)vpTree->getClosest(P);
         int dir = 1;
-        bool reframed = false;
         while (vP && heightTooLow(P, vP)) {
             int ix = vP->index + dir;
             if (ix >= 0 && ix < viewpoints.size()) vP = &viewpoints[ix];
             else dir *= -1;
-            reframed = true;
         }
 
         if (vP) {
-            //if (abs(P[1]) < 0.1) {
-            /*if (reframed) {
-                links.pushVert(P);
-                links.pushVert(vP->pose.pos());
-                links.pushLine();
-            }*/
-
             auto tex = getImage(vP->imgPath);
             splat.c = projectOnPanorama(P, tex, Pose::create(vP->pose));
         }
+
         // get closest path point
-        wstream.write((const char*)&splat, N1);
+        wstream.write((const char*)&splat, epc.binPntSize);
         progress->update(1);
     }
-
-    /*auto lg = links.asGeometry("testLinks");
-    auto m = VRMaterial::create("white");
-    m->setLit(0);
-    lg->setMaterial(m);
-    addChild(lg);*/
 
     stream.close();
     wstream.close();
