@@ -44,8 +44,14 @@ class VRExternalPointCloud {
         int headerLength = 0;
         int binPntsStart = 0;
 
+        // external octree access optimization
+        OcSerialNode lastGetOcn;
+        Vec3d getOcnCenter;
+        double getOcnHalfSize;
+
     public:
         VRExternalPointCloud(string path);
+        VRExternalPointCloud() {}
         ~VRExternalPointCloud();
 
         OcSerialNode getOctreeNode(Vec3d p);
@@ -86,6 +92,12 @@ class VRPointCloud : public VRTransform {
             char w = 0;
         };
 
+        struct OptRadiusSearch { // cache for optimizing external radius search
+            VRExternalPointCloud epc;
+            vector<Splat> points;
+            size_t chunkOffset = 0;
+        };
+
         POINTTYPE pointType = NONE;
 
     private:
@@ -100,6 +112,9 @@ class VRPointCloud : public VRTransform {
         vector<float> lodDistances;
         VRImportCbPtr onImport;
         VRMutex mtx;
+
+        // optimizations
+        OptRadiusSearch rsCache;
 
         // import options
         string filePath;
@@ -147,11 +162,12 @@ class VRPointCloud : public VRTransform {
         void externalTransform(string path, PosePtr p);
         void externalSort(string path, size_t chunkSize, double binSize);
         void externalPartition(string path);
-        void externalComputeSplats(string path, float neighborsRadius = 0.1);
+        void externalComputeSplats(string path, float neighborsRadius = 0.1, bool averageColors = false);
         void externalColorize(string path, string images, PosePtr pcPose, float localNorth, float localEast, float pDist, int i1, int i2);
 
         Vec3ub projectOnPanorama(Vec3d P, VRTexturePtr tex, PosePtr vP);
         Splat computeSplat(Vec3d p0, vector<Splat> neighbors);
+        Color3ub averageColor(Vec3d p0, vector<Splat> neighbors);
 
         shared_ptr<Octree<PntData>>& getOctree();
         VRGeometryPtr getOctreeVisual();

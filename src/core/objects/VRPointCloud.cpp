@@ -169,6 +169,14 @@ VRExternalPointCloud::OcSerialNode VRExternalPointCloud::getOctreeNode(Vec3d p) 
         return OcSerialNode();
     }
 
+    if (lastGetOcn.chunkOffset > 0) {
+        Vec3d d = p - getOcnCenter;
+        if (abs(d[0]) < getOcnHalfSize)
+            if (abs(d[1]) < getOcnHalfSize)
+                if (abs(d[2]) < getOcnHalfSize)
+                    return lastGetOcn;
+    }
+
     double rootSize = toValue<double>(params["ocRootSize"]);
     Vec3d rootCenter = toValue<Vec3d>(params["ocRootCenter"]);
     size_t nodeCount = toValue<size_t>(params["ocNodeCount"]);
@@ -215,6 +223,10 @@ VRExternalPointCloud::OcSerialNode VRExternalPointCloud::getOctreeNode(Vec3d p) 
         //cout << " get child from " << ocTree + cOffset << ", " << ocNode.chunkOffset << ", " << ocNode.chunkSize << endl;
         stream.read((char*)&ocNode, ocNodeBinSize);
     }
+
+    lastGetOcn = ocNode;
+    getOcnCenter = nodeCenter;
+    getOcnHalfSize = nodeSize * 0.5;
 
     return ocNode;
 }
@@ -864,33 +876,46 @@ vector<VRPointCloud::Splat> VRPointCloud::radiusSearch(Vec3d p, double r) {
 }
 
 vector<VRPointCloud::Splat> VRPointCloud::externalRadiusSearch(string path, Vec3d p, double r) {
-    //cout << "VRPointCloud::externalRadiusSearch " << path << endl;
-    VRExternalPointCloud epc(path);
+    double r2 = r*r;
 
+    if (rsCache.epc.path != path) {
+        rsCache.epc = VRExternalPointCloud(path);
+        rsCache.points.clear();
+        rsCache.chunkOffset = 0;
+    }
+
+    VRExternalPointCloud& epc = rsCache.epc;
     //epc.printOctree();
 
     // TODO: instead of only getting the chunk containing the center, get all chunks the sphere is contained in!
     //        then for each chunk get its points and do a radius search on it
 
     auto node = epc.getOctreeNode(p);
-    //cout << " getOctreeNode: " << node.chunkOffset << ", " << node.chunkSize << endl;
+    bool reuseCachedPoints = bool(rsCache.chunkOffset > 0 && rsCache.chunkOffset == node.chunkOffset);
+    rsCache.chunkOffset = node.chunkOffset;
+    rsCache.points.resize(node.chunkSize);
 
     vector<Splat> res;
-    Splat splat;
 
-    ifstream stream(path);
-    stream.seekg(node.chunkOffset, ios::beg);
-    if (stream.fail()) cout << " ERROR: seek failed!!!" << endl;
-    //auto progress = addProgress("search points ", node.chunkSize);
-    for (size_t i = 0; i<node.chunkSize; i++) { // TODO: optimize using octree structure
-        stream.read((char*)&splat, epc.binPntSize);
-        //if (i < 5) cout << splat.p << endl;
-        //res.push_back(splat);
-        double D = splat.p.dist(p);
-        if (D < r) res.push_back(splat);
-        //progress->update(1); // just to see the total time..
+    if (reuseCachedPoints) {
+        for (auto& splat : rsCache.points) {
+            double D = splat.p.dist2(p);
+            if (D < r2) res.push_back(splat);
+        }
+    } else {
+        ifstream stream(path);
+        stream.seekg(node.chunkOffset, ios::beg);
+        if (stream.fail()) cout << " ERROR: seek failed!!!" << endl;
+
+        for (size_t i = 0; i<node.chunkSize; i++) {
+            Splat& splat = rsCache.points[i];
+            stream.read((char*)&splat, epc.binPntSize);
+            double D = splat.p.dist2(p);
+            if (D < r2) res.push_back(splat);
+        }
+        stream.close();
     }
-    stream.close();
+
     return res;
 }
 
@@ -949,7 +974,14 @@ VRPointCloud::Splat VRPointCloud::computeSplat(Vec3d p0, vector<Splat> neighbors
     return res;
 }
 
-void VRPointCloud::externalComputeSplats(string path, float neighborsRadius) {
+Color3ub VRPointCloud::averageColor(Vec3d p0, vector<Splat> neighbors) {
+    double f = 1.0/neighbors.size();
+    Vec3d tmp(0,0,0);
+    for (auto& splat : neighbors) tmp += Vec3d(splat.c)*f;
+    return Color3ub(tmp[0], tmp[1], tmp[2]);
+}
+
+void VRPointCloud::externalComputeSplats(string path, float neighborsRadius, bool averageColors) {
     VRExternalPointCloud epc(path);
     cout << "  externalComputeSplats headers " << toString(epc.params) << endl;
     if (!epc.hasOctree) { cout << "  externalPartition needs a PCB with an octree partition, please run externalSort and externalPartition on it first!" << endl; return; }
@@ -971,8 +1003,9 @@ void VRPointCloud::externalComputeSplats(string path, float neighborsRadius) {
         stream.read((char*)&splat, epc.binPntSize);
         vector<Splat> neighbors = externalRadiusSearch(path, splat.p, neighborsRadius);
         auto nsplat = computeSplat(splat.p, neighbors);
+        if (averageColors) nsplat.c = averageColor(splat.p, neighbors);
+        else nsplat.c = splat.c;
         nsplat.p = splat.p;
-        nsplat.c = splat.c;
         wstream.write((const char*)&nsplat, Splat::size);
         progress->update(1);
     }
