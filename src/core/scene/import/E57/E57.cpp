@@ -537,6 +537,7 @@ void OSG::loadPCB(string path, VRTransformPtr res, map<string, string> importOpt
     ifstream stream(path);
     stream.seekg(epc.binPntsStart);
 
+
     if (epc.hasSplats) importOptions["doSplats"] = "1";
     if (epc.params.count("splatMod")) importOptions["splatMod"] = epc.params["splatMod"];
     else importOptions["splatMod"] = "0.001"; // in mm
@@ -580,7 +581,8 @@ void OSG::loadPCB(string path, VRTransformPtr res, map<string, string> importOpt
         Vec3d pSum;
         //if (Nbounds > 0) cout << endl << " + + try read points " << bounds[1]-bounds[0] << " at " << bounds[0] << ", N: " << N << endl;
         while (stream.read((char*)&pnt, epc.binPntSize)) {
-            Vec3d  pos = pnt.p;
+            Vec3d pos = pnt.p;
+            //if (pointsRead<10) cout << " point: " << pos << endl;
             if (pos.length() < 1e-6) continue; // ignore zeros..
             Vec3ub rgb = pnt.c;
             if (epc.hasSplats) pointcloud->addPoint(pos, pnt);
@@ -602,13 +604,12 @@ void OSG::loadPCB(string path, VRTransformPtr res, map<string, string> importOpt
             }
         }
 
-        //cout << endl << " + + read " << pointsRead << endl;
     }
 
     pointcloud->setupLODs();
     res->addChild(pointcloud); // TODO: threading -> problems with states, re-adding it as child in main thread fixes issue!
     stream.close();
-    cout << "  PCB import finished" << endl;
+    //cout << "  PCB import finished" << endl;
 }
 
 void OSG::loadXYZ(string path, VRTransformPtr res, map<string, string> importOptions) {

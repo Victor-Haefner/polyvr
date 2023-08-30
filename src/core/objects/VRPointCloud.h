@@ -53,6 +53,7 @@ class VRExternalPointCloud {
 
         static map<string, string> readPCBHeader(string path);
         static void writePCBHeader(string path, map<string, string> params);
+        static void copyPCBOctree(string path, const VRExternalPointCloud& epc);
 };
 
 class VRPointCloud : public VRTransform {
