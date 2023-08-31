@@ -28,6 +28,7 @@ template<> PyObject* VRPyTypeCaster::cast(const VRPointCloud::Splat& splat) {
 
 PyMethodDef VRPyPointCloud::methods[] = {
     {"getOctreeVisual", PyWrap( PointCloud, getOctreeVisual, "Visual of internal octree", VRGeometryPtr ) },
+    {"analyse", PyWrap( PointCloud, analyse, "Analyse a PCB file", void, string ) },
     {"addPoint", PyWrap( PointCloud, addPoint, "Add a point, position and color", void, Vec3d, Color3ub ) },
     {"addLevel", PyWrapOpt( PointCloud, addLevel, "Add LOD level, (distance, downsampling, stream = false)", "0", void, float, int, bool ) },
     {"setupLODs", PyWrap( PointCloud, setupLODs, "Setup LODs, this will delete the octree content if not disabled using the settings", void ) },
@@ -38,7 +39,7 @@ PyMethodDef VRPyPointCloud::methods[] = {
     {"convertMerge", PyWrapOpt( PointCloud, convertMerge, "Convert E57 pointclouds to a single PCB, if out path provided it will export to the same path but with '.pcb' at the end", "", void, vector<string>, string ) },
     {"externalTransform", PyWrap( PointCloud, externalTransform, "External transform of the points (path, pose)", void, string, PosePtr ) },
     {"externalSort", PyWrap( PointCloud, externalSort, "External sort, merge sort, only for PCB files, chunkSize in bytes to sort internal, bin size in m (path, chunkSize, binSize)", void, string, size_t, double ) },
-    {"externalPartition", PyWrap( PointCloud, externalPartition, "External partitioning, only for PCB files", void, string) },
+    {"externalPartition", PyWrapOpt( PointCloud, externalPartition, "External partitioning, only for PCB files", "0", void, string, float) },
     {"externalComputeSplats", PyWrapOpt( PointCloud, externalComputeSplats, "External algorithm to compute surface tangents and splat sizes, (path, splatRadius = 0.1, averageColors = false)", "0.1|0", void, string, float, bool) },
     {"externalColorize", PyWrap( PointCloud, externalColorize, "External algorithm to colorize a pointcloud from panorama images, use the extras/utils/extractEXIF.sh script and give the path to the resulting dat file as second argument", void, string, string, PosePtr, float, float, float, int, int) },
     {"genTestFile", PyWrap( PointCloud, genTestFile, "Generate a pointcloud, regular cube grid, (.pcb) file (path, Npoints, doColors)", void, string, size_t, bool ) },

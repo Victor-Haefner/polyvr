@@ -154,6 +154,7 @@ class VRPointCloud : public VRTransform {
         vector<Splat> radiusSearch(Vec3d p, double r);
         vector<Splat> externalRadiusSearch(string path, Vec3d p, double r);
 
+        void analyse(string path);
         void convert(string pathIn, string pathOut);
         void convertMerge(vector<string> pathIn, string pathOut);
         void genTestFile(string path, size_t N, bool doColor);
@@ -161,7 +162,7 @@ class VRPointCloud : public VRTransform {
 
         void externalTransform(string path, PosePtr p);
         void externalSort(string path, size_t chunkSize, double binSize);
-        void externalPartition(string path);
+        void externalPartition(string path, float leafSize = 0);
         void externalComputeSplats(string path, float neighborsRadius = 0.1, bool averageColors = false);
         void externalColorize(string path, string images, PosePtr pcPose, float localNorth, float localEast, float pDist, int i1, int i2);
 

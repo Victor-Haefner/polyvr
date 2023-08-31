@@ -560,7 +560,31 @@ VRProgressPtr VRPointCloud::addProgress(string head, size_t N) {
     return progress;
 }
 
-void VRPointCloud::externalPartition(string path) {
+void VRPointCloud::analyse(string path) {
+    VRExternalPointCloud epc(path);
+    cout << endl << "Analyse pointcloud " << path << endl;
+    cout << " parameters: " << toString(epc.params) << endl;
+
+    if (epc.hasOctree) {
+        float ls = toFloat(epc.params["binSize"]);
+        if (epc.params.count("leafSize")) ls = toFloat(epc.params["leafSize"]);
+
+        cout << endl << "Octree parameters:" << endl;
+        cout << "leaf size: " << ls << endl;
+        cout << "root size: " << epc.params["ocRootSize"] << endl;
+        cout << "root center: " << epc.params["ocRootCenter"] << endl;
+        cout << "total tree nodes: " << epc.params["ocNodeCount"] << endl;
+
+        auto oc = Octree<bool>::create(ls);
+        cout << " actual leaf size: " << oc->getLeafSize() << endl;
+    }
+
+    cout << "structs sizes, geo: " << sizeof(VRGeometry) << ", lod: " << sizeof(VRLod) << endl;
+    size_t k = ( sizeof(VRGeometry) + sizeof(VRLod) ) * toInt(epc.params["ocNodeCount"]);
+    cout << " total sg weight without points: " << k << endl;
+}
+
+void VRPointCloud::externalPartition(string path, float leafSize) {
     /**
     1) create an octree with resolution binSize
     2) put all points in that octree without storing them inside
@@ -578,7 +602,8 @@ void VRPointCloud::externalPartition(string path) {
     auto progress = addProgress("process points ", epc.size);
 
     float binSize = toFloat(epc.params["binSize"]);
-    auto oc = Octree<bool>::create(binSize);
+    if (leafSize == 0) leafSize = binSize;
+    auto oc = Octree<bool>::create(leafSize);
 
     map<void*, VRExternalPointCloud::OcChunkRef> chunkRefs;
 
@@ -640,6 +665,7 @@ void VRPointCloud::externalPartition(string path) {
     size_t ocNodeBinSize = sizeof(VRExternalPointCloud::OcSerialNode);
     string wpath = path+".tmp.pcb";
     epc.params["partitionStructure"] = "octree";
+    epc.params["leafSize"] = toString(leafSize);
     epc.params["ocRootSize"] = toString(oc->getRoot()->size);
     epc.params["ocRootCenter"] = toString(oc->getRoot()->center);
     epc.params["ocNodeCount"] = toString(oc->getNodesCount());
