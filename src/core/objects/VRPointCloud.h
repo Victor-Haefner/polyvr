@@ -103,6 +103,7 @@ class VRPointCloud : public VRTransform {
     private:
         VRMaterialPtr mat;
         shared_ptr<Octree<PntData>> octree;
+        VRLodTreePtr lodTree;
         int levels = 1;
         bool keepOctree = 0;
         bool lodsSetUp = 0;

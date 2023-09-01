@@ -16,7 +16,8 @@ ImScenegraph::ImScenegraph() :  tree("scenegraph"),
                                 camAspect("sgCamAspect", "aspect", "1"),
                                 camFov("sgCamFov", "fov", "1.0472"),
                                 camNear("sgCamNear", "near", "0.1"),
-                                camFar("sgCamFar", "far", "512") {
+                                camFar("sgCamFar", "far", "512"),
+                                lodCenter("lodCenter", "center") {
     auto mgr = OSG::VRGuiSignals::get();
     mgr->addCallback("set_sg_title", [&](OSG::VRGuiSignals::Options o){ title = o["title"]; return true; } );
     mgr->addCallback("on_sg_tree_clear", [&](OSG::VRGuiSignals::Options o){ treeClear(); return true; } );
@@ -25,6 +26,7 @@ ImScenegraph::ImScenegraph() :  tree("scenegraph"),
         return true; } );
     mgr->addCallback("on_sg_setup_obj", [&](OSG::VRGuiSignals::Options o){ setupObject(o); return true; } );
     mgr->addCallback("on_sg_setup_trans", [&](OSG::VRGuiSignals::Options o){ setupTransform(o); return true; } );
+    mgr->addCallback("on_sg_setup_lod", [&](OSG::VRGuiSignals::Options o){ setupLod(o); return true; } );
 }
 
 void ImScenegraph::render() {
@@ -143,6 +145,11 @@ void ImScenegraph::render() {
         ImGui::Separator();
         ImGui::Text("LoD:");
         ImGui::Indent(10);
+        if (lodCenter.render(region2.x-10)) lodCenter.signal("sg_set_lod_center");
+        for (int i=0; i<lodDistances.size(); i++) {
+            string lbl = "child " + toString(i) + ", distance: " + toString(lodDistances[i]);
+            ImGui::Text(lbl.c_str());
+        }
         ImGui::Unindent(10);
 
     ImGui::EndChild();
@@ -174,6 +181,29 @@ void ImScenegraph::setupTransform(OSG::VRGuiSignals::Options o) {
     setVector(scale, "scale");
 
     cout << "  ImScenegraph::setupTransform " << o["pos"] << endl;
+}
+
+void ImScenegraph::setupCamera(OSG::VRGuiSignals::Options o) {
+
+}
+
+void ImScenegraph::setupLight(OSG::VRGuiSignals::Options o) {
+
+}
+
+void ImScenegraph::setupLod(OSG::VRGuiSignals::Options o) {
+    auto setVector = [&](Im_Vector& vec, string opt) {
+        vector<float> v;
+        toValue(o[opt], v);
+        vec.set3(v[0], v[1], v[2]);
+    };
+
+    setVector(lodCenter, "center");
+    toValue(o["distances"], lodDistances);
+}
+
+void ImScenegraph::setupGeometry(OSG::VRGuiSignals::Options o) {
+
 }
 
 void ImScenegraph::treeClear() { tree.clear(); }

@@ -301,6 +301,13 @@ size_t OctreeNode<T>::countNodes() {
 }
 
 template<class T>
+int OctreeNode<T>::getDepth() {
+    int depth = 0;
+    for (auto& c : children) if (c) depth = max(depth, c->getDepth()) + 1;
+    return depth;
+}
+
+template<class T>
 OctreeNode<T>* OctreeNode<T>::getChild(int i) { if (i >= 0 && i < 8) return children[i]; return 0; }
 
 
@@ -313,6 +320,9 @@ shared_ptr<Octree<T>> Octree<T>::create(float resolution, float size, string n) 
 
 template<class T>
 shared_ptr<Octree<T>> Octree<T>::ptr() { return static_pointer_cast<Octree<T>>(shared_from_this()); }
+
+template<class T>
+int Octree<T>::getDepth() { return root->getDepth(); }
 
 template<class T>
 float Octree<T>::getSize() { return root->getSize(); }

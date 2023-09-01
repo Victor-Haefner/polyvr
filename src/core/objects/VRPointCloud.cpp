@@ -5,6 +5,7 @@
 #include "core/objects/geometry/VRGeoData.h"
 #include "core/objects/geometry/VRPrimitive.h"
 #include "core/objects/VRLod.h"
+#include "core/objects/VRLodTree.h"
 #include "core/math/partitioning/Octree.h"
 #include "core/math/partitioning/OctreeT.h"
 #include "core/math/partitioning/Quadtree.h"
@@ -363,7 +364,7 @@ void VRPointCloud::addLevel(float distance, int downsampling, bool stream) {
         VRImport::get()->addEventCallback(onImport);
     }
 
-    if (lodsSetUp && stream) {
+    /*if (lodsSetUp && stream) { // TODO: rework this in conjunction with the new setupLods
         VRLodCbPtr streamCB = VRLodCb::create( "pointcloudStreamCB", bind(&VRPointCloud::onLodSwitch, this, placeholders::_1 ) );
 
         for (auto c : getChildren()) {
@@ -382,7 +383,7 @@ void VRPointCloud::addLevel(float distance, int downsampling, bool stream) {
             lod->addChild( geo );
             obj->addLink( geo );
         }
-    }
+    }*/
 }
 
 void VRPointCloud::addPoint(Vec3d p, Splat s) {
@@ -404,49 +405,97 @@ void VRPointCloud::addPoint(Vec3d p, Color3ub c) {
     octree->add(p, d, -1, true, partitionLimit);
 }
 
-void VRPointCloud::setupLODs() {
-    cout << " VRPointCloud::setupLODs" << endl;
-    lodsSetUp = true;
+VRGeometryPtr setupSparseChunk(OctreeNode<VRPointCloud::PntData>* node, VRMaterialPtr mat, VRPointCloud::POINTTYPE pointType) {
+    double dsr0 = 1.0;
+    int depth = node->getDepth();
+    for (int i=0; i<depth; i++) dsr0 *= 1.5;
+    size_t dsr = size_t(dsr0);
 
-    auto leafs = octree->getAllLeafs();
+    cout << " setupLODs, depth: " << depth << ", dsr0: " << dsr0 << ", dsr: " << dsr << endl;
+
+    VRGeoData chunk;
+    auto leafs = node->getLeafs();
 
     auto progress = VRProgress::create();
     progress->setup("setup pointcloud LODs ", leafs.size());
     progress->reset();
 
     for (auto leaf : leafs) {
-        Vec3d center = leaf->getCenter();
-
-        auto lod = VRLod::create("chunk");
-        lod->setCenter(center);
-        addChild(lod);
-
-        for (int lvl=0; lvl<levels; lvl++) {
-            auto geo = VRGeometry::create("lvl"+toString(lvl+1));
-            geo->setMaterial(mat);
-            geo->setFrom(center);
-            lod->addChild(geo);
-            if (lvl > 0) lod->addDistance(lodDistances[lvl-1]);
-
-            VRGeoData chunk;
-            for (int i = 0; i < leaf->dataSize(); i+=downsamplingRate[lvl]) {
-                PntData& data = leaf->getData(i);
-                Vec3d pos = leaf->getPoint(i);
-                chunk.pushVert(pos - center, Vec3d(0,1,0));
-                chunk.pushColor(data.c);
-                if (pointType == SPLAT) {
-                    chunk.pushTexCoord(Vec2d(data.v1), 0);
-                    chunk.pushTexCoord(Vec2d(data.v2), 1);
-                    chunk.pushTexCoord(Vec2d(data.w,0), 2);
-                }
-                chunk.pushPoint();
+        //Vec3d center = leaf->getCenter();
+        for (int i = 0; i < leaf->dataSize(); i += dsr) {
+            VRPointCloud::PntData& data = leaf->getData(i);
+            Vec3d pos = leaf->getPoint(i);
+            chunk.pushVert(pos - node->getCenter(), Vec3d(0,1,0));
+            chunk.pushColor(data.c);
+            if (pointType == VRPointCloud::SPLAT) {
+                chunk.pushTexCoord(Vec2d(data.v1), 0);
+                chunk.pushTexCoord(Vec2d(data.v2), 1);
+                chunk.pushTexCoord(Vec2d(data.w,0), 2);
             }
-            if (chunk.size() > 0) chunk.apply( geo );
+            chunk.pushPoint();
         }
-
-        if (!keepOctree) leaf->clearContent();
         progress->update(1);
     }
+
+    if (chunk.size() == 0) return 0;
+
+    auto geo = VRGeometry::create("sparseChunk");
+    geo->setMaterial(mat);
+    geo->setFrom(node->getCenter());
+    chunk.apply( geo );
+    return geo;
+}
+
+VRLodPtr setupChunkLod(OctreeNode<VRPointCloud::PntData>* node, VRGeometryPtr geo, VRMaterialPtr mat, VRPointCloud::POINTTYPE pointType, float rangeModifier);
+
+void onPCLodSwitch(VRLodEventPtr e, OctreeNode<VRPointCloud::PntData>* node, VRMaterialPtr mat, VRPointCloud::POINTTYPE pointType, float rangeModifier) {
+    if (e->getCurrent() != 0) return; // wait for lod 0 to activate
+    VRLodPtr l = e->getLod();
+    l->setCallback(0);
+
+    l->getChild(0)->clearLinks();
+    for (auto c : node->getChildren()) {
+        if (!c) continue;
+        auto PC = setupSparseChunk(c, mat, pointType);
+        if (!PC) continue;
+
+        if (c->isLeaf()) {
+            l->getChild(0)->addChild(PC);
+        } else {
+            auto lod = setupChunkLod(c, PC, mat, pointType, rangeModifier);
+            if (lod) l->getChild(0)->addChild(lod);
+        }
+    }
+
+    // get valid children from 8 possible octree children
+    // compute for each the sparse pointcloud, create an lod, and repeat as below
+};
+
+VRLodPtr setupChunkLod(OctreeNode<VRPointCloud::PntData>* node, VRGeometryPtr geo, VRMaterialPtr mat, VRPointCloud::POINTTYPE pointType, float rangeModifier) {
+    if (!geo) return 0;
+    auto proxy = VRObject::create("proxy");
+    auto lod = VRLod::create("rootLod");
+    lod->setCenter(node->getCenter());
+    lod->addChild(proxy);
+    lod->addChild(geo);
+    float R = sqrt(3)*node->getSize()*0.5*rangeModifier; // box enclosing sphere radius
+    lod->addDistance(R);
+    lod->setCallback(VRLodCb::create("pcLod", bind(onPCLodSwitch, placeholders::_1, node, mat, pointType, rangeModifier)));
+    proxy->addLink(geo);
+    return lod;
+}
+
+void VRPointCloud::setupLODs() {
+    cout << " VRPointCloud::setupLODs" << endl;
+    lodsSetUp = true;
+
+    float rangeModifier = 2.0; // TODO: pass as parameter
+
+    auto root = octree->getRoot();
+    auto rootPC = setupSparseChunk(root, mat, pointType);
+    if (!rootPC) return;
+    auto rLod = setupChunkLod(root, rootPC, mat, pointType, rangeModifier);
+    if (rLod) addChild(rLod);
 
     //addChild(octree->getVisualization());
 }

@@ -280,6 +280,12 @@ void VRGuiScene::setGroup(VRGroupPtr g) {
 }
 
 void VRGuiScene::setLod(VRLodPtr lod) {
+
+    uiSignal( "on_sg_setup_lod", {
+        {"center", toString(lod->getCenter())},
+        {"distances", toString(lod->getDistances())}
+    } );
+
     /*setWidgetVisibility("expander2", true, true);
     setWidgetVisibility("expander10", true, true);
 

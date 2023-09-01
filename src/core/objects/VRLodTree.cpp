@@ -12,10 +12,10 @@ VRLodLeafPtr VRLodLeaf::ptr() { return static_pointer_cast<VRLodLeaf>( shared_fr
 
 VRLodLeafPtr VRLodLeaf::create(string name, OctreeNode<VRTransform*>* o, int lvl) {
     auto l = VRLodLeafPtr(new VRLodLeaf(name, o, lvl));
-    l->lod = VRLod::create("natureLod");
+    l->lod = VRLod::create("lod");
     l->lod->setPersistency(0);
     l->addChild(l->lod);
-    auto lvl0 = VRObject::create("natureLodLvl");
+    auto lvl0 = VRObject::create("lodLvl");
     lvl0->setPersistency(0);
     l->levels.push_back(lvl0);
     l->lod->addChild(lvl0);

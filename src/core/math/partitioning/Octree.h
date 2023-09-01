@@ -54,6 +54,7 @@ class OctreeNode : public PartitiontreeNode<T> {
 
         int dataSize();
         size_t countNodes();
+        int getDepth();
 
         int getOctant(Vec3d p);
         Vec3d lvljumpCenter(float s2, Vec3d rp);
@@ -90,6 +91,7 @@ class Octree : public Partitiontree {
 
         void setResolution(float res);
         float getSize();
+        int getDepth();
         void clear();
         void updateRoot();
 

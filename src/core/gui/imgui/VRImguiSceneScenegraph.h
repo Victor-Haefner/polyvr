@@ -41,6 +41,9 @@ class ImScenegraph {
         ImInput camNear;
         ImInput camFar;
 
+        Im_Vector lodCenter;
+        vector<double> lodDistances;
+
     public:
         ImScenegraph();
         void render();
@@ -50,6 +53,10 @@ class ImScenegraph {
 
         void setupObject(OSG::VRGuiSignals::Options o);
         void setupTransform(OSG::VRGuiSignals::Options o);
+        void setupCamera(OSG::VRGuiSignals::Options o);
+        void setupLight(OSG::VRGuiSignals::Options o);
+        void setupLod(OSG::VRGuiSignals::Options o);
+        void setupGeometry(OSG::VRGuiSignals::Options o);
 };
 
 #endif // VRIMGUISCENESCENEGRAPH_H_INCLUDED
