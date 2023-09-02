@@ -136,6 +136,11 @@ class VRPointCloud : public VRTransform {
         void onImportEvent(VRImportJob params);
         VRProgressPtr addProgress(string head, size_t N);
 
+        VRGeometryPtr setupSparseChunk(OctreeNode<PntData>* node);
+        void onPCLodSwitch(VRLodEventPtr e, OctreeNode<PntData>* node, float rangeModifier);
+        VRLodPtr setupLeafLod(OctreeNode<PntData>* node, VRGeometryPtr geo, float rangeModifier);
+        VRLodPtr setupChunkLod(OctreeNode<PntData>* node, VRGeometryPtr geo, float rangeModifier);
+
     public:
         VRPointCloud(string name = "pointcloud");
         ~VRPointCloud();

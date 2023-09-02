@@ -537,10 +537,9 @@ void OSG::loadPCB(string path, VRTransformPtr res, map<string, string> importOpt
     ifstream stream(path);
     stream.seekg(epc.binPntsStart);
 
-
+    for (auto& p : epc.params) importOptions[p.first] = p.second;
     if (epc.hasSplats) importOptions["doSplats"] = "1";
-    if (epc.params.count("splatMod")) importOptions["splatMod"] = epc.params["splatMod"];
-    else importOptions["splatMod"] = "0.001"; // in mm
+    if (!importOptions.count("splatMod")) importOptions["splatMod"] = "0.001"; // in mm
 
     auto progress = VRProgress::create();
     progress->setup("process points ", epc.size);
