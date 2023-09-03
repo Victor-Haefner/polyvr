@@ -170,7 +170,7 @@ VRExternalPointCloud::OcSerialNode VRExternalPointCloud::getOctreeNode(Vec3d p) 
         return OcSerialNode();
     }
 
-    if (lastGetOcn.chunkOffset > 0) {
+    if (getOcnHalfSize > 0) {
         Vec3d d = p - getOcnCenter;
         if (abs(d[0]) < getOcnHalfSize)
             if (abs(d[1]) < getOcnHalfSize)
@@ -767,7 +767,7 @@ void VRPointCloud::externalPartition(string path, float leafSize) {
         }
         void* key = node;
         if (chunkRefs.count(key)) {
-            sNode.chunkOffset = chunkRefs[key].offset;
+            sNode.chunkOffset = (chunkRefs[key].offset - epc.binPntsStart) / epc.binPntSize; // convert bin pos to point i
             sNode.chunkSize = chunkRefs[key].size;
         }
 
@@ -978,23 +978,30 @@ vector<VRPointCloud::Splat> VRPointCloud::radiusSearch(Vec3d p, double r) {
     return res;
 }
 
-vector<VRPointCloud::Splat> VRPointCloud::externalRadiusSearch(string path, Vec3d p, double r) {
+vector<VRPointCloud::Splat> VRPointCloud::externalRadiusSearch(string path, Vec3d p, double r, bool verbose) {
     double r2 = r*r;
 
-    if (rsCache.epc.path != path) {
+    if (verbose) cout << "*** VRPointCloud::externalRadiusSearch " << path << ", " << p << ", " << r << endl;
+
+    if (rsCache.epc.path != path) { // TODO: this fails if the call comes from python and there is an old cache.. broken streams?
+        cout << " new cache! " << endl;
         rsCache.epc = VRExternalPointCloud(path);
         rsCache.points.clear();
         rsCache.chunkOffset = 0;
     }
 
     VRExternalPointCloud& epc = rsCache.epc;
+    if (verbose) cout << " node center: " << epc.getOcnCenter << ", node half size: " << epc.getOcnHalfSize << endl;
     //epc.printOctree();
 
     // TODO: instead of only getting the chunk containing the center, get all chunks the sphere is contained in!
     //        then for each chunk get its points and do a radius search on it
 
     auto node = epc.getOctreeNode(p);
-    bool reuseCachedPoints = bool(rsCache.chunkOffset > 0 && rsCache.chunkOffset == node.chunkOffset);
+    if (verbose) cout << " node offset: " << node.chunkOffset << ", N pnts: " << node.chunkSize << endl;
+    if (node.chunkSize > 1e6) { cout << "Error, bad chunkSize! " << node.chunkSize << endl; return {}; }
+    bool reuseCachedPoints = bool(rsCache.points.size() > 0 && rsCache.chunkOffset == node.chunkOffset);
+    if (verbose) cout << " reuseCachedPoints: " << reuseCachedPoints << endl;
     rsCache.chunkOffset = node.chunkOffset;
     rsCache.points.resize(node.chunkSize);
 
@@ -1007,7 +1014,7 @@ vector<VRPointCloud::Splat> VRPointCloud::externalRadiusSearch(string path, Vec3
         }
     } else {
         ifstream stream(path);
-        stream.seekg(node.chunkOffset, ios::beg);
+        stream.seekg(node.chunkOffset*epc.binPntSize + epc.binPntsStart, ios::beg);
         if (stream.fail()) cout << " ERROR: seek failed!!!" << endl;
 
         for (size_t i = 0; i<node.chunkSize; i++) {
@@ -1052,19 +1059,18 @@ void VRPointCloud::externalTransform(string path, PosePtr p) {
 VRPointCloud::Splat VRPointCloud::computeSplat(Vec3d p0, vector<Splat> neighbors) {
     Splat res;
 
-    PCA pca;
-    for (auto& splat : neighbors) pca.add(splat.p);
-    Pose P = pca.compute();
-    Vec3d n = P.up();
-    n.normalize();
-    Pose O(p0, n);
-    O.makeUpOrthogonal();
-    res.v1 = toSpherical(O.x());
-    res.v2 = toSpherical(O.up());
-
-    res.w = 1; // 1 mm
     int N = neighbors.size();
     if (N >= 3) {
+        PCA pca;
+        for (auto& splat : neighbors) pca.add(splat.p);
+        Pose P = pca.compute();
+        Vec3d n = P.up();
+        n.normalize();
+        Pose O(p0, n);
+        O.makeUpOrthogonal();
+        res.v1 = toSpherical(O.x());
+        res.v2 = toSpherical(O.up());
+
         float d = 0.255;
         for (auto& splat : neighbors) {
             Vec3d dj = splat.p - p0;
@@ -1072,6 +1078,10 @@ VRPointCloud::Splat VRPointCloud::computeSplat(Vec3d p0, vector<Splat> neighbors
             if (L > 1e-4 && L < d) d = L;
         }
         res.w = d * 1000.0; // in mm
+    } else { // fallback
+        res.w = 1; // 1 mm
+        res.v1 = toSpherical(Vec3d(1,0,0));
+        res.v2 = toSpherical(Vec3d(0,0,1));
     }
 
     return res;

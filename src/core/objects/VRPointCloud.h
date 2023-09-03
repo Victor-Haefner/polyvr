@@ -47,7 +47,7 @@ class VRExternalPointCloud {
         // external octree access optimization
         OcSerialNode lastGetOcn;
         Vec3d getOcnCenter;
-        double getOcnHalfSize;
+        double getOcnHalfSize = -1;
 
     public:
         VRExternalPointCloud(string path);
@@ -158,7 +158,7 @@ class VRPointCloud : public VRTransform {
         void addPoint(Vec3d p, Splat c);
 
         vector<Splat> radiusSearch(Vec3d p, double r);
-        vector<Splat> externalRadiusSearch(string path, Vec3d p, double r);
+        vector<Splat> externalRadiusSearch(string path, Vec3d p, double r, bool verbose = false);
 
         void analyse(string path);
         void convert(string pathIn, string pathOut);

@@ -48,7 +48,7 @@ PyMethodDef VRPyPointCloud::methods[] = {
     {"computeSplat", PyWrap( PointCloud, computeSplat, "Compute splat, normal and size, from point and neightbors", VRPointCloud::Splat, Vec3d, vector<VRPointCloud::Splat> ) },
     {"averageColor", PyWrap( PointCloud, averageColor, "Average colors accross list of splats", Color3ub, Vec3d, vector<VRPointCloud::Splat> ) },
     {"radiusSearch", PyWrap( PointCloud, radiusSearch, "Executes a radius search and returns point positions around P inside radius r, (P, r)", vector<VRPointCloud::Splat>, Vec3d, double ) },
-    {"externalRadiusSearch", PyWrap( PointCloud, externalRadiusSearch, "Executes a radius search and returns point positions around P inside radius r, (path, P, r)", vector<VRPointCloud::Splat>, string, Vec3d, double ) },
+    {"externalRadiusSearch", PyWrapOpt( PointCloud, externalRadiusSearch, "Executes a radius search and returns point positions around P inside radius r, (path, P, r)", "0", vector<VRPointCloud::Splat>, string, Vec3d, double, bool ) },
     {NULL}  /* Sentinel */
 };
 

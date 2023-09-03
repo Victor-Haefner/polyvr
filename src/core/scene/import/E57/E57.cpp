@@ -517,7 +517,8 @@ vector<size_t> extractOctreeRegionBounds(string path, vector<double> region) {
     //return {37089059,37089059}; // TEMP
 
     vector<size_t> bounds;
-    size_t bound0 = (ocNode.chunkOffset - ocTree - nodeCount * ocNodeBinSize) / epc.binPntSize; // bounds are offsets relative to the first point
+    //size_t bound0 = (ocNode.chunkOffset - ocTree - nodeCount * ocNodeBinSize) / epc.binPntSize; // bounds are offsets relative to the first point
+    size_t bound0 = ocNode.chunkOffset;
     size_t bound1 = bound0 + ocNode.chunkSize; // N;
     bounds.push_back(bound0);
     bounds.push_back(bound1);
