@@ -28,7 +28,7 @@ template<> PyObject* VRPyTypeCaster::cast(const VRPointCloud::Splat& splat) {
 
 PyMethodDef VRPyPointCloud::methods[] = {
     {"getOctreeVisual", PyWrap( PointCloud, getOctreeVisual, "Visual of internal octree", VRGeometryPtr ) },
-    {"analyse", PyWrap( PointCloud, analyse, "Analyse a PCB file", void, string ) },
+    {"analyse", PyWrap( PointCloud, analyse, "Analyse a PCB file (path, printOctree)", void, string, bool ) },
     {"addPoint", PyWrap( PointCloud, addPoint, "Add a point, position and color", void, Vec3d, Color3ub ) },
     {"addLevel", PyWrapOpt( PointCloud, addLevel, "Add LOD level, (distance, downsampling, stream = false)", "0", void, float, int, bool ) },
     {"setupLODs", PyWrap( PointCloud, setupLODs, "Setup LODs, this will delete the octree content if not disabled using the settings", void ) },
@@ -42,13 +42,14 @@ PyMethodDef VRPyPointCloud::methods[] = {
     {"externalPartition", PyWrapOpt( PointCloud, externalPartition, "External partitioning, only for PCB files", "0", void, string, float) },
     {"externalComputeSplats", PyWrapOpt( PointCloud, externalComputeSplats, "External algorithm to compute surface tangents and splat sizes, (path, splatRadius = 0.1, averageColors = false)", "0.1|0", void, string, float, bool) },
     {"externalColorize", PyWrap( PointCloud, externalColorize, "External algorithm to colorize a pointcloud from panorama images, use the extras/utils/extractEXIF.sh script and give the path to the resulting dat file as second argument", void, string, string, PosePtr, float, float, float, int, int) },
-    {"genTestFile", PyWrap( PointCloud, genTestFile, "Generate a pointcloud, regular cube grid, (.pcb) file (path, Npoints, doColors)", void, string, size_t, bool ) },
+    {"genTestFile", PyWrap( PointCloud, genTestFile, "Generate a pointcloud, regular cube grid, (.pcb) file (path, Npoints, doColors, pDist)", void, string, size_t, bool, float ) },
     {"genTestFile2", PyWrap( PointCloud, genTestFile2, "Generate a pointcloud, ico sphere surface, (.pcb) file (path, Niterations, doColors, splatSize[mm])", void, string, size_t, bool, int ) },
     {"projectOnPanorama", PyWrap( PointCloud, projectOnPanorama, "Project point onto panorama image", Vec3ub, Vec3d, VRTexturePtr, PosePtr ) },
     {"computeSplat", PyWrap( PointCloud, computeSplat, "Compute splat, normal and size, from point and neightbors", VRPointCloud::Splat, Vec3d, vector<VRPointCloud::Splat> ) },
     {"averageColor", PyWrap( PointCloud, averageColor, "Average colors accross list of splats", Color3ub, Vec3d, vector<VRPointCloud::Splat> ) },
     {"radiusSearch", PyWrap( PointCloud, radiusSearch, "Executes a radius search and returns point positions around P inside radius r, (P, r)", vector<VRPointCloud::Splat>, Vec3d, double ) },
     {"externalRadiusSearch", PyWrapOpt( PointCloud, externalRadiusSearch, "Executes a radius search and returns point positions around P inside radius r, (path, P, r)", "0", vector<VRPointCloud::Splat>, string, Vec3d, double, bool ) },
+    {"getExternalChunk", PyWrap( PointCloud, getExternalChunk, "Returns point positions of chunk at p, (path, p)", vector<VRPointCloud::Splat>, string, Vec3d) },
     {NULL}  /* Sentinel */
 };
 

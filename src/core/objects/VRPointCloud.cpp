@@ -134,12 +134,12 @@ void VRExternalPointCloud::printOctree() {
     stream.read((char*)&ocNode, ocNodeBinSize); // read tree root
 
 
-    auto printNode = [&](OcSerialNode node, string indent) {
-        cout << indent << " node: " << node.chunkOffset << ", " << node.chunkSize << endl;
+    auto printNode = [&](OcSerialNode node, size_t pos, string indent) {
+        cout << indent << " node " << pos << ", chunk pos: " << node.chunkOffset << ", size: " << node.chunkSize << endl;
     };
 
-    function<void(OcSerialNode, string)> iterateNode = [&](OcSerialNode node, string indent) {
-        printNode(node, indent);
+    function<void(OcSerialNode, size_t, string)> iterateNode = [&](OcSerialNode node, size_t pos, string indent) {
+        printNode(node, pos, indent);
 
         for (int i=0; i<8; i++) {
             int cOffset = node.children[i];
@@ -147,21 +147,43 @@ void VRExternalPointCloud::printOctree() {
                 stream.seekg(ocTree + cOffset, ios::beg);
                 OcSerialNode child;
                 stream.read((char*)&child, ocNodeBinSize);
-                iterateNode(child, indent+" ");
+                iterateNode(child, cOffset, indent+" ");
             }
         }
     };
 
     cout << "Print octree structure:" << endl;
-    iterateNode(ocNode, "");
+    iterateNode(ocNode, rOffset, "");
     cout << "Print octree nodes list, oc:" << ocTree << " bs: " << ocNodeBinSize << endl;
     stream.seekg(ocTree, ios::beg);
     for (int i=0; i<nodeCount; i++) {
         OcSerialNode node;
+        size_t pos = stream.tellg() - ocTree;
         stream.read((char*)&node, ocNodeBinSize);
-        cout << stream.tellg() << ": ";
-        printNode(node, "");
+        printNode(node, pos, "");
     }
+}
+
+vector<VRExternalPointCloud::OcSerialNode> VRExternalPointCloud::getOctreeNodes(Vec3d p, float r) {
+    vector<OcSerialNode> res;
+    auto n = getOctreeNode(p);
+    res.push_back(n);
+
+    auto skipNode = [&](OcSerialNode& n) {
+        for (auto& no : res) if (no.chunkOffset == n.chunkOffset) return true;
+        return false;
+    };
+
+    for (double x : {p[0]-r, p[0]+r}) { // TODO: this only checks the box corners enclosing the sphere..
+        for (double y : {p[1]-r, p[1]+r}) {
+            for (double z : {p[2]-r, p[2]+r}) {
+                Vec3d c(x,y,z);
+                auto n = getOctreeNode(c);
+                if (!skipNode(n)) res.push_back(n);
+            }
+        }
+    }
+    return res;
 }
 
 VRExternalPointCloud::OcSerialNode VRExternalPointCloud::getOctreeNode(Vec3d p) {
@@ -188,10 +210,7 @@ VRExternalPointCloud::OcSerialNode VRExternalPointCloud::getOctreeNode(Vec3d p) 
     OcSerialNode ocNode;
 
     ifstream stream(path);
-    stream.seekg(headerLength);
-    size_t ocTree = stream.tellg();
-
-    stream.seekg(ocTree + rOffset, ios::beg);
+    stream.seekg(headerLength + rOffset, ios::beg);
     stream.read((char*)&ocNode, ocNodeBinSize); // read tree root
 
     int jumps = 0;
@@ -220,8 +239,8 @@ VRExternalPointCloud::OcSerialNode VRExternalPointCloud::getOctreeNode(Vec3d p) 
         jumps++;
 
         // get child node
-        stream.seekg(ocTree + cOffset, ios::beg);
-        //cout << " get child from " << ocTree + cOffset << ", " << ocNode.chunkOffset << ", " << ocNode.chunkSize << endl;
+        stream.seekg(headerLength + cOffset, ios::beg);
+        //cout << " get child from " << headerLength + cOffset << ", " << ocNode.chunkOffset << ", " << ocNode.chunkSize << endl;
         stream.read((char*)&ocNode, ocNodeBinSize);
     }
 
@@ -264,7 +283,8 @@ VRGeometryPtr VRPointCloud::getOctreeVisual() { return octree->getVisualization(
 void VRPointCloud::applySettings(map<string, string> options) {
     if (options.count("filePath")) filePath = options["filePath"];
     if (options.count("lit")) lit = toInt(options["lit"]);
-    if (options.count("leafSize")) leafSize = toInt(options["leafSize"]);
+    if (options.count("leafSize")) leafSize = toFloat(options["leafSize"]);
+    else if (options.count("binSize")) leafSize = toFloat(options["binSize"]);
     if (options.count("pointSize")) pointSize = toInt(options["pointSize"]);
     if (options.count("keepOctree")) keepOctree = toInt(options["keepOctree"]);
     if (options.count("partitionLimit")) partitionLimit = toInt(options["partitionLimit"]);
@@ -281,6 +301,7 @@ void VRPointCloud::applySettings(map<string, string> options) {
     if (options.count("downsampling")) splatMod /= sqrt(toFloat(options["downsampling"]));
 
     setupMaterial(lit, pointSize, doSplats, splatMod);
+    //octree = Octree<PntData>::create(leafSize);
     octree->setResolution(leafSize);
     actualLeafSize = octree->getLeafSize();
 
@@ -389,7 +410,7 @@ void VRPointCloud::addPoint(Vec3d p, Color3ub c) {
 
 VRGeometryPtr VRPointCloud::setupSparseChunk(OctreeNode<VRPointCloud::PntData>* node) {
     double dsr0 = 1.0;
-    int depth = node->getDepth();
+    int depth = min(10, node->getDepth() );
     for (int i=0; i<depth; i++) dsr0 *= 1.5;
     size_t dsr = size_t(dsr0);
 
@@ -428,6 +449,20 @@ VRGeometryPtr VRPointCloud::setupSparseChunk(OctreeNode<VRPointCloud::PntData>* 
     return geo;
 }
 
+void VRPointCloud::setupOcNodeLod(OctreeNode<VRPointCloud::PntData>* node, VRObjectPtr parent, float rangeModifier) {
+    auto PC = setupSparseChunk(node);
+    if (!PC) return;
+
+    if (node->isLeaf()) {
+        auto lod = setupLeafLod(node, PC, rangeModifier);
+        if (lod) parent->addChild(lod);
+        else parent->addChild(PC);
+    } else {
+        auto lod = setupChunkLod(node, PC, rangeModifier);
+        if (lod) parent->addChild(lod);
+    }
+}
+
 void VRPointCloud::onPCLodSwitch(VRLodEventPtr e, OctreeNode<VRPointCloud::PntData>* node, float rangeModifier) {
     if (e->getCurrent() != 0) return; // wait for lod 0 to activate
     VRLodPtr l = e->getLod();
@@ -435,22 +470,8 @@ void VRPointCloud::onPCLodSwitch(VRLodEventPtr e, OctreeNode<VRPointCloud::PntDa
 
     l->getChild(0)->clearLinks();
     for (auto c : node->getChildren()) {
-        if (!c) continue;
-        auto PC = setupSparseChunk(c);
-        if (!PC) continue;
-
-        if (c->isLeaf()) {
-            auto lod = setupLeafLod(c, PC, rangeModifier);
-            if (lod) l->getChild(0)->addChild(lod);
-            else l->getChild(0)->addChild(PC);
-        } else {
-            auto lod = setupChunkLod(c, PC, rangeModifier);
-            if (lod) l->getChild(0)->addChild(lod);
-        }
+        if (c) setupOcNodeLod(c, l->getChild(0), rangeModifier);
     }
-
-    // get valid children from 8 possible octree children
-    // compute for each the sparse pointcloud, create an lod, and repeat as below
 };
 
 VRLodPtr VRPointCloud::setupLeafLod(OctreeNode<VRPointCloud::PntData>* node, VRGeometryPtr geo, float rangeModifier) {
@@ -505,11 +526,11 @@ VRLodPtr VRPointCloud::setupChunkLod(OctreeNode<VRPointCloud::PntData>* node, VR
     auto lod = VRLod::create("rootLod");
     lod->setCenter(node->getCenter());
     lod->addChild(proxy);
-    lod->addChild(geo);
+    //lod->addChild(geo);
     float R = sqrt(3)*node->getSize()*0.5*rangeModifier; // box enclosing sphere radius
     lod->addDistance(R);
     lod->setCallback(VRLodCb::create("pcLod", bind(&VRPointCloud::onPCLodSwitch, this, placeholders::_1, node, rangeModifier)));
-    proxy->addLink(geo);
+    //proxy->addLink(geo);
     return lod;
 }
 
@@ -519,12 +540,9 @@ void VRPointCloud::setupLODs() {
 
     float rangeModifier = 2.0; // TODO: pass as parameter
 
+    cout << "  octree leafsize: " << octree->getLeafSize() << ", depth: " << octree->getDepth() << endl;
     auto root = octree->getRoot();
-    auto rootPC = setupSparseChunk(root);
-    if (!rootPC) return;
-    auto rLod = setupChunkLod(root, rootPC, rangeModifier);
-    if (rLod) addChild(rLod);
-
+    setupOcNodeLod(root, ptr(), rangeModifier);
     //addChild(octree->getVisualization());
 }
 
@@ -539,10 +557,10 @@ void VRPointCloud::convertMerge(vector<string> pathIn, string pathOut) {
     convertE57(pathIn, pathOut);
 }
 
-void VRPointCloud::genTestFile(string path, size_t N, bool doColor) {
+void VRPointCloud::genTestFile(string path, size_t N, bool doColor, float pDist) {
     size_t n = cbrt(N);
     double f = 255.0/n;
-    double s = 0.01;
+    double s = pDist;
     N = n*n*n;
 
     map<string, string> params;
@@ -637,7 +655,7 @@ VRProgressPtr VRPointCloud::addProgress(string head, size_t N) {
     return progress;
 }
 
-void VRPointCloud::analyse(string path) {
+void VRPointCloud::analyse(string path, bool printOctree) {
     VRExternalPointCloud epc(path);
     cout << endl << "Analyse pointcloud " << path << endl;
     cout << " parameters: " << toString(epc.params) << endl;
@@ -656,9 +674,11 @@ void VRPointCloud::analyse(string path) {
         cout << " actual leaf size: " << oc->getLeafSize() << endl;
     }
 
-    cout << "structs sizes, geo: " << sizeof(VRGeometry) << ", lod: " << sizeof(VRLod) << endl;
-    size_t k = ( sizeof(VRGeometry) + sizeof(VRLod) ) * toInt(epc.params["ocNodeCount"]);
-    cout << " total sg weight without points: " << k << endl;
+    //cout << "structs sizes, geo: " << sizeof(VRGeometry) << ", lod: " << sizeof(VRLod) << endl;
+    //size_t k = ( sizeof(VRGeometry) + sizeof(VRLod) ) * toInt(epc.params["ocNodeCount"]);
+    //cout << " total sg weight without points: " << k << endl;
+
+    if (printOctree) epc.printOctree();
 }
 
 void VRPointCloud::externalPartition(string path, float leafSize) {
@@ -740,17 +760,20 @@ void VRPointCloud::externalPartition(string path, float leafSize) {
     for (auto& ref : chunkRefs) if (ref.second.isOpen) { ref.second.stream.close(); ref.second.isOpen = false; openStreams--; }
 
     size_t ocNodeBinSize = sizeof(VRExternalPointCloud::OcSerialNode);
+    size_t ocNodesCount = oc->getNodesCount() + 1;
+
     string wpath = path+".tmp.pcb";
     epc.params["partitionStructure"] = "octree";
     epc.params["leafSize"] = toString(leafSize);
     epc.params["ocRootSize"] = toString(oc->getRoot()->size);
     epc.params["ocRootCenter"] = toString(oc->getRoot()->center);
-    epc.params["ocNodeCount"] = toString(oc->getNodesCount());
+    epc.params["ocNodeCount"] = toString(ocNodesCount);
     VRExternalPointCloud::writePCBHeader(wpath, epc.params);
     ofstream wstream(wpath, ios::app);
 
     // compute/predict the binary offsets of chunks and write them into the refs
-    size_t chunksOffset = size_t(wstream.tellp()) + ocNodeBinSize * oc->getNodesCount();
+    size_t binPntsStart = size_t(wstream.tellp()) + ocNodeBinSize * ocNodesCount;
+    size_t chunksOffset = binPntsStart;
     for (auto& ref : chunkRefs) {
         ref.second.offset = chunksOffset;
         chunksOffset += ref.second.size * epc.binPntSize;
@@ -767,7 +790,7 @@ void VRPointCloud::externalPartition(string path, float leafSize) {
         }
         void* key = node;
         if (chunkRefs.count(key)) {
-            sNode.chunkOffset = (chunkRefs[key].offset - epc.binPntsStart) / epc.binPntSize; // convert bin pos to point i
+            sNode.chunkOffset = (chunkRefs[key].offset - binPntsStart) / epc.binPntSize; // convert bin pos to point i
             sNode.chunkSize = chunkRefs[key].size;
         }
 
@@ -779,6 +802,8 @@ void VRPointCloud::externalPartition(string path, float leafSize) {
     };
 
     int nOffset = 0;
+    OctreeNode<bool> nullNode(0,0,0);
+    writeOutOcNode(&nullNode, wstream, nOffset);
     writeOutOcNode(oc->getRoot(), wstream, nOffset);
 
     cout << "---- start writing points at " << wstream.tellp() << ", nOffset " << nOffset << endl;
@@ -787,14 +812,13 @@ void VRPointCloud::externalPartition(string path, float leafSize) {
         VRPointCloud::Splat splat;
         ifstream stream(ref.second.path);
         while(stream.read((char*)&splat, epc.binPntSize)) {
-            if (splat.p.length() < 1e-6) cout << " B GOT P0 " << splat.p << endl;
             wstream.write((char*)&splat, epc.binPntSize);
             Nwritten += 1;
         }
 
         removeFile(ref.second.path);
     }
-    cout << "---- writing points " << Nwritten << endl;
+    cout << " ---> written points " << Nwritten << endl;
 
     wstream.close();
     rename(wpath.c_str(), path.c_str());
@@ -987,7 +1011,7 @@ vector<VRPointCloud::Splat> VRPointCloud::externalRadiusSearch(string path, Vec3
         cout << " new cache! " << endl;
         rsCache.epc = VRExternalPointCloud(path);
         rsCache.points.clear();
-        rsCache.chunkOffset = 0;
+        rsCache.chunkOffsets.clear();
     }
 
     VRExternalPointCloud& epc = rsCache.epc;
@@ -997,14 +1021,27 @@ vector<VRPointCloud::Splat> VRPointCloud::externalRadiusSearch(string path, Vec3
     // TODO: instead of only getting the chunk containing the center, get all chunks the sphere is contained in!
     //        then for each chunk get its points and do a radius search on it
 
-    auto node = epc.getOctreeNode(p);
-    if (verbose) cout << " node offset: " << node.chunkOffset << ", N pnts: " << node.chunkSize << endl;
-    if (node.chunkSize > 1e6) { cout << "Error, bad chunkSize! " << node.chunkSize << endl; return {}; }
-    bool reuseCachedPoints = bool(rsCache.points.size() > 0 && rsCache.chunkOffset == node.chunkOffset);
-    if (verbose) cout << " reuseCachedPoints: " << reuseCachedPoints << endl;
-    rsCache.chunkOffset = node.chunkOffset;
-    rsCache.points.resize(node.chunkSize);
+    auto nodes = epc.getOctreeNodes(p,r);
+    size_t Npoints = 0;
+    for (auto n : nodes) Npoints += n.chunkSize;
+    if (verbose) cout << " N nodes: " << nodes.size() << ", N pnts: " << Npoints << endl;
+    //if (node.chunkSize > 1e6) { cout << "Error, bad chunkSize! " << node.chunkSize << endl; return {}; }
 
+    bool reuseCachedPoints = bool(rsCache.chunkOffsets.size() > 0);
+    for (int i=0; i<rsCache.chunkOffsets.size(); i++) {
+        if (i >= nodes.size()) break;
+        if (rsCache.chunkOffsets[i] != nodes[i].chunkOffset) {
+            reuseCachedPoints = false;
+            break;
+        }
+    }
+
+    if (verbose) cout << " reuseCachedPoints: " << reuseCachedPoints << endl;
+    rsCache.chunkOffsets.clear();
+    for (auto n : nodes) rsCache.chunkOffsets.push_back( n.chunkOffset );
+    rsCache.points.resize(Npoints);
+
+    if (verbose) cout << " chunkOffsets: " << toString(rsCache.chunkOffsets) << endl;
     vector<Splat> res;
 
     if (reuseCachedPoints) {
@@ -1014,17 +1051,41 @@ vector<VRPointCloud::Splat> VRPointCloud::externalRadiusSearch(string path, Vec3
         }
     } else {
         ifstream stream(path);
-        stream.seekg(node.chunkOffset*epc.binPntSize + epc.binPntsStart, ios::beg);
-        if (stream.fail()) cout << " ERROR: seek failed!!!" << endl;
+        for (auto node : nodes) {
+            stream.seekg(node.chunkOffset*epc.binPntSize + epc.binPntsStart, ios::beg);
+            if (stream.fail()) cout << " ERROR: seek failed!!!" << endl;
 
-        for (size_t i = 0; i<node.chunkSize; i++) {
-            Splat& splat = rsCache.points[i];
-            stream.read((char*)&splat, epc.binPntSize);
-            double D = splat.p.dist2(p);
-            if (D < r2) res.push_back(splat);
+            for (size_t i = 0; i<node.chunkSize; i++) {
+                Splat& splat = rsCache.points[i];
+                stream.read((char*)&splat, epc.binPntSize);
+                double D = splat.p.dist2(p);
+                if (D < r2) res.push_back(splat);
+                //res.push_back(splat);
+            }
         }
         stream.close();
     }
+
+    return res;
+}
+
+vector<VRPointCloud::Splat> VRPointCloud::getExternalChunk(string path, Vec3d p) {
+    VRExternalPointCloud epc(path);
+    auto node = epc.getOctreeNode(p);
+    cout << "VRPointCloud::getExternalChunk at " << p << ", node pos: " << node.chunkOffset << ", size: " << node.chunkSize << endl;
+
+    vector<Splat> res;
+
+    ifstream stream(path);
+    stream.seekg(node.chunkOffset*epc.binPntSize + epc.binPntsStart, ios::beg);
+    if (stream.fail()) cout << " ERROR: seek failed!!!" << endl;
+
+    Splat splat;
+    for (size_t i = 0; i<node.chunkSize; i++) {
+        stream.read((char*)&splat, epc.binPntSize);
+        res.push_back(splat);
+    }
+    stream.close();
 
     return res;
 }

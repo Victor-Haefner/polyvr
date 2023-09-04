@@ -56,9 +56,9 @@ bool ImTreeview::Node::render(int lvl) {
         ImGui::SameLine();
         open = ImGui::CollapsingHeader(("##"+ID).c_str(), 0);
         if (open) {
-            ImGui::Indent(8*lvl);
+            ImGui::Indent(8);
             for (auto& child : children) child->render(lvl+1);
-            ImGui::Unindent(8*lvl);
+            ImGui::Unindent(8);
         }
     }
     return open;

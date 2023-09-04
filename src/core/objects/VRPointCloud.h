@@ -55,6 +55,7 @@ class VRExternalPointCloud {
         ~VRExternalPointCloud();
 
         OcSerialNode getOctreeNode(Vec3d p);
+        vector<OcSerialNode> getOctreeNodes(Vec3d p, float r);
         void printOctree();
 
         static map<string, string> readPCBHeader(string path);
@@ -95,7 +96,7 @@ class VRPointCloud : public VRTransform {
         struct OptRadiusSearch { // cache for optimizing external radius search
             VRExternalPointCloud epc;
             vector<Splat> points;
-            size_t chunkOffset = 0;
+            vector<size_t> chunkOffsets;
         };
 
         POINTTYPE pointType = NONE;
@@ -136,6 +137,7 @@ class VRPointCloud : public VRTransform {
         void onImportEvent(VRImportJob params);
         VRProgressPtr addProgress(string head, size_t N);
 
+        void setupOcNodeLod(OctreeNode<PntData>* node, VRObjectPtr parent, float rangeModifier);
         VRGeometryPtr setupSparseChunk(OctreeNode<PntData>* node);
         void onPCLodSwitch(VRLodEventPtr e, OctreeNode<PntData>* node, float rangeModifier);
         VRLodPtr setupLeafLod(OctreeNode<PntData>* node, VRGeometryPtr geo, float rangeModifier);
@@ -159,11 +161,12 @@ class VRPointCloud : public VRTransform {
 
         vector<Splat> radiusSearch(Vec3d p, double r);
         vector<Splat> externalRadiusSearch(string path, Vec3d p, double r, bool verbose = false);
+        vector<Splat> getExternalChunk(string path, Vec3d p);
 
-        void analyse(string path);
+        void analyse(string path, bool printOctree);
         void convert(string pathIn, string pathOut);
         void convertMerge(vector<string> pathIn, string pathOut);
-        void genTestFile(string path, size_t N, bool doColor);
+        void genTestFile(string path, size_t N, bool doColor, float pDist);
         void genTestFile2(string path, size_t N, bool doColor, int splatSize);
 
         void externalTransform(string path, PosePtr p);
