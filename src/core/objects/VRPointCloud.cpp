@@ -192,7 +192,7 @@ VRExternalPointCloud::OcSerialNode VRExternalPointCloud::getOctreeNode(Vec3d p) 
         return OcSerialNode();
     }
 
-    if (getOcnHalfSize > 0) {
+    if (getOcnHalfSize > 0 && 0) { // TODO: this doesnt work!
         Vec3d d = p - getOcnCenter;
         if (abs(d[0]) < getOcnHalfSize)
             if (abs(d[1]) < getOcnHalfSize)
@@ -1007,7 +1007,7 @@ vector<VRPointCloud::Splat> VRPointCloud::externalRadiusSearch(string path, Vec3
 
     if (verbose) cout << "*** VRPointCloud::externalRadiusSearch " << path << ", " << p << ", " << r << endl;
 
-    if (rsCache.epc.path != path || true) { // TODO: this fails if the call comes from python and there is an old cache.. broken streams?
+    if (rsCache.epc.path != path) { // TODO: this fails if the call comes from python and there is an old cache.. broken streams?
         //cout << " new cache! " << endl;
         rsCache.epc = VRExternalPointCloud(path);
         rsCache.points.clear();
