@@ -47,7 +47,7 @@ class VRExternalPointCloud {
         // external octree access optimization
         OcSerialNode lastGetOcn;
         Vec3d getOcnCenter;
-        double getOcnHalfSize = -1;
+        double getOcnSize = -1;
 
     public:
         VRExternalPointCloud(string path);

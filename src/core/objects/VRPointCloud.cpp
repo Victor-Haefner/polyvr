@@ -192,13 +192,17 @@ VRExternalPointCloud::OcSerialNode VRExternalPointCloud::getOctreeNode(Vec3d p) 
         return OcSerialNode();
     }
 
-    if (getOcnHalfSize > 0 && 0) { // TODO: this doesnt work!
+    bool reuseLastNode = false;
+    if (getOcnSize > 0 && lastGetOcn.chunkSize != 0) { // TODO: this doesnt work!
         Vec3d d = p - getOcnCenter;
-        if (abs(d[0]) < getOcnHalfSize)
-            if (abs(d[1]) < getOcnHalfSize)
-                if (abs(d[2]) < getOcnHalfSize)
-                    return lastGetOcn;
+        double s = getOcnSize*0.5;
+        if (abs(d[0]) < s)
+            if (abs(d[1]) < s)
+                if (abs(d[2]) < s)
+                    reuseLastNode = true; //return lastGetOcn;
     }
+
+    if (reuseLastNode) return lastGetOcn;
 
     double rootSize = toValue<double>(params["ocRootSize"]);
     Vec3d rootCenter = toValue<Vec3d>(params["ocRootCenter"]);
@@ -244,9 +248,20 @@ VRExternalPointCloud::OcSerialNode VRExternalPointCloud::getOctreeNode(Vec3d p) 
         stream.read((char*)&ocNode, ocNodeBinSize);
     }
 
+    /*if (reuseLastNode) {
+        if (lastGetOcn.chunkOffset != ocNode.chunkOffset) {
+            cout << "Warning! lastGetOcn should match ocNode, but it does not?!? ";
+            cout << "lastGetOcn: " << lastGetOcn.chunkOffset << ", " << lastGetOcn.chunkSize;
+            cout << ", ocNode: " << ocNode.chunkOffset << ", " << ocNode.chunkSize;
+            cout << ", getOcnCenter: " << getOcnCenter << ", getOcnSize: " << getOcnSize;
+            cout << ", nodeCenter: " << nodeCenter << ", nodeSize: " << nodeSize;
+            cout << endl;
+        }
+    }*/
+
     lastGetOcn = ocNode;
     getOcnCenter = nodeCenter;
-    getOcnHalfSize = nodeSize * 0.5;
+    getOcnSize = nodeSize;
 
     return ocNode;
 }
@@ -1015,11 +1030,7 @@ vector<VRPointCloud::Splat> VRPointCloud::externalRadiusSearch(string path, Vec3
     }
 
     VRExternalPointCloud& epc = rsCache.epc;
-    if (verbose) cout << " node center: " << epc.getOcnCenter << ", node half size: " << epc.getOcnHalfSize << endl;
     //epc.printOctree();
-
-    // TODO: instead of only getting the chunk containing the center, get all chunks the sphere is contained in!
-    //        then for each chunk get its points and do a radius search on it
 
     auto nodes = epc.getOctreeNodes(p,r);
     size_t Npoints = 0;
