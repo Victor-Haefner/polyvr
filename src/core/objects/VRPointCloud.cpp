@@ -186,6 +186,9 @@ vector<VRExternalPointCloud::OcSerialNode> VRExternalPointCloud::getOctreeNodes(
     return res;
 }
 
+static size_t countReuse = 0;
+static size_t countNonReuse = 0;
+
 VRExternalPointCloud::OcSerialNode VRExternalPointCloud::getOctreeNode(Vec3d p) {
     if (!hasOctree) {
         cout << "Error in getOctreeNode: no octree!" << endl;
@@ -1038,18 +1041,32 @@ vector<VRPointCloud::Splat> VRPointCloud::externalRadiusSearch(string path, Vec3
     if (verbose) cout << " N nodes: " << nodes.size() << ", N pnts: " << Npoints << endl;
     //if (node.chunkSize > 1e6) { cout << "Error, bad chunkSize! " << node.chunkSize << endl; return {}; }
 
-    bool reuseCachedPoints = bool(rsCache.chunkOffsets.size() > 0) && 0;
+    bool reuseCachedPoints = bool(rsCache.chunkOffsets.size() > 0 && rsCache.chunkOffsets.size() == nodes.size()); // TODO: not working!
     for (int i=0; i<rsCache.chunkOffsets.size(); i++) {
-        if (i >= nodes.size()) break;
         if (rsCache.chunkOffsets[i] != nodes[i].chunkOffset) {
             reuseCachedPoints = false;
             break;
         }
     }
 
-    if (verbose) cout << " reuseCachedPoints: " << reuseCachedPoints << endl;
+    //reuseCachedPoints = false; // TODO: there is still an error somewhere!
+
+    if (reuseCachedPoints) countReuse++;
+    else countNonReuse++;
+
+    if (reuseCachedPoints && rsCache.points.size() != Npoints) {
+        vector<size_t> tmp;
+        for (auto n : nodes) tmp.push_back( n.chunkOffset );
+        cout << "E, rsCache.points.size(): " << rsCache.points.size() << ", Npoints: " << Npoints;
+        cout << ", " << toString(rsCache.chunkOffsets);
+        cout << ", " << toString(tmp);
+        cout << endl;
+    }
+
     rsCache.chunkOffsets.clear();
     for (auto n : nodes) rsCache.chunkOffsets.push_back( n.chunkOffset );
+
+    if (verbose) cout << " reuseCachedPoints: " << reuseCachedPoints << endl;
     rsCache.points.resize(Npoints);
 
     if (verbose) cout << " chunkOffsets: " << toString(rsCache.chunkOffsets) << endl;
@@ -1062,11 +1079,12 @@ vector<VRPointCloud::Splat> VRPointCloud::externalRadiusSearch(string path, Vec3
         }
     } else {
         ifstream stream(path);
+        size_t i = 0;
         for (auto node : nodes) {
             stream.seekg(node.chunkOffset*epc.binPntSize + epc.binPntsStart, ios::beg);
             if (stream.fail()) cout << " ERROR: seek failed!!!" << endl;
 
-            for (size_t i = 0; i<node.chunkSize; i++) {
+            for (size_t j = 0; j<node.chunkSize; j++,i++) {
                 Splat& splat = rsCache.points[i];
                 stream.read((char*)&splat, epc.binPntSize);
                 double D = splat.p.dist2(p);
@@ -1198,6 +1216,8 @@ void VRPointCloud::externalComputeSplats(string path, float neighborsRadius, boo
     stream.close();
     wstream.close();
     rename(wpath.c_str(), path.c_str());
+
+    cout << "reuse nodes stats, countReuse: " << countReuse << ", countNonReuse: " << countNonReuse << endl;
 }
 
 void VRPointCloud::externalColorize(string path, string imgTable, PosePtr pcPose, float localNorth, float localEast, float pDist, int i1, int i2) {
