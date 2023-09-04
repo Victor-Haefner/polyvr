@@ -526,11 +526,11 @@ VRLodPtr VRPointCloud::setupChunkLod(OctreeNode<VRPointCloud::PntData>* node, VR
     auto lod = VRLod::create("rootLod");
     lod->setCenter(node->getCenter());
     lod->addChild(proxy);
-    //lod->addChild(geo);
+    lod->addChild(geo);
     float R = sqrt(3)*node->getSize()*0.5*rangeModifier; // box enclosing sphere radius
     lod->addDistance(R);
     lod->setCallback(VRLodCb::create("pcLod", bind(&VRPointCloud::onPCLodSwitch, this, placeholders::_1, node, rangeModifier)));
-    //proxy->addLink(geo);
+    proxy->addLink(geo);
     return lod;
 }
 
@@ -1007,8 +1007,8 @@ vector<VRPointCloud::Splat> VRPointCloud::externalRadiusSearch(string path, Vec3
 
     if (verbose) cout << "*** VRPointCloud::externalRadiusSearch " << path << ", " << p << ", " << r << endl;
 
-    if (rsCache.epc.path != path) { // TODO: this fails if the call comes from python and there is an old cache.. broken streams?
-        cout << " new cache! " << endl;
+    if (rsCache.epc.path != path || true) { // TODO: this fails if the call comes from python and there is an old cache.. broken streams?
+        //cout << " new cache! " << endl;
         rsCache.epc = VRExternalPointCloud(path);
         rsCache.points.clear();
         rsCache.chunkOffsets.clear();
@@ -1027,7 +1027,7 @@ vector<VRPointCloud::Splat> VRPointCloud::externalRadiusSearch(string path, Vec3
     if (verbose) cout << " N nodes: " << nodes.size() << ", N pnts: " << Npoints << endl;
     //if (node.chunkSize > 1e6) { cout << "Error, bad chunkSize! " << node.chunkSize << endl; return {}; }
 
-    bool reuseCachedPoints = bool(rsCache.chunkOffsets.size() > 0);
+    bool reuseCachedPoints = bool(rsCache.chunkOffsets.size() > 0) && 0;
     for (int i=0; i<rsCache.chunkOffsets.size(); i++) {
         if (i >= nodes.size()) break;
         if (rsCache.chunkOffsets[i] != nodes[i].chunkOffset) {
