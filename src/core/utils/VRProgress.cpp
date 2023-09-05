@@ -48,11 +48,11 @@ void VRProgress::signal() {
     }
 }
 
-void VRProgress::update(size_t i) {
+void VRProgress::update(size_t i, double delta) {
     if (count < max) {
         count += i;
         double k = double(count)/max;
-        if (k-part < 0.01) return;
+        if (k-part < delta) return;
         part = k;
     }
 

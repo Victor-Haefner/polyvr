@@ -96,7 +96,7 @@ class VRPointCloud : public VRTransform {
         struct OptRadiusSearch { // cache for optimizing external radius search
             VRExternalPointCloud epc;
             vector<Splat> points;
-            vector<size_t> chunkOffsets;
+            vector<VRExternalPointCloud::OcSerialNode> chunks;
             size_t Npoints = 0;
         };
 
