@@ -12,7 +12,7 @@ PyMethodDef VRPyProgress::methods[] = {
     {"setup", PyWrapOpt(Progress, setup, "Setup the progress parameters", "0", void, string, size_t, VRProgress::Mode) },
     {"get", PyWrap(Progress, get, "Get the current state t[0,1]", float) },
     {"set", PyWrap(Progress, set, "Set the current state t[0,1]", void, float) },
-    {"update", PyWrap(Progress, update, "Update the progress by n steps", void, size_t) },
+    {"update", PyWrapOpt(Progress, update, "Update the progress by n steps, optional signal delta (n, delta=0.01)", "0.01", void, size_t, double) },
     {"reset", PyWrap(Progress, reset, "Reset the progress", void) },
     {NULL}  /* Sentinel */
 };
