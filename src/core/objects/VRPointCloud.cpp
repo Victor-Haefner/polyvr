@@ -1058,8 +1058,8 @@ vector<VRPointCloud::Splat> VRPointCloud::externalRadiusSearch(string path, Vec3
 
     //reuseCachedPoints = false; // TODO: there is still an error somewhere!
 
-    if (reuseCachedPoints) countReuse++;
-    else countNonReuse++;
+    //if (reuseCachedPoints) countReuse++;
+    //else countNonReuse++;
 
     if (reuseCachedPoints && rsCache.Npoints != Npoints) {
         vector<size_t> tmp;
@@ -1083,13 +1083,22 @@ vector<VRPointCloud::Splat> VRPointCloud::externalRadiusSearch(string path, Vec3
     if (verbose) cout << " chunkOffsets: " << toString(rsCache.chunkOffsets) << endl;
     vector<Splat> res;
 
+    auto checkPnt = [p,r,r2](Splat& splat, vector<Splat>& res) {
+        if (abs(splat.p[0]-p[0]) < r) {
+            if (abs(splat.p[1]-p[1]) < r) {
+                if (abs(splat.p[2]-p[2]) < r) {
+                    double D = splat.p.dist2(p);
+                    if (D < r2) res.push_back(splat);
+                }
+            }
+        }
+    };
+
     epcTimer.start(" ers - get pnts in radius");
     if (reuseCachedPoints) {
         epcTimer.start("  ers - use cached pnts");
         for (size_t i=0; i<Npoints; i++) {
-            auto& splat = rsCache.points[i];
-            double D = splat.p.dist2(p);
-            if (D < r2) res.push_back(splat);
+            checkPnt(rsCache.points[i], res);
         }
         epcTimer.stop("  ers - use cached pnts");
     } else {
@@ -1103,9 +1112,7 @@ vector<VRPointCloud::Splat> VRPointCloud::externalRadiusSearch(string path, Vec3
             for (size_t j = 0; j<node.chunkSize; j++,i++) {
                 Splat& splat = rsCache.points[i];
                 stream.read((char*)&splat, epc.binPntSize);
-                double D = splat.p.dist2(p);
-                if (D < r2) res.push_back(splat);
-                //res.push_back(splat);
+                checkPnt(splat, res);
             }
         }
         stream.close();
@@ -1223,12 +1230,35 @@ void VRPointCloud::externalComputeSplats(string path, float neighborsRadius, boo
 
     epcTimer.start("total");
     VRPointCloud::Splat splat;
+    Vec3d lsplatp;
+    bool usePadding = false;
+    float padding = 2.0;
+    double rOuter = neighborsRadius * (1+padding);
+    double rInner2 = neighborsRadius*padding * neighborsRadius*padding;
+    double r2 = neighborsRadius * neighborsRadius;
+    vector<Splat> neighborsBig;
+    vector<Splat> neighbors;
     for (size_t i = 0; i<epc.size; i++) {
         epcTimer.start("readPnt");
         stream.read((char*)&splat, epc.binPntSize);
         epcTimer.stop("readPnt");
         epcTimer.start("externalRadiusSearch");
-        vector<Splat> neighbors = externalRadiusSearch(path, splat.p, neighborsRadius);
+
+        if (usePadding) { // not very usefull because the points are sorted, thus not close by each others!
+            if (i > 0 && lsplatp.dist2(splat.p) < rInner2) { // close to last point
+                countReuse++;
+            } else {
+                countNonReuse++;
+                neighborsBig = externalRadiusSearch(path, splat.p, rOuter);
+            }
+            lsplatp = splat.p;
+
+            neighbors.clear();
+            for (auto& s : neighborsBig) if (s.p.dist2(splat.p) < r2) neighbors.push_back(s);
+        } else {
+            neighbors = externalRadiusSearch(path, splat.p, neighborsRadius);
+        }
+
         epcTimer.stop("externalRadiusSearch");
         epcTimer.start("computeSplat");
         auto nsplat = computeSplat(splat.p, neighbors);
