@@ -14,6 +14,7 @@
 #include "core/math/PCA.h"
 #include "core/utils/toString.h"
 #include "core/utils/VRProgress.h"
+#include "core/utils/VRTimer.h"
 #include "core/utils/VRFunction.h"
 #include "core/utils/system/VRSystem.h"
 #include "core/tools/VRPathtool.h"
@@ -432,14 +433,14 @@ VRGeometryPtr VRPointCloud::setupSparseChunk(OctreeNode<VRPointCloud::PntData>* 
     for (int i=0; i<depth; i++) dsr0 *= 1.5;
     size_t dsr = size_t(dsr0);
 
-    cout << " setupSparseChunk, depth: " << depth << ", dsr0: " << dsr0 << ", dsr: " << dsr << endl;
+    //cout << " setupSparseChunk, depth: " << depth << ", dsr0: " << dsr0 << ", dsr: " << dsr << endl;
 
     VRGeoData chunk;
     auto leafs = node->getLeafs();
 
-    auto progress = VRProgress::create();
+    /*auto progress = VRProgress::create();
     progress->setup("setup pointcloud LODs ", leafs.size());
-    progress->reset();
+    progress->reset();*/
 
     for (auto leaf : leafs) {
         //Vec3d center = leaf->getCenter();
@@ -455,7 +456,7 @@ VRGeometryPtr VRPointCloud::setupSparseChunk(OctreeNode<VRPointCloud::PntData>* 
             }
             chunk.pushPoint();
         }
-        progress->update(1);
+        //progress->update(1);
     }
 
     if (chunk.size() == 0) return 0;
@@ -493,7 +494,7 @@ void VRPointCloud::onPCLodSwitch(VRLodEventPtr e, OctreeNode<VRPointCloud::PntDa
 };
 
 VRLodPtr VRPointCloud::setupLeafLod(OctreeNode<VRPointCloud::PntData>* node, VRGeometryPtr geo, float rangeModifier) {
-    cout << "setupLeafLod, downsamplingRate: " << toString(downsamplingRate) << " " << toString(lodDistances) << endl;
+    //cout << "setupLeafLod, downsamplingRate: " << toString(downsamplingRate) << " " << toString(lodDistances) << endl;
     //return 0;
     if (downsamplingRate.size() > 1) {
         VRLodCbPtr streamCB = VRLodCb::create( "pointcloudStreamCB", bind(&VRPointCloud::onLodSwitch, this, placeholders::_1 ) );
@@ -553,12 +554,12 @@ VRLodPtr VRPointCloud::setupChunkLod(OctreeNode<VRPointCloud::PntData>* node, VR
 }
 
 void VRPointCloud::setupLODs() {
-    cout << " VRPointCloud::setupLODs" << endl;
+    //cout << " VRPointCloud::setupLODs" << endl;
     lodsSetUp = true;
 
     float rangeModifier = 2.0; // TODO: pass as parameter
 
-    cout << "  octree leafsize: " << octree->getLeafSize() << ", depth: " << octree->getDepth() << endl;
+    //cout << "  octree leafsize: " << octree->getLeafSize() << ", depth: " << octree->getDepth() << endl;
     auto root = octree->getRoot();
     setupOcNodeLod(root, ptr(), rangeModifier);
     //addChild(octree->getVisualization());
@@ -1020,6 +1021,8 @@ vector<VRPointCloud::Splat> VRPointCloud::radiusSearch(Vec3d p, double r) {
     return res;
 }
 
+VRTimer epcTimer;
+
 vector<VRPointCloud::Splat> VRPointCloud::externalRadiusSearch(string path, Vec3d p, double r, bool verbose) {
     double r2 = r*r;
 
@@ -1027,21 +1030,25 @@ vector<VRPointCloud::Splat> VRPointCloud::externalRadiusSearch(string path, Vec3
 
     if (rsCache.epc.path != path) { // TODO: this fails if the call comes from python and there is an old cache.. broken streams?
         //cout << " new cache! " << endl;
+        epcTimer.start(" ers - new cache");
         rsCache.epc = VRExternalPointCloud(path);
         rsCache.points.clear();
         rsCache.chunkOffsets.clear();
+        epcTimer.stop(" ers - new cache");
     }
 
     VRExternalPointCloud& epc = rsCache.epc;
     //epc.printOctree();
 
+    epcTimer.start(" ers - get nodes in radius");
     auto nodes = epc.getOctreeNodes(p,r);
+    epcTimer.stop(" ers - get nodes in radius");
     size_t Npoints = 0;
     for (auto n : nodes) Npoints += n.chunkSize;
     if (verbose) cout << " N nodes: " << nodes.size() << ", N pnts: " << Npoints << endl;
     //if (node.chunkSize > 1e6) { cout << "Error, bad chunkSize! " << node.chunkSize << endl; return {}; }
 
-    bool reuseCachedPoints = bool(rsCache.chunkOffsets.size() > 0 && rsCache.chunkOffsets.size() == nodes.size()); // TODO: not working!
+    bool reuseCachedPoints = bool(rsCache.chunkOffsets.size() > 0 && rsCache.chunkOffsets.size() == nodes.size());
     for (int i=0; i<rsCache.chunkOffsets.size(); i++) {
         if (rsCache.chunkOffsets[i] != nodes[i].chunkOffset) {
             reuseCachedPoints = false;
@@ -1054,10 +1061,10 @@ vector<VRPointCloud::Splat> VRPointCloud::externalRadiusSearch(string path, Vec3
     if (reuseCachedPoints) countReuse++;
     else countNonReuse++;
 
-    if (reuseCachedPoints && rsCache.points.size() != Npoints) {
+    if (reuseCachedPoints && rsCache.Npoints != Npoints) {
         vector<size_t> tmp;
         for (auto n : nodes) tmp.push_back( n.chunkOffset );
-        cout << "E, rsCache.points.size(): " << rsCache.points.size() << ", Npoints: " << Npoints;
+        cout << "E, rsCache.points.size(): " << rsCache.Npoints << ", Npoints: " << Npoints;
         cout << ", " << toString(rsCache.chunkOffsets);
         cout << ", " << toString(tmp);
         cout << endl;
@@ -1067,17 +1074,26 @@ vector<VRPointCloud::Splat> VRPointCloud::externalRadiusSearch(string path, Vec3
     for (auto n : nodes) rsCache.chunkOffsets.push_back( n.chunkOffset );
 
     if (verbose) cout << " reuseCachedPoints: " << reuseCachedPoints << endl;
-    rsCache.points.resize(Npoints);
+    epcTimer.start(" ers - resize points");
+    if (Npoints > rsCache.points.size())
+        rsCache.points.resize(Npoints);
+    rsCache.Npoints = Npoints;
+    epcTimer.stop(" ers - resize points");
 
     if (verbose) cout << " chunkOffsets: " << toString(rsCache.chunkOffsets) << endl;
     vector<Splat> res;
 
+    epcTimer.start(" ers - get pnts in radius");
     if (reuseCachedPoints) {
-        for (auto& splat : rsCache.points) {
+        epcTimer.start("  ers - use cached pnts");
+        for (size_t i=0; i<Npoints; i++) {
+            auto& splat = rsCache.points[i];
             double D = splat.p.dist2(p);
             if (D < r2) res.push_back(splat);
         }
+        epcTimer.stop("  ers - use cached pnts");
     } else {
+        epcTimer.start("  ers - get points");
         ifstream stream(path);
         size_t i = 0;
         for (auto node : nodes) {
@@ -1093,7 +1109,9 @@ vector<VRPointCloud::Splat> VRPointCloud::externalRadiusSearch(string path, Vec3
             }
         }
         stream.close();
+        epcTimer.stop("  ers - get points");
     }
+    epcTimer.stop(" ers - get pnts in radius");
 
     return res;
 }
@@ -1201,21 +1219,38 @@ void VRPointCloud::externalComputeSplats(string path, float neighborsRadius, boo
     ifstream stream(path);
     stream.seekg(epc.binPntsStart);
 
+    epcTimer.reset();
+
+    epcTimer.start("total");
     VRPointCloud::Splat splat;
     for (size_t i = 0; i<epc.size; i++) {
+        epcTimer.start("readPnt");
         stream.read((char*)&splat, epc.binPntSize);
+        epcTimer.stop("readPnt");
+        epcTimer.start("externalRadiusSearch");
         vector<Splat> neighbors = externalRadiusSearch(path, splat.p, neighborsRadius);
+        epcTimer.stop("externalRadiusSearch");
+        epcTimer.start("computeSplat");
         auto nsplat = computeSplat(splat.p, neighbors);
+        epcTimer.stop("computeSplat");
+        epcTimer.start("averageColor");
         if (averageColors) nsplat.c = averageColor(splat.p, neighbors);
         else nsplat.c = splat.c;
+        epcTimer.stop("averageColor");
         nsplat.p = splat.p;
+        epcTimer.start("write pnt");
         wstream.write((const char*)&nsplat, Splat::size);
+        epcTimer.stop("write pnt");
         progress->update(1);
+        //if (i > 50000) break; // TO TEST
     }
 
     stream.close();
     wstream.close();
     rename(wpath.c_str(), path.c_str());
+    epcTimer.stop("total");
+
+    epcTimer.print();
 
     cout << "reuse nodes stats, countReuse: " << countReuse << ", countNonReuse: " << countNonReuse << endl;
 }

@@ -97,6 +97,7 @@ class VRPointCloud : public VRTransform {
             VRExternalPointCloud epc;
             vector<Splat> points;
             vector<size_t> chunkOffsets;
+            size_t Npoints = 0;
         };
 
         POINTTYPE pointType = NONE;
