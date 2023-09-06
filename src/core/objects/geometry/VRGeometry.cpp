@@ -223,7 +223,6 @@ vector<int> VRGeometry::intersectEdges(Line ray, double threshold) {
 
     VRGeoData data(ptr());
     for (VRGeoData::Primitive& prim : data) {
-        cout << "prim: " << prim.asString() << endl;
         if (prim.type != 1) continue;
 
         int i1 = prim.indices[0];
@@ -245,7 +244,8 @@ vector<int> VRGeometry::intersectEdges(Line ray, double threshold) {
         Vec3d I2 = intersect(ray, edge); // I2 somewhere on ray
         double d = (I1-I2).length();
 
-        double threshold = 1e-5;
+        //cout << "prim: " << prim.asString() << ", " << d << endl;
+
         if (d > threshold) continue; // too far from ray
         res = {i1,i2};
         break;
