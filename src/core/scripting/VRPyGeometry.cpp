@@ -121,6 +121,7 @@ PyMethodDef VRPyGeometry::methods[] = {
     {"size", PyWrap( Geometry, size, "Returns the size of the positions vector", int ) },
     {"remColors", PyWrapOpt( Geometry, remColors, "Removes color data", "0", void, bool ) },
     {"makeSingleIndex", PyWrap( Geometry, makeSingleIndex, "Make geometry single index", void ) },
+    {"intersectEdges", PyWrap( Geometry, intersectEdges, "Intersect the geometry with a ray to get edges", vector<int>, Line, double ) },
     {NULL}  /* Sentinel */
 };
 

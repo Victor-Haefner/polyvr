@@ -205,7 +205,55 @@ bool VRGeometry::applyIntersectionAction(Action* action) {
     return proxy->intersectDefaultGeometry(action) == Action::Continue;
 }
 
-/** initialise a geometry object with his name **/
+vector<int> VRGeometry::intersectEdges(Line ray, double threshold) {
+    vector<int> res;
+
+    auto intersect = [&](const Line& l1, const Line& l2) -> Vec3d {
+        Pnt3f p1 = l1.getPosition();
+        Pnt3f p2 = l2.getPosition();
+        Vec3f n1 = l1.getDirection();
+        Vec3f n2 = l2.getDirection();
+		Vec3f d = p2-p1;
+		Vec3f n3 = n1.cross(n2);
+		float N3 = n3.dot(n3);
+		if (N3 == 0) N3 = 1.0;
+		float s = d.cross(n2).dot(n3)/N3;
+		return Vec3d(Vec3f(p1) + n1*s);
+    };
+
+    VRGeoData data(ptr());
+    for (VRGeoData::Primitive& prim : data) {
+        cout << "prim: " << prim.asString() << endl;
+        if (prim.type != 1) continue;
+
+        int i1 = prim.indices[0];
+        int i2 = prim.indices[1];
+
+        Vec3d p1 = Vec3d(data.getPosition(i1));
+        Vec3d p2 = Vec3d(data.getPosition(i2));
+        Vec3d e = p2-p1;
+        double L = e.length();
+        if (L < 1e-6) continue;
+
+        e.normalize();
+        Line edge = Line(Pnt3f(p1), Vec3f(e));
+        Vec3d I1 = intersect(edge, ray); // I1 somewhere on edge
+
+		double t = (I1-p1).dot(e)/L; // check if on edge
+        if (t < 0 || t > 1) continue;
+
+        Vec3d I2 = intersect(ray, edge); // I2 somewhere on ray
+        double d = (I1-I2).length();
+
+        double threshold = 1e-5;
+        if (d > threshold) continue; // too far from ray
+        res = {i1,i2};
+        break;
+    }
+
+    return res;
+}
+
 VRGeometry::VRGeometry(string name) : VRTransform(name) {
     type = "Geometry";
     addTag("geometry");
