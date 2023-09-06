@@ -1333,6 +1333,8 @@ VRGuiScene::VRGuiScene() { // TODO: reduce callbacks with templated functions
     mgr->addCallback("sg_set_direction", [&](OSG::VRGuiSignals::Options o) { on_change_dir(Vec3d(toFloat(o["x"]), toFloat(o["y"]), toFloat(o["z"]))); return true; }, true );
     mgr->addCallback("sg_set_upvector", [&](OSG::VRGuiSignals::Options o) { on_change_up(Vec3d(toFloat(o["x"]), toFloat(o["y"]), toFloat(o["z"]))); return true; }, true );
     mgr->addCallback("sg_set_scale", [&](OSG::VRGuiSignals::Options o) { on_scale_changed(Vec3d(toFloat(o["x"]), toFloat(o["y"]), toFloat(o["z"]))); return true; }, true );
+    mgr->addCallback("sg_focus_transform", [&](OSG::VRGuiSignals::Options o) { on_focus_clicked(); return true; }, true );
+    mgr->addCallback("sg_set_identity", [&](OSG::VRGuiSignals::Options o) { on_identity_clicked(); return true; }, true );
 }
 
 // new scene, update stuff here

@@ -2,7 +2,6 @@
 #define VRGEARSEGMENTATION_H_INCLUDED
 
 #include <OpenSG/OSGVector.h>
-#include "core/objects/geometry/VRPrimitive.h"
 #include "core/objects/VRObjectFwd.h"
 #include "core/math/VRMathFwd.h"
 #include "VRMechanismFwd.h"

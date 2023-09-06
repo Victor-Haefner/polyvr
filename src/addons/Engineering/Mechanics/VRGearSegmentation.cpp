@@ -4,6 +4,7 @@
 #include "core/math/fft.h"
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/geometry/OSGGeometry.h"
+#include "core/objects/geometry/VRPrimitive.h"
 
 #include <unsupported/Eigen/NonLinearOptimization>
 
@@ -142,8 +143,15 @@ void VRGearSegmentation::computeAxis() {
 
 	axis.normalize();
 
-	cout << "VRGearSegmentation::computeAxis 1: " << res.scale() << "; " << res.dir() << "; " << res.x() << "; " << res.up() << endl;
-	cout << "VRGearSegmentation::computeAxis 2: " << axis << "; " << r1 << "; " << r2 << endl;
+	cout << "VRGearSegmentation::computeAxis:" << endl;
+	cout << " PCA: " << res.scale() << endl;
+    cout << " axis: " << axis << endl;
+    cout << " r1: " << r1 << endl;
+    cout << " r2: " << r2 << endl;
+
+	//axis = Vec3d(0, 1,0);
+    //r1 = Vec3d(-1,0,0);
+    //r2 = Vec3d(0,0, 1);
 }
 
 
@@ -187,6 +195,7 @@ void VRGearSegmentation::computePlanes() {
     planes.push_back( VertexPlane() );
 
     int N = gearVertices.size() - 1;
+    cout << "computePlanes, N verts: " << N << ", axis: " << axis << endl;
     for (int i=0; i<N; i++) {
         int x = planes.size()-1;
         gearVertices[i].setPlaneIndex(x);
@@ -194,6 +203,7 @@ void VRGearSegmentation::computePlanes() {
         //planes[x].position = gearVertices[i].profileCoords[0];
 
         bool b1 = same(gearVertices[i].profileCoords[0], gearVertices[i+1].profileCoords[0], planeEps);
+        if (!b1) cout << " vert coords: " << gearVertices[i].profileCoords << ", next: " << gearVertices[i+1].profileCoords << ", next same? " << b1 << endl;
         if (!b1) planes.push_back( VertexPlane() );
     }
     int x = planes.size()-1;
@@ -315,6 +325,7 @@ vector<int> getArgMax(vector<double> Fyy, int offset, int N) {
     for (auto i=0; i<N; i++) {
         cout << " (" << r[i] << "," << m[i] << ")";
     }
+    cout << endl;
 
     return r;
 }
@@ -363,8 +374,10 @@ const double pi = 3.14159;
 
 void VRGearSegmentation::computeSineApprox() {
     //Fit sin to the input time sequence, and store fitting parameters "amp", "omega", "phase", "offset", "freq", "period" and "fitfunc")
-    for (auto& plane : planes) {
+    for (VertexPlane& plane : planes) {
         if (plane.contour.size() < 3) continue;
+
+        cout << "do fft for plane " << plane.position << endl;
 
         vector<double> X, Y;
         for (auto& p : plane.contour) {
@@ -409,7 +422,7 @@ void VRGearSegmentation::computeSineApprox() {
                 int info = lm.minimize(x);
                 //int info = lm.lmder1(x,1e-5);
 
-                cout << "VRGearSegmentation::computeSineApprox minimize info: " << info << ", itrs: " << Vec2i(lm.nfev, lm.njev) << ", norm: " << Vec2d(lm.fnorm, lm.gnorm) << endl;
+                //cout << "VRGearSegmentation::computeSineApprox minimize info: " << info << ", itrs: " << Vec2i(lm.nfev, lm.njev) << ", norm: " << Vec2d(lm.fnorm, lm.gnorm) << endl;
 
                 sf.sineFitParams = vector<double>( x.data(), x.data() + 4 );
                 //sf.sineFitParams[1] *= 0.25;

@@ -234,7 +234,7 @@ vector<string> VRCamera::getProjectionTypes() {
 void VRCamera::focusPoint(Vec3d p) { setAt(p); }
 
 void VRCamera::focusObject(VRObjectPtr t) {
-    auto bb = t->getBoundingbox();
+    auto bb = t->getWorldBoundingbox();
     Vec3d c = bb->center();
 
     Vec3d d = getDir();
