@@ -137,7 +137,7 @@ bool VRMouse::calcViewRay(VRCameraPtr cam, Line &line, float x, float y, int W, 
     Vec3f dir = at - from;
     dir.normalize();
 
-    if (cam->getType() == 1) { // hack for ortho cam, TODO: not working :(
+    if (cam->getType() == "orthographic") { // hack for ortho cam, TODO: not working :(
         from[2] = 0;
     }
 

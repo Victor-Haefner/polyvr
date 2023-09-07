@@ -676,7 +676,7 @@ struct VRMLNode : VRMLUtils {
         if (!c) { cout << "WARNING in VRML handlePerspectiveCamera, cast failed" << endl; return; }
         c->rotate(orientation[3], Vec3d(orientation[0], orientation[1], orientation[2]));
         c->setFrom(position);
-        c->setType(VRCamera::PERSPECTIVE);
+        c->setType("perspective");
         c->setAspect(1);
         c->setFov(1.0/heightAngle);
     }

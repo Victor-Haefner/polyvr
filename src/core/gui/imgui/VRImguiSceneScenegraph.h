@@ -34,12 +34,14 @@ class ImScenegraph {
         bool cRotY = false;
         bool cRotZ = false;
         bool doPhysicalize = false;
-        bool doAcceptRoot = false;
         bool physDynamic = false;
+
+        bool doAcceptRoot = false;
         ImInput camAspect;
         ImInput camFov;
         ImInput camNear;
         ImInput camFar;
+        int camProj = 0;
 
         Im_Vector lodCenter;
         vector<double> lodDistances;

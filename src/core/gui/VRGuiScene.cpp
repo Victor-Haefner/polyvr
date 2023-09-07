@@ -267,6 +267,15 @@ void VRGuiScene::setCamera(VRCameraPtr c) {
     setTextEntry("entry61", toString(c->getFov()));
     setTextEntry("entry6", toString(c->getNear()));
     setTextEntry("entry7", toString(c->getFar()));*/
+
+    uiSignal( "on_sg_setup_cam", {
+        {"acceptRoot", toString(c->getAcceptRoot())},
+        {"aspect", toString(c->getAspect())},
+        {"fov", toString(c->getFov())},
+        {"near", toString(c->getNear())},
+        {"far", toString(c->getFar())},
+        {"projection", c->getType()}
+    } );
 }
 
 void VRGuiScene::setGroup(VRGroupPtr g) {
@@ -718,12 +727,10 @@ void on_change_CSG_operation(GtkComboBox* cb, gpointer data) {
 
 // Camera
 
-void VRGuiScene::on_toggle_camera_accept_realroot() {
+void VRGuiScene::on_toggle_camera_accept_realroot(bool b) {
     if(!trigger_cbs) return;
     VRCameraPtr obj = dynamic_pointer_cast<VRCamera>( getSelected() );
-
-    /*bool b = getCheckButtonState("checkbutton17");
-    obj->setAcceptRoot(b);*/
+    if (obj) obj->setAcceptRoot(b);
 }
 
 
@@ -992,38 +999,34 @@ void VRGuiScene::setGeometry_face_count() {
 
 
 // ------------- camera -----------------------
-void VRGuiScene::on_cam_aspect_changed() {
+void VRGuiScene::on_cam_aspect_changed(float v) {
     if(!trigger_cbs) return;
     VRCameraPtr obj = dynamic_pointer_cast<VRCamera>( getSelected() );
-    /*string a = getTextEntry("entry60");
-    obj->setAspect(toFloat(a));*/
+    obj->setAspect(v);
 }
 
-void VRGuiScene::on_cam_fov_changed() {
+void VRGuiScene::on_cam_fov_changed(float v) {
     if(!trigger_cbs) return;
     VRCameraPtr obj = dynamic_pointer_cast<VRCamera>( getSelected() );
-    /*string f = getTextEntry("entry61");
-    obj->setFov(toFloat(f));*/
+    obj->setFov(v);
 }
 
-void VRGuiScene::on_cam_near_changed() {
+void VRGuiScene::on_cam_near_changed(float v) {
     if(!trigger_cbs) return;
     VRCameraPtr obj = dynamic_pointer_cast<VRCamera>( getSelected() );
-    /*string f = getTextEntry("entry6");
-    obj->setNear(toFloat(f));*/
+    obj->setNear(v);
 }
 
-void VRGuiScene::on_cam_far_changed() {
+void VRGuiScene::on_cam_far_changed(float v) {
     if(!trigger_cbs) return;
     VRCameraPtr obj = dynamic_pointer_cast<VRCamera>( getSelected() );
-    /*string f = getTextEntry("entry7");
-    obj->setFar(toFloat(f));*/
+    obj->setFar(v);
 }
 
-void VRGuiScene::on_change_cam_proj() {
+void VRGuiScene::on_change_cam_proj(string mode) {
     if(!trigger_cbs) return;
     VRCameraPtr obj = dynamic_pointer_cast<VRCamera>( getSelected() );
-    //obj->setType(getComboboxI("combobox23"));
+    obj->setType(mode);
 }
 // ----------------------------------------------
 
@@ -1335,6 +1338,13 @@ VRGuiScene::VRGuiScene() { // TODO: reduce callbacks with templated functions
     mgr->addCallback("sg_set_scale", [&](OSG::VRGuiSignals::Options o) { on_scale_changed(Vec3d(toFloat(o["x"]), toFloat(o["y"]), toFloat(o["z"]))); return true; }, true );
     mgr->addCallback("sg_focus_transform", [&](OSG::VRGuiSignals::Options o) { on_focus_clicked(); return true; }, true );
     mgr->addCallback("sg_set_identity", [&](OSG::VRGuiSignals::Options o) { on_identity_clicked(); return true; }, true );
+
+    mgr->addCallback("sg_set_cam_accept_root", [&](OSG::VRGuiSignals::Options o) { on_toggle_camera_accept_realroot(toBool(o["value"])); return true; }, true );
+    mgr->addCallback("sg_set_cam_aspect", [&](OSG::VRGuiSignals::Options o) { on_cam_aspect_changed(toFloat(o["value"])); return true; }, true );
+    mgr->addCallback("sg_set_cam_fov", [&](OSG::VRGuiSignals::Options o) { on_cam_fov_changed(toFloat(o["value"])); return true; }, true );
+    mgr->addCallback("sg_set_cam_near", [&](OSG::VRGuiSignals::Options o) { on_cam_near_changed(toFloat(o["value"])); return true; }, true );
+    mgr->addCallback("sg_set_cam_far", [&](OSG::VRGuiSignals::Options o) { on_cam_far_changed(toFloat(o["value"])); return true; }, true );
+    mgr->addCallback("sg_set_cam_projection", [&](OSG::VRGuiSignals::Options o) { on_change_cam_proj(o["projection"]); return true; }, true );
 }
 
 // new scene, update stuff here

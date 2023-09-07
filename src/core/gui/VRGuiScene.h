@@ -98,11 +98,11 @@ class VRGuiScene {
         // ----------------------------------------------
 
         // ------------- camera -----------------------
-        void on_cam_aspect_changed();
-        void on_cam_fov_changed();
-        void on_cam_near_changed();
-        void on_cam_far_changed();
-        void on_change_cam_proj();
+        void on_cam_aspect_changed(float v);
+        void on_cam_fov_changed(float v);
+        void on_cam_near_changed(float v);
+        void on_cam_far_changed(float v);
+        void on_change_cam_proj(string mode);
         // ----------------------------------------------
 
         // ------------- material -----------------------
@@ -168,7 +168,7 @@ class VRGuiScene {
         void on_toggle_rc();
         void on_toggle_T_constraint();
         void on_toggle_R_constraint();
-        void on_toggle_camera_accept_realroot();
+        void on_toggle_camera_accept_realroot(bool b);
         // ----------------------------------------------
 
     public:

@@ -83,7 +83,7 @@ VRRain::VRRain() : VRGeometry("Rain") {
     camTex = VRCamera::create("camRainTexture");
     camTex-> setPersistency(0);
     lightF->addChild(camTex);
-    camTex->setType(1);
+    camTex->setType("orthographic");
     texRenderer->setup(camTex,512,512);
     camTex->setFrom(Vec3d(0,100,0));
     camTex->setAt(Vec3d(0,1,-1));

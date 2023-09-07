@@ -43,7 +43,7 @@ VRCamera::VRCamera(string name) : VRTransform(name) {
     store("aspect", &aspect);
     store("fov", &fov);
     store("orthoSize", &orthoSize);
-    store("type", &type);
+    store("camType", &camType);
     regStorageSetupFkt( VRStorageCb::create("camera_update", bind(&VRCamera::setup, this, true, _1)) );
 }
 
@@ -85,8 +85,8 @@ VRObjectPtr VRCamera::copy(vector<VRObjectPtr> children) {
 
 void VRCamera::setCam(OSGCameraPtr c) { cam = c; } // warning: setup() will override this!
 
-void VRCamera::setType(int type) { camType = type; setup(); }
-int VRCamera::getType() { return camType; }
+void VRCamera::setType(string type) { camType = type; setup(); }
+string VRCamera::getType() { return camType; }
 
 Matrix VRCamera::getProjectionMatrix(int w, int h) {
     Matrix res;
@@ -95,7 +95,7 @@ Matrix VRCamera::getProjectionMatrix(int w, int h) {
 }
 
 void VRCamera::updateOrthSize() {
-    if (camType == ORTHOGRAPHIC) {
+    if (camType == "orthographic") {
         orthoSize = (getAt()-getFrom()).length();
         setup();
     }
@@ -114,7 +114,7 @@ void VRCamera::setup(bool reg, VRStorageContextPtr context) {
     if (cam) pcam = dynamic_pointer_cast<PerspectiveCamera>(cam->cam);
     if (cam) ocam = dynamic_pointer_cast<OrthographicCamera>(cam->cam);
 
-    if (!pcam && camType == PERSPECTIVE) {
+    if (!pcam && camType == "perspective") {
         //cout << " VRCamera::setup switch to perp, reg: " << reg << endl;
         pcam = PerspectiveCamera::create();
         cam = OSGCamera::create( pcam );
@@ -122,7 +122,7 @@ void VRCamera::setup(bool reg, VRStorageContextPtr context) {
         if (reg) VRScene::getCurrent()->setActiveCamera(getName());
     }
 
-    if (!ocam && camType == ORTHOGRAPHIC) {
+    if (!ocam && camType == "orthographic") {
         //cout << " VRCamera::setup switch to orth, reg: " << reg << endl;
         ocam = OrthographicCamera::create();
         cam = OSGCamera::create( ocam );

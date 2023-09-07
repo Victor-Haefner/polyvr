@@ -7,19 +7,13 @@ OSG_BEGIN_NAMESPACE;
 using namespace std;
 
 class VRCamera : public VRTransform {
-    public:
-        enum TYPE{
-            PERSPECTIVE = 0,
-            ORTHOGRAPHIC
-        };
-
     private:
         OSGCameraPtr cam;
         OSGObjectPtr camGeo;
         VRObjectPtr vrSetup;
 
         bool registred = true;
-        int camType = 0;
+        string camType = "perspective";
         float parallaxD = 1;
         float nearClipPlaneCoeff = 0.1;
         float farClipPlaneCoeff = 512;
@@ -40,8 +34,8 @@ class VRCamera : public VRTransform {
 
         VRObjectPtr copy(vector<VRObjectPtr> children) override;
 
-        void setType(int type);
-        int getType();
+        void setType(string type);
+        string getType();
         void setup(bool reg = true, VRStorageContextPtr context = 0);
 
         int camID = -1;
