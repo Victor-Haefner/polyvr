@@ -14,6 +14,8 @@ class ImScenegraph {
         string title;
         string selected;
 
+        string objType;
+
         string parent;
         string persistency;
         bool visible = true;

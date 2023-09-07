@@ -61,6 +61,8 @@ void VRGuiScene::setObject(VRObjectPtr o) {
     VRObjectPtr parent = o->getParent();
     string pName = parent ? parent->getName() : "";
 
+    uiSignal("on_sg_set_obj_type", {{"objType", o->getType()}});
+
     uiSignal( "on_sg_setup_obj", {
         {"parent", pName},
         {"name", o->getName()},

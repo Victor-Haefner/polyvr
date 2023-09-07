@@ -24,6 +24,8 @@ ImScenegraph::ImScenegraph() :  tree("scenegraph"),
     mgr->addCallback("on_sg_tree_append", [&](OSG::VRGuiSignals::Options o) {
             treeAppend(o["ID"], o["label"], o["parent"], o["type"], o["cla"], o["mod"], o["col"]);
         return true; } );
+
+    mgr->addCallback("on_sg_set_obj_type", [&](OSG::VRGuiSignals::Options o){ objType = o["objType"]; return true; } );
     mgr->addCallback("on_sg_setup_obj", [&](OSG::VRGuiSignals::Options o){ setupObject(o); return true; } );
     mgr->addCallback("on_sg_setup_trans", [&](OSG::VRGuiSignals::Options o){ setupTransform(o); return true; } );
     mgr->addCallback("on_sg_setup_lod", [&](OSG::VRGuiSignals::Options o){ setupLod(o); return true; } );
@@ -59,108 +61,120 @@ void ImScenegraph::render() {
             if (ImGui::Checkbox("cast shadow", &castShadow)) uiSignal( "sg_toggle_cast_shadow", {{"castShadow",toString(castShadow)}} );
         ImGui::Unindent(10);
 
-        // transform
-        ImGui::Separator();
-        ImGui::Text("Transformation:");
-        ImGui::Indent(10);
-            if (ImGui::Button("Focus")) uiSignal( "sg_focus_transform");
-            ImGui::SameLine();
-            if (ImGui::Button("Identity")) uiSignal( "sg_set_identity");
-
-            if (position.render(region2.x-10)) position.signal("sg_set_position");
-            if (atvector.render(region2.x-10)) atvector.signal("sg_set_atvector");
-            if (direction.render(region2.x-10)) direction.signal("sg_set_direction");
-            if (upvector.render(region2.x-10)) upvector.signal("sg_set_upvector");
-            if (scale.render(region2.x-10)) scale.signal("sg_set_scale");
-
-            if (ImGui::Checkbox("global", &global)) uiSignal( "sg_toggle_global", {{"global",toString(global)}} );
-        ImGui::Unindent(10);
-
-        ImGui::Text("Constraints:");
-        ImGui::Indent(10);
-            if (ImGui::Checkbox("translation:", &doConstrTranslation)) ;//uiSignal( "sg_toggle_global", {{"global",toString(global)}} );
-            if (doConstrTranslation) {
-                ImGui::Indent(10);
-                constrTranslation.render(region2.x-20);
-                if (ImGui::RadioButton("point", &cTransMode, 0)) ;
-                ImGui::SameLine();
-                if (ImGui::RadioButton("line", &cTransMode, 1)) ;
-                ImGui::SameLine();
-                if (ImGui::RadioButton("plane", &cTransMode, 2)) ;
-                ImGui::Unindent(10);
-            }
-            if (ImGui::Checkbox("rotation:", &doConstrRotation)) ;//uiSignal( "sg_toggle_global", {{"global",toString(global)}} );
-            if (doConstrRotation) {
-                ImGui::Indent(10);
-                if (ImGui::Checkbox("x", &cRotX)) ;
-                ImGui::SameLine();
-                if (ImGui::Checkbox("y", &cRotY)) ;
-                ImGui::SameLine();
-                if (ImGui::Checkbox("z", &cRotZ)) ;
-                ImGui::Unindent(10);
-            }
-        ImGui::Unindent(10);
-
-        ImGui::Text("Physics:");
-        ImGui::Indent(10);
-            if (ImGui::Checkbox("physicalize:", &doPhysicalize)) ;//uiSignal( "sg_toggle_global", {{"global",toString(global)}} );
-            if (doPhysicalize) {
-                ImGui::Indent(10);
-                // combobox for shape type
-                // mass
-                if (ImGui::Checkbox("dynamic", &physDynamic)) ;
-                ImGui::Unindent(10);
-            }
-        ImGui::Unindent(10);
-
         // geometry
-        ImGui::Separator();
-        ImGui::Text("Geometry:");
-        ImGui::Indent(10);
-        ImGui::Unindent(10);
+        if (objType == "Geometry" || objType == "Sprite") {
+            ImGui::Separator();
+            ImGui::Text("Geometry:");
+            ImGui::Indent(10);
+            ImGui::Unindent(10);
+        }
 
         // material
-        ImGui::Separator();
-        ImGui::Text("Material:");
-        ImGui::Indent(10);
-        ImGui::Unindent(10);
+        if (objType == "Geometry" || objType == "Sprite" || objType == "Material") {
+            ImGui::Separator();
+            ImGui::Text("Material:");
+            ImGui::Indent(10);
+            ImGui::Unindent(10);
+        }
 
         // camera
-        ImGui::Separator();
-        ImGui::Text("Camera:");
-        ImGui::Indent(10);
-            if (ImGui::Checkbox("accept setup root:", &doAcceptRoot)) uiSignal("sg_set_cam_accept_root", {{"value", toString(doAcceptRoot)}});
-            if (camAspect.render(50)) uiSignal("sg_set_cam_aspect", {{"value", camAspect.value}});
-            ImGui::SameLine();
-            if (camFov.render(50)) uiSignal("sg_set_cam_fov", {{"value", camFov.value}});
-            if (camNear.render(50)) uiSignal("sg_set_cam_near", {{"value", camNear.value}});
-            ImGui::SameLine();
-            if (camFar.render(50)) uiSignal("sg_set_cam_far", {{"value", camFar.value}});
+        if (objType == "Camera") {
+            ImGui::Separator();
+            ImGui::Text("Camera:");
+            ImGui::Indent(10);
+                if (ImGui::Checkbox("accept setup root:", &doAcceptRoot)) uiSignal("sg_set_cam_accept_root", {{"value", toString(doAcceptRoot)}});
+                if (camAspect.render(50)) uiSignal("sg_set_cam_aspect", {{"value", camAspect.value}});
+                ImGui::SameLine();
+                if (camFov.render(50)) uiSignal("sg_set_cam_fov", {{"value", camFov.value}});
+                if (camNear.render(50)) uiSignal("sg_set_cam_near", {{"value", camNear.value}});
+                ImGui::SameLine();
+                if (camFar.render(50)) uiSignal("sg_set_cam_far", {{"value", camFar.value}});
 
-            ImGui::SetNextItemWidth(150);
-            if (ImGui::BeginCombo("##camProj", "Projection", 0)) {
-                if (ImGui::RadioButton("Perspective", &camProj, 0)) uiSignal("sg_set_cam_projection", {{"projection", "perspective"}});
-                if (ImGui::RadioButton("Orthographic", &camProj, 1)) uiSignal("sg_set_cam_projection", {{"projection", "orthographic"}});
-                ImGui::EndCombo();
-            }
-        ImGui::Unindent(10);
+                ImGui::SetNextItemWidth(150);
+                if (ImGui::BeginCombo("##camProj", "Projection", 0)) {
+                    if (ImGui::RadioButton("Perspective", &camProj, 0)) uiSignal("sg_set_cam_projection", {{"projection", "perspective"}});
+                    if (ImGui::RadioButton("Orthographic", &camProj, 1)) uiSignal("sg_set_cam_projection", {{"projection", "orthographic"}});
+                    ImGui::EndCombo();
+                }
+            ImGui::Unindent(10);
+        }
 
         // light
-        ImGui::Separator();
-        ImGui::Text("Light:");
-        ImGui::Indent(10);
-        ImGui::Unindent(10);
+        if (objType == "Light") {
+            ImGui::Separator();
+            ImGui::Text("Light:");
+            ImGui::Indent(10);
+            ImGui::Unindent(10);
+        }
 
         // lod
-        ImGui::Separator();
-        ImGui::Text("LoD:");
-        ImGui::Indent(10);
-            if (lodCenter.render(region2.x-10)) lodCenter.signal("sg_set_lod_center");
-            for (int i=0; i<lodDistances.size(); i++) {
-                string lbl = "child " + toString(i) + ", distance: " + toString(lodDistances[i]);
-                ImGui::Text(lbl.c_str());
-            }
-        ImGui::Unindent(10);
+        if (objType == "Lod") {
+            ImGui::Separator();
+            ImGui::Text("LoD:");
+            ImGui::Indent(10);
+                if (lodCenter.render(region2.x-10)) lodCenter.signal("sg_set_lod_center");
+                for (int i=0; i<lodDistances.size(); i++) {
+                    string lbl = "child " + toString(i) + ", distance: " + toString(lodDistances[i]);
+                    ImGui::Text(lbl.c_str());
+                }
+            ImGui::Unindent(10);
+        }
+
+        // transform
+        if (objType == "Transform" || objType == "Geometry" || objType == "Camera" || objType == "LightBeacon") {
+            ImGui::Separator();
+            ImGui::Text("Transformation:");
+            ImGui::Indent(10);
+                if (ImGui::Button("Focus")) uiSignal( "sg_focus_transform");
+                ImGui::SameLine();
+                if (ImGui::Button("Identity")) uiSignal( "sg_set_identity");
+
+                if (position.render(region2.x-10)) position.signal("sg_set_position");
+                if (atvector.render(region2.x-10)) atvector.signal("sg_set_atvector");
+                if (direction.render(region2.x-10)) direction.signal("sg_set_direction");
+                if (upvector.render(region2.x-10)) upvector.signal("sg_set_upvector");
+                if (scale.render(region2.x-10)) scale.signal("sg_set_scale");
+
+                if (ImGui::Checkbox("global", &global)) uiSignal( "sg_toggle_global", {{"global",toString(global)}} );
+            ImGui::Unindent(10);
+
+            ImGui::Text("Constraints:");
+            ImGui::Indent(10);
+                if (ImGui::Checkbox("translation:", &doConstrTranslation)) ;//uiSignal( "sg_toggle_global", {{"global",toString(global)}} );
+                if (doConstrTranslation) {
+                    ImGui::Indent(10);
+                    constrTranslation.render(region2.x-20);
+                    if (ImGui::RadioButton("point", &cTransMode, 0)) ;
+                    ImGui::SameLine();
+                    if (ImGui::RadioButton("line", &cTransMode, 1)) ;
+                    ImGui::SameLine();
+                    if (ImGui::RadioButton("plane", &cTransMode, 2)) ;
+                    ImGui::Unindent(10);
+                }
+                if (ImGui::Checkbox("rotation:", &doConstrRotation)) ;//uiSignal( "sg_toggle_global", {{"global",toString(global)}} );
+                if (doConstrRotation) {
+                    ImGui::Indent(10);
+                    if (ImGui::Checkbox("x", &cRotX)) ;
+                    ImGui::SameLine();
+                    if (ImGui::Checkbox("y", &cRotY)) ;
+                    ImGui::SameLine();
+                    if (ImGui::Checkbox("z", &cRotZ)) ;
+                    ImGui::Unindent(10);
+                }
+            ImGui::Unindent(10);
+
+            ImGui::Text("Physics:");
+            ImGui::Indent(10);
+                if (ImGui::Checkbox("physicalize:", &doPhysicalize)) ;//uiSignal( "sg_toggle_global", {{"global",toString(global)}} );
+                if (doPhysicalize) {
+                    ImGui::Indent(10);
+                    // combobox for shape type
+                    // mass
+                    if (ImGui::Checkbox("dynamic", &physDynamic)) ;
+                    ImGui::Unindent(10);
+                }
+            ImGui::Unindent(10);
+        }
 
     ImGui::EndChild();
 }
