@@ -1212,17 +1212,30 @@ void VRPointCloud::externalComputeSplats(string path, float neighborsRadius, boo
     cout << "  externalComputeSplats headers " << toString(epc.params) << endl;
     if (!epc.hasOctree) { cout << "  externalPartition needs a PCB with an octree partition, please run externalSort and externalPartition on it first!" << endl; return; }
 
-    auto progress = addProgress("process splats ", epc.size);
-
-    string wpath = path+".tmp.pcb";
     epc.params["format"] = "x8y8z8r1g1b1u2v2s1";
     epc.params["splatMod"] = "0.001";
-    VRExternalPointCloud::writePCBHeader(wpath, epc.params);
-    VRExternalPointCloud::copyPCBOctree(wpath, epc);
-    ofstream wstream(wpath, ios::app);
-
     ifstream stream(path);
     stream.seekg(epc.binPntsStart);
+
+
+    string wpath = path+".tmp.pcb";
+    size_t startPnt = 0;
+    if (exists(wpath)) { // resume
+        VRExternalPointCloud wepc(wpath);
+        ofstream tmp(wpath, ios::app);
+        size_t p = tmp.tellp();
+        startPnt = (tmp.tellp() - wepc.binPntsStart) / wepc.binPntSize;
+        tmp.close();
+        stream.seekg(epc.binPntsStart + epc.binPntSize*startPnt, ios::beg);
+        cout << "  resume at pnt " << startPnt << ", p: " << p << endl;
+    } else {
+        VRExternalPointCloud::writePCBHeader(wpath, epc.params);
+        VRExternalPointCloud::copyPCBOctree(wpath, epc);
+    }
+    ofstream wstream(wpath, ios::app);
+
+    auto progress = addProgress("process splats ", epc.size);
+    progress->update(startPnt);
 
     epcTimer.reset();
 
@@ -1236,7 +1249,7 @@ void VRPointCloud::externalComputeSplats(string path, float neighborsRadius, boo
     double r2 = neighborsRadius * neighborsRadius;
     vector<Splat> neighborsBig;
     vector<Splat> neighbors;
-    for (size_t i = 0; i<epc.size; i++) {
+    for (size_t i = startPnt; i<epc.size; i++) {
         epcTimer.start("readPnt");
         stream.read((char*)&splat, epc.binPntSize);
         epcTimer.stop("readPnt");
@@ -1269,8 +1282,11 @@ void VRPointCloud::externalComputeSplats(string path, float neighborsRadius, boo
         epcTimer.start("write pnt");
         wstream.write((const char*)&nsplat, Splat::size);
         epcTimer.stop("write pnt");
-        progress->update(1, 0.00001);
-        //if (i > 50000) break; // TO TEST
+        progress->update(1, 0.001);
+        /*if (i > 50000) {
+            cout << " break at " << wstream.tellp() << endl;
+            break; // TO TEST
+        }*/
     }
 
     stream.close();
