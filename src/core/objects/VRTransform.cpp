@@ -80,6 +80,7 @@ VRObjectPtr VRTransform::copy(vector<VRObjectPtr> children) {
     t->setEntity(entity);
     for (auto ta : getTags()) t->addTag(ta);
     t->setMatrix(getMatrix());
+    t->setConstraint(getConstraint());
     t->old_parent = getParent();
     return t;
 }

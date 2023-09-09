@@ -83,8 +83,9 @@ bool VRProjectManager::load(string path) {
         string mode = "RELOAD";
         if (e->hasAttribute("pmMode")) mode = e->getAttribute("pmMode");
         if (mode == "RELOAD") { if (i < vault_reload.size()) s = vault_reload[i]; i++; }
-        if (mode == "REBUILD") { s = VRStorage::createFromStore(e); vault_rebuild.push_back(s); }
-        if (!s) { cout << "VRProjectManager::load Warning! element unhandled"; continue; }
+        else if (mode == "REBUILD") { s = VRStorage::createFromStore(e, true); if (s) vault_rebuild.push_back(s); }
+        else { cout << "VRProjectManager::load Warning! invalid mode: " << mode << endl; }
+        if (!s) { cout << "VRProjectManager::load Warning! element unhandled:" << endl << e->toString() << endl; continue; }
 
         auto ctx = VRStorageContext::create(mode == "RELOAD");
         s->load(e, ctx);

@@ -430,8 +430,10 @@ void VRImport::Cache::setup(VRTransformPtr root) {
     objects.clear();
     this->root = root;
 
-    root->setNameSpace("VRImportCache"); // maybe try a unique namespace (use the path)?
-    for (auto o : root->getChildren(true) ) o->setNameSpace("VRImportCache");
+    string ns = "VRImportCache_"+genUUID();
+
+    root->setNameSpace(ns); // maybe try a unique namespace (use the path)?
+    for (auto o : root->getChildren(true) ) o->setNameSpace(ns);
 
     //for (auto c : root->getChildren(true)) objects[getName(c->getNode()->node)] = c;
     for (auto c : root->getChildren(true)) objects[c->getName()] = c;
