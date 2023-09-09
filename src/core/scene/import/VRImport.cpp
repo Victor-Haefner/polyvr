@@ -92,6 +92,23 @@ void VRImport::osgLoad(string path, VRObjectPtr res) {
     fixEmptyNames(n,m);
     auto obj = OSGConstruct(n, res, path, path);
     if (obj) res->addChild( obj );
+
+    // fix geo references
+    string ns = "tmp_"+genUUID();
+    res->setNameSpace(ns); // maybe try a unique namespace (use the path)?
+    for (auto o : res->getChildren(true) ) o->setNameSpace(ns);
+    for (auto o : res->getChildren(true) ) {
+        auto geo = dynamic_pointer_cast<VRGeometry>(o);
+        if (geo) {
+            VRGeometry::Reference ref;
+            ref.type = VRGeometry::FILE;
+            ref.parameter = path + "|" + geo->getName();
+            geo->setReference(ref);
+        }
+    }
+    res->resetNameSpace();
+    for (auto o : res->getChildren(true) ) o->resetNameSpace();
+
     cout << " done " << endl;
 }
 
@@ -413,6 +430,7 @@ VRGeometryPtr VRImport::loadGeometry(string file, string object, string preset, 
     VRObjectPtr o = cache[file].objects[object];
     if (o->getType() != "Geometry") {
         cout << "VRImport::loadGeometry - Warning: " << file << " is cached but object " << object << " has wrong type: " << o->getType() << endl;
+        for (auto o : cache[file].objects) cout << " cache " << o.first << ", " << o.second->getType() << endl;
         return 0;
     }
 
