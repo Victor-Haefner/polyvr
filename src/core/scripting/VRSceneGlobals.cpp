@@ -381,14 +381,23 @@ PyObject* VRSceneGlobals::stackCall(VRSceneGlobals* self, PyObject *args) {
     Py_RETURN_TRUE;
 }
 
-void callPyFileCb(PyObject* pyFkt, string fileName, string filePath, double scale, string preset) {
-    string path = fileName;
-    cout << "callPyFileCb " << path << endl;
+struct PyFileOpenParams {
+    PyObject* cb = 0;
+    string fileName;
+    string filePath;
+    float scale = 1.0;
+    string preset = "OSG";
+};
+
+static PyFileOpenParams pyFileOpenParams;
+
+void callPyFileCb() {
+    cout << "callPyFileCb " << pyFileOpenParams.fileName << endl;
     PyObject *pArgs = PyTuple_New(3);
-    PyTuple_SetItem( pArgs, 0, PyString_FromString(path.c_str()) );
-    PyTuple_SetItem( pArgs, 1, PyFloat_FromDouble( scale ) );
-    PyTuple_SetItem( pArgs, 2, PyString_FromString( preset.c_str() ) );
-    execCall( pyFkt, pArgs, 0 );
+    PyTuple_SetItem( pArgs, 0, PyString_FromString( pyFileOpenParams.fileName.c_str()) );
+    PyTuple_SetItem( pArgs, 1, PyFloat_FromDouble( pyFileOpenParams.scale ) );
+    PyTuple_SetItem( pArgs, 2, PyString_FromString( pyFileOpenParams.preset.c_str() ) );
+    execCall( pyFileOpenParams.cb, pArgs, 0 );
 }
 
 PyObject* VRSceneGlobals::openFileDialog(VRSceneGlobals* self, PyObject *args) {
@@ -396,24 +405,29 @@ PyObject* VRSceneGlobals::openFileDialog(VRSceneGlobals* self, PyObject *args) {
     if (! PyArg_ParseTuple(args, "OOOOO", &cb, &mode, &title, &default_path, &filter)) return NULL;
     Py_IncRef(cb);
 
-    static float scale = 1.0;
-    static string preset = "OSG";
-
     /*string filters = "PolyVR Project (.pvr .pvc){.pvr,.pvc,.xml}";
     filters += ",Mesh Model (.dae .wrl .obj .3ds .ply){.dae,.wrl,.obj,.3ds,.3DS,.ply}";
     filters += ",CAD Model (.step .ifc .dxf){.STEP,.STP,.step,.stp,.ifc,.dxf}";
     filters += ",Pointcloud (.e57 .xyz){.e57,.xyz}";
     filters += ",Geo Data (.hgt .tiff .pdf .shp){.hgt,.tif,.tiff,.pdf,.shp}";*/
 
-    auto cbf = [&](OSG::VRGuiSignals::Options o, PyObject* cb) {
-        // TODO: pass preset..
-         callPyFileCb(cb, o["fileName"], o["filePath"], scale, preset); return true;
+    auto cbf = [&](OSG::VRGuiSignals::Options o) {
+        pyFileOpenParams.fileName = o["fileName"];
+        pyFileOpenParams.filePath = o["filePath"];
+        callPyFileCb();
+        return true;
     };
 
-    auto mgr = OSG::VRGuiSignals::get();
-    mgr->addCallback("on_script_file_dialog_ok", bind(cbf, std::placeholders::_1, cb), true );
-    mgr->addCallback("on_change_import_scale", [&](OSG::VRGuiSignals::Options o){ scale = toFloat(o["scale"]); return true; } );
-    mgr->addCallback("on_change_import_preset", [&](OSG::VRGuiSignals::Options o){ preset = o["preset"]; return true; } );
+    pyFileOpenParams.cb = cb;
+
+    static bool signalsConnected = false;
+    if (!signalsConnected) {
+        auto mgr = OSG::VRGuiSignals::get();
+        mgr->addCallback("on_script_file_dialog_ok", bind(cbf, std::placeholders::_1), true );
+        mgr->addCallback("on_change_import_scale", [&](OSG::VRGuiSignals::Options o){ pyFileOpenParams.scale = toFloat(o["scale"]); return true; } );
+        mgr->addCallback("on_change_import_preset", [&](OSG::VRGuiSignals::Options o){ pyFileOpenParams.preset = o["preset"]; return true; } );
+        signalsConnected = true;
+    }
 
     string m = PyString_AsString(mode);
     //string action = "on_script_open_file";

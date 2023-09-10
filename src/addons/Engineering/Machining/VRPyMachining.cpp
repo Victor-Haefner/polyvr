@@ -14,6 +14,7 @@ PyMethodDef VRPyMachiningSimulation::methods[] = {
     {"setOnFinish", PyWrap(MachiningSimulation, setOnFinish, "Set callback to trigger when finished", void, VRUpdateCbPtr) },
     {"start", PyWrapOpt(MachiningSimulation, start, "Start simulation, optional speed multiplier", "1", void, double) },
     {"stop", PyWrap(MachiningSimulation, stop, "Start simulation, optional speed multiplier", void) },
+    {"setOrigin", PyWrap(MachiningSimulation, setOrigin, "Set Origin", void, Vec3d) },
     {NULL}  /* Sentinel */
 };
 
@@ -32,6 +33,5 @@ PyMethodDef VRPyMachiningKinematics::methods[] = {
 PyMethodDef VRPyCartesianKinematics::methods[] = {
     {"setComponents", PyWrap(CartesianKinematics, setComponents, "Set kinematic components", void, VRTransformPtr, VRTransformPtr, VRTransformPtr) },
     {"setAxisParams", PyWrap(CartesianKinematics, setAxisParams, "Set axis parameters", void, int, int, int) },
-    {"setOrigin", PyWrap(CartesianKinematics, setOrigin, "Set Origin", void, PosePtr) },
     {NULL}  /* Sentinel */
 };

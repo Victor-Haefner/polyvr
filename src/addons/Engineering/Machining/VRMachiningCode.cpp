@@ -164,7 +164,8 @@ VRGeometryPtr VRMachiningCode::asGeometry() {
         //cout << "T: " << element.T << endl;
 
         data.pushVert(element.p0, Vec3d(0,1,0));
-        data.pushLine();
+        //data.pushPoint();
+        if (data.size() > 1) data.pushLine();
     }
 
     auto geo = data.asGeometry("ncCode");

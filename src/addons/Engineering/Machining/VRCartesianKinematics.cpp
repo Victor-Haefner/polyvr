@@ -43,9 +43,5 @@ void VRCartesianKinematics::setAxisParams(int dirX, int dirY, int dirZ){
     axisDirections[2] = dirZ;
 }
 
-void VRCartesianKinematics::setOrigin(PosePtr pos){
-    cout<<"setting origin"<<endl;
 
-
-}
 
