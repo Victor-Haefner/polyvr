@@ -3,6 +3,8 @@
 #include "core/math/PCA.h"
 #include "core/math/fft.h"
 #include "core/math/partitioning/boundingbox.h"
+#include "core/objects/material/VRMaterial.h"
+#include "core/objects/geometry/VRGeoData.h"
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/geometry/OSGGeometry.h"
 #include "core/objects/geometry/VRPrimitive.h"
@@ -150,9 +152,13 @@ void VRGearSegmentation::computeAxis() {
     cout << " r1: " << r1 << endl;
     cout << " r2: " << r2 << endl;
 
-	//axis = Vec3d(0, 1,0);
-    //r1 = Vec3d(-1,0,0);
-    //r2 = Vec3d(0,0, 1);
+	/*axis = Vec3d(0, 1,0);
+    r1 = Vec3d(-1,0,0);
+    r2 = Vec3d(0,0, 1);*/
+
+	/*axis = Vec3d(0, -1,0);
+    r1 = Vec3d(0,0, -1);
+    r2 = Vec3d(-1,0,0);*/
 }
 
 
@@ -182,11 +188,11 @@ void VRGearSegmentation::computePolarVertices() {
     coords.dir0 = r2;
     coords.dir1 = r1;
 
-    Vec3d c = bb.center(); // offset to rotation axis
-    c -= axis * c.dot(axis);
+    axisOffset = bb.center(); // offset to rotation axis
+    axisOffset -= axis * axisOffset.dot(axis);
 
 	for (auto p : pos) {
-		GearVertex v(p-c);
+		GearVertex v(p-axisOffset);
 		v.computeAndSetAttributes(coords);
 		gearVertices.push_back(v);
     }
@@ -511,6 +517,7 @@ void VRGearSegmentation::analyse(VRObjectPtr o) {
 }
 
 Vec3d VRGearSegmentation::getAxis() { return axis; }
+Vec3d VRGearSegmentation::getAxisOffset() { return axisOffset; }
 PosePtr VRGearSegmentation::getPolarCoords() { return Pose::create(Vec3d(0,0,0), axis, r1); }
 size_t VRGearSegmentation::getNGears() { return gears.size(); }
 size_t VRGearSegmentation::getNPlanes() { return planes.size(); }
@@ -550,6 +557,37 @@ vector<Vec2d> VRGearSegmentation::getPlaneVertices(size_t i) {
     vector<Vec2d> vp;
     for (auto& v : planes[i].vertices) vp.push_back(v.polarCoords);
     return vp;
+}
+
+VRTransformPtr VRGearSegmentation::getContourViz() {
+    auto m = VRMaterial::create("cMat");
+    m->setPointSize(3);
+    m->setLit(0);
+
+    auto res = VRTransform::create("gearContours");
+	auto pc = getPolarCoords();
+    size_t Np = getNPlanes();
+    for (int i=0; i<Np; i++) {
+        auto p = getPlanePosition(i);
+        auto cs = getPlaneContour(i);
+
+        VRGeoData contour;
+        for (auto c : cs) {
+            float x = c[1]*cos(c[0]);
+            float y = c[1]*sin(c[0]);
+            Vec3d R = pc->transform(Vec3d(-y, x, 0), false);
+            Vec3d v = axisOffset + axis*p + R;
+            Color3f col(1, 0.3*(i%3), 1-0.3*(i%3));
+            contour.pushVert(v, Vec3d(0,1,0), col);
+            contour.pushPoint();
+        }
+
+        auto geo = contour.asGeometry("contour"+toString(i));
+        geo->setMaterial(m);
+        res->addChild(geo);
+    }
+
+    return res;
 }
 
 void VRGearSegmentation::printResults() {

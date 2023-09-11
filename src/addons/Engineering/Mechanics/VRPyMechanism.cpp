@@ -29,6 +29,7 @@ PyMethodDef VRPyGearSegmentation::methods[] = {
     {"setBinSizes", PyWrap(GearSegmentation, setBinSizes, "Set comparison eps for plane, plane match and radius", void, double, double, double) },
     {"setFFTFreqHint", PyWrap(GearSegmentation, setFFTFreqHint, "Set FFT hints, N freqs to get and ith to choose, (N freqs = 1, ith freq = 0)", void, int, int) },
     {"getAxis", PyWrap(GearSegmentation, getAxis, "Get rotation axis", Vec3d) },
+    {"getAxisOffset", PyWrap(GearSegmentation, getAxisOffset, "Get rotation axis offset", Vec3d) },
     {"getPolarCoords", PyWrap(GearSegmentation, getPolarCoords, "Get polar coordinate system", PosePtr) },
     {"getNGears", PyWrap(GearSegmentation, getNGears, "Get number of gears", size_t) },
     {"getNPlanes", PyWrap(GearSegmentation, getNPlanes, "Get number of planes", size_t) },
@@ -42,6 +43,7 @@ PyMethodDef VRPyGearSegmentation::methods[] = {
     {"runTest", PyWrap(GearSegmentation, runTest, "Run test, output in console", void) },
     {"printResults", PyWrap(GearSegmentation, printResults, "Output results to console", void) },
     {"createGear", PyWrap(GearSegmentation, createGear, "Create a gear geometry based on analysis", VRGeometryPtr, size_t) },
+    {"getContourViz", PyWrap(GearSegmentation, getContourViz, "Create a visual for the segmented contours", VRTransformPtr) },
     {NULL}  /* Sentinel */
 };
 

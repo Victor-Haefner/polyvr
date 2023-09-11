@@ -16,6 +16,7 @@ class VRGearSegmentation {
     private:
         VRObjectPtr obj;
         Vec3d axis, r1, r2;
+        Vec3d axisOffset;
         bool isMultiGear = false;
         int fftFreqHint = 1;
         int fftFreqSel = 0;
@@ -52,6 +53,7 @@ class VRGearSegmentation {
         void printResults();
 
         Vec3d getAxis();
+        Vec3d getAxisOffset();
         PosePtr getPolarCoords();
 
         size_t getNGears();
@@ -65,6 +67,8 @@ class VRGearSegmentation {
         vector<double> getPlaneFrequencies(size_t i);
         vector<double> getPlaneSineGuess(size_t i, size_t sf);
         vector<double> getPlaneSineApprox(size_t i, size_t sf);
+
+        VRTransformPtr getContourViz();
 };
 
 OSG_END_NAMESPACE;
