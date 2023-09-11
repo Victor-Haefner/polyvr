@@ -523,7 +523,7 @@ bool CEF::keyboard(VRDeviceWeakPtr d) {
     auto host = internals->browser->GetHost();
     if (!host) return true;
 
-    cout << "CEF::keyboard " << event.keyval << " " << ctrlUsed << " " << keyboard->ctrlDown() << endl;
+    //cout << "CEF::keyboard " << event.keyval << " " << ctrlUsed << " " << keyboard->ctrlDown() << endl;
 
     if (keyboard->ctrlDown() && event.state == 1) {
         if (event.keyval == 'a') { internals->browser->GetFocusedFrame()->SelectAll(); ctrlUsed = true; }

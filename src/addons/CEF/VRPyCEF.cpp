@@ -21,7 +21,7 @@ PyMethodDef VRPyCEF::methods[] = {
 PyMethodDef VRPyGui::methods[] = {
     {"open", PyWrap(Gui, open, "Open URL", void, string) },
     {"setMaterial", PyWrap(Gui, setMaterial, "Set material", void, VRMaterialPtr) },
-    {"addMouse", PyWrap(Gui, addMouse, "Add mouse interaction - addMouse(mouse, geo, LMB, RMB, SCRUP, SCRDOWN)", void, VRDevicePtr, VRObjectPtr, int, int, int, int) },
+    {"addMouse", PyWrap(Gui, addMouse, "Add mouse interaction - addMouse(mouse, geo, LMB, MMB, RMB, SCRUP, SCRDOWN)", void, VRDevicePtr, VRObjectPtr, int, int, int, int, int) },
     {"addKeyboard", PyWrap(Gui, addKeyboard, "Add keyboard device", void, VRDevicePtr) },
     {"setResolution", PyWrap(Gui, setResolution, "Set horizontal resolution W", void, float) },
     {"setAspectRatio", PyWrap(Gui, setAspectRatio, "Set aspect ratio a to define the height H: H = W/a", void, float) },

@@ -1,19 +1,41 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Scene name_suffix="0" base_name="CEF" name_space="Scene">
+<Scene base_name="CEF" name_space="Scene" name_suffix="0" persistency="666">
   <Objects>
-    <Object base_name="Root" name_space="__global__" name_suffix="0" pickable="0" type="Object" visible="1">
-      <Object ambient="0.3 0.3 0.3 1" base_name="Headlight" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" name_space="__global__" name_suffix="0" on="1" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowType="4096" specular="0.1 0.1 0.1 1" type="Light" visible="1">
-        <Object accept_root="1" aspect="1" at="0 0 -0.1" at_dir="0" base_name="Default" cR="0 0 0" cT="0 1 0" cT_mode="1" do_cR="0" do_cT="0" far="250" fov="1.0472" from="-1.63126 6.35925 3.71475" name_space="__global__" name_suffix="0" near="0.1" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
-          <Object at="0 0 -1" at_dir="1" base_name="Headlight_beacon" cR="0 0 0" cT="0 1 0" cT_mode="1" do_cR="0" do_cT="0" from="0 0 0" name_space="__global__" name_suffix="0" pickable="0" scale="1 1 1" type="LightBeacon" up="0 1 0" visible="1" light="Headlight"/>
+    <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" visible="1">
+      <Object ambient="0.3 0.3 0.3 1" base_name="Headlight" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" name_space="__global__" name_suffix="0" on="1" persistency="666" photometricMap="" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" shadowVolume="1e+06 1e+06 1e+06 -1e+06 -1e+06 -1e+06 1" specular="0.1 0.1 0.1 1" type="Light" visible="1">
+        <Object accept_root="1" aspect="1" at="0 0 -0.1" at_dir="0" base_name="Default" camType="perspective" far="250" fov="1.0472" from="-1.63126 6.35925 3.71475" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
+          <attachments>
+            <Node base_name="transform" name_space="VRAttachment" name_suffix="0" persistency="666" value=""/>
+          </attachments>
+          <Object at="0 0 -1" at_dir="0" base_name="Headlight_beacon" from="0 0 0" light="Headlight" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="LightBeacon" up="0 1 0" visible="1">
+            <attachments>
+              <Node base_name="transform" name_space="VRAttachment" name_suffix="0" persistency="666" value=""/>
+            </attachments>
+            <constraint persistency="666"/>
+          </Object>
+          <constraint persistency="666"/>
         </Object>
-        <Object at="-2 0 1" at_dir="1" base_name="Cylinder" cR="0 0 0" cT="0 1 0" cT_mode="1" do_cR="0" do_cT="0" from="-2 0 0" name_space="__global__" name_suffix="0" pickable="0" scale="1 1 1" sourceparam="Cylinder 4 2 128 0 0 1" sourcetype="3" type="Geometry" up="0 -1 0" visible="1"/>
-        <Object at="2.5 0 1" at_dir="1" base_name="Cylinder2" cR="0 0 0" cT="0 1 0" cT_mode="1" do_cR="0" do_cT="0" from="2.5 0 0" name_space="__global__" name_suffix="0" pickable="0" scale="1 1 1" sourceparam="Cylinder 4 2 128 0 0 1" sourcetype="3" type="Geometry" up="0 -1 0" visible="1"/>
+        <Object at="-2 0 1" at_dir="0" base_name="Cylinder" from="-2 0 0" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" sourceparam="Cylinder 4 2 128 0 0 1" sourcetype="3" type="Geometry" up="0 -1 0" visible="1">
+          <attachments>
+            <Node base_name="geometry" name_space="VRAttachment" name_suffix="0" persistency="666" value=""/>
+            <Node base_name="transform" name_space="VRAttachment" name_suffix="0" persistency="666" value=""/>
+          </attachments>
+          <constraint persistency="666"/>
+        </Object>
+        <Object at="2.5 0 1" at_dir="0" base_name="Cylinder2" from="2.5 0 0" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" sourceparam="Cylinder 4 2 128 0 0 1" sourcetype="3" type="Geometry" up="0 -1 0" visible="1">
+          <attachments>
+            <Node base_name="geometry" name_space="VRAttachment" name_suffix="0" persistency="666" value=""/>
+            <Node base_name="transform" name_space="VRAttachment" name_suffix="0" persistency="666" value=""/>
+          </attachments>
+          <constraint persistency="666"/>
+        </Object>
       </Object>
     </Object>
   </Objects>
-  <Rendering deferred_rendering="0" frustum_culling="1" occlusion_culling="0" ssao="0" ssao_kernel="4" ssao_noise="4" ssao_radius="0.02" two_sided="1"/>
-  <Scripts>
-    <Script name_suffix="0" base_name="controls" name_space="__script__" type="Python" mobile="">
+  <Cameras activeCam="Default" persistency="666"/>
+  <Rendering deferred_rendering="0" fogColor="0.5 0.5 0.5 1" fogParams="0 0 100 0.1" frustum_culling="1" fxaa="0" hmdd="0" marker="0" occlusion_culling="0" persistency="666" ssao="0" ssao_kernel="4" ssao_noise="4" ssao_radius="0.02" two_sided="1"/>
+  <Scripts persistency="666">
+    <Script base_name="controls" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
       <core>
 	import VR
 	k = dev.getKey()
@@ -34,10 +56,10 @@
 	if hasattr(VR, 'web'):
 		VR.web.open(site)
 </core>
-      <trig type="on_device" dev="mobile" state="Pressed" param="" key="-1" name_suffix="1" base_name="trigger" name_space="__global__"/>
-      <trig type="on_device" dev="mobile" state="Released" param="" key="-1" name_suffix="2" base_name="trigger" name_space="__global__"/>
+      <trig type="on_device" dev="server1" state="Pressed" param="" key="-1" base_name="trigger" name_space="__global__" name_suffix="1" persistency="666"/>
+      <trig type="on_device" dev="server1" state="Released" param="" key="-1" base_name="trigger" name_space="__global__" name_suffix="2" persistency="666"/>
     </Script>
-    <Script name_suffix="0" base_name="init" name_space="__script__" type="Python" mobile="">
+    <Script base_name="init" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
       <core>
 	import VR
 	mat = VR.Material('web1')
@@ -46,7 +68,7 @@
 	cef = VR.CEF()
 	cef.setMaterial(mat)
 	cef.open('http://www.imi.kit.edu')
-	cef.addMouse(mouse, geo, 0, 2, 3, 4)
+	cef.addMouse(mouse, geo, 0, 1, 2, 3, 4)
 	cef.addKeyboard(keyboard)
 	cef.setAspectRatio(2)
 	
@@ -59,18 +81,18 @@
 	cef = VR.CEF()
 	cef.setMaterial(mat2)
 	cef.open('http://localhost:5500/site')
-	cef.addMouse(mouse, geo2, 0, 2, 3, 4)
+	cef.addMouse(mouse, geo2, 0, 1, 2, 3, 4)
 	cef.addKeyboard(keyboard)
 	cef.setAspectRatio(2)
 	VR.web2 = cef
 </core>
-      <arg type="VRPyGeometryType" value="Cylinder" name_suffix="0" base_name="geo" name_space="init"/>
-      <arg type="VRPyGeometryType" value="Cylinder2" name_suffix="0" base_name="geo2" name_space="init"/>
-      <arg type="VRPyDeviceType" value="keyboard" name_suffix="0" base_name="keyboard" name_space="init"/>
-      <arg type="VRPyDeviceType" value="mouse" name_suffix="0" base_name="mouse" name_space="init"/>
-      <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" name_suffix="0" base_name="trigger" name_space="__global__"/>
+      <arg type="VRPyGeometryType" value="Cylinder" base_name="geo" name_space="init" name_suffix="0" persistency="666"/>
+      <arg type="VRPyGeometryType" value="Cylinder2" base_name="geo2" name_space="init" name_suffix="0" persistency="666"/>
+      <arg type="VRPyDeviceType" value="keyboard" base_name="keyboard" name_space="init" name_suffix="0" persistency="666"/>
+      <arg type="VRPyDeviceType" value="mouse" base_name="mouse" name_space="init" name_suffix="0" persistency="666"/>
+      <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" base_name="trigger" name_space="__global__" name_suffix="0" persistency="666"/>
     </Script>
-    <Script name_suffix="0" base_name="site" name_space="__script__" type="HTML" mobile="mobile">
+    <Script base_name="site" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="HTML">
       <core>
 &lt;!DOCTYPE html&gt;
 &lt;html&gt;
@@ -126,8 +148,13 @@
 </core>
     </Script>
   </Scripts>
-  <Sockets/>
-  <Background color="0.6 0.6 0.6" format=".png" path="" type="0"/>
-  <Navigation active="Orbit"/>
-  <Materials/>
+  <Sockets persistency="666"/>
+  <Background color="0.6 0.6 0.6" format=".png" path="" persistency="666" type="0"/>
+  <Navigation persistency="666">
+    <presetStates>
+      <Orbit>1</Orbit>
+    </presetStates>
+  </Navigation>
+  <Materials persistency="666"/>
+  <Semantics persistency="666"/>
 </Scene>

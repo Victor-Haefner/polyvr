@@ -240,13 +240,13 @@ void VRGui::setAspectRatio(float a) { aspect = a; resize(); }
 
 // dev callbacks:
 
-void VRGui::addMouse(VRDevicePtr dev, VRObjectPtr obj, int lb, int rb, int wu, int wd) {
+void VRGui::addMouse(VRDevicePtr dev, VRObjectPtr obj, int lb, int mb, int rb, int wu, int wd) {
     if (!obj) obj = this->obj.lock();
     if (dev == 0 || obj == 0) return;
     this->obj = obj;
 
     auto k = dev.get();
-    if (!mouse_dev_callback.count(k)) mouse_dev_callback[k] = VRFunction<VRDeviceWeakPtr, bool>::create( "VRGui::MOUSE", bind(&VRGui::mouse, this, lb,rb,wu,wd,_1 ) );
+    if (!mouse_dev_callback.count(k)) mouse_dev_callback[k] = VRFunction<VRDeviceWeakPtr, bool>::create( "VRGui::MOUSE", bind(&VRGui::mouse, this, lb,mb,rb,wu,wd,_1 ) );
     dev->newSignal(-1,0)->add(mouse_dev_callback[k], -1);
     dev->newSignal(-1,1)->add(mouse_dev_callback[k], -1);
 
@@ -291,7 +291,7 @@ void VRGui::toggleInput(bool m, bool k) {
     doKeyboard = k;
 }
 
-bool VRGui::mouse(int lb, int rb, int wu, int wd, VRDeviceWeakPtr d) {
+bool VRGui::mouse(int lb, int mb, int rb, int wu, int wd, VRDeviceWeakPtr d) {
     if (!doMouse) return true;
     //cout << "VRGui::mouse " << lb << " " << rb << " " << wu << " " << wd << endl;
     auto dev = d.lock();
@@ -300,6 +300,7 @@ bool VRGui::mouse(int lb, int rb, int wu, int wd, VRDeviceWeakPtr d) {
     bool down = dev->getState();
 
     if (b == lb) b = 0;
+    else if (b == mb) b = 1;
     else if (b == rb) b = 2;
     else if (b == wu) b = 3;
     else if (b == wd) b = 4;

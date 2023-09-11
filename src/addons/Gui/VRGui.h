@@ -45,7 +45,7 @@ class VRGui {
         void initiate();
         void update();
 
-        bool mouse(int lb, int rb, int wu, int wd, VRDeviceWeakPtr dev);
+        bool mouse(int lb, int mb, int rb, int wu, int wd, VRDeviceWeakPtr dev);
         void mouse_move(VRDeviceWeakPtr dev);
         bool keyboard(VRDeviceWeakPtr dev);
 
@@ -58,7 +58,7 @@ class VRGui {
         void setAspectRatio(float a);
 
         void setMaterial(VRMaterialPtr mat);
-        void addMouse(VRDevicePtr dev, VRObjectPtr obj, int lb, int rb, int wu, int wd);
+        void addMouse(VRDevicePtr dev, VRObjectPtr obj, int lb, int mb, int rb, int wu, int wd);
         void addKeyboard(VRDevicePtr dev);
         void toggleInput(bool keyboard, bool mouse);
 
