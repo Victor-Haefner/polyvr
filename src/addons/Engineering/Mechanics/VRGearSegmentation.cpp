@@ -530,7 +530,7 @@ VRGeometryPtr VRGearSegmentation::createGear(size_t i) {
     auto g = VRGeometry::create("gear");
     g->setPrimitive("Gear "+toString(p[6])+" "+toString(p[0])+" "+toString(p[4])+" "+toString(p[5])+" "+toString(p[3])+" 0"); // width hole pitch N_teeth teeth_size bevel
 
-    g->setTransform(axis*p[7], axis, r1);
+    g->setTransform(axis*p[7]+axisOffset, axis, r1);
     return g;
 }
 
