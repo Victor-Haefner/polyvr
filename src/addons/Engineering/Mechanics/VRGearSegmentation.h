@@ -62,6 +62,7 @@ class VRGearSegmentation {
         double getPlanePosition(size_t i);
         vector<Vec2d> getPlaneVertices(size_t i);
         vector<Vec2d> getPlaneContour(size_t i);
+        vector<double> getPlaneFrequencies(size_t i);
         vector<double> getPlaneSineGuess(size_t i, size_t sf);
         vector<double> getPlaneSineApprox(size_t i, size_t sf);
 };

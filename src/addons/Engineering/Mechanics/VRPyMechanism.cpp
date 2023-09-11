@@ -27,7 +27,7 @@ PyMethodDef VRPyMechanism::methods[] = {
 PyMethodDef VRPyGearSegmentation::methods[] = {
     {"analyse", PyWrap(GearSegmentation, analyse, "Analyse object to get gear parameters", void, VRObjectPtr) },
     {"setBinSizes", PyWrap(GearSegmentation, setBinSizes, "Set comparison eps for plane, plane match and radius", void, double, double, double) },
-    {"setFFTFreqHint", PyWrap(GearSegmentation, setFFTFreqHint, "Set FFT frequency hint", void, int, int) },
+    {"setFFTFreqHint", PyWrap(GearSegmentation, setFFTFreqHint, "Set FFT hints, N freqs to get and ith to choose, (N freqs = 1, ith freq = 0)", void, int, int) },
     {"getAxis", PyWrap(GearSegmentation, getAxis, "Get rotation axis", Vec3d) },
     {"getPolarCoords", PyWrap(GearSegmentation, getPolarCoords, "Get polar coordinate system", PosePtr) },
     {"getNGears", PyWrap(GearSegmentation, getNGears, "Get number of gears", size_t) },
@@ -35,6 +35,7 @@ PyMethodDef VRPyGearSegmentation::methods[] = {
     {"getGearParams", PyWrap(GearSegmentation, getGearParams, "Get ith gear params", vector<double>, size_t) },
     {"getPlanePosition", PyWrap(GearSegmentation, getPlanePosition, "Get plane position along axis", double, size_t) },
     {"getPlaneVertices", PyWrap(GearSegmentation, getPlaneVertices, "Get plane polar vertices", vector<Vec2d>, size_t) },
+    {"getPlaneFrequencies", PyWrap(GearSegmentation, getPlaneFrequencies, "Get plane frequencies from sine approx", vector<double>, size_t) },
     {"getPlaneContour", PyWrap(GearSegmentation, getPlaneContour, "Get plane contour", vector<Vec2d>, size_t) },
     {"getPlaneSineGuess", PyWrapOpt(GearSegmentation, getPlaneSineGuess, "Get plane sine guess params", "0", vector<double>, size_t, size_t) },
     {"getPlaneSineApprox", PyWrapOpt(GearSegmentation, getPlaneSineApprox, "Get plane sine fit params", "0", vector<double>, size_t, size_t) },
