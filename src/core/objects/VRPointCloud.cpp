@@ -22,6 +22,8 @@
 #include "core/scene/import/E57/E57.h"
 #include "addons/WorldGenerator/terrain/VRPlanet.h"
 
+#include <thread>
+
 #define GLSL(shader) #shader
 
 using namespace OSG;
@@ -205,7 +207,6 @@ VRExternalPointCloud::OcSerialNode VRExternalPointCloud::getOctreeNode(Vec3d p) 
                 if (abs(d[2]) < s)
                     reuseLastNode = true; //return lastGetOcn;
     }
-
     if (reuseLastNode) return lastGetOcn;
 
     double rootSize = toValue<double>(params["ocRootSize"]);
@@ -1023,13 +1024,20 @@ vector<VRPointCloud::Splat> VRPointCloud::radiusSearch(Vec3d p, double r) {
 
 VRTimer epcTimer;
 
-vector<VRPointCloud::Splat> VRPointCloud::externalRadiusSearch(string path, Vec3d p, double r, bool verbose) {
+vector<VRPointCloud::Splat> VRPointCloud::externalRadiusSearch(string path, Vec3d p, double r, bool verbose, int cacheID) {
     double r2 = r*r;
+    vector<Splat> res;
+
+    if (cacheID >= rsCaches.size()) {
+        rsCaches = vector<OptRadiusSearch>(cacheID+1);
+    }
+
+    auto& rsCache = rsCaches[cacheID];
 
     if (verbose) cout << "*** VRPointCloud::externalRadiusSearch " << path << ", " << p << ", " << r << endl;
 
     if (rsCache.epc.path != path) { // TODO: this fails if the call comes from python and there is an old cache.. broken streams?
-        //cout << " new cache! " << endl;
+        //cout << endl << " new cache! " << endl;
         epcTimer.start(" ers - new cache");
         rsCache.epc = VRExternalPointCloud(path);
         rsCache.points.clear();
@@ -1074,12 +1082,13 @@ vector<VRPointCloud::Splat> VRPointCloud::externalRadiusSearch(string path, Vec3
 
     if (verbose) cout << " reuseCachedPoints: " << reuseCachedPoints << endl;
     epcTimer.start(" ers - resize points");
-    if (Npoints > rsCache.points.size())
+    if (Npoints > rsCache.points.size()) {
+        //cout << " resize pnt cache from " << rsCache.points.size() << " to " << Npoints << ", N nodes: " << nodes.size() << ", cacheID: " << cacheID << " cache: " << &rsCache << endl;
         rsCache.points.resize(Npoints);
+    }
     rsCache.Npoints = Npoints;
     epcTimer.stop(" ers - resize points");
 
-    vector<Splat> res;
 
     auto checkPnt = [p,r,r2](Splat& splat, vector<Splat>& res) {
         if (abs(splat.p[0]-p[0]) < r) {
@@ -1240,50 +1249,62 @@ void VRPointCloud::externalComputeSplats(string path, float neighborsRadius, boo
     epcTimer.reset();
 
     epcTimer.start("total");
-    VRPointCloud::Splat splat;
-    Vec3d lsplatp;
-    bool usePadding = false;
-    float padding = 2.0;
-    double rOuter = neighborsRadius * (1+padding);
-    double rInner2 = neighborsRadius*padding * neighborsRadius*padding;
-    double r2 = neighborsRadius * neighborsRadius;
-    vector<Splat> neighborsBig;
-    vector<Splat> neighbors;
-    for (size_t i = startPnt; i<epc.size; i++) {
-        epcTimer.start("readPnt");
-        stream.read((char*)&splat, epc.binPntSize);
-        epcTimer.stop("readPnt");
+    int Nthreads = 9;
+    vector<Splat> splats(Nthreads);
+    rsCaches = vector<OptRadiusSearch>(Nthreads);
+
+    auto processSplat = [&](int i) {
+        Splat& splat = splats[i];
+
         epcTimer.start("externalRadiusSearch");
-
-        if (usePadding) { // not very usefull because the points are sorted, thus not close by each others!
-            if (i > 0 && lsplatp.dist2(splat.p) < rInner2) { // close to last point
-                countReuse++;
-            } else {
-                countNonReuse++;
-                neighborsBig = externalRadiusSearch(path, splat.p, rOuter);
-            }
-            lsplatp = splat.p;
-
-            neighbors.clear();
-            for (auto& s : neighborsBig) if (s.p.dist2(splat.p) < r2) neighbors.push_back(s);
-        } else {
-            neighbors = externalRadiusSearch(path, splat.p, neighborsRadius);
-        }
-
+        vector<Splat> neighbors = externalRadiusSearch(path, splat.p, neighborsRadius, false, i);
         epcTimer.stop("externalRadiusSearch");
+
         epcTimer.start("computeSplat");
         auto nsplat = computeSplat(splat.p, neighbors);
+        splat.v1 = nsplat.v1;
+        splat.v2 = nsplat.v2;
+        splat.w = nsplat.w;
         epcTimer.stop("computeSplat");
+
         epcTimer.start("averageColor");
-        if (averageColors) nsplat.c = averageColor(splat.p, neighbors);
-        else nsplat.c = splat.c;
+        if (averageColors) splat.c = averageColor(splat.p, neighbors);
         epcTimer.stop("averageColor");
-        nsplat.p = splat.p;
+    };
+
+    for (size_t i = startPnt; i<epc.size; i+=Nthreads) {
+        epcTimer.start("readPnt");
+        for (int j=0; j<Nthreads; j++) {
+            stream.read((char*)&splats[j], epc.binPntSize);
+        }
+        epcTimer.stop("readPnt");
+
+        {
+            //for (int j=0; j<Nthreads; j++) processSplat(j);
+            vector<thread> threads(Nthreads);
+            for (int j=0; j<Nthreads; j++) threads[j] = thread(processSplat, j);
+            for (int j=0; j<Nthreads; j++) threads[j].join();
+        }
+
         epcTimer.start("write pnt");
-        wstream.write((const char*)&nsplat, Splat::size);
+        for (int j=0; j<Nthreads; j++) {
+            wstream.write((const char*)&splats[j], Splat::size);
+            //cout << i+j << ", " << splats[j].p << ", " << splats[j].v1 << ", " << splats[j].v2 << endl;
+        }
         epcTimer.stop("write pnt");
         progress->update(1, 0.001);
-        /*if (i > 50000) {
+
+        /*static double vm = 0;
+        static double rss = 0;
+        double _vm, _rss;
+        getMemUsage(_vm, _rss);
+        if (_vm != vm || _rss != rss) {
+            cout << i-startPnt << ") VM: " << _vm << "; RSS: " << _rss << endl;
+            vm = _vm;
+            rss = _rss;
+        }*/
+
+        /*if (i > 5000 + startPnt) {
             cout << " break at " << wstream.tellp() << endl;
             break; // TO TEST
         }*/

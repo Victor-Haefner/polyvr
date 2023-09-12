@@ -117,7 +117,7 @@ class VRPointCloud : public VRTransform {
         VRMutex mtx;
 
         // optimizations
-        OptRadiusSearch rsCache;
+        vector<OptRadiusSearch> rsCaches;
 
         // import options
         string filePath;
@@ -161,7 +161,7 @@ class VRPointCloud : public VRTransform {
         void addPoint(Vec3d p, Splat c);
 
         vector<Splat> radiusSearch(Vec3d p, double r);
-        vector<Splat> externalRadiusSearch(string path, Vec3d p, double r, bool verbose = false);
+        vector<Splat> externalRadiusSearch(string path, Vec3d p, double r, bool verbose = false, int cacheID = 0);
         vector<Splat> getExternalChunk(string path, Vec3d p);
 
         void analyse(string path, bool printOctree);
