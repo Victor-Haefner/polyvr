@@ -33,6 +33,7 @@ void fileReplaceStrings(string filePath, string oldString, string newString);
 void initTime();
 long long getTime();
 long long getCPUTime();
+void getMemUsage(double& vm_usage, double& resident_set);
 void doFrameSleep(double tFrame, double fps);
 
 
