@@ -238,7 +238,10 @@ void loadSHP(string path, VRTransformPtr res, map<string, string> opts) {
                 }
                 string value = poFeature->GetFieldAsString(field);
                 entShape->set(name, value);
-                //cout << " import field: " << name << ", value: " << value << endl;
+                /*if (name == "RAIL-COST") {
+                    cout << " import field: " << name << ", value: '" << value;
+                    cout << "' -> '" << entShape->get(name)->getValue() << "'" << endl;
+                }*/
 
                 //cout << name;
                 //if ( poFieldDefn->GetType() == OFTInteger ) printf( "  %d, ", poFeature->GetFieldAsInteger(field) );
@@ -373,8 +376,8 @@ void writeSHP(VRObjectPtr obj, string path, map<string, string> options) {
 
             for (auto prop : featEnt->getAll()) {
                 feature->SetField(prop->getName().c_str(), prop->getValue().c_str());
-                //cout << " set exported field: " << prop->getName() << ", " << prop->getValue() << endl;
-                cout << " set exported field: " << prop->toString() << endl;
+                //if (prop->getName() == "RAIL-COST") cout << " set exported field: " << prop->getName() << ", " << prop->getValue() << endl;
+                //cout << " set exported field: " << prop->toString() << endl;
             }
 
             if (layerType == wkbPoint) {
@@ -864,6 +867,122 @@ vector<double> getGeoTransform(string path) {
     GDALClose(poDS);
     return res;
 }
+
+
+void analyzeSHP(string path, string out) {
+    OGRRegisterAll();
+#if GDAL_VERSION_MAJOR < 2
+ 	OGRDataSource *poDS = OGRSFDriverRegistrar::Open(path.c_str(), false);
+#else
+	GDALDataset *poDS = (GDALDataset*) GDALOpenEx(path.c_str(), GDAL_OF_READONLY, NULL, NULL, NULL);
+#endif
+
+    if( poDS == NULL ) { printf( "Open failed.\n" ); return; }
+
+    ofstream fout(out);
+
+    auto handlePoint = [&](OGRGeometry* geo) {
+        OGRPoint* pnt = (OGRPoint*)geo;
+        Vec3d p = toVec3d(*pnt);
+        fout << "point " << p << endl;
+    };
+
+    auto handleLine = [&](OGRGeometry* geo) {
+        OGRLineString* line = (OGRLineString*) geo;
+        OGRPoint pnt;
+        fout << "line" << endl;
+        for (int i=0; i<line->getNumPoints(); i++) {
+            line->getPoint(i, &pnt);
+            Vec3d p = toVec3d(pnt);
+            fout << " " << p << endl;
+        }
+        fout << endl;
+    };
+
+    auto handleRing = [&](OGRGeometry* geo) {
+        OGRLinearRing* ring = (OGRLinearRing*) geo;
+        OGRPoint pnt;
+        fout << "ring" << endl;
+        for (int i=0; i<ring->getNumPoints(); i++) {
+            ring->getPoint(i, &pnt);
+            Vec3d p = toVec3d(pnt);
+            fout << " " << p << endl;
+        }
+        fout << endl;
+    };
+
+    auto handlePolygon = [&](OGRGeometry* geo) {
+        OGRPolygon* poly = (OGRPolygon*) geo;
+        fout << "polygon" << endl;
+        handleRing( poly->getExteriorRing() );
+        for (int i=0; i<poly->getNumInteriorRings(); i++) {
+            handleRing( poly->getInteriorRing(i) );
+        }
+    };
+
+    auto handleMultiPolygon = [&](OGRGeometry* geo) {
+        OGRMultiPolygon* mpoly = (OGRMultiPolygon*) geo;
+        fout << "multipolygon" << endl;
+        for (int i=0; i<mpoly->getNumGeometries(); i++) {
+            auto poly = mpoly->getGeometryRef(i);
+            if (poly) handlePolygon( poly );
+            else break;
+        }
+    };
+
+    auto handleFeature = [&](OGRGeometry* geo) {
+        fout << "feature" << endl;
+        auto type = wkbFlatten(geo->getGeometryType());
+        if (type == wkbPoint) handlePoint(geo);
+        else if (type == wkbLineString) handleLine(geo);
+        else if (type == wkbPolygon) handlePolygon(geo);
+        else if (type == wkbMultiPolygon) handleMultiPolygon(geo);
+        else fout << "loadSHP::handleGeometry WARNING: type " << type << " not handled!\n";
+    };
+
+    fout << "layers:" << endl;
+    for (int i=0; i<poDS->GetLayerCount(); i++) {
+        OGRLayer* poLayer = poDS->GetLayer(i);
+        if (!poLayer) continue;
+        fout << " " << i << " " << poLayer->GetName() << ", geom type: " << (int)poLayer->GetGeomType() << endl;
+
+        poLayer->ResetReading();
+        int gi = 0;
+        OGRFeatureDefn* poFDefn = poLayer->GetLayerDefn();
+        for( int field = 0; field < poFDefn->GetFieldCount(); field++ ) {
+            OGRFieldDefn* poFieldDefn = poFDefn->GetFieldDefn( field );
+            fout << "   field name: " << poFieldDefn->GetNameRef() << ", type: " << poFieldDefn->GetType() << endl;
+        }
+
+        OGRFeature* poFeature = 0;
+        while( (poFeature = poLayer->GetNextFeature()) != NULL ) {
+            OGRFeatureDefn* poFDefn = poLayer->GetLayerDefn();
+            fout << " fields: ";
+            for( int field = 0; field < poFDefn->GetFieldCount(); field++ ) {
+                OGRFieldDefn* poFieldDefn = poFDefn->GetFieldDefn( field );
+                string name = poFieldDefn->GetNameRef();
+                OGRFieldType type = poFieldDefn->GetType();
+                string value = poFeature->GetFieldAsString(field);
+                fout << " (" << name << ", " << value << ", " << type << ")" << endl;
+            }
+            fout << endl;
+
+            OGRGeometry* geo = poFeature->GetGeometryRef();
+            if (geo) handleFeature(geo);
+            OGRFeature::DestroyFeature( poFeature );
+        }
+    }
+
+    fout.close();
+
+
+#if GDAL_VERSION_MAJOR < 2
+ 	OGRDataSource::DestroyDataSource(poDS);
+#else
+	GDALClose(poDS);
+#endif
+}
+
 OSG_END_NAMESPACE;
 
 

@@ -56,6 +56,11 @@ VRImport* VRImport::get() {
     return s;
 }
 
+void VRImport::analyze(string path, string out) {
+    string ext = getFileExtension(path);
+    if (ext == ".shp") analyzeSHP(path, out);
+}
+
 void VRImport::fixEmptyNames(NodeMTRecPtr o, map<string, bool>& m, string parentName, int iChild) {
     if (!OSG::getName(o)) OSG::setName(o, parentName);
 

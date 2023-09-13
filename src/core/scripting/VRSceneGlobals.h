@@ -16,6 +16,7 @@ class VRSceneGlobals: public VRPyBase {
 		static PyObject* exit(VRSceneGlobals* self);
 		static PyObject* find(VRSceneGlobals* self, PyObject *args);
 		static PyObject* findByID(VRSceneGlobals* self, PyObject *args);
+		static PyObject* analyzeFile(VRSceneGlobals* self, PyObject *args);
 		static PyObject* loadGeometry(VRSceneGlobals* self, PyObject *args, PyObject *kwargs);
 		static PyObject* getLoadGeometryProgress(VRSceneGlobals* self);
 		static PyObject* createPrimitive(VRSceneGlobals* self, PyObject *args, PyObject *kwargs);

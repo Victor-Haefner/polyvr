@@ -54,6 +54,7 @@ string loadGeometryDoc =
 PyMethodDef VRSceneGlobals::methods[] = {
 	{"exit", (PyCFunction)VRSceneGlobals::exit, METH_NOARGS, "Terminate application" },
 	{"loadGeometry", (PyCFunction)VRSceneGlobals::loadGeometry, METH_VARARGS|METH_KEYWORDS, loadGeometryDoc.c_str() },
+	{"analyzeFile", (PyCFunction)VRSceneGlobals::analyzeFile, METH_VARARGS, "Analyze a file, write to out (file, out), supported extensions: [shp]" },
 	{"exportToFile", (PyCFunction)VRSceneGlobals::exportToFile, METH_VARARGS, "Export a node ( object, path ), supported extensions: [wrl, wrz, obj, osb, osg, ply, gltf]" },
 	{"getLoadGeometryProgress", (PyCFunction)VRSceneGlobals::getLoadGeometryProgress, METH_VARARGS, "Return the progress object for geometry loading - getLoadGeometryProgress()" },
 	{"createPrimitive", (PyCFunction)VRSceneGlobals::createPrimitive, METH_VARARGS|METH_KEYWORDS, "Helper to create a geometric primitive (see setPrimitive for the params) with optional material or color - createPrimitive(name, params, [ parent, material, color] )" },
@@ -297,6 +298,14 @@ PyObject* VRSceneGlobals::createPrimitive(VRSceneGlobals* self, PyObject *args, 
     }
 
     return VRPyTypeCaster::cast(obj);
+}
+
+PyObject* VRSceneGlobals::analyzeFile(VRSceneGlobals* self, PyObject *args) {
+    const char* path = "";
+    const char* out = "";
+    if (! PyArg_ParseTuple(args, "ss", &path, &out)) return NULL;
+    if (path && out) VRImport::get()->analyze( path, out );
+    Py_RETURN_TRUE;
 }
 
 PyObject* VRSceneGlobals::exportToFile(VRSceneGlobals* self, PyObject *args) {

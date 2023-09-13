@@ -70,6 +70,7 @@ class VRImport {
         void addPath(string folder);
         bool checkPath(string& path);
 
+        void analyze(string path, string out);
         VRTransformPtr load(string path, VRObjectPtr parent = 0, bool useCache = true, string preset = "OSG", bool thread = false, map<string, string> options = map<string, string>(), bool useBinaryCache = false);
         VRGeometryPtr loadGeometry(string path, string name, string preset = "OSG", bool thread = false);
 
