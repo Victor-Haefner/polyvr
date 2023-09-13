@@ -173,7 +173,7 @@ class VRPointCloud : public VRTransform {
         void externalTransform(string path, PosePtr p);
         void externalSort(string path, size_t chunkSize, double binSize);
         void externalPartition(string path, float leafSize = 0);
-        void externalComputeSplats(string path, float neighborsRadius = 0.1, bool averageColors = false);
+        void externalComputeSplats(string path, float neighborsRadius = 0.1, bool averageColors = false, int threads = 1);
         void externalColorize(string path, string images, PosePtr pcPose, float localNorth, float localEast, float pDist, int i1, int i2);
 
         Vec3ub projectOnPanorama(Vec3d P, VRTexturePtr tex, PosePtr vP);

@@ -40,7 +40,7 @@ PyMethodDef VRPyPointCloud::methods[] = {
     {"externalTransform", PyWrap( PointCloud, externalTransform, "External transform of the points (path, pose)", void, string, PosePtr ) },
     {"externalSort", PyWrap( PointCloud, externalSort, "External sort, merge sort, only for PCB files, chunkSize in bytes to sort internal, bin size in m (path, chunkSize, binSize)", void, string, size_t, double ) },
     {"externalPartition", PyWrapOpt( PointCloud, externalPartition, "External partitioning, only for PCB files", "0", void, string, float) },
-    {"externalComputeSplats", PyWrapOpt( PointCloud, externalComputeSplats, "External algorithm to compute surface tangents and splat sizes, (path, splatRadius = 0.1, averageColors = false)", "0.1|0", void, string, float, bool) },
+    {"externalComputeSplats", PyWrapOpt( PointCloud, externalComputeSplats, "External algorithm to compute surface tangents and splat sizes, (path, splatRadius = 0.1, averageColors = false, Nthreads = 1)", "0.1|0|1", void, string, float, bool, int) },
     {"externalColorize", PyWrap( PointCloud, externalColorize, "External algorithm to colorize a pointcloud from panorama images, use the extras/utils/extractEXIF.sh script and give the path to the resulting dat file as second argument", void, string, string, PosePtr, float, float, float, int, int) },
     {"genTestFile", PyWrap( PointCloud, genTestFile, "Generate a pointcloud, regular cube grid, (.pcb) file (path, Npoints, doColors, pDist)", void, string, size_t, bool, float ) },
     {"genTestFile2", PyWrap( PointCloud, genTestFile2, "Generate a pointcloud, ico sphere surface, (.pcb) file (path, Niterations, doColors, splatSize[mm])", void, string, size_t, bool, int ) },

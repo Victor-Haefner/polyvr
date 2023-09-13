@@ -1216,7 +1216,7 @@ Color3ub VRPointCloud::averageColor(Vec3d p0, vector<Splat> neighbors) {
     return Color3ub(tmp[0], tmp[1], tmp[2]);
 }
 
-void VRPointCloud::externalComputeSplats(string path, float neighborsRadius, bool averageColors) {
+void VRPointCloud::externalComputeSplats(string path, float neighborsRadius, bool averageColors, int Nthreads) {
     VRExternalPointCloud epc(path);
     cout << "  externalComputeSplats headers " << toString(epc.params) << endl;
     if (!epc.hasOctree) { cout << "  externalPartition needs a PCB with an octree partition, please run externalSort and externalPartition on it first!" << endl; return; }
@@ -1249,7 +1249,6 @@ void VRPointCloud::externalComputeSplats(string path, float neighborsRadius, boo
     epcTimer.reset();
 
     epcTimer.start("total");
-    int Nthreads = 9;
     vector<Splat> splats(Nthreads);
     rsCaches = vector<OptRadiusSearch>(Nthreads);
 
