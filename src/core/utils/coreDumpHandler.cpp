@@ -23,10 +23,13 @@ void testSignal(int sig) {
 extern "C" void coreDump(int sig) {
     cout << "\n called PolyVR coreDump" << endl;
     static bool once = true;
-    if (!once) signal(sig, NULL);
-    else {
-        cout << "\n dump core to " << dumpFile << endl;
-        boost::filesystem::current_path(dumpPath);
+    if (!once) {
+        cout << "\n final signal " << endl;
+        signal(sig, NULL);
+    } else {
+        cout << "\n dump core, check in /var/lib/apport/coredump" << endl;
+        //cout << "\n dump core to " << dumpFile << endl;
+        //boost::filesystem::current_path(dumpPath); // TODO: doesnt work anymore, coredumps are in /var/lib/apport/coredump
     }
     once = false;
 #ifndef __EMSCRIPTEN__
@@ -52,8 +55,8 @@ void enableCoreDump(bool b) {
 
     // Enable core dumps
     struct rlimit corelim;
-    corelim.rlim_cur = -1;
-    corelim.rlim_max = -1;
+    corelim.rlim_cur = RLIM_INFINITY;
+    corelim.rlim_max = RLIM_INFINITY;
     if (setrlimit (RLIMIT_CORE, &corelim) != 0) cerr << "Couldn't set core limit\n";
 
     signal(SIGSEGV, &coreDump);

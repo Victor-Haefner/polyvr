@@ -248,7 +248,9 @@ void PolyVR::init(int argc, char **argv) {
     this->argv = argv;
 
     cout << "Init PolyVR" << endl << endl;
-    initQueue.push_back(VRUpdateCb::create( "init environment", bind(&PolyVR::initEnvironment, this)));
+    PolyVR::initEnvironment();
+
+    //initQueue.push_back(VRUpdateCb::create( "init environment", bind(&PolyVR::initEnvironment, this)));
     initQueue.push_back(VRUpdateCb::create( "init opensg", bind(&PolyVR::initOpenSG, this)));
     initQueue.push_back(VRUpdateCb::create( "init managers", bind(&PolyVR::initManagers, this)));
     initQueue.push_back(VRUpdateCb::create( "init ui", bind(&PolyVR::initUI, this)));
