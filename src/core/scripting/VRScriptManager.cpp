@@ -518,6 +518,51 @@ string pointCloudImport = TEMPLATE(
 \tVR.scene.addChild(pc)\n
 );
 
+string simpleVP =
+"#version 120\n"
+TEMPLATE(
+attribute vec4 osg_Vertex;\n
+attribute vec3 osg_Normal;\n
+attribute vec4 osg_Color;\n
+attribute vec2 osg_MultiTexCoord0;\n\n
+varying vec4 vertPos;\n
+varying vec3 vertNorm;\n
+varying vec4 color;\n
+void main(void) {\n
+\tvertPos = gl_ModelViewMatrix * osg_Vertex;\n
+\tvertNorm = gl_NormalMatrix * osg_Normal;\n
+\tgl_TexCoord[0] = vec4(osg_MultiTexCoord0,0.0,0.0);\n
+\tcolor = gl_Color;\n
+\tgl_Position = gl_ModelViewProjectionMatrix*osg_Vertex;\n
+}\n
+);
+
+string simpleFP =
+"#version 120\n"
+TEMPLATE(
+varying vec4 vertPos;\n
+varying vec3 vertNorm;\n
+varying vec4 color;\n
+uniform sampler2D tex0;\n\n
+void applyLightning() {\n
+\tvec3 n = normalize(vertNorm);\n
+\tvec3 light;\n
+\tif (gl_LightSource[0].position.w < 0.5) light = normalize( gl_LightSource[0].position.xyz ); // dir light\n
+\telse light = normalize( gl_LightSource[0].position.xyz - vertPos.xyz ); // pnt light\n
+\tfloat NdotL = max(dot( n, light ), 0.0);\n
+\tvec4 ambient = gl_LightSource[0].ambient * color;\n
+\tvec4 diffuse = gl_LightSource[0].diffuse * NdotL * color;\n
+\tfloat NdotHV = max(dot(n, normalize(gl_LightSource[0].halfVector.xyz)),0.0);\n
+\tvec4 specular = gl_LightSource[0].specular * pow( NdotHV, gl_FrontMaterial.shininess );\n
+\tgl_FragColor = ambient + diffuse + specular;\n
+}\n\n
+void main(void) {\n
+\tvec3 pos = vertPos.xyz / vertPos.w;\n
+\tvec4 diffCol = texture2D(tex0, gl_TexCoord[0].xy);\n
+\tapplyLightning();\n
+}\n
+);
+
 struct VRScriptTemplate {
     string name;
     string type;
@@ -573,7 +618,8 @@ void VRScriptManager::initTemplates() {
         addTemplate("scripts", "hudHandler", hudHandler);
         addTrigger("hudHandler", "on_device", "0", "server1", -1, "Released");
         addTemplate("websites", "hudSite", hudSite);
-        addTemplate("shaders", "test", "TODO");
+        addTemplate("shaders", "simpleVP", simpleVP);
+        addTemplate("shaders", "simpleFP", simpleFP);
         addTemplate("scripts", "restClient", restClient);
         addTemplate("scripts", "OrderedDict", OrderedDict);
         addTemplate("scripts", "pointCloudImport", pointCloudImport);
