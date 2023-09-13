@@ -87,6 +87,7 @@ struct VertexRing {
 struct sineFit {
     vector<double> guess;
     vector<double> fit; // A, w, p, c -> A sin ( w t + p ) +c
+    double quality = 0;
 };
 
 struct VertexPlane {
@@ -389,6 +390,22 @@ struct FunctorSine {
 
 const double pi = 3.14159;
 
+double CalculateSSR(const Eigen::VectorXd& observed, const Eigen::VectorXd& fitted) {
+    Eigen::VectorXd residuals = observed - fitted;
+    double ssr = residuals.squaredNorm();
+    return ssr;
+}
+
+double CalculateRSquared(const Eigen::VectorXd& observed, const Eigen::VectorXd& fitted) {
+    double ssr = CalculateSSR(observed, fitted);
+    double m = observed.mean();
+    vector<double> mv(observed.size(), m);
+    Eigen::VectorXd meanv = Map<VectorXd>(&mv[0], mv.size());
+    double sst = (observed - meanv).squaredNorm();
+    double rsquared = 1.0 - (ssr / sst);
+    return rsquared;
+}
+
 void VRGearSegmentation::computeSineApprox() {
     //Fit sin to the input time sequence, and store fitting parameters "amp", "omega", "phase", "offset", "freq", "period" and "fitfunc")
     for (VertexPlane& plane : planes) {
@@ -421,8 +438,8 @@ void VRGearSegmentation::computeSineApprox() {
         for (auto FyyMaxPos : freqs) {
             double guess_freq = abs(ff[FyyMaxPos]);
 
-            cout << "fft freq params: (" << X.size() << ", " << X[1]-X[0] << ")"<< endl;
-            cout << "fft results, peak at: " << FyyMaxPos << ", " << ff[FyyMaxPos] << ", Df: " << Vec2d(2*pi, Df) << endl;
+            //cout << "fft freq params: (" << X.size() << ", " << X[1]-X[0] << ")"<< endl;
+            //cout << "fft results, peak at: " << FyyMaxPos << ", " << ff[FyyMaxPos] << ", Df: " << Vec2d(2*pi, Df) << endl;
 
             sineFit sf;
             sf.guess = {guess_amp, Df*guess_freq, 0, guess_offset}; //
@@ -440,10 +457,20 @@ void VRGearSegmentation::computeSineApprox() {
                 lm.parameters.epsfcn = 0; // 0
                 int info = lm.minimize(x);
                 //int info = lm.lmder1(x,1e-5);
+                sf.fit = vector<double>( x.data(), x.data() + 4 );
+
+                /*vector<double> Yf(X.size(), 0);
+                for (int i=0; i<X.size(); i++) Yf[i] = sf.fit[0] * sin( sf.fit[1] * X[i] + sf.fit[2] ) + sf.fit[3];
+
+                VectorXd observed = Map<VectorXd>(&Y[0], Y.size());
+                VectorXd fitted   = Map<VectorXd>(&Yf[0], Yf.size());
+                double ssr = CalculateSSR(observed, fitted);
+                double rsquared = CalculateRSquared(observed, fitted);*/
 
                 //cout << "VRGearSegmentation::computeSineApprox minimize info: " << info << ", itrs: " << Vec2i(lm.nfev, lm.njev) << ", norm: " << Vec2d(lm.fnorm, lm.gnorm) << endl;
+                //cout << "VRGearSegmentation::computeSineApprox minimize info: " << info << ", (ssr, rsquared): " << Vec2d(sqrt(ssr), rsquared) << ", norm: " << Vec2d(lm.fnorm, lm.gnorm) << endl;
 
-                sf.fit = vector<double>( x.data(), x.data() + 4 );
+                sf.quality = lm.fnorm;
                 //sf.fit[1] *= 0.25;
                 //sf.sineFitFreq = sf.fit[1]/(2*pi);
             //}
@@ -475,19 +502,25 @@ void VRGearSegmentation::computeGearParams(int fN) {
         if (plane1.sineFits[fN].fit.size() == 0) continue;
         if (plane2.sineFits[fN].fit.size() == 0) continue;
 
+        auto& fit1 = plane1.sineFits[fN];
+        auto& fit2 = plane2.sineFits[fN];
+        //cout << "matching planes " << Vec2f(plane1.position, plane2.position) << ", fits: " << Vec2f(fit1.quality, fit2.quality) << endl;
+
         double rmin = plane1.rings[0].radius;
         double rmax = plane1.rings[ plane1.rings.size()-1 ].radius;
 
-		double r1 = rmax - 2*abs(plane1.sineFits[fN].fit[0]);
+		double r1 = rmax - 2*abs(fit1.fit[0]);
 		double ts = rmax - r1;
 		double R = rmax - ts*0.5;
-		double f = plane1.sineFits[fN].fit[1];
+		double f = fit1.fit[1];
 		//double pitch = R*sin(1.0/f)*4;
 		//double Nteeth = round(2*pi*R/pitch);
 		double Nteeth = round(f);
 		double pitch = 2*pi*R/Nteeth;
 		double width = abs(plane2.position - plane1.position);
 		double offset = (plane1.position+plane2.position)*0.5;
+
+		if (Nteeth < 4) continue;
 
         gears.push_back( {rmin, r1, R, ts, pitch, Nteeth, width, offset} );
         //cout << "- - - computeGearParams " << Vec4d(f, pitch, Nteeth, R) << endl;
