@@ -82,7 +82,7 @@ void loadSHP(string path, VRTransformPtr res, map<string, string> opts) {
         OGRPoint* pnt = (OGRPoint*)geo;
         Vec3d p = toVec3d(*pnt);
         Vec3d n = Vec3d(0,1,0);
-        Vec2d tc1 = Vec2d(fI, 0);
+        Vec2d tc1 = Vec2d(fI, geoCoords.size());
         geoCoords.push_back(p); // keep original coordinates
 
         if (pointSize > 0) {
@@ -111,7 +111,6 @@ void loadSHP(string path, VRTransformPtr res, map<string, string> opts) {
 
         Vec3d p, p1, p2, d, x;
         Vec3d n = Vec3d(0,1,0);
-        Vec2d tc = Vec2d(fI, 0);
 
         OGRPoint pnt;
         if (lineSize > 0) {
@@ -123,6 +122,8 @@ void loadSHP(string path, VRTransformPtr res, map<string, string> opts) {
                 line->getPoint(i, &pnt);
                 p2 = toVec3d(pnt);
 
+                Vec2d tc1 = Vec2d(fI, geoCoords.size());
+                Vec2d tc2 = Vec2d(fI, geoCoords.size()+1);
                 geoCoords.push_back(p1); // keep original coordinates
                 geoCoords.push_back(p2); // keep original coordinates
 
@@ -135,10 +136,10 @@ void loadSHP(string path, VRTransformPtr res, map<string, string> opts) {
                 Vec3d p21 = p2 + x*W;
                 Vec3d p22 = p2 - x*W;
 
-                data->pushVert(p11, n, tc);
-                data->pushVert(p21, n, tc);
-                data->pushVert(p22, n, tc);
-                data->pushVert(p12, n, tc);
+                data->pushVert(p11, n, tc1);
+                data->pushVert(p21, n, tc2);
+                data->pushVert(p22, n, tc2);
+                data->pushVert(p12, n, tc1);
                 data->pushQuad();
             }
         } else {
@@ -146,7 +147,7 @@ void loadSHP(string path, VRTransformPtr res, map<string, string> opts) {
             for (int i=0; i<line->getNumPoints(); i++) {
                 line->getPoint(i, &pnt);
                 p = toVec3d(pnt);
-                Vec2d tc = Vec2d(fI, 0);
+                Vec2d tc = Vec2d(fI, geoCoords.size());
                 geoCoords.push_back(p); // keep original coordinates
                 data->pushVert(p, n, tc);
                 if (i > 0) data->pushLine();
@@ -388,7 +389,7 @@ void writeSHP(VRObjectPtr obj, string path, map<string, string> options) {
 
             if (layerType == wkbPoint) {
                 Vec2d t = data.getTexCoord(f[0]);
-                Vec3d p = geoCoords[f[0]];
+                Vec3d p = geoCoords[t[1]];
                 OGRPoint point = toOGRPoint(p);
                 feature->SetGeometry(&point);
             }
@@ -397,7 +398,8 @@ void writeSHP(VRObjectPtr obj, string path, map<string, string> options) {
                 if (f[1] == f[0]) continue; // may happen if edge is deleted
                 OGRLineString line;
                 for (size_t i=f[0]; i<=f[1]; i++) {
-                    Vec3d p = geoCoords[i];
+                    Vec2d t = data.getTexCoord(i);
+                    Vec3d p = geoCoords[t[1]];
                     OGRPoint point = toOGRPoint(p);
                     //line.addPoint(&point);
                     line.addPoint(point.getX(), point.getY(), point.getZ());
