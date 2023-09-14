@@ -24,6 +24,7 @@
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/material/VRTexture.h"
+#include "core/objects/object/VRObjectT.h"
 #include "core/objects/VRTransform.h"
 #include "core/math/polygon.h"
 #include "core/math/triangulator.h"
@@ -35,7 +36,10 @@
 #include "addons/Semantics/Reasoning/VRProperty.h"
 #include <OpenSG/OSGGeoProperties.h>
 
-
+// TODO: why on earth do I need that?? should be in toString
+template<> string typeName< vector<OSG::Vec3d> >( vector<OSG::Vec3d> const *) { return ""; }
+template<> int toValue<vector<OSG::Vec3d > >(stringstream&, vector<OSG::Vec3d >&) { return 0; }
+template<> string toString<vector<OSG::Vec3d > >(vector<OSG::Vec3d > const&) { return ""; }
 
 #include <string>
 
@@ -72,13 +76,14 @@ void loadSHP(string path, VRTransformPtr res, map<string, string> opts) {
     Layer->addProperty("type", "int");
     Layer->addProperty("features", "Shape");
 
+    vector<Vec3d> geoCoords;
 
     auto handlePoint = [&](OGRGeometry* geo, VRGeoDataPtr data, size_t fI) {
         OGRPoint* pnt = (OGRPoint*)geo;
         Vec3d p = toVec3d(*pnt);
         Vec3d n = Vec3d(0,1,0);
-        Vec2d tc1 = Vec2d(fI, p[0]);
-        Vec2d tc2 = Vec2d(p[1], p[2]); // keep original point in tex coords
+        Vec2d tc1 = Vec2d(fI, 0);
+        geoCoords.push_back(p); // keep original coordinates
 
         if (pointSize > 0) {
             float W2 = pointSize; //0.00002;
@@ -90,13 +95,13 @@ void loadSHP(string path, VRTransformPtr res, map<string, string> opts) {
             Vec3d p21 = p - x1*W2 + x2*W2;
             Vec3d p22 = p - x1*W2 - x2*W2;
 
-            data->pushVert(p11, n, tc1, tc2);
-            data->pushVert(p12, n, tc1, tc2);
-            data->pushVert(p22, n, tc1, tc2);
-            data->pushVert(p21, n, tc1, tc2);
+            data->pushVert(p11, n, tc1);
+            data->pushVert(p12, n, tc1);
+            data->pushVert(p22, n, tc1);
+            data->pushVert(p21, n, tc1);
             data->pushQuad();
         } else {
-            data->pushVert(p, n, tc1, tc2);
+            data->pushVert(p, n, tc1);
             data->pushPoint();
         }
     };
@@ -106,6 +111,7 @@ void loadSHP(string path, VRTransformPtr res, map<string, string> opts) {
 
         Vec3d p, p1, p2, d, x;
         Vec3d n = Vec3d(0,1,0);
+        Vec2d tc = Vec2d(fI, 0);
 
         OGRPoint pnt;
         if (lineSize > 0) {
@@ -117,10 +123,8 @@ void loadSHP(string path, VRTransformPtr res, map<string, string> opts) {
                 line->getPoint(i, &pnt);
                 p2 = toVec3d(pnt);
 
-                Vec2d tc11 = Vec2d(fI, p1[0]);
-                Vec2d tc12 = Vec2d(p1[1], p1[2]); // keep original point in tex coords
-                Vec2d tc21 = Vec2d(fI, p2[0]);
-                Vec2d tc22 = Vec2d(p2[1], p2[2]); // keep original point in tex coords
+                geoCoords.push_back(p1); // keep original coordinates
+                geoCoords.push_back(p2); // keep original coordinates
 
                 d = (p2-p1);
                 d.normalize();
@@ -131,10 +135,10 @@ void loadSHP(string path, VRTransformPtr res, map<string, string> opts) {
                 Vec3d p21 = p2 + x*W;
                 Vec3d p22 = p2 - x*W;
 
-                data->pushVert(p11, n, tc11, tc12);
-                data->pushVert(p21, n, tc21, tc22);
-                data->pushVert(p22, n, tc21, tc22);
-                data->pushVert(p12, n, tc11, tc12);
+                data->pushVert(p11, n, tc);
+                data->pushVert(p21, n, tc);
+                data->pushVert(p22, n, tc);
+                data->pushVert(p12, n, tc);
                 data->pushQuad();
             }
         } else {
@@ -142,9 +146,9 @@ void loadSHP(string path, VRTransformPtr res, map<string, string> opts) {
             for (int i=0; i<line->getNumPoints(); i++) {
                 line->getPoint(i, &pnt);
                 p = toVec3d(pnt);
-                Vec2d tc1 = Vec2d(fI, p[0]);
-                Vec2d tc2 = Vec2d(p[1], p[2]); // keep original point in tex coords
-                data->pushVert(p, n, tc1, tc2);
+                Vec2d tc = Vec2d(fI, 0);
+                geoCoords.push_back(p); // keep original coordinates
+                data->pushVert(p, n, tc);
                 if (i > 0) data->pushLine();
                 if (verbose) cout << "  line point " << p << endl;
             }
@@ -262,6 +266,7 @@ void loadSHP(string path, VRTransformPtr res, map<string, string> opts) {
         if (data->size() > 0) {
             auto vlayer = data->asGeometry(layer_name);
             vlayer->setEntity(entLayer);
+            vlayer->addAttachment<vector<Vec3d>>("geoCoords", geoCoords);
             res->addChild(vlayer);
         }
     }
@@ -291,6 +296,7 @@ void writeSHP(VRObjectPtr obj, string path, map<string, string> options) {
         VREntityPtr layerEntity = geo->getEntity();
         if (!layerEntity) continue;
 
+        vector<Vec3d> geoCoords = geo->getAttachment<vector<Vec3d>>("geoCoords");
         VRGeoData data(geo);
         if (data.size() == 0) continue;
 
@@ -382,8 +388,8 @@ void writeSHP(VRObjectPtr obj, string path, map<string, string> options) {
 
             if (layerType == wkbPoint) {
                 Vec2d t = data.getTexCoord(f[0]);
-                Pnt3d p = data.getPosition(f[0]);
-                OGRPoint point = toOGRPoint(Vec3d(p));
+                Vec3d p = geoCoords[f[0]];
+                OGRPoint point = toOGRPoint(p);
                 feature->SetGeometry(&point);
             }
 
@@ -391,9 +397,8 @@ void writeSHP(VRObjectPtr obj, string path, map<string, string> options) {
                 if (f[1] == f[0]) continue; // may happen if edge is deleted
                 OGRLineString line;
                 for (size_t i=f[0]; i<=f[1]; i++) {
-                    Vec2d t1 = data.getTexCoord(i);
-                    Vec2d t2 = data.getTexCoord2(i);
-                    OGRPoint point = toOGRPoint(Vec3d(t1[1], t2[0], t2[1]));
+                    Vec3d p = geoCoords[i];
+                    OGRPoint point = toOGRPoint(p);
                     //line.addPoint(&point);
                     line.addPoint(point.getX(), point.getY(), point.getZ());
                 }
