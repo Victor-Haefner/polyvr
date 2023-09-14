@@ -68,7 +68,13 @@ class VRCOLLADA_Scene {
 		void finalize() {
 		    scheduler->callPostponed(true);
 
-		    map<VRObjectPtr, VRObjectPtr> toReparent; // child -> parent
+		    struct reparentJob {
+                VRObjectPtr object;
+                VRObjectPtr newParent;
+                int childIndex;
+		    };
+
+		    vector<reparentJob> toReparent;
 		    vector<VRObjectPtr> toDestroy;
 
 		    auto geos = root->getChildren(true, "Geometry");
@@ -76,16 +82,14 @@ class VRCOLLADA_Scene {
                 auto geo = dynamic_pointer_cast<VRTransform>(g);
                 auto trans = dynamic_pointer_cast<VRTransform>(g->getParent());
                 if (!geo || !trans) continue;
+                if (trans->getChildrenCount() != 1) continue;
                 auto parent = trans->getParent();
                 if (!parent) continue;
+                int cI = trans->getChildIndex();
 
                 geo->setPose(trans->getPose());
-                toReparent[geo] = parent;
-                /*for (auto child : trans->getChildren()) {
-                    cout << " finalize:  add '" << child->getName() << "' to '" << geo->getName() << "'" << endl;
-                    //geo->addChild(child);
-                    toReparent[child] = geo;
-                }*/
+                toReparent.push_back({geo, parent, cI});
+                toDestroy.push_back(trans);
 
                 for (auto o : objects) {
                     if (auto O = o.second.lock()) {
@@ -95,11 +99,11 @@ class VRCOLLADA_Scene {
                         }
                     }
                 }
-
-                toDestroy.push_back(trans);
 		    }
 
-		    for (auto cp : toReparent) cp.second->addChild(cp.first);
+		    for (auto j : toReparent) {
+                j.newParent->addChild(j.object, j.childIndex);
+		    }
 		    for (auto c : toDestroy) c->destroy();
         }
 
@@ -153,8 +157,9 @@ class VRCOLLADA_Scene {
             objects[id] = obj;
 
             auto parent = top();
-            if (parent) parent->addChild(obj);
-            else {
+            if (parent) {
+                parent->addChild(obj);
+            } else {
                 if (currentSection == "library_nodes") library_nodes[id] = obj;
                 if (currentSection == "library_visual_scenes") library_scenes[id] = obj;
             }
