@@ -65,10 +65,11 @@ class VRGearSegmentation {
         vector<Vec2d> getPlaneVertices(size_t i);
         vector<Vec2d> getPlaneContour(size_t i);
         vector<double> getPlaneFrequencies(size_t i);
-        vector<double> getPlaneSineGuess(size_t i, size_t sf);
-        vector<double> getPlaneSineApprox(size_t i, size_t sf);
+        vector<double> getPlaneSineGuess(size_t i, size_t sf = 0);
+        vector<double> getPlaneSineApprox(size_t i, size_t sf = 0);
 
         VRTransformPtr getContourViz();
+        VRTransformPtr getSineFitViz(int precision = 360);
 };
 
 OSG_END_NAMESPACE;

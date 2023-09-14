@@ -520,6 +520,7 @@ void VRGearSegmentation::computeGearParams(int fN) {
 		double width = abs(plane2.position - plane1.position);
 		double offset = (plane1.position+plane2.position)*0.5;
 
+        //cout << " possible gear " << Vec4d(f, pitch, Nteeth, R) << endl;
 		if (Nteeth < 4) continue;
 
         gears.push_back( {rmin, r1, R, ts, pitch, Nteeth, width, offset} );
@@ -528,6 +529,7 @@ void VRGearSegmentation::computeGearParams(int fN) {
 }
 
 void VRGearSegmentation::analyse(VRObjectPtr o) {
+    if (!o) return;
     obj = o;
     cout << "VRGearSegmentation::analyse " << o->getName() << endl;
     cout << "  computeAxis" << endl;
@@ -590,6 +592,41 @@ vector<Vec2d> VRGearSegmentation::getPlaneVertices(size_t i) {
     vector<Vec2d> vp;
     for (auto& v : planes[i].vertices) vp.push_back(v.polarCoords);
     return vp;
+}
+
+VRTransformPtr VRGearSegmentation::getSineFitViz(int precision) {
+    auto m = VRMaterial::create("cMat");
+    m->setLineWidth(2);
+    m->setDiffuse(Color3f(0,0,0));
+    m->setLit(0);
+
+    auto res = VRTransform::create("gearSineFits");
+	auto pc = getPolarCoords();
+    size_t Np = getNPlanes();
+    for (int i=0; i<Np; i++) {
+        auto s = getPlaneSineApprox(i);
+        if (s.size() != 4) continue;
+        cout << "sineApprox " << i << " " << toString(s) << endl;
+        auto p = getPlanePosition(i);
+        VRGeoData curve;
+        int j = precision;
+        for (int i=0; i<precision; i++) {
+            float a = i*2*pi/(precision-1);
+            float r = s[0] * sin(s[1]*a + s[2]) + s[3];
+            float x = r*cos(a);
+            float y = r*sin(a);
+            Vec3d v = p*axis + axisOffset + pc->transform(Vec3d(x,y,0), false);
+            curve.pushVert(v);
+            curve.pushLine(i, j%precision);
+            j = i;
+        }
+
+        auto geo = curve.asGeometry("curve"+toString(i));
+        geo->setMaterial(m);
+        res->addChild(geo);
+    }
+
+    return res;
 }
 
 VRTransformPtr VRGearSegmentation::getContourViz() {

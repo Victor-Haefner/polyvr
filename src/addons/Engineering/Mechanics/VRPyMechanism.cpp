@@ -44,6 +44,7 @@ PyMethodDef VRPyGearSegmentation::methods[] = {
     {"printResults", PyWrap(GearSegmentation, printResults, "Output results to console", void) },
     {"createGear", PyWrap(GearSegmentation, createGear, "Create a gear geometry based on analysis", VRGeometryPtr, size_t) },
     {"getContourViz", PyWrap(GearSegmentation, getContourViz, "Create a visual for the segmented contours", VRTransformPtr) },
+    {"getSineFitViz", PyWrapOpt(GearSegmentation, getSineFitViz, "Create a visual for the fitted sine functions", "360", VRTransformPtr, int) },
     {NULL}  /* Sentinel */
 };
 
