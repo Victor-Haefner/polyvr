@@ -93,11 +93,12 @@ void ImScriptList::setColor(string name, string fg, string bg) {
 
 void ImScriptList::computeMinWidth() {
     ImGuiStyle& style = ImGui::GetStyle();
+    int nIndent = 8; // for groups
     width = 50;
     for (auto& g : groups) {
         for (auto& s : g.second.scripts) {
             auto R = ImGui::CalcTextSize( s.name.c_str() ).x + style.FramePadding.x * 2.0f;
-            width = max(width, R+20);
+            width = max(width, R+20+nIndent);
         }
     }
 }
