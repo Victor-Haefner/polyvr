@@ -874,6 +874,12 @@
 			<Option target="Release" />
 			<Option target="PVR-Addons-d" />
 		</Unit>
+		<Unit filename="src/addons/Engineering/Mechanics/VRPolarVertex.cpp">
+			<Option target="PVR-Addons-d" />
+		</Unit>
+		<Unit filename="src/addons/Engineering/Mechanics/VRPolarVertex.h">
+			<Option target="PVR-Addons-d" />
+		</Unit>
 		<Unit filename="src/addons/Engineering/Mechanics/VRPyMechanism.cpp">
 			<Option target="Release" />
 			<Option target="PVR-Addons-d" />

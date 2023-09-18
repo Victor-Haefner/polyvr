@@ -4,6 +4,7 @@
 #include <OpenSG/OSGConfig.h>
 #include "core/objects/VRObjectFwd.h"
 #include "VRMechanismFwd.h"
+#include "VRPolarVertex.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;

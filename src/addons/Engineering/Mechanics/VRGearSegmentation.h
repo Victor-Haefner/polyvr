@@ -5,11 +5,11 @@
 #include "core/objects/VRObjectFwd.h"
 #include "core/math/VRMathFwd.h"
 #include "VRMechanismFwd.h"
+#include "VRPolarVertex.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-struct GearVertex;
 struct VertexPlane;
 
 class VRGearSegmentation {
