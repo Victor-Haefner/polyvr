@@ -32,6 +32,7 @@
 
 
 void getMemUsage(double& vm_usage, double& resident_set) {
+#ifndef WIN32
    using std::ios_base;
    using std::ifstream;
    using std::string;
@@ -63,8 +64,9 @@ void getMemUsage(double& vm_usage, double& resident_set) {
    stat_stream.close();
 
    long page_size_kb = sysconf(_SC_PAGE_SIZE) / 1024; // in case x86-64 is configured to use 2MB pages
-   vm_usage     = vsize / 1024.0;
    resident_set = rss * page_size_kb;
+   vm_usage     = vsize / 1024.0;
+#endif
 }
 
 string getSystemVariable(string name) {

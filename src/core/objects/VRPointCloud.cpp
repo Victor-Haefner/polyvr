@@ -161,7 +161,7 @@ void VRExternalPointCloud::printOctree() {
     stream.seekg(ocTree, ios::beg);
     for (int i=0; i<nodeCount; i++) {
         OcSerialNode node;
-        size_t pos = stream.tellg() - ocTree;
+        size_t pos = size_t(stream.tellg()) - ocTree;
         stream.read((char*)&node, ocNodeBinSize);
         printNode(node, pos, "");
     }
@@ -1234,7 +1234,7 @@ void VRPointCloud::externalComputeSplats(string path, float neighborsRadius, boo
         VRExternalPointCloud wepc(wpath);
         ofstream tmp(wpath, ios::app);
         size_t p = tmp.tellp();
-        startPnt = (tmp.tellp() - wepc.binPntsStart) / wepc.binPntSize;
+        startPnt = (p - wepc.binPntsStart) / wepc.binPntSize;
         tmp.close();
         stream.seekg(epc.binPntsStart + epc.binPntSize*startPnt, ios::beg);
         cout << "  resume at pnt " << startPnt << ", p: " << p << endl;

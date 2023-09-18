@@ -644,6 +644,14 @@ link_directories(${LIB_DIRS})
 add_executable(polyvr src/main.cpp)
 target_sources(polyvr PRIVATE src/PolyVR.cpp)
 
+# command to run polyvr after building within visual studio
+if(WIN32)
+add_custom_command(TARGET polyvr POST_BUILD
+    COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/start-win2.bat
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+)
+endif()
+
 # start with optional stuff
 
 if(NOT WASM)
@@ -686,6 +694,7 @@ target_sources(polyvr PRIVATE src/core/tools/VRQRCode.cpp) # needs qrencode
 endif()
 
 if(NOT WITHOUT_EIGEN)
+target_sources(polyvr PRIVATE src/addons/Engineering/Mechanics/VRPolarVertex.cpp)
 target_sources(polyvr PRIVATE src/addons/Engineering/Mechanics/VRGearSegmentation.cpp) # needs eigen
 target_sources(polyvr PRIVATE src/addons/Engineering/Mechanics/VRAxleSegmentation.cpp) # needs eigen
 endif()

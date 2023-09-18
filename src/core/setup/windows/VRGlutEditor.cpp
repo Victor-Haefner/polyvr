@@ -336,7 +336,7 @@ void VRGlutEditor::on_ui_resize(int w, int h) {
 }
 
 void VRGlutEditor::on_popup_display() {
-    //cout << "  Glut::on_ui_display " << winUI << endl;
+    //cout << "  Glut::on_popup_display " << winUI << endl;
     if (winPopup < 0) return;
     glutSetWindow(winPopup);
     if (signal) signal( "glutRenderPopup", {{"name",popup}} );

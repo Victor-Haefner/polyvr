@@ -23,6 +23,7 @@ examples/tmp_pics/
 examples/GPUCache
 extras/python/Leap/*.pyc
 extras/python/Myo/*.pyc
+extras/utils/Output
 examples/vals*.dat
 *blend1
 .local*

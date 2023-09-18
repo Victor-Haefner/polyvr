@@ -539,10 +539,13 @@ ImFileDialog::ImFileDialog() : ImDialog("file"), scaleInput("geoScale", "Scale:"
     mgr->addCallback("set_file_dialog_options", [&](OSG::VRGuiSignals::Options o){ options = o["options"]; return true; } );
 }
 
+IGFD::FileDialog* imGuiFileDialogInstance = 0;
+
 void ImFileDialog::begin() {
     if (!internalOpened) {
         internalOpened = true;
-        ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgKey", title.c_str(), filters.c_str(), startDir.c_str(), startFile.c_str());
+        imGuiFileDialogInstance = new IGFD::FileDialog();
+        imGuiFileDialogInstance->OpenDialog("ChooseFileDlgKey", title.c_str(), filters.c_str(), startDir.c_str(), startFile.c_str());
     }
 
     bool doGeoOpts = bool(options == "geoOpts");
@@ -551,14 +554,15 @@ void ImFileDialog::begin() {
     ImVec2 minSize = ImGui::GetWindowSize();
     if (doGeoOpts) minSize.y *= 0.9;
     ImGui::SetNextWindowPos(ImVec2(surface.x, surface.y));
-    if (ImGuiFileDialog::Instance()->Display("ChooseFileDlgKey", flags, minSize, minSize)) {
-        if (ImGuiFileDialog::Instance()->IsOk()) {
-            std::string fileName = ImGuiFileDialog::Instance()->GetFilePathName();
-            std::string filePath = ImGuiFileDialog::Instance()->GetCurrentPath();
+    if (imGuiFileDialogInstance->Display("ChooseFileDlgKey", flags, minSize, minSize)) {
+        if (imGuiFileDialogInstance->IsOk()) {
+            std::string fileName = imGuiFileDialogInstance->GetFilePathName();
+            std::string filePath = imGuiFileDialogInstance->GetCurrentPath();
             signal(sig, {{"fileName",fileName},{"filePath",filePath}});
         }
 
-        ImGuiFileDialog::Instance()->Close();
+        imGuiFileDialogInstance->Close();
+        delete imGuiFileDialogInstance;
         signal("ui_close_popup", {});
         internalOpened = false;
     }

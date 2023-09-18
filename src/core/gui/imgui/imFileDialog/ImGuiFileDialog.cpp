@@ -3981,8 +3981,6 @@ namespace IGFD
 					res = prDrawFooter(); // file field, filter combobox, ok/cancel buttons
 
 					EndFrame();
-
-
 				}
 				ImGui::EndChild();
 
