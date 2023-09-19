@@ -269,6 +269,12 @@ void VRImport::LoadJob::load(VRThreadWeakPtr tw) {
         if (ext == ".tiff" || ext == ".tif") { loadTIFF(path, res, options); return; }
         if (ext == ".hgt") { loadTIFF(path, res, options); return; }
 #endif
+        if (preset == "DXF") {
+            if (ext == ".dxf" || ext == ".DXF") {
+                loadDXF(path, res);
+                return;
+            }
+        }
 #ifndef WITHOUT_DWG
         if (ext == ".dwg" || ext == ".dxf" || ext == ".DWG" || ext == ".DXF") {
             loadDWG(path, res, options);

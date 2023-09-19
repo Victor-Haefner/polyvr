@@ -287,6 +287,7 @@ void VRAppManager::writeGitignore(string path) {
     f << "blob_storage" << endl;
     f << "GPUCache" << endl;
     f << "imgui.ini" << endl;
+    f << ".*.osb" << endl;
 }
 
 void VRAppManager::on_diag_new_clicked(string path) {

@@ -93,12 +93,15 @@ void ImScriptList::setColor(string name, string fg, string bg) {
 
 void ImScriptList::computeMinWidth() {
     ImGuiStyle& style = ImGui::GetStyle();
-    int nIndent = 8; // for groups
+    int padding = 20;
+    if (groupsList.size() > 1) padding += 8; // for groups
+    if (doPerf) padding += 50;
     width = 50;
+    width = max(width, float(Rinput+padding));
     for (auto& g : groups) {
         for (auto& s : g.second.scripts) {
             auto R = ImGui::CalcTextSize( s.name.c_str() ).x + style.FramePadding.x * 2.0f;
-            width = max(width, R+20+nIndent);
+            width = max(width, R+padding);
         }
     }
 }
@@ -106,6 +109,7 @@ void ImScriptList::computeMinWidth() {
 void ImScriptList::renderScriptEntry(ImScriptEntry& scriptEntry) {
     string& script = scriptEntry.name;
     string bID = script + "##script";
+    if (!input) input = new ImInput("##renameScript", "", "Script0", ImGuiInputTextFlags_EnterReturnsTrue);
     //ImVec4 colorSelected(0.3f, 0.5f, 1.0f, 1.0f);
     bool isSelected = bool(selected == bID);
     //if (isSelected) ImGui::PushStyleColor(ImGuiCol_Button, colorSelected);
@@ -116,6 +120,7 @@ void ImScriptList::renderScriptEntry(ImScriptEntry& scriptEntry) {
         if (ImGui::Button(bID.c_str())) {
             selected = bID;
             uiSignal("select_script", {{"script",script}});
+            if (input) input->value = script;
         }
 
 		ImGui::PopStyleColor();
@@ -126,15 +131,15 @@ void ImScriptList::renderScriptEntry(ImScriptEntry& scriptEntry) {
 		ImGui::PushStyleColor(ImGuiCol_Border, colorFromString("#66AAFF"));
 		ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 2);
 
-        if (!input) input = new ImInput("##renameScript", "", "Script0", ImGuiInputTextFlags_EnterReturnsTrue);
-        input->value = script;
-        if (input->render(-1)) {
+        ImGuiStyle& style = ImGui::GetStyle();
+        Rinput = ImGui::CalcTextSize( input->value.c_str() ).x + style.FramePadding.x * 2.0f + 5;
+        if (input->render(Rinput)) {
             script = input->value;
             selected = bID;
             uiSignal("rename_script", {{"name",script}});
             uiSignal("select_script", {{"script",script}});
-            computeMinWidth();
         }
+        computeMinWidth();
 
 		ImGui::PopStyleVar();
 		ImGui::PopStyleColor();

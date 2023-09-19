@@ -28,6 +28,7 @@ class ImScriptList {
     public:
         bool doPerf = false;
         float width = 50;
+        int Rinput = 0;
 
     private:
         map<string, ImScriptGroup> groups;

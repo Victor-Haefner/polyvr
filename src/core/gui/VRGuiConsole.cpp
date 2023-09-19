@@ -154,7 +154,7 @@ void VRConsoleWidget::on_link_activate(string mark) {
 
 void VRConsoleWidget::update() {
     VRLock lock(mtx);
-    if (msg_queue.size() > 0) cout << "VRConsoleWidget::update " << msg_queue.size() << endl;
+    //if (msg_queue.size() > 0) cout << "VRConsoleWidget::update " << msg_queue.size() << endl;
     while(!msg_queue.empty()) {
         auto& msg = msg_queue.front();
 

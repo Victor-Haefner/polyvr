@@ -115,7 +115,7 @@ typedef function<string(string, size_t)> serverCb;
 PyMethodDef VRPyTCPServer::methods[] = {
     {"listen", PyWrapOpt(TCPServer, listen, "Listen on port", "", void, int, string) },
     {"close", PyWrap(TCPServer, close, "Close server", void) },
-    {"onMessage", PyWrap(TCPServer, onMessage, "Set onMessage callback", void, serverCb) },
+    {"onMessage", PyWrap(TCPServer, onMessage, "Set onMessage callback, callback signature:  cb(msg, uID)", void, serverCb) },
     {NULL}  /* Sentinel */
 };
 
