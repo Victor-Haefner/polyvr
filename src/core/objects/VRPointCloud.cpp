@@ -558,7 +558,8 @@ void VRPointCloud::setupLODs() {
     //cout << " VRPointCloud::setupLODs" << endl;
     lodsSetUp = true;
 
-    float rangeModifier = 5.0;//2.0; // TODO: pass as parameter
+    float rangeModifier = 5.0;//2.0; // TODO: pass as parameter, bigger means lod visible from farther
+
 
     //cout << "  octree leafsize: " << octree->getLeafSize() << ", depth: " << octree->getDepth() << endl;
     auto root = octree->getRoot();
