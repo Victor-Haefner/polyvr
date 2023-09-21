@@ -16,6 +16,7 @@ class VRGlutEditor: public VRWindow {
         int winGL = -1;
         int winUI = -1;
         int winPopup = -1;
+        VRHeadMountedDisplayPtr hmd;
         bool fullscreen = false;
         bool glViewFocussed = true;
         string popup;

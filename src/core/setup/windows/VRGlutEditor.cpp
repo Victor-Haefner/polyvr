@@ -14,6 +14,10 @@
 #include "core/gui/imgui/VRImguiManager.h"
 #include "glut/VRGlutExtensions.h"
 
+#ifndef WITHOUT_OPENVR
+#include "VRHeadMountedDisplay.h"
+#endif
+
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
@@ -60,6 +64,11 @@ void testGLCapabilities() {
 VRGlutEditor::VRGlutEditor() {
     cout << "Glut: New Editor" << endl;
     type = "glutEditor";
+
+#ifndef WITHOUT_OPENVR
+    if (VRHeadMountedDisplay::checkDeviceAttached())
+        hmd = VRHeadMountedDisplay::create();
+#endif
 
     initGlut();
 
@@ -114,6 +123,11 @@ VRGlutEditor::VRGlutEditor() {
     win->setSize(width, height);
     cout << "  init OpenSG GLUT window" << endl;
     win->init();
+#ifndef WITHOUT_OPENVR
+    if (hmd) {
+        hmd->initHMD();
+    }
+#endif
 
     glutDisplayFunc( onGLDisplay );
     glutReshapeFunc(glutEResize);
@@ -318,6 +332,11 @@ void VRGlutEditor::on_gl_display() {
     int w = glutGet(GLUT_WINDOW_WIDTH); // calling glutGet somehow magically fixes the resize glitches..
     int h = glutGet(GLUT_WINDOW_HEIGHT);
     //if (signal) signal( "glutRenderGL", {} );
+#ifndef WITHOUT_OPENVR
+    if (hmd) {
+        hmd->render();
+    }
+#endif
     VRWindow::render();
 }
 

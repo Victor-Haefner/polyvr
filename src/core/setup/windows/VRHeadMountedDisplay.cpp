@@ -90,7 +90,11 @@ VRHeadMountedDisplayPtr VRHeadMountedDisplay::ptr() { return static_pointer_cast
 VRHeadMountedDisplayPtr VRHeadMountedDisplay::create() { return VRHeadMountedDisplayPtr(new VRHeadMountedDisplay()); }
 
 bool VRHeadMountedDisplay::checkDeviceAttached() {
-	return vr::VR_IsHmdPresent();
+	cout << " check for HMD.." << endl;
+	bool b = vr::VR_IsHmdPresent();
+	if (b) cout << "  .. found a HMD!" << endl;
+	else   cout << "  .. no HMD found!" << endl;
+	return b;
 }
 
 void VRHeadMountedDisplay::initFBO() {
@@ -175,6 +179,10 @@ void VRHeadMountedDisplay::setScene() {
 }
 
 void VRHeadMountedDisplay::initHMD() {
+	static bool initiated = false;
+	if (initiated) return;
+	initiated = true;
+
 	cout << "VRHeadMountedDisplay: init" << endl;
 
 	m_rTrackedDevicePose.resize(vr::k_unMaxTrackedDeviceCount);
@@ -210,6 +218,7 @@ void VRHeadMountedDisplay::initHMD() {
 
 	//loadActionSettings();
 	valid = true;
+	cout << "HMD initiated successfully!" << endl;
 }
 
 void VRHeadMountedDisplay::updateTexID(VRTextureRendererPtr renderer, unsigned int& tID) {
@@ -231,7 +240,6 @@ void VRHeadMountedDisplay::updateTexID(VRTextureRendererPtr renderer, unsigned i
 
 void VRHeadMountedDisplay::render(bool fromThread) {
 	if (fromThread || !fboData  || !m_pHMD) return;
-
 	setScene(); // TODO: put this in callback when new scene
 
 //#ifdef _WIN32
@@ -241,17 +249,17 @@ void VRHeadMountedDisplay::render(bool fromThread) {
 //#endif
 
 	updateTexID(fboData->rendererL, texIDL);
-	vr::Texture_t leftEyeTexture;  //= { (void*)(uintptr_t)texIDL, vr::TextureType_OpenGL, vr::ColorSpace_Gamma };
-	leftEyeTexture.eColorSpace = vr::ColorSpace_Gamma;
+	vr::Texture_t leftEyeTexture = { (void*)(uintptr_t)texIDL, vr::TextureType_OpenGL, vr::ColorSpace_Gamma };
+	/*leftEyeTexture.eColorSpace = vr::ColorSpace_Gamma;
 	leftEyeTexture.eType = ttype;
-	leftEyeTexture.handle = (void*)(uintptr_t)texIDL;
+	leftEyeTexture.handle = (void*)(uintptr_t)texIDL;*/
 	vr::VRCompositor()->Submit(vr::Eye_Left , &leftEyeTexture);
 
 	updateTexID(fboData->rendererR, texIDR);
-	vr::Texture_t rightEyeTexture; //= { (void*)(uintptr_t)texIDR, vr::TextureType_OpenGL, vr::ColorSpace_Gamma };
-	rightEyeTexture.eColorSpace = vr::ColorSpace_Gamma;
+	vr::Texture_t rightEyeTexture = { (void*)(uintptr_t)texIDR, vr::TextureType_OpenGL, vr::ColorSpace_Gamma };
+	/*rightEyeTexture.eColorSpace = vr::ColorSpace_Gamma;
 	rightEyeTexture.eType = ttype;
-	rightEyeTexture.handle = (void*)(uintptr_t)texIDR;
+	rightEyeTexture.handle = (void*)(uintptr_t)texIDR;*/
 	vr::VRCompositor()->Submit(vr::Eye_Right, &rightEyeTexture);
 
 	glFlush();
@@ -419,13 +427,19 @@ void VRHeadMountedDisplay::UpdateHMDMatrixPose() {
 		Matrix4d mvm = m_rmat4DevicePose[hmdID];
 		mvm.invert();
 
-		Matrix4d mcW = fboData->rendererL->getCamera()->getWorldMatrix();
+		Matrix4d mcW;
+		if (fboData && fboData->rendererL) {
+			auto cam = fboData->rendererL->getCamera();
+			if (cam) mcW = cam->getWorldMatrix();
+		}
 		mcW.invert();
 		mvm.mult(mcW);
 
 		auto mvmf = toMatrix4f(mvm);
-		fboData->mcamL->setModelviewMatrix(mvmf);
-		fboData->mcamR->setModelviewMatrix(mvmf);
+		if (fboData) {
+			if (fboData->mcamL) fboData->mcamL->setModelviewMatrix(mvmf);
+			if (fboData->mcamR) fboData->mcamR->setModelviewMatrix(mvmf);
+		}
 	}
 }
 
