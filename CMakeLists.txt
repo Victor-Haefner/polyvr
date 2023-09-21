@@ -917,7 +917,7 @@ target_sources(polyvr PRIVATE src/core/scene/VRScene.cpp)
 target_sources(polyvr PRIVATE src/core/scene/import/VRImport.cpp)
 target_sources(polyvr PRIVATE src/core/scene/import/VRExport.cpp)
 #target_sources(polyvr PRIVATE src/core/scene/import/VRDWG.cpp) # TODO: needs libdwg
-#target_sources(polyvr PRIVATE src/core/scene/import/VRDXF.cpp)
+target_sources(polyvr PRIVATE src/core/scene/import/VRDXF.cpp)
 #target_sources(polyvr PRIVATE src/core/scene/import/VRVTK.cpp)
 #target_sources(polyvr PRIVATE src/core/scene/import/VRIES.cpp)
 target_sources(polyvr PRIVATE src/core/scene/import/VRML.cpp)
