@@ -12,15 +12,17 @@
 
 using namespace OSG;
 
-VRAppLauncher::VRAppLauncher(VRAppPanelPtr s) : section(s) {
+VRAppLauncher::VRAppLauncher(VRAppPanelPtr s, string path, string timestamp) : section(s) {
     //cout << " ----------------- VRAppLauncher " << ID << " / " << s->getName() << endl;
     ID = VRGuiManager::genUUID();
-    uiSignal("newAppLauncher", {{"panel",s->getName()}, {"ID",ID}});
+    this->path = path;
+    this->lastStarted = timestamp;
+    uiSignal("newAppLauncher", {{"panel",s->getName()}, {"ID",ID}, {"timestamp",timestamp}});
 }
 
 VRAppLauncher::~VRAppLauncher() {}
 
-VRAppLauncherPtr VRAppLauncher::create(VRAppPanelPtr s) { return VRAppLauncherPtr( new VRAppLauncher(s) ); }
+VRAppLauncherPtr VRAppLauncher::create(VRAppPanelPtr s, string path, string timestamp) { return VRAppLauncherPtr( new VRAppLauncher(s, path, timestamp) ); }
 
 void VRAppLauncher::show() { uiSignal("setVisible", {{"ID",ID},{"visible","1"}}); }
 void VRAppLauncher::hide() { uiSignal("setVisible", {{"ID",ID},{"visible","0"}}); }

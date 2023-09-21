@@ -3,7 +3,7 @@
 #include "core/utils/toString.h"
 #include "core/gui/VRGuiManager.h"
 
-ImAppLauncher::ImAppLauncher(string ID, string pnl) : ID(ID), name(ID), panel(pnl) {}
+ImAppLauncher::ImAppLauncher(string ID, string pnl, string ts) : ID(ID), name(ID), panel(pnl), timestamp(ts) {}
 
 void ImAppLauncher::render(string filter) {
     if (filter != "") {
@@ -73,7 +73,7 @@ void ImAppPanel::render(string filter, map<string, ImAppLauncher>& launcherPool)
 
 ImAppManager::ImAppManager() : ImWidget("AppManager"), examples("") {
     auto mgr = OSG::VRGuiSignals::get();
-    mgr->addCallback("newAppLauncher", [&](OSG::VRGuiSignals::Options o){ newAppLauncher(o["panel"], o["ID"]); return true; } );
+    mgr->addCallback("newAppLauncher", [&](OSG::VRGuiSignals::Options o){ newAppLauncher(o["panel"], o["ID"], o["timestamp"]); return true; } );
     mgr->addCallback("setupAppLauncher", [&](OSG::VRGuiSignals::Options o){ setupAppLauncher(o["ID"], o["name"]); return true; } );
     mgr->addCallback("setAppLauncherState", [&](OSG::VRGuiSignals::Options o){ setAppLauncherState(o["ID"], toBool(o["running"]), toBool(o["sensitive"])); return true; } );
 }
@@ -95,8 +95,8 @@ void ImAppManager::updatePannels() {
     }
 }
 
-void ImAppManager::newAppLauncher(string panel, string ID) {
-    launchers[ID] = ImAppLauncher(ID, panel);
+void ImAppManager::newAppLauncher(string panel, string ID, string timestamp) {
+    launchers[ID] = ImAppLauncher(ID, panel, timestamp);
     if (panel == "examples") examples.launchers.push_back(ID);
     else updatePannels();
 }

@@ -10,11 +10,12 @@ class ImAppLauncher {
         string ID;
         string name;
         string panel;
+        string timestamp;
         bool running = false;
         bool sensitive = true;
 
         ImAppLauncher() {}
-        ImAppLauncher(string ID, string panel);
+        ImAppLauncher(string ID, string panel, string timestamp);
         void render(string filter);
 };
 
@@ -37,7 +38,7 @@ class ImAppManager : public ImWidget {
         ImAppPanel examples;
 
         void updatePannels();
-        void newAppLauncher(string pannel, string ID);
+        void newAppLauncher(string pannel, string ID, string timestamp);
         void setupAppLauncher(string ID, string name);
         void setAppLauncherState(string ID, bool running, bool sensitive);
 

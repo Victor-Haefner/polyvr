@@ -24,9 +24,7 @@ VRAppPanelPtr VRAppPanel::ptr() { return shared_from_this(); }
 VRAppLauncherPtr VRAppPanel::addLauncher(string path, string timestamp, VRAppManager* mgr, bool write_protected, bool favorite, string table) {
     if (!exists(path)) return 0;
     if (auto l = getLauncher(path)) return l;
-    auto app = VRAppLauncher::create(ptr());
-    app->path = path;
-    app->lastStarted = timestamp;
+    auto app = VRAppLauncher::create(ptr(), path, timestamp);
     string filename = getFileName(path);
     string foldername = getFolderName(path);
     app->pxm_path = foldername + "/.local_" + filename.substr(0,filename.size()-4) + "/snapshot.png";

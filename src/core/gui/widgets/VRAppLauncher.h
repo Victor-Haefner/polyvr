@@ -29,9 +29,9 @@ class VRAppLauncher : public std::enable_shared_from_this<VRAppLauncher> {
         VRAppPanelWeakPtr section;
 
     public:
-        VRAppLauncher(VRAppPanelPtr s);
+        VRAppLauncher(VRAppPanelPtr s, string path, string timestamp);
         ~VRAppLauncher();
-        static VRAppLauncherPtr create(VRAppPanelPtr s);
+        static VRAppLauncherPtr create(VRAppPanelPtr s, string path, string timestamp);
 
         void setup(VRAppManager* mgr);
         bool updatePixmap();
