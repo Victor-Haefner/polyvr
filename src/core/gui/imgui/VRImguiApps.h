@@ -9,30 +9,34 @@ class ImAppLauncher {
     public:
         string ID;
         string name;
+        string panel;
         bool running = false;
         bool sensitive = true;
 
         ImAppLauncher() {}
-        ImAppLauncher(string ID);
+        ImAppLauncher(string ID, string panel);
         void render(string filter);
 };
 
 class ImAppPanel {
     public:
-        map<string,ImAppLauncher> launchers;
+        string label;
+        vector<string> launchers;
 
-        ImAppPanel() {}
-        void render(string filter);
+        ImAppPanel(string label);
+        void render(string filter, map<string, ImAppLauncher>& launcherPool);
 };
 
 class ImAppManager : public ImWidget {
     public:
         string filter = "";
 
-        ImAppPanel recents;
-        ImAppPanel projects;
+        map<string, ImAppLauncher> launchers;
+
+        vector<ImAppPanel> projects;
         ImAppPanel examples;
 
+        void updatePannels();
         void newAppLauncher(string pannel, string ID);
         void setupAppLauncher(string ID, string name);
         void setAppLauncherState(string ID, bool running, bool sensitive);

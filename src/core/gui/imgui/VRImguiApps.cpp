@@ -3,7 +3,7 @@
 #include "core/utils/toString.h"
 #include "core/gui/VRGuiManager.h"
 
-ImAppLauncher::ImAppLauncher(string ID) : ID(ID), name(ID) {}
+ImAppLauncher::ImAppLauncher(string ID, string pnl) : ID(ID), name(ID), panel(pnl) {}
 
 void ImAppLauncher::render(string filter) {
     if (filter != "") {
@@ -43,36 +43,75 @@ void ImAppLauncher::render(string filter) {
     if (!sensitive) ImGui::EndDisabled();
 }
 
-void ImAppPanel::render(string filter) {
-    for (auto& l : launchers) l.second.render(filter);
+ImAppPanel::ImAppPanel(string lbl) : label(lbl) {
+    ;
 }
 
-ImAppManager::ImAppManager() : ImWidget("AppManager") {
+void ImAppPanel::render(string filter, map<string, ImAppLauncher>& launcherPool) {
+    if (filter != "") {
+        bool anyVisible = false;
+        for (auto& lID : launchers) {
+            auto& l = launcherPool[lID];
+            if (contains(l.name, filter, false)) anyVisible = true;
+        }
+        if (!anyVisible) return;
+    }
+
+    if (label.size() > 0) {
+        ImGui::Spacing();
+        ImGui::Text(label.c_str());
+        ImGui::SameLine();
+        ImGui::Separator();
+        ImGui::Spacing();
+    }
+
+    for (auto& lID : launchers) {
+        auto& l = launcherPool[lID];
+        l.render(filter);
+    }
+}
+
+ImAppManager::ImAppManager() : ImWidget("AppManager"), examples("") {
     auto mgr = OSG::VRGuiSignals::get();
     mgr->addCallback("newAppLauncher", [&](OSG::VRGuiSignals::Options o){ newAppLauncher(o["panel"], o["ID"]); return true; } );
     mgr->addCallback("setupAppLauncher", [&](OSG::VRGuiSignals::Options o){ setupAppLauncher(o["ID"], o["name"]); return true; } );
     mgr->addCallback("setAppLauncherState", [&](OSG::VRGuiSignals::Options o){ setAppLauncherState(o["ID"], toBool(o["running"]), toBool(o["sensitive"])); return true; } );
 }
 
+void ImAppManager::updatePannels() {
+    projects.clear();
+    projects.push_back(ImAppPanel("recent"));
+    projects.push_back(ImAppPanel("older"));
+
+    ImAppPanel& recents = projects[0];
+    ImAppPanel& older = projects[1];
+
+    for (auto& l : launchers) {
+        if (l.second.panel == "recents") {
+            recents.launchers.push_back(l.first);
+        } else {
+            older.launchers.push_back(l.first);
+        }
+    }
+}
+
 void ImAppManager::newAppLauncher(string panel, string ID) {
-    if (panel == "examples") examples.launchers[ID] = ImAppLauncher(ID);
-    if (panel == "favorites") projects.launchers[ID] = ImAppLauncher(ID);
-    if (panel == "recents") recents.launchers[ID] = ImAppLauncher(ID);
+    launchers[ID] = ImAppLauncher(ID, panel);
+    if (panel == "examples") examples.launchers.push_back(ID);
+    else updatePannels();
 }
 
 void ImAppManager::setAppLauncherState(string ID, bool running, bool sensitive) {
-    for (auto& p : {&examples, &projects, &recents}) {
-        if (!p->launchers.count(ID)) continue;
-        p->launchers[ID].running = running;
-        p->launchers[ID].sensitive = sensitive;
-    }
+    if (!launchers.count(ID)) return;
+    auto& l = launchers[ID];
+    l.running = running;
+    l.sensitive = sensitive;
 }
 
 void ImAppManager::setupAppLauncher(string ID, string name) {
-    for (auto& p : {&examples, &projects, &recents}) {
-        if (!p->launchers.count(ID)) continue;
-        p->launchers[ID].name = name;
-    }
+    if (!launchers.count(ID)) return;
+    auto& l = launchers[ID];
+    l.name = name;
 }
 
 void ImAppManager::begin() {
@@ -93,11 +132,7 @@ void ImAppManager::begin() {
         if (ImGui::BeginTabItem("Projects")) {
             ImGui::Spacing();
             ImGui::BeginChild("Panel1", ImGui::GetContentRegionAvail(), false, flags);
-            recents.render(filter);
-            ImGui::Spacing();
-            ImGui::Separator();
-            ImGui::Spacing();
-            projects.render(filter);
+            for (auto panel : projects) panel.render(filter, launchers);
             ImGui::EndChild();
             ImGui::EndTabItem();
         }
@@ -105,7 +140,7 @@ void ImAppManager::begin() {
         if (ImGui::BeginTabItem("Examples")) {
             ImGui::Spacing();
             ImGui::BeginChild("Panel2", ImGui::GetContentRegionAvail(), false, flags);
-            examples.render(filter);
+            examples.render(filter, launchers);
             ImGui::EndChild();
             ImGui::EndTabItem();
         }
