@@ -16,6 +16,8 @@ simpleVRPyType(WiringSimulation, 0);
 simpleVRPyType(ElectricComponent, 0);
 simpleVRPyType(LADVariable, New_ptr);
 simpleVRPyType(LADEngine, New_ptr);
+simpleVRPyType(SCLScript, New_ptr);
+simpleVRPyType(SCLEngine, New_ptr);
 simpleVRPyType(RocketExhaust, New_VRObjects_ptr);
 simpleVRPyType(SpaceMission, New_ptr);
 
@@ -177,6 +179,22 @@ PyMethodDef VRPyLADVariable::methods[] = {
     {"getRemanence", PyWrap( LADVariable, getRemanence, "Get remanence", string ) },
     {"getValue", PyWrap( LADVariable, getValue, "Get value", string ) },
     {"getStartValue", PyWrap( LADVariable, getStartValue, "Get start value", string ) },
+    {NULL}
+};
+
+PyMethodDef VRPySCLScript::methods[] = {
+    {"readSCL", PyWrap( SCLScript, readSCL, "read a scl script", void, string ) },
+    {"convert", PyWrap( SCLScript, convert, "convert the scl script to python", void ) },
+    {"getScl", PyWrap( SCLScript, getScl, "get the scl script", string ) },
+    {"getPython", PyWrap( SCLScript, getPython, "get the python script", string ) },
+    {NULL}
+};
+
+PyMethodDef VRPySCLEngine::methods[] = {
+    {"setElectricEngine", PyWrap( SCLEngine, setElectricEngine, "set the electric system", void, VRElectricSystemPtr ) },
+    {"readSCL", PyWrap( SCLEngine, readSCL, "read an scl script and name it, returns the scl script", VRSCLScriptPtr, string, string ) },
+    {"getScript", PyWrap( SCLEngine, getScript, "return scl script by name", VRSCLScriptPtr, string ) },
+    {"iterate", PyWrap( SCLEngine, iterate, "run tick", void ) },
     {NULL}
 };
 

@@ -14,6 +14,7 @@
 #include "Wiring/VRElectricComponent.h"
 #include "Programming/VRLADVariable.h"
 #include "Programming/VRLADEngine.h"
+#include "Programming/VRSCLEngine.h"
 
 struct VRPyNumberingEngine : VRPyBaseT<OSG::VRNumberingEngine> {
     static PyMethodDef methods[];
@@ -52,6 +53,14 @@ struct VRPyLADVariable : VRPyBaseT<OSG::VRLADVariable> {
 };
 
 struct VRPyLADEngine : VRPyBaseT<OSG::VRLADEngine> {
+    static PyMethodDef methods[];
+};
+
+struct VRPySCLScript : VRPyBaseT<OSG::VRSCLScript> {
+    static PyMethodDef methods[];
+};
+
+struct VRPySCLEngine : VRPyBaseT<OSG::VRSCLEngine> {
     static PyMethodDef methods[];
 };
 

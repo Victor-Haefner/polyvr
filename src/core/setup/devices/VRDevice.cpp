@@ -68,16 +68,21 @@ void VRDevice::triggerSignal(int key, int state, bool doGeneric) {
         if (sig && sig1) {
             auto map0 = sig->getCallbacks();
             auto map1 = sig1->getCallbacks();
-            int k0 = min(map0.begin()->first , map1.begin()->first );
-            int k1 = max(map0.rbegin()->first, map1.rbegin()->first);
-            for (int i=k0; i<=k1; i++) {
-                if (map0.count(i)) if (!sig ->trigger<VRDevice>(map0[i])) break;
-                if (map1.count(i)) if (!sig1->trigger<VRDevice>(map1[i])) break;
+
+            if (map0.size() > 0 && map1.size() > 0) {
+                int k0 = min(map0.begin()->first , map1.begin()->first );
+                int k1 = max(map0.rbegin()->first, map1.rbegin()->first);
+                for (int i=k0; i<=k1; i++) {
+                    if (map0.count(i)) if (!sig ->trigger<VRDevice>(map0[i])) break;
+                    if (map1.count(i)) if (!sig1->trigger<VRDevice>(map1[i])) break;
+                }
             }
+            else if (map0.size() > 0) sig->triggerAll<VRDevice>();
+            else if (map1.size() > 0) sig1->triggerAll<VRDevice>();
 
             //sig->triggerAll<VRDevice>();
             //sig1->triggerAll<VRDevice>();
-            if (sig->doUpdate()) addUpdateSignal(sig, key);
+            if (sig->doUpdate())  addUpdateSignal(sig, key);
             if (sig1->doUpdate()) addUpdateSignal(sig1, key);
         }
     }

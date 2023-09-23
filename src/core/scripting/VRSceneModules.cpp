@@ -291,6 +291,8 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPyWiringSimulation>("WiringSimulation", pModVR);
     sm->registerModule<VRPyLADVariable>("LADVariable", pModVR);
     sm->registerModule<VRPyLADEngine>("LADEngine", pModVR);
+    sm->registerModule<VRPySCLScript>("SCLScript", pModVR);
+    sm->registerModule<VRPySCLEngine>("SCLEngine", pModVR);
     sm->registerModule<VRPyElectricComponent>("ElectricComponent", pModVR);
     sm->registerModule<VRPyElectricVisualization>("ElectricVisualization", pModVR, VRPyObject::typeRef);
     sm->registerModule<VRPyOntology>("Ontology", pModVR, VRPyName::typeRef);

@@ -214,11 +214,17 @@ string createTempFile() {
     return string() + P_tmpdir + "/exec_out_file" + toString(time(0)) + "_" + toString(rand());
 }
 
-string readFileContent(string fileName) {
-    ifstream file(fileName, ios::in | ios::binary);
+string readFileContent(string fileName, bool binary) {
+    auto flags = ios::in;
+    if (binary) flags |= ios::binary;
+    ifstream file(fileName, flags);
     string result;
     if (file) {
-        while (!file.eof()) result.push_back(file.get());
+        while (!file.eof()) {
+            char c = file.get();
+            if (c == -1) break; // EOF
+            result.push_back(c);
+        }
         file.close();
     }
     return result;
