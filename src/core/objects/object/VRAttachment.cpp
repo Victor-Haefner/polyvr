@@ -39,6 +39,8 @@ string VRAttachment::asString() {
     return "";
 }
 
-void VRAttachment::fromString(string s) {
+bool VRAttachment::fromString(string s) {
     if (data) data->fromString(s);
+    else return false;
+    return true;
 }

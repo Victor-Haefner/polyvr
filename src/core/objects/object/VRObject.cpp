@@ -1,4 +1,5 @@
 #include "VRObject.h"
+#include "VRObjectT.h"
 #include "VRAttachment.h"
 #include "OSGCore.h"
 #include "../OSGObject.h"
@@ -188,7 +189,10 @@ string VRObject::getAttachmentAsString(string name) {
 
 void VRObject::setAttachmentFromString(string name, string value) {
     if (!hasTag(name)) addAttachment(name, value);
-    else attachments[name]->fromString(value);
+    else {
+        if (!attachments[name]->fromString(value))
+            attachments[name]->set(value);
+    }
 }
 
 vector<string> VRObject::getTags() {

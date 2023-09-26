@@ -39,7 +39,7 @@ class VRAttachment : public OSG::VRName {
         T get();
 
         string asString();
-        void fromString(string v);
+        bool fromString(string v);
 };
 
 #endif // VRATTACHMENT_H_INCLUDED
