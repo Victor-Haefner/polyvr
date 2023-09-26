@@ -59,8 +59,9 @@ void ImAppPanel::render(string filter, map<string, ImAppLauncher>& launcherPool)
 
     if (label.size() > 0) {
         ImGui::Spacing();
+        ImGui::Spacing();
         ImGui::Text(label.c_str());
-        ImGui::SameLine();
+        //ImGui::SameLine();
         ImGui::Separator();
         ImGui::Spacing();
     }
@@ -78,19 +79,47 @@ ImAppManager::ImAppManager() : ImWidget("AppManager"), examples("") {
     mgr->addCallback("setAppLauncherState", [&](OSG::VRGuiSignals::Options o){ setAppLauncherState(o["ID"], toBool(o["running"]), toBool(o["sensitive"])); return true; } );
 }
 
+void getDurationString(size_t d, string& dLabel, size_t& dLabelI) {
+    if (d == 0) { dLabel = "long ago"; dLabelI = 3600*24*356*2; return; }
+    if (d < 3600) { dLabel = "last hour"; dLabelI = 3600; return; }
+    if (d < 3600*24) { dLabel = "today"; dLabelI = 3600*24; return; }
+    if (d < 3600*24*2) { dLabel = "yesterday"; dLabelI = 3600*24*2; return; }
+    if (d < 3600*24*7) { dLabel = "last week"; dLabelI = 3600*24*7; return; }
+    if (d < 3600*24*30) { dLabel = "last month"; dLabelI = 3600*24*30; return; }
+    if (d < 3600*24*356) { dLabel = "last year"; dLabelI = 3600*24*356; return; }
+    { dLabel = "long ago"; dLabelI = 3600*24*356*2; return; }
+}
+
 void ImAppManager::updatePannels() {
     projects.clear();
-    projects.push_back(ImAppPanel("recent"));
-    projects.push_back(ImAppPanel("older"));
+    map<string, vector<string>> panelToLaunchers;
+    map<size_t, string> panels;
 
-    ImAppPanel& recents = projects[0];
-    ImAppPanel& older = projects[1];
+    time_t tnow = time(0);
+    auto now = localtime(&tnow);
 
     for (auto& l : launchers) {
-        if (l.second.panel == "recents") {
-            recents.launchers.push_back(l.first);
-        } else {
-            older.launchers.push_back(l.first);
+        if (l.second.panel == "examples") continue;
+
+        time_t tl = toValue<size_t>(l.second.timestamp);
+        time_t delta = 0;
+        if (tl > 0) delta = tnow-tl;
+        string dLabel;
+        size_t dLabelI;
+        getDurationString(delta, dLabel, dLabelI);
+
+        if (!panelToLaunchers.count(dLabel)) {
+            panels[dLabelI] = dLabel;
+            panelToLaunchers[dLabel] = vector<string>();
+        }
+        panelToLaunchers[dLabel].push_back(l.first);
+    }
+
+    for (auto& p : panels) {
+        projects.push_back(ImAppPanel(p.second));
+        auto& panel = projects[projects.size()-1];
+        for (auto& l : panelToLaunchers[p.second]) {
+            panel.launchers.push_back(l);
         }
     }
 }

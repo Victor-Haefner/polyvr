@@ -42,9 +42,13 @@ VRAppManager::VRAppManager() {
 
     int i=0;
     for (auto p : favorites->getEntriesByTimestamp()) {
-        time_t ts = p->getTimestamp();
+        long tsi = p->getTimestamp();
+        time_t ts = tsi;
         string t = "";
-        if (ts > 0) t = asctime( localtime(&ts) );
+        if (ts > 0) {
+            //t = asctime( localtime(&ts) );
+            t = toString( tsi );
+        }
         addEntry(p->getPath(), "favorites_tab", false, t, i<2);
         i++;
     }
