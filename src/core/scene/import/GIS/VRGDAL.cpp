@@ -242,6 +242,10 @@ void loadSHP(string path, VRTransformPtr res, map<string, string> opts) {
                     else Shape->addProperty(name, "string");
                 }
                 string value = poFeature->GetFieldAsString(field);
+                if (value == "?") { // GetFieldAsString may mess up..
+                    //if (type == OFTBinary) value = "F";
+                    value = "F";
+                }
                 entShape->set(name, value);
                 /*if (name == "RAIL-COST") {
                     cout << " import field: " << name << ", value: '" << value;
@@ -961,16 +965,22 @@ void analyzeSHP(string path, string out) {
             fout << "   field name: " << poFieldDefn->GetNameRef() << ", type: " << poFieldDefn->GetType() << endl;
         }
 
+        int fieldI = 0;
         OGRFeature* poFeature = 0;
         while( (poFeature = poLayer->GetNextFeature()) != NULL ) {
             OGRFeatureDefn* poFDefn = poLayer->GetLayerDefn();
-            fout << " fields: ";
+            fout << " fields:" << endl;
             for( int field = 0; field < poFDefn->GetFieldCount(); field++ ) {
                 OGRFieldDefn* poFieldDefn = poFDefn->GetFieldDefn( field );
                 string name = poFieldDefn->GetNameRef();
                 OGRFieldType type = poFieldDefn->GetType();
                 string value = poFeature->GetFieldAsString(field);
-                fout << " (" << name << ", " << value << ", " << type << ")" << endl;
+                if (value == "?") {
+                    //if (type == OFTBinary) value = "F";
+                    value = "F";
+                }
+                fieldI++;
+                fout << " " << fieldI << " (" << name << ", " << value << ", " << type << ")" << endl;
             }
             fout << endl;
 
