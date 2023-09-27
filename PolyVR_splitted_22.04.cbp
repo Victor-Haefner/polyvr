@@ -7,6 +7,18 @@
 		<Option default_target="Debug" />
 		<Option compiler="gcc" />
 		<Build>
+			<Target title="freeglut">
+				<Option output="bin/Debug/freeglut" imp_lib="$(TARGET_OUTPUT_DIR)$(TARGET_OUTPUT_BASENAME).a" def_file="$(TARGET_OUTPUT_DIR)$(TARGET_OUTPUT_BASENAME).def" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Debug/" />
+				<Option type="3" />
+				<Option compiler="gcc" />
+				<Option createDefFile="1" />
+				<Option createStaticLib="1" />
+				<Compiler>
+					<Add directory="src/core/setup/windows/glut/freeglut/include/" />
+					<Add directory="src/core/setup/windows/glut/freeglut/src/" />
+				</Compiler>
+			</Target>
 			<Target title="PVR-Gui-d">
 				<Option output="bin/Debug/PVR-Gui" imp_lib="$(TARGET_OUTPUT_DIR)$(TARGET_OUTPUT_BASENAME).a" def_file="$(TARGET_OUTPUT_DIR)$(TARGET_OUTPUT_BASENAME).def" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj/Debug/" />
@@ -160,6 +172,7 @@
 					<Add library="bin/Debug/libPVR-Tools.so" />
 					<Add library="bin/Debug/libPVR-Utils.so" />
 					<Add library="bin/Debug/libPVR-Addons.so" />
+					<Add library="bin/Debug/libfreeglut.so" />
 					<Add directory="bin/Debug" />
 				</Linker>
 			</Target>
@@ -179,7 +192,7 @@
 			</Target>
 		</Build>
 		<VirtualTargets>
-			<Add alias="DebugAll" targets="PVR-Gui-d;PVR-Math-d;PVR-Navigation-d;PVR-Networking-d;PVR-Objects-d;PVR-Scene-d;PVR-Scripting-d;PVR-Setup-d;PVR-Tools-d;PVR-Utils-d;PVR-Addons-d;Debug;" />
+			<Add alias="DebugAll" targets="freeglut;PVR-Gui-d;PVR-Math-d;PVR-Navigation-d;PVR-Networking-d;PVR-Objects-d;PVR-Scene-d;PVR-Scripting-d;PVR-Setup-d;PVR-Tools-d;PVR-Utils-d;PVR-Addons-d;Debug;" />
 		</VirtualTargets>
 		<Compiler>
 			<Add option="-Wall" />
@@ -357,7 +370,6 @@
 			<Add option="-lXext" />
 			<Add option="-limgui" />
 			<Add option="-lstb" />
-			<Add option="-lglut" />
 			<Add option="-lXmu" />
 			<Add option="-lXi" />
 			<Add option="-lboost_system" />
@@ -4346,6 +4358,226 @@
 		</Unit>
 		<Unit filename="src/core/setup/windows/glut/VRGlutExtensions.h">
 			<Option target="PVR-Gui-d" />
+		</Unit>
+		<Unit filename="src/core/setup/windows/glut/freeglut/include/GL/freeglut.h">
+			<Option target="freeglut" />
+		</Unit>
+		<Unit filename="src/core/setup/windows/glut/freeglut/include/GL/freeglut_ext.h">
+			<Option target="freeglut" />
+		</Unit>
+		<Unit filename="src/core/setup/windows/glut/freeglut/include/GL/freeglut_std.h">
+			<Option target="freeglut" />
+		</Unit>
+		<Unit filename="src/core/setup/windows/glut/freeglut/include/GL/freeglut_ucall.h">
+			<Option target="freeglut" />
+		</Unit>
+		<Unit filename="src/core/setup/windows/glut/freeglut/include/GL/glut.h">
+			<Option target="freeglut" />
+		</Unit>
+		<Unit filename="src/core/setup/windows/glut/freeglut/src/fg_callback_macros.h">
+			<Option target="freeglut" />
+		</Unit>
+		<Unit filename="src/core/setup/windows/glut/freeglut/src/fg_callbacks.c">
+			<Option compilerVar="CC" />
+			<Option target="freeglut" />
+		</Unit>
+		<Unit filename="src/core/setup/windows/glut/freeglut/src/fg_cursor.c">
+			<Option compilerVar="CC" />
+			<Option target="freeglut" />
+		</Unit>
+		<Unit filename="src/core/setup/windows/glut/freeglut/src/fg_display.c">
+			<Option compilerVar="CC" />
+			<Option target="freeglut" />
+		</Unit>
+		<Unit filename="src/core/setup/windows/glut/freeglut/src/fg_ext.c">
+			<Option compilerVar="CC" />
+			<Option target="freeglut" />
+		</Unit>
+		<Unit filename="src/core/setup/windows/glut/freeglut/src/fg_font.c">
+			<Option compilerVar="CC" />
+			<Option target="freeglut" />
+		</Unit>
+		<Unit filename="src/core/setup/windows/glut/freeglut/src/fg_font_data.c">
+			<Option compilerVar="CC" />
+			<Option target="freeglut" />
+		</Unit>
+		<Unit filename="src/core/setup/windows/glut/freeglut/src/fg_gamemode.c">
+			<Option compilerVar="CC" />
+			<Option target="freeglut" />
+		</Unit>
+		<Unit filename="src/core/setup/windows/glut/freeglut/src/fg_geometry.c">
+			<Option compilerVar="CC" />
+			<Option target="freeglut" />
+		</Unit>
+		<Unit filename="src/core/setup/windows/glut/freeglut/src/fg_gl2.c">
+			<Option compilerVar="CC" />
+			<Option target="freeglut" />
+		</Unit>
+		<Unit filename="src/core/setup/windows/glut/freeglut/src/fg_gl2.h">
+			<Option target="freeglut" />
+		</Unit>
+		<Unit filename="src/core/setup/windows/glut/freeglut/src/fg_init.c">
+			<Option compilerVar="CC" />
+			<Option target="freeglut" />
+		</Unit>
+		<Unit filename="src/core/setup/windows/glut/freeglut/src/fg_init.h">
+			<Option target="freeglut" />
+		</Unit>
+		<Unit filename="src/core/setup/windows/glut/freeglut/src/fg_input_devices.c">
+			<Option compilerVar="CC" />
+			<Option target="freeglut" />
+		</Unit>
+		<Unit filename="src/core/setup/windows/glut/freeglut/src/fg_internal.h">
+			<Option target="freeglut" />
+		</Unit>
+		<Unit filename="src/core/setup/windows/glut/freeglut/src/fg_joystick.c">
+			<Option compilerVar="CC" />
+			<Option target="freeglut" />
+		</Unit>
+		<Unit filename="src/core/setup/windows/glut/freeglut/src/fg_main.c">
+			<Option compilerVar="CC" />
+			<Option target="freeglut" />
+		</Unit>
+		<Unit filename="src/core/setup/windows/glut/freeglut/src/fg_menu.c">
+			<Option compilerVar="CC" />
+			<Option target="freeglut" />
+		</Unit>
+		<Unit filename="src/core/setup/windows/glut/freeglut/src/fg_misc.c">
+			<Option compilerVar="CC" />
+			<Option target="freeglut" />
+		</Unit>
+		<Unit filename="src/core/setup/windows/glut/freeglut/src/fg_overlay.c">
+			<Option compilerVar="CC" />
+			<Option target="freeglut" />
+		</Unit>
+		<Unit filename="src/core/setup/windows/glut/freeglut/src/fg_spaceball.c">
+			<Option compilerVar="CC" />
+			<Option target="freeglut" />
+		</Unit>
+		<Unit filename="src/core/setup/windows/glut/freeglut/src/fg_state.c">
+			<Option compilerVar="CC" />
+			<Option target="freeglut" />
+		</Unit>
+		<Unit filename="src/core/setup/windows/glut/freeglut/src/fg_stroke_mono_roman.c">
+			<Option compilerVar="CC" />
+			<Option target="freeglut" />
+		</Unit>
+		<Unit filename="src/core/setup/windows/glut/freeglut/src/fg_stroke_roman.c">
+			<Option compilerVar="CC" />
+			<Option target="freeglut" />
+		</Unit>
+		<Unit filename="src/core/setup/windows/glut/freeglut/src/fg_structure.c">
+			<Option compilerVar="CC" />
+			<Option target="freeglut" />
+		</Unit>
+		<Unit filename="src/core/setup/windows/glut/freeglut/src/fg_teapot.c">
+			<Option compilerVar="CC" />
+			<Option target="freeglut" />
+		</Unit>
+		<Unit filename="src/core/setup/windows/glut/freeglut/src/fg_teapot_data.h">
+			<Option target="freeglut" />
+		</Unit>
+		<Unit filename="src/core/setup/windows/glut/freeglut/src/fg_version.h">
+			<Option target="freeglut" />
+		</Unit>
+		<Unit filename="src/core/setup/windows/glut/freeglut/src/fg_videoresize.c">
+			<Option compilerVar="CC" />
+			<Option target="freeglut" />
+		</Unit>
+		<Unit filename="src/core/setup/windows/glut/freeglut/src/fg_window.c">
+			<Option compilerVar="CC" />
+			<Option target="freeglut" />
+		</Unit>
+		<Unit filename="src/core/setup/windows/glut/freeglut/src/util/xparsegeometry_repl.c">
+			<Option compilerVar="CC" />
+			<Option target="freeglut" />
+		</Unit>
+		<Unit filename="src/core/setup/windows/glut/freeglut/src/util/xparsegeometry_repl.h">
+			<Option target="freeglut" />
+		</Unit>
+		<Unit filename="src/core/setup/windows/glut/freeglut/src/x11/fg_cmap_x11.c">
+			<Option compilerVar="CC" />
+			<Option target="freeglut" />
+		</Unit>
+		<Unit filename="src/core/setup/windows/glut/freeglut/src/x11/fg_cursor_x11.c">
+			<Option compilerVar="CC" />
+			<Option target="freeglut" />
+		</Unit>
+		<Unit filename="src/core/setup/windows/glut/freeglut/src/x11/fg_display_x11_glx.c">
+			<Option compilerVar="CC" />
+			<Option target="freeglut" />
+		</Unit>
+		<Unit filename="src/core/setup/windows/glut/freeglut/src/x11/fg_ext_x11.c">
+			<Option compilerVar="CC" />
+			<Option target="freeglut" />
+		</Unit>
+		<Unit filename="src/core/setup/windows/glut/freeglut/src/x11/fg_gamemode_x11.c">
+			<Option compilerVar="CC" />
+			<Option target="freeglut" />
+		</Unit>
+		<Unit filename="src/core/setup/windows/glut/freeglut/src/x11/fg_glutfont_definitions_x11.c">
+			<Option compilerVar="CC" />
+			<Option target="freeglut" />
+		</Unit>
+		<Unit filename="src/core/setup/windows/glut/freeglut/src/x11/fg_init_x11.c">
+			<Option compilerVar="CC" />
+			<Option target="freeglut" />
+		</Unit>
+		<Unit filename="src/core/setup/windows/glut/freeglut/src/x11/fg_input_devices_x11.c">
+			<Option compilerVar="CC" />
+			<Option target="freeglut" />
+		</Unit>
+		<Unit filename="src/core/setup/windows/glut/freeglut/src/x11/fg_internal_x11.h">
+			<Option target="freeglut" />
+		</Unit>
+		<Unit filename="src/core/setup/windows/glut/freeglut/src/x11/fg_internal_x11_glx.h">
+			<Option target="freeglut" />
+		</Unit>
+		<Unit filename="src/core/setup/windows/glut/freeglut/src/x11/fg_joystick_x11.c">
+			<Option compilerVar="CC" />
+			<Option target="freeglut" />
+		</Unit>
+		<Unit filename="src/core/setup/windows/glut/freeglut/src/x11/fg_main_x11.c">
+			<Option compilerVar="CC" />
+			<Option target="freeglut" />
+		</Unit>
+		<Unit filename="src/core/setup/windows/glut/freeglut/src/x11/fg_menu_x11.c">
+			<Option compilerVar="CC" />
+			<Option target="freeglut" />
+		</Unit>
+		<Unit filename="src/core/setup/windows/glut/freeglut/src/x11/fg_spaceball_x11.c">
+			<Option compilerVar="CC" />
+			<Option target="freeglut" />
+		</Unit>
+		<Unit filename="src/core/setup/windows/glut/freeglut/src/x11/fg_state_x11.c">
+			<Option compilerVar="CC" />
+			<Option target="freeglut" />
+		</Unit>
+		<Unit filename="src/core/setup/windows/glut/freeglut/src/x11/fg_state_x11_glx.c">
+			<Option compilerVar="CC" />
+			<Option target="freeglut" />
+		</Unit>
+		<Unit filename="src/core/setup/windows/glut/freeglut/src/x11/fg_state_x11_glx.h">
+			<Option target="freeglut" />
+		</Unit>
+		<Unit filename="src/core/setup/windows/glut/freeglut/src/x11/fg_structure_x11.c">
+			<Option compilerVar="CC" />
+			<Option target="freeglut" />
+		</Unit>
+		<Unit filename="src/core/setup/windows/glut/freeglut/src/x11/fg_window_x11.c">
+			<Option compilerVar="CC" />
+			<Option target="freeglut" />
+		</Unit>
+		<Unit filename="src/core/setup/windows/glut/freeglut/src/x11/fg_window_x11_glx.c">
+			<Option compilerVar="CC" />
+			<Option target="freeglut" />
+		</Unit>
+		<Unit filename="src/core/setup/windows/glut/freeglut/src/x11/fg_window_x11_glx.h">
+			<Option target="freeglut" />
+		</Unit>
+		<Unit filename="src/core/setup/windows/glut/freeglut/src/x11/fg_xinput_x11.c">
+			<Option compilerVar="CC" />
+			<Option target="freeglut" />
 		</Unit>
 		<Unit filename="src/core/tools/VRAnalyticGeometry.cpp">
 			<Option target="Release" />

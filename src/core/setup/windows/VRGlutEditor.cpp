@@ -18,6 +18,8 @@
 #include "VRHeadMountedDisplay.h"
 #endif
 
+
+
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
