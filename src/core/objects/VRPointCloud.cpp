@@ -525,7 +525,7 @@ VRGeometryPtr VRPointCloud::setupSparseChunk(OctreeNode<VRPointCloud::PntData>* 
         //progress->update(1);
     }
 
-    //if (chunk.size() == 0) return 0;
+    if (chunk.size() == 0) return 0;
 
     auto geo = VRGeometry::create("sparseChunk");
     geo->setMaterial(mat);
@@ -551,22 +551,11 @@ void VRPointCloud::setupOcNodeLod(OctreeNode<VRPointCloud::PntData>* node, VRObj
 void VRPointCloud::onPCLodSwitch(VRLodEventPtr e, OctreeNode<VRPointCloud::PntData>* node, float rangeModifier) {
     if (e->getCurrent() != 0) return; // wait for lod 0 to activate
     VRLodPtr l = e->getLod();
-    //l->setCallback(0);
+    l->setCallback(0);
 
-    //l->getChild(0)->clearLinks();
+    l->getChild(0)->clearLinks();
     for (auto c : node->getChildren()) {
         if (c) setupOcNodeLod(c, l->getChild(0), rangeModifier);
-    }
-
-    int nN = 0;
-    for (auto c : node->getChildren()) if (c) nN++;
-    int lN = l->getChild(0)->getChildren().size();
-    if (nN != lN) {
-        cout << "onPCLodSwitch " << l->getName() << ", ocNode children: " << nN << ", lod children: " << lN << endl;
-        auto bb = l->getChild(0)->getBoundingbox(true);
-        addChild(bb->asGeometry());
-    } else {
-        l->setCallback(0);
     }
 };
 
