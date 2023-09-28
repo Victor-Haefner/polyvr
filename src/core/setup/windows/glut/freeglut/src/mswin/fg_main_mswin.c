@@ -700,7 +700,9 @@ static LRESULT fghWindowProcKeyPress(SFG_Window *window, UINT uMsg, GLboolean ke
         //printf(" -> w: %i code: (%i %i), fRet: %i\n", wParam, code[0], code[1], r);
 
         if (keydown) {
+            fgState.Modifiers = fgPlatformGetModifiers();
             INVOKE_WCB( *window, Keyboard,   ((char)(wParam & 0xFF), window->State.MouseX, window->State.MouseY));
+            fgState.Modifiers = INVALID_MODIFIERS;
         } else {
             /* and with 0xFF to indicate to runtime that we want to strip out higher bits - otherwise we get a runtime error when "Smaller Type Checks" is enabled */
             INVOKE_WCB( *window, KeyboardUp, ((char)(wParam & 0xFF), window->State.MouseX, window->State.MouseY ) );
@@ -1383,6 +1385,7 @@ LRESULT CALLBACK fgPlatformWindowProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
     case WM_SYSCHAR:
     case WM_CHAR:
     {
+      break;
       window = fghWindowUnderCursor(window);
 
       if( (fgState.KeyRepeat==GLUT_KEY_REPEAT_OFF || window->State.IgnoreKeyRepeat==GL_TRUE) && (HIWORD(lParam) & KF_REPEAT) )
