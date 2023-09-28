@@ -35,6 +35,48 @@ OctreeNode<T>* OSG::OctreeNode<T>::get(Vec3d p, bool checkPosition) {
 }
 
 // checkPosition avoids parent/child cycles due to float error
+
+template<class T>
+OctreeNode<T>* OctreeNode<T>::extend(Vec3d pos, int targetLevel, bool checkPosition) {
+    Vec3d rpos = pos - center;
+
+    auto createParent = [&]() {
+        parent = new OctreeNode(tree.lock(), resolution, 2*size, level+1);
+        parent->center = center + lvljumpCenter(size*0.5, rpos);
+        int o = parent->getOctant(center);
+        parent->children[o] = this;
+        tree.lock()->updateRoot();
+    };
+
+    auto createChild = [&](int octant) {
+        children[octant] = new OctreeNode(tree.lock(), resolution, size*0.5, level-1);
+        Vec3d c = center + lvljumpCenter(size*0.25, rpos);
+        children[octant]->center = c;
+        children[octant]->parent = this;
+    };
+
+    auto reachedTargetLevel = [&]() {
+        if (size <= resolution) return true;
+        if (level == targetLevel && targetLevel != -1) return true;
+        return false;
+    };
+
+    if (checkPosition) {
+        if ( !inBox(pos, center, size) ) { // not in node
+            if (size > 1e12) return 0;
+            if (!parent) createParent();
+            return parent->extend(pos, targetLevel, true); // go a level up
+        }
+    }
+
+    if (!reachedTargetLevel()) {
+        int o = getOctant(pos);
+        if (!children[o]) createChild(o);
+        return children[o]->extend(pos, targetLevel, false);
+    }
+    return this;
+}
+
 // partitionLimit sets a max amount of data points, tree is subdivided if necessary!
 
 template<class T>
@@ -345,6 +387,11 @@ size_t Octree<T>::getNodesCount() { return root->getRoot()->countNodes(); }
 template<class T>
 OctreeNode<T>* Octree<T>::add(Vec3d p, T data, int targetLevel, bool checkPosition, int partitionLimit) {
     return getRoot()->add(p, data, targetLevel, checkPosition, partitionLimit);
+}
+
+template<class T>
+OctreeNode<T>* Octree<T>::extend(Vec3d p, int targetLevel, bool checkPosition) {
+    return getRoot()->extend(p, targetLevel, checkPosition);
 }
 
 template<class T>

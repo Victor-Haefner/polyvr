@@ -56,6 +56,7 @@ class VRExternalPointCloud {
 
         OcSerialNode getOctreeNode(Vec3d p);
         vector<OcSerialNode> getOctreeNodes(Vec3d p, float r);
+        vector<Vec3d> getOctreeLeafPositions();
         void printOctree();
 
         static map<string, string> readPCBHeader(string path);
@@ -159,6 +160,7 @@ class VRPointCloud : public VRTransform {
 
         void addPoint(Vec3d p, Color3ub c);
         void addPoint(Vec3d p, Splat c);
+        void extendOctree(Vec3d p);
 
         vector<Splat> radiusSearch(Vec3d p, double r);
         vector<Splat> externalRadiusSearch(string path, Vec3d p, double r, bool verbose = false, int cacheID = 0);

@@ -40,6 +40,7 @@ class OctreeNode : public PartitiontreeNode<T> {
         Vec3d getLocalCenter();
 
         Node* add(Vec3d p, T data, int targetLevel = -1, bool checkPosition = true, int partitionLimit = -1);
+        Node* extend(Vec3d p, int targetLevel = -1, bool checkPosition = true);
         Node* get(Vec3d p, bool checkPosition = true);
         Node* getChild(int i);
 
@@ -97,6 +98,7 @@ class Octree : public Partitiontree {
 
         void addBox(const Boundingbox& b, T data, int targetLevel = -1, bool checkPosition = true);
         Node* add(Vec3d p, T data, int targetLevel = -1, bool checkPosition = true, int partitionLimit = -1);
+        Node* extend(Vec3d p, int targetLevel = -1, bool checkPosition = true);
 
         vector<T> getAllData();
         vector<T> radiusSearch(Vec3d p, float r, int d = -1);
