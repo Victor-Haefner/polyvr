@@ -986,14 +986,14 @@ extern SFG_State fgState;
   if ( ! fgState.Initialised )                                    \
   {                                                               \
     fgError ( " ERROR:  Function <%s> called"                     \
-              " without first calling 'glutInit'.", (string) ) ;  \
+              ", without first calling 'glutInit'.", (string) ) ;  \
   }
 
 #define  FREEGLUT_INTERNAL_ERROR_EXIT_IF_NOT_INITIALISED( string )  \
   if ( ! fgState.Initialised )                                      \
   {                                                                 \
     fgError ( " ERROR:  Internal <%s> function called"              \
-              " without first calling 'glutInit'.", (string) ) ;    \
+              ", without first calling 'glutInit'.", (string) ) ;    \
   }
 
 #define  FREEGLUT_INTERNAL_ERROR_EXIT( cond, string, function )  \

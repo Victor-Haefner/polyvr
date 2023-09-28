@@ -215,8 +215,8 @@ string createTempFile() {
 }
 
 string readFileContent(string fileName, bool binary) {
-    auto flags = ios::in;
-    if (binary) flags |= ios::binary;
+    int flags = ios::in;
+    if (binary) flags = ios::in | ios::binary;
     ifstream file(fileName, flags);
     string result;
     if (file) {

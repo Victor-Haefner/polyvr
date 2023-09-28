@@ -40,6 +40,60 @@ if(UNIX)
 	add_custom_command(TARGET cefResourceCopy PRE_BUILD COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/ressources/cef18/*.bin ${CMAKE_BINARY_DIR})
 endif()
 
+# Define the name of your library and specify its source files
+add_library(freeglut SHARED)
+
+
+# Optionally, set compile options and include directories for your library
+#target_compile_options(freeglut PRIVATE -Wall -Wextra)  # Compiler options
+target_include_directories(freeglut PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} "src/core/setup/windows/glut/freeglut/src" "src/core/setup/windows/glut/freeglut/include")  # Include directories
+target_link_options(freeglut PRIVATE "/NODEFAULTLIB:freeglut.lib")
+
+
+target_sources(freeglut PRIVATE src/core/setup/windows/glut/freeglut/src/fg_callbacks.c)
+target_sources(freeglut PRIVATE src/core/setup/windows/glut/freeglut/src/fg_cursor.c)
+target_sources(freeglut PRIVATE src/core/setup/windows/glut/freeglut/src/fg_display.c)
+target_sources(freeglut PRIVATE src/core/setup/windows/glut/freeglut/src/fg_ext.c)
+target_sources(freeglut PRIVATE src/core/setup/windows/glut/freeglut/src/fg_font.c)
+target_sources(freeglut PRIVATE src/core/setup/windows/glut/freeglut/src/fg_font_data.c)
+target_sources(freeglut PRIVATE src/core/setup/windows/glut/freeglut/src/fg_gamemode.c)
+target_sources(freeglut PRIVATE src/core/setup/windows/glut/freeglut/src/fg_geometry.c)
+target_sources(freeglut PRIVATE src/core/setup/windows/glut/freeglut/src/fg_gl2.c)
+target_sources(freeglut PRIVATE src/core/setup/windows/glut/freeglut/src/fg_init.c)
+target_sources(freeglut PRIVATE src/core/setup/windows/glut/freeglut/src/fg_input_devices.c)
+target_sources(freeglut PRIVATE src/core/setup/windows/glut/freeglut/src/fg_joystick.c)
+target_sources(freeglut PRIVATE src/core/setup/windows/glut/freeglut/src/fg_main.c)
+target_sources(freeglut PRIVATE src/core/setup/windows/glut/freeglut/src/fg_menu.c)
+target_sources(freeglut PRIVATE src/core/setup/windows/glut/freeglut/src/fg_misc.c)
+target_sources(freeglut PRIVATE src/core/setup/windows/glut/freeglut/src/fg_overlay.c)
+target_sources(freeglut PRIVATE src/core/setup/windows/glut/freeglut/src/fg_spaceball.c)
+target_sources(freeglut PRIVATE src/core/setup/windows/glut/freeglut/src/fg_state.c)
+target_sources(freeglut PRIVATE src/core/setup/windows/glut/freeglut/src/fg_stroke_mono_roman.c)
+target_sources(freeglut PRIVATE src/core/setup/windows/glut/freeglut/src/fg_stroke_roman.c)
+target_sources(freeglut PRIVATE src/core/setup/windows/glut/freeglut/src/fg_structure.c)
+target_sources(freeglut PRIVATE src/core/setup/windows/glut/freeglut/src/fg_teapot.c)
+target_sources(freeglut PRIVATE src/core/setup/windows/glut/freeglut/src/fg_videoresize.c)
+target_sources(freeglut PRIVATE src/core/setup/windows/glut/freeglut/src/fg_window.c)
+target_sources(freeglut PRIVATE src/core/setup/windows/glut/freeglut/src/util/xparsegeometry_repl.c)
+
+if(WIN32)
+target_sources(freeglut PRIVATE src/core/setup/windows/glut/freeglut/src/mswin/fg_cmap_mswin.c)
+target_sources(freeglut PRIVATE src/core/setup/windows/glut/freeglut/src/mswin/fg_cursor_mswin.c)
+target_sources(freeglut PRIVATE src/core/setup/windows/glut/freeglut/src/mswin/fg_display_mswin.c)
+target_sources(freeglut PRIVATE src/core/setup/windows/glut/freeglut/src/mswin/fg_ext_mswin.c)
+target_sources(freeglut PRIVATE src/core/setup/windows/glut/freeglut/src/mswin/fg_gamemode_mswin.c)
+target_sources(freeglut PRIVATE src/core/setup/windows/glut/freeglut/src/mswin/fg_init_mswin.c)
+target_sources(freeglut PRIVATE src/core/setup/windows/glut/freeglut/src/mswin/fg_input_devices_mswin.c)
+target_sources(freeglut PRIVATE src/core/setup/windows/glut/freeglut/src/mswin/fg_joystick_mswin.c)
+target_sources(freeglut PRIVATE src/core/setup/windows/glut/freeglut/src/mswin/fg_main_mswin.c)
+target_sources(freeglut PRIVATE src/core/setup/windows/glut/freeglut/src/mswin/fg_menu_mswin.c)
+target_sources(freeglut PRIVATE src/core/setup/windows/glut/freeglut/src/mswin/fg_spaceball_mswin.c)
+target_sources(freeglut PRIVATE src/core/setup/windows/glut/freeglut/src/mswin/fg_state_mswin.c)
+target_sources(freeglut PRIVATE src/core/setup/windows/glut/freeglut/src/mswin/fg_structure_mswin.c)
+target_sources(freeglut PRIVATE src/core/setup/windows/glut/freeglut/src/mswin/fg_window_mswin.c)
+endif()
+
+
 add_definitions( -D__USE_MISC=1 )
 
 set(INCLUDE_DIRS "")
@@ -63,7 +117,7 @@ if(WASM)
 endif()
 
 if(WIN32)
-	add_definitions( -DWIN32_LEAN_AND_MEAN=1 )
+	add_definitions( -DWIN32_LEAN_AND_MEAN=1 -D_WIN32_WINNT=0x0502 )
 	set(DISK "C")
 	if(EXISTS "D:/usr/vcpkg")
 		set(DISK "D")
@@ -73,6 +127,22 @@ if(WIN32)
 	set(INCLUDE_DIRS ${INCLUDE_DIRS} "${DISK}:/usr/vcpkg/installed/x64-windows/include")
 	set(INCLUDE_DIRS ${INCLUDE_DIRS} "${DISK}:/usr/include")
 	set(LINKER_FLAGS ${LINKER_FLAGS} wininet.lib dwmapi.lib cairo.lib)
+endif()
+
+# command to copy the freeglut dll, lib and header to /c/usr/
+if(WIN32)
+#(TARGET freeglut POST_BUILD
+#    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/src/core/setup/windows/glut/freeglut/include/GL/* ${DISK}:/usr/vcpkg/installed/x64-windows/include/GL/
+#    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+#)
+add_custom_command(TARGET freeglut POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/build/Release/freeglut.dll ${DISK}:/usr/vcpkg/installed/x64-windows/bin/
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+)
+add_custom_command(TARGET freeglut POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/build/Release/freeglut.lib ${DISK}:/usr/vcpkg/installed/x64-windows/lib/
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+)
 endif()
 
 if(UNIX)
@@ -163,16 +233,16 @@ function(FIND_PYTHON)
 	endif()
 endfunction()
 
-function(FIND_GLUT)
-	if(UNIX)
-		set(LINKER_FLAGS "${LINKER_FLAGS} -lglut -lGL -lGLU" PARENT_SCOPE)
-	endif()
-	if(WASM) # GLUT is wrapped for web assembly
-	endif()
-	if(WIN32)
-		set(LINKER_FLAGS ${LINKER_FLAGS} freeglut PARENT_SCOPE)
-	endif()
-endfunction()
+#function(FIND_GLUT)
+#	if(UNIX)
+#		set(LINKER_FLAGS "${LINKER_FLAGS} -lglut -lGL -lGLU" PARENT_SCOPE)
+#	endif()
+#	if(WASM) # GLUT is wrapped for web assembly
+#	endif()
+#	if(WIN32)
+#		set(LINKER_FLAGS ${LINKER_FLAGS} freeglut PARENT_SCOPE)
+#	endif()
+#endfunction()
 
 function(FIND_OPENSG)
 	if(UNIX)
@@ -605,7 +675,7 @@ FIND_LIBXML()
 FIND_FREETYPE()
 FIND_BOOST()
 FIND_PYTHON()
-FIND_GLUT()
+#FIND_GLUT()
 FIND_OPENSG()
 FIND_BULLET()
 FIND_COLLADA()
@@ -638,6 +708,8 @@ if(WASM OR UNIX)
 endif()
 
 set(INCLUDE_DIRS ${INCLUDE_DIRS} "src")
+set(INCLUDE_DIRS ${INCLUDE_DIRS} "src/core/setup/windows/glut/freeglut/src")
+set(INCLUDE_DIRS ${INCLUDE_DIRS} "src/core/setup/windows/glut/freeglut/include")
 include_directories(${INCLUDE_DIRS})
 link_directories(${LIB_DIRS})
 
@@ -646,10 +718,10 @@ target_sources(polyvr PRIVATE src/PolyVR.cpp)
 
 # command to run polyvr after building within visual studio
 if(WIN32)
-add_custom_command(TARGET polyvr POST_BUILD
-    COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/start-win2.bat
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-)
+#add_custom_command(TARGET polyvr POST_BUILD
+#    COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/start-win2.bat
+#    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+#)
 endif()
 
 # start with optional stuff
@@ -1224,6 +1296,7 @@ target_sources(polyvr PRIVATE src/addons/Engineering/Wiring/VRWiringSimulation.c
 target_sources(polyvr PRIVATE src/addons/Engineering/Wiring/VRElectricSystem.cpp)
 target_sources(polyvr PRIVATE src/addons/Engineering/Wiring/VRElectricComponent.cpp)
 target_sources(polyvr PRIVATE src/addons/Engineering/Wiring/VRElectricVisualization.cpp)
+target_sources(polyvr PRIVATE src/addons/Engineering/Programming/VRSCLEngine.cpp)
 target_sources(polyvr PRIVATE src/addons/Engineering/Space/VRRocketExhaust.cpp)
 target_sources(polyvr PRIVATE src/addons/Engineering/Space/VRSpaceMission.cpp)
 target_sources(polyvr PRIVATE src/addons/Semantics/Reasoning/VROntologyRule.cpp)
@@ -1298,8 +1371,10 @@ if(UNIX)
 add_dependencies(polyvr cefResourceCopy)
 endif()
 add_dependencies(polyvr versionTarget)
+add_dependencies(polyvr freeglut)
 target_compile_options(polyvr PRIVATE ${COMPILER_FLAGS})
 message(${LINKER_FLAGS})
-target_link_libraries(polyvr PRIVATE ${LINKER_FLAGS})
+target_link_libraries(polyvr PRIVATE ${LINKER_FLAGS} freeglut)
+#target_link_options(polyvr PRIVATE "/NODEFAULTLIB:freeglut.lib")
 
 

@@ -223,6 +223,7 @@ void handleMouseWheel(int b, int s) {
 }
 
 void handleSpecial(int b, int s) { // TODO: for some reason the imgui state is inverted..
+    //cout << "handleSpecial " << b << ", " << s << endl;
     ImGuiIO& io = ImGui::GetIO();
     if (b == 112) io.KeyShift = s;
     if (b == 113) io.KeyShift = s;
@@ -275,13 +276,16 @@ void ImGui_ImplGLUT_InstallFuncs_popup() {
 }
 
 void IMGUISetClipboardText(void* user_data, const char* text) {
+    //cout << "IMGUISetClipboardText " << text << endl;
     if (text) clip::set_text(text);
 }
 
 const char* IMGUIGetClipboardText(void* user_data) {
+    //cout << "IMGUIGetClipboardText " << endl;
     if (clip::has(clip::text_format())) {
         static string value;
         clip::get_text(value);
+        //cout << " IMGUIGetClipboardText " << value << endl;
         return value.c_str();
     }
     else return 0;
