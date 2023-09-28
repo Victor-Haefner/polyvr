@@ -603,7 +603,11 @@ void OSG::loadPCB(string path, VRTransformPtr res, map<string, string> importOpt
                 }
             }
         }
+    }
 
+    if (epc.hasOctree && bounds.size() == 0) { // due to point skip/decimate, the octree might not be fully built, this fixes it
+        auto lp = epc.getOctreeLeafPositions();
+        for (auto& p : lp) pointcloud->extendOctree(p);
     }
 
     pointcloud->setupLODs();

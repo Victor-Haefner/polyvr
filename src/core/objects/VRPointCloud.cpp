@@ -167,6 +167,65 @@ void VRExternalPointCloud::printOctree() {
     }
 }
 
+vector<Vec3d> VRExternalPointCloud::getOctreeLeafPositions() {
+    vector<Vec3d> res;
+    if (!hasOctree) return res;
+
+    double rootSize = toValue<double>(params["ocRootSize"]);
+    Vec3d rootCenter = toValue<Vec3d>(params["ocRootCenter"]);
+    size_t nodeCount = toValue<size_t>(params["ocNodeCount"]);
+
+    // get correct octree node based on region
+    size_t ocNodeBinSize = sizeof(OcSerialNode);
+    size_t rOffset = (nodeCount-1) * ocNodeBinSize; // root is last node written
+    OcSerialNode ocRoot;
+
+    ifstream stream(path);
+    if (!stream.is_open()) { cout << "ERROR! could not open " << path << endl; return res; }
+    stream.seekg(headerLength);
+    if (stream.fail()) { cout << "ERROR! could not seek to " << headerLength << endl; return res; }
+    size_t ocTree = stream.tellg();
+
+    stream.seekg(ocTree + rOffset, ios::beg);
+    stream.read((char*)&ocRoot, ocNodeBinSize); // read tree root
+
+    function<void(OcSerialNode, double, Vec3d)> iterateNode = [&](OcSerialNode node, double nodeSize, Vec3d nodeCenter) {
+        // check if leaf!
+        bool isLeaf = true;
+        for (int i=0; i<8; i++) { // i is octant
+            int cOffset = node.children[i];
+            if (cOffset != 0) isLeaf = false;
+        }
+        if (isLeaf) {
+            res.push_back(nodeCenter);
+            return;
+        }
+
+        for (int i=0; i<8; i++) { // i is octant
+            // get child address
+            int cOffset = node.children[i];
+
+            // compute new node size and center
+            double childSize = nodeSize*0.5;
+            Vec3d childCenter = Vec3d(childSize, childSize, childSize)*0.5;
+            if (i == 1 || i == 3 || i == 5 || i == 7) childCenter[0] -= childSize;
+            if (i == 2 || i == 3 || i == 6 || i == 7) childCenter[1] -= childSize;
+            if (i == 4 || i == 5 || i == 6 || i == 7) childCenter[2] -= childSize;
+            childCenter = nodeCenter + childCenter;
+
+            if (cOffset != 0) {
+                stream.seekg(ocTree + cOffset, ios::beg);
+                OcSerialNode child;
+                stream.read((char*)&child, ocNodeBinSize);
+                iterateNode(child, childSize, childCenter);
+            }
+        }
+    };
+
+    iterateNode(ocRoot, rootSize, rootCenter);
+    return res;
+}
+
 vector<VRExternalPointCloud::OcSerialNode> VRExternalPointCloud::getOctreeNodes(Vec3d p, float r) {
     vector<OcSerialNode> res;
     auto n = getOctreeNode(p);
@@ -343,8 +402,8 @@ void VRPointCloud::loadChunk(VRLodPtr lod) {
     Vec3d c = lod->getCenter();
     double L = actualLeafSize*0.5;
 
-    cout << " - - - - - VRPointCloud::loadChunk actualLeafSize: " << actualLeafSize << ",  leafSize " << leafSize << endl;
-    cout << " - - - - - VRPointCloud::loadChunk c: " << c << ",  L/2: " << L << endl;
+    //cout << " - - - - - VRPointCloud::loadChunk actualLeafSize: " << actualLeafSize << ",  leafSize " << leafSize << endl;
+    //cout << " - - - - - VRPointCloud::loadChunk c: " << c << ",  L/2: " << L << endl;
 
     vector<double> region = {c[0]-L,c[0]+L, c[1]-L,c[1]+L, c[2]-L,c[2]+L};
     string path = filePath;
@@ -362,7 +421,6 @@ void VRPointCloud::loadChunk(VRLodPtr lod) {
 
     bool threaded = false;
     auto chunk = VRImport::get()->load(path, prxy, false, "OSG", threaded, options);
-    prxy->addChild(chunk);
     //cout << " VRPointCloud::onLodSwitch loaded " << chunk->getName() << ", parent: " << chunk->getParent() << ", region: " << toString(region) << endl;
 }
 
@@ -428,6 +486,14 @@ void VRPointCloud::addPoint(Vec3d p, Color3ub c) {
     octree->add(p, d, -1, true, partitionLimit);
 }
 
+void VRPointCloud::extendOctree(Vec3d p) { // TODO: extend should be sufficient, but doesnt work yet!
+    //octree->extend(p, -1, true);
+
+    PntData d;
+    d.c = Color3ub(1,0,1);
+    octree->add(p, d, -1, true, partitionLimit);
+}
+
 VRGeometryPtr VRPointCloud::setupSparseChunk(OctreeNode<VRPointCloud::PntData>* node) {
     double dsr0 = 1.0;
     int depth = min(10, node->getDepth() );
@@ -442,7 +508,6 @@ VRGeometryPtr VRPointCloud::setupSparseChunk(OctreeNode<VRPointCloud::PntData>* 
     /*auto progress = VRProgress::create();
     progress->setup("setup pointcloud LODs ", leafs.size());
     progress->reset();*/
-
     for (auto leaf : leafs) {
         //Vec3d center = leaf->getCenter();
         for (int i = 0; i < leaf->dataSize(); i += dsr) {
@@ -465,7 +530,7 @@ VRGeometryPtr VRPointCloud::setupSparseChunk(OctreeNode<VRPointCloud::PntData>* 
     auto geo = VRGeometry::create("sparseChunk");
     geo->setMaterial(mat);
     geo->setFrom(node->getCenter());
-    chunk.apply( geo );
+    if (chunk.size() > 0) chunk.apply( geo );
     return geo;
 }
 
@@ -1556,6 +1621,7 @@ void main( void ) {
     vec2 u = osg_MultiTexCoord0;
     vec2 v = osg_MultiTexCoord1;
     float size = osg_MultiTexCoord2.x*splatModifier; // mm
+    size = min(size, 0.2);
     //float size = 0.1;
 	tangentU = vecFromAngles(u)*size;
 	tangentV = vecFromAngles(v)*size;
