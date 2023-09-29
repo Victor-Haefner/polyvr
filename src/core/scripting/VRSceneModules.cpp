@@ -260,6 +260,7 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
 #ifndef WITHOUT_EIGEN
     sm->registerModule<VRPyGearSegmentation>("GearSegmentation", pModVR);
     sm->registerModule<VRPyAxleSegmentation>("AxleSegmentation", pModVR);
+    sm->registerModule<VRPyThreadSegmentation>("ThreadSegmentation", pModVR);
 #endif
     sm->registerModule<VRPyMachiningSimulation>("MachiningSimulation", pModVR);
     sm->registerModule<VRPyMachiningCode>("MachiningCode", pModVR);

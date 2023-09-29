@@ -1,4 +1,4 @@
-#include "VRAxleSegmentation.h"
+#include "VRThreadSegmentation.h"
 #include "core/utils/toString.h"
 #include "core/math/PCA.h"
 #include "core/math/partitioning/boundingbox.h"
@@ -10,16 +10,16 @@
 
 using namespace OSG;
 
-VRAxleSegmentation::VRAxleSegmentation() {}
-VRAxleSegmentation::~VRAxleSegmentation() {}
+VRThreadSegmentation::VRThreadSegmentation() {}
+VRThreadSegmentation::~VRThreadSegmentation() {}
 
-VRAxleSegmentationPtr VRAxleSegmentation::create() { return VRAxleSegmentationPtr(new VRAxleSegmentation()); }
+VRThreadSegmentationPtr VRThreadSegmentation::create() { return VRThreadSegmentationPtr(new VRThreadSegmentation()); }
 
-void VRAxleSegmentation::setBinSizes(double pe) {
+void VRThreadSegmentation::setBinSizes(double pe) {
     planeEps = pe;
 }
 
-void VRAxleSegmentation::computeAxis() {
+void VRThreadSegmentation::computeAxis() {
     PCA pca;
     pca.addMesh(obj);
     Pose res = pca.computeRotationAxis();
@@ -29,7 +29,7 @@ void VRAxleSegmentation::computeAxis() {
     r2 = res.up();
 }
 
-void VRAxleSegmentation::computePolarVertices() {
+void VRThreadSegmentation::computePolarVertices() {
 	auto geos = obj->getChildren(true, "Geometry", true); // gear vertices
 
 	Boundingbox bb;
@@ -46,6 +46,7 @@ void VRAxleSegmentation::computePolarVertices() {
             pos.push_back(Vec3d(p));
             bb.update(Vec3d(p));
         }
+		//geo->makeUnique(); // TODO: what for??
     }
 
     PolarCoords coords(axis, pos[0]);
@@ -63,7 +64,7 @@ void VRAxleSegmentation::computePolarVertices() {
     }
 }
 
-void VRAxleSegmentation::analyse(VRObjectPtr o) {
+void VRThreadSegmentation::analyse(VRObjectPtr o) {
     obj = o;
     if (!obj) return;
 
@@ -135,14 +136,14 @@ void VRAxleSegmentation::analyse(VRObjectPtr o) {
 	}
 }
 
-VRGeometryPtr VRAxleSegmentation::createAxle() {
+VRGeometryPtr VRThreadSegmentation::createAxle() {
     auto g = VRGeometry::create("axle");
     g->setPrimitive("Cylinder "+toString(length)+" "+toString(radius));
     g->setTransform(axisOffset + axis*midOffset, r1, axis);
     return g;
 }
 
-VRTransformPtr VRAxleSegmentation::getProfileViz() {
+VRTransformPtr VRThreadSegmentation::getProfileViz() {
     VRGeoData data;
 	for (auto& axleParam : axleParams) {
 	    Vec3d p = axisOffset + r1*axleParam[0] + axis*axleParam[1];
@@ -159,14 +160,14 @@ VRTransformPtr VRAxleSegmentation::getProfileViz() {
     return geo;
 }
 
-vector<Vec2d> VRAxleSegmentation::getProfile() {
+vector<Vec2d> VRThreadSegmentation::getProfile() {
     vector<Vec2d> res;
 	for (auto& axleParam : axleParams) res.push_back(Vec2d(axleParam[1], axleParam[0]));
 	return res;
 }
 
-Vec3d VRAxleSegmentation::getAxis() { return axis; }
-Vec3d VRAxleSegmentation::getAxisOffset() { return axisOffset; }
-double VRAxleSegmentation::getRadius() { return radius; }
-double VRAxleSegmentation::getLength() { return length; }
+Vec3d VRThreadSegmentation::getAxis() { return axis; }
+Vec3d VRThreadSegmentation::getAxisOffset() { return axisOffset; }
+double VRThreadSegmentation::getRadius() { return radius; }
+double VRThreadSegmentation::getLength() { return length; }
 

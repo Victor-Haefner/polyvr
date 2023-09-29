@@ -5,6 +5,7 @@
 #include "VRMechanism.h"
 #include "VRGearSegmentation.h"
 #include "VRAxleSegmentation.h"
+#include "VRThreadSegmentation.h"
 
 struct VRPyMechanism : VRPyBaseT<OSG::VRMechanism> {
     static PyMethodDef methods[];
@@ -16,6 +17,10 @@ struct VRPyGearSegmentation : VRPyBaseT<OSG::VRGearSegmentation> {
 };
 
 struct VRPyAxleSegmentation : VRPyBaseT<OSG::VRAxleSegmentation> {
+    static PyMethodDef methods[];
+};
+
+struct VRPyThreadSegmentation : VRPyBaseT<OSG::VRThreadSegmentation> {
     static PyMethodDef methods[];
 };
 #endif

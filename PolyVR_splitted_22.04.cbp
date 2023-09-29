@@ -943,6 +943,12 @@
 			<Option target="Release" />
 			<Option target="PVR-Addons-d" />
 		</Unit>
+		<Unit filename="src/addons/Engineering/Mechanics/VRThreadSegmentation.cpp">
+			<Option target="PVR-Addons-d" />
+		</Unit>
+		<Unit filename="src/addons/Engineering/Mechanics/VRThreadSegmentation.h">
+			<Option target="PVR-Addons-d" />
+		</Unit>
 		<Unit filename="src/addons/Engineering/Milling/VRMillingCuttingToolProfile.cpp">
 			<Option target="Release" />
 			<Option target="PVR-Addons-d" />

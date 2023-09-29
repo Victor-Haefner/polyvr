@@ -8,6 +8,7 @@ namespace OSG {
 ptrFwd(VRMechanism);
 ptrFwd(VRGearSegmentation);
 ptrFwd(VRAxleSegmentation);
+ptrFwd(VRThreadSegmentation);
 
 }
 

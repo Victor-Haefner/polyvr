@@ -9,6 +9,7 @@ simpleVRPyType(Mechanism, New_ptr);
 #ifndef WITHOUT_EIGEN
 simpleVRPyType(GearSegmentation, New_ptr);
 simpleVRPyType(AxleSegmentation, New_ptr);
+simpleVRPyType(ThreadSegmentation, New_ptr);
 #endif
 
 PyMethodDef VRPyMechanism::methods[] = {
@@ -57,6 +58,11 @@ PyMethodDef VRPyAxleSegmentation::methods[] = {
     {"getLength", PyWrap(AxleSegmentation, getLength, "Get axle length", double) },
     {"getAxis", PyWrap(AxleSegmentation, getAxis, "Get axle length", Vec3d) },
     {"getAxisOffset", PyWrap(AxleSegmentation, getAxisOffset, "Get axle length", Vec3d) },
+    {NULL}  /* Sentinel */
+};
+
+PyMethodDef VRPyThreadSegmentation::methods[] = {
+    {"analyse", PyWrap(AxleSegmentation, analyse, "Analyse object to get thread parameters", void, VRObjectPtr) },
     {NULL}  /* Sentinel */
 };
 #endif
