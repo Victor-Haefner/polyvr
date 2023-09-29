@@ -23,7 +23,7 @@ class VRGearSegmentation {
 
         vector<VertexPlane> planes;
         vector<vector<double>> gears;
-        vector<GearVertex> gearVertices;
+        vector<PolarVertex> gearVertices;
         map<int, int> matchedPlanes;
 
         bool same(double x, double y, double eps);

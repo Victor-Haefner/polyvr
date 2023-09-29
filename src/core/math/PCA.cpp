@@ -117,12 +117,42 @@ Matrix4d PCA::computeEigenvectors(Matrix4d m) {
     return res;
 }
 
-Pose PCA::compute() { // TODO: ditch it at some point!
+Pose PCA::compute() {
     Pose res;
     Matrix4d cov = computeCovMatrix();
     Matrix4d ev  = computeEigenvectors(cov);
     res.set(Vec3d(cov[3]), Vec3d(ev[0]), Vec3d(ev[2]), Vec3d(ev[3]));
     return res;
+}
+
+Pose PCA::computeRotationAxis() {
+    Pose res = compute();
+
+	double a = res.scale()[0];
+	double b = res.scale()[1];
+	double c = res.scale()[2];
+
+	double AB = abs(a-b);
+	double AC = abs(a-c);
+	double BC = abs(b-c);
+
+    Vec3d axis = res.up();
+    Vec3d r2 = res.dir();
+
+	if (AC < AB && AC < BC) {
+        axis = res.x();
+        r2 = res.dir();
+    }
+
+	if (BC < AB && BC < AC)  {
+        axis = res.dir();
+        r2 = res.up();
+    }
+
+	axis.normalize();
+	r2.normalize();
+
+	return Pose(Vec3d(0,0,0), axis, r2);
 }
 
 PCA::PCA() {}

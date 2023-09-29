@@ -23,6 +23,8 @@ class PCA {
         static PCAPtr create();
 
         Pose compute();
+        Pose computeRotationAxis();
+
         void add(Vec3d p);
         void addMesh(VRObjectPtr obj);
         int size();

@@ -1,5 +1,12 @@
 #include "VRAxleSegmentation.h"
 #include "core/utils/toString.h"
+#include "core/math/PCA.h"
+#include "core/math/partitioning/boundingbox.h"
+#include "core/objects/object/VRObject.h"
+#include "core/objects/material/VRMaterial.h"
+#include "core/objects/geometry/VRGeometry.h"
+#include "core/objects/geometry/OSGGeometry.h"
+#include "core/objects/geometry/VRGeoData.h"
 
 using namespace OSG;
 
@@ -8,226 +15,159 @@ VRAxleSegmentation::~VRAxleSegmentation() {}
 
 VRAxleSegmentationPtr VRAxleSegmentation::create() { return VRAxleSegmentationPtr(new VRAxleSegmentation()); }
 
+void VRAxleSegmentation::setBinSizes(double pe) {
+    planeEps = pe;
+}
+
+void VRAxleSegmentation::computeAxis() {
+    PCA pca;
+    pca.addMesh(obj);
+    Pose res = pca.computeRotationAxis();
+
+    axis = res.dir();
+    r1 = res.x();
+    r2 = res.up();
+}
+
+void VRAxleSegmentation::computePolarVertices() {
+	auto geos = obj->getChildren(true, "Geometry", true); // gear vertices
+
+	Boundingbox bb;
+
+	vector<Vec3d> pos;
+	for (auto g : geos) {
+        auto geo = dynamic_pointer_cast<VRGeometry>(g);
+        Matrix4d M = geo->getMatrixTo(obj);
+        M.invert();
+		auto positions = geo->getMesh()->geo->getPositions();
+		for (unsigned int i=0; i<positions->size(); i++) {
+            Pnt3d p = Pnt3d(positions->getValue<Pnt3f>(i));
+            M.mult(p, p);
+            pos.push_back(Vec3d(p));
+            bb.update(Vec3d(p));
+        }
+		//geo->makeUnique(); // TODO: what for??
+    }
+
+    PolarCoords coords(axis, pos[0]);
+    coords.dir0 = r2;
+    coords.dir1 = r1;
+
+    axisOffset = bb.center(); // offset to rotation axis
+    axisOffset -= axis * axisOffset.dot(axis);
+    midOffset = bb.center().dot(axis);
+
+	for (auto p : pos) {
+		PolarVertex v(p-axisOffset);
+		v.computeAndSetAttributes(coords);
+		axleVertices.push_back(v);
+    }
+}
 
 void VRAxleSegmentation::analyse(VRObjectPtr o) {
     obj = o;
+    if (!obj) return;
+
+	auto same = [](double x, double y, double eps = 1) {
+		return abs(x-y) < eps;
+	};
+
+	auto getVerticesOnSamePlane = [&]() {
+		vector<vector<PolarVertex>> planes;
+		planes.push_back(vector<PolarVertex>());
+		int x = 0;
+
+		vector<PolarVertex> vertices = axleVertices;
+		std::sort(vertices.begin(), vertices.end(), [](const PolarVertex &a, const PolarVertex &b) { return a.profileCoords[0] < b.profileCoords[0]; });
+
+		size_t size = vertices.size();
+		for (int i=0; i<size-1; i++) {
+			vertices[i].setPlaneIndex(x);
+			planes[x].push_back(vertices[i]);
+
+			bool b = same(vertices[i].profileCoords[0], vertices[i+1].profileCoords[0], planeEps);
+			if (!b) {
+                planes.push_back(vector<PolarVertex>());
+				x++;
+			}
+		}
+
+		auto& lastVertex = vertices[size-1];
+		lastVertex.setPlaneIndex(x);
+        planes[x].push_back(lastVertex);
+		return planes;
+    };
+
+	auto getMinMaxRadius = [](vector<PolarVertex>& vertexList) {
+		double rmin = 1e6;
+		double rmax = 0;
+		for (auto& v : vertexList) {
+			rmin = min(rmin,v.radius);
+			rmax = max(rmax,v.radius);
+		}
+		return Vec2d(rmin, rmax);
+    };
+
+	auto getTotalLength = [&]() {
+		double pmin = 1e6;
+		double pmax = 0;
+		for (auto& v : axleVertices) {
+			pmin = min(pmin, v.profileCoords[0]);
+			pmax = max(pmax, v.profileCoords[0]);
+		}
+		return pmax - pmin;
+    };
+
+	auto calcAxleParams = [&](vector<PolarVertex>& vertices) {
+		double radius = getMinMaxRadius(vertices)[1];
+		double offset = vertices[0].profileCoords[0];
+		return vector<double>({radius, offset});
+    };
+
+    computeAxis();
+    computePolarVertices();
+    length = getTotalLength();
+
+	vector<vector<PolarVertex>> planes = getVerticesOnSamePlane();
+	for (auto& vertices : planes) {
+		auto res = calcAxleParams(vertices);
+		axleParams.push_back(res);
+		radius = max(radius, res[0]);
+	}
 }
 
+VRGeometryPtr VRAxleSegmentation::createAxle() {
+    auto g = VRGeometry::create("axle");
+    g->setPrimitive("Cylinder "+toString(length)+" "+toString(radius));
+    g->setTransform(axisOffset + axis*midOffset, r1, axis);
+    return g;
+}
 
+VRTransformPtr VRAxleSegmentation::getProfileViz() {
+    VRGeoData data;
+	for (auto& axleParam : axleParams) {
+	    Vec3d p = axisOffset + r1*axleParam[0] + axis*axleParam[1];
+        data.pushVert(p);
+        if (data.size() > 1) data.pushLine();
+	}
 
-/**
+	auto m = VRMaterial::create("axleProfViz");
+	m->setLit(0);
+	m->setLineWidth(2);
+	m->setDiffuse(Color3f(1,0.3,0));
+    auto geo = data.asGeometry("axleProfile");
+    geo->setMaterial(m);
+    return geo;
+}
 
-    <Script base_name="axleAnalysis" group="kinematics" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
-      <core>
+vector<Vec2d> VRAxleSegmentation::getProfile() {
+    vector<Vec2d> res;
+	for (auto& axleParam : axleParams) res.push_back(Vec2d(axleParam[1], axleParam[0]));
+	return res;
+}
 
-	import VR, random, time
-	from VR.Math import Vec3
+Vec3d VRAxleSegmentation::getAxis() { return axis; }
+Vec3d VRAxleSegmentation::getAxisOffset() { return axisOffset; }
+double VRAxleSegmentation::getRadius() { return radius; }
+double VRAxleSegmentation::getLength() { return length; }
 
-	#import pylab as plt
-	import numpy, scipy.optimize
-
-	if hasattr(VR, 'visualsT'): VR.visualsT.destroy()
-	VR.visualsT = VR.Transform('visualsT')
-	VR.scene.addChild(VR.visualsT)
-	visuals = VR.AnalyticGeometry()
-	VR.visualsT.addChild(visuals)
-
-	pi = 3.14159265359
-
-	class axleVertex:
-		def __init__(self, v):
-			self.vertex = v
-			self.profileCoords = Vec3([0,0,0])
-			self.plane = -1
-			self.radius = 0
-
-		def computeRadius(self):
-			p = self.vertex
-			p = p-d*d.dot(p)
-			return p.length()
-
-		def computeProfile(self):
-			o = getOrthogonal(d)
-			o2 = o.cross(d)
-			p = self.vertex
-
-			p = p-o*o.dot(p)
-			x = d.dot(p)
-			y = o2.dot(p)
-			return (x,y)
-
-		def computeAndSetAttributes(self):
-			self.profileCoords = self.computeProfile()
-			self.radius = self.computeRadius()
-			return
-
-		def setPlaneIndex(self, i):
-			self.plane = i
-			return
-
-	axleVertices = {} # key is vertex ID (corresponds to position in geometry vertex array)
-
-
-	def same(x,y):
-		return abs(x-y) &lt; 1
-
-
-	def getOrthogonal(v): #TODO improve calculation
-		if abs(v[0]-v[1]) &lt; 0.1:
-			return Vec3([v[0],-v[2],v[1]])
-		return Vec3([v[1],-v[0],v[2]])
-
-	if not obj:
-		obj = VR.machine.findAll('4507 008 11 Antriebswelle KV-120')[0]
-
-	# axle direction
-	d = Vec3(obj.getEntity().getVector('axis')).normalize()
-
-	# gear vertices
-	geos = obj.getChildren(True, 'Geometry', True)
-
-	pos = []
-	for g in geos:
-		pos += g.getPositions()
-		g.makeUnique()
-
-	for p in pos:
-		v = axleVertex(p)
-		v.computeAndSetAttributes()
-		axleVertices[p] = v
-
-
-	def getProfile():
-		p = []
-		for g in axleVertices.values():
-			p += [g.profileCoords]
-		return p
-
-	def getVerticesOnSamePlane():
-		p = {}
-		a = []
-		x = 0
-		vertices = sorted(axleVertices.values(), key=lambda v: v.profileCoords[0])
-
-		size = len(vertices)
-		for i in range(0, size-1):
-			a += [vertices[i]]
-			vertices[i].setPlaneIndex(x)
-
-			b1 = same(vertices[i].profileCoords[0], vertices[i+1].profileCoords[0])
-			if not (b1):
-				p[x] = a
-				a = []
-				x += 1
-		lastVertex = vertices[size-1]
-		a += [lastVertex]
-		lastVertex.setPlaneIndex(x)
-		p[x] = a #add last list
-		return p
-
-	def getMinMaxRadius(vertexList):
-		rmin = 1e6
-		rmax = 0
-		for v in vertexList:
-			rmin = min(rmin,v.radius)
-			rmax = max(rmax,v.radius)
-		return rmin, rmax
-
-	def getMinMaxProfileHeight(vertexList): # y value
-		pmin = 1e6
-		pmax = 0
-		for v in vertexList:
-			pmin = min(pmin,v.profileCoords[1])
-			pmax = max(pmax,v.profileCoords[1])
-		return pmin, pmax
-
-	def getMinMaxProfileDist(vertexList): #x value
-		pmin = 1e6
-		pmax = 0
-		for v in vertexList:
-			pmin = min(pmin,v.profileCoords[0])
-			pmax = max(pmax,v.profileCoords[0])
-		return pmin, pmax
-
-	def dictToList(myDict):
-		myList = []
-		for e in myDict.values():
-			myList.extend(e)
-		return myList
-
-	def calcOffset(vertexList):
-		pmin, pmax = getMinMaxProfileDist(vertexList)
-		poffset = pmin + (pmax - pmin)/2
-
-		bb = obj.getWorldBoundingbox()
-		p = bb.center()
-
-		po = obj.getWorldPose()
-		pb = po.mult(p)
-
-		po.setPos([0,0,0])
-		dL = po.mult(d)
-
-		offset = pb +  dL*poffset
-		return Vec3(offset)
-
-	def calcWidth(vertexList):
-		pmin, pmax = getMinMaxProfileDist(vertexList)
-		w = pmax - pmin
-		return w
-
-	def getTotalLength():
-		pmin = 1e6
-		pmax = 0
-		for v in axleVertices.values():
-			pmin = min(pmin,v.profileCoords[0])
-			pmax = max(pmax,v.profileCoords[0])
-		return pmax - pmin
-
-	def calcAxleParams(vertices):
-		radius = getMinMaxRadius(vertices)[1]
-		totalLength = getTotalLength()
-		offset = calcOffset(vertices)
-
-		if 0:
-			print 'axle:', obj.getName()
-			print 'totalLength:', totalLength
-			print ' offset:', offset
-		return [radius,totalLength,offset]
-
-
-	def showProfile(vertices):
-		#P = getProfile()
-		P = [g.profileCoords for g in vertices]
-		if 0:
-
-			tt = numpy.array([ x for x,y in P ])
-			yy = numpy.array([ y for x,y in P ])
-
-			plt.plot(tt, yy, "ok", label="y", linewidth=2)
-			plt.legend(loc="best")
-			plt.show()
-	###################################################
-
-
-	planes = getVerticesOnSamePlane()
-	if 0:
-		print obj.getBaseName()
-		print '  number of planes:', len(planes)
-
-	result = {}
-	i = 0
-
-	for m in planes:
-
-		vertices = planes[m]
-		#showProfile(vertices)
-
-		res = calcAxleParams(vertices)
-		result[i] = res
-		i += 1
-
-	return result
-
-
-*/

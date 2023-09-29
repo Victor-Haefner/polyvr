@@ -18,7 +18,7 @@ namespace OSG {
 
 struct VertexRing {
     double radius;
-    vector<GearVertex> vertices;
+    vector<PolarVertex> vertices;
 };
 
 struct sineFit {
@@ -29,7 +29,7 @@ struct sineFit {
 
 struct VertexPlane {
     double position;
-    vector<GearVertex> vertices;
+    vector<PolarVertex> vertices;
     vector<VertexRing> rings;
     vector<Vec2d> contour; // resampled and in polar coords
     double profMin = 1e6;
@@ -56,47 +56,11 @@ VRGearSegmentationPtr VRGearSegmentation::create() { return VRGearSegmentationPt
 void VRGearSegmentation::computeAxis() {
     PCA pca;
     pca.addMesh(obj);
-    Pose res = pca.compute();
+    Pose res = pca.computeRotationAxis();
 
-	double a = res.scale()[0];
-	double b = res.scale()[1];
-	double c = res.scale()[2];
-
-	double AB = abs(a-b);
-	double AC = abs(a-c);
-	double BC = abs(b-c);
-
-    axis = res.up();
+    axis = res.dir();
     r1 = res.x();
-    r2 = res.dir();
-
-	if (AC < AB && AC < BC) {
-        axis = res.x();
-        r1 = res.up();
-        r2 = res.dir();
-    }
-
-	if (BC < AB && BC < AC)  {
-        axis = res.dir();
-        r1 = res.x();
-        r2 = res.up();
-    }
-
-	axis.normalize();
-
-	cout << "VRGearSegmentation::computeAxis:" << endl;
-	cout << " PCA: " << res.scale() << endl;
-    cout << " axis: " << axis << endl;
-    cout << " r1: " << r1 << endl;
-    cout << " r2: " << r2 << endl;
-
-	/*axis = Vec3d(0, 1,0);
-    r1 = Vec3d(-1,0,0);
-    r2 = Vec3d(0,0, 1);*/
-
-	/*axis = Vec3d(0, -1,0);
-    r1 = Vec3d(0,0, -1);
-    r2 = Vec3d(-1,0,0);*/
+    r2 = res.up();
 }
 
 
@@ -130,14 +94,14 @@ void VRGearSegmentation::computePolarVertices() {
     axisOffset -= axis * axisOffset.dot(axis);
 
 	for (auto p : pos) {
-		GearVertex v(p-axisOffset);
+		PolarVertex v(p-axisOffset);
 		v.computeAndSetAttributes(coords);
 		gearVertices.push_back(v);
     }
 }
 
 void VRGearSegmentation::computePlanes() {
-    auto sortCB = [](const GearVertex& a, const GearVertex& b) -> bool {
+    auto sortCB = [](const PolarVertex& a, const PolarVertex& b) -> bool {
         return a.profileCoords[0] < b.profileCoords[0];
     };
 
@@ -183,7 +147,7 @@ void VRGearSegmentation::groupPlanes() {
 }
 
 void VRGearSegmentation::computeRings() {
-    auto sortCB = [](const GearVertex& a, const GearVertex& b) -> bool {
+    auto sortCB = [](const PolarVertex& a, const PolarVertex& b) -> bool {
         return a.radius < b.radius;
     };
 
@@ -195,28 +159,28 @@ void VRGearSegmentation::computeRings() {
 		int N = plane.vertices.size()-1;
 		for (int i=0; i<N; i++) {
             int x = plane.rings.size()-1;
-            GearVertex& v1 = plane.vertices[i];
-            GearVertex& v2 = plane.vertices[i+1];
+            PolarVertex& v1 = plane.vertices[i];
+            PolarVertex& v2 = plane.vertices[i+1];
             plane.rings[x].vertices.push_back(v1);
             plane.rings[x].radius = v1.radius;
 			bool b1 = same(v1.radius, v2.radius, ringEps);
 			if (!b1) plane.rings.push_back(VertexRing());
         }
         int x = plane.rings.size()-1;
-        GearVertex& v = plane.vertices[N];
+        PolarVertex& v = plane.vertices[N];
         plane.rings[x].vertices.push_back(v);
         plane.rings[x].radius = v.radius;
     }
 }
 
 void VRGearSegmentation::computeContours() {
-    auto sortCB = [](const GearVertex& a, const GearVertex& b) -> bool {
+    auto sortCB = [](const PolarVertex& a, const PolarVertex& b) -> bool {
         return a.polarCoords[0] < b.polarCoords[0];
     };
 
 	for (auto& plane : planes) {
         double R0 = plane.rings[0].radius;
-        vector<GearVertex> outerVertices;
+        vector<PolarVertex> outerVertices;
         auto vLast = plane.vertices[0];
         for (auto& v : plane.vertices) {
             if (plane.rings.size() > 2) {

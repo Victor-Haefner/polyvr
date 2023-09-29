@@ -15,15 +15,15 @@ struct PolarCoords {
     PolarCoords(Vec3d a, Vec3d p0);
 };
 
-struct GearVertex {
+struct PolarVertex {
     Vec3d vertex;
 	Vec2d polarCoords;
 	Vec2d profileCoords;
 	int plane = -1;
 	double radius = -1;
 
-	GearVertex();
-	GearVertex(Vec3d v);
+	PolarVertex();
+	PolarVertex(Vec3d v);
 
 	void setPlaneIndex(int i);
 	Vec3d getOrthogonal(Vec3d v);

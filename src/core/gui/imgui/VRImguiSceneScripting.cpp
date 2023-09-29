@@ -428,17 +428,19 @@ void ImScriptEditor::render() {
 }
 
 
-
 ImScripting::ImScripting() {}
 
 void ImScripting::render() {
     ImGuiIO& io = ImGui::GetIO();
+#ifdef WIN32
     if (io.KeyCtrl && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_S))) { uiSignal("scripts_toolbar_save"); }
     if (io.KeyCtrl && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_E))) { uiSignal("scripts_toolbar_execute"); }
     if (io.KeyCtrl && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_W))) { uiSignal("clearConsoles"); }
-    //if (io.KeyCtrl && io.KeysDown['s']) { io.KeysDown['s'] = false; uiSignal("scripts_toolbar_save"); }
-    //if (io.KeyCtrl && io.KeysDown['e']) { io.KeysDown['e'] = false; uiSignal("scripts_toolbar_execute"); }
-    //if (io.KeyCtrl && io.KeysDown['w']) { io.KeysDown['w'] = false; uiSignal("clearConsoles"); }
+#else
+    if (io.KeyCtrl && io.KeysDown['s']) { io.KeysDown['s'] = false; uiSignal("scripts_toolbar_save"); }
+    if (io.KeyCtrl && io.KeysDown['e']) { io.KeysDown['e'] = false; uiSignal("scripts_toolbar_execute"); }
+    if (io.KeyCtrl && io.KeysDown['w']) { io.KeysDown['w'] = false; uiSignal("clearConsoles"); }
+#endif
 
     // toolbar
     ImGui::Spacing();
@@ -482,10 +484,13 @@ void ImScripting::render() {
     ImGui::Spacing();
     ImGui::BeginChild("ScriptEditorPanel", ImVec2(w2, h), false, flags);
     if (ImGui::IsWindowFocused(ImGuiFocusedFlags_ChildWindows)) {
+#ifdef WIN32
         if (io.KeyCtrl && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_T))) { uiSignal("editor_cmd", {{"cmd","toggleLine"}}); }
         if (io.KeyCtrl && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_D))) { uiSignal("editor_cmd", {{"cmd","duplicateLine"}}); }
-        //if (io.KeyCtrl && io.KeysDown['t']) { io.KeysDown['t'] = false; uiSignal("editor_cmd", {{"cmd","toggleLine"}}); }
-        //if (io.KeyCtrl && io.KeysDown['d']) { io.KeysDown['d'] = false; uiSignal("editor_cmd", {{"cmd","duplicateLine"}}); }
+#else
+        if (io.KeyCtrl && io.KeysDown['t']) { io.KeysDown['t'] = false; uiSignal("editor_cmd", {{"cmd","toggleLine"}}); }
+        if (io.KeyCtrl && io.KeysDown['d']) { io.KeysDown['d'] = false; uiSignal("editor_cmd", {{"cmd","duplicateLine"}}); }
+#endif
     }
 
     editor.render();

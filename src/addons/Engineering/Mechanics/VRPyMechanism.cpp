@@ -50,6 +50,13 @@ PyMethodDef VRPyGearSegmentation::methods[] = {
 
 PyMethodDef VRPyAxleSegmentation::methods[] = {
     {"analyse", PyWrap(AxleSegmentation, analyse, "Analyse object to get axis parameters", void, VRObjectPtr) },
+    {"createAxle", PyWrap(AxleSegmentation, createAxle, "Get a geometry from the analysis result", VRGeometryPtr) },
+    {"getProfileViz", PyWrap(AxleSegmentation, getProfileViz, "Get a visualization of the analysis result", VRTransformPtr) },
+    {"getProfile", PyWrap(AxleSegmentation, getProfile, "Get axle profile", vector<Vec2d>) },
+    {"getRadius", PyWrap(AxleSegmentation, getRadius, "Get axle radius", double) },
+    {"getLength", PyWrap(AxleSegmentation, getLength, "Get axle length", double) },
+    {"getAxis", PyWrap(AxleSegmentation, getAxis, "Get axle length", Vec3d) },
+    {"getAxisOffset", PyWrap(AxleSegmentation, getAxisOffset, "Get axle length", Vec3d) },
     {NULL}  /* Sentinel */
 };
 #endif
