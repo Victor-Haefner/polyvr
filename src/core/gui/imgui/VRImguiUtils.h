@@ -8,7 +8,7 @@
 
 //#include "imEditor/TextEditor.h"
 #include <imgui.h>
-#include <core/utils/VRFwdDeclTemplate.h>
+#include "core/tools/VRToolsFwd.h"
 
 using namespace std;
 
@@ -54,5 +54,10 @@ class ImWidget {
 };
 
 ImVec4 colorFromString(const string& c);
+
+void uiInitStore();
+void uiStoreParameter(string name, string value);
+string uiGetParameter(string name, string def);
+
 
 #endif // VRIMGUIUTILS_H_INCLUDED

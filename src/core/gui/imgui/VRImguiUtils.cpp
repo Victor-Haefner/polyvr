@@ -3,6 +3,7 @@
 #include <iostream>
 #include <math.h>
 
+#include "core/tools/VRProjectManager.h"
 
 
 ostream& operator<<(ostream& os, const ResizeEvent& s) {
@@ -79,6 +80,22 @@ ImVec4 colorFromString(const string& c) {
         if (c.size() == 9) return ImVec4(conv(c[1],c[2]), conv(c[3],c[4]), conv(c[5],c[6]), conv(c[7],c[8]));
     }
     return ImVec4(255,255,255,255);
+}
+
+OSG::VRProjectManagerPtr uiParameterStore;
+
+void uiInitStore() {
+    uiParameterStore = OSG::VRProjectManager::create();
+    uiParameterStore->newProject(".uiParameter.ini", true);
+    uiParameterStore->load();
+}
+
+void uiStoreParameter(string name, string value) {
+    uiParameterStore->setSetting(name, value);
+}
+
+string uiGetParameter(string name, string def) {
+    return uiParameterStore->getSetting(name, def);
 }
 
 

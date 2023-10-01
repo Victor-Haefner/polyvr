@@ -24,7 +24,7 @@ PyMethodDef VRPyProjectManager::methods[] = {
     {"addItem", PyWrapOpt(ProjectManager, addItem, "Add a storable item\n\tmode can be 'RELOAD' or 'REBUILD', reload will only reload the attributes of the object", "RELOAD", void, VRStoragePtr, string ) },
     {"remItem", PyWrap(ProjectManager, remItem, "Remove an item", void, VRStoragePtr ) },
     {"getItems", PyWrap(ProjectManager, getItems, "Get all items", vector<VRStoragePtr> ) },
-    {"newProject", PyWrap(ProjectManager, newProject, "New project", void, string ) },
+    {"newProject", PyWrapOpt(ProjectManager, newProject, "New project, (path, autosave = False)", "0", void, string, bool ) },
     {"save", PyWrapOpt(ProjectManager, save, "Save to file", "", void, string ) },
     {"load", PyWrapOpt(ProjectManager, load, "Load from file", "", bool, string ) },
     {"setPersistencyLevel", PyWrap(ProjectManager, setPersistencyLevel, "Set the persistency level of objects to store, set lower than the persistency of objects to be stored", void, int ) },

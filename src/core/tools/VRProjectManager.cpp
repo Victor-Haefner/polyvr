@@ -32,7 +32,7 @@ void VRProjectManager::remItem(VRStoragePtr s) {
     if (modesMap.count(s.get())) modesMap.erase(s.get());
 }
 
-void VRProjectManager::setSetting(string s, string v) { settings[s] = v; }
+void VRProjectManager::setSetting(string s, string v) { settings[s] = v; if (autosave) save(); }
 string VRProjectManager::getSetting(string s, string d) { return settings.count(s) ? settings[s] : d; }
 
 vector<VRStoragePtr> VRProjectManager::getItems() {
@@ -41,10 +41,11 @@ vector<VRStoragePtr> VRProjectManager::getItems() {
     return res;
 }
 
-void VRProjectManager::newProject(string path) {
+void VRProjectManager::newProject(string path, bool asave) {
     setName(path);
     vault_rebuild.clear();
     modesMap.clear();
+    autosave = asave;
 }
 
 void VRProjectManager::save(string path) {

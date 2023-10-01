@@ -16,6 +16,7 @@ class VRProjectManager : public VRObject {
         vector<VRStoragePtr> vault_reload;
         vector<VRStoragePtr> vault_rebuild;
         int persistencyLvl = 0;
+        bool autosave = false;
 
     public:
         VRProjectManager();
@@ -28,7 +29,7 @@ class VRProjectManager : public VRObject {
         void remItem(VRStoragePtr s);
         vector<VRStoragePtr> getItems();
 
-        void newProject(string path);
+        void newProject(string path, bool autosave = false);
         void save(string path = "");
         bool load(string path = "");
 

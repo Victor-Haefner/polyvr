@@ -13,9 +13,10 @@
 #include <backends/imgui_impl_opengl3.h>
 #endif
 
-#include <core/gui/VRGuiSignals.h>
-#include <core/gui/VRGuiManager.h>
-#include <core/utils/toString.h>
+#include "core/gui/VRGuiSignals.h"
+#include "core/gui/VRGuiManager.h"
+#include "core/utils/toString.h"
+#include "core/tools/VRProjectManager.h"
 
 #include "VRImguiApps.h"
 #include "VRImguiConsoles.h"
@@ -335,6 +336,15 @@ void VRImguiEditor::init(Signal signal, ResizeSignal resizeSignal) {
     auto mgr = OSG::VRGuiSignals::get();
     mgr->addCallback("relayedKeySignal", [&](OSG::VRGuiSignals::Options o){ handleRelayedKey(toInt(o["key"]), toInt(o["state"]), false); return true; } );
     mgr->addCallback("relayedSpecialKeySignal", [&](OSG::VRGuiSignals::Options o){ handleRelayedKey(toInt(o["key"]), toInt(o["state"]), true); return true; } );
+
+    uiInitStore();
+    toValue(uiGetParameter("fontScale", "1.0"), io.FontGlobalScale);
+
+    string theme;
+    toValue(uiGetParameter("uiTheme", "dark"), theme);
+    if (theme == "dark") ImGui::StyleColorsDark();
+    if (theme == "light") ImGui::StyleColorsLight();
+    if (theme == "classic") ImGui::StyleColorsClassic();
 }
 
 void VRImguiEditor::initPopup() {
