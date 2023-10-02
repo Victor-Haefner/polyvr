@@ -1391,6 +1391,7 @@ VRGuiSetup::VRGuiSetup() {
 
     auto mgr = OSG::VRGuiSignals::get();
     mgr->addCallback("ui_toggle_fotomode", [&](OSG::VRGuiSignals::Options o) { on_foto_clicked(toBool(o["active"])); return true; }, true );
+    mgr->addCallback("ui_set_framesleep", [&](OSG::VRGuiSignals::Options o) { VRSceneManager::get()->setTargetFPS(toInt(o["fps"])); return true; }, true );
 
     updateSetupCb = VRDeviceCb::create("update gui setup", bind(&VRGuiSetup::updateSetup, this) );
 
