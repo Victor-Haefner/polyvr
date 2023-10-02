@@ -775,7 +775,7 @@ void TextEditor::HandleKeyboardInputs()
 			{
 				auto c = io.InputQueueCharacters[i];
 				if (c != 0 && c != 127 && (c == '\n' || c >= 32) && (!ctrl || alt)) { // altgr is alt and ctrl
-					std::cout << "  EnterCharacter " << (int)c << std::endl;
+					//std::cout << "  EnterCharacter " << (int)c << std::endl;
 					EnterCharacter(c, shift);
 				}
 			}
