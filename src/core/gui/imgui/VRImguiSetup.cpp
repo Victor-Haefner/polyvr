@@ -10,4 +10,5 @@ ImSetupManager::ImSetupManager() : ImWidget("SetupManager") {
 
 void ImSetupManager::begin() {
     if (ImGui::Checkbox("Fotomode", &fotomode)) uiSignal("ui_toggle_fotomode", {{"active",toString(fotomode)}});
+    if (ImGui::Checkbox("V-Sync", &vsync)) uiSignal("ui_toggle_vsync", {{"active",toString(vsync)}});
 }

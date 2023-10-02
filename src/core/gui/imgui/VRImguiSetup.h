@@ -8,6 +8,7 @@ using namespace std;
 class ImSetupManager : public ImWidget {
     private:
         bool fotomode = false;
+        bool vsync = true;
 
     public:
         ImSetupManager();

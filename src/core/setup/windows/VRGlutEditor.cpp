@@ -148,6 +148,7 @@ VRGlutEditor::VRGlutEditor() {
     mgr->addCallback("ui_toggle_popup", [&](VRGuiSignals::Options o) { togglePopupWindow(o["name"], toInt(o["width"]), toInt(o["height"])); return true; }, true );
     mgr->addCallback("set_editor_fullscreen", [&](VRGuiSignals::Options o) { setFullscreen(toBool(o["fullscreen"])); return true; } );
     mgr->addCallback("uiGrabFocus", [&](VRGuiSignals::Options o) { glViewFocussed = false; return true; } );
+    mgr->addCallback("ui_toggle_vsync", [&](VRGuiSignals::Options o) { enableVSync(toBool(o["active"])); return true; } );
 }
 
 VRGlutEditor::~VRGlutEditor() {
@@ -221,6 +222,7 @@ void VRGlutEditor::initGlut() {
     glutInititated = true;
     cout << " init GLUT";
 
+    putenv((char*)"__GL_SYNC_TO_VBLANK=1");
     glutInit(&VROptions::get()->argc, VROptions::get()->argv);
 
 #ifdef WASM
@@ -283,21 +285,36 @@ void VRGlutEditor::render(bool fromThread) {
     glutMainLoopEvent();
     glutMainLoopEvent(); // call again after window reshapes
     glutMainLoopEvent(); // call again after window reshapes
-
-    glutSetWindow(winUI);
-    glutSwapBuffers();
-    if (winPopup >= 0) {
-        glutSetWindow(winPopup);
-        glutSwapBuffers();
-    }
 }
 
 void VRGlutEditor::forceGLResize(int w, int h) { // TODO
     ;
 }
 
-void VRGlutEditor::enableVSync(bool b) { // TODO
-    ;
+#ifdef WIN32
+#include <GL/wglext.h>
+#endif
+
+void setSwapInterval(int swapInterval) { // TODO, Linux
+#ifdef WIN32
+    PFNWGLSWAPINTERVALEXTPROC wglSwapIntervalEXT;
+    if (wglSwapIntervalEXT = (PFNWGLSWAPINTERVALEXTPROC)wglGetProcAddress("wglSwapIntervalEXT"))
+    {
+        // Enable V-Sync
+        wglSwapIntervalEXT(swapInterval); // 0 for off, 1 for on
+    };
+#else
+#endif
+}
+
+void VRGlutEditor::enableVSync(bool b) {
+    int swapInterval = b ? 1 : 0;
+
+    int current = glutGetWindow();
+    if (winGL >= 0) glutSetWindow(winGL); setSwapInterval(swapInterval);
+    if (winUI >= 0) glutSetWindow(winUI); setSwapInterval(swapInterval);
+    if (winPopup >= 0) glutSetWindow(winPopup); setSwapInterval(swapInterval);
+    glutSetWindow(current);
 }
 
 void VRGlutEditor::on_gl_resize(int w, int h) {
@@ -347,6 +364,7 @@ void VRGlutEditor::on_ui_display() {
     if (winUI < 0) return;
     glutSetWindow(winUI);
     if (signal) signal( "glutRenderUI", {} );
+    glutSwapBuffers();
 }
 
 void VRGlutEditor::on_ui_resize(int w, int h) {
@@ -361,6 +379,7 @@ void VRGlutEditor::on_popup_display() {
     if (winPopup < 0) return;
     glutSetWindow(winPopup);
     if (signal) signal( "glutRenderPopup", {{"name",popup}} );
+    glutSwapBuffers();
 }
 
 void VRGlutEditor::on_popup_resize(int w, int h) {

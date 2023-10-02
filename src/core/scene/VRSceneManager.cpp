@@ -348,16 +348,6 @@ void VRSceneManager::update() {
             setup.reset(); // updateGtk may close application, reset setup to avoid memory leak
             VRGlobals::WINDOWS_FRAME_RATE.update(t2);
             VRGlobals::UPDATE_LOOP5.update(timer);
-#ifndef WASM
-            int pID31 = profiler->regStart("frame gtk update");
-#endif
-#ifndef WITHOUT_GTK
-            //VRGuiManager::get()->updateGtk();
-#endif
-#ifndef WASM
-            profiler->regStop(pID31);
-#endif
-            VRGlobals::UPDATE_LOOP6.update(timer);
         }
 #ifndef WASM
         profiler->regStop(pID3);
@@ -371,7 +361,7 @@ void VRSceneManager::update() {
         VRTimer t7; t7.start();
 #ifndef WASM // main loop is controlled by wasm, no sleep needed here
         int pID2 = profiler->regStart("frame sleep");
-        doFrameSleep(timer.stop(), targetFPS);
+        if (targetFPS > 0) doFrameSleep(timer.stop(), targetFPS);
         profiler->regStop(pID2);
 #endif
         VRGlobals::SLEEP_FRAME_RATE.update(t7);
@@ -388,7 +378,6 @@ void VRSceneManager::update() {
     };
 
     setupProfiling();
-    //doGTKUpdate();
     doCallbacks(); // Warning, CEF may call g_main_context_iteration
     doSetupUpdate();
     doSceneUpdate();

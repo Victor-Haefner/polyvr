@@ -357,16 +357,14 @@ void VRView::showStats(bool b) {
 
         statsFg->addText("\nPerformance:");
         statsFg->addElement(VRGlobals::FRAME_RATE.statFPS, " application FPS: %d");
-        statsFg->addElement(VRGlobals::UPDATE_LOOP1.statFPS, "  main update loop point 1 FPS (after first Gtk update) : %d");
-        statsFg->addElement(VRGlobals::UPDATE_LOOP2.statFPS, "  main update loop point 2 FPS (after callbacks update) : %d");
-        statsFg->addElement(VRGlobals::UPDATE_LOOP3.statFPS, "  main update loop point 3 FPS (after hardware update)  : %d");
-        statsFg->addElement(VRGlobals::UPDATE_LOOP4.statFPS, "  main update loop point 4 FPS (after scene update)     : %d");
-        statsFg->addElement(VRGlobals::UPDATE_LOOP5.statFPS, "  main update loop point 5 FPS (after remote rendering) : %d");
-        statsFg->addElement(VRGlobals::UPDATE_LOOP6.statFPS, "  main update loop point 6 FPS (after second Gtk update): %d");
-        statsFg->addElement(VRGlobals::UPDATE_LOOP7.statFPS, "  main update loop point 7 FPS (end of loop iteration)  : %d");
+        statsFg->addElement(VRGlobals::UPDATE_LOOP2.statFPS, "  main update loop point 1 FPS (after callbacks update) : %d");
+        statsFg->addElement(VRGlobals::UPDATE_LOOP3.statFPS, "  main update loop point 2 FPS (after hardware update)  : %d");
+        statsFg->addElement(VRGlobals::UPDATE_LOOP4.statFPS, "  main update loop point 3 FPS (after scene update)     : %d");
+        statsFg->addElement(VRGlobals::UPDATE_LOOP5.statFPS, "  main update loop point 4 FPS (after all rendering) : %d");
+        statsFg->addElement(VRGlobals::UPDATE_LOOP7.statFPS, "  main update loop point 5 FPS (end of loop iteration)  : %d");
         statsFg->addElement(VRGlobals::SLEEP_FRAME_RATE.statFPS, " application sleep FPS: %d");
         statsFg->addElement(VRGlobals::SCRIPTS_FRAME_RATE.statFPS, "  script FPS: %d");
-        statsFg->addElement(VRGlobals::WINDOWS_FRAME_RATE.statFPS, "  distributed windows FPS: %d");
+        statsFg->addElement(VRGlobals::WINDOWS_FRAME_RATE.statFPS, "  all windows FPS: %d");
         statsFg->addElement(VRGlobals::GTK1_FRAME_RATE.statFPS, " GTK devices FPS: %d");
         statsFg->addElement(VRGlobals::GTK2_FRAME_RATE.statFPS, " GTK rendering FPS: %d");
         statsFg->addElement(VRGlobals::RENDER_FRAME_RATE.statFPS, "  rendering FPS: %d");
