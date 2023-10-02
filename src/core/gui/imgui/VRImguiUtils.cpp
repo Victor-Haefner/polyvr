@@ -3,6 +3,7 @@
 #include <iostream>
 #include <math.h>
 
+#include "core/utils/system/VRSystem.h"
 #include "core/tools/VRProjectManager.h"
 
 
@@ -86,7 +87,7 @@ OSG::VRProjectManagerPtr uiParameterStore;
 
 void uiInitStore() {
     uiParameterStore = OSG::VRProjectManager::create();
-    uiParameterStore->newProject(".uiParameter.ini", true);
+    uiParameterStore->newProject(absolute(".uiParameter.ini"), true);
     uiParameterStore->load();
 }
 
