@@ -604,6 +604,9 @@ static LRESULT fghWindowProcKeyPress(SFG_Window *window, UINT uMsg, GLboolean ke
     if( keydown && ( fgState.KeyRepeat==GLUT_KEY_REPEAT_OFF || window->State.IgnoreKeyRepeat==GL_TRUE ) && (HIWORD(lParam) & KF_REPEAT) )
         return 1;
 
+    //printf("fghWindowProcKeyPress w: %i, l: %i, s: %i, u: %i\n", wParam, lParam, keydown, uMsg);
+
+
     /* Remember the current modifiers state so user can query it from their callback */
     fgState.Modifiers = fgPlatformGetModifiers( );
 
@@ -688,16 +691,19 @@ static LRESULT fghWindowProcKeyPress(SFG_Window *window, UINT uMsg, GLboolean ke
         GetKeyboardState(state);
 
         int ctrlPressed = GetKeyState(VK_CONTROL) < 0;
+        int altPressed = GetKeyState(VK_MENU) < 0;
         UINT vkCode = (UINT)wParam;
         UINT scanCode = (lParam >> 16) & 0xFF;
 
         int r = -1;
-        if (ctrlPressed) r = ToAscii(vkCode, scanCode, 0, code, 0);
+        if (ctrlPressed && !altPressed) r = ToAscii(vkCode, scanCode, 0, code, 0); // TODO: passing 0 instead of state doesnt work, ToAscii just fails
         else r = ToAscii(vkCode, scanCode, state, code, 0);
+        //int result = ToUnicode(VK_0, scanCode, GetKeyState(VK_MENU) < 0, buffer, 2, 0); // TODO: try ToUnicode instead of ToAscii ?
+
         if (r == 1) wParam = code[0];
 
         //printf(" cb -> vkCode: %i scanCode: %i\n", vkCode, scanCode);
-        //printf(" -> w: %i code: (%i %i), fRet: %i\n", wParam, code[0], code[1], r);
+        //printf("    -> w: %i code: (%i %i), fRet: %i, ctrlPressed %i\n", wParam, code[0], code[1], r, ctrlPressed);
 
         if (keydown) {
             fgState.Modifiers = fgPlatformGetModifiers();

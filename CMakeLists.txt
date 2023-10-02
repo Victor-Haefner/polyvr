@@ -769,6 +769,7 @@ if(NOT WITHOUT_EIGEN)
 target_sources(polyvr PRIVATE src/addons/Engineering/Mechanics/VRPolarVertex.cpp)
 target_sources(polyvr PRIVATE src/addons/Engineering/Mechanics/VRGearSegmentation.cpp) # needs eigen
 target_sources(polyvr PRIVATE src/addons/Engineering/Mechanics/VRAxleSegmentation.cpp) # needs eigen
+target_sources(polyvr PRIVATE src/addons/Engineering/Mechanics/VRThreadSegmentation.cpp) # needs eigen
 endif()
 
 if(NOT WITHOUT_LAPACKE_BLAS)
