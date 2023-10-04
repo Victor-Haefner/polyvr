@@ -110,6 +110,9 @@ bool VRHeadMountedDisplay::updateCamera() {
 	if (!fboData) return true;
 	cout << "VRHeadMountedDisplay::updateCamera" << endl;
 	VRCameraPtr cam = VRScene::getCurrent()->getActiveCamera();
+    fboData->mcamL->setBeacon(cam->getCam()->cam->getBeacon());
+    fboData->mcamR->setBeacon(cam->getCam()->cam->getBeacon());
+
 	float f = cam->getFar();
 	float n = cam->getNear();
 	fboData->mcamL->setNear(n);
