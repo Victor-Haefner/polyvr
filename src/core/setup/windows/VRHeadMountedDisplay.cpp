@@ -17,6 +17,7 @@
 #include "core/scripting/VRScript.h"
 #include "core/gui/VRGuiManager.h"
 #include "core/gui/VRGuiSignals.h"
+#include "core/utils/VRMutex.h"
 #include "addons/CEF/CEF.h"
 
 #include <openvr.h>
@@ -51,6 +52,8 @@ unsigned int testTextureID;
 unsigned int texIDL;
 unsigned int texIDR;
 // ------------------------------
+
+static VRMutex mtx;
 
 
 std::string GetViveDeviceString(vr::TrackedDeviceIndex_t unDevice, vr::TrackedDeviceProperty prop, vr::TrackedPropertyError* peError = NULL) {
@@ -408,6 +411,7 @@ void VRHeadMountedDisplay::handleInput() {
 
 void VRHeadMountedDisplay::UpdateHMDMatrixPose() {
 	if (!m_pHMD) return;
+	VRLock lock(mtx);
 
 	vr::VRCompositor()->WaitGetPoses(&m_rTrackedDevicePose[0], vr::k_unMaxTrackedDeviceCount, NULL, 0);
 
@@ -452,6 +456,7 @@ void VRHeadMountedDisplay::UpdateHMDMatrixPose() {
 }
 
 void VRHeadMountedDisplay::calibrateOrigin() {
+	VRLock lock(mtx);
 	int hmdID = vr::k_unTrackedDeviceIndex_Hmd;
     if (hmdID < 0 || hmdID >= m_rmat4DevicePose.size()) return;
     calibration.invert();
