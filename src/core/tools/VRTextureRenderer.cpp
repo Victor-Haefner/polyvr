@@ -265,6 +265,7 @@ void VRTextureRenderer::setReadback(bool readback) {
     //texDBuf->setReadBack(readback);
 }
 
+void VRTextureRenderer::setCam(VRCameraPtr c) { cam = c; }
 void VRTextureRenderer::setStageCam(OSGCameraPtr cam) { data->stage->setCamera(cam->cam); }
 VRMaterialPtr VRTextureRenderer::getMaterial() { return mat; }
 VRCameraPtr VRTextureRenderer::getCamera() { return cam; }

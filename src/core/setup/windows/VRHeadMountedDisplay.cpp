@@ -114,6 +114,8 @@ bool VRHeadMountedDisplay::updateCamera() {
 	VRCameraPtr cam = VRScene::getCurrent()->getActiveCamera();
     fboData->mcamL->setBeacon(cam->getCam()->cam->getBeacon());
     fboData->mcamR->setBeacon(cam->getCam()->cam->getBeacon());
+	fboData->rendererL->setCam(cam);
+	fboData->rendererR->setCam(cam);
 
 	float f = cam->getFar();
 	float n = cam->getNear();
@@ -414,7 +416,7 @@ void VRHeadMountedDisplay::UpdateHMDMatrixPose() {
 		if (m_rTrackedDevicePose[devID].bPoseIsValid) {
 			m_iValidPoseCount++;
 			Matrix4d m = convertMatrix(m_rTrackedDevicePose[devID].mDeviceToAbsoluteTracking);
-            m.mult(calibration);
+            m.multLeft(calibration);
 			m_rmat4DevicePose[devID] = m;
 			auto devType = m_pHMD->GetTrackedDeviceClass(devID);
 

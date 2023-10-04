@@ -51,6 +51,7 @@ class VRTextureRenderer : public VRObject {
 
         void setup(VRCameraPtr cam, int width, int height, bool alpha = false);
         void setReadback(bool readback);
+        void setCam(VRCameraPtr c);
         void setStageCam(OSGCameraPtr cam);
         void setMaterialSubstitutes(map<VRMaterial*, VRMaterialPtr> substitutes, CHANNEL c);
         void setBackground(Color3f c, float a = 0);
