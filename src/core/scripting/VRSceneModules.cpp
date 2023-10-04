@@ -390,6 +390,7 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
 #ifndef WITHOUT_VIRTUOSE
     sm->registerModule<VRPyHaptic>("Haptic", pModVR, VRPyDevice::typeRef);
 #endif
+    sm->registerModule<VRPyHeadMountedDisplay>("HeadMountedDisplay", pModVR, VRPyDevice::typeRef);
     sm->registerModule<VRPyParticles>("Particles", pModVR, VRPyGeometry::typeRef);
     sm->registerModule<VRPyFluids>("Fluids", pModVR, VRPyParticles::typeRef);
     sm->registerModule<VRPyMetaBalls>("MetaBalls", pModVR, VRPyObject::typeRef);
