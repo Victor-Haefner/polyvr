@@ -6,7 +6,7 @@ namespace OSG { typedef Boundingbox VRBoundingbox; }
 
 using namespace OSG;
 
-newPyType(Boundingbox, Boundingbox, New_ptr);
+simplePyType(Boundingbox, New_ptr);
 
 template<> bool toValue(PyObject* o, Boundingbox& v) { if (!VRPyBoundingbox::check(o)) return 0; v = *((VRPyBoundingbox*)o)->objPtr; return 1; }
 

@@ -5,7 +5,12 @@
 using namespace OSG;
 
 newPyType(VRStateMachinePy, StateMachine, New_named_ptr);
+newPyTypeToValue(VRStateMachinePy, StateMachine);
+newPyTypeCast(VRStateMachinePy, StateMachine);
+
 newPyType(VRStateMachinePy::State, State, 0);
+newPyTypeToValue(VRStateMachinePy::State, State);
+newPyTypeCast(VRStateMachinePy::State, State);
 
 PyMethodDef VRPyState::methods[] = {
     {"getName", (PyCFunction)VRPyState::getName, METH_NOARGS, "Return the state name - str getName()" },

@@ -10,8 +10,9 @@
 #include "../VRSetupFwd.h"
 #include "core/objects/VRObjectFwd.h"
 #include "core/utils/VRFunctionFwd.h"
-#include "core/utils/VRDeviceFwd.h"
 #include "core/tools/VRToolsFwd.h"
+
+#include "core/setup/devices/VRDevice.h"
 
 namespace vr {
 	class IVRSystem;
@@ -23,7 +24,7 @@ namespace vr {
 using namespace std;
 OSG_BEGIN_NAMESPACE;
 
-class VRHeadMountedDisplay : public std::enable_shared_from_this<VRHeadMountedDisplay> {
+class VRHeadMountedDisplay : public VRDevice {
 	public:
 		struct FBOData;
 
@@ -44,7 +45,6 @@ class VRHeadMountedDisplay : public std::enable_shared_from_this<VRHeadMountedDi
 
 		vector<vr::TrackedDevicePose_t> m_rTrackedDevicePose;
 		vector<Matrix4d> m_rmat4DevicePose;
-		VRDevicePtr hmd;
 		map<int, VRTransformPtr> tracker;
 		map<int, VRDevicePtr> devices;
 
@@ -55,6 +55,7 @@ class VRHeadMountedDisplay : public std::enable_shared_from_this<VRHeadMountedDi
 		Matrix4d m_mat4ProjectionRight;
 		Matrix4d m_mat4eyePosLeft;
 		Matrix4d m_mat4eyePosRight;
+		Matrix4d calibration;
 
 		VRDeviceCbPtr onCameraChanged;
 
@@ -88,11 +89,13 @@ class VRHeadMountedDisplay : public std::enable_shared_from_this<VRHeadMountedDi
 		void initHMD();
 
 		void render(bool fromThread = false);
-		
+
 		VRTransformPtr getTracker(int tID);
 		VRDevicePtr getDevice(int dID);
 		map<int, VRTransformPtr> getTrackers();
 		map<int, VRDevicePtr> getDevices();
+
+		void calibrateOrigin();
 };
 
 OSG_END_NAMESPACE;

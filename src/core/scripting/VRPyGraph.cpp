@@ -6,7 +6,7 @@
 
 using namespace OSG;
 
-newPyType( Graph , Graph , New_ptr );
+simplePyType( Graph , New_ptr );
 
 template<> PyObject* VRPyTypeCaster::cast(const Graph::edge& e) {
     PyObject* epy = PyTuple_New(2);

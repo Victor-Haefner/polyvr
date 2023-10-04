@@ -19,6 +19,7 @@ using namespace OSG;
 
 simpleVRPyType(Signal, 0)
 simpleVRPyType(Device, New_named_ptr)
+simpleVRPyType(HeadMountedDisplay, 0)
 
 PyMethodDef VRPySignal::methods[] = {
     {NULL}  /* Sentinel */
@@ -77,6 +78,7 @@ PyObject* VRPyDevice::fromSharedPtr(VRDevicePtr dev) {
 #endif
     else if (type == "leap") return VRPyLeap::fromSharedPtr( static_pointer_cast<VRLeap>(dev) );
     else if (type == "server") return VRPyServer::fromSharedPtr( static_pointer_cast<VRServer>(dev) );
+    else if (type == "hmd") return VRPyHeadMountedDisplay::fromSharedPtr( static_pointer_cast<VRHeadMountedDisplay>(dev) );
 #ifndef WITHOUT_VIRTUOSE
     else if (type == "haptic") return VRPyHaptic::fromSharedPtr( static_pointer_cast<VRHaptic>(dev) );
 #endif
@@ -85,3 +87,8 @@ PyObject* VRPyDevice::fromSharedPtr(VRDevicePtr dev) {
     cout << "\nERROR in VRPyTypeCaster::cast device: " << type << " not handled!\n";
     return VRPyBaseT<VRDevice>::fromSharedPtr(dev);
 }
+
+PyMethodDef VRPyHeadMountedDisplay::methods[] = {
+    {"calibrateOrigin", PyWrap( HeadMountedDisplay, calibrateOrigin, "Set HMD tracking origin to camera", void ) },
+    {NULL}  /* Sentinel */
+};

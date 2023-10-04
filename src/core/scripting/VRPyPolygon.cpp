@@ -9,8 +9,8 @@ template<> PyObject* VRPyTypeCaster::cast(const Frustum& p) { return VRPyFrustum
 template<> bool toValue(PyObject* o, VRPolygon& v) { if (!VRPyPolygon::check(o)) return 0; v = *((VRPyPolygon*)o)->objPtr; return 1; }
 template<> bool toValue(PyObject* o, Frustum& v) { if (!VRPyFrustum::check(o)) return 0; v = *((VRPyFrustum*)o)->objPtr; return 1; }
 
-newPyType(VRPolygon, Polygon, New_ptr);
-newPyType(Frustum, Frustum, New_ptr);
+simpleVRPyType(Polygon, New_ptr);
+simplePyType(Frustum, New_ptr);
 
 PyMethodDef VRPyFrustum::methods[] = {
     {"isInside", PyWrap2(Frustum, isInside, "Check if point in frustum", bool, Vec3d) },
