@@ -85,16 +85,16 @@ class VRGuiScene {
         // ----------------------------------------------
 
         // ------------- light -----------------------
-        void on_toggle_light();
-        void on_toggle_light_shadow();
-        void on_toggle_light_shadow_volume();
-        void on_change_light_type();
-        void on_change_light_shadow();
-        void on_edit_light_attenuation();
-        bool setShadow_color();
-        bool setLight_diff_color();
-        bool setLight_amb_color();
-        bool setLight_spec_color();
+        void on_toggle_light(bool b);
+        void on_toggle_light_shadow(bool b);
+        void on_toggle_light_shadow_volume(bool b, float D);
+        void on_change_light_type(string type);
+        void on_change_light_shadow(int res);
+        void on_edit_light_attenuation(Vec3d a);
+        bool setShadow_color(Color4f c);
+        bool setLight_diff_color(Color4f c);
+        bool setLight_amb_color(Color4f c);
+        bool setLight_spec_color(Color4f c);
         // ----------------------------------------------
 
         // ------------- camera -----------------------

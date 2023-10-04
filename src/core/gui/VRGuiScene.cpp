@@ -227,13 +227,15 @@ void VRGuiScene::setGeometry(VRGeometryPtr g) {
 }
 
 void VRGuiScene::setLight(VRLightPtr l) {
-    /*setWidgetVisibility("expander13", true, true);
+    uiSignal( "on_sg_setup_light", {
+        {"type", toString(l->getLightType())},
+        {"shadowRes", toString(l->getShadowMapRes())},
+        {"state", toString(l->isOn())},
+        {"doShadows", toString(l->getShadows())},
+    } );
 
-    setToggleButton("checkbutton31", l->isOn());
-    setToggleButton("checkbutton32", l->getShadows());
+    /*
     setToggleButton("checkbutton2", l->getShadowVolume().volume() > 1e-4);
-    setCombobox("combobox2", getListStorePos("light_types", l->getLightType()));
-    setCombobox("combobox22", getListStorePos("shadow_types", toString(l->getShadowMapRes())));
 
     setColorChooserColor("shadow_col", toColor3f(l->getShadowColor()));
     setColorChooserColor("light_diff", toColor3f(l->getDiffuse()));
@@ -263,13 +265,6 @@ void VRGuiScene::setLight(VRLightPtr l) {
 }
 
 void VRGuiScene::setCamera(VRCameraPtr c) {
-    /*setWidgetVisibility("expander12", true, true);
-    setToggleButton("checkbutton17", c->getAcceptRoot());
-    setTextEntry("entry60", toString(c->getAspect()));
-    setTextEntry("entry61", toString(c->getFov()));
-    setTextEntry("entry6", toString(c->getNear()));
-    setTextEntry("entry7", toString(c->getFar()));*/
-
     uiSignal( "on_sg_setup_cam", {
         {"acceptRoot", toString(c->getAcceptRoot())},
         {"aspect", toString(c->getAspect())},
@@ -1033,96 +1028,83 @@ void VRGuiScene::on_change_cam_proj(string mode) {
 // ----------------------------------------------
 
 // ------------- light -----------------------
-void VRGuiScene::on_toggle_light() {
+void VRGuiScene::on_toggle_light(bool b) {
     if(!trigger_cbs) return;
     VRLightPtr obj = dynamic_pointer_cast<VRLight>( getSelected() );
     if (!obj) return;
-    /*bool b = getCheckButtonState("checkbutton31");
-    obj->setOn(b);*/
+    obj->setOn(b);
 }
 
-void VRGuiScene::on_toggle_light_shadow() {
+void VRGuiScene::on_toggle_light_shadow(bool b) {
     if(!trigger_cbs) return;
     VRLightPtr obj = dynamic_pointer_cast<VRLight>( getSelected() );
     if (!obj) return;
-    /*bool b = getCheckButtonState("checkbutton32");
-    obj->setShadows(b);*/
+    obj->setShadows(b);
 }
 
-void VRGuiScene::on_toggle_light_shadow_volume() {
+void VRGuiScene::on_toggle_light_shadow_volume(bool b, float D) {
     if(!trigger_cbs) return;
     VRLightPtr obj = dynamic_pointer_cast<VRLight>( getSelected() );
     if (!obj) return;
-    /*bool b = getCheckButtonState("checkbutton2");
-    float D = toFloat( getTextEntry("entry36") );
     Boundingbox bb;
     if (!b) obj->setShadowVolume( bb );
     else {
         bb.inflate( 0.5*D );
         cout << "VRGuiScene::on_toggle_light_shadow_volume " << 0.5*D << " " << bb.volume() << " " << bb.size() << endl;
         obj->setShadowVolume( bb );
-    }*/
+    }
 }
 
-void VRGuiScene::on_change_light_type() {
-    if(!trigger_cbs) return;
-    VRLightPtr obj = dynamic_pointer_cast<VRLight>( getSelected() );
-    /*if (!obj) return;
-    string t = getComboboxText("combobox2");
-    obj->setType(t);*/
-}
-
-void VRGuiScene::on_change_light_shadow() {
-    if(!trigger_cbs) return;
-    VRLightPtr obj = dynamic_pointer_cast<VRLight>( getSelected() );
-    /*if (!obj) return;
-    string t = getComboboxText("combobox22");
-    obj->setShadowMapRes(toInt(t));*/
-}
-
-void VRGuiScene::on_edit_light_attenuation() {
+void VRGuiScene::on_change_light_type(string type) {
     if(!trigger_cbs) return;
     VRLightPtr obj = dynamic_pointer_cast<VRLight>( getSelected() );
     if (!obj) return;
-    /*string ac = getTextEntry("entry44");
-    string al = getTextEntry("entry45");
-    string aq = getTextEntry("entry46");
-    obj->setAttenuation(Vec3d(toFloat(ac), toFloat(al), toFloat(aq)));*/
+    obj->setType(type);
 }
 
-bool VRGuiScene::setShadow_color() {
+void VRGuiScene::on_change_light_shadow(int res) {
+    if(!trigger_cbs) return;
+    VRLightPtr obj = dynamic_pointer_cast<VRLight>( getSelected() );
+    if (!obj) return;
+    obj->setShadowMapRes(res);
+}
+
+void VRGuiScene::on_edit_light_attenuation(Vec3d a) {
+    if(!trigger_cbs) return;
+    VRLightPtr obj = dynamic_pointer_cast<VRLight>( getSelected() );
+    if (!obj) return;
+    obj->setAttenuation(a);
+}
+
+bool VRGuiScene::setShadow_color(Color4f c) {
     if(!trigger_cbs) return true;
     VRLightPtr obj = dynamic_pointer_cast<VRLight>( getSelected() );
     if (!obj) return true;
-    /*Color4f c = chooseColor("shadow_col", obj->getShadowColor());
-    obj->setShadowColor(c);*/
+    obj->setShadowColor(c);
     return true;
 }
 
-bool VRGuiScene::setLight_diff_color() {
+bool VRGuiScene::setLight_diff_color(Color4f c) {
     if(!trigger_cbs) return true;
     VRLightPtr obj = dynamic_pointer_cast<VRLight>( getSelected() );
     if (!obj) return true;
-    /*Color4f c = chooseColor("light_diff", obj->getDiffuse());
-    obj->setDiffuse(c);*/
+    obj->setDiffuse(c);
     return true;
 }
 
-bool VRGuiScene::setLight_amb_color() {
-    if(!trigger_cbs) return true;
-    VRLightPtr obj = dynamic_pointer_cast<VRLight>( getSelected() );
-    /*if (!obj) return true;
-    Color4f c = chooseColor("light_amb", obj->getAmbient());
-    obj->setAmbient(c);*/
-    return true;
-}
-
-bool VRGuiScene::setLight_spec_color() {
+bool VRGuiScene::setLight_amb_color(Color4f c) {
     if(!trigger_cbs) return true;
     VRLightPtr obj = dynamic_pointer_cast<VRLight>( getSelected() );
     if (!obj) return true;
-    /*Color4f c = chooseColor("light_spec", obj->getSpecular());
-    obj->setSpecular(c);*/
+    obj->setAmbient(c);
+    return true;
+}
+
+bool VRGuiScene::setLight_spec_color(Color4f c) {
+    if(!trigger_cbs) return true;
+    VRLightPtr obj = dynamic_pointer_cast<VRLight>( getSelected() );
+    if (!obj) return true;
+    obj->setSpecular(c);
     return true;
 }
 // ----------------------------------------------
@@ -1347,6 +1329,17 @@ VRGuiScene::VRGuiScene() { // TODO: reduce callbacks with templated functions
     mgr->addCallback("sg_set_cam_near", [&](OSG::VRGuiSignals::Options o) { on_cam_near_changed(toFloat(o["value"])); return true; }, true );
     mgr->addCallback("sg_set_cam_far", [&](OSG::VRGuiSignals::Options o) { on_cam_far_changed(toFloat(o["value"])); return true; }, true );
     mgr->addCallback("sg_set_cam_projection", [&](OSG::VRGuiSignals::Options o) { on_change_cam_proj(o["projection"]); return true; }, true );
+
+    mgr->addCallback("sg_set_light_state", [&](OSG::VRGuiSignals::Options o) { on_toggle_light(toBool(o["state"])); return true; }, true );
+    mgr->addCallback("sg_set_shadow", [&](OSG::VRGuiSignals::Options o) { on_toggle_light_shadow(toBool(o["state"])); return true; }, true );
+    mgr->addCallback("sg_set_shadow_volume", [&](OSG::VRGuiSignals::Options o) { on_toggle_light_shadow_volume(toBool(o["state"]), toFloat(o["volume"])); return true; }, true );
+    mgr->addCallback("sg_set_light_type", [&](OSG::VRGuiSignals::Options o) { on_change_light_type(o["type"]); return true; }, true );
+    mgr->addCallback("sg_set_shadow_resolution", [&](OSG::VRGuiSignals::Options o) { on_change_light_shadow(toInt(o["resolution"])); return true; }, true );
+    mgr->addCallback("sg_set_light_attenuation", [&](OSG::VRGuiSignals::Options o) { on_edit_light_attenuation(toValue<Vec3d>(o["attenuation"])); return true; }, true );
+    mgr->addCallback("sg_set_shadow_color", [&](OSG::VRGuiSignals::Options o) { setShadow_color(toValue<Color4f>(o["color"])); return true; }, true );
+    mgr->addCallback("sg_set_light_diffuse", [&](OSG::VRGuiSignals::Options o) { setLight_diff_color(toValue<Color4f>(o["color"])); return true; }, true );
+    mgr->addCallback("sg_set_light_ambient", [&](OSG::VRGuiSignals::Options o) { setLight_amb_color(toValue<Color4f>(o["color"])); return true; }, true );
+    mgr->addCallback("sg_set_light_specular", [&](OSG::VRGuiSignals::Options o) { setLight_spec_color(toValue<Color4f>(o["color"])); return true; }, true );
 }
 
 // new scene, update stuff here

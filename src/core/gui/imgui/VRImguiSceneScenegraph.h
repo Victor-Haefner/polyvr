@@ -43,7 +43,15 @@ class ImScenegraph {
         ImInput camFov;
         ImInput camNear;
         ImInput camFar;
-        int camProj = 0;
+        int camProjection = 0;
+        vector<const char*> camProjections;
+
+        bool lightOn = true;
+        int lightType = 0;
+        vector<const char*> lightTypes;
+        bool shadowsOn = true;
+        int shadowResolution = true;
+        vector<const char*> shadowResolutions;
 
         Im_Vector lodCenter;
         vector<double> lodDistances;

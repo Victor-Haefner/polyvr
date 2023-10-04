@@ -32,6 +32,10 @@ ImScenegraph::ImScenegraph() :  tree("scenegraph"),
     mgr->addCallback("on_sg_setup_cam", [&](OSG::VRGuiSignals::Options o){ setupCamera(o); return true; } );
     mgr->addCallback("on_sg_setup_light", [&](OSG::VRGuiSignals::Options o){ setupLight(o); return true; } );
     mgr->addCallback("on_sg_setup_geo", [&](OSG::VRGuiSignals::Options o){ setupGeometry(o); return true; } );
+
+    camProjections = {"perspective", "orthographic"};
+    lightTypes = {"point", "directional", "spot", "photometric"};
+    shadowResolutions = {"1024", "2048", "4096", "8192"};
 }
 
 void ImScenegraph::render() {
@@ -90,11 +94,11 @@ void ImScenegraph::render() {
                 ImGui::SameLine();
                 if (camFar.render(50)) uiSignal("sg_set_cam_far", {{"value", camFar.value}});
 
+                ImGui::Text("Projection:");
+                ImGui::SameLine();
                 ImGui::SetNextItemWidth(150);
-                if (ImGui::BeginCombo("##camProj", "Projection", 0)) {
-                    if (ImGui::RadioButton("Perspective", &camProj, 0)) uiSignal("sg_set_cam_projection", {{"projection", "perspective"}});
-                    if (ImGui::RadioButton("Orthographic", &camProj, 1)) uiSignal("sg_set_cam_projection", {{"projection", "orthographic"}});
-                    ImGui::EndCombo();
+                if (ImGui::Combo("##camProj", &camProjection, &camProjections[0], camProjections.size())) {
+                    uiSignal("sg_set_cam_projection", {{"projection",camProjections[camProjection]}});
                 }
             ImGui::Unindent(10);
         }
@@ -104,6 +108,19 @@ void ImScenegraph::render() {
             ImGui::Separator();
             ImGui::Text("Light:");
             ImGui::Indent(10);
+                if (ImGui::Checkbox("Active", &lightOn)) uiSignal("sg_set_light_state", {{"state",toString(lightOn)}});
+                ImGui::Text("Type:");
+                ImGui::SameLine();
+                ImGui::SetNextItemWidth(150);
+                if (ImGui::Combo("##LightTypes", &lightType, &lightTypes[0], lightTypes.size())) {
+                    uiSignal("sg_set_light_type", {{"type",lightTypes[lightType]}});
+                }
+                if (ImGui::Checkbox("Shadows", &shadowsOn)) uiSignal("sg_set_shadow", {{"state",toString(shadowsOn)}});
+                ImGui::SameLine();
+                ImGui::SetNextItemWidth(150);
+                if (ImGui::Combo("##ShadowRes", &shadowResolution, &shadowResolutions[0], shadowResolutions.size())) {
+                    uiSignal("sg_set_shadow_resolution", {{"resolution",shadowResolutions[shadowResolution]}});
+                }
             ImGui::Unindent(10);
         }
 
@@ -213,12 +230,19 @@ void ImScenegraph::setupCamera(OSG::VRGuiSignals::Options o) {
     camFov.value = o["fov"];
     camNear.value = o["near"];
     camFar.value = o["far"];
-    if (o["projection"] == "perspective") camProj = 0;
-    if (o["projection"] == "orthographic") camProj = 1;
+    if (o["projection"] == "perspective") camProjection = 0;
+    if (o["projection"] == "orthographic") camProjection = 1;
 }
 
 void ImScenegraph::setupLight(OSG::VRGuiSignals::Options o) {
-
+    string lType;
+    string sRes;
+    toValue(o["type"], lType);
+    toValue(o["shadowRes"], sRes);
+    for (int i=0; i<lightTypes.size(); i++) if (string(lightTypes[i]) == lType) lightType = i;
+    for (int i=0; i<shadowResolutions.size(); i++) if (string(shadowResolutions[i]) == sRes) shadowResolution = i;
+    lightOn = toBool(o["state"]);
+    shadowsOn = toBool(o["doShadows"]);
 }
 
 void ImScenegraph::setupLod(OSG::VRGuiSignals::Options o) {
