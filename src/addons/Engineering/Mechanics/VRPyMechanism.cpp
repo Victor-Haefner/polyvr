@@ -51,6 +51,7 @@ PyMethodDef VRPyGearSegmentation::methods[] = {
 
 PyMethodDef VRPyAxleSegmentation::methods[] = {
     {"analyse", PyWrap(AxleSegmentation, analyse, "Analyse object to get axis parameters", void, VRObjectPtr) },
+    {"setBinSizes", PyWrap(ThreadSegmentation, setBinSizes, "Eps for same plane", void, double) },
     {"createAxle", PyWrap(AxleSegmentation, createAxle, "Get a geometry from the analysis result", VRGeometryPtr) },
     {"getProfileViz", PyWrap(AxleSegmentation, getProfileViz, "Get a visualization of the analysis result", VRTransformPtr) },
     {"getProfile", PyWrap(AxleSegmentation, getProfile, "Get axle profile", vector<Vec2d>) },
@@ -62,7 +63,17 @@ PyMethodDef VRPyAxleSegmentation::methods[] = {
 };
 
 PyMethodDef VRPyThreadSegmentation::methods[] = {
-    {"analyse", PyWrap(AxleSegmentation, analyse, "Analyse object to get thread parameters", void, VRObjectPtr) },
+    {"analyse", PyWrap(ThreadSegmentation, analyse, "Analyse object to get thread parameters", void, VRObjectPtr) },
+    {"setBinSizes", PyWrap(ThreadSegmentation, setBinSizes, "Eps for same plane", void, double) },
+    {"createThread", PyWrap(ThreadSegmentation, createThread, "Get a geometry from the analysis result", VRGeometryPtr) },
+    {"getProfileViz", PyWrap(ThreadSegmentation, getProfileViz, "Get a visualization of the analysis result", VRTransformPtr) },
+    {"getSineFitViz", PyWrap(ThreadSegmentation, getSineFitViz, "Get a visualization of the sinus fit, geo (int Npoints)", VRGeometryPtr, int) },
+    {"getProfile", PyWrap(ThreadSegmentation, getProfile, "Get axle profile", vector<Vec2d>) },
+    {"getRadius", PyWrap(ThreadSegmentation, getRadius, "Get axle radius", double) },
+    {"getLength", PyWrap(ThreadSegmentation, getLength, "Get axle length", double) },
+    {"getAxis", PyWrap(ThreadSegmentation, getAxis, "Get axle length", Vec3d) },
+    {"getAxisOffset", PyWrap(ThreadSegmentation, getAxisOffset, "Get axle length", Vec3d) },
+    {"setPitch", PyWrap(ThreadSegmentation, setPitch, "Set pitch", void, double) },
     {NULL}  /* Sentinel */
 };
 #endif

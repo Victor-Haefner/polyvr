@@ -1,7 +1,7 @@
 #include "VRGearSegmentation.h"
 #include "core/utils/toString.h"
 #include "core/math/PCA.h"
-#include "core/math/fft.h"
+#include "core/math/VRSineFit.h"
 #include "core/math/partitioning/boundingbox.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/geometry/VRGeoData.h"
@@ -9,22 +9,13 @@
 #include "core/objects/geometry/OSGGeometry.h"
 #include "core/objects/geometry/VRPrimitive.h"
 
-#include <unsupported/Eigen/NonLinearOptimization>
-
 using namespace OSG;
-using namespace Eigen;
 
 namespace OSG {
 
 struct VertexRing {
     double radius;
     vector<PolarVertex> vertices;
-};
-
-struct sineFit {
-    vector<double> guess;
-    vector<double> fit; // A, w, p, c -> A sin ( w t + p ) +c
-    double quality = 0;
 };
 
 struct VertexPlane {
@@ -35,7 +26,7 @@ struct VertexPlane {
     double profMin = 1e6;
     double profMax = -1e6;
 
-    vector<sineFit> sineFits;
+    vector<SineFit::Fit> sineFits;
     //double sineFitFreq = 0;
 
     void computeProfileMinMax() {
@@ -46,6 +37,7 @@ struct VertexPlane {
         }
     }
 };
+
 }
 
 VRGearSegmentation::VRGearSegmentation() {}
@@ -249,64 +241,6 @@ vector<int> getArgMax(vector<double> Fyy, int offset, int N) {
     return r;
 }
 
-struct FunctorSine {
-    typedef Eigen::Matrix<double,Dynamic,1> InputType;
-    typedef Eigen::Matrix<double,Dynamic,1> ValueType;
-    typedef Eigen::Matrix<double,Dynamic,Dynamic> JacobianType;
-
-    vector<double> X;
-    vector<double> Y;
-    int m_inputs = 4;
-    int m_values = Dynamic;
-
-    FunctorSine(vector<double> x, vector<double> y) : X(x), Y(y),  m_values(X.size()) {}
-
-    int inputs() const { return m_inputs; }
-    int values() const { return m_values; }
-
-    // the sine function
-    int operator() (const VectorXd &p, VectorXd &f) const {
-        for (int i = 0; i < values(); i++) f[i] = Y[i] - (p[0] * sin(p[1]*X[i] + p[2]) + p[3]);
-        return 0;
-    }
-
-    /*
-    a*x + d             -> a
-    a sin(b x + c) + d  -> a cos(b x + c) b
-    a sin(x + c) + d    -> a cos(b x + c)
-    a*x + d             -> a
-    */
-
-    // jacoby matrices, contains the partial derivatives
-    int df(const VectorXd &p, MatrixXd &jac) const {
-        for (int i = 0; i < values(); i++) {
-            jac(i,0) = -sin(p[1]*X[i] + p[2]);
-            jac(i,1) = -p[0] * cos(p[1]*X[i] + p[2])*X[i];
-            jac(i,2) = -p[0] * cos(p[1]*X[i] + p[2]);
-            jac(i,3) = -1;
-        }
-        return 0;
-    }
-};
-
-const double pi = 3.14159;
-
-double CalculateSSR(const Eigen::VectorXd& observed, const Eigen::VectorXd& fitted) {
-    Eigen::VectorXd residuals = observed - fitted;
-    double ssr = residuals.squaredNorm();
-    return ssr;
-}
-
-double CalculateRSquared(const Eigen::VectorXd& observed, const Eigen::VectorXd& fitted) {
-    double ssr = CalculateSSR(observed, fitted);
-    double m = observed.mean();
-    vector<double> mv(observed.size(), m);
-    Eigen::VectorXd meanv = Map<VectorXd>(&mv[0], mv.size());
-    double sst = (observed - meanv).squaredNorm();
-    double rsquared = 1.0 - (ssr / sst);
-    return rsquared;
-}
-
 void VRGearSegmentation::computeSineApprox() {
     //Fit sin to the input time sequence, and store fitting parameters "amp", "omega", "phase", "offset", "freq", "period" and "fitfunc")
     for (VertexPlane& plane : planes) {
@@ -314,70 +248,10 @@ void VRGearSegmentation::computeSineApprox() {
 
         cout << "do fft for plane " << plane.position << endl;
 
-        vector<double> X, Y;
-        for (auto& p : plane.contour) {
-            X.push_back(p[0]+pi);
-            Y.push_back(p[1]);
-        }
-
-		double guess_offset = calcMean(Y);
-		double guess_amp = calcMeanDeviation(Y, guess_offset) * sqrt(2);
-
-        //TODO: check the fft, the result is pretty bad..
-        double Df = X[X.size()-1] - X[0];
-        Df = 2*pi*(2*pi/Df);
-        //double Df = 2*pi;
-
-        FFT fft;
-        vector<double> ff = fft.freq(X.size(), X[1]-X[0]);
-        vector<double> Fyy = fft.transform(Y, Y.size());
-        for (auto& f : Fyy) f = abs(f);
-        //cout << "fft freqs: " << toString(Fyy) << endl;
-
-
-        vector<int> freqs = getArgMax(Fyy, 1, fftFreqHint); // excluding the zero frequency "peak", which is related to offset
-        for (auto FyyMaxPos : freqs) {
-            double guess_freq = abs(ff[FyyMaxPos]);
-
-            //cout << "fft freq params: (" << X.size() << ", " << X[1]-X[0] << ")"<< endl;
-            //cout << "fft results, peak at: " << FyyMaxPos << ", " << ff[FyyMaxPos] << ", Df: " << Vec2d(2*pi, Df) << endl;
-
-            sineFit sf;
-            sf.guess = {guess_amp, Df*guess_freq, 0, guess_offset}; //
-            VectorXd x = Map<VectorXd>(&sf.guess[0], sf.guess.size());
-
-            // do the computation
-            //if (fftFreqHint == plane.sineFits.size()) {
-                FunctorSine functor(X,Y);
-                LevenbergMarquardt<FunctorSine> lm(functor);
-                lm.parameters.factor = 100; // 100
-                lm.parameters.maxfev = 100*(x.size()+1); // 400
-                lm.parameters.ftol = 1e-6; // eps
-                lm.parameters.xtol = 1e-6; // eps
-                lm.parameters.gtol = 0; // 0
-                lm.parameters.epsfcn = 0; // 0
-                int info = lm.minimize(x);
-                //int info = lm.lmder1(x,1e-5);
-                sf.fit = vector<double>( x.data(), x.data() + 4 );
-
-                /*vector<double> Yf(X.size(), 0);
-                for (int i=0; i<X.size(); i++) Yf[i] = sf.fit[0] * sin( sf.fit[1] * X[i] + sf.fit[2] ) + sf.fit[3];
-
-                VectorXd observed = Map<VectorXd>(&Y[0], Y.size());
-                VectorXd fitted   = Map<VectorXd>(&Yf[0], Yf.size());
-                double ssr = CalculateSSR(observed, fitted);
-                double rsquared = CalculateRSquared(observed, fitted);*/
-
-                //cout << "VRGearSegmentation::computeSineApprox minimize info: " << info << ", itrs: " << Vec2i(lm.nfev, lm.njev) << ", norm: " << Vec2d(lm.fnorm, lm.gnorm) << endl;
-                //cout << "VRGearSegmentation::computeSineApprox minimize info: " << info << ", (ssr, rsquared): " << Vec2d(sqrt(ssr), rsquared) << ", norm: " << Vec2d(lm.fnorm, lm.gnorm) << endl;
-
-                sf.quality = lm.fnorm;
-                //sf.fit[1] *= 0.25;
-                //sf.sineFitFreq = sf.fit[1]/(2*pi);
-            //}
-
-            plane.sineFits.push_back(sf);
-        }
+        SineFit sineFit;
+        sineFit.vertices = plane.contour;
+        sineFit.compute(fftFreqHint);
+        plane.sineFits = sineFit.fits;
     }
 }
 
@@ -404,7 +278,7 @@ void VRGearSegmentation::computeGearParams(int fN) {
         if (plane2.sineFits[fN].fit.size() == 0) continue;
 
         auto& fit1 = plane1.sineFits[fN];
-        auto& fit2 = plane2.sineFits[fN];
+        //auto& fit2 = plane2.sineFits[fN];
         //cout << "matching planes " << Vec2f(plane1.position, plane2.position) << ", fits: " << Vec2f(fit1.quality, fit2.quality) << endl;
 
         double rmin = plane1.rings[0].radius;
@@ -417,7 +291,7 @@ void VRGearSegmentation::computeGearParams(int fN) {
 		//double pitch = R*sin(1.0/f)*4;
 		//double Nteeth = round(2*pi*R/pitch);
 		double Nteeth = round(f);
-		double pitch = 2*pi*R/Nteeth;
+		double pitch = 2*Pi*R/Nteeth;
 		double width = abs(plane2.position - plane1.position);
 		double offset = (plane1.position+plane2.position)*0.5;
 
@@ -512,7 +386,7 @@ VRTransformPtr VRGearSegmentation::getSineFitViz(int precision) {
         VRGeoData curve;
         int j = precision;
         for (int i=0; i<precision; i++) {
-            float a = i*2*pi/(precision-1);
+            float a = i*2*Pi/(precision-1);
             float r = s[0] * sin(s[1]*a + s[2]) + s[3];
             float x = r*cos(a);
             float y = r*sin(a);

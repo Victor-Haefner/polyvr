@@ -2180,6 +2180,12 @@
 			<Option target="Release" />
 			<Option target="PVR-Math-d" />
 		</Unit>
+		<Unit filename="src/core/math/VRSineFit.cpp">
+			<Option target="PVR-Math-d" />
+		</Unit>
+		<Unit filename="src/core/math/VRSineFit.h">
+			<Option target="PVR-Math-d" />
+		</Unit>
 		<Unit filename="src/core/math/VRStateMachine.cpp">
 			<Option target="Release" />
 			<Option target="PVR-Math-d" />

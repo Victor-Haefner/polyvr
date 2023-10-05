@@ -30,6 +30,12 @@ VRPrimitive* VRPrimitive::create(string p) {
     return 0;
 }
 
+VRPrimitive* VRPrimitive::copy() {
+    auto p = create(getType());
+    p->fromString(toString());
+    return p;
+}
+
 vector<string> VRPrimitive::getTypes() {
     static bool init = false;
     static vector<string> prims;
@@ -493,8 +499,9 @@ GeometryMTRecPtr VRScrewThread::make() {
     Vec3d n;
     int iN = 0;
     int tN = round(length/pitch);
-    float r1 = radius;
-    float r2 = radius+0.5*pitch/tan(Pi/6);
+    float lT = 0.5*pitch/tan(Pi/6);
+    float r1 = radius-lT*0.5;
+    float r2 = radius+lT*0.5;
     for(int i=0; i<tN; i++) {
         iN = Pos->size();
         for (int j=0; j<rN; j++) {

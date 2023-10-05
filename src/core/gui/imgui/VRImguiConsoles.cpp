@@ -209,6 +209,7 @@ void ImViewControls::render() {
 
     ImGuiIO& io = ImGui::GetIO();
     ImGui::Text("Font size:"); ImGui::SameLine();
+    //io.FontAllowUserScaling = false;
     if (ImGui::Button("+##FontSizeP")) { io.FontGlobalScale += 0.1; uiStoreParameter("fontScale", toString(io.FontGlobalScale)); } ImGui::SameLine();
     if (ImGui::Button("-##FontSizeM")) { io.FontGlobalScale -= 0.1; uiStoreParameter("fontScale", toString(io.FontGlobalScale)); } ImGui::SameLine();
     if (ImGui::Button("1##FontSize1")) { io.FontGlobalScale = 1.0;  uiStoreParameter("fontScale", toString(io.FontGlobalScale)); }

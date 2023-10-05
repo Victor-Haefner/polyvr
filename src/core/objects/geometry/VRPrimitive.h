@@ -15,6 +15,7 @@ struct VRPrimitive {
     string getType();
     void fromString(string s);
     string toString();
+    VRPrimitive* copy();
 
     static VRPrimitive* create(string p);
     static vector<string> getTypes();

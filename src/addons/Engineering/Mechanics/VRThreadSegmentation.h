@@ -3,6 +3,7 @@
 
 #include <OpenSG/OSGConfig.h>
 #include "core/objects/VRObjectFwd.h"
+#include "core/math/VRMathFwd.h"
 #include "VRMechanismFwd.h"
 #include "VRPolarVertex.h"
 
@@ -14,11 +15,15 @@ class VRThreadSegmentation {
         VRObjectPtr obj;
         double length = 0;
         double radius = 0;
+        double pitch = 0;
         double midOffset = 0;
         double planeEps = 1e-3;
 
         vector<PolarVertex> axleVertices;
         vector<vector<double>> axleParams;
+        vector<Vec2d> sineFitInput;
+        SineFitPtr sineFit;
+        int chosenFreqI = 0;
 
         Vec3d axis;
         Vec3d axisOffset;
@@ -34,11 +39,13 @@ class VRThreadSegmentation {
         static VRThreadSegmentationPtr create();
 
         void setBinSizes(double planeEps);
+        void setPitch(double p);
 
         void analyse(VRObjectPtr obj);
 
-        VRGeometryPtr createAxle();
+        VRGeometryPtr createThread();
         VRTransformPtr getProfileViz();
+        VRGeometryPtr getSineFitViz(int precision = 100);
 
         vector<Vec2d> getProfile();
         double getRadius();

@@ -99,7 +99,7 @@ void VRAxleSegmentation::analyse(VRObjectPtr o) {
 
 	auto getMinMaxRadius = [](vector<PolarVertex>& vertexList) {
 		double rmin = 1e6;
-		double rmax = 0;
+		double rmax = -1e6;
 		for (auto& v : vertexList) {
 			rmin = min(rmin,v.radius);
 			rmax = max(rmax,v.radius);
@@ -109,7 +109,7 @@ void VRAxleSegmentation::analyse(VRObjectPtr o) {
 
 	auto getTotalLength = [&]() {
 		double pmin = 1e6;
-		double pmax = 0;
+		double pmax = -1e6;
 		for (auto& v : axleVertices) {
 			pmin = min(pmin, v.profileCoords[0]);
 			pmax = max(pmax, v.profileCoords[0]);

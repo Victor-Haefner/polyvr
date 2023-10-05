@@ -31,6 +31,7 @@ ptrFwd(Expression);
 ptrFwd(MathExpression);
 ptrFwd(TSDF);
 ptrFwd(PCA);
+ptrFwd(SineFit);
 
 template<class T>
 class OctreeNode;

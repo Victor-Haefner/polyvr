@@ -76,6 +76,7 @@ VRObjectPtr VRGeometry::copy(vector<VRObjectPtr> children) {
     geo->setMesh(mesh);
     geo->setMaterial(mat);
     geo->source = source;
+    if (primitive) geo->primitive = primitive->copy();
     return geo;
 }
 
