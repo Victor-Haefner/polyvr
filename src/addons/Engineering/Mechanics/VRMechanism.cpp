@@ -325,7 +325,9 @@ VRScrewThread* MThread::thread() { return (VRScrewThread*)prim; }
 
 void MPart::move() {}
 void MChain::move() { if (!geo || !geo->isVisible("", true)) return; updateGeo(); }
-void MThread::move() { trans->rotateWorld(change.a, rAxis); }
+void MThread::move() {
+    trans->rotateWorld(change.a, rAxis);
+}
 
 void MGear::move() {
     if (!change.doMove) { // next gear on same object!
@@ -333,8 +335,10 @@ void MGear::move() {
         return;
     }
 
+    cout << " MGear::move " << change.a << ", " << change.dx;
     float a = change.dx/gear()->radius();
     change.a = a;
+    cout << " -> " << a << endl;
 #ifndef WITHOUT_BULLET
     if (trans->getPhysics()->isPhysicalized()) {
         trans->getPhysics()->setDynamic(false, true);
@@ -387,8 +391,8 @@ void MGear::computeChange() {
 void MThread::computeChange() {
     MPart::computeChange();
     change.a *= rAxis.dot(change.n);
-    //if (abs(change.a) > 1e-2) cout << "MGear::computeChange " << rAxis << "  n " << change.n << "  " << change.a << endl;
-    change.dx = change.a*thread()->radius;
+    // 2 Pi rotation -> pitch advancement
+    change.dx = - thread()->pitch * change.a / (2*Pi);
 }
 
 void MGear::updateNeighbors(vector<MPart*> parts) {
