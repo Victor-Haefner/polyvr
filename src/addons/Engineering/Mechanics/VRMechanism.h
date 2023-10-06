@@ -9,7 +9,7 @@
 #include "core/objects/object/VRObject.h"
 
 class VRGear;
-class VRScrewthread;
+class VRScrewThread;
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -58,6 +58,13 @@ struct MChainGearRelation : public MRelation {
     int segID = 0;
 
     MChainGearRelation();
+    void translateChange(MChange& change) override;
+};
+
+struct MGearThreadRelation : public MRelation {
+    bool doFlip = true;
+
+    MGearThreadRelation();
     void translateChange(MChange& change) override;
 };
 
@@ -148,10 +155,17 @@ class MGear : public MPart {
 
 class MThread : public MPart {
     public:
+        Vec3d axis = Vec3d(0,0,-1);
+        Vec3d rAxis;
+
         MThread();
         ~MThread();
 
-        VRScrewthread* thread();
+        VRScrewThread* thread();
+
+        void setup() override;
+
+        void computeChange() override;
 
         void move() override;
         void updateNeighbors(vector<MPart*> parts) override;

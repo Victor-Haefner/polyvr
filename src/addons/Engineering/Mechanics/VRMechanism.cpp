@@ -194,11 +194,61 @@ MObjRelation* checkPartObj(MPart* p1, MPart* p2) { // TODO
     return rel;
 }
 
-MRelation* checkGearThread(MPart* p1, MPart* p2) {
+struct dbgStuff {
+    Vec3d P1;
+    Vec3d P2;
+    Pnt3d lP;
+};
+
+map<MGear*, dbgStuff> debugTmp;
+
+MRelation* checkGearThread(MGear* p1, MThread* p2) {
     //float R = g->radius() + t->radius;
     ; // TODO: check if line center distance is the gear + thread radius
     ; // TODO: check if thread && gear coplanar
-    return 0;
+    Matrix4d r1 = p1->reference;
+    Matrix4d r2 = p2->reference;
+    Vec3d P1 = Vec3d(r1[3]) + p1->offset;
+    Vec3d P2 = Vec3d(r2[3]);// + p2->offset;
+    Vec3d a1 = p1->rAxis;
+    Vec3d a2 = p2->rAxis;
+    Vec3d n1 = a1; n1.normalize();
+    Vec3d n2 = a2; n2.normalize();
+
+    VRGear* g1 = (VRGear*)p1->prim;
+    VRScrewThread* g2 = (VRScrewThread*)p2->prim;
+    float t = g1->teeth_size;
+
+    // get point on thread segment closest to gear P1
+    Line l = Line(Pnt3f(P2), Vec3f(n2));
+    Pnt3d lP = Pnt3d( l.getClosestPoint(Pnt3f(P1)) );
+    double lt = P2.dist(lP)/g2->length;
+    cout << " checkGearThread " << lt << endl;
+    if (lt > 0.5 || lt < -0.5) return 0;
+
+    lP = Pnt3d(P2) + lt * n2;
+
+    debugTmp[p1] = {P1, P2, lP}; // TODO: lt still wrong??
+
+
+    /*Vec3d d = P2 - P1;
+
+    Vec3d R1 = d - n1*n1.dot( d); R1.normalize();
+    Vec3d R2 =-d - n2*n2.dot(-d); R2.normalize();
+    R1 *= g1->radius();
+    R2 *= g2->radius();
+    float l = (P1+R1 - (P2+R2)).length();
+    //cout << " l " << l << " t " << t << "  " << p1 << "  " << p2 << endl;
+    if ( l > t) return 0; // not touching!
+
+    Vec3d w1 = R1.cross(a1);
+    Vec3d w2 = R2.cross(a2);*/
+
+    MGearThreadRelation* rel = new MGearThreadRelation();
+    rel->part1 = p1;
+    rel->part2 = p2;
+    //rel->doFlip = bool(w1.dot(w2) < 0);
+    return rel;
 }
 
 MChainGearRelation* checkChainPart(MChain* c, MPart* p) {
@@ -289,11 +339,11 @@ vector<pointPolySegment> MChain::toPolygon(Vec3d p) {
 }*/
 
 VRGear* MGear::gear() { return (VRGear*)prim; }
-VRScrewthread* MThread::thread() { return (VRScrewthread*)prim; }
+VRScrewThread* MThread::thread() { return (VRScrewThread*)prim; }
 
 void MPart::move() {}
 void MChain::move() { if (!geo || !geo->isVisible("", true)) return; updateGeo(); }
-void MThread::move() { trans->rotateWorld(change.a, Vec3d(0,0,-1)); }
+void MThread::move() { trans->rotateWorld(change.a, rAxis); }
 
 void MGear::move() {
     if (!change.doMove) { // next gear on same object!
@@ -352,6 +402,13 @@ void MGear::computeChange() {
     change.dx = change.a*gear()->radius();
 }
 
+void MThread::computeChange() {
+    MPart::computeChange();
+    change.a *= rAxis.dot(change.n);
+    //if (abs(change.a) > 1e-2) cout << "MGear::computeChange " << rAxis << "  n " << change.n << "  " << change.a << endl;
+    change.dx = change.a*thread()->radius;
+}
+
 void MGear::updateNeighbors(vector<MPart*> parts) {
     //cout << "   MGear::updateNeighbors of " << geo->getName() << endl;
     clearNeighbors();
@@ -372,7 +429,7 @@ void MGear::updateNeighbors(vector<MPart*> parts) {
                     if (rel) addNeighbor(part, rel);
                 }
                 if (p->getType() == "Thread") {
-                    MRelation* rel = checkGearThread(this, part);
+                    MRelation* rel = checkGearThread(this, (MThread*)part);
                     if (rel) addNeighbor(part, rel);
                 }
             }
@@ -408,10 +465,12 @@ void MThread::updateNeighbors(vector<MPart*> parts) {
 MObjRelation::MObjRelation() { type = "obj"; }
 MChainGearRelation::MChainGearRelation() { type = "chain"; }
 MGearGearRelation::MGearGearRelation() { type = "gear"; }
+MGearThreadRelation::MGearThreadRelation() { type = "thread"; }
 
 void MRelation::translateChange(MChange& change) { change.doMove = true; }
 void MObjRelation::translateChange(MChange& change) { change.doMove = false; }
 void MChainGearRelation::translateChange(MChange& change) { change.doMove = true; if (dir == -1) change.flip(); }
+void MGearThreadRelation::translateChange(MChange& change) { change.doMove = true; }
 
 void MGearGearRelation::translateChange(MChange& change) {
     change.doMove = true;
@@ -579,6 +638,13 @@ void MGear::setup() {
     rAxis.normalize();
 }
 
+void MThread::setup() {
+    auto m = trans->getWorldMatrix();
+    //auto m = trans->getMatrix();
+    m.mult(axis, rAxis);
+    rAxis.normalize();
+}
+
 VRTransformPtr VRMechanism::addChain(float w, vector<VRTransformPtr> geos, string dirs) {
     MChain* c = new MChain();
     for (unsigned int i=0; i<geos.size(); i++) {
@@ -724,6 +790,14 @@ void VRMechanism::updateVisuals() {
             Vec3d d = (pos2-pos1)*0.45;
             geo->addVector(pos1, d, color);
         }
+    }
+
+    for (auto& _ds : debugTmp) {
+        auto& ds = _ds.second;
+        geo->addVector(ds.P1, Vec3d(0,-10,0), Color3f(1,0,0));
+        geo->addVector(ds.P2, Vec3d(0,-10,0), Color3f(1,1,0));
+        geo->addVector(Vec3d(ds.lP), Vec3d(0,-10,0), Color3f(1,0,1));
+        geo->addVector(ds.P1, Vec3d(ds.lP-ds.P1), Color3f(1,0,1));
     }
 }
 
