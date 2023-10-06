@@ -194,14 +194,6 @@ MObjRelation* checkPartObj(MPart* p1, MPart* p2) { // TODO
     return rel;
 }
 
-struct dbgStuff {
-    Vec3d P1;
-    Vec3d P2;
-    Pnt3d lP;
-};
-
-map<MGear*, dbgStuff> debugTmp;
-
 MRelation* checkGearThread(MGear* p1, MThread* p2) {
     //float R = g->radius() + t->radius;
     ; // TODO: check if line center distance is the gear + thread radius
@@ -219,30 +211,20 @@ MRelation* checkGearThread(MGear* p1, MThread* p2) {
     VRScrewThread* g2 = (VRScrewThread*)p2->prim;
     float t = g1->teeth_size;
 
-    // get point on thread segment closest to gear P1
+    // check if gear center along thread
     Line l = Line(Pnt3f(P2), Vec3f(n2));
     Pnt3d lP = Pnt3d( l.getClosestPoint(Pnt3f(P1)) );
-    double lt = P2.dist(lP)/g2->length;
-    cout << " checkGearThread " << lt << endl;
-    if (lt > 0.5 || lt < -0.5) return 0;
+    double lt = n2.dot(P2-Vec3d(lP))/g2->length;
+    if (lt < 0.0 || lt > 1.0) return 0;
 
-    lP = Pnt3d(P2) + lt * n2;
+    // check if radius ok
+    double L = lP.dist(Pnt3d(P1));
+    double R = g1->radius() + g2->radius;
+    if (R < L*0.9 || R > L*1.1) return 0;
 
-    debugTmp[p1] = {P1, P2, lP}; // TODO: lt still wrong??
-
-
-    /*Vec3d d = P2 - P1;
-
-    Vec3d R1 = d - n1*n1.dot( d); R1.normalize();
-    Vec3d R2 =-d - n2*n2.dot(-d); R2.normalize();
-    R1 *= g1->radius();
-    R2 *= g2->radius();
-    float l = (P1+R1 - (P2+R2)).length();
-    //cout << " l " << l << " t " << t << "  " << p1 << "  " << p2 << endl;
-    if ( l > t) return 0; // not touching!
-
-    Vec3d w1 = R1.cross(a1);
-    Vec3d w2 = R2.cross(a2);*/
+    // check if gear axis is ok
+    double n = n2.dot(lP-P1);
+    if (abs(n) > 0.1) return 0;
 
     MGearThreadRelation* rel = new MGearThreadRelation();
     rel->part1 = p1;
@@ -790,14 +772,6 @@ void VRMechanism::updateVisuals() {
             Vec3d d = (pos2-pos1)*0.45;
             geo->addVector(pos1, d, color);
         }
-    }
-
-    for (auto& _ds : debugTmp) {
-        auto& ds = _ds.second;
-        geo->addVector(ds.P1, Vec3d(0,-10,0), Color3f(1,0,0));
-        geo->addVector(ds.P2, Vec3d(0,-10,0), Color3f(1,1,0));
-        geo->addVector(Vec3d(ds.lP), Vec3d(0,-10,0), Color3f(1,0,1));
-        geo->addVector(ds.P1, Vec3d(ds.lP-ds.P1), Color3f(1,0,1));
     }
 }
 
