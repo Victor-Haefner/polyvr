@@ -49,7 +49,7 @@ bool MPart::changed() {
     return b;
 }
 
-void MPart::setBack() { if (geo) geo->setWorldMatrix(reference); }
+void MPart::setBack() { if (trans) trans->setWorldMatrix(reference); }
 void MPart::apply() {
     if (geo && type != "chain") reference = geo->getWorldMatrix();
     timestamp++;
@@ -153,11 +153,21 @@ void MPart::printNeighbors() {
     cout << endl;
 }
 
+/*struct BLA {
+    Vec3d P;
+    Vec3d V;
+    MGear* g;
+};
+
+vector<BLA> blas;*/
+
 MGearGearRelation* checkGearGear(MGear* p1, MGear* p2) {
+    double s1 = p1->geo->getWorldScale()[0];
+    double s2 = p2->geo->getWorldScale()[0];
     Matrix4d r1 = p1->reference;
     Matrix4d r2 = p2->reference;
-    Vec3d P1 = Vec3d(r1[3]) + p1->offset;
-    Vec3d P2 = Vec3d(r2[3]) + p2->offset;
+    Vec3d P1 = Vec3d(r1[3]) + p1->offset;//*s1;
+    Vec3d P2 = Vec3d(r2[3]) + p2->offset;//*s2;
     Vec3d a1 = p1->rAxis;
     Vec3d a2 = p2->rAxis;
     Vec3d n1 = a1; n1.normalize();
@@ -166,15 +176,28 @@ MGearGearRelation* checkGearGear(MGear* p1, MGear* p2) {
     VRGear* g1 = (VRGear*)p1->prim;
     VRGear* g2 = (VRGear*)p2->prim;
     Vec3d d = P2 - P1;
-    float t = g1->teeth_size;
+    float t1 = g1->teeth_size*s1;
 
     Vec3d R1 = d - n1*n1.dot( d); R1.normalize();
     Vec3d R2 =-d - n2*n2.dot(-d); R2.normalize();
-    R1 *= g1->radius();
-    R2 *= g2->radius();
+
+    double rad1 = g1->radius() * s1;
+    double rad2 = g2->radius() * s2;
+
+    R1 *= rad1;
+    R2 *= rad2;
     float l = (P1+R1 - (P2+R2)).length();
-    //cout << " l " << l << " t " << t << "  " << p1 << "  " << p2 << endl;
-    if ( l > t) return 0; // not touching!
+    //if (p1->trans->getBaseName() == "31082Root")
+    //    cout << " p2 " << p2->trans->getName() << " l " << l << " t " << t << "  " << p1 << "  " << p2 << endl;
+    /*if (t1 > 1e-4 && p1->trans->getBaseName() != p2->trans->getBaseName()) {
+        cout << "  p1 " << p1->trans->getName() << ", p2 " << p2->trans->getName();
+        cout << " D: " << d;
+        cout << " l " << l << " t1 " << t1 << "  " << p1 << "  " << p2 << endl;
+        blas.push_back({P1,R1,p1});
+    }*/
+
+
+    if ( l > t1 ) return 0; // not touching!
 
     Vec3d w1 = R1.cross(a1);
     Vec3d w2 = R2.cross(a2);
@@ -198,10 +221,12 @@ MRelation* checkGearThread(MGear* p1, MThread* p2) {
     //float R = g->radius() + t->radius;
     ; // TODO: check if line center distance is the gear + thread radius
     ; // TODO: check if thread && gear coplanar
+    double s1 = p1->geo->getWorldScale()[0];
+    double s2 = p2->geo->getWorldScale()[0];
     Matrix4d r1 = p1->reference;
     Matrix4d r2 = p2->reference;
-    Vec3d P1 = Vec3d(r1[3]) + p1->offset;
-    Vec3d P2 = Vec3d(r2[3]);// + p2->offset;
+    Vec3d P1 = Vec3d(r1[3]) + p1->offset;//*s1;
+    Vec3d P2 = Vec3d(r2[3]);
     Vec3d a1 = p1->rAxis;
     Vec3d a2 = p2->rAxis;
     Vec3d n1 = a1; n1.normalize();
@@ -209,21 +234,24 @@ MRelation* checkGearThread(MGear* p1, MThread* p2) {
 
     VRGear* g1 = (VRGear*)p1->prim;
     VRScrewThread* g2 = (VRScrewThread*)p2->prim;
-    float t = g1->teeth_size;
+    float t = g1->teeth_size * s1;
 
     // check if gear center along thread
     Line l = Line(Pnt3f(P2), Vec3f(n2));
     Pnt3d lP = Pnt3d( l.getClosestPoint(Pnt3f(P1)) );
-    double lt = n2.dot(P2-Vec3d(lP))/g2->length;
+    double lt = n2.dot(P2-Vec3d(lP))/(g2->length *s2);
     if (lt < 0.0 || lt > 1.0) return 0;
 
     // check if radius ok
     double L = lP.dist(Pnt3d(P1));
-    double R = g1->radius() + g2->radius;
-    if (R < L*0.9 || R > L*1.1) return 0;
+    double R = g1->radius()  *s1 + g2->radius *s2;
+    if (L > R*1.2 || L < R*0.6) return 0;
 
     // check if gear axis is ok
-    double n = n2.dot(lP-P1);
+    Vec3d dP = Vec3d(lP-P1);
+    dP.normalize();
+    double n = n1.dot(dP);
+    //cout << " tg n2 " << n2 << ",  lP " << lP << ",  P1 " << P1 << ",  dP " << dP << ",  n " << n << endl;
     if (abs(n) > 0.1) return 0;
 
     MGearThreadRelation* rel = new MGearThreadRelation();
@@ -335,10 +363,10 @@ void MGear::move() {
         return;
     }
 
-    cout << " MGear::move " << change.a << ", " << change.dx;
+    //cout << " MGear::move " << change.a << ", " << change.dx;
     float a = change.dx/gear()->radius();
     change.a = a;
-    cout << " -> " << a << endl;
+    //cout << " -> " << a << endl;
 #ifndef WITHOUT_BULLET
     if (trans->getPhysics()->isPhysicalized()) {
         trans->getPhysics()->setDynamic(false, true);
@@ -395,11 +423,17 @@ void MThread::computeChange() {
     change.dx = - thread()->pitch * change.a / (2*Pi);
 }
 
+bool isPossibleNeighbor(MPart* p1, MPart* p2) {
+    if (p1 == p2) return false;
+    //if (p1->trans == p2->trans) return false; // TODO: should be ok, but messes up sim??
+    return true;
+}
+
 void MGear::updateNeighbors(vector<MPart*> parts) {
     //cout << "   MGear::updateNeighbors of " << geo->getName() << endl;
     clearNeighbors();
     for (auto part : parts) {
-        if (part == this) continue;
+        if (!isPossibleNeighbor(part, this)) continue;
         //cout << "    MGear::updateNeighbors check part " << part->geo->getName() << endl;
         VRPrimitive* p = part->prim;
 
@@ -427,7 +461,7 @@ void MChain::updateNeighbors(vector<MPart*> parts) {
     clearNeighbors();
     dirs = "";
     for (auto p : parts) {
-        if (p == this) continue;
+        if (!isPossibleNeighbor(p, this)) continue;
         if (!p->prim) continue;
         if (p->prim->getType() == "Gear") {
             MRelation* rel = checkChainPart(this, p);
@@ -439,7 +473,7 @@ void MChain::updateNeighbors(vector<MPart*> parts) {
 void MThread::updateNeighbors(vector<MPart*> parts) {
     clearNeighbors();
     for (auto part : parts) {
-        if (part == this) continue;
+        if (!isPossibleNeighbor(part, this)) continue;
         VRPrimitive* p = part->prim;
         if (p->getType() == "Gear") {
             MRelation* rel = checkGearThread((MGear*)part, this);
@@ -721,46 +755,48 @@ void VRMechanism::updateVisuals() {
 
     // visualize part params
     for (auto p : parts) {
-        if (p->type != "gear") continue;
-        VRGear* g = (VRGear*)p->prim;
-        Vec3d a = ((MGear*)p)->rAxis;
-        Vec3d o = ((MGear*)p)->offset;
-        float w = g->width*0.5;
-        auto u = Vec3d(0,1,0); // TODO: change to orthogonal to a!
-        float ts = g->teeth_size;
-        float r = g->radius();
-        a.normalize();
-        Vec3d pos = Vec3d(p->reference[3]) + o;
-        geo->addVector(pos, a*w, Color3f(0.2,1,0.3));
+        if (p->type == "gear") {
+            double s = p->trans->getWorldScale()[0];
+            VRGear* g = (VRGear*)p->prim;
+            Vec3d a = ((MGear*)p)->rAxis;
+            Vec3d o = ((MGear*)p)->offset;
+            float w = g->width*0.5 * s;
+            auto u = Vec3d(0,1,0); // TODO: change to orthogonal to a!
+            float ts = g->teeth_size * s;
+            float r = g->radius() * s;
+            a.normalize();
+            Vec3d pos = Vec3d(p->reference[3]) + o;
+            geo->addVector(pos, a*w, Color3f(0.2,1,0.3));
 
-        // last change
-        Vec3d t = p->change.n.cross(u);
-        Vec3d cP = pos + a*w + u*(r+ts*0.5);
-        float A = p->change.a;
-        float d = p->change.n.dot(a);
-        if (abs(d) > 1e-2) A /= d;
-        geo->addVector(cP, p->change.n*w, Color3f(0.9,0,0.7)); // change rot axis
-        geo->addVector(cP, t*A, Color3f(0.6,0,0.4)); // tangant * angle
-        geo->addVector(cP, u*A, Color3f(0.2,0,0.4)); // up * angle
+            // last change
+            Vec3d t = p->change.n.cross(u);
+            Vec3d cP = pos + a*w + u*(r+ts*0.5);
+            float A = p->change.a;
+            float d = p->change.n.dot(a);
+            if (abs(d) > 1e-2) A /= d;
+            geo->addVector(cP, p->change.n*w, Color3f(0.9,0,0.7)); // change rot axis
+            geo->addVector(cP, t*A, Color3f(0.6,0,0.4)); // tangant * angle
+            geo->addVector(cP, u*A, Color3f(0.2,0,0.4)); // up * angle
 
 
-        bool b = false;
-        for (auto p2 : p->neighbors) {
-            if (p2.first->type != "gear") continue;
-            if (p2.second->type != "gear") continue;
-            auto pos2 = Vec3d(p2.first->reference[3]);
-            pos2 += ((MGear*)p2.first)->offset;
-            auto d = pos2-pos;
-            d.normalize();
-            float ts = g->teeth_size;
-            geo->addVector(pos + a*w, d*(r-ts*0.5), Color3f(1,1,0));
-            geo->addVector(pos + a*w + d*(r-ts*0.5), d*ts, Color3f(0.9,0.4,0));
-            b = true;
-        }
+            bool b = false;
+            for (auto p2 : p->neighbors) {
+                if (p2.first->type != "gear") continue;
+                if (p2.second->type != "gear") continue;
+                auto pos2 = Vec3d(p2.first->reference[3]);
+                pos2 += ((MGear*)p2.first)->offset;
+                auto d = pos2-pos;
+                d.normalize();
+                float ts = g->teeth_size * s;
+                geo->addVector(pos + a*w, d*(r-ts*0.5), Color3f(1,1,0));
+                geo->addVector(pos + a*w + d*(r-ts*0.5), d*ts, Color3f(0.9,0.4,0));
+                b = true;
+            }
 
-        if (!b) {
-            geo->addVector(pos + a*w, u*(r-ts*0.5), Color3f(1,1,0));
-            geo->addVector(pos + a*w + u*(r-ts*0.5), u*ts, Color3f(0.9,0.4,0));
+            if (!b) {
+                geo->addVector(pos + a*w, u*(r-ts*0.5), Color3f(1,1,0));
+                geo->addVector(pos + a*w + u*(r-ts*0.5), u*ts, Color3f(0.9,0.4,0));
+            }
         }
     }
 
@@ -777,6 +813,12 @@ void VRMechanism::updateVisuals() {
             geo->addVector(pos1, d, color);
         }
     }
+
+    /*for (auto b : blas) {
+        geo->addVector(b.P, b.V, Color3f(0,1,0));
+        auto pos1 = Vec3d(b.g->reference[3]) + b.g->offset;
+        geo->addVector(pos1, b.V, Color3f(0,1,0));
+    }*/
 }
 
 
