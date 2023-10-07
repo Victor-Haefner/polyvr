@@ -53,6 +53,7 @@ class VRAnalyticGeometry : public VRTransform {
         void setCircle(int i, Vec3d pos, Vec3d norm, float r, Color3f color, string label="");
 
         int addVector(Vec3d pos, Vec3d vec, Color3f color, string label="", bool doArrow = false);
+        int addCircle(Vec3d pos, Vec3d norm, float r, Color3f color, string label="");
 
         void clear();
 

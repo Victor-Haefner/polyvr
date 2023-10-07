@@ -53,6 +53,14 @@ void MPart::setBack() { if (trans) trans->setWorldMatrix(reference); }
 void MPart::apply() {
     if (geo && type != "chain") reference = geo->getWorldMatrix();
     timestamp++;
+
+    lastChange = change;
+    if (type == "gear") {
+        double s = trans->getWorldScale()[0];
+        VRGear* g = (VRGear*)prim;
+        double r = g->radius() * s;
+        lastChange.dx = lastChange.a*r;
+    }
 }
 
 MPart* MPart::make(VRTransformPtr g, VRTransformPtr t) {
@@ -79,12 +87,19 @@ void MPart::clearNeighbors() {
         n.first->neighbors.erase(this);
     }
     neighbors.clear();
+    for (auto fn : forcedNeighbors) addNeighbor(fn.first, fn.second);
 }
 
 void MPart::addNeighbor(MPart* p, MRelation* r) {
     //cout << "      MPart::addNeighbor " << p->geo->getName() << endl;
     neighbors[p] = r;
     p->neighbors[this] = r;
+}
+
+void MPart::addCoaxialNeighbor(MPart* p) {
+    auto r = new MObjRelation();
+    forcedNeighbors[p] = r;
+    p->forcedNeighbors[this] = r;
 }
 
 bool MPart::hasNeighbor(MPart* p) {
@@ -150,6 +165,7 @@ void MPart::printNeighbors() {
     cout << geo->getName();
     cout << " neighbors: ";
     for (auto n : neighbors) cout << " " << n.first->geo->getName();
+    for (auto n : forcedNeighbors) cout << " " << n.first->geo->getName();
     cout << endl;
 }
 
@@ -210,11 +226,17 @@ MGearGearRelation* checkGearGear(MGear* p1, MGear* p2) {
 }
 
 MObjRelation* checkPartObj(MPart* p1, MPart* p2) { // TODO
-    if (p1->trans != p2->trans) return 0;
-    MObjRelation* rel = new MObjRelation();
-    rel->part1 = p1;
-    rel->part2 = p2;
-    return rel;
+    bool check = false;
+    if (p1->trans == p2->trans) check = true;
+    else if (p1->trans->hasAncestor(p2->trans)) check = true;
+    else if (p2->trans->hasAncestor(p1->trans)) check = true;
+
+    if (check) {
+        MObjRelation* rel = new MObjRelation();
+        rel->part1 = p1;
+        rel->part2 = p2;
+        return rel;
+    } else return 0;
 }
 
 MRelation* checkGearThread(MGear* p1, MThread* p2) {
@@ -482,6 +504,15 @@ void MThread::updateNeighbors(vector<MPart*> parts) {
     }
 }
 
+void VRMechanism::addCoaxialConstraint(VRTransformPtr part1, VRTransformPtr part2) {
+    // p1->addNeighbor(p2, rel);
+    if (!cache.count(part1)) return;
+    if (!cache.count(part2)) return;
+    auto p1 = cache[part1][0]; // TODO: how to process iv multiple parts per object?
+    auto p2 = cache[part2][0];
+    p1->addCoaxialNeighbor(p2);
+}
+
 MObjRelation::MObjRelation() { type = "obj"; }
 MChainGearRelation::MChainGearRelation() { type = "chain"; }
 MGearGearRelation::MGearGearRelation() { type = "gear"; }
@@ -707,10 +738,14 @@ void VRMechanism::updateNeighbors() {
 
 int VRMechanism::getNParts() { return parts.size(); }
 
+double VRMechanism::getLastChange(VRTransformPtr part) {
+    if (!cache.count(part)) return 0.1;
+    return cache[part][0]->lastChange.dx;
+}
+
 void VRMechanism::update() {
     //cout << "\nVRMechanism::update" << endl;
 
-    vector<MPart*> changed_parts;
 #ifndef WITHOUT_BULLET
     for (auto& part : parts) {
         if (part->resetPhysics) {
@@ -720,6 +755,7 @@ void VRMechanism::update() {
     }
 #endif
 
+    changed_parts.clear();
     //for (auto& part : parts) part->change = MChange();
     for (auto& part : parts) if (part->changed()) changed_parts.push_back(part);
 
@@ -814,11 +850,23 @@ void VRMechanism::updateVisuals() {
         }
     }
 
-    /*for (auto b : blas) {
-        geo->addVector(b.P, b.V, Color3f(0,1,0));
-        auto pos1 = Vec3d(b.g->reference[3]) + b.g->offset;
-        geo->addVector(pos1, b.V, Color3f(0,1,0));
-    }*/
+    // visualize amount of change
+    for (auto cp : changed_parts) { // TODO: only the externally changed!
+        double s = cp->geo->getWorldScale()[0];
+        auto pos1 = Vec3d(cp->reference[3]);
+        if (cp->type == "gear") pos1 += ((MGear*)cp)->offset;
+
+        Vec3d n = Vec3d(0,1,0);
+        if (cp->type == "gear") n = ((MGear*)cp)->rAxis;
+        if (cp->type == "thread") n = ((MThread*)cp)->rAxis;
+
+        double r = 1.0;
+        if (cp->type == "gear") n = ((VRGear*)((MGear*)cp)->prim)->radius() *s;
+        if (cp->type == "thread") n = ((VRScrewThread*)((MThread*)cp)->prim)->radius *s;
+
+        //geo->addVector(pos1, Vec3d(0,10,0), Color3f(1,0,0));
+        geo->addCircle(pos1, n, r, Color3f(1,0,0));
+    }
 }
 
 

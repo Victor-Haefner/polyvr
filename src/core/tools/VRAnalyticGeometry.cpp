@@ -257,6 +257,12 @@ void VRAnalyticGeometry::setVector(int i, Vec3d p, Vec3d vec, Color3f color, str
     }
 }
 
+int VRAnalyticGeometry::addCircle(Vec3d pos, Vec3d norm, float r, Color3f color, string label) {
+    int i = vectorEndsGeometry->getMesh()->geo->getPositions()->size();
+    setCircle(i, pos, norm, r, color, label);
+    return i;
+}
+
 int VRAnalyticGeometry::addVector(Vec3d pos, Vec3d vec, Color3f color, string label, bool doArrow) {
     int i = vectorEndsGeometry->getMesh()->geo->getPositions()->size();
     setVector(i, pos, vec, color, label, doArrow);

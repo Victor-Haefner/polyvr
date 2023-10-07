@@ -21,6 +21,7 @@ PyMethodDef VRPyMechanism::methods[] = {
     {"updateNeighbors", PyWrap(Mechanism, updateNeighbors, "updateNeighbors", void) },
     {"updateVisuals", PyWrap(Mechanism, updateVisuals, "update semantic visuals", void) },
     {"getNParts", PyWrap(Mechanism, getNParts, "get number of parts", int) },
+    {"getLastChange", PyWrap(Mechanism, getLastChange, "Get last dx change of part", double, VRTransformPtr) },
     {NULL}  /* Sentinel */
 };
 

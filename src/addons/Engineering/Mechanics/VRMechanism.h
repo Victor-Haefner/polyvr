@@ -100,11 +100,13 @@ class MPart {
         bool resetPhysics = false;
         string type = "part";
         map<MPart*, MRelation*> neighbors;
+        map<MPart*, MRelation*> forcedNeighbors;
         vector<MPart*> group;
         VRTransformPtr geo = 0;
         VRTransformPtr trans = 0;
         VRPrimitive* prim = 0;
         MChange change;
+        MChange lastChange;
         Matrix4d reference;
         unsigned int timestamp = 0;
         STATE state = FREE;
@@ -121,6 +123,7 @@ class MPart {
 
         void clearNeighbors();
         void addNeighbor(MPart* p, MRelation* r);
+        void addCoaxialNeighbor(MPart* p);
         bool hasNeighbor(MPart* p);
         void computeState();
 
@@ -199,6 +202,7 @@ class VRMechanism : public VRObject {
     private:
         map<VRTransformPtr, vector<MPart*>> cache;
         vector<MPart*> parts;
+        vector<MPart*> changed_parts;
 
         VRAnalyticGeometryPtr geo;
 
@@ -211,8 +215,10 @@ class VRMechanism : public VRObject {
         void add(VRTransformPtr part, VRTransformPtr trans = 0);
         void addGear(VRTransformPtr trans, float width, float hole, float pitch, int N_teeth, float teeth_size, float bevel, Vec3d axis, Vec3d offset);
         VRTransformPtr addChain(float w, vector<VRTransformPtr> geos, string dirs);
+        void addCoaxialConstraint(VRTransformPtr part1, VRTransformPtr part2);
 
         int getNParts();
+        double getLastChange(VRTransformPtr part);
 
         void update();
         void updateNeighbors();
