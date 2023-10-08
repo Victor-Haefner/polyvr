@@ -570,7 +570,9 @@ BoundingboxPtr VRObject::getWorldBoundingbox() {
         auto geo = dynamic_pointer_cast<VRGeometry>(obj);
         if (!geo) continue;
         Matrix4d M = geo->getWorldMatrix();
+        if (!geo->getMesh() || !geo->getMesh()->geo) continue;
         auto pos = geo->getMesh()->geo->getPositions();
+        if (!pos) continue;
         for (unsigned int i=0; i<pos->size(); i++) {
             Pnt3d p = Pnt3d( pos->getValue<Pnt3f>(i) );
             M.mult(p,p);
