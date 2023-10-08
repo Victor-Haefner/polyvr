@@ -865,7 +865,7 @@ void VRMechanism::updateVisuals() {
         if (cp->type == "thread") n = ((VRScrewThread*)((MThread*)cp)->prim)->radius *s;
 
         //geo->addVector(pos1, Vec3d(0,10,0), Color3f(1,0,0));
-        geo->addCircle(pos1, n, r, Color3f(1,0,0));
+        //geo->addCircle(pos1, n, r, Color3f(1,0,0));
     }
 }
 
