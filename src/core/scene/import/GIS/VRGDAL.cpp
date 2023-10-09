@@ -215,48 +215,45 @@ void loadSHP(string path, VRTransformPtr res, map<string, string> opts) {
         int gi = 0;
         auto entLayer = ontology->addEntity("layer", "Layer");
         entLayer->set("type", toString( (int)poLayer->GetGeomType() ));
+        OGRFeatureDefn* poFDefn = poLayer->GetLayerDefn();
+        size_t Nfields = poFDefn->GetFieldCount();
+        vector<pair<string, OGRFieldType>> fields;
 
-        {
-            OGRFeatureDefn* poFDefn = poLayer->GetLayerDefn();
-            for( int field = 0; field < poFDefn->GetFieldCount(); field++ ) {
-                OGRFieldDefn* poFieldDefn = poFDefn->GetFieldDefn( field );
-                cout << "   field name: " << poFieldDefn->GetNameRef() << ", type: " << poFieldDefn->GetType() << endl;
-            }
+        for( int field = 0; field < poFDefn->GetFieldCount(); field++ ) {
+            OGRFieldDefn* poFieldDefn = poFDefn->GetFieldDefn( field );
+            string name = poFieldDefn->GetNameRef();
+            OGRFieldType type = poFieldDefn->GetType();
+            fields.push_back( { name, type } );
+            cout << "   field name: " << poFieldDefn->GetNameRef() << ", type: " << poFieldDefn->GetType() << endl;
+
+            if (type == OFTReal) Shape->addProperty(name, "float");
+            else if (type == OFTInteger) Shape->addProperty(name, "int");
+            //else if (type == OFTBinary) Shape->addProperty(name, "bool"); // TODO: should work, but test first!
+            else Shape->addProperty(name, "string");
         }
 
         OGRFeature* poFeature = 0;
+        vector<VRPropertyPtr> shapeProps;
         while( (poFeature = poLayer->GetNextFeature()) != NULL ) {
             auto entShape = ontology->addEntity("shape", "Shape");
-            OGRFeatureDefn* poFDefn = poLayer->GetLayerDefn();
+            if (shapeProps.size() == 0) shapeProps = entShape->getProperties();
 
             //cout << " fields: ";
-            for( int field = 0; field < poFDefn->GetFieldCount(); field++ ) {
-                OGRFieldDefn* poFieldDefn = poFDefn->GetFieldDefn( field );
+            for( int i = 0; i < Nfields; i++ ) {
+                auto& field = fields[i];
+                string& name = field.first;
+                OGRFieldType& type = field.second;
 
-                //string name = string("&") + poFieldDefn->GetNameRef(); // why prepend an '&' ??
-                string name = poFieldDefn->GetNameRef();
-                OGRFieldType type = poFieldDefn->GetType();
-                if (!Shape->getProperty(name)) {
-                    if (type == OFTReal) Shape->addProperty(name, "float");
-                    else if (type == OFTInteger) Shape->addProperty(name, "int");
-                    else Shape->addProperty(name, "string");
-                }
-                string value = poFeature->GetFieldAsString(field);
-                if (value == "?") { // GetFieldAsString may mess up..
-                    //if (type == OFTBinary) value = "F";
-                    value = "F";
-                }
-                entShape->set(name, value);
-                /*if (name == "RAIL-COST") {
-                    cout << " import field: " << name << ", value: '" << value;
-                    cout << "' -> '" << entShape->get(name)->getValue() << "'" << endl;
-                }*/
+                string value = poFeature->GetFieldAsString(i);
+                if (value == "?") value = "F"; // GetFieldAsString may mess up..
+                auto prop = shapeProps[i]->copy();
+                entShape->addProperty(prop, name, value);
+                //entShape->set(name, value);
 
                 //cout << name;
                 //if ( poFieldDefn->GetType() == OFTInteger ) printf( "  %d, ", poFeature->GetFieldAsInteger(field) );
                 //if ( poFieldDefn->GetType() == OFTReal ) printf( "  %.3f, ", poFeature->GetFieldAsDouble(field) );
                 //if ( poFieldDefn->GetType() == OFTString ) printf( "  %s, ", poFeature->GetFieldAsString(field) );
-
             }
             //cout << endl;
 
@@ -275,7 +272,6 @@ void loadSHP(string path, VRTransformPtr res, map<string, string> opts) {
             res->addChild(vlayer);
         }
     }
-
 
 #if GDAL_VERSION_MAJOR < 2
  	OGRDataSource::DestroyDataSource(poDS);

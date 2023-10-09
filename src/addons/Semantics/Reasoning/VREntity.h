@@ -41,6 +41,7 @@ struct VREntity : public VROntoID, public VRName {
     void setSGObject(VRObjectPtr o);
     VRObjectPtr getSGObject();
 
+    void addProperty(VRPropertyPtr prop, string name, string value, int pos = 0);
     void set(string prop, string value, int pos = 0);
     void add(string prop, string value);
     void clear(string prop);

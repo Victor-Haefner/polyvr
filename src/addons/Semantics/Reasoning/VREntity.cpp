@@ -78,6 +78,11 @@ vector<VRPropertyPtr> VREntity::getProperties() {
     return res;
 }
 
+void VREntity::addProperty(VRPropertyPtr prop, string name, string value, int pos) {
+    if (!properties[name].count(pos)) properties[name][pos] = prop;
+    properties[name][pos]->setValue( value );
+}
+
 void VREntity::set(string name, string value, int pos) {
     auto prop = getProperty(name, true);
     if (prop) prop = prop->copy();
@@ -85,8 +90,7 @@ void VREntity::set(string name, string value, int pos) {
         WARN("Warning (set): Entity " + this->name + " has no property " + name);
         prop = VRProperty::create();
     }
-    if (!properties[name].count(pos)) properties[name][pos] = prop;
-    properties[name][pos]->setValue( value );
+    addProperty(prop, name, value, pos);
 }
 
 void VREntity::add(string name, string value) {
