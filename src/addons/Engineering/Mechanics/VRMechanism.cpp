@@ -739,8 +739,10 @@ void VRMechanism::updateNeighbors() {
 int VRMechanism::getNParts() { return parts.size(); }
 
 double VRMechanism::getLastChange(VRTransformPtr part) {
-    if (!cache.count(part)) return 0.1;
-    return cache[part][0]->lastChange.dx;
+    if (!cache.count(part)) return 0;
+    auto& change = cache[part][0]->lastChange;
+    if (change.time >= cache[part][0]->timestamp-5 ) return change.dx;
+    return 0;
 }
 
 void VRMechanism::update() {
