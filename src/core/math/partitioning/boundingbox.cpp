@@ -97,33 +97,21 @@ void Boundingbox::inflate(float D) {
 }
 
 bool Boundingbox::intersect(BoundingboxPtr bb) {
-    Vec3d S = size();
-    vector<Vec3d> corners = {
-        bb1,
-        bb1+Vec3d(S[0], 0   , 0   ),
-        bb1+Vec3d(S[0], S[1], 0   ),
-        bb1+Vec3d(0   , S[1], 0   ),
-        bb1+Vec3d(0   , 0   , S[2]),
-        bb1+Vec3d(S[0], 0   , S[2]),
-        bb1+Vec3d(S[0], S[1], S[2]),
-        bb1+Vec3d(0   , S[1], S[2])
-    };
-    for (auto c : corners) if (bb->isInside(c)) return true;
+    Vec3d min1 = min();
+    Vec3d min2 = bb->min();
+    Vec3d max1 = max();
+    Vec3d max2 = bb->max();
 
-    S = bb->size();
-    corners = {
-        bb->bb1,
-        bb->bb1+Vec3d(S[0], 0   , 0   ),
-        bb->bb1+Vec3d(S[0], S[1], 0   ),
-        bb->bb1+Vec3d(0   , S[1], 0   ),
-        bb->bb1+Vec3d(0   , 0   , S[2]),
-        bb->bb1+Vec3d(S[0], 0   , S[2]),
-        bb->bb1+Vec3d(S[0], S[1], S[2]),
-        bb->bb1+Vec3d(0   , S[1], S[2])
+    auto projOverlap = [&](int i) {
+        if (max1[i] < min2[i]) return false;
+        if (max2[i] < min1[i]) return false;
+        return true;
     };
-    for (auto c : corners) if (isInside(c)) return true;
 
-    return false;
+    if (!projOverlap(0)) return false;
+    if (!projOverlap(1)) return false;
+    if (!projOverlap(2)) return false;
+    return true;
 }
 
 bool Boundingbox::intersectedBy(Line l) {
