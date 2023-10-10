@@ -429,7 +429,9 @@ void VRPhysics::update() { // only called when object is physicalized
     if (useCallbacks) gContactAddedCallback = customContactAddedCallback;
     if (bt.shape == 0) { cout << "ERROR: physics shape unknown: " << physicsShape << endl; return; }
 
-    bt.motionState = new btDefaultMotionState( fromVRTransform( vr_obj.lock(), scale, CoMOffset ) );
+    bool scaleChanged = false;
+    bt.motionState = new btDefaultMotionState( fromVRTransform( vr_obj.lock(), scale, CoMOffset, scaleChanged ) );
+    if (scaleChanged) rescaleCollisionShape();
 
     if (_mass != 0) bt.shape->calculateLocalInertia(_mass, bt.inertia);
 
@@ -1112,24 +1114,69 @@ void VRPhysics::updateVisualGeo() {
     geo->setWorldMatrix( getTransformation() );
 }
 
+void VRPhysics::rescaleCollisionShape() {
+    Vec3d rescale = Vec3d(scale[0]/shapeScale[0], scale[1]/shapeScale[1], scale[2]/shapeScale[2]);
+    shapeScale = scale;
+
+    btCollisionShape* shape = bt.getCollisionShape();
+    if (!shape) return;
+    int stype = shape->getShapeType();
+
+    if (stype == 8) { // sphere
+        btSphereShape* sshape = (btSphereShape*)shape;
+        sshape->setLocalScaling(toBtVector3(scale));
+        //btScalar r = sshape->getRadius();
+        //sshape->setRadius(r*rescale[0]);
+    }
+
+    if (stype == 0) { // box
+        btBoxShape* bshape = (btBoxShape*)shape;
+        bshape->setLocalScaling(toBtVector3(scale));
+    }
+
+    if (stype == 4) { // convex
+        btConvexHullShape* cshape = (btConvexHullShape*)shape;
+        cshape->setLocalScaling(toBtVector3(scale));
+    }
+
+    if (stype == 21) { // trianglemesh
+        auto tshpe = (btBvhTriangleMeshShape*)shape;
+        tshpe->setLocalScaling(toBtVector3(scale));
+    }
+
+    if (stype == 24) { // heightmap, TODO
+
+    }
+
+    if (stype == 31) { // compound
+        btCompoundShape* cpshape = (btCompoundShape*)shape;
+        cpshape->setLocalScaling(toBtVector3(scale));
+    }
+}
+
 void VRPhysics::updateTransformation(OSG::VRTransformPtr trans) {
     if (!trans) return;
     VRLock lock(VRPhysics_mtx());
     //static VRRate FPS; int fps = FPS.getRate(); cout << "VRPhysics::updateTransformation " << fps << endl;
-    auto btp = fromVRTransform(trans, scale, CoMOffset);
+
+    bool scaleChanged = false;
+    auto btp = fromVRTransform(trans, scale, CoMOffset, scaleChanged);
+    if (scaleChanged) rescaleCollisionShape();
     if (bt.body) { bt.body->setWorldTransform(btp); resetForces(); bt.body->activate(); }
     if (bt.ghost_body) { bt.ghost_body->setWorldTransform(btp); bt.ghost_body->activate(); }
     if (visShape && visShape->isVisible()) visShape->setWorldMatrix( getTransformation() );
 }
 
-btTransform VRPhysics::fromVRTransform(OSG::VRTransformPtr trans, OSG::Vec3d& scale, OSG::Vec3d mc) {
-    if (!trans) return fromMatrix(OSG::Matrix4d(),scale,mc);
+btTransform VRPhysics::fromVRTransform(OSG::VRTransformPtr trans, OSG::Vec3d& scale, OSG::Vec3d mc, bool& scaleChanged) {
+    if (!trans) return fromMatrix(OSG::Matrix4d(),scale,mc,scaleChanged);
     OSG::Matrix4d m = trans->getWorldMatrix();
-    return fromMatrix(m,scale,mc);
+    return fromMatrix(m,scale,mc,scaleChanged);
 }
 
-btTransform VRPhysics::fromMatrix(OSG::Matrix4d m, OSG::Vec3d& scale, OSG::Vec3d mc) {
+btTransform VRPhysics::fromMatrix(OSG::Matrix4d m, OSG::Vec3d& scale, OSG::Vec3d mc, bool& scaleChanged) {
+    Vec3d lScale = scale;
     for (int i=0; i<3; i++) scale[i] = m[i].length(); // store scale
+    if (lScale.dist2(scale) > 1e-5) scaleChanged = true;
     for (int i=0; i<3; i++) m[i] *= 1.0/scale[i]; // normalize
     return fromMatrix(m, mc);
 }
@@ -1145,7 +1192,7 @@ btTransform VRPhysics::fromMatrix(OSG::Matrix4d m, OSG::Vec3d mc) {
     return bltTrans;
 }
 
-OSG::Matrix4d VRPhysics::fromBTTransform(const btTransform bt, OSG::Vec3d& scale, OSG::Vec3d mc) {
+OSG::Matrix4d VRPhysics::fromBTTransform(const btTransform bt, OSG::Vec3d scale, OSG::Vec3d mc) {
     OSG::Matrix4d m = fromBTTransform(bt);
 
     OSG::Matrix4d t,s;
@@ -1235,7 +1282,7 @@ btTransform VRPhysics::getTransform() {
     return bt.body->getWorldTransform();
 }
 
-OSG::Matrix4d VRPhysics::getTransformation() {
+OSG::Matrix4d VRPhysics::getTransformation(bool scaled) {
     if (bt.body == 0 && bt.soft_body == 0 && bt.ghost_body == 0) return OSG::Matrix4d();
     btTransform t;
     VRLock lock(VRPhysics_mtx());
@@ -1251,7 +1298,12 @@ OSG::Matrix4d VRPhysics::getTransformation() {
         result /= nodes.size();
         t.setOrigin(result);
     }
-    return fromBTTransform(t, scale, CoMOffset);
+
+    if (scaled) return fromBTTransform(t, scale, CoMOffset);
+    else {
+        static Vec3d s = Vec3d(1,1,1);
+        return fromBTTransform(t, s, CoMOffset);
+    }
 }
 
 btMatrix3x3 VRPhysics::getInertiaTensor() {

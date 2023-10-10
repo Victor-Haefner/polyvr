@@ -128,6 +128,7 @@ class VRPhysics : public VRStorage {
         VRGeometryPtr visShape;
         VRConstraintPtr constraint = 0;
         Vec3d scale = Vec3d(1,1,1);
+        Vec3d shapeScale = Vec3d(1,1,1);
 
         vector<VRGeometryPtr> getGeometries();
 
@@ -144,6 +145,7 @@ class VRPhysics : public VRStorage {
         void update();
         void clear();
 
+        void rescaleCollisionShape();
         void createVisualGeo();
         void updateVisualGeo();
 
@@ -197,7 +199,7 @@ class VRPhysics : public VRStorage {
         vector<VRCollision> getCollisions();
 
         void updateTransformation(VRTransformPtr t);
-        Matrix4d getTransformation();
+        Matrix4d getTransformation(bool scaled = true);
         btTransform getTransform();
         void setTransformation(btTransform t);
 
@@ -222,11 +224,11 @@ class VRPhysics : public VRStorage {
         void setCenterOfMass(Vec3d com);
 
         static vector<string> getPhysicsShapes();
-        static btTransform fromMatrix(Matrix4d m, Vec3d& scale, Vec3d mc);
+        static btTransform fromMatrix(Matrix4d m, Vec3d& scale, Vec3d mc, bool& scaleChanged);
         static btTransform fromMatrix(Matrix4d m, Vec3d mc);
-        static btTransform fromVRTransform(VRTransformPtr t, Vec3d& scale, Vec3d mc);
+        static btTransform fromVRTransform(VRTransformPtr t, Vec3d& scale, Vec3d mc, bool& scaleChanged);
         static Matrix4d fromBTTransform(const btTransform t);
-        static Matrix4d fromBTTransform(const btTransform t, Vec3d& scale, Vec3d mc);
+        static Matrix4d fromBTTransform(const btTransform t, Vec3d scale, Vec3d mc);
 
         static btVector3 toBtVector3(Vec3d);
         static Vec3d toVec3d(btVector3);
