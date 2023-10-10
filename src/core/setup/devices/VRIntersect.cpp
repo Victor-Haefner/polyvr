@@ -160,10 +160,8 @@ VRIntersectionPtr VRIntersect::intersect(VRObjectWeakPtr wtree, bool force, VRTr
 
 VRIntersect::VRIntersect() {
 #ifndef WASM
-    initCross();
+    //initCross(); // a bit deprecated, if needed remove from here and init seperatly!
 #endif
-    drop_fkt = VRDeviceCb::create("Intersect_drop", bind(&VRIntersect::drop, this, _1, VRTransformPtr(0)));
-    dragged_ghost = VRTransform::create("dev_ghost");
 }
 
 VRIntersect::~VRIntersect() {}
@@ -199,6 +197,7 @@ void VRIntersect::drag(VRIntersectionPtr i, VRTransformWeakPtr wcaster) {
     dragged[caster.get()] = dobj;
     dobj->drag(caster, i);
 
+    if (!dragged_ghost) dragged_ghost = VRTransform::create("dev_ghost");
     dragged_ghost->setMatrix(dobj->getMatrix());
     dragged_ghost->switchParent(caster);
 
@@ -223,7 +222,11 @@ VRTransformPtr VRIntersect::getDraggedObject(VRTransformPtr beacon) {
     return dragged[beacon.get()].lock();
 }
 
-VRTransformPtr VRIntersect::getDraggedGhost() { return dragged_ghost; }
+VRTransformPtr VRIntersect::getDraggedGhost() {
+    if (!dragged_ghost) dragged_ghost = VRTransform::create("dev_ghost");
+    return dragged_ghost;
+}
+
 VRSignalPtr VRIntersect::getDragSignal() { return dragSignal; }
 VRSignalPtr VRIntersect::getDropSignal() { return dropSignal; }
 
@@ -300,7 +303,11 @@ void VRIntersect::remDynTree(VRObjectPtr o) {
 }
 
 VRObjectPtr VRIntersect::getCross() { return cross; }//needs to be optimized for multiple scenes
-VRDeviceCbPtr VRIntersect::getDrop() { return drop_fkt; }
+
+VRDeviceCbPtr VRIntersect::getDrop() {
+    if (!drop_fkt) drop_fkt = VRDeviceCb::create("Intersect_drop", bind(&VRIntersect::drop, this, _1, VRTransformPtr(0)));
+    return drop_fkt;
+}
 
 VRIntersectionPtr VRIntersect::getLastIntersection() { return lastIntersection; }
 
