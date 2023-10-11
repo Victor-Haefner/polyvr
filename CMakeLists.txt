@@ -942,6 +942,7 @@ if(TRUE) # ok
 target_sources(polyvr PRIVATE src/version/version.cpp)
 target_sources(polyvr PRIVATE src/core/math/Layer2D.cpp)
 target_sources(polyvr PRIVATE src/core/math/VRStateMachine.cpp)
+target_sources(polyvr PRIVATE src/core/math/VRSineFit.cpp)
 target_sources(polyvr PRIVATE src/core/math/coordinates.cpp)
 target_sources(polyvr PRIVATE src/core/math/partitioning/Partitiontree.cpp)
 target_sources(polyvr PRIVATE src/core/math/partitioning/Octree.cpp)

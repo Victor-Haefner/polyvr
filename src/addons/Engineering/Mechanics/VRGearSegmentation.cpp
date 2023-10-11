@@ -204,43 +204,6 @@ void VRGearSegmentation::computeContours() {
     }
 }
 
-double calcMean(vector<double>& f) {
-    double m = 0;
-    for (auto& v : f) m += v;
-    m /= f.size();
-    return m;
-}
-
-double calcMeanDeviation(vector<double>& f, double mean) {
-    double S = 0;
-    for (auto v : f) {
-        S += abs(v-mean);
-    }
-    return S / f.size();
-}
-
-vector<int> getArgMax(vector<double> Fyy, int offset, int N) {
-    vector<int> r(N,0);
-    vector<double> m(N,-1e6);
-    for (unsigned int i=offset; i<Fyy.size(); i++) {
-        for (int j=0; j<N; j++) {
-            if (Fyy[i] > m[j]) {
-                m[j] = Fyy[i];
-                r[j] = i;
-                break;
-            }
-        }
-    }
-
-    cout << "FFT results:";
-    for (auto i=0; i<N; i++) {
-        cout << " (" << r[i] << "," << m[i] << ")";
-    }
-    cout << endl;
-
-    return r;
-}
-
 void VRGearSegmentation::computeSineApprox() {
     //Fit sin to the input time sequence, and store fitting parameters "amp", "omega", "phase", "offset", "freq", "period" and "fitfunc")
     for (VertexPlane& plane : planes) {
