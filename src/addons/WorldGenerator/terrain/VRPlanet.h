@@ -96,6 +96,8 @@ class VRPlanet : public VRTransform {
 
         VROrbitPtr putInOrbit(VRTransformPtr child, vector<double> params);
         map<string, VROrbitPtr> getOrbits();
+
+        Vec3d getGeoCoord(VRGeometryPtr geo, size_t i);
 };
 
 OSG_END_NAMESPACE;

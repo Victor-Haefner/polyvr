@@ -71,6 +71,7 @@ PyMethodDef VRPyPlanet::methods[] = {
     {"getSatellites", PyWrap(Planet, getSatellites, "Get all satellites", vector<VRTransformPtr> ) },
     {"putInOrbit", PyWrap(Planet, putInOrbit, "See Orbit.fromKepler", VROrbitPtr, VRTransformPtr, vector<double> ) },
     {"getOrbits", PyWrap(Planet, getOrbits, "Get orbits", mapStrOrbit  ) },
+    {"getGeoCoord", PyWrap(Planet, getGeoCoord, "Get double precision geo coordinate from an attachment named geoCoords if present, shp file import does add it", Vec3d, VRGeometryPtr, size_t  ) },
     {NULL}  /* Sentinel */
 };
 

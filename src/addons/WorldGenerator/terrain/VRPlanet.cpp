@@ -46,6 +46,12 @@ vector<VRTransformPtr> VRPlanet::getSatellites() { return satellites; }
 
 map<string, VROrbitPtr> VRPlanet::getOrbits() { return orbits; }
 
+Vec3d VRPlanet::getGeoCoord(VRGeometryPtr geo, size_t i) {
+    if (!geo->hasTag("geoCoords")) return Vec3d();
+    vector<Vec3d> gcs = geo->getAttachment<vector<Vec3d>>("geoCoords");
+    return gcs[i];
+}
+
 VROrbitPtr VRPlanet::putInOrbit(VRTransformPtr child, vector<double> params) {
     auto orbit = VROrbit::create();
     orbit->fromKepler(params);
