@@ -30,6 +30,10 @@ VRRobotArm::VRRobotArm(string type) : type(type) {
 
     updatePtr = VRUpdateCb::create("run engines", bind(&VRRobotArm::update, this) );
     VRScene::getCurrent()->addUpdateFkt(updatePtr, 999);
+
+    if (type == "kuka") { // defaults
+        axis = {1,0,0,2,0,2};
+    }
 }
 
 VRRobotArm::~VRRobotArm() {
@@ -94,11 +98,12 @@ VRTransformPtr VRRobotArm::genKinematics() {
 double clamp(double f, double a = -1, double b = 1) { return f<a ? a : f>b ? b : f; }
 
 void VRRobotArm::applyAngles() {
-    //cout << "VRRobotArm::applyAngles " << N << endl;
+    //cout << "VRRobotArm::applyAngles " << N << ", " << axis.size() << ", " << angles.size() << ", " << parts.size() << endl;
     for (int i=0; i<N; i++) {
         if (i >= axis.size() || i >= angles.size() || i >= parts.size()) break;
         Vec3d euler;
         euler[axis[i]] = angles[i];
+        //cout << " applyAngle " << i << ", " << euler << ", " << parts[i] << endl;
         if (parts[i]) parts[i]->setEuler(euler);
     }
 }
