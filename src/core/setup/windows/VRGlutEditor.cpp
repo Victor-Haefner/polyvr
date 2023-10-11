@@ -378,8 +378,8 @@ void VRGlutEditor::on_popup_display() {
     //cout << "  Glut::on_popup_display " << winUI << endl;
     if (winPopup < 0) return;
     glutSetWindow(winPopup);
-    if (signal) signal( "glutRenderPopup", {{"name",popup}} );
-    glutSwapBuffers();
+    if (signal) signal( "glutRenderPopup", {{"name",popup}} ); // may close window
+    if (winPopup >= 0) glutSwapBuffers();
 }
 
 void VRGlutEditor::on_popup_resize(int w, int h) {
