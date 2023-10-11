@@ -317,6 +317,7 @@ void main( void ) {
 #ifdef __EMSCRIPTEN__
 \n
     mat4 M = OSGModelViewProjectionMatrix;
+\n
 #else
 \n
     mat4 M = gl_ModelViewProjectionMatrix;
