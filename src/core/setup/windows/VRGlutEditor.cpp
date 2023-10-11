@@ -256,6 +256,7 @@ void VRGlutEditor::onMouse(int b, int s, int x, int y) {
 
 void VRGlutEditor::onMotion(int x, int y) {
     //cout << "VRGlutEditor::onMotion " << Vec2i(x, y) << endl;
+    glutSetCursor(GLUT_CURSOR_RIGHT_ARROW);
     if (auto m = getMouse()) m->motion(x, y, 1);
 }
 
@@ -347,7 +348,6 @@ void VRGlutEditor::on_gl_display() {
     //cout << "  Glut::on_gl_display " << endl;
     if (winGL < 0) return;
     glutSetWindow(winGL);
-    glutSetCursor(GLUT_CURSOR_RIGHT_ARROW);
     int w = glutGet(GLUT_WINDOW_WIDTH); // calling glutGet somehow magically fixes the resize glitches..
     int h = glutGet(GLUT_WINDOW_HEIGHT);
     //if (signal) signal( "glutRenderGL", {} );

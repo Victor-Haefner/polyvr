@@ -26,6 +26,20 @@
 #include "../clipboard/clip.h"
 #include "../VRGuiManager.h"
 
+void updateGlutCursor() {
+    auto mc = ImGui::GetMouseCursor();
+    if (mc == ImGuiMouseCursor_None) glutSetCursor(GLUT_CURSOR_NONE);
+    if (mc == ImGuiMouseCursor_Arrow) glutSetCursor(GLUT_CURSOR_RIGHT_ARROW);
+    if (mc == ImGuiMouseCursor_TextInput) glutSetCursor(GLUT_CURSOR_TEXT);
+    if (mc == ImGuiMouseCursor_ResizeAll) glutSetCursor(GLUT_CURSOR_FULL_CROSSHAIR);
+    if (mc == ImGuiMouseCursor_ResizeNS) glutSetCursor(GLUT_CURSOR_UP_DOWN);
+    if (mc == ImGuiMouseCursor_ResizeEW) glutSetCursor(GLUT_CURSOR_LEFT_RIGHT);
+    if (mc == ImGuiMouseCursor_ResizeNESW) glutSetCursor(GLUT_CURSOR_FULL_CROSSHAIR);
+    if (mc == ImGuiMouseCursor_ResizeNWSE) glutSetCursor(GLUT_CURSOR_FULL_CROSSHAIR);
+    if (mc == ImGuiMouseCursor_Hand) glutSetCursor(GLUT_CURSOR_INFO);
+    if (mc == ImGuiMouseCursor_NotAllowed) glutSetCursor(GLUT_CURSOR_DESTROY);
+}
+
 ImGuiContext* mainContext = 0;
 ImGuiContext* popupContext = 0;
 
@@ -238,7 +252,7 @@ void ImGui_ImplGLUT_KeyboardUpFunc_main(unsigned char c, int x, int y) { /*print
 void ImGui_ImplGLUT_SpecialFunc_main(int k, int x, int y) { /*printf("special down %i\n", k);*/  ImGui::SetCurrentContext(mainContext); ImGui_ImplGLUT_SpecialFunc(k,x,y); handleSpecial(k,1); }
 void ImGui_ImplGLUT_SpecialUpFunc_main(int k, int x, int y) { /*printf("special up %i\n", k);*/ ImGui::SetCurrentContext(mainContext); ImGui_ImplGLUT_SpecialUpFunc(k,x,y); handleSpecial(k,0); }
 void ImGui_ImplGLUT_ReshapeFunc_main(int x, int y) { ImGui::SetCurrentContext(mainContext); ImGui_ImplGLUT_ReshapeFunc(x,y); }
-void ImGui_ImplGLUT_MotionFunc_main(int x, int y) { ImGui::SetCurrentContext(mainContext); ImGui_ImplGLUT_MotionFunc(x,y); }
+void ImGui_ImplGLUT_MotionFunc_main(int x, int y) { updateGlutCursor(); ImGui::SetCurrentContext(mainContext); ImGui_ImplGLUT_MotionFunc(x, y); }
 void ImGui_ImplGLUT_MouseFunc_main(int b, int s, int x, int y) {
     ImGui::SetCurrentContext(mainContext);
     ImGui_ImplGLUT_MouseFunc(b,s,x,y);
@@ -252,7 +266,7 @@ void ImGui_ImplGLUT_SpecialFunc_popup(int k, int x, int y) { ImGui::SetCurrentCo
 void ImGui_ImplGLUT_SpecialUpFunc_popup(int k, int x, int y) { ImGui::SetCurrentContext(popupContext); ImGui_ImplGLUT_SpecialUpFunc(k,x,y); handleSpecial(k,0); }
 void ImGui_ImplGLUT_MouseFunc_popup(int b, int s, int x, int y) { ImGui::SetCurrentContext(popupContext); ImGui_ImplGLUT_MouseFunc(b,s,x,y); handleMouseWheel(b,s); }
 //void ImGui_ImplGLUT_ReshapeFunc_popup(int x, int y) { ImGui::SetCurrentContext(popupContext); ImGui_ImplGLUT_ReshapeFunc(x,y); }
-void ImGui_ImplGLUT_MotionFunc_popup(int x, int y) { ImGui::SetCurrentContext(popupContext); ImGui_ImplGLUT_MotionFunc(x,y); }
+void ImGui_ImplGLUT_MotionFunc_popup(int x, int y) { updateGlutCursor(); ImGui::SetCurrentContext(popupContext); ImGui_ImplGLUT_MotionFunc(x,y); }
 
 void ImGui_ImplGLUT_InstallFuncs_main() {
     glutReshapeFunc(ImGui_ImplGLUT_ReshapeFunc_main);
@@ -421,18 +435,6 @@ void VRImguiEditor::render() {
     toolbar.render();
     sidePanel.render();
     consoles.render();
-
-    auto mc = ImGui::GetMouseCursor();
-    if (mc == ImGuiMouseCursor_None) glutSetCursor(GLUT_CURSOR_NONE);
-    if (mc == ImGuiMouseCursor_Arrow) glutSetCursor(GLUT_CURSOR_RIGHT_ARROW);
-    if (mc == ImGuiMouseCursor_TextInput) glutSetCursor(GLUT_CURSOR_TEXT);
-    if (mc == ImGuiMouseCursor_ResizeAll) glutSetCursor(GLUT_CURSOR_FULL_CROSSHAIR);
-    if (mc == ImGuiMouseCursor_ResizeNS) glutSetCursor(GLUT_CURSOR_UP_DOWN);
-    if (mc == ImGuiMouseCursor_ResizeEW) glutSetCursor(GLUT_CURSOR_LEFT_RIGHT);
-    if (mc == ImGuiMouseCursor_ResizeNESW) glutSetCursor(GLUT_CURSOR_FULL_CROSSHAIR);
-    if (mc == ImGuiMouseCursor_ResizeNWSE) glutSetCursor(GLUT_CURSOR_FULL_CROSSHAIR);
-    if (mc == ImGuiMouseCursor_Hand) glutSetCursor(GLUT_CURSOR_INFO);
-    if (mc == ImGuiMouseCursor_NotAllowed) glutSetCursor(GLUT_CURSOR_DESTROY);
 
     //ImGui::ShowDemoWindow(0);
 
