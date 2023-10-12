@@ -50,11 +50,11 @@ class VRRobotArm {
         vector<VRTransformPtr> parts;
         vector<float> angles;
         vector<float> angle_targets;
-        vector<float> angle_offsets;
-        vector<int> angle_directions;
+        vector<float> angle_offsets = {0,0,-0.5,0,0,0};
+        vector<int> angle_directions = {1,-1,1,1,1,1};
         vector<float> lengths = {0,0,0,0,0};
         vector<float> axis_offsets = {0,0};
-        vector<int> axis;
+        vector<int> axis = {1,0,0,2,0,2};
 
         vector<float> calcReverseKinematicsKuka(PosePtr p);
         vector<float> calcReverseKinematicsAubo(PosePtr p);

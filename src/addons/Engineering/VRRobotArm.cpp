@@ -30,10 +30,6 @@ VRRobotArm::VRRobotArm(string type) : type(type) {
 
     updatePtr = VRUpdateCb::create("run engines", bind(&VRRobotArm::update, this) );
     VRScene::getCurrent()->addUpdateFkt(updatePtr, 999);
-
-    if (type == "kuka") { // defaults
-        axis = {1,0,0,2,0,2};
-    }
 }
 
 VRRobotArm::~VRRobotArm() {
