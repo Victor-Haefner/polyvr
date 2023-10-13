@@ -202,6 +202,7 @@ vector<float> VRRobotArm::calcReverseKinematics(PosePtr p) {
     return resultingAngles;
 }
 
+// TODO: doesnt seem to work anymore!
 PosePtr VRRobotArm::calcForwardKinematicsKuka(vector<float> angles) {
     float r1 = lengths[1];
     float r2 = lengths[2];
@@ -484,6 +485,10 @@ void VRRobotArm::setAngles(vector<float> angles, bool force) {
     if (force) {
         for (int i=0; i<N; i++) this->angles[i] = convertAngle(angles[i], i);
         applyAngles();
+        if (parts.size() >= 6) {
+            lastPose = parts[0]->getPoseTo(parts[5]);
+            lastPose->setPos(lastPose->pos() + lastPose->dir() * lengths[3]);
+        }
     }
 }
 
