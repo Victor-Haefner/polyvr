@@ -36,6 +36,21 @@ void ImRendering::setBGExt(string data) {
 void ImRendering::render() {
     ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_CollapsingHeader;
 
+    if (ImGui::Checkbox("V-Sync", &vsync)) uiSignal("ui_toggle_vsync", {{"active",toString(vsync)}});
+    ImGui::SameLine();
+    if (ImGui::Checkbox("Framesleep", &framesleep)) {
+        int fps = framesleep ? targetFPS : 0;
+        uiSignal("ui_set_framesleep", { {"fps",toString(fps)} });
+    }
+    if (framesleep) {
+        ImGui::SameLine();
+        static ImInput fpsInput("fpsInput", "Target FPS:", toString(targetFPS));
+        if (fpsInput.render(50)) {
+            targetFPS = toInt(fpsInput.value);
+            uiSignal("ui_set_framesleep", { {"fps",toString(targetFPS)} });
+        }
+    }
+
     if (ImGui::CollapsingHeader("Background##bg", flags)) {
         if (ImGui::RadioButton("Solid", &bgType, 0)) uiSignal("on_toggle_bg", {{"type","solid"}});
         ImGui::SameLine();

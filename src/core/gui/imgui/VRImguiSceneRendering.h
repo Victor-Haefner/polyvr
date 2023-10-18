@@ -13,6 +13,10 @@ class ImRendering {
         ImInput extInput;
         ImVec4 color;
 
+        bool vsync = true;
+        bool framesleep = true;
+        int targetFPS = 60;
+
     public:
         ImRendering();
         void render();

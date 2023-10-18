@@ -189,6 +189,7 @@ void ImToolbar::begin() {
     ImGui::SameLine(); if (ImGui::Button("About")) uiSignal("ui_toggle_popup", {{"name","about"}, {"width","400"}, {"height","500"}});
     ImGui::SameLine(); if (ImGui::Button("Profiler")) uiSignal("ui_toggle_popup", {{"name","profiler"}, {"width","600"}, {"height","500"}});
     ImGui::SameLine(); if (ImGui::Button("Recorder")) uiSignal("ui_toggle_popup", {{"name","recorder"}, {"width","400"}, {"height","200"}});
+    ImGui::SameLine(); if (ImGui::Checkbox("Fotomode", &fotomode)) uiSignal("ui_toggle_fotomode", {{"active",toString(fotomode)}});
 }
 
 void ImConsolesSection::begin() {

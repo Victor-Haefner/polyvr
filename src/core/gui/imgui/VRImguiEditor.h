@@ -22,6 +22,7 @@ class ImSection : public ImWidget {
         Surface parentSurface;
         ResizeEvent resizer;
         ImGuiWindowFlags flags = 0;
+        bool fotomode = false;
 
         ImSection(string n, ImRectangle r);
         void resize(const Surface& parent);
