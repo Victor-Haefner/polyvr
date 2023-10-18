@@ -281,9 +281,24 @@ template <typename T, typename O> int ssToVal(stringstream& ss, T& t, const O& o
     return (int(ss.tellg()) - N)*b;
 }
 
+template<> int toValue(string sIn, vector<string>& s) {
+    s = splitString(sIn);
+    int N = s.size();
+    s[0] = subString(s[0], 1);
+    s[N-1] = subString(s[N-1], 0, s[N-1].length()-1);
+    for (int i=0; i<N-1; i++) s[i] = subString(s[i], 0, s[i].length()-1);
+    return true;
+}
+
+template<> int toValue(stringstream& ss, string& s) {
+    if (!ss.rdbuf()->in_avail()) return false;
+    s = ss.str();
+    ss.str(string()); // clears ss
+    return true;
+}
+
 template<> int toValue(stringstream& ss, void*& s) { return true; }
 template<> int toValue(stringstream& ss, PyObject*& s) { return true; }
-template<> int toValue(stringstream& ss, string& s) { s = ss.str(); return true; }
 template<> int toValue(stringstream& ss, bool& v) { return ssToVal(ss, v, false); }
 template<> int toValue(stringstream& ss, char& v) { return ssToVal(ss, v, 0); }
 template<> int toValue(stringstream& ss, signed char& v) { return ssToVal(ss, v, 0); }

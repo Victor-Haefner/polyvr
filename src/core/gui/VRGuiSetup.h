@@ -53,6 +53,7 @@ class VRGuiSetup {
         shared_ptr<VRGuiEditor> editor;
 
         bool guard; // update guard
+        string setupRequest;
 
         string setupDir();
 
@@ -64,6 +65,7 @@ class VRGuiSetup {
         void on_del_clicked();
         void on_new_clicked();
         void on_foto_clicked(bool b);
+        void on_setup_change_request(string name);
         void on_setup_changed();
         bool on_treeview_rightclick();
 

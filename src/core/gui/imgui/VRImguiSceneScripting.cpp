@@ -93,15 +93,25 @@ void ImScriptList::setColor(string name, string fg, string bg) {
 
 void ImScriptList::computeMinWidth() {
     ImGuiStyle& style = ImGui::GetStyle();
+    ImGuiIO& io = ImGui::GetIO();
+    float fs = io.FontGlobalScale;
+
+    // padding
     int padding = 20;
-    if (groupsList.size() > 1) padding += 8; // for groups
+    if (groupsList.size() > 1) {
+        padding += 8; // for indent of scripts in groups
+        padding += 20; // for arrow of group expander
+    }
     if (doPerf) padding += 50;
+    padding *= fs;
+
+    // total width
     width = 50;
     width = max(width, float(Rinput+padding));
     for (auto& g : groups) {
         for (auto& s : g.second.scripts) {
             auto R = ImGui::CalcTextSize( s.name.c_str() ).x + style.FramePadding.x * 2.0f;
-            width = max(width, R+padding);
+            width = max(width, R*fs+padding);
         }
     }
 }

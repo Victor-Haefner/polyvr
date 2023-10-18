@@ -113,6 +113,8 @@ template<typename T> int toValue(string s, vector<T>& t) {
     return true;
 }
 
+template<> int toValue(string sIn, vector<string>& s);
+
 template<typename T> int toValue(string s, vector<std::shared_ptr<T>>& t) { return true; }
 template<typename T> int toValue(string s, vector<vector<T>>& t) { return true; } // not implemented
 template<typename T, typename U> int toValue(string s, map<T, U>& t) { return true; } // not implemented

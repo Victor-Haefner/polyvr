@@ -2,6 +2,7 @@
 
 #include "VRGuiSetup.h"
 #include "VRGuiSignals.h"
+#include "VRGuiManager.h"
 #include "PolyVR.h"
 
 #include "core/scripting/VRScript.h"
@@ -10,6 +11,7 @@
 #include "core/setup/VRNetwork.h"
 #include "core/setup/windows/VRWindow.h"
 #include "core/setup/windows/VRMultiWindow.h"
+#include "core/utils/system/VRSystem.h"
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/geometry/VRPrimitive.h"
 #include "core/setup/devices/VRKeyboard.h"
@@ -1330,7 +1332,6 @@ VRGuiSetup::VRGuiSetup() {
     setRadioButtonCallback("radiobutton11", bind( &VRGuiSetup::on_netslave_edited, this));
     setRadioButtonCallback("radiobutton12", bind( &VRGuiSetup::on_netslave_edited, this));
 
-    setComboboxCallback("combobox6", bind( &VRGuiSetup::on_setup_changed, this) );
 #ifndef WITHOUT_MTOUCH
     setComboboxCallback("combobox12", bind( &VRGuiSetup::on_mt_device_changed, this) );
 #endif
@@ -1392,6 +1393,14 @@ VRGuiSetup::VRGuiSetup() {
     auto mgr = OSG::VRGuiSignals::get();
     mgr->addCallback("ui_toggle_fotomode", [&](OSG::VRGuiSignals::Options o) { on_foto_clicked(toBool(o["active"])); return true; }, true );
     mgr->addCallback("ui_set_framesleep", [&](OSG::VRGuiSignals::Options o) { VRSceneManager::get()->setTargetFPS(toInt(o["fps"])); return true; }, true );
+    mgr->addCallback("ui_set_framesleep", [&](OSG::VRGuiSignals::Options o) { VRSceneManager::get()->setTargetFPS(toInt(o["fps"])); return true; }, true );
+
+    mgr->addCallback("setup_switch_setup", [&](OSG::VRGuiSignals::Options o) { on_setup_change_request(o["setup"]); return true; }, true );
+    mgr->addCallback("change_setup", [&](OSG::VRGuiSignals::Options o) { on_setup_changed(); return true; }, true );
+    mgr->addCallback("setup_new", [&](OSG::VRGuiSignals::Options o) { on_new_clicked(); return true; }, true );
+    mgr->addCallback("setup_delete", [&](OSG::VRGuiSignals::Options o) { on_del_clicked(); return true; }, true );
+    mgr->addCallback("setup_save", [&](OSG::VRGuiSignals::Options o) { on_save_clicked(); return true; }, true );
+    mgr->addCallback("setup_saveas", [&](OSG::VRGuiSignals::Options o) { on_save_as_clicked(); return true; }, true );
 
     updateSetupCb = VRDeviceCb::create("update gui setup", bind(&VRGuiSetup::updateSetup, this) );
 
@@ -1401,15 +1410,19 @@ VRGuiSetup::VRGuiSetup() {
     updateSetup();
 }
 
-void VRGuiSetup::on_setup_changed() {
+void VRGuiSetup::on_setup_change_request(string name) {
     if (guard) return;
     cout << "on_setup_changed\n";
-    /*string name = getComboboxText("combobox6");
     if (name == "") return;
+    setupRequest = name;
 
-    static bool init = true;
-    if (!init) if (!askUser("Switch to setup '" + name + "' - this will quit PolyVR", "Are you sure you want to switch to the " + name + " setup?")) return;
+    uiSignal("askUser", {{"msg1","Switch to setup '" + name + "' - this will quit PolyVR"},
+                         {"msg2","Are you sure you want to switch to the " + name + " setup?"},
+                         {"sig","change_setup"}});
+}
 
+void VRGuiSetup::on_setup_changed() {
+    string name = setupRequest;
     string setupDirPath = setupDir();
     ofstream f(setupDirPath+".local"); f.write(name.c_str(), name.size()); f.close(); // remember setup
     string d = setupDirPath + name + ".xml";
@@ -1421,11 +1434,8 @@ void VRGuiSetup::on_setup_changed() {
     current_setup.lock()->getART()->getSignal_on_new_art_device()->add(updateSetupCb); // TODO: where to put this? NOT in updateSetup() !!!
 #endif
 
-    if (!init) {
-        auto fkt = VRUpdateCb::create("setup_induced_shutdown", bind(&PolyVR::shutdown));
-        VRSceneManager::get()->queueJob(fkt, 0, 100); // TODO: this blocks everything..
-    }
-    init = false;*/
+    auto fkt = VRUpdateCb::create("setup_induced_shutdown", bind(&PolyVR::shutdown));
+    VRSceneManager::get()->queueJob(fkt, 0, 100); // TODO: this blocks everything..
 }
 
 void VRGuiSetup::on_window_device_changed() {
@@ -1601,12 +1611,8 @@ bool getSetupEntries(string dir, string& local, string& def) {
 }
 
 void VRGuiSetup::updateSetupList() {
-    // update script list
-    /*auto store = (GtkListStore*)VRGuiBuilder::get()->get_object("setups");
-    gtk_list_store_clear(store);
-
     string dir = setupDir();
-    if (!VRGuiFile::exists(dir)) { cerr << "Error: no local directory setup\n"; return; }
+    if (!exists(dir)) { cerr << "Error: no local directory setup\n"; return; }
 
     string local, defaul;
     if (!getSetupEntries(dir, local, defaul)) { cerr << "Error: no setup file found\n"; return; }
@@ -1622,17 +1628,17 @@ void VRGuiSetup::updateSetupList() {
     };
 
     string ending;
-    for(string name : VRGuiFile::listDir(dir)) { // update list
+    vector<string> setups;
+    for (string name : openFolder(dir)) { // update list
         if (!splitFileName(name, ending)) continue;
-        GtkTreeIter row;
-        gtk_list_store_append(store, &row);
-        gtk_list_store_set (store, &row, 0, name.c_str(), -1);
+        setups.push_back(name);
     }
+    uiSignal("updateSetupsList", {{"setups", toString(setups)}});
 
     int active = -1;
     auto setActive = [&](string n) {
         int i = 0;
-        for(string name : VRGuiFile::listDir(dir)) {
+        for(string name : openFolder(dir)) {
             if (n == name) { active = i; break; }
             if (!splitFileName(name, ending)) continue;
             if (n == name) { active = i; break; }
@@ -1645,7 +1651,7 @@ void VRGuiSetup::updateSetupList() {
         cout << "Setup " << local << " not found. Load default: " << defaul << endl;
         setActive(defaul);
     }
-    setCombobox("combobox6", active);*/
+    uiSignal("setCurrentSetup", {{"setup", toString(active)}});
 }
 
 OSG_END_NAMESPACE;

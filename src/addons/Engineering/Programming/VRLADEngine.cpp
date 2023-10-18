@@ -319,7 +319,7 @@ void VRLADEngine::read(string tagTablePath, string modulesPath) {
                 variable->setStartValue(startValue->getText());
                 variable->setValue(startValue->getText());
             }
-			esystem->addVariable(variable->getName(), variable);
+			if (esystem) esystem->addVariable(variable->getName(), variable);
 		}
 	};
 
@@ -341,7 +341,7 @@ void VRLADEngine::read(string tagTablePath, string modulesPath) {
 			for (auto dataType : tag->getChildren("DataTypeName", true)) {
 				variable->setDataType(dataType->getText());
 			}
-			esystem->addVariable(variable->getName(), variable);
+			if (esystem) esystem->addVariable(variable->getName(), variable);
 		}
 
         for (auto f : openFolder(modulesPath)) {
@@ -451,8 +451,10 @@ void VRLADEngine::read(string tagTablePath, string modulesPath) {
 	};
 
 	getVariables();
-	auto vars = esystem->getLADVariables();
-	setupCompileUnits(vars);
+	if (esystem) {
+        auto vars = esystem->getLADVariables();
+        setupCompileUnits(vars);
+	}
 }
 
 VRLADEngine::CompileUnitPtr VRLADEngine::getCompileUnit(string name) {

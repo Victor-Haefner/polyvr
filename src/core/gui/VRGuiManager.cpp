@@ -124,6 +124,7 @@ void VRGuiManager::init() {
     guiSignalCbs.push_back(fkt);
 
     g_di = new VRGuiSetup();
+
     return;
 
     //gtk_rc_parse("gui/gtkrc");
