@@ -80,6 +80,7 @@ struct VRTextureRenderer::Data {
     TextureObjChunkRefPtr   fboDTex;
     ImageRefPtr             fboDTexImg;
     TextureBufferRefPtr     texBuf;
+    TextureBufferRefPtr     texDBuf;
     SimpleStageRefPtr       stage;
 
     // render once ressources
@@ -131,7 +132,7 @@ VRTextureRenderer::VRTextureRenderer(string name, bool readback) : VRObject(name
     data->texBuf->setTexture(data->fboTex);
 
     data->fboDTexImg = Image::create();
-    data->fboDTexImg->set(Image::OSG_RGB_PF, data->fboWidth, data->fboHeight);
+    data->fboDTexImg->set(Image::OSG_RGB_PF, data->fboWidth, data->fboHeight/*, 1, 0, 1, 0, 0, Image::OSG_FLOAT32_IMAGEDATA*/);
     data->fboDTex = TextureObjChunk::create();
     data->fboDTex->setImage(data->fboDTexImg);
     data->fboDTex->setMinFilter(GL_NEAREST);
@@ -143,15 +144,15 @@ VRTextureRenderer::VRTextureRenderer(string name, bool readback) : VRObject(name
     data->fboDTex->setCompareMode(GL_NONE);
     data->fboDTex->setCompareFunc(GL_LEQUAL);
     data->fboDTex->setDepthMode(GL_INTENSITY);
-    TextureBufferRefPtr texDBuf = TextureBuffer::create();
-    texDBuf->setTexture(data->fboDTex);
+    data->texDBuf = TextureBuffer::create();
+    data->texDBuf->setTexture(data->fboDTex);
 
     RenderBufferRefPtr depthBuf = RenderBuffer::create();
     depthBuf->setInternalFormat(GL_DEPTH_COMPONENT24);
 
     data->fbo = FrameBufferObject::create();
     data->fbo->setColorAttachment(data->texBuf, 0);
-    data->fbo->setDepthAttachment(texDBuf);
+    data->fbo->setDepthAttachment(data->texDBuf);
     data->fbo->editMFDrawBuffers()->push_back(GL_DEPTH_ATTACHMENT_EXT);
     data->fbo->editMFDrawBuffers()->push_back(GL_COLOR_ATTACHMENT0_EXT);
     data->fbo->setWidth (data->fboWidth );
@@ -160,7 +161,7 @@ VRTextureRenderer::VRTextureRenderer(string name, bool readback) : VRObject(name
 
     if (readback) {
         data->texBuf->setReadBack(true);
-        texDBuf->setReadBack(true);
+        data->texDBuf->setReadBack(true);
     }
 
     mat = VRMaterial::create("VRTextureRenderer");
@@ -248,11 +249,12 @@ void VRTextureRenderer::setup(VRCameraPtr c, int width, int height, bool alpha) 
     data->fbo->setHeight(data->fboHeight);
     if (alpha) {
         data->fboTexImg->set(Image::OSG_RGBA_PF, data->fboWidth, data->fboHeight);
-        data->fboDTexImg->set(Image::OSG_RGBA_PF, data->fboWidth, data->fboHeight);
+        data->fboDTexImg->set(Image::OSG_RGBA_PF, data->fboWidth, data->fboHeight/*, 1, 0, 1, 0, 0, Image::OSG_FLOAT32_IMAGEDATA*/);
     }
+
     else {
         data->fboTexImg->set(Image::OSG_RGB_PF, data->fboWidth, data->fboHeight);
-        data->fboDTexImg->set(Image::OSG_RGB_PF, data->fboWidth, data->fboHeight);
+        data->fboDTexImg->set(Image::OSG_RGB_PF, data->fboWidth, data->fboHeight/*, 1, 0, 1, 0, 0, Image::OSG_FLOAT32_IMAGEDATA*/);
     }
     data->stage->setCamera(cam->getCam()->cam);
 #ifndef WITHOUT_DEFERRED_RENDERING
@@ -260,9 +262,9 @@ void VRTextureRenderer::setup(VRCameraPtr c, int width, int height, bool alpha) 
 #endif
 }
 
-void VRTextureRenderer::setReadback(bool readback) {
-    data->texBuf->setReadBack(readback);
-    //texDBuf->setReadBack(readback);
+void VRTextureRenderer::setReadback(bool RGBReadback, bool depthReadback) {
+    data->texBuf->setReadBack(RGBReadback);
+    data->texDBuf->setReadBack(depthReadback);
 }
 
 void VRTextureRenderer::setCam(VRCameraPtr c) { cam = c; }
@@ -491,7 +493,7 @@ VRTexturePtr VRTextureRenderer::renderOnce(CHANNEL c) { // TODO: not working!
     if (c != RENDER) setChannelSubstitutes(c);
 
     setActive(true);
-    setReadback(true);
+    setReadback(true, true);
 
 #ifdef __EMSCRIPTEN__
     data->win->render(data->ract);
@@ -516,7 +518,7 @@ VRTexturePtr VRTextureRenderer::renderOnce(CHANNEL c) { // TODO: not working!
     //data->win->render(data->ract);
     //data->win->renderNoFinish(data->ract);
     if (deferred) data->win->render(data->ract); // hack, TODO: for some reason the fbo gets not updated the first render call..
-    setReadback(false);
+    setReadback(false, false);
     setActive(false);
 
     ImageMTRecPtr img = Image::create();

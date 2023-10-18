@@ -106,6 +106,7 @@ void VRTexture::writeImage(ImageMTRecPtr img, string path) {
 
     //OSG::Image::OSG_FLOAT32_IMAGEDATA
     auto dtype = img->getDataType();
+
     if (dtype != OSG::Image::OSG_UINT8_IMAGEDATA) { // need to convert image data to write to file
         cout << "convert image data from " << dtype << " to OSG::Image::OSG_UINT8_IMAGEDATA" << endl;
         ImageMTRecPtr img2 = Image::create();
@@ -387,6 +388,8 @@ Color4f VRTexture::getPixel(int i, bool invertY) {
         y = s[1]-1 - y;
         i = x + y*s[0];
     }
+
+    //cout << "VRTexture::getPixel " << i << ", " << N << ", " << f << endl;
 
     if (N == 1) {
         float d = 0;

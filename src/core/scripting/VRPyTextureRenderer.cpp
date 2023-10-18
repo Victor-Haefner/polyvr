@@ -14,7 +14,7 @@ simpleVRPyType(TextureRenderer, New_VRObjects_ptr);
 
 PyMethodDef VRPyTextureRenderer::methods[] = {
     {"setup", PyWrapOpt(TextureRenderer, setup, "Setup texture renderer, cam, width, height", "0", void, VRCameraPtr, int, int, bool) },
-    {"setReadback", PyWrap(TextureRenderer, setReadback, "Set readback, necessary for using the texture beyond rendering", void, bool) },
+    {"setReadback", PyWrap(TextureRenderer, setReadback, "Set readback (RGB, depth), necessary for using the texture beyond rendering", void, bool, bool) },
     {"getMaterial", PyWrap(TextureRenderer, getMaterial, "Get the material with the rendering", VRMaterialPtr) },
     {"copyMaterial", PyWrap(TextureRenderer, copyMaterial, "Get a material copy with the rendering textures", VRMaterialPtr) },
     {"setActive", PyWrap(TextureRenderer, setActive, "Activate and deactivate the texture rendering", void, bool) },
