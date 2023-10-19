@@ -8,6 +8,15 @@ ImSetupManager::ImSetupManager() : ImWidget("SetupManager"), tree("setup") {
     auto mgr = OSG::VRGuiSignals::get();
     mgr->addCallback("updateSetupsList", [&](OSG::VRGuiSignals::Options o){ updateSetupsList(o["setups"]); return true; } );
     mgr->addCallback("setCurrentSetup", [&](OSG::VRGuiSignals::Options o){ current_setup = toInt(o["setup"]); return true; } );
+    mgr->addCallback("on_setup_tree_clear", [&](OSG::VRGuiSignals::Options o){ tree.clear(); return true; } );
+    mgr->addCallback("on_setup_tree_append", [&](OSG::VRGuiSignals::Options o) { treeAppend(o["ID"], o["label"], o["type"], o["parent"]); return true; } );
+    mgr->addCallback("on_setup_tree_expand", [&](OSG::VRGuiSignals::Options o) { tree.expandAll(); return true; } );
+
+    tree.setNodeFlags( ImGuiTreeNodeFlags_DefaultOpen );
+}
+
+void ImSetupManager::treeAppend(string ID, string label, string type, string parent) {
+    tree.add(ID, label, IM_TV_NODE_EDITABLE, parent);
 }
 
 void ImSetupManager::updateSetupsList(string s) {
@@ -43,15 +52,33 @@ void ImSetupManager::begin() {
 
     ImGui::SameLine();
 
+    bool showDisplay = false;
+    bool showWindow = false;
+    bool showEditorWindow = false;
+    bool showLocalWindow = false;
+    bool showRemoteWindow = false;
+    bool showViewport = false;
+    bool showVRPN = false;
+    bool showVRPNTracker = false;
+    bool showART = false;
+    bool showARTDevice = false;
+    bool showDevice = false;
+    bool showMultitouch = false;
+    bool showLeap = false;
+    bool showHaptics = false;
+    bool showNode = false;
+    bool showSlave = false;
+    bool showScript = false;
+
     ImGui::BeginChild("setupProps", region2, false, flags);
-        if (0) {
+        if (showDisplay) {
             ImGui::Text(("Displays: " + selected).c_str());
             ImGui::Indent(10);
             // Global Offset Vec3
             ImGui::Unindent(10);
         }
 
-        if (0) {
+        if (showWindow) {
             ImGui::Text(("Window: " + selected).c_str());
             ImGui::Indent(10);
             // bool active
@@ -64,24 +91,37 @@ void ImSetupManager::begin() {
             ImGui::Unindent(10);
         }
 
-        if (0) {
+        if (showEditorWindow) {
             ImGui::Text(("Editor Window: " + selected).c_str());
             ImGui::Indent(10);
             // nothing yet
             ImGui::Unindent(10);
         }
 
-        if (0) {
+        if (showLocalWindow) {
             ImGui::Text(("Local Window: " + selected).c_str());
             ImGui::Indent(10);
             ImGui::Unindent(10);
         }
 
-        if (0) {
+        if (showRemoteWindow) {
             ImGui::Text(("Remote Window: " + selected).c_str());
             ImGui::Indent(10);
-            // State: CONN_STATE   button connect
-            // Connection type: radiobuttons Multicast SockPipeline StreamSock
+            ImGui::Text("State:");
+            ImGui::SameLine();
+            ImGui::Text("CONN_STATE");
+            ImGui::SameLine();
+            if (ImGui::Button("connect##win")) uiSignal("win_clicked_connect", {{}});
+
+            ImGui::Text("Connection type:");
+            ImGui::SameLine();
+            if (ImGui::RadioButton("Multicast##win", &winConnType, 0)) { uiSignal("win_set_conn_type", {{"type", "multicast"}}); }
+            ImGui::SameLine();
+            if (ImGui::RadioButton("SockPipeline##win", &winConnType, 0)) { uiSignal("win_set_conn_type", {{"type", "sockpipeline"}}); }
+            ImGui::SameLine();
+            if (ImGui::RadioButton("StreamSock##win", &winConnType, 0)) { uiSignal("win_set_conn_type", {{"type", "streamsock"}}); }
+
+            //ImInput("##vrpnPort", "Nx:")
             // Nx: entry 1   Ny: entry 1
             // Listview Server List
             //  i j CONN_ID_STR
@@ -89,7 +129,7 @@ void ImSetupManager::begin() {
             ImGui::Unindent(10);
         }
 
-        if (0) {
+        if (showViewport) {
             ImGui::Text(("Viewport: " + selected).c_str());
             ImGui::Indent(10);
             // Area
@@ -116,16 +156,18 @@ void ImSetupManager::begin() {
             ImGui::Unindent(10);
         }
 
-        if (0) {
+        if (showVRPN) {
             ImGui::Text(("VRPN: " + selected).c_str());
             ImGui::Indent(10);
-            // checkbutton active    Port: entry PORT
-            // checkbutton test server
-            // checkbutton verbose
+            ImGui::Checkbox("active##VRPN", &vrpnActive);
+            ImGui::SameLine();
+            //ImInput("##vrpnPort", "Port:")
+            ImGui::Checkbox("test server##VRPN", &vrpnTestServer);
+            ImGui::Checkbox("verbose##VRPN", &vrpnVerbose);
             ImGui::Unindent(10);
         }
 
-        if (0) {
+        if (showVRPNTracker) {
             ImGui::Text(("VRPN Tracker: " + selected).c_str());
             ImGui::Indent(10);
             // address: entry ADDR
@@ -135,7 +177,7 @@ void ImSetupManager::begin() {
             ImGui::Unindent(10);
         }
 
-        if (0) {
+        if (showART) {
             ImGui::Text(("ART: " + selected).c_str());
             ImGui::Indent(10);
             // checkbutton active    Port: entry PORT
@@ -144,14 +186,14 @@ void ImSetupManager::begin() {
             ImGui::Unindent(10);
         }
 
-        if (0) {
+        if (showARTDevice) {
             ImGui::Text(("ART Device: " + selected).c_str());
             ImGui::Indent(10);
             // ID: ID
             ImGui::Unindent(10);
         }
 
-        if (0) {
+        if (showDevice) {
             ImGui::Text(("Device: " + selected).c_str());
             ImGui::Indent(10);
             // name: DEVICENAME
@@ -163,14 +205,14 @@ void ImSetupManager::begin() {
             ImGui::Unindent(10);
         }
 
-        if (0) {
+        if (showMultitouch) {
             ImGui::Text(("Multitouch Device: " + selected).c_str());
             ImGui::Indent(10);
             // device: combo devicelist
             ImGui::Unindent(10);
         }
 
-        if (0) {
+        if (showLeap) {
             ImGui::Text(("Leap Device: " + selected).c_str());
             ImGui::Indent(10);
             // address: entry ADDR
@@ -184,7 +226,7 @@ void ImSetupManager::begin() {
             ImGui::Unindent(10);
         }
 
-        if (0) {
+        if (showHaptics) {
             ImGui::Text(("Haptic Device: " + selected).c_str());
             ImGui::Indent(10);
             // IP: entry IP
@@ -194,30 +236,64 @@ void ImSetupManager::begin() {
             ImGui::Unindent(10);
         }
 
-        if (0) {
+        if (showNode) {
             ImGui::Text(("Network Node: " + selected).c_str());
             ImGui::Indent(10);
-            // address: entry ADDR   STATE
-            // ssh user: entry USER   STATE
-            // button distribute key   STATE
-            // button stop slaves
-            // root path: entry PATH   STATE
+            //ImInput("##nodeAddr", "address:")
+            ImGui::SameLine();
+            ImGui::Text("STATE");
+
+            //ImInput("##sshUsr", "ssh user:")
+            ImGui::SameLine();
+            ImGui::Text("STATE");
+
+            if (ImGui::Button("distribute key##node")) uiSignal("node_clicked_distribkey", {{}});
+            ImGui::SameLine();
+            ImGui::Text("STATE");
+
+            if (ImGui::Button("stop slaves##node")) uiSignal("node_clicked_stopslaves", {{}});
+            ImGui::SameLine();
+            ImGui::Text("STATE");
+
+            //ImInput("##pvrPath", "root path:")
+            ImGui::SameLine();
+            ImGui::Text("STATE");
             ImGui::Unindent(10);
         }
 
-        if (0) {
+        if (showSlave) {
             ImGui::Text(("Network Slave: " + selected).c_str());
             ImGui::Indent(10);
             // connection identifier:  CONN_ID_STR
-            // checkbutton autostart     button start    STATE
-            // checkbutton active stereo     checkbutton fullscreen      port: entry PORT
-            // Connection type: radiobuttons Multicast SockPipeline StreamSock
-            // local display: entry DISPLAY    startup delay: entry DELAY
-            // geometry ('512x512+0+0'): entry 512x512+0+0
+            if (ImGui::Checkbox("autostart##slave", &slaveAutostart)) uiSignal("slave_toggle_autostart", {{"state",toString(slaveAutostart)}});
+            ImGui::SameLine();
+            if (ImGui::Button("start##slave")) uiSignal("slave_clicked_start", {{}});
+            ImGui::SameLine();
+            ImGui::Text("STATE");
+
+            if (ImGui::Checkbox("active stereo##slave", &slaveActStereo)) uiSignal("slave_toggle_activestereo", {{"state",toString(slaveActStereo)}});
+            ImGui::SameLine();
+            if (ImGui::Checkbox("fullscreen##slave", &slaveFullscreen)) uiSignal("slave_toggle_fullscreen", {{"state",toString(slaveFullscreen)}});
+            ImGui::SameLine();
+            //ImInput("##slavePort", "port:")
+
+            ImGui::Text("Connection type:");
+            ImGui::SameLine();
+            if (ImGui::RadioButton("Multicast##slave", &slaveConnType, 0)) { uiSignal("slave_set_conn_type", {{"type", "multicast"}}); }
+            ImGui::SameLine();
+            if (ImGui::RadioButton("SockPipeline##slave", &slaveConnType, 0)) { uiSignal("slave_set_conn_type", {{"type", "sockpipeline"}}); }
+            ImGui::SameLine();
+            if (ImGui::RadioButton("StreamSock##slave", &slaveConnType, 0)) { uiSignal("slave_set_conn_type", {{"type", "streamsock"}}); }
+
+            //ImInput("##screenDisplay", "local display:")
+            ImGui::SameLine();
+            //ImInput("##startupDelay", "startup delay:")
+
+            //ImInput("##winGeometry", "geometry ('512x512+0+0'):")
             ImGui::Unindent(10);
         }
 
-        if (0) {
+        if (showScript) {
             ImGui::Text(("Script: " + selected).c_str());
             ImGui::Indent(10);
             // nothing, TODO or deprecate?

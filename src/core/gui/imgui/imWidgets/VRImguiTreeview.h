@@ -24,6 +24,7 @@ class ImTreeview {
             int options;
             bool isSelected = false;
             vector<Node*> children;
+            ImGuiTreeNodeFlags nodeFlags = 0;
 
             Node() {}
             Node(string ID, string tvID, string label, int options);
@@ -38,16 +39,19 @@ class ImTreeview {
         string selected;
         Node root;
         map<string, Node*> nodes;
+        ImGuiTreeNodeFlags nodeFlags = 0;
 
         void handleSelection(string node);
 
     public:
         ImTreeview(string ID);
 
+        void setNodeFlags(ImGuiTreeNodeFlags flags);
         Node* add(string ID, string label, int options, string parent = "");
         void rename(string ID, string label);
         void render();
         void clear();
+        void expandAll();
 };
 
 #endif // VRIMGUITREEVIEW_H_INCLUDED

@@ -45,6 +45,7 @@ class ImSidePanel : public ImSection {
         ImWidgetPtr sceneEditor;
 
         string selected = "Apps";
+        string currentTab = "Apps";
 
         ImSidePanel(ImRectangle r);
         void begin() override;

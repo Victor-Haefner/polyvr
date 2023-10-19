@@ -112,6 +112,14 @@ void ImSidePanel::openTabs(string tab1, string tab2) {
 }
 
 void ImSidePanel::begin() {
+    auto setCurrentTab = [&](string t) {
+        if (t != currentTab) {
+            currentTab = t;
+            uiSignal("ui_change_main_tab", {{"tab",currentTab}});
+            //cout << "  setCurrentTab " << currentTab << " -> " << t << endl;
+        }
+    };
+
     ImSection::begin();
     ImGuiTabBarFlags tab_bar_flags = ImGuiTabBarFlags_None;
 
@@ -129,16 +137,19 @@ void ImSidePanel::begin() {
         if (ImGui::BeginTabItem("Apps", NULL, flags1)) {
             appManager->render();
             ImGui::EndTabItem();
+            setCurrentTab("Apps");
         }
 
         if (ImGui::BeginTabItem("Setup", NULL, flags2)) {
             setupManager->render();
             ImGui::EndTabItem();
+            setCurrentTab("Setup");
         }
 
         if (ImGui::BeginTabItem("Scene", NULL, flags3)) {
             sceneEditor->render();
             ImGui::EndTabItem();
+            setCurrentTab("Scene");
         }
         ImGui::EndTabBar();
     }

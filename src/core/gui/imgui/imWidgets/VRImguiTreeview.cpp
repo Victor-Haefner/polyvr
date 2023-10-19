@@ -54,7 +54,7 @@ bool ImTreeview::Node::render(int lvl) {
     bool open = false;
     if (children.size() > 0) {
         ImGui::SameLine();
-        open = ImGui::CollapsingHeader(("##"+ID).c_str(), 0);
+        open = ImGui::CollapsingHeader(("##"+ID).c_str(), nodeFlags);
         if (open) {
             ImGui::Indent(8);
             for (auto& child : children) child->render(lvl+1);
@@ -66,6 +66,12 @@ bool ImTreeview::Node::render(int lvl) {
 
 ImTreeview::Node::Node(string ID, string tvID, string label, int options) : ID(ID), tvID(tvID), label(label), options(options) {}
 
+void ImTreeview::setNodeFlags(ImGuiTreeNodeFlags flags) {
+    nodeFlags = flags;
+    root.nodeFlags = flags;
+    for (auto n : nodes) n.second->nodeFlags = flags;
+}
+
 ImTreeview::Node* ImTreeview::add(string nID, string label, int options, string parent) {
     Node* n = 0;
     if (nodes.count(parent)) n = nodes[parent]->add(nID, label, options);
@@ -76,8 +82,13 @@ ImTreeview::Node* ImTreeview::add(string nID, string label, int options, string 
 
 ImTreeview::Node* ImTreeview::Node::add(string childID, string child, int options) {
     Node* n = new Node(childID, tvID, child, options);
+    n->nodeFlags = nodeFlags;
     children.push_back(n);
     return n;
+}
+
+void ImTreeview::expandAll() { // TODO
+    ;
 }
 
 void ImTreeview::clear() {

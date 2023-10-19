@@ -1391,6 +1391,8 @@ VRGuiSetup::VRGuiSetup() {
     setWidgetSensitivity("table8", false);*/
 
     auto mgr = OSG::VRGuiSignals::get();
+    mgr->addCallback("ui_change_main_tab", [&](OSG::VRGuiSignals::Options o) { if (o["tab"] == "Setup") updateSetup(); return true; }, true );
+
     mgr->addCallback("ui_toggle_fotomode", [&](OSG::VRGuiSignals::Options o) { on_foto_clicked(toBool(o["active"])); return true; }, true );
     mgr->addCallback("ui_set_framesleep", [&](OSG::VRGuiSignals::Options o) { VRSceneManager::get()->setTargetFPS(toInt(o["fps"])); return true; }, true );
     mgr->addCallback("ui_set_framesleep", [&](OSG::VRGuiSignals::Options o) { VRSceneManager::get()->setTargetFPS(toInt(o["fps"])); return true; }, true );
@@ -1455,62 +1457,43 @@ void VRGuiSetup::on_window_msaa_changed() {
     setLabel("msaa_info", "to take effect please restart PolyVR!");*/
 }
 
-/*void VRGuiSetup::setTreeRow(GtkTreeStore* tree_store, GtkTreeIter* row, string name, string type, gpointer ptr, string fg, string bg) {
-    gtk_tree_store_set(tree_store, row, 0, name.c_str(), -1);
-    gtk_tree_store_set(tree_store, row, 1, type.c_str(), -1);
-    gtk_tree_store_set(tree_store, row, 2, ptr, -1);
-    gtk_tree_store_set(tree_store, row, 3, fg.c_str(), -1);
-    gtk_tree_store_set(tree_store, row, 4, bg.c_str(), -1);
-}*/
-
 void VRGuiSetup::updateStatus() {
     //if (mwindow) setLabel("win_state", mwindow->getStateString());
 }
 
 bool VRGuiSetup::updateSetup() {
-    /*auto tree_store = (GtkTreeStore*)VRGuiBuilder::get()->get_object("setupTree");
-    gtk_tree_store_clear(tree_store);
+    cout << " - - - - updateSetup" << endl;
+    uiSignal("on_setup_tree_clear");
 
-    GtkTreeIter network_itr, windows_itr, devices_itr, art_itr, vrpn_itr, scripts_itr;
-    gtk_tree_store_append(tree_store, &network_itr, NULL);
-    gtk_tree_store_append(tree_store, &windows_itr, NULL);
-    gtk_tree_store_append(tree_store, &devices_itr, NULL);
-    gtk_tree_store_append(tree_store, &art_itr, NULL);
-    gtk_tree_store_append(tree_store, &vrpn_itr, NULL);
-    gtk_tree_store_append(tree_store, &scripts_itr, NULL);
+    uiSignal("on_setup_tree_append", {{ "ID","SecNetwork" }, { "label","Network" }, { "type","section" }, { "parent","" }});
+    uiSignal("on_setup_tree_append", {{ "ID","SecDisplays" }, { "label","Displays" }, { "type","section" }, { "parent","" }});
+    uiSignal("on_setup_tree_append", {{ "ID","SecDevices" }, { "label","Devices" }, { "type","section" }, { "parent","" }});
+    uiSignal("on_setup_tree_append", {{ "ID","SecART" }, { "label","ART" }, { "type","section" }, { "parent","" }});
+    uiSignal("on_setup_tree_append", {{ "ID","SecVRPN" }, { "label","VRPN" }, { "type","section" }, { "parent","" }});
+    uiSignal("on_setup_tree_append", {{ "ID","SecScripts" }, { "label","Scripts" }, { "type","section" }, { "parent","" }});
 
-    setTreeRow(tree_store, &network_itr, "Network", "section", 0);
-    setTreeRow(tree_store, &windows_itr, "Displays", "section", 0);
-    setTreeRow(tree_store, &devices_itr, "Devices", "section", 0);
-    setTreeRow(tree_store, &art_itr, "ART", "section", 0);
-    setTreeRow(tree_store, &vrpn_itr, "VRPN", "section", 0);
-    setTreeRow(tree_store, &scripts_itr, "Scripts", "section", 0);
-
-    GtkTreeIter row;
+    /*GtkTreeIter row;
     auto user_list = (GtkListStore*)VRGuiBuilder::get()->get_object("user_list");
     gtk_list_store_clear(user_list);
     gtk_list_store_append(user_list, &row);
     gtk_list_store_set(user_list, &row, 0, "None", -1);
-    gtk_list_store_set(user_list, &row, 1, 0, -1);
+    gtk_list_store_set(user_list, &row, 1, 0, -1);*/
 
-    // Devices
-    auto mouse_list = (GtkListStore*)VRGuiBuilder::get()->get_object("mouse_list");
+    /*auto mouse_list = (GtkListStore*)VRGuiBuilder::get()->get_object("mouse_list");
     gtk_list_store_clear(mouse_list);
     gtk_list_store_append(mouse_list, &row);
-    gtk_list_store_set (mouse_list, &row, 0, "None", -1);
+    gtk_list_store_set (mouse_list, &row, 0, "None", -1);*/
 
-    auto setup = current_setup.lock();
-    setLabel("label13", "VR Setup: NONE");
+    auto setup = VRSetup::getCurrent();
+    //setLabel("label13", "VR Setup: NONE");
     if (!setup) return true;
-    setLabel("label13", "VR Setup: " + setup->getName());
+    //setLabel("label13", "VR Setup: " + setup->getName());
 
     for (auto ditr : setup->getDevices()) {
         VRDevicePtr dev = ditr.second;
-        GtkTreeIter itr;
-        gtk_tree_store_append(tree_store, &itr, &devices_itr);
-        setTreeRow(tree_store, &itr, ditr.first.c_str(), dev->getType().c_str(), (gpointer)dev.get());
+        uiSignal("on_setup_tree_append", {{ "ID","dev$"+ditr.first }, { "label",ditr.first }, { "type",dev->getType() }, { "parent","SecDevices" }});
 
-        if (dev->getType() == "mouse") {
+        /*if (dev->getType() == "mouse") {
             gtk_list_store_append(mouse_list, &row);
             gtk_list_store_set(mouse_list, &row, 0, dev->getName().c_str(), -1);
         }
@@ -1518,27 +1501,22 @@ bool VRGuiSetup::updateSetup() {
         if (dev->getType() == "multitouch") {
             gtk_list_store_append(mouse_list, &row);
             gtk_list_store_set(mouse_list, &row, 0, dev->getName().c_str(), -1);
-        }
+        }*/
     }
 
     for (auto node : setup->getNetwork()->getData() ) {
-        GtkTreeIter itr, itr2;
-        gtk_tree_store_append(tree_store, &itr, &network_itr);
-        setTreeRow(tree_store, &itr, node->getName().c_str(), "node", (gpointer)node.get(), "#000000", "#FFFFFF");
+        string nodeID = "NetNode$"+node->getName();
+        uiSignal("on_setup_tree_append", {{ "ID",nodeID }, { "label",node->getName() }, { "type","node" }, { "parent","SecNetwork" }});
         for (auto slave : node->getData() ) {
-            gtk_tree_store_append(tree_store, &itr2, &itr);
-            setTreeRow(tree_store, &itr2, slave->getName().c_str(), "slave", (gpointer)slave.get(), "#000000", "#FFFFFF");
+            uiSignal("on_setup_tree_append", {{ "ID","NetSlave$"+slave->getName() }, { "label",slave->getName() }, { "type","slave" }, { "parent",nodeID }});
         }
     }
 
     for (auto win : setup->getWindows()) {
         VRWindow* w = win.second.get();
         string name = win.first;
-        GtkTreeIter itr, itr2;
-        gtk_tree_store_append(tree_store, &itr, &windows_itr);
-        string bg = "#FFFFFF";
-        if (w->isActive() == false) bg = "#FFDDDD";
-        setTreeRow(tree_store, &itr, name.c_str(), "window", (gpointer)w, "#000000", bg);
+        string winID = "Window$"+name;
+        uiSignal("on_setup_tree_append", {{ "ID",winID }, { "label",name }, { "type","window" }, { "parent","SecDisplays" }});
 
         // add viewports
         vector<VRViewPtr> views = w->getViews();
@@ -1546,8 +1524,8 @@ bool VRGuiSetup::updateSetup() {
             VRViewPtr v = views[i];
             stringstream ss;
             ss << name << i;
-            gtk_tree_store_append(tree_store, &itr2, &itr);
-            setTreeRow(tree_store, &itr2, ss.str().c_str(), "view", (gpointer)v.get());
+            string viewID = "View$"+name;
+            uiSignal("on_setup_tree_append", {{ "ID",viewID }, { "label",name }, { "type","view" }, { "parent",winID }});
         }
     }
 
@@ -1556,10 +1534,7 @@ bool VRGuiSetup::updateSetup() {
     vector<int> vrpnIDs = setup->getVRPN()->getVRPNTrackerIDs();
     for (uint i=0; i<vrpnIDs.size(); i++) {
         VRPN_device* t = setup->getVRPN()->getVRPNTracker(vrpnIDs[i]).get();
-        GtkTreeIter itr;
-        gtk_tree_store_append(tree_store, &itr, &vrpn_itr);
-        cout << "vrpn liststore: " << t->getName() << endl;
-        setTreeRow(tree_store, &itr, t->getName().c_str(), "vrpn_tracker", (gpointer)t);
+        uiSignal("on_setup_tree_append", {{ "ID","vrpn$"+t->getName() }, { "label",t->getName() }, { "type","vrpn_tracker" }, { "parent","SecVRPN" }});
     }
 #endif
 
@@ -1568,31 +1543,28 @@ bool VRGuiSetup::updateSetup() {
     for (int ID : setup->getART()->getARTDevices() ) {
         ART_devicePtr dev = setup->getART()->getARTDevice(ID);
 
-        GtkTreeIter itr, row;
-        gtk_tree_store_append(tree_store, &itr, &art_itr);
         string name = dev->getName();
         if (dev->dev) name = dev->dev->getName();
         else if (dev->ent) name = dev->ent->getName();
-        setTreeRow(tree_store, &itr, name.c_str(), "art_device", (gpointer)dev.get());
+        uiSignal("on_setup_tree_append", {{ "ID","art$"+name }, { "label",name }, { "type","art_device" }, { "parent","SecART" }});
 
-        if (dev->ent) {
+        /*if (dev->ent) {
             gtk_list_store_append(user_list, &row);
             gtk_list_store_set (user_list, &row, 0, dev->ent->getName().c_str(), -1);
             gtk_list_store_set (user_list, &row, 1, dev->ent.get(), -1);
-        }
+        }*/
     }
 #endif
 
-    for (auto s : setup->getScripts()) {
+    /*for (auto s : setup->getScripts()) {
         auto script = s.second.get();
         GtkTreeIter itr;
         gtk_tree_store_append(tree_store, &itr, &scripts_itr);
         setTreeRow(tree_store, &itr, script->getName().c_str(), "script", (gpointer)script);
-    }
+    }*/
 
     on_treeview_select();
-    auto tree_view = VRGuiBuilder::get()->get_widget("treeview2");
-    gtk_tree_view_expand_all((GtkTreeView*)tree_view);*/
+    uiSignal("on_setup_tree_expand");
     return true;
 }
 
