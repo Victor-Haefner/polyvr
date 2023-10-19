@@ -157,7 +157,7 @@ void ImSetupManager::begin() {
                     if (k < serverIDs.size()) sID = serverIDs[k];
                     string xy = toString(x) + " " + toString(y);
                     ImGui::Text(xy.c_str());
-                    ImInput entry("##nxy_"+xy, "", sID);
+                    ImInput entry("##nxy_"+xy, "", sID, ImGuiInputTextFlags_EnterReturnsTrue);
                     ImGui::SameLine();
                     if (entry.render(240)) uiSignal("win_set_serverID", {{"x", toString(x)}, {"y", toString(y)}, {"sID", entry.value}});
                     k++;

@@ -5,7 +5,7 @@ using namespace std;
 
 ImInput::ImInput(string ID, string label, string value, int flags) : ID("##"+ID), label(label), value(value), flags(flags) {}
 
-int imguiInputCb(ImGuiInputTextCallbackData* data) { // the callback reacts on any edit to make sure the value is allways set, even if InputTexxt only reacts on ENTER
+int imguiInputCb(ImGuiInputTextCallbackData* data) { // the callback reacts on any edit to make sure the value is always set, even if InputText only reacts on ENTER
     ImInput& input = *((ImInput*)data->UserData);
     input.value = string(data->Buf, data->BufTextLen);
     //cout << "imguiInputCb " << data->BufTextLen << ", " << input.value << endl;

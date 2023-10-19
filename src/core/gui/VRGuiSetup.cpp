@@ -615,6 +615,7 @@ void VRGuiSetup::on_server_edit(int x, int y, string sID) {
     if (!mwin) return;
     mwin->setServer(x,y,sID);
     mwin->reset();
+    updateObjectData();
 }
 
 void VRGuiSetup::on_connect_mw_clicked() {
