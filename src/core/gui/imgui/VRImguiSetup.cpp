@@ -4,7 +4,7 @@
 #include "core/gui/VRGuiManager.h"
 #include "core/gui/imgui/imWidgets/VRImguiInput.h"
 
-ImSetupManager::ImSetupManager() : ImWidget("SetupManager"), tree("setup") {
+ImSetupManager::ImSetupManager() : ImWidget("SetupManager"), tree("setup"), NxNy("NxNy", "NxNy") {
     auto mgr = OSG::VRGuiSignals::get();
     mgr->addCallback("updateSetupsList", [&](OSG::VRGuiSignals::Options o){ updateSetupsList(o["setups"]); return true; } );
     mgr->addCallback("setCurrentSetup", [&](OSG::VRGuiSignals::Options o){ current_setup = toInt(o["setup"]); return true; } );
@@ -12,7 +12,47 @@ ImSetupManager::ImSetupManager() : ImWidget("SetupManager"), tree("setup") {
     mgr->addCallback("on_setup_tree_append", [&](OSG::VRGuiSignals::Options o) { treeAppend(o["ID"], o["label"], o["type"], o["parent"]); return true; } );
     mgr->addCallback("on_setup_tree_expand", [&](OSG::VRGuiSignals::Options o) { tree.expandAll(); return true; } );
 
+    mgr->addCallback("on_setup_multiwindow", [&](OSG::VRGuiSignals::Options o) { selectWindow(o); return true; } );
+
     tree.setNodeFlags( ImGuiTreeNodeFlags_DefaultOpen );
+}
+
+void ImSetupManager::selectWindow(OSG::VRGuiSignals::Options o) {
+    hideAll();
+    showWindow = true;
+    showRemoteWindow = true;
+
+    selected = o["name"];
+    remoteWinState = o["state"];
+    string ct = o["connType"];
+    winConnType = 0;
+    if (ct == "SockPipeline") winConnType = 1;
+    if (ct == "StreamSock") winConnType = 2;
+    Nx = toInt(o["nx"]);
+    Ny = toInt(o["ny"]);
+    NxNy.set2(Nx, Ny);
+    toValue(o["serverIDs"], serverIDs);
+}
+
+void ImSetupManager::hideAll() {
+    selected = "";
+    showDisplay = false;
+    showWindow = false;
+    showEditorWindow = false;
+    showLocalWindow = false;
+    showRemoteWindow = false;
+    showViewport = false;
+    showVRPN = false;
+    showVRPNTracker = false;
+    showART = false;
+    showARTDevice = false;
+    showDevice = false;
+    showMultitouch = false;
+    showLeap = false;
+    showHaptics = false;
+    showNode = false;
+    showSlave = false;
+    showScript = false;
 }
 
 void ImSetupManager::treeAppend(string ID, string label, string type, string parent) {
@@ -38,39 +78,24 @@ void ImSetupManager::begin() {
     ImGui::SameLine(); if (ImGui::Button("Save")) uiSignal("setup_save");
     ImGui::SameLine(); if (ImGui::Button("Save as..")) uiSignal("setup_saveas");
 
+    ImGuiStyle& style = ImGui::GetStyle();
+    ImGuiIO& io = ImGui::GetIO();
+    float fs = io.FontGlobalScale;
+    float width = 120*fs; // TODO: add a width compute to TreeView
 
-    auto region1 = ImGui::GetContentRegionAvail();
-    auto region2 = ImGui::GetContentRegionAvail();
-    region1.x *= 0.5;
-    region2.x *= 0.5;
     ImGuiWindowFlags flags = ImGuiWindowFlags_None;
+    float w = ImGui::GetContentRegionAvail().x;
+    float h = ImGui::GetContentRegionAvail().y;
+    float w1 = min(float(w*0.5), width);
+    float w2 = w - w1;
 
-
-    ImGui::BeginChild("setupTree", region1, false, flags);
+    ImGui::BeginChild("setupTree", ImVec2(w1, h), true, flags);
     tree.render();
     ImGui::EndChild();
 
     ImGui::SameLine();
 
-    bool showDisplay = false;
-    bool showWindow = false;
-    bool showEditorWindow = false;
-    bool showLocalWindow = false;
-    bool showRemoteWindow = false;
-    bool showViewport = false;
-    bool showVRPN = false;
-    bool showVRPNTracker = false;
-    bool showART = false;
-    bool showARTDevice = false;
-    bool showDevice = false;
-    bool showMultitouch = false;
-    bool showLeap = false;
-    bool showHaptics = false;
-    bool showNode = false;
-    bool showSlave = false;
-    bool showScript = false;
-
-    ImGui::BeginChild("setupProps", region2, false, flags);
+    ImGui::BeginChild("setupProps", ImVec2(w2, h), false, flags);
         if (showDisplay) {
             ImGui::Text(("Displays: " + selected).c_str());
             ImGui::Indent(10);
@@ -92,6 +117,7 @@ void ImSetupManager::begin() {
         }
 
         if (showEditorWindow) {
+            ImGui::Separator();
             ImGui::Text(("Editor Window: " + selected).c_str());
             ImGui::Indent(10);
             // nothing yet
@@ -99,33 +125,45 @@ void ImSetupManager::begin() {
         }
 
         if (showLocalWindow) {
+            ImGui::Separator();
             ImGui::Text(("Local Window: " + selected).c_str());
             ImGui::Indent(10);
             ImGui::Unindent(10);
         }
 
         if (showRemoteWindow) {
+            ImGui::Separator();
             ImGui::Text(("Remote Window: " + selected).c_str());
             ImGui::Indent(10);
             ImGui::Text("State:");
             ImGui::SameLine();
-            ImGui::Text("CONN_STATE");
+            ImGui::Text(remoteWinState.c_str());
             ImGui::SameLine();
-            if (ImGui::Button("connect##win")) uiSignal("win_clicked_connect", {{}});
+            if (ImGui::Button("connect##win")) uiSignal("win_click_connect", {{}});
 
             ImGui::Text("Connection type:");
-            ImGui::SameLine();
+            ImGui::Indent(10);
             if (ImGui::RadioButton("Multicast##win", &winConnType, 0)) { uiSignal("win_set_conn_type", {{"type", "multicast"}}); }
-            ImGui::SameLine();
-            if (ImGui::RadioButton("SockPipeline##win", &winConnType, 0)) { uiSignal("win_set_conn_type", {{"type", "sockpipeline"}}); }
-            ImGui::SameLine();
-            if (ImGui::RadioButton("StreamSock##win", &winConnType, 0)) { uiSignal("win_set_conn_type", {{"type", "streamsock"}}); }
+            if (ImGui::RadioButton("SockPipeline##win", &winConnType, 1)) { uiSignal("win_set_conn_type", {{"type", "sockpipeline"}}); }
+            if (ImGui::RadioButton("StreamSock##win", &winConnType, 2)) { uiSignal("win_set_conn_type", {{"type", "streamsock"}}); }
+            ImGui::Unindent(10);
 
-            //ImInput("##vrpnPort", "Nx:")
-            // Nx: entry 1   Ny: entry 1
-            // Listview Server List
-            //  i j CONN_ID_STR
-            //  ...
+            if (NxNy.render(160) && NxNy.vX > 0 && NxNy.vY > 0) uiSignal("win_set_NxNy", {{"Nx", toString(int(NxNy.vX))}, {"Ny", toString(int(NxNy.vY))}});
+            ImGui::Indent(10);
+            int k = 0;
+            for (int x=0; x<Nx; x++) {
+                for (int y=0; y<Ny; y++) {
+                    string sID = "";
+                    if (k < serverIDs.size()) sID = serverIDs[k];
+                    string xy = toString(x) + " " + toString(y);
+                    ImGui::Text(xy.c_str());
+                    ImInput entry("##nxy_"+xy, "", sID);
+                    ImGui::SameLine();
+                    if (entry.render(240)) uiSignal("win_set_serverID", {{"x", toString(x)}, {"y", toString(y)}, {"sID", entry.value}});
+                    k++;
+                }
+            }
+            ImGui::Unindent(10);
             ImGui::Unindent(10);
         }
 
@@ -281,9 +319,9 @@ void ImSetupManager::begin() {
             ImGui::SameLine();
             if (ImGui::RadioButton("Multicast##slave", &slaveConnType, 0)) { uiSignal("slave_set_conn_type", {{"type", "multicast"}}); }
             ImGui::SameLine();
-            if (ImGui::RadioButton("SockPipeline##slave", &slaveConnType, 0)) { uiSignal("slave_set_conn_type", {{"type", "sockpipeline"}}); }
+            if (ImGui::RadioButton("SockPipeline##slave", &slaveConnType, 1)) { uiSignal("slave_set_conn_type", {{"type", "sockpipeline"}}); }
             ImGui::SameLine();
-            if (ImGui::RadioButton("StreamSock##slave", &slaveConnType, 0)) { uiSignal("slave_set_conn_type", {{"type", "streamsock"}}); }
+            if (ImGui::RadioButton("StreamSock##slave", &slaveConnType, 2)) { uiSignal("slave_set_conn_type", {{"type", "streamsock"}}); }
 
             //ImInput("##screenDisplay", "local display:")
             ImGui::SameLine();

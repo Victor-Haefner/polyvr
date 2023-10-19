@@ -5,6 +5,7 @@
 #include "core/utils/VRFunctionFwd.h"
 #include "core/setup/VRSetupFwd.h"
 #include "core/scene/VRSceneFwd.h"
+#include "core/utils/VRDeviceFwd.h"
 #include "core/scripting/VRScriptFwd.h"
 #include "VRGuiVectorEntry.h"
 #include "VRGuiEditor.h"
@@ -16,13 +17,17 @@ using namespace std;
 
 class VRGuiSetup {
     private:
-        /*_GtkTreeIter* parent_row = 0;
-        gpointer selected_object;
-        gpointer selected_object_parent;*/
+        void* selected_object = 0;
         string selected_type;
         string selected_name;
-        VRSetupWeakPtr current_setup;
-        VRSceneWeakPtr current_scene;
+
+        VRWindowPtr window;
+        VRViewPtr view;
+        VRNetworkNodePtr node;
+        VRNetworkSlavePtr slave;
+        VRDevicePtr device;
+        ART_devicePtr art_device;
+        VRPN_devicePtr vrpn_tracker;
 
         VRGuiVectorEntry artAxis;
         VRGuiVectorEntry artOffset;
@@ -44,9 +49,6 @@ class VRGuiSetup {
         VRGuiVectorEntry leapDirEntry;
         VRGuiVectorEntry leapUpEntry;
 
-        VRGuiContextMenu* menu = 0;
-        VRWindow* window = 0;
-        VRMultiWindow* mwindow = 0;
 	    VRUpdateCbPtr updatePtr;
 	    VRDeviceCbPtr updateSetupCb;
 
@@ -57,8 +59,8 @@ class VRGuiSetup {
 
         string setupDir();
 
-        void on_treeview_select();
-        void on_name_edited(const char* path, const char* new_name);
+        void on_treeview_select(string selected);
+        void on_treeview_rename(string ID, string name);
         void on_save_clicked();
         void on_save_as_clicked();
         void on_diag_save_as_clicked();
@@ -84,9 +86,9 @@ class VRGuiSetup {
         void on_window_msaa_changed();
         void on_toggle_display_active();
         void on_toggle_display_multi();
-        void on_servern_edit();
+        void on_servern_edit(int Nx, int Ny);
         void on_server_ct_toggled();
-        void on_server_edit(const char* path, const char* new_name);
+        void on_server_edit(int x, int y, string sID);
         void on_connect_mw_clicked();
 
         void on_toggle_view_stats();

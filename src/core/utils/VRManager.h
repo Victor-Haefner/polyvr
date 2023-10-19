@@ -12,8 +12,6 @@ class VRManager : public OSG::VRName {
 
     protected:
         int getFreeID();
-
-        shared_ptr<T> get(string name);
         shared_ptr<T> get(int ID);
 
     public:
@@ -22,6 +20,8 @@ class VRManager : public OSG::VRName {
         vector< shared_ptr<T> > getData();
         virtual shared_ptr<T> add(string name = "");
         virtual shared_ptr<T> add(string name, int key);
+
+        shared_ptr<T> get(string name);
 
         void rem(shared_ptr<T> t);
         void rem(string name);

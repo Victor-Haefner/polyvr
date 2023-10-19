@@ -60,6 +60,7 @@ string VRWindow::getMSAA() { return msaa; }
 void VRWindow::stop() { stopping = true; }
 void VRWindow::setAction(RenderActionRefPtr ract) { this->ract = ract; }
 bool VRWindow::hasType(string i) { return (i == type); }
+string VRWindow::getType() { return type; }
 Vec2i VRWindow::getSize() { return Vec2i(width, height); }
 void VRWindow::render(bool fromThread) { if(_win) _win->render(ract); }
 void VRWindow::sync(bool fromThread) { ; }
@@ -145,7 +146,7 @@ VRKeyboardPtr VRWindow::getKeyboard() { return keyboard; }
 
 void VRWindow::save(XMLElementPtr node) {
     node->setAttribute("active", toString(active).c_str());
-    node->setAttribute("type", toString(type).c_str());
+    node->setAttribute("type", type.c_str());
     node->setAttribute("width", toString(width).c_str());
     node->setAttribute("height", toString(height).c_str());
     node->setAttribute("name", getName().c_str());
@@ -169,7 +170,7 @@ void VRWindow::save(XMLElementPtr node) {
 
 void VRWindow::load(XMLElementPtr node) {
     active = toValue<bool>( node->getAttribute("active") );
-    type = toInt( node->getAttribute("type") );
+    type = node->getAttribute("type");
     width = toInt( node->getAttribute("width") );
     height = toInt( node->getAttribute("height") );
     name = node->getAttribute("name");

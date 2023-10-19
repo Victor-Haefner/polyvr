@@ -26,6 +26,13 @@ void VRNetwork::joinInitThreads() {
     for (auto n : getData()) n->joinInitThread();
 }
 
+VRNetworkSlavePtr VRNetwork::getSlave(string name) {
+    for (auto n : getData()) {
+        auto s = n->get(name);
+        if (s) return s;
+    }
+    return 0;
+}
 
 VRNetworkNode::VRNetworkNode(string name) : VRManager("NetworkNode") {
     setNameSpace("NetworkNode");

@@ -47,6 +47,7 @@ class VRWindow : public std::enable_shared_from_this<VRWindow>, public VRName {
         VRWindowPtr ptr();
 
         bool hasType(string i);
+        string getType();
         void resize(int w, int h);
         Vec2i getSize();
 

@@ -133,6 +133,7 @@ class VRNetwork : public VRManager<VRNetworkNode> {
 
         void joinInitThreads();
         void stopSlaves();
+        VRNetworkSlavePtr getSlave(string name);
 };
 
 OSG_END_NAMESPACE;
