@@ -291,7 +291,7 @@ template<> int toValue(string sIn, vector<string>& s) {
 }
 
 template<> int toValue(stringstream& ss, string& s) {
-    if (!ss.rdbuf()->in_avail()) return false;
+    //if (!ss.rdbuf()->in_avail()) return false; // Py bindings need the return true even if the string input is empty!
     s = ss.str();
     ss.str(string()); // clears ss
     return true;

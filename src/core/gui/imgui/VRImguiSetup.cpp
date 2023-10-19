@@ -28,4 +28,7 @@ void ImSetupManager::begin() {
     ImGui::SameLine(); if (ImGui::Button("Delete")) uiSignal("setup_delete");
     ImGui::SameLine(); if (ImGui::Button("Save")) uiSignal("setup_save");
     ImGui::SameLine(); if (ImGui::Button("Save as..")) uiSignal("setup_saveas");
+
+    // treeview
+    // attributes
 }
