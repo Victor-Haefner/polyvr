@@ -64,10 +64,10 @@ Vec3d Boundingbox::size() const { return cleared ? Vec3d() : bb2-bb1; }
 float Boundingbox::radius() const { return cleared ? 0 : (size()*0.5).length(); }
 float Boundingbox::volume() const { auto s = size(); return s[0]*s[1]*s[2]; };
 
-bool Boundingbox::isInside(Vec3d p) const {
-    return (p[0] <= bb2[0] && p[0] >= bb1[0]
-         && p[1] <= bb2[1] && p[1] >= bb1[1]
-         && p[2] <= bb2[2] && p[2] >= bb1[2]);
+bool Boundingbox::isInside(Vec3d p, double margin) const {
+    return (p[0] <= bb2[0]+margin && p[0] >= bb1[0]-margin
+         && p[1] <= bb2[1]+margin && p[1] >= bb1[1]-margin
+         && p[2] <= bb2[2]+margin && p[2] >= bb1[2]-margin);
 }
 
 void Boundingbox::move(const Vec3d& t) {
@@ -184,7 +184,7 @@ float Boundingbox::py_radius() { return radius(); }
 float Boundingbox::py_volume() { return volume(); }
 void Boundingbox::py_setCenter(Vec3d t) { setCenter(t); }
 void Boundingbox::py_move(Vec3d t) { move(t); }
-bool Boundingbox::py_isInside(Vec3d p) { return isInside(p); }
+bool Boundingbox::py_isInside(Vec3d p, double margin) { return isInside(p, margin); }
 void Boundingbox::py_clamp(Vec3d p) { clamp(p); }
 
 

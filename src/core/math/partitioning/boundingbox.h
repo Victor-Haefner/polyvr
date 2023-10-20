@@ -37,7 +37,7 @@ class Boundingbox {
         void scale(float s);
         void inflate(float D);
 
-        bool isInside(Vec3d p) const;
+        bool isInside(Vec3d p, double margin = 0) const;
         bool intersectedBy(Line l);
         bool intersect(BoundingboxPtr bb);
 
@@ -59,7 +59,7 @@ class Boundingbox {
         float py_volume();
         void py_setCenter(Vec3d t);
         void py_move(Vec3d t);
-        bool py_isInside(Vec3d p);
+        bool py_isInside(Vec3d p, double margin = 0);
         void py_clamp(Vec3d p);
 };
 

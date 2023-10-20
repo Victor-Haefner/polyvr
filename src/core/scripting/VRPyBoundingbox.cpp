@@ -22,7 +22,7 @@ PyMethodDef VRPyBoundingbox::methods[] = {
     {"move", PyWrap(Boundingbox, py_move, "Get the size", void, Vec3d) },
     {"scale", PyWrap(Boundingbox, scale, "Get the size", void, float) },
     {"inflate", PyWrap(Boundingbox, inflate, "Get the size", void, float) },
-    {"isInside", PyWrap(Boundingbox, py_isInside, "Get the size", bool, Vec3d) },
+    {"isInside", PyWrapOpt(Boundingbox, py_isInside, "Check if point inside box with optional margin", "0", bool, Vec3d, double) },
     {"intersectedBy", PyWrap(Boundingbox, intersectedBy, "Get the size", bool, Line) },
     {"clamp", PyWrap(Boundingbox, py_clamp, "Get the size", void, Vec3d) },
     {"getRandomPoint", PyWrap(Boundingbox, getRandomPoint, "Get the size", Vec3d) },
