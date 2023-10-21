@@ -293,21 +293,57 @@ PathPtr VRCharacter::grab(Vec3d p1, float speed) {
     return path;
 }
 
-PathPtr VRCharacter::move(string endEffector, PosePtr pose, float s) {
+PathPtr VRCharacter::move(string endEffector, PosePtr pose, float s, bool global) {
     if (!skeleton) return 0;
     auto p0 = skeleton->getTarget(endEffector);
 
     if (target.count(endEffector)) delete target[endEffector];
 
-    auto self = getPose();
-    self->invert();
-    pose = self->multRight(pose);
+    if (global) {
+        auto self = getPose();
+        self->invert();
+        pose = self->multRight(pose);
+    }
     target[endEffector] = new MoveTarget(p0, pose); // TODO
     target[endEffector]->start( VRAnimCb::create("moveAnim", bind(&VRCharacter::moveEE, this, placeholders::_1, endEffector) ), s);
     return target[endEffector]->path;
 }
 
+void VRCharacter::sit() {
+    float a = -0.5;
+    float b = 0.2;
+    auto pR = skeleton->getTarget("ankleR");
+    auto pL = skeleton->getTarget("ankleL");
+    //auto self = getPose();
+    //pR = self->multRight(pR);
+    //pL = self->multRight(pL);
+    pR->translate(pR->dir()*a + pR->up()*b);
+    pL->translate(pL->dir()*a + pL->up()*b);
+    move("ankleR", pR, 1.0, false);
+    move("ankleL", pL, 1.0, false);
+    pR->translate(-pR->dir()*0.1);
+    pL->translate(-pL->dir()*0.1);
+    move("toesR", pR, 1.0, false);
+    move("toesL", pL, 1.0, false);
+}
 
+void VRCharacter::stand() {
+    float a = -0.5;
+    float b = 0.2;
+    auto pR = skeleton->getTarget("ankleR");
+    auto pL = skeleton->getTarget("ankleL");
+    //auto self = getPose();
+    //pR = self->multRight(pR);
+    //pL = self->multRight(pL);
+    pR->translate(-pR->dir()*a + -pR->up()*b);
+    pL->translate(-pL->dir()*a + -pL->up()*b);
+    move("ankleR", pR, 1.0, false);
+    move("ankleL", pL, 1.0, false);
+    pR->translate(-pR->dir()*0.1);
+    pL->translate(-pL->dir()*0.1);
+    move("toesR", pR, 1.0, false);
+    move("toesL", pL, 1.0, false);
+}
 
 /** TODO
 

@@ -128,7 +128,7 @@ void VRHumanoid::generateHead(VRGeoData& data) {
         int N = (rads.size()-1)*2;
         float da = 2*Pi/N;
         for (int i=0; i<N; i++) {
-            double a = da*i;
+            double a = -da*i;
             int ri = i < rads.size() ? i : -i+2*(rads.size()-1);
             double r = rads[ri];
             int id = data.pushVert(Vec3d(sin(a)*r,h,cos(a)*r), n, col, Vec2d(0,rID));

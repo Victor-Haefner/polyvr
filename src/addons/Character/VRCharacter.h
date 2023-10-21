@@ -35,9 +35,11 @@ class VRCharacter : public VRTransform {
         VRSkeletonPtr getSkeleton();
         VRGeometryPtr getSkin();
 
-        PathPtr move(string endEffector, PosePtr pose, float s);
+        PathPtr move(string endEffector, PosePtr pose, float s, bool global = false);
         PathPtr moveTo(Vec3d p, float s);
         PathPtr grab(Vec3d p, float s);
+        void sit();
+        void stand();
 
         void addBehavior(VRBehaviorPtr b);
         //void addAction(VRBehavior::ActionPtr a);
