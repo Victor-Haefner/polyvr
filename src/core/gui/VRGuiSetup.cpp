@@ -408,7 +408,9 @@ void VRGuiSetup::on_treeview_select(string selected) {
     else if (selected_type == "view") view = setup->getView(selected_name);
     else if (selected_type == "node") node = setup->getNetwork()->get(selected_name);
     else if (selected_type == "slave") slave = setup->getNetwork()->getSlave(selected_name);
+#ifndef WITHOUT_VRPN
     else if (selected_type == "vrpn_tracker") vrpn_tracker = setup->getVRPN()->getVRPNTracker(toInt(selected_name));
+#endif
     else if (selected_type == "art_device") art_device = setup->getART()->getARTDevice(toInt(selected_name));
     else device = setup->getDevice(selected_name);
 
