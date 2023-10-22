@@ -275,8 +275,8 @@ void VRHeadMountedDisplay::render(bool fromThread) {
 	glFlush();
 	glFinish();
 
-	UpdateHMDMatrixPose(); // update transformations for next rendering
-	handleInput();
+	//UpdateHMDMatrixPose(); // update transformations for next rendering
+	//handleInput();
 }
 
 void VRHeadMountedDisplay::loadActionSettings() {

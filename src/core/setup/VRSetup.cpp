@@ -8,6 +8,7 @@
 #include "core/setup/devices/VRMouse.h"
 #include "core/setup/devices/VRKeyboard.h"
 #include "core/setup/windows/VRGlutEditor.h"
+#include "core/setup/windows/VRHeadMountedDisplay.h"
 #include "core/utils/toString.h"
 #include "core/utils/VROptions.h"
 #include "core/utils/VRVisualLayer.h"
@@ -120,6 +121,10 @@ void VRSetup::updateTracking() {
 #ifndef WITHOUT_VRPN
     if (vrpn) vrpn->update();
 #endif
+    if (auto hmd = dynamic_pointer_cast<VRHeadMountedDisplay>(getDevice("hmd"))) {
+        hmd->UpdateHMDMatrixPose();
+        hmd->handleInput();
+    }
     for (auto view : getViews()) view->updateMirror();
 }
 

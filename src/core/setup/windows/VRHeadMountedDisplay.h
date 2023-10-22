@@ -60,11 +60,9 @@ class VRHeadMountedDisplay : public VRDevice {
 		VRDeviceCbPtr onCameraChanged;
 
 		void addController(int devID);
-		void handleInput();
 
 		Matrix4d GetHMDMatrixProjectionEye(unsigned int nEye);
 		Matrix4d GetHMDMatrixPoseEye(unsigned int nEye);
-		void UpdateHMDMatrixPose();
 		Matrix4d convertMatrix(const vr::HmdMatrix34_t& mat);
 		Matrix4d convertMatrix(const vr::HmdMatrix44_t& mat);
 
@@ -87,7 +85,8 @@ class VRHeadMountedDisplay : public VRDevice {
 		static bool checkDeviceAttached();
 
 		void initHMD();
-
+		void UpdateHMDMatrixPose();
+		void handleInput();
 		void render(bool fromThread = false);
 
 		VRTransformPtr getTracker(int tID);
