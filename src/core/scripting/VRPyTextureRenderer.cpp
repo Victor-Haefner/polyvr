@@ -14,6 +14,7 @@ simpleVRPyType(TextureRenderer, New_VRObjects_ptr);
 
 PyMethodDef VRPyTextureRenderer::methods[] = {
     {"setup", PyWrapOpt(TextureRenderer, setup, "Setup texture renderer, cam, width, height", "0", void, VRCameraPtr, int, int, bool) },
+    {"setBackground", PyWrapOpt(TextureRenderer, setBackground, "Set background color ( [r,g,b], alpha=1 )", "1", void, Color3f, float) },
     {"setReadback", PyWrap(TextureRenderer, setReadback, "Set readback (RGB, depth), necessary for using the texture beyond rendering", void, bool, bool) },
     {"getMaterial", PyWrap(TextureRenderer, getMaterial, "Get the material with the rendering", VRMaterialPtr) },
     {"copyMaterial", PyWrap(TextureRenderer, copyMaterial, "Get a material copy with the rendering textures", VRMaterialPtr) },
@@ -25,6 +26,7 @@ PyMethodDef VRPyTextureRenderer::methods[] = {
     {"test", PyWrap(TextureRenderer, test, "test", void) },
     {"startServer", PyWrap(TextureRenderer, startServer, "Start streaming server", string, int) },
     {"stopServer", PyWrap(TextureRenderer, stopServer, "Stop streaming server", void) },
+    {"exportImage", PyWrap(TextureRenderer, exportImage, "Export rgb to file", void, string) },
     {"exportDepthImage", PyWrap(TextureRenderer, exportDepthImage, "Export depth to file", void, string) },
     {NULL}  /* Sentinel */
 };

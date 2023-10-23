@@ -267,6 +267,11 @@ void VRTextureRenderer::setReadback(bool RGBReadback, bool depthReadback) {
     data->texDBuf->setReadBack(depthReadback);
 }
 
+void VRTextureRenderer::exportImage(string path) {
+    auto tex = mat->getTexture();
+    tex->write(path);
+}
+
 bool _convertToUInt8(ImageMTRecPtr img) {
     auto dtype = img->getDataType();
     auto format = img->getPixelFormat();
