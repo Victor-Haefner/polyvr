@@ -25,5 +25,6 @@ PyMethodDef VRPyTextureRenderer::methods[] = {
     {"test", PyWrap(TextureRenderer, test, "test", void) },
     {"startServer", PyWrap(TextureRenderer, startServer, "Start streaming server", string, int) },
     {"stopServer", PyWrap(TextureRenderer, stopServer, "Stop streaming server", void) },
+    {"exportDepthImage", PyWrap(TextureRenderer, exportDepthImage, "Export depth to file", void, string) },
     {NULL}  /* Sentinel */
 };

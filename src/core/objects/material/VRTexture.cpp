@@ -234,8 +234,6 @@ int VRTexture::getChannels() {
     if (f == Image::OSG_DEPTH_PF) return 1;
     if (f == Image::OSG_ALPHA_INTEGER_PF) return 1;
     if (f == Image::OSG_LUMINANCE_INTEGER_PF) return 1;
-    if (f == Image::OSG_DEPTH_PF) return 1;
-    if (f == Image::OSG_DEPTH_PF) return 1;
     if (f == Image::OSG_LA_PF) return 2;
     if (f == Image::OSG_LUMINANCE_ALPHA_INTEGER_PF) return 2;
     if (f == Image::OSG_RGB_PF) return 3;
@@ -261,6 +259,42 @@ int VRTexture::getPixelByteN() {
     if (f == Image::OSG_INT32_IMAGEDATA) return 4;
     if (f == Image::OSG_UINT24_8_IMAGEDATA) return 3;
     return 0;
+}
+
+string VRTexture::typeToString(int f) {
+    if (f == Image::OSG_INVALID_IMAGEDATATYPE) return "OSG_INVALID_IMAGEDATATYPE";
+    if (f == Image::OSG_UINT8_IMAGEDATA) return "OSG_UINT8_IMAGEDATA";
+    if (f == Image::OSG_UINT16_IMAGEDATA) return "OSG_UINT16_IMAGEDATA";
+    if (f == Image::OSG_UINT32_IMAGEDATA) return "OSG_UINT32_IMAGEDATA";
+    if (f == Image::OSG_FLOAT16_IMAGEDATA) return "OSG_FLOAT16_IMAGEDATA";
+    if (f == Image::OSG_FLOAT32_IMAGEDATA) return "OSG_FLOAT32_IMAGEDATA";
+    if (f == Image::OSG_INT16_IMAGEDATA) return "OSG_INT16_IMAGEDATA";
+    if (f == Image::OSG_INT32_IMAGEDATA) return "OSG_INT32_IMAGEDATA";
+    if (f == Image::OSG_UINT24_8_IMAGEDATA) return "OSG_UINT24_8_IMAGEDATA";
+    return "Unknown";
+}
+
+string VRTexture::formatToString(int f) {
+#ifdef __EMSCRIPTEN__
+    if (f == Image::OSG_R_PF) return "OSG_R_PF";
+#else
+    if (f == GL_RED) return "OSG_R_PF";
+#endif
+    if (f == Image::OSG_A_PF) return "OSG_A_PF";
+    if (f == Image::OSG_I_PF) return "OSG_I_PF";
+    if (f == Image::OSG_L_PF) return "OSG_L_PF";
+    if (f == Image::OSG_DEPTH_PF) return "OSG_DEPTH_PF";
+    if (f == Image::OSG_ALPHA_INTEGER_PF) return "OSG_ALPHA_INTEGER_PF";
+    if (f == Image::OSG_LUMINANCE_INTEGER_PF) return "OSG_LUMINANCE_INTEGER_PF";
+    if (f == Image::OSG_LA_PF) return "OSG_LA_PF";
+    if (f == Image::OSG_LUMINANCE_ALPHA_INTEGER_PF) return "OSG_LUMINANCE_ALPHA_INTEGER_PF";
+    if (f == Image::OSG_RGB_PF) return "OSG_RGB_PF";
+    if (f == Image::OSG_RGB_INTEGER_PF) return "OSG_RGB_INTEGER_PF";
+    if (f == Image::OSG_BGR_INTEGER_PF) return "OSG_BGR_INTEGER_PF";
+    if (f == Image::OSG_RGBA_PF) return "OSG_RGBA_PF";
+    if (f == Image::OSG_RGBA_INTEGER_PF) return "OSG_RGBA_INTEGER_PF";
+    if (f == Image::OSG_BGRA_INTEGER_PF) return "OSG_BGRA_INTEGER_PF";
+    return "Unknown";
 }
 
 int VRTexture::getPixelByteSize() { return getPixelByteN()*getChannels(); }

@@ -319,7 +319,7 @@ void VRGlutEditor::enableVSync(bool b) {
 }
 
 void VRGlutEditor::on_gl_resize(int w, int h) {
-    cout << "  Glut::on_gl_resize " << w << ", " << h << endl;
+    //cout << "  Glut::on_gl_resize " << w << ", " << h << endl;
     if (winGL < 0) return;
     glutSetWindow(winGL);
     int ww = glutGet(GLUT_WINDOW_WIDTH); // calling glutGet somehow magically fixes the resize glitches..
@@ -329,7 +329,7 @@ void VRGlutEditor::on_gl_resize(int w, int h) {
 
 void VRGlutEditor::resizeGLWindow(int x, int y, int w, int h) { // glArea.surface
     if (fullscreen) return;
-    cout << "     Glut::updateGLWindow " << x << ", " << y << ", " << w << ", " << h << endl;
+    //cout << "     Glut::updateGLWindow " << x << ", " << y << ", " << w << ", " << h << endl;
     if (winGL < 0) return;
     glutSetWindow(winGL);
     glutPositionWindow(x, y);

@@ -267,6 +267,74 @@ void VRTextureRenderer::setReadback(bool RGBReadback, bool depthReadback) {
     data->texDBuf->setReadBack(depthReadback);
 }
 
+bool _convertToUInt8(ImageMTRecPtr img) {
+    auto dtype = img->getDataType();
+    auto format = img->getPixelFormat();
+    Vec3i s = Vec3i(img->getWidth(), img->getHeight(), img->getDepth());
+
+    if (dtype == OSG::Image::OSG_FLOAT32_IMAGEDATA && format == OSG::Image::OSG_RGB_PF) {
+        size_t N = s[0]*s[1]*s[2];
+        Color3f* src = (Color3f*)img->getData();
+        vector<Color3ub> dst(N);
+        for (size_t i=0; i<N; i++) {
+            Color3f c = src[i];
+            UInt8 r = max(0.f,c[0])*255;
+            UInt8 g = max(0.f,c[1])*255;
+            UInt8 b = max(0.f,c[2])*255;
+            dst[i] = Color3ub(r,g,b);
+        }
+        img->set(format, s[0], s[1], s[2], 1, 1, 0, (UInt8*)&dst[0]);
+        return true;
+    }
+    return false;
+}
+
+// This doesnt work because OpenSG doesnt bind GL_DEPTH_ATTACHMENT
+// I changed that but this would need some testing!
+void VRTextureRenderer::exportDepthImage(string path) {
+    //auto tBuf = data->texBuf;
+    auto tBuf = data->texDBuf;
+
+    bool b = tBuf->getReadBack();
+    if (!b) cout << "Warning! depth buffer readback disabled! image export will fail!" << endl;
+
+    auto fboTex = tBuf->getTexture();
+    auto img = fboTex->getImage();
+    auto dtype = img->getDataType();
+    auto format = img->getPixelFormat();
+
+    cout << "VRTextureRenderer::exportDepthImage to " << path << endl;
+    cout << " img type: " << VRTexture::typeToString(dtype) << endl;
+    cout << " img format: " << VRTexture::formatToString(format) << endl;
+
+    int w = img->getWidth();
+    int h = img->getHeight();
+    int d = img->getDepth();
+    int s = w*h*d;
+    size_t bS = img->getSize(0,0,0);
+    cout << " dimensions: " << Vec3i(w,h,d) << " -> N pixels: " << s << ", byte size: " << bS << endl;
+
+    double T = 0;
+    for (size_t i=0; i<bS; i++) T += (int)img->getData()[i];
+    cout << " byteSum: " << T << endl;
+    if (dtype != OSG::Image::OSG_UINT8_IMAGEDATA) { // need to convert image data to write to file
+        cout << "convert image data from " << dtype << " to OSG::Image::OSG_UINT8_IMAGEDATA" << endl;
+        ImageMTRecPtr img2 = Image::create();
+        img2->set(img);
+        if (!_convertToUInt8(img2)) img2->convertDataTypeTo(OSG::Image::OSG_UINT8_IMAGEDATA);
+        img = img2;
+    }
+
+    if (format == OSG::Image::OSG_A_PF) { // need to convert pixel data
+        cout << "convert pixel data from " << format << " to OSG::Image::OSG_RGB_PF" << endl;
+        ImageMTRecPtr img2 = Image::create();
+        img->reformat(OSG::Image::OSG_RGB_PF, img2);
+        img = img2;
+    }
+
+    if (!img->write(path.c_str())) cout << " VRTexture::write to file '" << path << "' failed!" << endl;
+}
+
 void VRTextureRenderer::setCam(VRCameraPtr c) { cam = c; }
 void VRTextureRenderer::setStageCam(OSGCameraPtr cam) { data->stage->setCamera(cam->cam); }
 VRMaterialPtr VRTextureRenderer::getMaterial() { return mat; }

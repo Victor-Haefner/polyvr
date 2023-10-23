@@ -67,6 +67,7 @@ class VRTextureRenderer : public VRObject {
         vector<VRTexturePtr> createCubeMaps(VRTransformPtr focusObject);
         VRMaterialPtr createTextureLod(VRObjectPtr scene, PosePtr cam, int res, float aspect, float fov, Color3f bg);
 
+        void exportDepthImage(string path);
         string startServer(int port);
         void stopServer();
 
