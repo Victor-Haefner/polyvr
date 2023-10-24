@@ -369,6 +369,7 @@ void VRGuiScripts::on_rename_script(string new_name) {
     if (script == 0) return;
     auto s = scene->changeScriptName(selected, new_name);
     new_name = s->getName();
+    updateList();
 }
 
 void VRGuiScripts::on_rename_group(string new_name) {
