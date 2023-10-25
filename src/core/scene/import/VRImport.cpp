@@ -155,7 +155,7 @@ VRTransformPtr VRImport::load(string path, VRObjectPtr parent, bool useCache, st
 
     cout << "VRImport::load " << path << ", with preset: " << preset << ", useCache: " << useCache << endl;
     if (ihr_flag) if (fileSize(path) > 3e7) return 0;
-    setlocale(LC_ALL, "C");
+    setlocale(LC_ALL, "en_US.UTF-8"); // if necessary call with utf8 instead (see polyvr.cpp)
 
     // check cache
     if (useCache && cache.count(path)) {
@@ -293,6 +293,7 @@ void VRImport::LoadJob::load(VRThreadWeakPtr tw) {
 
     string osbPath = getFolderName(path) + "/." + getFileName(path) + ".osb";
     bool loadedFromCache = false;
+    if (useBinaryCache) cout << "check for cache " << osbPath << " -> exist? " << exists(osbPath) << endl;
     if (useBinaryCache && exists(osbPath)) {
         // TODO: create descriptive hash of file, load hash and compare
         cout << "load from binary cache" << endl;
