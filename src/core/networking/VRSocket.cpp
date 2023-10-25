@@ -11,6 +11,7 @@
 #include "core/setup/devices/VRServer.h"
 #include "core/utils/toString.h"
 #include "core/utils/VRLogger.h"
+#include "core/utils/VRMutex.h"
 #include "core/utils/system/VRSystem.h"
 
 #include <algorithm>
@@ -169,7 +170,16 @@ class HTTPServer {
         }
 
         void websocket_send(int id, string message) {
-            if (websockets.count(id) && websockets[id]) mg_send_websocket_frame(websockets[id], WEBSOCKET_OP_TEXT, message.c_str(), message.size());
+            static VRMutex mtx;
+
+            //cout << "websocket_send " << id << ", " << message << endl;
+            if (websockets.count(id) && websockets[id]) {
+                VRLock lock(mtx);
+                mg_connection* c = websockets[id];
+                //if (c->send_mbuf.len > 2200) return;
+                //cout << " mgc " << c->send_mbuf.len << ", " << c->send_mbuf.size << ", " << c->recv_mbuf.len << ", " << c->recv_mbuf.size << ", " << message << endl;
+                mg_send_websocket_frame(c, WEBSOCKET_OP_TEXT, message.c_str(), message.size());
+            }
         }
 
         int websocket_open(string address, string protocols) {

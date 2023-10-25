@@ -2304,6 +2304,7 @@ void mg_destroy_conn(struct mg_connection *conn, int destroy_if) {
 #if MG_ENABLE_SSL
   mg_ssl_if_conn_free(conn);
 #endif
+  printf("-----mg_destroy_conn! %i %i", conn->send_mbuf.len, conn->send_mbuf.size);
   mbuf_free(&conn->recv_mbuf);
   mbuf_free(&conn->send_mbuf);
 
