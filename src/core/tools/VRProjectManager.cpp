@@ -51,7 +51,7 @@ void VRProjectManager::newProject(string path, bool asave) {
 void VRProjectManager::save(string path) {
     if (path == "") path = getName();
     if (exists(path)) path = canonical(path);
-    cout << "VRProjectManager::save " << path << " (" << toString(vault_reload.size()) << " + " << toString(vault_rebuild.size()) << " objects)" << endl;
+    cout << "VRProjectManager::save " << path << " (" << toString(vault_reload.size()) << " + " << toString(vault_rebuild.size()) << " objects)" << ", persistencyLvl: " << persistencyLvl << endl;
 
     XML xml;
     XMLElementPtr root = xml.newRoot("Project", "", ""); // name, ns_uri, ns_prefix

@@ -37,7 +37,10 @@
 #include "core/objects/VRTransform.h"
 #include "core/setup/VRSetup.h"
 
+#include <boost/filesystem.hpp>
+
 #ifndef _WIN32
+#include <Windows.h>
 #include <unistd.h>
 #include <termios.h>
 #endif
@@ -174,7 +177,16 @@ void printOSGImportCapabilities() {
 
 void PolyVR::initEnvironment() {
     initTime();
-    setlocale(LC_ALL, "C");
+    //setlocale(LC_ALL, "C");
+    setlocale(LC_ALL, "en_US.UTF-8");
+    boost::filesystem::path::imbue(std::locale("en_US.UTF-8"));
+
+#ifdef _WIN32
+    // to get windows to compile for UTF8
+    SetConsoleOutputCP(CP_UTF8);
+    setvbuf(stdout, nullptr, _IOFBF, 1000);
+#endif
+
     options = shared_ptr<VROptions>(VROptions::get());
     options->parse(argc,argv);
 
