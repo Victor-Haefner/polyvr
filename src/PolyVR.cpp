@@ -40,7 +40,6 @@
 #include <boost/filesystem.hpp>
 
 #ifndef _WIN32
-#include <Windows.h>
 #include <unistd.h>
 #include <termios.h>
 #endif
