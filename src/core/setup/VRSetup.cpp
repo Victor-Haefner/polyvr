@@ -122,7 +122,8 @@ void VRSetup::updateTracking() {
     if (vrpn) vrpn->update();
 #endif
     if (auto hmd = dynamic_pointer_cast<VRHeadMountedDisplay>(getDevice("hmd"))) {
-        hmd->UpdateHMDMatrixPose();
+        //hmd->UpdateHMDMatrixPose();
+        hmd->UpdateDevMatrixPoses();
         hmd->handleInput();
     }
     for (auto view : getViews()) view->updateMirror();

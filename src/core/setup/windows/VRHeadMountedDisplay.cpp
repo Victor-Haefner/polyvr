@@ -275,7 +275,7 @@ void VRHeadMountedDisplay::render(bool fromThread) {
 	glFlush();
 	glFinish();
 
-	//UpdateHMDMatrixPose(); // update transformations for next rendering
+	UpdateHMDMatrixPose(); // update transformations for next rendering
 	//handleInput();
 }
 
@@ -409,14 +409,45 @@ void VRHeadMountedDisplay::handleInput() {
 	}
 }
 
+void VRHeadMountedDisplay::UpdateDevMatrixPoses() {
+	if (!m_pHMD) return;
+	VRLock lock(mtx);
+
+	int hmdID = vr::k_unTrackedDeviceIndex_Hmd;
+	m_iValidPoseCount = 0;
+	for (uint devID = 0; devID < vr::k_unMaxTrackedDeviceCount; devID++) {
+		if (devID == hmdID) continue;
+
+		if (m_rTrackedDevicePose[devID].bPoseIsValid) {
+			m_iValidPoseCount++;
+			Matrix4d m = convertMatrix(m_rTrackedDevicePose[devID].mDeviceToAbsoluteTracking);
+			m.multLeft(calibration);
+			m_rmat4DevicePose[devID] = m;
+			auto devType = m_pHMD->GetTrackedDeviceClass(devID);
+
+			if (devType == vr::TrackedDeviceClass_Controller) {
+				auto d = getDevice(devID);
+				if (d) d->getBeacon()->setMatrix(m);
+			}
+			else {
+				auto t = getTracker(devID);
+				if (t) t->setMatrix(m);
+			}
+		}
+	}
+}
+
 void VRHeadMountedDisplay::UpdateHMDMatrixPose() {
 	if (!m_pHMD) return;
 	VRLock lock(mtx);
 
 	vr::VRCompositor()->WaitGetPoses(&m_rTrackedDevicePose[0], vr::k_unMaxTrackedDeviceCount, NULL, 0);
 
+	int hmdID = vr::k_unTrackedDeviceIndex_Hmd;
 	m_iValidPoseCount = 0;
 	for (uint devID = 0; devID < vr::k_unMaxTrackedDeviceCount; devID++) {
+		if (devID != hmdID) continue;
+
 		if (m_rTrackedDevicePose[devID].bPoseIsValid) {
 			m_iValidPoseCount++;
 			Matrix4d m = convertMatrix(m_rTrackedDevicePose[devID].mDeviceToAbsoluteTracking);
@@ -434,7 +465,6 @@ void VRHeadMountedDisplay::UpdateHMDMatrixPose() {
 		}
 	}
 
-	int hmdID = vr::k_unTrackedDeviceIndex_Hmd;
 	if (m_rTrackedDevicePose[hmdID].bPoseIsValid) {
 		Matrix4d mvm = m_rmat4DevicePose[hmdID];
 		mvm.invert();

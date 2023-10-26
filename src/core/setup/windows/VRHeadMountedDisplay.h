@@ -86,6 +86,7 @@ class VRHeadMountedDisplay : public VRDevice {
 
 		void initHMD();
 		void UpdateHMDMatrixPose();
+		void UpdateDevMatrixPoses();
 		void handleInput();
 		void render(bool fromThread = false);
 
