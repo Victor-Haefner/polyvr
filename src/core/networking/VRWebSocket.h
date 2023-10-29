@@ -29,7 +29,7 @@ class VRWebSocket : public VRName {
 #endif
 
     private:
-        static void eventHandler(struct mg_connection* nc, int ev, void* ev_data);
+        static void eventHandler(struct mg_connection* nc, int ev, void* ev_data, void* user_data);
 
         void poll(VRThreadWeakPtr t);
         void processFrame(string frameData);

@@ -26,11 +26,15 @@ bool VRWebSocket::open(string url) {
     cout << "VRWebSocket::open " << url << endl;
     close();
 
-    mg_mgr_init(&mgr, (void*) this);
+    mg_mgr_init(&mgr);
 
-    connection = mg_connect_ws(&mgr, eventHandler, url.c_str(), NULL, NULL);
+    connection = mg_ws_connect(&mgr, url.c_str(), eventHandler, this, 0);
     if (connection == nullptr) {
         cerr << "Cannot connect to " << url << endl;
+        return false;
+    }
+    if (!connection->is_websocket) {
+        cerr << "Error, '" << url << "' is not a websocket!" << endl;
         return false;
     }
 
@@ -58,7 +62,8 @@ void VRWebSocket::poll(VRThreadWeakPtr t) {
 bool VRWebSocket::close() {
     if (isConnected()) {
         cout << "Closing socket: " << this << endl;
-        mg_send_websocket_frame(connection, WEBSOCKET_OP_CLOSE, nullptr, 0);
+        //mg_send_websocket_frame(connection, WEBSOCKET_OP_CLOSE, nullptr, 0);
+        mg_ws_send(connection, 0, 0, WEBSOCKET_OP_CLOSE);
 
         // TODO: output only for testing purposes. Remove after closing of web sockets is fixed.
         int i = 0;
@@ -87,7 +92,7 @@ bool VRWebSocket::isConnected() {
 bool VRWebSocket::sendMessage(string message) {
     cout << "VRWebSocket::sendMessage N " << message.size() << endl;
     if (isConnected()) {
-        mg_send_websocket_frame(connection, WEBSOCKET_OP_TEXT, message.c_str(), message.length());
+        mg_ws_send(connection, message.c_str(), message.length(), WEBSOCKET_OP_TEXT);
         cout << " VRWebSocket::sendMessage N " << message.size() << " done" << endl;
         return true;
     } else {
@@ -119,38 +124,48 @@ void VRWebSocket::registerJsonCallback(function<void(Json::Value)> func) {
 }
 #endif
 
-void VRWebSocket::eventHandler(struct mg_connection* nc, int ev, void* ev_data) {
-
-    VRWebSocket* object = (VRWebSocket*) nc->mgr->user_data;
+void VRWebSocket::eventHandler(struct mg_connection* nc, int ev, void* ev_data, void* user_data) {
+    VRWebSocket* object = (VRWebSocket*)user_data;
+    struct mg_http_message* hm = 0;
+    struct mg_ws_message* wm = 0;
+    int status = 0;
 
     switch (ev) {
-        case MG_EV_CONNECT: {
-            int status = *((int*) ev_data);
+        case MG_EV_HTTP_MSG:
+            hm = (struct mg_http_message *) ev_data;
+            if (mg_http_match_uri(hm, "/websocket")) mg_ws_upgrade(nc, hm, NULL);
+            else if (mg_http_match_uri(hm, "/rest")) mg_http_reply(nc, 200, "", "{\"result\": \"unsupported request\"}\n"); // TODO: handle rest request??
+            else { // TODO serving static files ?
+              //struct mg_http_serve_opts opts = {.root_dir = s_web_root};
+              //mg_http_serve_dir(nc, ev_data, &opts);
+            }
+
+        case MG_EV_CONNECT:
+            status = *((int*) ev_data);
             if (status != 0) {
                 printf("-- Connection error: %d\n", status);
                 object->connectionStatus = 0;
                 object->done = true;
             }
             break;
-        }
-        case MG_EV_WEBSOCKET_HANDSHAKE_DONE: {
+
+        case MG_EV_WS_OPEN:
             printf("-- Connected\n");
             object->connectionStatus = 1;
             break;
-        }
-        case MG_EV_WEBSOCKET_FRAME: {
-            struct websocket_message* wm = (struct websocket_message*) ev_data;
-            object->processFrame(string(reinterpret_cast<char const*>(wm->data), wm->size));
+
+        case MG_EV_WS_MSG:
+            wm = (struct mg_ws_message*) ev_data;
+            object->processFrame(string(reinterpret_cast<char const*>(wm->data.ptr), wm->data.len));
             break;
-        }
-        case MG_EV_CLOSE: {
+
+        case MG_EV_CLOSE:
             if (object->isConnected()) {
                 printf("-- Disconnected\n");
                 object->connectionStatus = -1;
             }
             object->done = true;
             break;
-        }
     }
 }
 

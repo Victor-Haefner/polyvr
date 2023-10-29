@@ -69,8 +69,8 @@ void server_answer_job(HTTP_args* args) {
     delete args;
 }
 
-static void server_answer_to_connection_m(struct mg_connection *conn, int ev, void *ev_data);
-static struct mg_serve_http_opts s_http_server_opts;
+static void server_answer_to_connection_m(struct mg_connection *conn, int ev, void *ev_data, void *fn_data);
+static struct mg_http_serve_opts s_http_server_opts;
 
 class HTTPServer {
     private:
@@ -80,9 +80,7 @@ class HTTPServer {
         //server----------------------------------------------------------------
         //struct MHD_Daemon* server = 0;
         struct mg_mgr* server = 0;
-        struct mg_bind_opts bind_opts;
         struct mg_connection* nc = 0;
-        const char* err_str = 0;
         int port = 0;
         int threadID = 0;
         HTTP_args* data = 0;
@@ -104,22 +102,20 @@ class HTTPServer {
             port = p;
             data->cb = fkt;
             server = new mg_mgr();
-            mg_mgr_init(server, data);
-            //server = mg_create_server(data, server_answer_to_connection_m);
-            memset(&bind_opts, 0, sizeof(bind_opts));
-            bind_opts.error_string = &err_str;
+            mg_mgr_init(server);
             for (int i=0; i<10; i++) {
-                nc = mg_bind_opt(server, toString(port+i).c_str(), server_answer_to_connection_m, bind_opts);
-                if (!nc) cout << "Warning in initServer: could not bind to " << server << ":" << port+i << ", increment port to " << port+i << endl;
+                string addr = ":" + toString(port+i);
+                nc = mg_http_listen(server, addr.c_str(), server_answer_to_connection_m, data);
+                if (!nc) cout << "Warning in initServer: could not bind to :" << port+i << ", increment port to " << port+i+1 << endl;
                 else {
                     port = port+i;
                     break;
                 }
             }
-            if (!nc) { cout << "Warning in initServer: could not bind to " << server << ":" << port << endl; return false; }
-            mg_set_protocol_http_websocket(nc);
+            if (!nc) { cout << "Warning in initServer: could not bind to :" << port << endl; return false; }
+            //mg_set_protocol_http_websocket(nc);
             //s_http_server_opts.document_root = ".";
-            s_http_server_opts.enable_directory_listing = "yes";
+            //s_http_server_opts.enable_directory_listing = "yes";
             //mg_set_option(server, "listening_port", toString(port).c_str());
 
             serverThread = VRFunction<VRThreadWeakPtr>::create("mongoose loop", bind(&HTTPServer::loop, this, placeholders::_1));
@@ -178,14 +174,14 @@ class HTTPServer {
                 mg_connection* c = websockets[id];
                 //if (c->send_mbuf.len > 2200) return;
                 //cout << " mgc " << c->send_mbuf.len << ", " << c->send_mbuf.size << ", " << c->recv_mbuf.len << ", " << c->recv_mbuf.size << ", " << message << endl;
-                mg_send_websocket_frame(c, WEBSOCKET_OP_TEXT, message.c_str(), message.size());
+                mg_ws_send(c, message.c_str(), message.size(), WEBSOCKET_OP_TEXT);
             }
         }
 
         int websocket_open(string address, string protocols) {
             static size_t clientID = 1e5; clientID++;
             int newID = clientID;
-            auto c = mg_connect_ws(server, server_answer_to_connection_m, address.c_str(), protocols.c_str(), NULL);
+            auto c = mg_ws_connect(server, address.c_str(), server_answer_to_connection_m, this, protocols.c_str());
             if (c) websockets[newID] = c;
             else newID = -1;
             return newID;
@@ -220,21 +216,29 @@ string processPHP(HTTP_args* sad) {
     return subString( res, 0, res.size()-1 );
 }
 
-static void server_answer_to_connection_m(struct mg_connection *conn, int ev, void *ev_data) {
+static void server_answer_to_connection_m(struct mg_connection *conn, int ev, void* ev_data, void* user_data) {
     //VRLog::setTag("net",1);
     bool v = VRLog::tag("net");
     if (v) {
-        if (ev == MG_EV_CONNECT) { VRLog::log("net", "MG_EV_CONNECT\n"); return; }
-        if (ev == MG_EV_RECV) { VRLog::log("net", "MG_EV_RECV\n"); return; }
+        if (ev == MG_EV_ERROR) { VRLog::log("net", "MG_EV_ERROR\n"); return; }
+        if (ev == MG_EV_OPEN) { VRLog::log("net", "MG_EV_OPEN\n"); return; }
         if (ev == MG_EV_POLL) { return; }
+        if (ev == MG_EV_RESOLVE) { VRLog::log("net", "MG_EV_RESOLVE\n"); return; }
+        if (ev == MG_EV_CONNECT) { VRLog::log("net", "MG_EV_CONNECT\n"); return; }
         if (ev == MG_EV_ACCEPT) { VRLog::log("net", "MG_EV_ACCEPT\n"); return; }
-        if (ev == MG_EV_SEND) { VRLog::log("net", "MG_EV_SEND\n"); return; }
-        if (ev == MG_EV_TIMER) { VRLog::log("net", "MG_EV_TIMER\n"); return; }
-        if (ev == MG_EV_WEBSOCKET_HANDSHAKE_DONE) { VRLog::log("net", "MG_EV_WEBSOCKET_HANDSHAKE_DONE\n"); return; }
-        if (ev == MG_EV_WEBSOCKET_CONTROL_FRAME) { VRLog::log("net", "MG_EV_WEBSOCKET_CONTROL_FRAME\n"); return; }
+        if (ev == MG_EV_TLS_HS) { VRLog::log("net", "MG_EV_TLS_HS\n"); return; }
+        if (ev == MG_EV_READ) { VRLog::log("net", "MG_EV_READ\n"); return; }
+        if (ev == MG_EV_WRITE) { return; }
+        if (ev == MG_EV_WS_OPEN) { VRLog::log("net", "MG_EV_WS_OPEN\n"); return; }
+        if (ev == MG_EV_WS_CTL) { VRLog::log("net", "MG_EV_WS_CTL\n"); return; }
+        if (ev == MG_EV_MQTT_CMD) { VRLog::log("net", "MG_EV_MQTT_CMD\n"); return; }
+        if (ev == MG_EV_MQTT_MSG) { VRLog::log("net", "MG_EV_MQTT_MSG\n"); return; }
+        if (ev == MG_EV_MQTT_OPEN) { VRLog::log("net", "MG_EV_MQTT_OPEN\n"); return; }
+        if (ev == MG_EV_SNTP_TIME) { VRLog::log("net", "MG_EV_SNTP_TIME\n"); return; }
+        if (ev == MG_EV_USER) { VRLog::log("net", "MG_EV_USER\n"); return; }
     }
 
-    HTTP_args* sad = (HTTP_args*) conn->mgr->user_data;
+    HTTP_args* sad = (HTTP_args*)user_data;
 
     if (ev == MG_EV_CLOSE) {
         VRLog::log("net", "MG_EV_CLOSE\n");
@@ -249,16 +253,16 @@ static void server_answer_to_connection_m(struct mg_connection *conn, int ev, vo
         return;
     }
 
-    if (ev == MG_EV_WEBSOCKET_FRAME) {
+    if (ev == MG_EV_WS_MSG) {
         sad->websocket = true;
         sad->path = "";
         sad->params->clear();
 
-        VRLog::log("net", "MG_EV_WEBSOCKET_FRAME\n");
+        VRLog::log("net", "MG_EV_WS_MSG\n");
         if (v) sad->print();
 
-        struct websocket_message* wm = (struct websocket_message*) ev_data;
-        sad->ws_data = string(reinterpret_cast<char const*>(wm->data), wm->size);
+        struct mg_ws_message* wm = (struct mg_ws_message*) ev_data;
+        sad->ws_data = string(reinterpret_cast<char const*>(wm->data.ptr), wm->data.len);
 
         if (!sad->serv->websocket_ids.count(conn)) {
             static size_t ID = 0; ID++;
@@ -274,19 +278,34 @@ static void server_answer_to_connection_m(struct mg_connection *conn, int ev, vo
         return;
     }
 
-    if (ev == MG_EV_HTTP_REQUEST) {
-        VRLog::log("net", "MG_EV_HTTP_REQUEST\n");
+    if (ev == MG_EV_HTTP_MSG) {
+        struct mg_http_message *hm = (struct mg_http_message *)ev_data;
+        VRLog::log("net", "MG_EV_HTTP_MSG\n");
         //HTTP_args* sad = (HTTP_args*) conn->mgr_data;
-        sad->websocket = false;
 
-        struct http_message *hm = (struct http_message *)ev_data;
-        string method_s(hm->method.p, hm->method.len);//GET, POST, ...
-        string section(hm->uri.p+1, hm->uri.len-1); //path
+        /*cout << "message:" << endl << string(hm->message.ptr, hm->message.len) << endl;
+        cout << "query:" << endl << string(hm->query.ptr, hm->query.len) << endl;
+        cout << "body:" << endl << string(hm->body.ptr, hm->body.len) << endl;
+        for (int i=0; i<MG_MAX_HTTP_HEADERS; i++) {
+            cout << "header: " << string(hm->headers[i].name.ptr, hm->headers[i].name.len);
+            cout << " : " << string(hm->headers[i].value.ptr, hm->headers[i].value.len) << endl;
+        }*/
+
+        if (mg_http_match_uri(hm, "/websocket")) { mg_ws_upgrade(conn, hm, NULL); return; }
+        for (int i=0; i<MG_MAX_HTTP_HEADERS; i++) {
+            string name = string(hm->headers[i].name.ptr, hm->headers[i].name.len);
+            string value = string(hm->headers[i].value.ptr, hm->headers[i].value.len);
+            if (name == "Upgrade" && value == "websocket") { mg_ws_upgrade(conn, hm, NULL); return; }
+        }
+
+        sad->websocket = false;
+        string method_s(hm->method.ptr, hm->method.len);//GET, POST, ...
+        string section(hm->uri.ptr+1, hm->uri.len-1); //path
         sad->path = section;
         sad->params->clear();
 
         string params;
-        if (hm->query_string.p) params = string(hm->query_string.p, hm->query_string.len);
+        if (hm->query.ptr) params = string(hm->query.ptr, hm->query.len);
         sad->paramsString = params;
         for (auto pp : splitString(params, '&')) {
             vector<string> d = splitString(pp, '=');
@@ -298,9 +317,11 @@ static void server_answer_to_connection_m(struct mg_connection *conn, int ev, vo
         if (v) sad->print();
 
         auto sendString = [&](string data, int code = 200) {
-            mg_send_head(conn, code, data.size(), "Transfer-Encoding: chunked");
-            mg_send_http_chunk(conn, data.c_str(), data.size());
-            mg_send_http_chunk(conn, "", 0);
+            mg_http_reply(conn, code, "", data.c_str());
+
+            //mg_http_reply(conn, code, "Transfer-Encoding: chunked", "");
+            //mg_http_write_chunk(conn, data.c_str(), data.size());
+            //mg_http_write_chunk(conn, "", 0);
         };
 
         //--- respond to client ------
@@ -348,7 +369,7 @@ static void server_answer_to_connection_m(struct mg_connection *conn, int ev, vo
                         sendString( processPHP(sad) );
                     } else {
                         if (v) VRLog::log("net", "Serve ressource "+sad->path+"\n");
-                        if (!doRootSrv) mg_serve_http(conn, hm, s_http_server_opts);
+                        if (!doRootSrv) mg_http_serve_file(conn, hm, sad->path.c_str(), &s_http_server_opts);
                         else sendString(readFileContent(sad->path));
                         // mg_http_serve_file
                         return;

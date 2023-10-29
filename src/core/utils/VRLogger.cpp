@@ -10,7 +10,8 @@ void VRLog::print(string tag, string s, string c) {
     if (!tags[tag]) return;
 
 #ifndef WITHOUT_GTK
-    OSG::VRConsoleWidget::get(c)->write(s+"\n");
+    auto co = OSG::VRConsoleWidget::get(c);
+    if (co) co->write(s+"\n");
 #endif
 }
 
