@@ -32,10 +32,10 @@ VRGlutEditor* getCurrentEditor() {
 void onMainDisplay() { ; }
 void onMainReshape(int w, int h) { getCurrentEditor()->on_resize_window(w,h); }
 void onMainClose() { getCurrentEditor()->on_close_window(); }
-void onMainKeyboard(unsigned char k, int x, int y) { getCurrentEditor()->onKeyboard(k, 1, x, y); }
-void onMainSpecial(int k, int x, int y) { getCurrentEditor()->onKeyboard_special(k, 1, x, y); }
-void onMainKeyboardUp(unsigned char k, int x, int y) { getCurrentEditor()->onKeyboard(k, 0, x, y); }
-void onMainSpecialUp(int k, int x, int y) { getCurrentEditor()->onKeyboard_special(k, 0, x, y); }
+void onMainKeyboard(unsigned char k, int x, int y) { /*printf("gl key down %i\n", k);*/ getCurrentEditor()->onKeyboard(k, 1, x, y); }
+void onMainSpecial(int k, int x, int y) { /*printf("gl special down %i\n", k);*/ getCurrentEditor()->onKeyboard_special(k, 1, x, y); }
+void onMainKeyboardUp(unsigned char k, int x, int y) { /*printf("gl key up %i\n", k);*/ getCurrentEditor()->onKeyboard(k, 0, x, y); }
+void onMainSpecialUp(int k, int x, int y) { /*printf("gl special up %i\n", k);*/ getCurrentEditor()->onKeyboard_special(k, 0, x, y); }
 
 void onUIDisplay() { getCurrentEditor()->on_ui_display(); }
 void onGLDisplay() { getCurrentEditor()->on_gl_display(); }
@@ -49,10 +49,10 @@ void onPopupClose() { getCurrentEditor()->on_popup_close(); }
 void glutEResize(int w, int h) { getCurrentEditor()->on_gl_resize(w, h); }
 void glutEMouse(int b, int s, int x, int y) { getCurrentEditor()->onMouse(b ,s ,x ,y); }
 void glutEMotion(int x, int y) { getCurrentEditor()->onMotion(x, y); }
-void glutEKeyboard(unsigned char k, int x, int y) { getCurrentEditor()->onKeyboard(k, 1, x, y); }
-void glutESpecial(int k, int x, int y) { getCurrentEditor()->onKeyboard_special(k, 1, x, y); }
-void glutEKeyboardUp(unsigned char k, int x, int y) { getCurrentEditor()->onKeyboard(k, 0, x, y); }
-void glutESpecialUp(int k, int x, int y) { getCurrentEditor()->onKeyboard_special(k, 0, x, y); }
+void glutEKeyboard(unsigned char k, int x, int y) { /*printf("gl key down %i\n", k);*/ getCurrentEditor()->onKeyboard(k, 1, x, y); }
+void glutESpecial(int k, int x, int y) { /*printf("gl special down %i\n", k);*/ getCurrentEditor()->onKeyboard_special(k, 1, x, y); }
+void glutEKeyboardUp(unsigned char k, int x, int y) { /*printf("gl key up %i\n", k);*/ getCurrentEditor()->onKeyboard(k, 0, x, y); }
+void glutESpecialUp(int k, int x, int y) { /*printf("gl special up %i\n", k);*/ getCurrentEditor()->onKeyboard_special(k, 0, x, y); }
 
 void testGLCapabilities() {
     cout << "Check OpenGL capabilities:" << endl;
@@ -149,6 +149,8 @@ VRGlutEditor::VRGlutEditor() {
     mgr->addCallback("set_editor_fullscreen", [&](VRGuiSignals::Options o) { setFullscreen(toBool(o["fullscreen"])); return true; }, true );
     mgr->addCallback("uiGrabFocus", [&](VRGuiSignals::Options o) { glViewFocussed = false; return true; } );
     mgr->addCallback("ui_toggle_vsync", [&](VRGuiSignals::Options o) { enableVSync(toBool(o["active"])); return true; } );
+    mgr->addCallback("relayedImguiKeySignal", [&](VRGuiSignals::Options o) { handleRelayedKey(toInt(o["key"]), toInt(o["state"]), false); return true; } );
+    mgr->addCallback("relayedImguiSpecialKeySignal", [&](VRGuiSignals::Options o) { handleRelayedKey(toInt(o["key"]), toInt(o["state"]), true); return true; } );
 }
 
 VRGlutEditor::~VRGlutEditor() {
@@ -279,6 +281,14 @@ void VRGlutEditor::onKeyboard_special(int c, int s, int x, int y) {
     if (!glViewFocussed) { if (signal) signal("relayedSpecialKeySignal", {{"key",toString(c)},{"state",toString(s)}}); }
     else if (auto k = getKeyboard()) k->keyboard_special(c, s, x, y, 1);
     //cout << " VRGlutEditor::onKeyboard_special " << c << " " << s << " " << x << " " << y << endl;
+}
+
+void VRGlutEditor::handleRelayedKey(int key, int state, bool special) {
+    //cout << "handleRelayedKey, spacial? " << special << ", key: " << key << ", state: " << state << ", has focus? " << glViewFocussed << endl;
+    if (!glViewFocussed) return;
+    auto k = getKeyboard();
+    if (special) if (k) k->keyboard_special(key, state, 0, 0, 1);
+    else if (k) k->keyboard(key, state, 0, 0, 1);
 }
 
 void VRGlutEditor::render(bool fromThread) {

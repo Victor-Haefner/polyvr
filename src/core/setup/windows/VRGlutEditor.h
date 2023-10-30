@@ -26,6 +26,8 @@ class VRGlutEditor: public VRWindow {
         Signal signal;
         ResizeSignal resizeSignal;
 
+        void handleRelayedKey(int key, int state, bool special);
+
     public:
         VRGlutEditor();
         ~VRGlutEditor();
