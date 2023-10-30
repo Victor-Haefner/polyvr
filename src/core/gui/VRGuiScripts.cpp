@@ -959,6 +959,13 @@ void VRGuiScripts::update() {
     auto scene = VRScene::getCurrent();
     if (scene == 0) return;
     //for (auto& r : scriptRows) setScriptListRow(&r.second, r.first.lock(), true);
+
+    if (doPerf) {
+        for (auto script : scene->getScripts()) {
+            float perf = script.second->getExecutionTime();
+            if (perf > 0) uiSignal("scripts_list_set_perf", {{"name",script.second->getName()},{"perf",toString(perf)}});
+        }
+    }
 }
 
 bool VRGuiScripts::updateList() {

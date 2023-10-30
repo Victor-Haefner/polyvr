@@ -51,6 +51,7 @@ ImScriptList::ImScriptList() {
     mgr->addCallback("scripts_list_add_group", [&](OSG::VRGuiSignals::Options o){ addGroup(o["name"], o["ID"]); return true; } );
     mgr->addCallback("scripts_list_add_script", [&](OSG::VRGuiSignals::Options o){ addScript(o["name"], o["group"], toFloat(o["perf"])); return true; } );
     mgr->addCallback("scripts_list_set_color", [&](OSG::VRGuiSignals::Options o){ setColor(o["name"], o["fg"], o["bg"]); return true; } );
+    mgr->addCallback("scripts_list_set_perf", [&](OSG::VRGuiSignals::Options o){ setPerformance(o["name"], toFloat(o["perf"])); return true; } );
     mgr->addCallback("openUiScript", [&](OSG::VRGuiSignals::Options o) {
         selected = o["name"];
         uiSignal("select_script", {{"script",selected}});
@@ -77,6 +78,17 @@ void ImScriptList::addScript(string name, string groupID, float time) {
     se.perf = time;
     groups[groupID].scripts.push_back(se);
     computeMinWidth();
+}
+
+void ImScriptList::setPerformance(string name, float time) {
+    for (auto& g : groups) {
+        for (auto& s : g.second.scripts) {
+            if (s.name == name) {
+                s.perf = time;
+                return;
+            }
+        }
+    }
 }
 
 void ImScriptList::setColor(string name, string fg, string bg) {

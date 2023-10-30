@@ -40,6 +40,7 @@ class ImScriptList {
         void addGroup(string name, string ID);
         void addScript(string name, string groupID, float time);
         void setColor(string name, string fg, string bg);
+        void setPerformance(string name, float time);
         void renderScriptEntry(ImScriptEntry& script);
         void renderGroupEntry(string& group);
 
