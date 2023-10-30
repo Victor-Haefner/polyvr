@@ -3,6 +3,8 @@
 #include "core/utils/toString.h"
 #include "core/gui/VRGuiManager.h"
 
+#include <algorithm>
+
 ImAppLauncher::ImAppLauncher(string ID, string pnl, string ts) : ID(ID), name(ID), panel(pnl), timestamp(ts) {}
 
 void ImAppLauncher::render(string filter) {
@@ -113,6 +115,16 @@ void ImAppManager::updatePannels() {
             panelToLaunchers[dLabel] = vector<string>();
         }
         panelToLaunchers[dLabel].push_back(l.first);
+    }
+
+    auto sortByDate = [&](const string& a, const string& b) {
+        auto& t1 = launchers[a].timestamp;
+        auto& t2 = launchers[b].timestamp;
+        return t1 > t2;
+    };
+
+    for (auto& pl : panelToLaunchers) {
+        std::sort(pl.second.begin(), pl.second.end(), sortByDate);
     }
 
     for (auto& p : panels) {
