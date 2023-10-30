@@ -146,7 +146,7 @@ VRGlutEditor::VRGlutEditor() {
     mgr->addCallback("ui_open_popup", [&](VRGuiSignals::Options o) { openPopupWindow(o["name"], toInt(o["width"]), toInt(o["height"])); return true; } );
     mgr->addCallback("ui_close_popup", [&](VRGuiSignals::Options o) { closePopupWindow(); return true; } );
     mgr->addCallback("ui_toggle_popup", [&](VRGuiSignals::Options o) { togglePopupWindow(o["name"], toInt(o["width"]), toInt(o["height"])); return true; }, true );
-    mgr->addCallback("set_editor_fullscreen", [&](VRGuiSignals::Options o) { setFullscreen(toBool(o["fullscreen"])); return true; } );
+    mgr->addCallback("set_editor_fullscreen", [&](VRGuiSignals::Options o) { setFullscreen(toBool(o["fullscreen"])); return true; }, true );
     mgr->addCallback("uiGrabFocus", [&](VRGuiSignals::Options o) { glViewFocussed = false; return true; } );
     mgr->addCallback("ui_toggle_vsync", [&](VRGuiSignals::Options o) { enableVSync(toBool(o["active"])); return true; } );
 }
@@ -170,18 +170,27 @@ void VRGlutEditor::setFullscreen(bool b) {
     int width = glutGet(GLUT_SCREEN_WIDTH);
     int height = glutGet(GLUT_SCREEN_HEIGHT);
 
-    glutSetWindow(topWin);
     if (b) {
-        glutFullScreen();
+        cout << " glut enter fullscreen!" << endl;
+        resizeGLWindow(0,0,width,height);
+        fullscreen = b;
+
         glutSetWindow(winUI);
         glutHideWindow();
-        resizeGLWindow(0,0,width,height);
+
+        glutSetWindow(topWin);
+        glutFullScreen(); // needs to go last to work
     } else {
-        glutLeaveFullScreen();
+        cout << " glut exit fullscreen!" << endl;
+        fullscreen = b;
+        on_resize_window(width, height);
+
         glutSetWindow(winUI);
         glutShowWindow();
+
+        glutSetWindow(topWin);
+        glutLeaveFullScreen(); // needs to go last to work
     }
-    fullscreen = b;
 }
 
 void VRGlutEditor::on_close_window() { signal( "glutCloseWindow", {} ); }
@@ -268,8 +277,8 @@ void VRGlutEditor::onKeyboard(int c, int s, int x, int y) {
 void VRGlutEditor::onKeyboard_special(int c, int s, int x, int y) {
     if (s == 0 && c == 11) setFullscreen(!fullscreen);
     if (!glViewFocussed) { if (signal) signal("relayedSpecialKeySignal", {{"key",toString(c)},{"state",toString(s)}}); }
-    //cout << " VRGlutEditor::onKeyboard_special " << c << " " << s << " " << x << " " << y << endl;
     else if (auto k = getKeyboard()) k->keyboard_special(c, s, x, y, 1);
+    //cout << " VRGlutEditor::onKeyboard_special " << c << " " << s << " " << x << " " << y << endl;
 }
 
 void VRGlutEditor::render(bool fromThread) {
