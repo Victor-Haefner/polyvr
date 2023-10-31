@@ -65,12 +65,14 @@ VRTransformPtr VRRobotArm::genKinematics() {
     auto elbow = VRTransform::create("elbow");
     auto beam2 = VRTransform::create("beam2");
     auto wrist = VRTransform::create("wrist");
+    auto hand = VRTransform::create("hand");
 
     base->addChild(baseUpper);
     baseUpper->addChild(beam1);
     beam1->addChild(elbow);
     elbow->addChild(beam2);
     beam2->addChild(wrist);
+    wrist->addChild(hand);
 
     //vector<VRTransformPtr> objs = { baseUpper, beam1, elbow, beam2 };
 
@@ -86,6 +88,9 @@ VRTransformPtr VRRobotArm::genKinematics() {
 
     p = Vec3d(sin(f), 0, cos(f)) * lengths[2];
     wrist->setFrom(p);
+
+    //hand->rotate(Pi*0.5, Vec3d(1,0,0));
+    hand->setOrientation(Vec3d(-1,0,0), Vec3d(0,1,0));
     //wrist->setFrom(Vec3d(lengths[2],0,0));
 
     return base;
