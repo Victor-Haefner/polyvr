@@ -90,9 +90,7 @@ void VRGuiScene::setTransform(VRTransformPtr e) {
         s = e->getWorldScale();
     }
 
-    cout << "  VRGuiScene::setTransform " << f << endl;
-
-    uiSignal( "on_sg_setup_trans", {
+    map<string, string> params = {
         {"pos", toString(f)},
         {"at", toString(a)},
         {"dir", toString(d)},
@@ -100,35 +98,28 @@ void VRGuiScene::setTransform(VRTransformPtr e) {
         {"scale", toString(s)},
         {"useAt", toString(e->get_orientation_mode())},
         {"local", toString(transformModeLocal)}
-    } );
+    };
 
 
-    /*auto c = e->getConstraint();
-    Vec3d tc = c->getTConstraint();
-    Vec3d rc = c->getRConstraint();*/
+    auto c = e->getConstraint();
+    params["constrActive"] = toString(c->isActive());
+    params["constrLocal"] = toString(c->isLocal());
 
-    /*bool doTc = c->hasTConstraint();
-    bool doRc = c->hasRConstraint();
-
-    setToggleButton("checkbutton18", rc[0]);
-    setToggleButton("checkbutton19", rc[1]);
-    setToggleButton("checkbutton20", rc[2]);
-
-    setToggleButton("checkbutton21", doTc);
-    setToggleButton("checkbutton22", doRc);
-
-    setToggleButton("radiobutton1", !c->getTMode());
-    setToggleButton("radiobutton2", c->getTMode());
+    for (int i=0; i<6; i++) {
+        params["constrDof"+toString(i)] = toString(Vec2d(c->getMin(i), c->getMax(i)));
+    }
 
 #ifndef WITHOUT_BULLET
-    if (e->getPhysics()) {
-        setToggleButton("checkbutton13", e->getPhysics()->isPhysicalized());
-        setToggleButton("checkbutton33", e->getPhysics()->isDynamic());
-        setTextEntry("entry59", toString(e->getPhysics()->getMass()));
-        setCombobox("combobox8", getListStorePos("phys_shapes", e->getPhysics()->getShape()));
-        setWidgetSensitivity("combobox8", e->getPhysics()->isPhysicalized());
+    auto phys = e->getPhysics();
+    if (phys) {
+        params["isPhysicalized"] = toString(phys->isPhysicalized());
+        params["physDynamic"] = toString(phys->isDynamic());
+        params["physMass"] = toString(phys->getMass());
+        params["physShape"] = toString(phys->getShape());
     }
-#endif*/
+#endif
+
+    uiSignal( "on_sg_setup_trans", params );
 }
 
 void VRGuiScene::setMaterial(VRMaterialPtr mat) {
@@ -610,40 +601,29 @@ void VRGuiScene::on_identity_clicked() {
     updateObjectForms();
 }
 
-void VRGuiScene::on_edit_T_constraint(Vec3d v) {
+void VRGuiScene::on_constraint_set_active(bool b) {
     if(!trigger_cbs) return;
     VRTransformPtr obj = dynamic_pointer_cast<VRTransform>( getSelected() );
-    //obj->getConstraint()->setTConstraint(v, obj->getConstraint()->getTMode());
+    if (auto c = obj->getConstraint()) c->setActive(b);
 }
 
-void VRGuiScene::on_toggle_T_constraint() {
+void VRGuiScene::on_constraint_set_local(bool b) {
     if(!trigger_cbs) return;
     VRTransformPtr obj = dynamic_pointer_cast<VRTransform>( getSelected() );
-
-    /*bool bT = getCheckButtonState("checkbutton21");
-    bool bR = getCheckButtonState("checkbutton22");
-    obj->getConstraint()->setActive(bT || bR);*/
+    if (auto c = obj->getConstraint()) c->setLocal(b);
 }
 
-void VRGuiScene::on_toggle_R_constraint() {
+void VRGuiScene::on_constraint_lock_rotation(bool b) {
     if(!trigger_cbs) return;
     VRTransformPtr obj = dynamic_pointer_cast<VRTransform>( getSelected() );
-
-    /*bool bT = getCheckButtonState("checkbutton21");
-    bool bR = getCheckButtonState("checkbutton22");
-    obj->getConstraint()->setActive(bT || bR);*/
+    if (auto c = obj->getConstraint()) c->lockRotation(b);
+    setTransform( obj );
 }
 
-void VRGuiScene::on_toggle_rc() {
+void VRGuiScene::on_constraint_set_dof(int dof, double min, double max) {
     if(!trigger_cbs) return;
     VRTransformPtr obj = dynamic_pointer_cast<VRTransform>( getSelected() );
-
-    Vec3d rc;
-    /*if (getCheckButtonState("checkbutton18") ) rc[0] = 1;
-    if (getCheckButtonState("checkbutton19") ) rc[1] = 1;
-    if (getCheckButtonState("checkbutton20") ) rc[2] = 1;*/
-
-    //obj->getConstraint()->setRConstraint(rc, obj->getConstraint()->getRMode());
+    if (auto c = obj->getConstraint()) c->setMinMax(dof, min, max);
 }
 
 // geometry
@@ -905,14 +885,6 @@ void VRGuiScene::on_toggle_global(bool global) {
     if (obj) {
         if (obj->hasTag("transform")) setTransform(dynamic_pointer_cast<VRTransform>(obj));
     }
-}
-
-void VRGuiScene::on_toggle_T_constraint_mode() {
-    if(!trigger_cbs) return;
-    VRTransformPtr obj = dynamic_pointer_cast<VRTransform>( getSelected() );
-
-    //bool plane = getRadioButtonState("radiobutton2");
-    //obj->getConstraint()->setTConstraint( obj->getConstraint()->getTConstraint(), plane? OSG::VRConstraint::PLANE : OSG::VRConstraint::LINE);
 }
 
 void VRGuiScene::on_toggle_phys() {
@@ -1322,6 +1294,11 @@ VRGuiScene::VRGuiScene() { // TODO: reduce callbacks with templated functions
     mgr->addCallback("sg_set_scale", [&](OSG::VRGuiSignals::Options o) { on_scale_changed(Vec3d(toFloat(o["x"]), toFloat(o["y"]), toFloat(o["z"]))); return true; }, true );
     mgr->addCallback("sg_focus_transform", [&](OSG::VRGuiSignals::Options o) { on_focus_clicked(); return true; }, true );
     mgr->addCallback("sg_set_identity", [&](OSG::VRGuiSignals::Options o) { on_identity_clicked(); return true; }, true );
+    mgr->addCallback("sg_set_constraint_active", [&](OSG::VRGuiSignals::Options o) { on_constraint_set_active(toBool(o["active"])); return true; }, true );
+    mgr->addCallback("sg_set_constraint_local", [&](OSG::VRGuiSignals::Options o) { on_constraint_set_local(toBool(o["local"])); return true; }, true );
+    mgr->addCallback("sg_set_constraint_lock_rotation", [&](OSG::VRGuiSignals::Options o) { on_constraint_lock_rotation(1); return true; }, true );
+    mgr->addCallback("sg_set_constraint_unlock_rotation", [&](OSG::VRGuiSignals::Options o) { on_constraint_lock_rotation(0); return true; }, true );
+    mgr->addCallback("sg_set_constraint_dof", [&](OSG::VRGuiSignals::Options o) { on_constraint_set_dof(toInt(o["dof"]), toFloat(o["min"]), toFloat(o["max"])); return true; }, true );
 
     mgr->addCallback("sg_set_cam_accept_root", [&](OSG::VRGuiSignals::Options o) { on_toggle_camera_accept_realroot(toBool(o["value"])); return true; }, true );
     mgr->addCallback("sg_set_cam_aspect", [&](OSG::VRGuiSignals::Options o) { on_cam_aspect_changed(toFloat(o["value"])); return true; }, true );

@@ -17,6 +17,12 @@ ImScenegraph::ImScenegraph() :  tree("scenegraph"),
                                 camFov("sgCamFov", "fov", "1.0472"),
                                 camNear("sgCamNear", "near", "0.1"),
                                 camFar("sgCamFar", "far", "512"),
+                                constrDof1("dof0", "DoF 0 tx"),
+                                constrDof2("dof1", "DoF 1 ty"),
+                                constrDof3("dof2", "DoF 2 tz"),
+                                constrDof4("dof3", "DoF 3 rx"),
+                                constrDof5("dof4", "DoF 4 ry"),
+                                constrDof6("dof5", "DoF 5 rz"),
                                 lodCenter("lodCenter", "center") {
     auto mgr = OSG::VRGuiSignals::get();
     mgr->addCallback("set_sg_title", [&](OSG::VRGuiSignals::Options o){ title = o["title"]; return true; } );
@@ -157,26 +163,22 @@ void ImScenegraph::render() {
 
             ImGui::Text("Constraints:");
             ImGui::Indent(10);
-                if (ImGui::Checkbox("translation:", &doConstrTranslation)) ;//uiSignal( "sg_toggle_global", {{"global",toString(global)}} );
-                if (doConstrTranslation) {
-                    ImGui::Indent(10);
-                    constrTranslation.render(region2.x-20);
-                    if (ImGui::RadioButton("point", &cTransMode, 0)) ;
+                if (ImGui::Checkbox("active", &constrActive)) uiSignal( "sg_set_constraint_active", {{"active",toString(constrActive)}} );
+                if (constrActive) {
+                    int L = region2.x-10;
                     ImGui::SameLine();
-                    if (ImGui::RadioButton("line", &cTransMode, 1)) ;
+                    if (ImGui::Checkbox("local", &constrLocal)) uiSignal( "sg_set_constraint_local", {{"local",toString(constrLocal)}} );
+                    if (constrDof1.render(L)) uiSignal( "sg_set_constraint_dof", {{"dof",toString(0)}, {"min",toString(constrDof1.vX)}, {"max",toString(constrDof1.vY)}} );
+                    if (constrDof2.render(L)) uiSignal( "sg_set_constraint_dof", {{"dof",toString(1)}, {"min",toString(constrDof2.vX)}, {"max",toString(constrDof2.vY)}} );
+                    if (constrDof3.render(L)) uiSignal( "sg_set_constraint_dof", {{"dof",toString(2)}, {"min",toString(constrDof3.vX)}, {"max",toString(constrDof3.vY)}} );
+                    if (constrDof4.render(L)) uiSignal( "sg_set_constraint_dof", {{"dof",toString(3)}, {"min",toString(constrDof4.vX)}, {"max",toString(constrDof4.vY)}} );
+                    if (constrDof5.render(L)) uiSignal( "sg_set_constraint_dof", {{"dof",toString(4)}, {"min",toString(constrDof5.vX)}, {"max",toString(constrDof5.vY)}} );
+                    if (constrDof6.render(L)) uiSignal( "sg_set_constraint_dof", {{"dof",toString(5)}, {"min",toString(constrDof6.vX)}, {"max",toString(constrDof6.vY)}} );
+                    ImGui::Text("Rotation:");
                     ImGui::SameLine();
-                    if (ImGui::RadioButton("plane", &cTransMode, 2)) ;
-                    ImGui::Unindent(10);
-                }
-                if (ImGui::Checkbox("rotation:", &doConstrRotation)) ;//uiSignal( "sg_toggle_global", {{"global",toString(global)}} );
-                if (doConstrRotation) {
-                    ImGui::Indent(10);
-                    if (ImGui::Checkbox("x", &cRotX)) ;
+                    if (ImGui::Button("lock")) uiSignal( "sg_set_constraint_lock_rotation" );
                     ImGui::SameLine();
-                    if (ImGui::Checkbox("y", &cRotY)) ;
-                    ImGui::SameLine();
-                    if (ImGui::Checkbox("z", &cRotZ)) ;
-                    ImGui::Unindent(10);
+                    if (ImGui::Button("unlock")) uiSignal( "sg_set_constraint_unlock_rotation" );
                 }
             ImGui::Unindent(10);
 
@@ -212,6 +214,12 @@ void ImScenegraph::setupTransform(OSG::VRGuiSignals::Options o) {
         vec.set3(v[0], v[1], v[2]);
     };
 
+    auto setVector2 = [&](Im_Vector& vec, string opt) {
+        vector<float> v;
+        toValue(o[opt], v);
+        vec.set2(v[0], v[1]);
+    };
+
     //useAt = toBool(o["useAt"]);
     global = !toBool(o["local"]);
 
@@ -220,6 +228,16 @@ void ImScenegraph::setupTransform(OSG::VRGuiSignals::Options o) {
     setVector(direction, "dir");
     setVector(upvector, "up");
     setVector(scale, "scale");
+
+    constrActive = toBool(o["constrActive"]);
+    constrLocal = toBool(o["constrLocal"]);
+
+    setVector2(constrDof1, "constrDof0");
+    setVector2(constrDof2, "constrDof1");
+    setVector2(constrDof3, "constrDof2");
+    setVector2(constrDof4, "constrDof3");
+    setVector2(constrDof5, "constrDof4");
+    setVector2(constrDof6, "constrDof5");
 
     cout << "  ImScenegraph::setupTransform " << o["pos"] << endl;
 }

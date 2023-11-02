@@ -48,13 +48,13 @@ bool VRConstraint::isLocked(int i) { return bool(min[i] > max[i]); }
 
 void VRConstraint::setReferenceA(PosePtr p) { refMatrixA = p->asMatrix(); refMatrixA.inverse(refMatrixAI); };
 void VRConstraint::setReferenceB(PosePtr p) { refMatrixB = p->asMatrix(); refMatrixB.inverse(refMatrixBI); };
-void VRConstraint::setReference(PosePtr p) { setReferenceA(p); }
+//void VRConstraint::setReference(PosePtr p) { setReferenceA(p); }
 PosePtr VRConstraint::getReferenceA() { return Pose::create(refMatrixA); };
 PosePtr VRConstraint::getReferenceB() { return Pose::create(refMatrixB); };
-
-void VRConstraint::lockRotation() { lock({3,4,5}); }
-
 void VRConstraint::setReferential(VRTransformPtr t) { Referential = t; }
+
+void VRConstraint::lockRotation(bool b) { if (b) lock({3,4,5}); else free({3,4,5}); }
+
 
 void VRConstraint::setTConstraint(Vec3d params, TCMode mode, bool local) {
     if (params.length() > 1e-4 && mode != POINT) params.normalize();

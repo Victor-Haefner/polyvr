@@ -53,20 +53,17 @@ class VRConstraint : public VRStorage {
 
         void lock(vector<int> dofs, float v = 0);
         void free(vector<int> dofs);
-        void lockRotation();
+        void lockRotation(bool b);
         bool isLocked(int i);
 
         void setReferenceA(PosePtr p);
         void setReferenceB(PosePtr p);
         PosePtr getReferenceA();
         PosePtr getReferenceB();
+        void setReferential(VRTransformPtr ref);
 
         void apply(VRTransformPtr obj, VRObjectPtr parent = 0, bool force = false);
 
-
-        // TODO: refactor old VRTransform stuff
-        void setReference(PosePtr m);
-        void setReferential(VRTransformPtr ref);
         void setTConstraint(Vec3d trans, TCMode mode, bool local = false);
         void setRConstraint(Vec3d rot, TCMode mode, bool local = false);
 };

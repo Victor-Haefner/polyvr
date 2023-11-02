@@ -61,10 +61,13 @@ class VRGuiScene {
         void on_change_dir(Vec3d v);
         void on_change_up(Vec3d v);
         void on_scale_changed(Vec3d v);
-        void on_change_lod_center(Vec3d v);
-        void on_edit_T_constraint(Vec3d v);
         void on_toggle_global(bool global);
-        void on_toggle_T_constraint_mode();
+
+        void on_constraint_set_active(bool b);
+        void on_constraint_set_local(bool b);
+        void on_constraint_lock_rotation(bool b);
+        void on_constraint_set_dof(int dof, double min, double max);
+
         void on_toggle_phys();
         void on_toggle_dynamic();
         void on_change_phys_shape();
@@ -119,6 +122,7 @@ class VRGuiScene {
         // ------------- lod -----------------------
         void on_edit_distance(const char* path_string, const char* new_text);
         void on_lod_decimate_changed();
+        void on_change_lod_center(Vec3d v);
         // ----------------------------------------------
 
         // ------------- scenegraph drag && drop -------

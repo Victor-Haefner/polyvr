@@ -29,12 +29,14 @@ class ImScenegraph {
         Im_Vector scale;
         Im_Vector constrTranslation;
         bool global = false;
-        bool doConstrTranslation = false;
-        bool doConstrRotation = false;
-        int cTransMode = 0;
-        bool cRotX = false;
-        bool cRotY = false;
-        bool cRotZ = false;
+        bool constrActive = false;
+        bool constrLocal = false;
+        Im_Vector constrDof1;
+        Im_Vector constrDof2;
+        Im_Vector constrDof3;
+        Im_Vector constrDof4;
+        Im_Vector constrDof5;
+        Im_Vector constrDof6;
         bool doPhysicalize = false;
         bool physDynamic = false;
 
