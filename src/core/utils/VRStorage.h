@@ -11,9 +11,12 @@
 
 namespace xmlpp{ class Element; }
 
+namespace OSG { class VRStorageContext; }
+
 struct VRStorageCbParams {
     OSG::XMLElementPtr e;
     int p; // dont add '= 0', wont compile with initialiser list on older compilers..
+    std::shared_ptr<OSG::VRStorageContext> ctx;
 };
 
 ptrFctFwd(VRStore, VRStorageCbParams);
@@ -31,8 +34,9 @@ struct VRStorageBin {
 class VRStorageContext {
     public:
         bool onlyReload = false;
+        bool checkUniqueNaming = true;
 
-        static VRStorageContextPtr create(bool onlyReload);
+        static VRStorageContextPtr create(bool onlyReload, bool checkUniqueNaming);
 };
 
 class VRStorage {

@@ -85,7 +85,7 @@ struct VREntity : public VROntoID, public VRName {
     bool is_a(string concept);
     string toString();
     void save(XMLElementPtr e, int p) override;
-    void load(XMLElementPtr e);
+    void load(XMLElementPtr e, VRStorageContextPtr context = 0) override;
 };
 
 OSG_END_NAMESPACE;

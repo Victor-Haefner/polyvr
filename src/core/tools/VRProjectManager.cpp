@@ -88,7 +88,7 @@ bool VRProjectManager::load(string path) {
         else { cout << "VRProjectManager::load Warning! invalid mode: " << mode << endl; }
         if (!s) { cout << "VRProjectManager::load Warning! element unhandled:" << endl << e->toString() << endl; continue; }
 
-        auto ctx = VRStorageContext::create(mode == "RELOAD");
+        auto ctx = VRStorageContext::create(mode == "RELOAD", 1);
         s->load(e, ctx);
     }
 

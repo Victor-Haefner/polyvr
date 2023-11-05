@@ -449,7 +449,7 @@ void VRProcessLayout::storeLayout(string path) {
 
 void VRProcessLayout::loadLayout(string path) {
     if (path == "") path = ".process_layout.plt";
-    auto context = VRStorageContext::create(true);
+    auto context = VRStorageContext::create(1, 1);
 
     if (!exists(path)) return;
 

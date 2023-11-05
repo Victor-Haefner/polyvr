@@ -294,8 +294,8 @@ void VREntity::save(XMLElementPtr e, int p) {
     }
 }
 
-void VREntity::load(XMLElementPtr e) {
-    VRStorage::load(e);
+void VREntity::load(XMLElementPtr e, VRStorageContextPtr context) {
+    VRStorage::load(e, context);
     e = e->getChild("properties");
     for (auto el : e->getChildren()) {
         for (auto el2 : el->getChildren()) {

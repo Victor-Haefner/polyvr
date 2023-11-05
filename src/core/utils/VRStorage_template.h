@@ -110,7 +110,7 @@ void VRStorage::load_int_objmap_cb(map<int, std::shared_ptr<T> >* mt, string tag
         if (ID < 0) { cout << "VRStorage::load_int_objmap_cb Error: object " << el->getName() << " in map '" << tag << "' has no attribute ID!\n"; return; }
         if (mt->count(ID) == 0) {
             auto t = T::create();
-            t->load(el);
+            t->load(el, p.ctx);
             (*mt)[ID] = t;
         }
     }
@@ -125,7 +125,7 @@ void VRStorage::load_int_objumap_cb(unordered_map<int, std::shared_ptr<T> >* mt,
         if (ID < 0) { cout << "VRStorage::load_int_objmap_cb Error: object " << el->getName() << " in map '" << tag << "' has no attribute ID!\n"; return; }
         if (mt->count(ID) == 0) {
             auto t = T::create();
-            t->load(el);
+            t->load(el, p.ctx);
             (*mt)[ID] = t;
         }
     }
@@ -139,7 +139,7 @@ void VRStorage::load_str_objmap_cb(map<string, std::shared_ptr<T> >* mt, string 
         string name = el->getName();
         if (el->hasAttribute("base_name")) name = el->getAttribute("base_name") + "_tmp";
         auto t = T::create(name);
-        t->load(el);
+        t->load(el, p.ctx);
 
         name = t->getName();
         if (!mt->count(name)) (*mt)[name] = t;
@@ -154,7 +154,7 @@ void VRStorage::load_str_objumap_cb(unordered_map<string, std::shared_ptr<T> >* 
         string name = el->getName();
         if (el->hasAttribute("base_name")) name = el->getAttribute("base_name") + "_tmp";
         auto t = T::create(name);
-        t->load(el);
+        t->load(el, p.ctx);
 
         name = t->getName();
         if (!mt->count(name)) (*mt)[name] = t;
@@ -181,7 +181,7 @@ void VRStorage::load_str_map_cb(map<string, T*>* mt, string tag, bool under, VRS
         string name = el->getName();
         if (el->hasAttribute("base_name")) name = el->getAttribute("base_name") + "_tmp";
         T* o = new T(name);
-        o->load(el);
+        o->load(el, p.ctx);
 
         name = o->getName();
         if (mt->count(name)) delete o;
@@ -197,7 +197,7 @@ void VRStorage::load_int_map_cb(map<int, T*>* mt, string tag, bool under, VRStor
         int ID = getID(el);
         if (mt->count(ID) == 0) {
             T* o = new T();
-            o->load(el);
+            o->load(el, p.ctx);
             (*mt)[ID] = o;
         }
     }
@@ -233,14 +233,14 @@ void VRStorage::load_obj_vec_cb(vector<std::shared_ptr<T> >* v, string tag, bool
     bool doReload = (v->size() == children.size());
     for (uint i=0; i<children.size(); i++) {
         auto el = children[i];
-        if (doReload) (*v)[i]->load(el);
+        if (doReload) (*v)[i]->load(el, p.ctx);
         else {
             VRStoragePtr s = VRStorage::createFromStore(el, false);
             if (!s) s = T::create();
             auto c = static_pointer_cast<T>(s);
             if (!c) continue;
             if (el->getName() != s->type) continue;
-            c->load(el);
+            c->load(el, p.ctx);
             v->push_back( c );
         }
     }
@@ -315,7 +315,7 @@ void VRStorage::load_obj_cb(std::shared_ptr<T>* v, string tag, VRStorageCbParams
     p.e = p.e->getChild(tag);
     if (!p.e) return;
     if (!*v) *v = T::create();
-    (*v)->load(p.e);
+    (*v)->load(p.e, p.ctx);
 }
 
 template<typename T>

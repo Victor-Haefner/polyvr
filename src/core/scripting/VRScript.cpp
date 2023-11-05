@@ -660,7 +660,7 @@ void VRScript::remArgument(string name) {
 void VRScript::setGroup(string g) { group = g; }
 string VRScript::getGroup() { return group; }
 
-void VRScript::save(XMLElementPtr e) {
+void VRScript::save(XMLElementPtr e, int p) {
     XMLElementPtr ec = e->addChild("core");
     ec->setText("\n"+core+"\n");
 
@@ -669,7 +669,7 @@ void VRScript::save(XMLElementPtr e) {
         XMLElementPtr ea = e->addChild("arg");
         ea->setAttribute("type", a->type);
         ea->setAttribute("value", a->val);
-        a->save(ea);
+        a->save(ea, p);
     }
 
     for (auto t : trigs) {
@@ -679,13 +679,13 @@ void VRScript::save(XMLElementPtr e) {
         ea->setAttribute("state", t->state);
         ea->setAttribute("param", t->param);
         ea->setAttribute("key", toString(t->key));
-        t->save(ea);
+        t->save(ea, p);
     }
 }
 
-void VRScript::load(XMLElementPtr e) {
+void VRScript::load(XMLElementPtr e, VRStorageContextPtr context) {
     clean();
-    VRName::load(e);
+    VRName::load(e, context);
     if (e->hasAttribute("core")) core = e->getAttribute("core");
     if (e->hasAttribute("type")) type = e->getAttribute("type");
     if (e->hasAttribute("server")) server = e->getAttribute("server");
@@ -708,7 +708,7 @@ void VRScript::load(XMLElementPtr e) {
             a->type = el->getAttribute("type");
             a->val  = el->getAttribute("value");
             string oname = a->getName();
-            a->load(el);
+            a->load(el, context);
             changeArgName(oname, a->getName());
         }
 
@@ -720,7 +720,7 @@ void VRScript::load(XMLElementPtr e) {
             t->state = el->getAttribute("state");
             t->param = el->getAttribute("param");
             t->key = toInt( el->getAttribute("key") );
-            t->load(el);
+            t->load(el, context);
             trigs.push_back(t);
 
             if ((t->trigger == "on_scene_load" && active) || (t->trigger == "on_scene_import" && active)) {

@@ -367,7 +367,8 @@ TODO:
 void VRScene::importScene(XMLElementPtr e, string path) {
     if (e == 0) return;
     auto oldScripts = getScripts();
-    VRScriptManager::loadChildFrom(e);
+    auto ctx = VRStorageContext::create(0,0);
+    VRScriptManager::loadChildFrom(e, "", ctx);
 
     VRImport::get()->addPath( getFolderName(path) );
 

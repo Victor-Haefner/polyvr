@@ -8,9 +8,10 @@
 using namespace OSG;
 
 
-VRStorageContextPtr VRStorageContext::create(bool onlyReload) {
+VRStorageContextPtr VRStorageContext::create(bool onlyReload, bool checkUniqueNaming) {
     auto c = VRStorageContextPtr( new VRStorageContext() );
     c->onlyReload = onlyReload;
+    c->checkUniqueNaming = checkUniqueNaming;
     return c;
 }
 
@@ -90,9 +91,9 @@ XMLElementPtr VRStorage::saveUnder(XMLElementPtr e, int p, string t) {
 void VRStorage::load(XMLElementPtr e, VRStorageContextPtr context) {
     if (e == 0) return;
     for (auto f : f_setup_before) (*f)(context);
-    for (auto s : storage) (*s.second.f1)({e,0});
+    for (auto s : storage) (*s.second.f1)({e,0,context});
     for (auto f : f_setup) (*f)(context);
-    for (auto f : f_setup_after) VRSceneManager::get()->queueJob(f, 0, 0, false);
+    for (auto f : f_setup_after) VRSceneManager::get()->queueJob(f, 0, 0, false); // TODO: pass context
     f_setup_after.clear();
 }
 

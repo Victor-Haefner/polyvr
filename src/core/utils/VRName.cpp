@@ -221,6 +221,6 @@ VRName::VRName() {
 VRName::~VRName() { setName(""); }
 
 void VRName::setup(VRStorageContextPtr context) {
-    compileName(true);
+    compileName( context ? context->checkUniqueNaming : 1 );
 }
 
