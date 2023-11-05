@@ -190,8 +190,10 @@ bool VRNavigator::zoom(VRDeviceWeakPtr _dev, int dir) {
     VRTransformPtr target = dev->getTarget();
     if (target == 0) return true;
 
+    float speedT = dev->getSpeed()[0]/0.02; // 0.02
+
     //Vec2d speed = dev->getSpeed(); // 0.05
-    float speed = 0.05;
+    float speed = 0.05*speedT;
     target->zoom(speed*dir);
     return true;
 }
@@ -259,10 +261,14 @@ bool VRNavigator::orbit(VRDeviceWeakPtr _dev) {
     // move cam
     mousePos -= mouseOnMouseDown;
 
+    Vec2d speed = dev->getSpeed();
+    float speedT = speed[0]/0.02; // 0.02
+    float speedR = speed[1]/0.04; // 0.04
+
     if (!doPan) {
         camDelta = camSphereRef;
-        camDelta[1] += mousePos[0]*1.5; //yaw
-        camDelta[2] -= mousePos[1]*1.5; //pitch
+        camDelta[1] += mousePos[0]*1.5*speedR; //yaw
+        camDelta[2] -= mousePos[1]*1.5*speedR; //pitch
 
         camDelta[2] = max(camDelta[2], -Pi*0.49);
         camDelta[2] = min(camDelta[2],  Pi*0.49);
@@ -281,7 +287,7 @@ bool VRNavigator::orbit(VRDeviceWeakPtr _dev) {
         //  virtually move that point -> thus moving the camera accordingly
 
         Vec3d D = (camAtRef-camPanRef.pos());
-        double d = D.length();
+        double d = D.length()*speedT;
 
         Vec3d x = camPanRef.x(); x.normalize();
         Vec3d u = x.cross( camPanRef.dir() ); u.normalize();
@@ -364,8 +370,9 @@ bool VRNavigator::orbit2D(VRDeviceWeakPtr _dev) {
     Vec3d dir_m = devBeacon->getAt() - devBeacon->getFrom();
     dir_m.normalize();
 
-    float speedT = 0.02;
-    float speedR = 0.04;
+    Vec2d speed = dev->getSpeed();
+    float speedT = speed[0]; // 0.02
+    float speedR = speed[1]; // 0.04
 
     float x = dir_m[1]*speedT*exp(-abs(dir_m[0]));
     float y = -dir_m[0]*speedR*exp(-abs(dir_m[1]));
