@@ -61,6 +61,7 @@ class VRConstraint : public VRStorage {
         PosePtr getReferenceA();
         PosePtr getReferenceB();
         void setReferential(VRTransformPtr ref);
+        VRTransformPtr getReferential();
 
         void apply(VRTransformPtr obj, VRObjectPtr parent = 0, bool force = false);
 

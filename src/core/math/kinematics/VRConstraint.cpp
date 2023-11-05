@@ -52,6 +52,7 @@ void VRConstraint::setReferenceB(PosePtr p) { refMatrixB = p->asMatrix(); refMat
 PosePtr VRConstraint::getReferenceA() { return Pose::create(refMatrixA); };
 PosePtr VRConstraint::getReferenceB() { return Pose::create(refMatrixB); };
 void VRConstraint::setReferential(VRTransformPtr t) { Referential = t; }
+VRTransformPtr VRConstraint::getReferential() { return Referential.lock(); }
 
 void VRConstraint::lockRotation(bool b) { if (b) lock({3,4,5}); else free({3,4,5}); }
 
