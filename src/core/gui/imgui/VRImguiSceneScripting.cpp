@@ -209,21 +209,24 @@ void ImScriptList::render() {
     ImGui::PushStyleColor(ImGuiCol_Header, colorGroup);
     ImGui::PushStyleColor(ImGuiCol_Button, colorScript);
 
-    for (auto groupID : groupsList) {
+    auto tmpGroupsList = groupsList; // copy to avoid crash when data changed while iterating
+    auto tmpGroups = groups; // copy to avoid crash when data changed while iterating
+
+    for (auto groupID : tmpGroupsList) {
         if (groupID == "__default__") continue;
-        string group = groups[groupID].name;
-        renderGroupEntry(groups[groupID].name);
+        string group = tmpGroups[groupID].name;
+        renderGroupEntry(tmpGroups[groupID].name);
         ImGui::SameLine();
 
         //if (ImGui::CollapsingHeader((group+"##"+groupID).c_str(), flags)) {
         if (ImGui::CollapsingHeader(("##"+groupID).c_str(), flags)) {
             ImGui::Indent();
-            for (auto& script : groups[groupID].scripts) renderScriptEntry(script);
+            for (auto& script : tmpGroups[groupID].scripts) renderScriptEntry(script);
             ImGui::Unindent();
         }
     }
 
-    for (auto& script : groups["__default__"].scripts) renderScriptEntry(script);
+    for (auto& script : tmpGroups["__default__"].scripts) renderScriptEntry(script);
 
     ImGui::PopStyleColor();
     ImGui::PopStyleColor();
