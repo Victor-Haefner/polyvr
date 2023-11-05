@@ -445,6 +445,7 @@ void VRNavigator::initOrbit(VRTransformPtr target, VRDevicePtr dev) {
     preset->addKeyBinding(bf);
     preset->deactivate();
     preset->setName("Orbit");
+    preset->setSpeed(0.02, 0.04);
 
     addNavigation(preset);
 }
@@ -465,6 +466,7 @@ void VRNavigator::initOrbit2D(VRTransformPtr target, VRDevicePtr dev) {
     preset->addKeyBinding(bf);
     preset->deactivate();
     preset->setName("Orbit2D");
+    preset->setSpeed(0.02, 0.04);
 
     addNavigation(preset);
 }
@@ -483,6 +485,7 @@ void VRNavigator::initFlyOrbit(VRTransformPtr target, VRDevicePtr dev) { // TODO
     preset->addKeyBinding(bz2);
     preset->deactivate();
     preset->setName("FlyOrbit2D");
+    preset->setSpeed(0.02, 0.04);
 
     addNavigation(preset);
 }
