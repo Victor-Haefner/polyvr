@@ -7,6 +7,7 @@
 #include "toString.h"
 #include "VRStorage_template.h"
 #include "VRFunction.h"
+#include "core/utils/system/VRSystem.h"
 
 using namespace OSG;
 
@@ -142,6 +143,8 @@ class VRNameManager {
 VRNameManager nmgr;
 void VRName::printInternals() { nmgr.print(); }
 
+VRNameSpace* VRName::getNameSpace() { return nameSpace; }
+
 VRNameSpace* VRName::setNameSpace(string s) {
     nameSpaceName = s;
     if (nameSpace) {
@@ -160,8 +163,15 @@ VRNameSpace* VRName::setNameSpace(string s) {
 
 VRNameSpace* VRName::resetNameSpace() { return setNameSpace("__global__"); }
 
-void VRName::compileName() {
+void VRName::compileName(bool expectUnique) {
     if (!nameSpace) setNameSpace(nameSpaceName);
+
+    if (expectUnique) { // when loading it may happen that suffixes are redundant
+        auto& d = nameSpace->nameDict;
+        if (!d.count(base_name)) d[base_name] = VRNamePool();
+        if (d[base_name].has(name_suffix)) name_suffix = d[base_name].get(); // get new suffix
+    }
+
     name = nameSpace->compileName(base_name, name_suffix);
 }
 
@@ -210,5 +220,7 @@ VRName::VRName() {
 
 VRName::~VRName() { setName(""); }
 
-void VRName::setup(VRStorageContextPtr context) { compileName(); }
+void VRName::setup(VRStorageContextPtr context) {
+    compileName(true);
+}
 

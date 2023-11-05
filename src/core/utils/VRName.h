@@ -56,7 +56,7 @@ class VRName : public VRStorage {
         int getNameSuffix();
         VRNameSpace* getNameSpace();
 
-        void compileName();
+        void compileName(bool expectUnique = false);
         void setup(VRStorageContextPtr context);
 
         static void printInternals();

@@ -137,7 +137,7 @@ void VRStorage::load_str_objmap_cb(map<string, std::shared_ptr<T> >* mt, string 
     if (!p.e) return;
     for (auto el : p.e->getChildren()) {
         string name = el->getName();
-        if (el->hasAttribute("base_name")) name = el->getAttribute("base_name");
+        if (el->hasAttribute("base_name")) name = el->getAttribute("base_name") + "_tmp";
         auto t = T::create(name);
         t->load(el);
 
@@ -152,7 +152,7 @@ void VRStorage::load_str_objumap_cb(unordered_map<string, std::shared_ptr<T> >* 
     if (!p.e) return;
     for (auto el : p.e->getChildren()) {
         string name = el->getName();
-        if (el->hasAttribute("base_name")) name = el->getAttribute("base_name");
+        if (el->hasAttribute("base_name")) name = el->getAttribute("base_name") + "_tmp";
         auto t = T::create(name);
         t->load(el);
 
@@ -179,7 +179,7 @@ void VRStorage::load_str_map_cb(map<string, T*>* mt, string tag, bool under, VRS
     if (!p.e) return;
     for (auto el : p.e->getChildren()) {
         string name = el->getName();
-        if (el->hasAttribute("base_name")) name = el->getAttribute("base_name");
+        if (el->hasAttribute("base_name")) name = el->getAttribute("base_name") + "_tmp";
         T* o = new T(name);
         o->load(el);
 

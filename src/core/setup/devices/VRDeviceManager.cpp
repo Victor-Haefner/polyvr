@@ -114,6 +114,7 @@ void VRDeviceManager::load(XMLElementPtr node) {
 
         if (type == "mouse") {
             VRMousePtr m = VRMouse::create();
+            m->setName(m->getBaseName()+"_tmp");
             m->load(el);
             dev = m;
         }
@@ -121,6 +122,7 @@ void VRDeviceManager::load(XMLElementPtr node) {
 #ifndef WITHOUT_MTOUCH
         if (type == "multitouch") {
             VRMultiTouchPtr m = VRMultiTouch::create();
+            m->setName(m->getBaseName()+"_tmp");
             m->load(el);
             dev = m;
         }
@@ -128,12 +130,14 @@ void VRDeviceManager::load(XMLElementPtr node) {
 
         if (type == "leap") {
             VRLeapPtr m = VRLeap::create();
+            m->setName(m->getBaseName()+"_tmp");
             m->load(el);
             dev = m;
         }
 
         if (type == "keyboard") {
             VRKeyboardPtr k = VRKeyboard::create();
+            k->setName(k->getBaseName()+"_tmp");
             k->load(el);
             dev = k;
         }
@@ -141,6 +145,7 @@ void VRDeviceManager::load(XMLElementPtr node) {
 #ifndef WITHOUT_VIRTUOSE
         if (type == "haptic") {
             VRHapticPtr h = VRHaptic::create();
+            h->setName(h->getBaseName()+"_tmp");
             h->load(el);
             dev = h;
         }
@@ -148,6 +153,7 @@ void VRDeviceManager::load(XMLElementPtr node) {
 
         if (type == "server") {
             VRServerPtr m = VRServer::create(5500);
+            m->setName(m->getBaseName()+"_tmp");
             m->load(el);
             dev = m;
         }
@@ -155,6 +161,7 @@ void VRDeviceManager::load(XMLElementPtr node) {
 #ifndef WITHOUT_PRESENTER
         if (type == "presenter") {
             VRPresenterPtr m = VRPresenter::create();
+            m->setName(m->getBaseName()+"_tmp");
             m->load(el);
             dev = m;
         }
@@ -163,6 +170,7 @@ void VRDeviceManager::load(XMLElementPtr node) {
 #ifndef WITHOUT_ART
         if (type == "flystick") {
             VRFlystickPtr m = VRFlystick::create();
+            m->setName(m->getBaseName()+"_tmp");
             m->load(el);
             dev = m;
         }
@@ -170,6 +178,7 @@ void VRDeviceManager::load(XMLElementPtr node) {
 
         if (type == "webxr") {
             VRWebXRPtr w = VRWebXR::create();
+            w->setName(w->getBaseName()+"_tmp");
             w->load(el);
             dev = w;
         }

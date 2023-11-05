@@ -26,7 +26,7 @@ void VRSpreadsheet::read(string path) {
         return;
     }
 
-    cout << "VRSpreadsheet::read: " << path << endl;
+    //cout << "VRSpreadsheet::read: " << path << endl;
     string ext = getFileExtension(path);
 
     auto extractZipEntry = [](Unzipper& z, string name) {
@@ -157,7 +157,7 @@ void VRSpreadsheet::read(string path) {
 }
 
 void VRSpreadsheet::write(string folder, string ext) {
-    cout << "VRSpreadsheet::write to " << folder << " with extention " << ext << endl;
+    //cout << "VRSpreadsheet::write to " << folder << " with extention " << ext << endl;
     if (ext == "csv") {
         makedir(folder);
         for (auto s : sheets) writeSheet(s.first, folder+"/"+s.first+"."+ext);
@@ -165,7 +165,7 @@ void VRSpreadsheet::write(string folder, string ext) {
 }
 
 void VRSpreadsheet::writeSheet(string sheetName, string path) {
-    cout << "VRSpreadsheet::writeSheet " << sheetName << " to " << path << endl;
+    //cout << "VRSpreadsheet::writeSheet " << sheetName << " to " << path << endl;
     string ext = getFileExtension(path);
 
     auto& sheet = sheets[sheetName];
@@ -281,7 +281,7 @@ void VRSpreadsheet::addSheet(string& name, string& data, vector<string>& strings
         sheet.NCols = max(sheet.NCols, R.cells.size());
     }
 
-    cout << " VRSpreadsheet::addSheet " << name << " " << Vec2i(sheet.NRows, sheet.NCols) << endl;
+    //cout << " VRSpreadsheet::addSheet " << name << " " << Vec2i(sheet.NRows, sheet.NCols) << endl;
 }
 
 
