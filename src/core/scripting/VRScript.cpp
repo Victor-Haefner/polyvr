@@ -661,6 +661,7 @@ void VRScript::setGroup(string g) { group = g; }
 string VRScript::getGroup() { return group; }
 
 void VRScript::save(XMLElementPtr e, int p) {
+    VRStorage::save(e, p);
     XMLElementPtr ec = e->addChild("core");
     ec->setText("\n"+core+"\n");
 
