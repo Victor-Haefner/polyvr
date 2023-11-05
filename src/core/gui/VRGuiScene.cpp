@@ -104,6 +104,9 @@ void VRGuiScene::setTransform(VRTransformPtr e) {
     auto c = e->getConstraint();
     params["constrActive"] = toString(c->isActive());
     params["constrLocal"] = toString(c->isLocal());
+    params["constrReferenceA"] = toString(c->getReferenceA());
+    params["constrReferenceB"] = toString(c->getReferenceB());
+    if (auto r = c->getReferential()) params["constrReferential"] = r->getName();
 
     for (int i=0; i<6; i++) {
         params["constrDof"+toString(i)] = toString(Vec2d(c->getMin(i), c->getMax(i)));
