@@ -40,8 +40,6 @@ void VRStorage::save_str_map_cb(map<string, T*>* mt, string tag, bool under, VRS
     if (under) p.e = p.e->addChild(tag);
     for (auto t : *mt) {
         auto ei = t.second->saveUnder(p.e, p.p);
-        //if (ei && t.second->overrideCallbacks) t.second->save(ei, p.p); // TODO: some classes like VRScript have a custom save method
-        if (ei && t.second->overrideCallbacks) t.second->save(ei); // TODO: some classes like VRScript have a custom save method
     }
 }
 
@@ -51,8 +49,6 @@ void VRStorage::save_str_objmap_cb(map<string, std::shared_ptr<T> >* mt, string 
     if (under) p.e = p.e->addChild(tag);
     for (auto t : *mt) {
         auto ei = t.second->saveUnder(p.e, p.p);
-        //if (ei && t.second->overrideCallbacks) t.second->save(ei, p.p); // TODO: some classes like VRScript have a custom save method
-        if (ei && t.second->overrideCallbacks) t.second->save(ei); // TODO: some classes like VRScript have a custom save method
     }
 }
 
