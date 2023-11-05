@@ -153,13 +153,16 @@ void ImScriptList::renderScriptEntry(ImScriptEntry& scriptEntry) {
 		ImGui::PushStyleColor(ImGuiCol_Border, colorFromString("#66AAFF"));
 		ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 2);
 
-        ImGuiStyle& style = ImGui::GetStyle();
-        Rinput = ImGui::CalcTextSize( input->value.c_str() ).x + style.FramePadding.x * 2.0f + 5;
-        if (input->render(Rinput)) {
-            script = input->value;
-            selected = bID;
-            uiSignal("rename_script", {{"name",script}});
-            uiSignal("select_script", {{"script",script}});
+        if (input) {
+            ImGuiStyle& style = ImGui::GetStyle();
+            Rinput = ImGui::CalcTextSize( input->value.c_str() ).x + style.FramePadding.x * 2.0f + 5;
+            if (input->render(Rinput)) {
+                script = input->value;
+                selected = bID;
+                string s = script;
+                uiSignal("rename_script", {{"name",s}});
+                uiSignal("select_script", {{"script",s}});
+            }
         }
         computeMinWidth();
 
