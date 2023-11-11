@@ -18,6 +18,7 @@
 #include "core/gui/VRGuiManager.h"
 #include "core/gui/VRGuiSignals.h"
 #include "core/utils/VRMutex.h"
+#include "core/utils/VROptions.h"
 #include "addons/CEF/CEF.h"
 
 #include <openvr.h>
@@ -95,6 +96,9 @@ VRHeadMountedDisplayPtr VRHeadMountedDisplay::create() {
 }
 
 bool VRHeadMountedDisplay::checkDeviceAttached() {
+    bool ignoreHMD = VROptions::get()->getOption<bool>("ignoreHMD");
+    if (ignoreHMD) return false;
+
 	cout << " check for HMD.." << endl;
 	bool b = vr::VR_IsHmdPresent();
 	if (b) cout << "  .. found a HMD!" << endl;

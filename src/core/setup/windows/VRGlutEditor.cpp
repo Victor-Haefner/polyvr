@@ -151,6 +151,9 @@ VRGlutEditor::VRGlutEditor() {
     mgr->addCallback("ui_toggle_vsync", [&](VRGuiSignals::Options o) { enableVSync(toBool(o["active"])); return true; } );
     mgr->addCallback("relayedImguiKeySignal", [&](VRGuiSignals::Options o) { handleRelayedKey(toInt(o["key"]), toInt(o["state"]), false); return true; } );
     mgr->addCallback("relayedImguiSpecialKeySignal", [&](VRGuiSignals::Options o) { handleRelayedKey(toInt(o["key"]), toInt(o["state"]), true); return true; } );
+
+    bool fullscreen = VROptions::get()->getOption<bool>("fullscreen");
+    if (fullscreen) setFullscreen(true);
 }
 
 VRGlutEditor::~VRGlutEditor() {
@@ -231,7 +234,7 @@ void VRGlutEditor::initGlut() {
     static bool glutInititated = false;
     if (glutInititated) return;
     glutInititated = true;
-    cout << " init GLUT";
+    cout << " init GLUT (VRGlutEditor)";
 
     putenv((char*)"__GL_SYNC_TO_VBLANK=1");
     glutInit(&VROptions::get()->argc, VROptions::get()->argv);

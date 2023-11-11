@@ -84,7 +84,7 @@ void VRGuiManager::init() {
         VRSetupManager::get()->load("Desktop", "setup/DesktopMin.xml");
         updatePtr = VRUpdateCb::create("GUI_updateManager", bind(&VRGuiManager::update, this) );
         VRSceneManager::get()->addUpdateFkt(updatePtr, 1);
-        g_bits = new VRGuiBits();
+        //g_bits = new VRGuiBits();
         return;
     }
 

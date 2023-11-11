@@ -12,6 +12,7 @@ class VRGlutWindow : public VRWindow {
     private:
         GLUTWindowMTRecPtr win;
         int winID;
+        VRHeadMountedDisplayPtr hmd;
 
     public:
         VRGlutWindow();
@@ -27,6 +28,7 @@ class VRGlutWindow : public VRWindow {
         void save(XMLElementPtr node) override;
         void load(XMLElementPtr node) override;
 
+        void onDisplay();
         void onMouse(int b, int s, int x, int y);
         void onMotion(int x, int y);
         void onKeyboard(int k, int s, int x, int y);

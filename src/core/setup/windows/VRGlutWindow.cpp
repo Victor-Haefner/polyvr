@@ -1,4 +1,5 @@
 #include <OpenSG/OSGGLUT.h>
+#include <GL/freeglut.h>
 
 #include "VRGlutWindow.h"
 #include "core/utils/VROptions.h"
@@ -7,6 +8,12 @@
 #include "../devices/VRKeyboard.h"
 #include "core/setup/VRSetup.h"
 #include "core/setup/VRWebXR.h"
+
+#include "glut/VRGlutExtensions.h"
+
+#ifndef WITHOUT_OPENVR
+#include "VRHeadMountedDisplay.h"
+#endif
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -21,6 +28,7 @@ VRGlutWindow* getCurrentWindow() {
 #endif
 }
 
+void glutDisplay() { getCurrentWindow()->onDisplay(); }
 void glutResize(int w, int h) { getCurrentWindow()->resize(w, h); }
 void glutMouse(int b, int s, int x, int y) { getCurrentWindow()->onMouse(b ,s ,x ,y); }
 void glutMotion(int x, int y) { getCurrentWindow()->onMotion(x, y); }
@@ -31,7 +39,12 @@ void glutSpecialUp(int k, int x, int y) { getCurrentWindow()->onKeyboard_special
 
 VRGlutWindow::VRGlutWindow() {
     cout << "Glut: New Window" << endl;
-    type = 1;
+    type = "glut";
+
+#ifndef WITHOUT_OPENVR
+    if (VRHeadMountedDisplay::checkDeviceAttached())
+        hmd = VRHeadMountedDisplay::create();
+#endif
 
     int width = 800;//20;
     int height = 600;//10;
@@ -52,6 +65,7 @@ VRGlutWindow::VRGlutWindow() {
 
     glutWindows[winID] = this;
 
+    glutDisplayFunc(glutDisplay);
     glutReshapeFunc(glutResize);
     glutKeyboardFunc(glutKeyboard);
     glutSpecialFunc(glutSpecial);
@@ -59,6 +73,9 @@ VRGlutWindow::VRGlutWindow() {
     glutSpecialUpFunc(glutSpecialUp);
     glutMotionFunc(glutMotion);
     glutMouseFunc(glutMouse);
+
+    bool fullscreen = VROptions::get()->getOption<bool>("fullscreen");
+    if (fullscreen) glutFullScreen();
     cout << " Glut window initiated" << endl;
 }
 
@@ -74,8 +91,9 @@ void VRGlutWindow::initGlut() {
     static bool glutInititated = false;
     if (glutInititated) return;
     glutInititated = true;
-    cout << " init GLUT";
+    cout << " init GLUT (VRGlutWindow)";
 
+    putenv((char*)"__GL_SYNC_TO_VBLANK=1");
     glutInit(&VROptions::get()->argc, VROptions::get()->argv);
 
 #ifdef WASM
@@ -88,6 +106,8 @@ void VRGlutWindow::initGlut() {
     else glutInitDisplayMode(GLUT_RGBA | GLUT_DEPTH | GLUT_DOUBLE | GLUT_STENCIL | GLUT_MULTISAMPLE);
 #endif
 
+    glutSetOption(GLUT_ACTION_ON_WINDOW_CLOSE, GLUT_ACTION_CONTINUE_EXECUTION);
+
     cout << " ..done " << endl;
 }
 
@@ -95,6 +115,10 @@ void VRGlutWindow::save(XMLElementPtr node) { VRWindow::save(node); }
 void VRGlutWindow::load(XMLElementPtr node) { VRWindow::load(node); }
 
 void VRGlutWindow::onMouse(int b, int s, int x, int y) {
+    // swap mouse wheel
+    if (b == 3) b = 4;
+    else if (b == 4) b = 3;
+
     cout << "VRGlutWindow::onMouse " << Vec4i(b, s, x, y) << endl;
     if (auto m = getMouse()) m->mouse(b, s, x, y, 0);
 }
@@ -112,12 +136,22 @@ void VRGlutWindow::onKeyboard_special(int c, int s, int x, int y) {
     if (auto k = getKeyboard()) k->keyboard_special(c, s, x, y);
 }
 
-void VRGlutWindow::render(bool fromThread) {
-    if (fromThread) return;
+void VRGlutWindow::onDisplay() {
+    #ifndef WITHOUT_OPENVR
+    if (hmd) {
+        hmd->render();
+    }
+#endif
     auto webxr = dynamic_pointer_cast<VRWebXR>( VRSetup::getCurrent()->getDevice("webxr") );
     if (webxr) webxr->preRender();
     VRWindow::render();
     if (webxr) webxr->postRender();
+}
+
+void VRGlutWindow::render(bool fromThread) {
+    if (fromThread) return;
+    glutPostRedisplay();
+    glutMainLoopEvent();
 }
 
 OSG_END_NAMESPACE;
