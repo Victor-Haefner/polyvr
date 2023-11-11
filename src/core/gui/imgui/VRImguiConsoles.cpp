@@ -47,6 +47,8 @@ void ImConsole::render() {
                 colorized = true;
             }
 
+            // TODO: test with InputTextMultiline
+            ImGui::SetNextItemWidth(-1);
             ImGui::InputText(lID.c_str(), &l[0], l.size(), ImGuiInputTextFlags_ReadOnly);
             if (colorized) ImGui::PopStyleColor();
 
