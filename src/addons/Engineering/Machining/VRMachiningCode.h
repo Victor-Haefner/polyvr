@@ -18,6 +18,17 @@ OSG_BEGIN_NAMESPACE;
 
 class VRMachiningCode : public std::enable_shared_from_this<VRMachiningCode> {
 	public:
+		struct Function {
+            vector<string> lines;
+		};
+
+		struct Program {
+		    Function main;
+            map<string, Function> subroutines;
+            map<string, string> variables;
+		};
+
+
 		struct Instruction {
 			int G = -1;
 			Vec3d d;
@@ -25,9 +36,14 @@ class VRMachiningCode : public std::enable_shared_from_this<VRMachiningCode> {
 			double T = 0;
 		};
 
+		struct Process {
+            vector< Instruction > instructions;
+            size_t pointer = 0;
+		};
+
 	private:
-		vector< Instruction > instructions;
-		size_t pointer = 0;
+        Program program;
+	    Process process;
 
 		int arcPrecision = 64;
 		int skippedSteps = 0;
@@ -48,10 +64,10 @@ class VRMachiningCode : public std::enable_shared_from_this<VRMachiningCode> {
 
 		void clear();
 		void readGCode(string path, double speedMultiplier);
+		void parseFile(string path);
+		void computePaths(double speedMultiplier);
 
 		VRGeometryPtr asGeometry();
-		//VRGeometryPtr asGeometry(VRTransformPtr res);
-		//void asGeometry();
 };
 
 OSG_END_NAMESPACE;

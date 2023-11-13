@@ -1,5 +1,6 @@
 #include "VRMachiningCode.h"
 #include "core/utils/toString.h"
+#include "core/utils/system/VRSystem.h"
 #include "core/objects/material/VRMaterial.h"
 
 #include <OpenSG/OSGMatrix.h>
@@ -12,16 +13,19 @@ VRMachiningCode::~VRMachiningCode() {}
 VRMachiningCodePtr VRMachiningCode::create() { return VRMachiningCodePtr( new VRMachiningCode() ); }
 VRMachiningCodePtr VRMachiningCode::ptr() { return static_pointer_cast<VRMachiningCode>(shared_from_this()); }
 
-void VRMachiningCode::reset() { pointer = 0; }
-size_t VRMachiningCode::length() { return instructions.size() - pointer; }
+void VRMachiningCode::reset() { process.pointer = 0; }
+size_t VRMachiningCode::length() { return process.instructions.size() - process.pointer; }
 
 void VRMachiningCode::clear() {
-    instructions.clear();
-    reset();
+    program.subroutines.clear();
+    program.variables.clear();
+    program.main = Function();
+    process.instructions.clear();
+    process.pointer = 0;
 }
 
 VRMachiningCode::Instruction VRMachiningCode::next() {
-	if (pointer <= instructions.size()) return instructions[pointer++];
+	if (process.pointer <= process.instructions.size()) return process.instructions[process.pointer++];
 	return Instruction();
 }
 
@@ -38,7 +42,7 @@ void VRMachiningCode::translate(Vec3d vec_0, Vec3d vec_1, double v) { // G01 tra
 		i.d = vecf;
 		i.p0 = vec_0;
 		i.T = T;
-		instructions.push_back(i);
+		process.instructions.push_back(i);
 		skippedSteps = 0;
 	} else skippedSteps += 1;
 }
@@ -79,11 +83,36 @@ void VRMachiningCode::rotate(Vec3d start, Vec3d end, Vec3d center, Vec3d axis, d
 
 void VRMachiningCode::readGCode(string path, double speedMultiplier) {
 	cout << "VRMachiningCode::readGCode " << path << " " << speedMultiplier << endl;
-	Vec3d vec0, vec1;
+
+	if (isFile(path)) parseFile(path);
+	else if (isFolder(path)) {
+        for (auto f : openFolder(path)) parseFile(path);
+	}
+
+	computePaths(speedMultiplier);
+}
+
+void VRMachiningCode::parseFile(string path) {
+	cout << " VRMachiningCode::parseFile " << path << endl;
 
 	ifstream file;
 	file.open(path);
 	if (!file.is_open()) { cout << "ERROR in VRMachiningCode::readGCode : file '" << path << "' not found!" << endl; return; }
+
+	string line;
+	bool inSubroutine = false;
+
+	while (getline(file, line)) {
+        if (contains(line, ";")) line = splitString(line, ';')[0]; // remove comments
+        program.main.lines.push_back(line);
+	}
+}
+
+void VRMachiningCode::computePaths(double speedMultiplier) {
+	struct Command {
+        char code = 'G';
+        float value = 0;
+	};
 
 	// state variables
 	int motionMode = 1; // G0, G1, G2, G3
@@ -92,18 +121,20 @@ void VRMachiningCode::readGCode(string path, double speedMultiplier) {
 	Vec3d cursor;
 	Vec3d target;
 	Vec3d rotationCenter;
+	Vec3d vec0, vec1;
 
-	struct Command {
-        char code = 'G';
-        float value = 0;
-	};
+	size_t l = 0;
+	for (auto& line : program.main.lines) {
+        if (contains(line, " = ")) { // variable assignment
+            auto parts = splitString(line, " = ");
+            program.variables[parts[0]] = parts[1];
+            continue;
+        }
 
-	string line;
-	while (getline(file, line)) {
 		// parse commands
 		vector<Command> commands;
 		for (auto i : splitString(line)) {
-            if (i.size() <= 1) { cout << " Warning! empty line: '" << line << "'" << endl; continue; }
+            if (i.size() <= 1) { cout << " Warning! empty line " << l << ": '" << line << "'" << endl; continue; }
             commands.push_back( { i[0], toFloat(subString(i, 1)) } );
 		}
 
@@ -111,6 +142,12 @@ void VRMachiningCode::readGCode(string path, double speedMultiplier) {
 		rotationCenter = cursor;
 		for (auto& cmd : commands) {
             if (cmd.code == 'V') speed = cmd.value * speedMultiplier;
+            if (cmd.code == 'F') speed = cmd.value * 0.001 * 0.01667 * speedMultiplier; // convert from mm/min to m/s
+
+            if (cmd.code == 'M') {
+                if (cmd.value == 0) ; // pause after last movement and wait for user to continue, TODO: implement a wait/continue mechanism
+                if (cmd.value == 30) ; // programm finished -> reset, TODO: should reset pointer to 0
+            }
 
             if (cmd.code == 'G') {
                 if (cmd.value > -1 && cmd.value < 4 ) motionMode = cmd.value;
@@ -143,11 +180,12 @@ void VRMachiningCode::readGCode(string path, double speedMultiplier) {
 		}
 
 		cursor = target;
+		l++;
 
 		//implementation of the other G Code commands!
 	}
 
-	cout << " read " << instructions.size() << " instructions" << endl;
+	cout << " read " << process.instructions.size() << " instructions" << endl;
 }
 
 //Implement here to plot the gcode path
@@ -156,7 +194,7 @@ VRGeometryPtr VRMachiningCode::asGeometry() {
     VRGeoData data;
 
     // Print all elements of the vector
-    for (const auto& element : instructions) {
+    for (const auto& element : process.instructions) {
 
         //cout << "G: " << element.G << endl;
         //cout << "d: " << element.d << endl;
