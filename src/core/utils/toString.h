@@ -27,6 +27,9 @@ bool endsWith(const string& s, const string& s2, bool caseSensitive = true);
 bool contains(const string& s, const string& s2, bool caseSensitive = true);
 size_t countLines(const string& s);
 
+void toUpper(string& s);
+void toLower(string& s);
+
 template<typename T> string toString(const T& s);
 string toString(const double& f, int d = -1);
 string toString(const float& f, int d = -1);

@@ -19,7 +19,7 @@ size_t VRMachiningCode::length() { return process.instructions.size() - process.
 void VRMachiningCode::clear() {
     program.subroutines.clear();
     program.variables.clear();
-    program.main = Function();
+    program.main = Function("main");
     process.instructions.clear();
     process.pointer = 0;
 }
@@ -86,10 +86,13 @@ void VRMachiningCode::readGCode(string path, double speedMultiplier) {
 
 	if (isFile(path)) parseFile(path);
 	else if (isFolder(path)) {
-        for (auto f : openFolder(path)) parseFile(path);
+        for (auto f : openFolder(path)) parseFile(path+'/'+f);
 	}
 
 	computePaths(speedMultiplier);
+
+	cout << " read " << program.subroutines.size() << " subroutines" << endl;
+	cout << " read " << process.instructions.size() << " instructions" << endl;
 }
 
 void VRMachiningCode::parseFile(string path) {
@@ -101,10 +104,31 @@ void VRMachiningCode::parseFile(string path) {
 
 	string line;
 	bool inSubroutine = false;
+	string subName;
 
 	while (getline(file, line)) {
         if (contains(line, ";")) line = splitString(line, ';')[0]; // remove comments
-        program.main.lines.push_back(line);
+        toUpper(line);
+        auto parts = splitString(line);
+        if (parts.size() == 0) continue;
+
+        if (parts[0] == "PROC") {
+            inSubroutine = true;
+            subName = parts[1];
+            if (contains(subName, "(")) subName = splitString(subName, '(')[0];
+            program.subroutines[subName] = Function(subName);
+            continue;
+        }
+
+        if (parts[0] == "EXTERN") continue;
+        if (parts[0] == "DEF") continue;
+
+        if (!inSubroutine) program.main.lines.push_back(line);
+        else program.subroutines[subName].lines.push_back(line);
+
+        if (parts[0] == "RET") {
+            inSubroutine = false;
+        }
 	}
 }
 
@@ -123,69 +147,115 @@ void VRMachiningCode::computePaths(double speedMultiplier) {
 	Vec3d rotationCenter;
 	Vec3d vec0, vec1;
 
-	size_t l = 0;
-	for (auto& line : program.main.lines) {
-        if (contains(line, " = ")) { // variable assignment
-            auto parts = splitString(line, " = ");
-            program.variables[parts[0]] = parts[1];
-            continue;
-        }
+	bool inIf = false;
+	bool inWhile = false;
+	bool condEval = false;
 
-		// parse commands
-		vector<Command> commands;
-		for (auto i : splitString(line)) {
-            if (i.size() <= 1) { cout << " Warning! empty line " << l << ": '" << line << "'" << endl; continue; }
-            commands.push_back( { i[0], toFloat(subString(i, 1)) } );
-		}
+	function<void(Function&, string)> computeFunction = [&](Function& func, string indent) {
+	    cout << indent << "enter subroutine " << func.name << endl;
 
-		// apply commands to current state
-		rotationCenter = cursor;
-		for (auto& cmd : commands) {
-            if (cmd.code == 'V') speed = cmd.value * speedMultiplier;
-            if (cmd.code == 'F') speed = cmd.value * 0.001 * 0.01667 * speedMultiplier; // convert from mm/min to m/s
+        for (auto& line : func.lines) {
+            if (startsWith(line, "ENDIF")) { inIf = false; continue; }
+            if (startsWith(line, "ENDWHILE")) { inWhile = false; continue; }
+            if (inIf && !condEval) { /*cout << indent << " skip if content" << endl;*/ continue; }
+            if (inWhile && !condEval) { /*cout << indent << " skip while content" << endl;*/ continue; }
+            cout << indent << " line: " << line << endl;
 
-            if (cmd.code == 'M') {
-                if (cmd.value == 0) ; // pause after last movement and wait for user to continue, TODO: implement a wait/continue mechanism
-                if (cmd.value == 30) ; // programm finished -> reset, TODO: should reset pointer to 0
-            }
-
-            if (cmd.code == 'G') {
-                if (cmd.value > -1 && cmd.value < 4 ) motionMode = cmd.value;
-                if (cmd.value > 16 && cmd.value < 20) {  // G17 (Y), G18 (Z), G19 (X)
-                    if (cmd.value == 17) rotationAxis = Vec3d(0,-1,0);
-                    if (cmd.value == 18) rotationAxis = Vec3d(0,0,1);
-                    if (cmd.value == 19) rotationAxis = Vec3d(1,0,0);
+            // check for IF
+            if (startsWith(line, "IF ")) {
+                inIf = true;
+                auto parts = splitString(line);
+                if (parts.size() == 4) {
+                    if (parts[2] != "==") continue;
+                    if (!program.variables.count(parts[1])) continue;
+                    condEval = bool(parts[3] == program.variables[parts[1]]);
+                    cout << indent << " check if, " << line << " -> " << condEval << endl;
                 }
+                continue;
             }
 
-            if (cmd.code == 'X') target[0] =  cmd.value;
-            if (cmd.code == 'Y') target[2] = -cmd.value;
-            if (cmd.code == 'Z') target[1] =  cmd.value;
+            // check for WHILE
+            if (startsWith(line, "WHILE ")) { // TODO
+                inWhile = true;
+                continue;
+            }
 
-            if (cmd.code == 'I') rotationCenter[0] = cursor[0] + cmd.value;
-            if (cmd.code == 'J') rotationCenter[2] = cursor[2] - cmd.value;
-            if (cmd.code == 'K') rotationCenter[1] = cursor[1] + cmd.value;
-		}
+            if (startsWith(line, "RET")) { return; }
 
-		if (motionMode == 0 || motionMode == 1) { // translate
-			translate(cursor, target, speed);
-		}
+            // check for variable assignment
+            if (contains(line, " = ")) {
+                auto parts = splitString(line, " = ");
+                program.variables[parts[0]] = parts[1];
+                continue;
+            }
 
-		if (motionMode == 2) { // rotate clockwise
-			rotate(cursor, target, rotationCenter, rotationAxis, speed, 1);
-		}
+            // check for subroutine
+            string sub;
+            if (contains(line, "(")) sub = splitString(line, '(')[0];
+            else sub = splitString(line)[0];
+            //cout << indent << "  sub " << sub << ", known: " << program.subroutines.count(sub) << endl;
+            if (program.subroutines.count(sub)) {
+                computeFunction(program.subroutines[sub], indent+" ");
+                continue;
+            }
 
-		if (motionMode == 3) { // rotate counterclockwise
-			rotate(cursor, target, rotationCenter, rotationAxis, speed, -1);
-		}
+            cout << indent << "  cmd: " << line << endl;
 
-		cursor = target;
-		l++;
+            // parse commands
+            vector<Command> commands;
+            for (auto i : splitString(line)) {
+                if (i.size() <= 1) { cout << " Warning! empty line: '" << line << "'" << endl; continue; }
+                commands.push_back( { i[0], toFloat(subString(i, 1)) } );
+            }
 
-		//implementation of the other G Code commands!
-	}
+            // apply commands to current state
+            rotationCenter = cursor;
+            for (auto& cmd : commands) {
+                if (cmd.code == 'V') speed = cmd.value * speedMultiplier;
+                if (cmd.code == 'F') speed = cmd.value * 0.001 * 0.01667 * speedMultiplier; // convert from mm/min to m/s
 
-	cout << " read " << process.instructions.size() << " instructions" << endl;
+                if (cmd.code == 'M') {
+                    if (cmd.value == 0) ; // pause after last movement and wait for user to continue, TODO: implement a wait/continue mechanism
+                    if (cmd.value == 30) ; // programm finished -> reset, TODO: should reset pointer to 0
+                }
+
+                if (cmd.code == 'G') {
+                    if (cmd.value > -1 && cmd.value < 4 ) motionMode = cmd.value;
+                    if (cmd.value > 16 && cmd.value < 20) {  // G17 (Y), G18 (Z), G19 (X)
+                        if (cmd.value == 17) rotationAxis = Vec3d(0,-1,0);
+                        if (cmd.value == 18) rotationAxis = Vec3d(0,0,1);
+                        if (cmd.value == 19) rotationAxis = Vec3d(1,0,0);
+                    }
+                }
+
+                if (cmd.code == 'X') target[0] =  cmd.value;
+                if (cmd.code == 'Y') target[2] = -cmd.value;
+                if (cmd.code == 'Z') target[1] =  cmd.value;
+
+                if (cmd.code == 'I') rotationCenter[0] = cursor[0] + cmd.value;
+                if (cmd.code == 'J') rotationCenter[2] = cursor[2] - cmd.value;
+                if (cmd.code == 'K') rotationCenter[1] = cursor[1] + cmd.value;
+            }
+
+            if (motionMode == 0 || motionMode == 1) { // translate
+                translate(cursor, target, speed);
+            }
+
+            if (motionMode == 2) { // rotate clockwise
+                rotate(cursor, target, rotationCenter, rotationAxis, speed, 1);
+            }
+
+            if (motionMode == 3) { // rotate counterclockwise
+                rotate(cursor, target, rotationCenter, rotationAxis, speed, -1);
+            }
+
+            cursor = target;
+
+            //implementation of the other G Code commands!
+        }
+	};
+
+    computeFunction(program.main, "");
 }
 
 //Implement here to plot the gcode path
@@ -198,7 +268,7 @@ VRGeometryPtr VRMachiningCode::asGeometry() {
 
         //cout << "G: " << element.G << endl;
         //cout << "d: " << element.d << endl;
-        //cout << "p0: " << element.p0 << endl;
+        cout << "p0: " << element.p0 << endl;
         //cout << "T: " << element.T << endl;
 
         data.pushVert(element.p0, Vec3d(0,1,0));

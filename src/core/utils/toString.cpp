@@ -14,6 +14,8 @@
 #include <boost/uuid/uuid_io.hpp>
 #include <boost/uuid/uuid_generators.hpp>
 
+#include <algorithm>
+
 using namespace OSG;
 using namespace boost::algorithm;
 
@@ -74,6 +76,14 @@ bool endsWith(const string& s, const string& s2, bool caseSensitive) {
 bool contains(const string& s, const string& s2, bool caseSensitive) {
     if (caseSensitive) return bool(s.find(s2) != std::string::npos);
     else return bool(to_lower_copy(s).find(to_lower_copy(s2)) != std::string::npos);
+}
+
+void toUpper(string& s) {
+    std::transform(s.begin(), s.end(), s.begin(), ::toupper);
+}
+
+void toLower(string& s) {
+    std::transform(s.begin(), s.end(), s.begin(), ::tolower);
 }
 
 typedef void* voidPtr;

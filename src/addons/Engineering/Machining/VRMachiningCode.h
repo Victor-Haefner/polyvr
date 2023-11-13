@@ -19,11 +19,14 @@ OSG_BEGIN_NAMESPACE;
 class VRMachiningCode : public std::enable_shared_from_this<VRMachiningCode> {
 	public:
 		struct Function {
+		    string name;
             vector<string> lines;
+            Function() {}
+            Function(string n) : name(n) {}
 		};
 
 		struct Program {
-		    Function main;
+		    Function main = Function("main");
             map<string, Function> subroutines;
             map<string, string> variables;
 		};
