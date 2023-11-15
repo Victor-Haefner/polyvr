@@ -11,6 +11,11 @@
 
 OSG_BEGIN_NAMESPACE
 
+// under windows there is a macro that defines poll as WSAPoll ??
+#ifdef poll
+#undef poll
+#endif
+
 class VRWebSocket : public VRName {
     public:
         VRWebSocket(string name = "websocket");
