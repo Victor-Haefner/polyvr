@@ -167,6 +167,9 @@ VRGlutEditor::~VRGlutEditor() {
 VRGlutEditorPtr VRGlutEditor::ptr() { return static_pointer_cast<VRGlutEditor>( shared_from_this() ); }
 VRGlutEditorPtr VRGlutEditor::create() { return VRGlutEditorPtr(new VRGlutEditor() ); }
 
+int VRGlutEditor::getCurrentWinID() { return glutGetWindow(); }
+void VRGlutEditor::setCurrentWinID(int i) { glutSetWindow(i); }
+
 void VRGlutEditor::onMain_Keyboard_special(int k) {
     //cout << " VRGlutEditor::onMain_Keyboard_special " << k << endl;
 }
