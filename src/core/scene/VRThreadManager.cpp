@@ -130,6 +130,11 @@ void VRThreadManager::runLoop(VRThreadWeakPtr wt) {
     auto t = wt.lock();
     if (!t) return;
 
+#ifdef WIN32
+    std::wstring stemp = std::wstring(t->name.begin(), t->name.end());
+    SetThreadDescription(GetCurrentThread(), stemp.c_str());
+#endif
+
     ExternalThreadRefPtr tr = OSGThread::create(t->name.c_str(), 0);
     tr->initialize(t->aspect);//der hauptthread nutzt Aspect 0
 
