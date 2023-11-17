@@ -91,12 +91,17 @@ void uiInitStore() {
     uiParameterStore->load();
 }
 
+void uiCloseStore() {
+    uiParameterStore.reset();
+}
+
 void uiStoreParameter(string name, string value) {
-    uiParameterStore->setSetting(name, value);
+    if (uiParameterStore) uiParameterStore->setSetting(name, value);
 }
 
 string uiGetParameter(string name, string def) {
-    return uiParameterStore->getSetting(name, def);
+    if (uiParameterStore) return uiParameterStore->getSetting(name, def);
+    else return "";
 }
 
 

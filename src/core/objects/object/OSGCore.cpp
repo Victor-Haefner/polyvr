@@ -2,6 +2,8 @@
 
 using namespace OSG;
 
+bool OSGCore::OSG_VALID = true;
+
 OSGCore::OSGCore(NodeCoreMTRecPtr core) {
     this->core = core;
 }

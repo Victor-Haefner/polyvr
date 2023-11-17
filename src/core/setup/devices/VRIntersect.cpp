@@ -217,6 +217,7 @@ bool VRIntersect::drop(VRDeviceWeakPtr dev, VRTransformWeakPtr beacon) {
 }
 
 VRTransformPtr VRIntersect::getDraggedObject(VRTransformPtr beacon) {
+    if (dragged.size() == 0) return 0;
     if (beacon == 0) return dragged.begin()->second.lock();
     if (!dragged.count(beacon.get())) return 0;
     return dragged[beacon.get()].lock();

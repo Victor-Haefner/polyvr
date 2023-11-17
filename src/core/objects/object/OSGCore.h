@@ -7,12 +7,15 @@
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
+
 class OSGCore {
     public:
         NodeCoreMTRecPtr core;
 
         OSGCore(NodeCoreMTRecPtr core = 0);
         static OSGCorePtr create(NodeCoreMTRecPtr core = 0);
+
+        static bool OSG_VALID;
 };
 
 OSG_END_NAMESPACE;

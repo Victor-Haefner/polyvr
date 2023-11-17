@@ -502,9 +502,13 @@ void VRPathtool::projectHandle(VRGeometryPtr handle, VRDevicePtr dev) { // proje
 }
 
 void VRPathtool::updateDevs() { // update when something is dragged
-    for (auto dev : VRSetup::getCurrent()->getDevices()) { // get dragged objects
-        VRGeometryPtr obj = static_pointer_cast<VRGeometry>(dev.second->getDraggedObject());
-        if (obj == 0) continue;
+    auto setup = VRSetup::getCurrent();
+    if (!setup) return;
+
+    for (auto dev : setup->getDevices()) { // get dragged objects
+        if (!dev.second) continue;
+        VRGeometryPtr obj = dynamic_pointer_cast<VRGeometry>(dev.second->getDraggedObject());
+        if (!obj) continue;
         if (!obj->hasTag("handle") && !obj->hasTag("controlhandle")) continue;
         if (!handleToNode.count(obj.get()) && !handleToEntries.count(obj.get())) continue;
         projectHandle(obj, dev.second);

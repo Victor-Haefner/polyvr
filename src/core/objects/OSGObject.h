@@ -13,6 +13,7 @@ class OSGObject {
         map<VRObject*, NodeMTRecPtr> links;
 
         OSGObject(NodeMTRecPtr node = 0);
+        ~OSGObject();
         static OSGObjectPtr create(NodeMTRecPtr node = 0);
 };
 

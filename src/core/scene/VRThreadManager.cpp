@@ -20,6 +20,7 @@ class OSGThread : public ExternalThread {
 
 VRThreadManager::VRThreadManager() {
     appThread = dynamic_cast<Thread *>(ThreadManager::getAppThread());
+    setThreadName("PolyVR_main");
 }
 
 VRThreadManager::~VRThreadManager() {
@@ -126,14 +127,32 @@ void VRThreadManager::stopThread(int id, int tries) {
     threads.erase(id);
 }
 
+void VRThreadManager::setThreadName(string name) {
+#ifdef WIN32
+    std::wstring stemp = std::wstring(name.begin(), name.end());
+    SetThreadDescription(GetCurrentThread(), stemp.c_str());
+#endif
+}
+
+string VRThreadManager::getThreadName() {
+    string name = "unknown thread";
+#ifdef WIN32
+    PWSTR data;
+    HRESULT hr = GetThreadDescription(GetCurrentThread(), &data);
+    if (SUCCEEDED(hr)) {
+        std::wstring stemp = std::wstring(data);
+        name = string(stemp.begin(), stemp.end());
+        LocalFree(data);
+    }
+#endif
+    return name;
+}
+
 void VRThreadManager::runLoop(VRThreadWeakPtr wt) {
     auto t = wt.lock();
     if (!t) return;
 
-#ifdef WIN32
-    std::wstring stemp = std::wstring(t->name.begin(), t->name.end());
-    SetThreadDescription(GetCurrentThread(), stemp.c_str());
-#endif
+    setThreadName(t->name);
 
     ExternalThreadRefPtr tr = OSGThread::create(t->name.c_str(), 0);
     tr->initialize(t->aspect);//der hauptthread nutzt Aspect 0

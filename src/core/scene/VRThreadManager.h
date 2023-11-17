@@ -72,6 +72,9 @@ class VRThreadManager {
         void setupThreadState(VRThreadPtr t);
         void importThreadState(VRThreadPtr t);
         void ThreadManagerUpdate();
+
+        static void setThreadName(string name);
+        static string getThreadName();
 };
 
 OSG_END_NAMESPACE;

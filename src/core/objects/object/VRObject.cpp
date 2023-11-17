@@ -77,9 +77,11 @@ void VRObject::setupAfter(VRStorageContextPtr context) {
 
 VRObject::~VRObject() {
     //cout << " ~VRObject " << getName() << endl;
-    NodeMTRecPtr p;
-    if (osg->node) p = osg->node->getParent();
-    if (p) p->subChild(osg->node);
+    if (OSGCore::OSG_VALID) {
+        NodeMTRecPtr p;
+        if (osg->node) p = osg->node->getParent();
+        if (p) p->subChild(osg->node);
+    }
     for (auto a : attachments) delete a.second;
     attachments.clear();
 }

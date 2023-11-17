@@ -53,6 +53,7 @@ VRGuiManager::VRGuiManager() {}
 
 VRGuiManager::~VRGuiManager() {
     cout << "VRGuiManager::~VRGuiManager" << endl;
+    uiCloseStore();
     if (g_scene) delete g_scene;
     if (g_bits) delete g_bits;
     if (g_demos) delete g_demos;

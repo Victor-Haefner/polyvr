@@ -33,6 +33,7 @@
 #ifndef WITHOUT_AV
 #include "core/scene/sound/VRSoundManager.h"
 #endif
+#include "core/objects/object/OSGCore.h"
 #include "core/objects/object/VRObject.h"
 #include "core/objects/VRTransform.h"
 #include "core/setup/VRSetup.h"
@@ -112,7 +113,6 @@ PolyVR::~PolyVR() {
     if (scene_mgr) scene_mgr->stopAllThreads();
     if (setup_mgr) setup_mgr->closeSetup();
 
-
     monitor.reset();
     gui_mgr.reset();
     main_interface.reset();
@@ -128,6 +128,7 @@ PolyVR::~PolyVR() {
 #endif
 
     cout << "call osgExit" << endl;
+    OSGCore::OSG_VALID = false;
     osgExit();
 
     /*#ifdef WASM
