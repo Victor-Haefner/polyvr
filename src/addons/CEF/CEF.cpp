@@ -109,6 +109,7 @@ CEF_handler::CEF_handler() {
 
 CEF_handler::~CEF_handler() {
     cout << "~CEF_handler\n";
+    image.reset();
 }
 
 #ifdef _WIN32
