@@ -163,9 +163,11 @@ bool CEF_handler::OnConsoleMessage( CefRefPtr< CefBrowser > browser, cef_log_sev
 
 
 void CEF_handler::OnPaint(CefRefPtr<CefBrowser> browser, PaintElementType type, const RectList& dirtyRects, const void* buffer, int width, int height) {
+    //cout << "CEF_handler::OnPaint " << image << endl;
     if (!image) return;
     auto img = image->getImage();
     if (img) {
+        //cout << " CEF_handler::OnPaint set " << img << endl;
         img->set(Image::OSG_BGRA_PF, width, height, 1, 0, 1, 0.0, (const uint8_t*)buffer, Image::OSG_UINT8_IMAGEDATA, true, 1);
     }
 }
@@ -175,6 +177,7 @@ OSG::VRTexturePtr CEF_handler::getImage() { return image; }
 void CEF_handler::resize(int resolution, float aspect) {
     width = resolution;
     height = width/aspect;
+    //cout << "CEF_handler::resize" << endl;
 }
 
 void CEF_handler::OnLoadEnd( CefRefPtr< CefBrowser > browser, CefRefPtr< CefFrame > frame, int httpStatusCode ) {
@@ -324,7 +327,18 @@ void CEF::setMaterial(VRMaterialPtr mat) {
 }
 
 string CEF::getSite() { return site; }
-void CEF::reload() { if (internals->browser) internals->browser->Reload(); if (auto m = mat.lock()) m->updateDeferredShader(); }
+void CEF::reload() { 
+    cout << "CEF::reload " << site << ", " << internals->browser << endl;
+    if (internals->browser) {
+#ifdef _WIN32
+        internals->browser->GetMainFrame()->LoadURL(site); // Reload doesnt work on windows ??
+#else
+        internals->browser->Reload(); 
+#endif
+        //internals->browser->ReloadIgnoreCache(); // TODO: try this out
+    }
+    if (auto m = mat.lock()) m->updateDeferredShader(); 
+}
 
 void CEF::update() {
     if (!init || !internals->client->getHandler()) return;
@@ -370,7 +384,7 @@ void CEF::reloadScripts(string path) {
         auto cef = i.lock();
         if (!cef) continue;
         string s = cef->getSite();
-        stringstream ss(s); vector<string> res; while (getline(ss, s, '/')) res.push_back(s); // split by ':'
+        auto res = splitString(s, '/');
         if (res.size() == 0) continue;
         if (res[res.size()-1] == path) {
             cef->resize();
