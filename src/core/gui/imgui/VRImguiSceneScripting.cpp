@@ -341,7 +341,9 @@ void ImScriptEditor::setBuffer(string data) {
 
 void ImScriptEditor::setParameters(string type, string group) {
     current_group = 0;
-    for (int i=0; i<groupList.size(); i++) if (groupList[i] == group) current_group = i;
+    for (int i = 0; i < groupList.size(); i++) {
+        if (startsWith(groupList[i], group)) current_group = i;
+    }
 
     current_type = 0; // Python
     if (type == "GLSL") current_type = 1;
