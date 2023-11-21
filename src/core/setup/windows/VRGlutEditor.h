@@ -18,6 +18,7 @@ class VRGlutEditor: public VRWindow {
         int winPopup = -1;
         VRHeadMountedDisplayPtr hmd;
         bool fullscreen = false;
+        bool maximized = false;
         bool glViewFocussed = true;
         string popup;
 
@@ -59,6 +60,7 @@ class VRGlutEditor: public VRWindow {
         void forceGLResize(int w, int h);
         void enableVSync(bool b);
         void setFullscreen(bool b);
+        void setMaximized(bool b);
 
         void resizeGLWindow(int x, int y, int w, int h);
         void on_resize_window(int w, int h);

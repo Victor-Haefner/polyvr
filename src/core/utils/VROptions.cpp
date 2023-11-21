@@ -14,7 +14,8 @@ VROptions::VROptions() : desc("Configuration ") {
 
     addOption<bool>(true, "dofailcheck", "do a fail check of the last startup of PolyVR, may halt startup");
     addOption<bool>(false, "standalone", "start without UI, only GL canvas");
-    addOption<bool>(false, "fullscreen", "start in fullscreen");
+    addOption<bool>(false, "maximized", "start with maximized GL window");
+    addOption<bool>(false, "fullscreen", "start with fullscreen GL window");
     addOption<bool>(false, "ignoreHMD", "ignore HMD if present");
     addOption<bool>(false, "active_stereo", "use active_stereo or not");
     addOption<bool>(false, "nogtk", "start without UI, even without GL canvas, you should add a glut window in the setup file");

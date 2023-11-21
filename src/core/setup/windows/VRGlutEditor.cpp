@@ -154,6 +154,9 @@ VRGlutEditor::VRGlutEditor() {
 
     bool fullscreen = VROptions::get()->getOption<bool>("fullscreen");
     if (fullscreen) setFullscreen(true);
+
+    bool maximized = VROptions::get()->getOption<bool>("maximized");
+    if (maximized) setMaximized(true);
 }
 
 VRGlutEditor::~VRGlutEditor() {
@@ -174,11 +177,36 @@ void VRGlutEditor::onMain_Keyboard_special(int k) {
     //cout << " VRGlutEditor::onMain_Keyboard_special " << k << endl;
 }
 
+void VRGlutEditor::setMaximized(bool b) {
+    int width = glutGet(GLUT_SCREEN_WIDTH);
+    int height = glutGet(GLUT_SCREEN_HEIGHT);
+
+    if (b && !fullscreen) {
+        cout << " glut maximize!" << endl;
+        resizeGLWindow(0,0,width,height);
+        maximized = b;
+
+        glutSetWindow(winUI);
+        glutHideWindow();
+
+        glutSetWindow(topWin);
+        glutPositionWindow(0,0);
+        glutReshapeWindow(width,height);
+    } else {
+        cout << " glut unmaximize!" << endl;
+        maximized = b;
+        on_resize_window(width, height);
+
+        glutSetWindow(winUI);
+        glutShowWindow();
+    }
+}
+
 void VRGlutEditor::setFullscreen(bool b) {
     int width = glutGet(GLUT_SCREEN_WIDTH);
     int height = glutGet(GLUT_SCREEN_HEIGHT);
 
-    if (b) {
+    if (b && !maximized) {
         cout << " glut enter fullscreen!" << endl;
         resizeGLWindow(0,0,width,height);
         fullscreen = b;
@@ -353,7 +381,7 @@ void VRGlutEditor::on_gl_resize(int w, int h) {
 }
 
 void VRGlutEditor::resizeGLWindow(int x, int y, int w, int h) { // glArea.surface
-    if (fullscreen) return;
+    if (fullscreen || maximized) return;
     //cout << "     Glut::updateGLWindow " << x << ", " << y << ", " << w << ", " << h << endl;
     if (winGL < 0) return;
     glutSetWindow(winGL);
