@@ -24,6 +24,14 @@ void VRMachiningSimulation::setKinematics(VRMachiningKinematicsPtr k) { kinemati
 void VRMachiningSimulation::setCode(VRMachiningCodePtr c) { code = c; }
 void VRMachiningSimulation::setOnFinish(VRUpdateCbPtr cb) { finishCallback = cb; }
 
+bool VRMachiningSimulation::isPaused() { return anim ? anim->isPaused() : 0; }
+
+void VRMachiningSimulation::pause(bool b) {
+    if (!anim) return;
+    if (b) anim->pause();
+    else anim->resume();
+}
+
 void VRMachiningSimulation::stop() { doStop = true; }
 
 void VRMachiningSimulation::start(double sM) {

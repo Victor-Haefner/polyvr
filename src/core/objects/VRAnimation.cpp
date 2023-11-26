@@ -27,7 +27,7 @@ VRAnimation::VRAnimation(float _duration, float _offset, VRAnimCbPtr _fkt, float
     setName("anim"); // TODO: _fkt->getBaseName() is an empty string??
 }
 
-VRAnimation::~VRAnimation() {}
+VRAnimation::~VRAnimation() { stop(); }
 
 shared_ptr<VRAnimation> VRAnimation::create(string name) { return shared_ptr<VRAnimation>(new VRAnimation(name)); }
 shared_ptr<VRAnimation> VRAnimation::create(float duration, float offset, VRAnimCbPtr fkt, float start, float end, bool loop, bool owned) { return shared_ptr<VRAnimation>(new VRAnimation(duration, offset, fkt, start, end, loop, owned)); }

@@ -13,7 +13,9 @@ PyMethodDef VRPyMachiningSimulation::methods[] = {
     {"setCode", PyWrap(MachiningSimulation, setCode, "Set machining code", void, VRMachiningCodePtr) },
     {"setOnFinish", PyWrap(MachiningSimulation, setOnFinish, "Set callback to trigger when finished", void, VRUpdateCbPtr) },
     {"start", PyWrapOpt(MachiningSimulation, start, "Start simulation, optional speed multiplier", "1", void, double) },
-    {"stop", PyWrap(MachiningSimulation, stop, "Start simulation, optional speed multiplier", void) },
+    {"stop", PyWrap(MachiningSimulation, stop, "Stop simulation", void) },
+    {"pause", PyWrap(MachiningSimulation, pause, "Pause/unpause simulation", void, bool) },
+    {"isPaused", PyWrap(MachiningSimulation, isPaused, "Returns if sim paused", bool) },
     {"setOrigin", PyWrap(MachiningSimulation, setOrigin, "Set Origin", void, Vec3d) },
     {NULL}  /* Sentinel */
 };

@@ -46,6 +46,8 @@ class VRMachiningSimulation : public std::enable_shared_from_this<VRMachiningSim
 
 		void start(double sM = 1.0);
 		void stop();
+		void pause(bool b);
+		bool isPaused();
 };
 
 OSG_END_NAMESPACE;
