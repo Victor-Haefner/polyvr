@@ -57,10 +57,10 @@ void VRMachiningSimulation::runInstruction(float delay) {
 
 void VRMachiningSimulation::run(float t) {
 	if (doStop) return;
-	cout<<"Origin is : "<<origin<<endl;
 	Vec3d ee = origin + eeP0 + eeD * t;
 	kinematics->setEndEffector(Pose::create(ee));
 	if (t == 1) runInstruction();
+	//cout << "sim run, t: " << t << ", o: " << origin << ", e: " << ee << ", d: " << eeD << ", i: " << code->length() << endl;
 }
 
 void VRMachiningSimulation::setOrigin(Vec3d O){

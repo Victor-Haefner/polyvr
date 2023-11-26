@@ -212,7 +212,7 @@ void VRMachiningCode::computePaths(double speedMultiplier) {
             rotationCenter = cursor;
             for (auto& cmd : commands) {
                 if (cmd.code == 'V') speed = cmd.value * speedMultiplier;
-                if (cmd.code == 'F') speed = cmd.value * 0.001 * 0.01667 * speedMultiplier; // convert from mm/min to m/s
+                //if (cmd.code == 'F') speed = cmd.value * 0.001 * 0.01667 * speedMultiplier; // convert from mm/min to m/s
 
                 if (cmd.code == 'M') {
                     if (cmd.value == 0) ; // pause after last movement and wait for user to continue, TODO: implement a wait/continue mechanism
