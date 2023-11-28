@@ -573,8 +573,16 @@ void VRRobotArm::setGrab(float g) {
 }
 
 void VRRobotArm::moveOnPath(float t0, float t1, bool loop, float durationMultiplier) {
-    moveTo( robotPath->getPose(t0) );
-    addJob( job(robotPath, orientationPath, t0, t1, 2*robotPath->getLength() * durationMultiplier, loop) );
+    auto p0 = robotPath->getPose(t0);
+    if (orientationPath) {
+        auto o0 = orientationPath->getPose(t0);
+        p0->setDir(o0->dir());
+        p0->setUp(o0->up());
+    }
+    moveTo( p0 );
+
+    float T = 2*robotPath->getLength()/animSpeed * durationMultiplier;
+    addJob( job(robotPath, orientationPath, t0, t1, T, loop) );
 }
 
 void VRRobotArm::toggleGrab() { setGrab(1-grabDist); }
