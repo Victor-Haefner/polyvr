@@ -3,7 +3,7 @@
   <Objects>
     <Object base_name="Root" name_space="__global__" name_suffix="1" persistency="666" pickable="0" type="Object" visible="1">
       <Object ambient="0.3 0.3 0.3 1" base_name="light" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" name_space="__global__" name_suffix="0" on="1" persistency="666" photometricMap="" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" shadowVolume="1e+06 1e+06 1e+06 -1e+06 -1e+06 -1e+06 1" specular="0.1 0.1 0.1 1" type="Light" visible="1">
-        <Object accept_root="1" aspect="1" at="0.324945 0.197023 0.216703" at_dir="0" base_name="Default" camType="perspective" far="512" fov="1.0472" from="-0.201439 0.846466 1.08005" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
+        <Object accept_root="1" aspect="1" at="-0.125333 0 0.608198" at_dir="0" base_name="Default" camType="perspective" far="512" fov="1.0472" from="0.69238 0.742928 -0.0373358" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
           <attachments>
             <Node base_name="transform" name_space="VRAttachment" name_suffix="0" persistency="666" value=""/>
           </attachments>
@@ -55,6 +55,7 @@
 	VR.robot.showAnalytics(1)
 	
 	arm = VR.loadGeometry('robotArm.dae', preset='OSG')
+	arm.setTransform([0,0,0.7], [0,0,1])
 	tool = VR.loadGeometry('greifer.dae', 0, preset='OSG')
 	tool.setTransform([0,0,0.02],[0,0,-1],[0,1,0])
 	tool.addTag('grab')
@@ -113,8 +114,8 @@
 	
 	# end effector orientation
 	o = VR.Path()
-	o.addPoint([0,0,0],[0,0,1],[0,0,0],[0,1,0])
-	o.addPoint([0,0,0],[0,0,1],[0,0,0],[0,1,0])
+	o.addPoint([0,0,0],[0,0,-1],[0,0,0],[0,1,0])
+	o.addPoint([0,0,0],[0,0,-1],[0,0,0],[0,1,0])
 	o.compute(2)
 	
 	# visualize paths

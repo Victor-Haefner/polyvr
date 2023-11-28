@@ -20,9 +20,10 @@ class VRRobotArm {
             PathPtr po = 0;
             float t0 = 0;
             float t1 = 1;
-            bool loop = false;
             float d = 1;
-            job(PathPtr p, PathPtr po = 0, float t0 = 0, float t1 = 1, float d = 1, bool loop = false) : p(p), po(po), t0(t0), t1(t1), loop(loop), d(d) {;}
+            bool loop = false;
+            bool local = false;
+            job(PathPtr p, PathPtr po = 0, float t0 = 0, float t1 = 1, float d = 1, bool loop = false, bool local = false) : p(p), po(po), t0(t0), t1(t1), d(d), loop(loop), local(local) {;}
         };
 
         VRAnalyticGeometryPtr ageo = 0;
@@ -33,6 +34,8 @@ class VRRobotArm {
         PathPtr robotPath = 0;
         PathPtr orientationPath = 0;
         PosePtr lastPose = 0;
+        PosePtr gToL = 0;
+        PosePtr lToG = 0;
         VRMessageCbPtr eventCb = 0;
 
         list<job> job_queue;
@@ -65,6 +68,7 @@ class VRRobotArm {
         PosePtr getLastPose();
         double convertAngle(double a, int i);
         void applyAngles();
+        void updateLGTransforms();
         PosePtr calcForwardKinematics(vector<float> angles);
         vector<float> calcReverseKinematics(PosePtr p);
         void animOnPath(float t);
@@ -110,7 +114,7 @@ class VRRobotArm {
         void setPath(PathPtr p, PathPtr po = 0);
         PathPtr getPath();
         PathPtr getOrientationPath();
-        void moveOnPath(float t0, float t1, bool loop = false, float durationMultiplier = 1);
+        void moveOnPath(float t0, float t1, bool loop = false, float durationMultiplier = 1, bool local = false);
 };
 
 typedef shared_ptr<VRRobotArm> VRRobotArmPtr;

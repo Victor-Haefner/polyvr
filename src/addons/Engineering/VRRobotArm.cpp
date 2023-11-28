@@ -448,11 +448,13 @@ void VRRobotArm::animOnPath(float t) {
 
     auto updateTargets = [&](float t) {
         auto pose = job.p->getPose(t);
-        pose->normalizeOrientationVectors();
         if (job.po) {
             auto poseO = job.po->getPose(t);
             pose->set(pose->pos(), poseO->dir(), poseO->up());
+        } else {
+            pose->normalizeOrientationVectors();
         }
+        if (!job.local) pose = pose->multLeft(gToL);
         angle_targets = calcReverseKinematics(pose);
 
         //auto fP = calcForwardKinematics(angle_targets);
@@ -507,10 +509,8 @@ vector<VRTransformPtr> VRRobotArm::getParts() { return parts; }
 
 bool VRRobotArm::canReach(PosePtr p, bool local) {
     if (!local) {
-        auto root = dynamic_pointer_cast<VRTransform>( parts[0]->getParent() );
-        auto wpI = root->getWorldPose();
-        wpI->invert();
-        p = p->multLeft(wpI);
+        updateLGTransforms();
+        p = p->multLeft(gToL);
     }
 
     auto angles = calcReverseKinematics(p);
@@ -532,17 +532,12 @@ void VRRobotArm::moveTo(PosePtr p2, bool local) {
     stop();
     auto p1 = getPose();
     if (!p1) return;
-
-    if (!local) {
-        auto root = dynamic_pointer_cast<VRTransform>( parts[0]->getParent() );
-        auto wpI = root->getWorldPose();
-        wpI->invert();
-        p2 = p2->multLeft(wpI);
-    }
+    updateLGTransforms();
+    if (!local) p1 = p1->multLeft(lToG);
     //p1->setUp(-p1->up());
     //p1->setUp(Vec3d(0,1,0));
 
-    cout << "VRRobotArm::moveTo " << p1->toString() << "   ->   " << p2->toString() << endl;
+    //cout << "VRRobotArm::moveTo " << p1->toString() << "   ->   " << p2->toString() << endl;
 
     animPath->clear();
     animPath->addPoint( *p1 );
@@ -557,7 +552,7 @@ void VRRobotArm::moveTo(PosePtr p2, bool local) {
 
 
     //addJob( job(animPath, 0, 1, 2*animPath->getLength()) ); // TODO
-    addJob( job(animPath, 0, 0, 1, 2*animPath->getLength()/animSpeed, false) );
+    addJob( job(animPath, 0, 0, 1, 2*animPath->getLength()/animSpeed, false, local) );
 }
 
 void VRRobotArm::setGrab(float g) {
@@ -572,7 +567,7 @@ void VRRobotArm::setGrab(float g) {
     }
 }
 
-void VRRobotArm::moveOnPath(float t0, float t1, bool loop, float durationMultiplier) {
+void VRRobotArm::moveOnPath(float t0, float t1, bool loop, float durationMultiplier, bool local) {
     auto p0 = robotPath->getPose(t0);
     if (orientationPath) {
         auto o0 = orientationPath->getPose(t0);
@@ -580,14 +575,23 @@ void VRRobotArm::moveOnPath(float t0, float t1, bool loop, float durationMultipl
         p0->setUp(o0->up());
     }
     moveTo( p0 );
-
     float T = 2*robotPath->getLength()/animSpeed * durationMultiplier;
-    addJob( job(robotPath, orientationPath, t0, t1, T, loop) );
+    addJob( job(robotPath, orientationPath, t0, t1, T, loop, local) );
 }
 
 void VRRobotArm::toggleGrab() { setGrab(1-grabDist); }
 
-void VRRobotArm::setPath(PathPtr p, PathPtr po) { robotPath = p; orientationPath = po; }
+void VRRobotArm::updateLGTransforms() {
+    auto root = dynamic_pointer_cast<VRTransform>( parts[0]->getParent() );
+    lToG = root->getWorldPose();
+    gToL = lToG->inverse();
+}
+
+void VRRobotArm::setPath(PathPtr p, PathPtr po) {
+    robotPath = p;
+    orientationPath = po;
+}
+
 PathPtr VRRobotArm::getPath() { return robotPath; }
 PathPtr VRRobotArm::getOrientationPath() { return orientationPath; }
 
