@@ -32,6 +32,7 @@ class VRGuiManager {
 
         VRGuiManager();
         void update();
+        void onWindowClose();
 
     public:
         static VRGuiManager* get(bool init = true);

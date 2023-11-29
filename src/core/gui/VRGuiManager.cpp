@@ -1,4 +1,5 @@
 #include "VRGuiManager.h"
+#include "PolyVR.h"
 #include "imgui/VRImguiManager.h"
 #include "core/scene/VRScene.h"
 #include "core/scene/VRSceneLoader.h"
@@ -104,6 +105,9 @@ void VRGuiManager::init() {
 
     VRDeviceCbPtr fkt; // TODO: all those signals are not properly connected to, the fkt binding is destroyed when going out of scope
 
+    auto mgr = VRGuiSignals::get();
+    mgr->addCallback("glutCloseWindow", [&](VRGuiSignals::Options o) { onWindowClose(); return true; });
+
     fkt = VRDeviceCb::create("GUI_updateBits", bind(&VRGuiBits::update, g_bits) );
     VRGuiSignals::get()->getSignal("scene_changed")->add( fkt );
     VRGuiSignals::get()->getSignal("camera_added")->add( fkt );
@@ -177,6 +181,11 @@ void VRGuiManager::initImgui() {
 
 void VRGuiManager::initImguiPopup() {
     imguiMgr->initImguiPopup();
+}
+
+void VRGuiManager::onWindowClose() {
+    cout << "VRGuiManager::onWindowClose" << endl;
+    PolyVR::shutdown();
 }
 
 void VRGuiManager::setWindowTitle(string title) {
