@@ -32,7 +32,7 @@ Color3f toColor3f(Color4f c);
 class VRMaterial : public VRObject {
     public:
         static map<string, VRMaterialWeakPtr> materials;
-        static map<MaterialMTRecPtr, VRMaterialWeakPtr> materialsByPtr;
+        static map<Material*, VRMaterialWeakPtr> materialsByPtr;
         static map<size_t, size_t> fieldContainerMap;
 
         void setup();

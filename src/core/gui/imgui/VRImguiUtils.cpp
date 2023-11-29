@@ -83,25 +83,53 @@ ImVec4 colorFromString(const string& c) {
     return ImVec4(255,255,255,255);
 }
 
-OSG::VRProjectManagerPtr uiParameterStore;
+#include "core/utils/xml.h"
+
+map<string, string> uiParameterStore;
+string uiParameterFile;
 
 void uiInitStore() {
-    uiParameterStore = OSG::VRProjectManager::create();
-    uiParameterStore->newProject(absolute(".uiParameter.ini"), true);
-    uiParameterStore->load();
-}
+    uiParameterFile = absolute(".uiParameter.ini"); 
+    OSG::XML xml;
+    xml.read(uiParameterFile, false);
+    OSG::XMLElementPtr root = xml.getRoot();
 
-void uiCloseStore() {
-    uiParameterStore.reset();
+    auto params = root->getChild("params");
+    if (!params) return;
+    for (auto el : params->getChildren()) {
+        string name = el->getName();
+        uiParameterStore[name] = el->getText();
+    }
 }
 
 void uiStoreParameter(string name, string value) {
-    if (uiParameterStore) uiParameterStore->setSetting(name, value);
+    uiParameterStore[name] = value;
+
+    OSG::XML xml;
+    OSG::XMLElementPtr root = xml.newRoot("Project", "", ""); // name, ns_uri, ns_prefix
+    OSG::XMLElementPtr params = root->addChild("params");
+    for (auto t : uiParameterStore) {
+        auto e2 = params->addChild(t.first);
+        e2->setText(t.second);
+    }
+    xml.write(uiParameterFile);
+}
+
+void uiCloseStore() {
+    uiParameterStore.clear();
 }
 
 string uiGetParameter(string name, string def) {
-    if (uiParameterStore) return uiParameterStore->getSetting(name, def);
-    else return "";
+    if (uiParameterStore.count(name)) return uiParameterStore[name];
+    else return def;
 }
 
+float strWidth(const string& s) { // TODO
+    ImGuiStyle& style = ImGui::GetStyle();
+    ImGuiIO& io = ImGui::GetIO();
+    
+    float p = style.FramePadding.x * 2.0f;
+    //return ImGui::CalcTextSize(s.c_str()).x + p; // CalcTextSize may crash when starting maximized
+    return s.size()*6.5*io.FontGlobalScale + p;
+}
 

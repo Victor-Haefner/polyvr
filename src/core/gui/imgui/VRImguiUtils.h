@@ -55,6 +55,8 @@ class ImWidget {
 
 ImVec4 colorFromString(const string& c);
 
+float strWidth(const string& s);
+
 void uiInitStore();
 void uiCloseStore();
 void uiStoreParameter(string name, string value);

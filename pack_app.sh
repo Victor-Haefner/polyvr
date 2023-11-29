@@ -62,7 +62,7 @@ cat <<EOT >> $pckFolder/startApp.bat
 set PATH=%PATH%;%~f0\..\engine\libs;
 set PYTHONPATH=%PYTHONPATH%;%~f0\..\engine\pyLibs
 cd engine
-polyvr.exe --fullscreen=1 --application ../$appProject
+polyvr.exe --maximized=1 --application ../$appProject
 EOT
 else
 cat <<EOT >> $pckFolder/startApp.bat

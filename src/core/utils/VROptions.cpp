@@ -59,5 +59,8 @@ void VROptions::parse(int _argc, char** _argv) {
         cout << desc << endl;
     }
 
+    //setOption<bool>("maximized", true);
+    //setOption<string>("application", "C:\\Users\\victo\\Projects\\lernfabrik\\factory.pvr");
+
     cout << endl;
 }

@@ -183,16 +183,17 @@ void VRGlutEditor::setMaximized(bool b) {
 
     if (b && !fullscreen) {
         cout << " glut maximize!" << endl;
-        resizeGLWindow(0,0,width,height);
+        resizeGLWindow(0, 0, width, height);
         maximized = b;
 
         glutSetWindow(winUI);
         glutHideWindow();
 
         glutSetWindow(topWin);
-        glutPositionWindow(0,0);
-        glutReshapeWindow(width,height);
-    } else {
+        glutPositionWindow(0, 0);
+        glutReshapeWindow(width, height);
+    }
+    else {
         cout << " glut unmaximize!" << endl;
         maximized = b;
         on_resize_window(width, height);

@@ -104,7 +104,6 @@ void ImScriptList::setColor(string name, string fg, string bg) {
 }
 
 void ImScriptList::computeMinWidth() {
-    ImGuiStyle& style = ImGui::GetStyle();
     ImGuiIO& io = ImGui::GetIO();
     float fs = io.FontGlobalScale;
 
@@ -122,7 +121,7 @@ void ImScriptList::computeMinWidth() {
     width = max(width, float(Rinput+padding));
     for (auto& g : groups) {
         for (auto& s : g.second.scripts) {
-            auto R = ImGui::CalcTextSize( s.name.c_str() ).x + style.FramePadding.x * 2.0f;
+            auto R = strWidth( s.name );
             width = max(width, R*fs+padding);
         }
     }
@@ -154,8 +153,7 @@ void ImScriptList::renderScriptEntry(ImScriptEntry& scriptEntry) {
 		ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 2);
 
         if (input) {
-            ImGuiStyle& style = ImGui::GetStyle();
-            Rinput = ImGui::CalcTextSize( input->value.c_str() ).x + style.FramePadding.x * 2.0f + 5;
+            Rinput = strWidth( input->value ) + 5;
             if (input->render(Rinput)) {
                 script = input->value;
                 selected = bID;
