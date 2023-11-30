@@ -78,7 +78,12 @@ string VRGuiManager::genUUID() {
 void VRGuiManager::init() {
     cout << "Init VRGuiManager.." << endl;
     mtx = new VRMutex();
-    standalone = VROptions::get()->getOption<bool>("standalone") || nogtk;
+    standalone = VROptions::get()->getOption<bool>("standalone");
+    headless = VROptions::get()->getOption<bool>("headless");
+
+    if (headless) {
+        return;
+    }
 
     //VRGuiBuilder::get(standalone);
     if (standalone) {

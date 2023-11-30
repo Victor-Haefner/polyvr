@@ -22,7 +22,7 @@ void saveScene(string path = "", bool saveas = false, string encryptionKey = "")
 
 class VRGuiManager {
     private:
-        bool nogtk = false;
+        bool headless = false;
         bool standalone = false;
 	    VRUpdateCbPtr updatePtr;
         VRThreadCbPtr gtkUpdateCb;

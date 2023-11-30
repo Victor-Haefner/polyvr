@@ -18,7 +18,7 @@ VROptions::VROptions() : desc("Configuration ") {
     addOption<bool>(false, "fullscreen", "start with fullscreen GL window");
     addOption<bool>(false, "ignoreHMD", "ignore HMD if present");
     addOption<bool>(false, "active_stereo", "use active_stereo or not");
-    addOption<bool>(false, "nogtk", "start without UI, even without GL canvas, you should add a glut window in the setup file");
+    addOption<bool>(false, "headless", "start without UI, even without a window, run application with --application=\"path/to/app\"");
     addOption<string>("", "application", "specify an application file to load at startup");
     addOption<string>("", "decryption", "pass information to decrypt a secured application, \"key:YOURKEY\"");
     addOption<string>("", "setup", "specify the hardware setup file to load, ommiting this will load the last setup");
@@ -59,8 +59,9 @@ void VROptions::parse(int _argc, char** _argv) {
         cout << desc << endl;
     }
 
+    // for testing
+    //setOption<bool>("headless", true);
     //setOption<bool>("maximized", true);
-    //setOption<string>("application", "C:\\Users\\victo\\Projects\\lernfabrik\\factory.pvr");
 
     cout << endl;
 }
