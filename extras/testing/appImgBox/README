@@ -1,0 +1,6 @@
+copy app image in this folder
+
+adapt config
+build and run docker with
+
+docker build -t appimgbox . ; docker rm test-container ; docker run -d --device /dev/fuse --privileged --name test-container appimgbox && docker logs test-container
