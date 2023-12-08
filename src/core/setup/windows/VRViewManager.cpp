@@ -80,7 +80,9 @@ void VRViewManager::removeView(int i) {
 VRTransformPtr VRViewManager::getViewUser(int i) { if (checkView(i)) return views[i]->getUser(); else return 0; }
 VRViewPtr VRViewManager::getView(int i) { if (checkView(i)) return views[i]; else return 0; }
 VRViewPtr VRViewManager::getView(string name) {
-    for (auto v : views) if (v.second->getName() == name) return v.second;
+    for (auto v : views) {
+        if (v.second->getName() == name) return v.second;
+    }
     return 0;
 }
 

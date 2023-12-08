@@ -4,7 +4,20 @@
 #include "core/gui/VRGuiManager.h"
 #include "core/gui/imgui/imWidgets/VRImguiInput.h"
 
-ImSetupManager::ImSetupManager() : ImWidget("SetupManager"), tree("setup"), NxNy("NxNy", "NxNy") {
+ImSetupManager::ImSetupManager() : ImWidget("SetupManager"),
+        tree("setup"),
+        viewPosition("viewPos", "Area"),
+        viewSize("viewSize", "Size"),
+        viewProjUser("viewProjUser", "User"),
+        viewProjCenter("viewProjCenter", "Center"),
+        viewProjNormal("viewProjNormal", "Normal"),
+        viewProjUp("viewProjUp", "Up"),
+        viewProjSize("viewProjSize", "Size"),
+        viewProjShear("viewProjShear", "Shear"),
+        viewProjWarp("viewProjWarp", "Warp"),
+        viewMirrorPos("viewMPos", "Position"),
+        viewMirrorNorm("viewMNorm", "Normal"),
+        NxNy("NxNy", "Nx Ny") {
     auto mgr = OSG::VRGuiSignals::get();
     mgr->addCallback("updateSetupsList", [&](OSG::VRGuiSignals::Options o){ updateSetupsList(o["setups"]); return true; } );
     mgr->addCallback("setCurrentSetup", [&](OSG::VRGuiSignals::Options o){ current_setup = toInt(o["setup"]); return true; } );
@@ -12,9 +25,36 @@ ImSetupManager::ImSetupManager() : ImWidget("SetupManager"), tree("setup"), NxNy
     mgr->addCallback("on_setup_tree_append", [&](OSG::VRGuiSignals::Options o) { treeAppend(o["ID"], o["label"], o["type"], o["parent"]); return true; } );
     mgr->addCallback("on_setup_tree_expand", [&](OSG::VRGuiSignals::Options o) { tree.expandAll(); return true; } );
 
+    mgr->addCallback("on_setup_view", [&](OSG::VRGuiSignals::Options o) { selectView(o); return true; } );
     mgr->addCallback("on_setup_multiwindow", [&](OSG::VRGuiSignals::Options o) { selectWindow(o); return true; } );
 
     tree.setNodeFlags( ImGuiTreeNodeFlags_DefaultOpen );
+}
+
+void ImSetupManager::selectView(OSG::VRGuiSignals::Options o) {
+    hideAll();
+    showViewport = true;
+
+    selected = o["name"];
+    viewPosition.set4( o["position"] );
+    viewSize.set2( o["size"]);
+    viewStereo = toBool(o["stereo"]);
+    viewEyesInverted = toBool(o["eyesInverted"]);
+    viewActiveStereo = toBool(o["activeStereo"]);
+    viewProjection = toBool(o["projection"]);
+    viewMirror = toBool(o["mirror"]);
+    eyeSeparation = toFloat(o["eyeSeparation"]);
+    viewUserBeacon = o["userBeacon"];
+
+    viewProjUser.set3( o["projUser"]);
+    viewProjCenter.set3( o["projCenter"]);
+    viewProjNormal.set3( o["projNormal"]);
+    viewProjUp.set3( o["projUp"]);
+    viewProjSize.set3( o["projSize"]);
+    viewProjShear.set2( o["projShear"]);
+    viewProjWarp.set2( o["projWarp"]);
+    viewMirrorPos.set3( o["mirrorPos"]);
+    viewMirrorNorm.set3( o["mirrorNorm"]);
 }
 
 void ImSetupManager::selectWindow(OSG::VRGuiSignals::Options o) {
@@ -170,27 +210,44 @@ void ImSetupManager::begin() {
         if (showViewport) {
             ImGui::Text(("Viewport: " + selected).c_str());
             ImGui::Indent(10);
-            // Area
-            //  Vec2 x
-            //  Vec2 y
-            // Vec2 Size (resolution)
-            // checkbutton statistics
-            // checkbutton stereo
+
+            int w3 = w2-20;
+            viewPosition.render(w2-10);
+            viewSize.render(w2-10);
+
+            if (ImGui::Checkbox("Stereo", &viewStereo)) uiSignal("setup_set_view_stereo", {{"active", toString(viewStereo)}});
+
+            if (viewStereo) {
+                ImGui::Indent(10);
+                //float eyeSeparation = 0; // TODO
+                if (ImGui::Checkbox("Invert eyes", &viewEyesInverted)) uiSignal("setup_set_view_projection", {{"active", toString(viewEyesInverted)}});
+                if (ImGui::Checkbox("Active stereo", &viewActiveStereo)) uiSignal("setup_set_view_projection", {{"active", toString(viewActiveStereo)}});
+                ImGui::Unindent(10);
+            }
+
+            if (ImGui::Checkbox("Projection", &viewProjection)) uiSignal("setup_set_view_projection", {{"active", toString(viewProjection)}});
+            if (viewProjection) {
+                ImGui::Indent(10);
+                //string viewUserBeacon;
+                // checkbutton user  combo trackers // TODO
+                viewProjCenter.render(w3);
+                viewProjUser.render(w3);
+                viewProjNormal.render(w3);
+                viewProjUp.render(w3);
+                viewProjSize.render(w3);
+                viewProjShear.render(w3);
+                viewProjWarp.render(w3);
+                ImGui::Unindent(10);
+            }
+
+            if (ImGui::Checkbox("Mirror", &viewMirror)) uiSignal("setup_set_view_mirror", {{"active", toString(viewMirror)}});
+            if (viewMirror) {
+                ImGui::Indent(10);
+                viewMirrorPos.render(w3);
+                viewMirrorNorm.render(w3);
+                ImGui::Unindent(10);
+            }
             // Eye Separation: entry 0.06 [m]
-            // checkbutton invert
-            // checkbutton active stereo
-            // checkbutton projection
-            // checkbutton user  combo trackers
-            // Vec3 center
-            // Vec3 user
-            // Vec3 normal
-            // Vec3 up
-            // Vec2 size
-            // Vec2 shear
-            // Vec2 warp
-            // checkbutton mirror:
-            // Vec3 mirror origin
-            // Vec3 mirror normal
             ImGui::Unindent(10);
         }
 

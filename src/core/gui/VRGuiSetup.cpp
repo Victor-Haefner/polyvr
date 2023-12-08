@@ -40,42 +40,13 @@
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-// VRGuiSetup_ModelColumns
-//  add(name); add(type); add(obj);
-
-// VRGuiSetup_ServerColumns
-//  add(y); add(x); add(server);
-
-// VRGuiSetup_UserColumns
-//  add(name); add(user);
-
-void VRGuiSetup::closeAllExpander() {
-    /*setWidgetVisibility("expander3", false, true);
-    setWidgetVisibility("expander4", false, true);
-    setWidgetVisibility("expander5", false, true);
-    setWidgetVisibility("expander6", false, true);
-    setWidgetVisibility("expander7", false, true);
-    setWidgetVisibility("expander8", false, true);
-    setWidgetVisibility("expander20", false, true);
-    setWidgetVisibility("expander21", false, true);
-    setWidgetVisibility("expander22", false, true);
-    setWidgetVisibility("expander23", false, true);
-    setWidgetVisibility("expander24", false, true);
-    setWidgetVisibility("expander25", false, true);
-    setWidgetVisibility("expander26", false, true);
-    setWidgetVisibility("expander28", false, true);
-    setWidgetVisibility("expander29", false, true);
-    setWidgetVisibility("expander30", false, true);
-    setWidgetVisibility("expander31", false, true);*/
-}
-
 void VRGuiSetup::updateObjectData() {
     bool device = false;
     guard = true;
 
     auto scene = VRScene::getCurrent();
 
-    if (selected_type == "window") {
+    if (selected_type == "window" && window) {
         if (window->hasType("distributed")) { // multiwindow
             VRMultiWindowPtr mwin = dynamic_pointer_cast<VRMultiWindow>(window);
             if (mwin) {
@@ -112,38 +83,30 @@ void VRGuiSetup::updateObjectData() {
         //setCombobox("combobox15", getListStorePos("msaa_list", window->getMSAA()));
     }
 
-    if (selected_type == "view") {
-        /*setWidgetVisibility("expander8", true, true);
-
-        VRView* view = (VRView*)selected_object;
-
+    if (selected_type == "view" && view) {
         Vec4d p = view->getPosition();
-        setTextEntry("entry52", toString(p[0]).c_str());
-        setTextEntry("entry53", toString(p[2]).c_str());
-        setTextEntry("entry56", toString(p[1]).c_str());
-        setTextEntry("entry57", toString(p[3]).c_str());
 
-        setToggleButton("checkbutton8", view->isStereo());
-        setToggleButton("checkbutton9", view->eyesInverted());
-        setToggleButton("checkbutton10", view->activeStereo());
-        setToggleButton("checkbutton11", view->isProjection());
-        setToggleButton("checkbutton30", view->getMirror());
-
-        setTextEntry("entry12", toString(view->getEyeSeparation()).c_str());
-        int uID = getListStorePos("user_list", view->getUser()->getName());
-        setCombobox("combobox18", uID);
-        setToggleButton("checkbutton26", uID != -1);
-
-        userEntry.set(view->getProjectionUser());
-        centerEntry.set(view->getProjectionCenter());
-        normalEntry.set(view->getProjectionNormal());
-        upEntry.set(view->getProjectionUp());
-        sizeEntry.set(view->getProjectionSize());
-        shearEntry.set(view->getProjectionShear());
-        warpEntry.set(view->getProjectionWarp());
-        vsizeEntry.set(Vec2d(view->getSize()));
-        mirrorPosEntry.set(view->getMirrorPos());
-        mirrorNormEntry.set(view->getMirrorNorm());*/
+        uiSignal( "on_setup_view", {
+            {"name", view->getName()},
+            {"position", toString(p)},
+            {"size", toString(view->getSize())},
+            {"stereo", toString(view->isStereo())},
+            {"eyesInverted", toString(view->eyesInverted())},
+            {"activeStereo", toString(view->activeStereo())},
+            {"projection", toString(view->isProjection())},
+            {"mirror", toString(view->getMirror())},
+            {"eyeSeparation", toString(view->getEyeSeparation())},
+            {"userBeacon", view->getUser() ? view->getUser()->getName() : ""},
+            {"projUser", toString(view->getProjectionUser())},
+            {"projCenter", toString(view->getProjectionCenter())},
+            {"projNormal", toString(view->getProjectionNormal())},
+            {"projUp", toString(view->getProjectionUp())},
+            {"projSize", toString(view->getProjectionSize())},
+            {"projShear", toString(view->getProjectionShear())},
+            {"projWarp", toString(view->getProjectionWarp())},
+            {"mirrorPos", toString(view->getMirrorPos())},
+            {"mirrorNorm", toString(view->getMirrorNorm())}
+        } );
     }
 
     if (selected_type == "vrpn_device") {
@@ -1510,7 +1473,7 @@ bool VRGuiSetup::updateSetup() {
         vector<VRViewPtr> views = w->getViews();
         for (uint i=0; i<views.size(); i++) {
             VRViewPtr v = views[i];
-            string vname = name + toString(i);
+            string vname = name;
             string viewID = "view$"+vname;
             uiSignal("on_setup_tree_append", {{ "ID",viewID }, { "label",vname }, { "type","view" }, { "parent",winID }});
         }

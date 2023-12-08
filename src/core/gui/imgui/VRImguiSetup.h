@@ -32,6 +32,26 @@ class ImSetupManager : public ImWidget {
         bool showSlave = false;
         bool showScript = false;
 
+        // view
+        Im_Vector viewPosition;
+        Im_Vector viewSize;
+        bool viewStereo = 0;
+        bool viewEyesInverted = 0;
+        bool viewActiveStereo = 0;
+        bool viewProjection = 0;
+        bool viewMirror = 0;
+        float eyeSeparation = 0;
+        string viewUserBeacon;
+        Im_Vector viewProjUser;
+        Im_Vector viewProjCenter;
+        Im_Vector viewProjNormal;
+        Im_Vector viewProjUp;
+        Im_Vector viewProjSize;
+        Im_Vector viewProjShear;
+        Im_Vector viewProjWarp;
+        Im_Vector viewMirrorPos;
+        Im_Vector viewMirrorNorm;
+
         // remote window
         string remoteWinState;
         int winConnType = 0;
@@ -53,6 +73,7 @@ class ImSetupManager : public ImWidget {
 
         void hideAll();
         void treeAppend(string ID, string label, string type, string parent);
+        void selectView(map<string,string> o);
         void selectWindow(map<string,string> o);
 
     public:

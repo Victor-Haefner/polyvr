@@ -161,7 +161,6 @@ class VRGuiSetup {
 
         void on_script_changed();
 
-        void closeAllExpander();
         void updateObjectData();
 
         //void setTreeRow(_GtkTreeStore* tree_store, _GtkTreeIter* row, string name, string type, gpointer ptr, string fg = "#000000", string bg = "#FFFFFF");
