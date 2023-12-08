@@ -392,10 +392,6 @@ void VRGuiSetup::on_treeview_select(string selected) {
     auto setup = VRSetup::getCurrent();
     if (!setup) return;
 
-    selected_type = splitString(selected,'$')[0];
-    selected_name = splitString(selected,'$')[1];
-
-
     window = 0;
     view = 0;
     node = 0;
@@ -403,6 +399,17 @@ void VRGuiSetup::on_treeview_select(string selected) {
     device = 0;
     art_device = 0;
     vrpn_tracker = 0;
+
+    selected_type = "";
+    selected_name = "";
+
+    auto parts = splitString(selected,'$');
+    if (parts.size() == 1) selected_name = parts[0];
+    if (parts.size() != 2) return;
+
+    selected_type = parts[0];
+    selected_name = parts[1];
+    //cout << "on_treeview_select " << selected_type << ", " << selected_name << endl;
 
     if (selected_type == "window") window = setup->getWindow(selected_name);
     else if (selected_type == "view") view = setup->getView(selected_name);
