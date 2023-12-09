@@ -40,8 +40,9 @@ class ImSetupManager : public ImWidget {
         bool viewActiveStereo = 0;
         bool viewProjection = 0;
         bool viewMirror = 0;
-        float eyeSeparation = 0;
-        string viewUserBeacon;
+        ImInput eyeSeparation;
+        vector<string> view_users;
+        int current_view_user = 0;
         Im_Vector viewProjUser;
         Im_Vector viewProjCenter;
         Im_Vector viewProjNormal;
@@ -81,6 +82,7 @@ class ImSetupManager : public ImWidget {
         void begin() override;
 
         void updateSetupsList(string s);
+        void updateViewTrackersList(string s);
 };
 
 #endif // VRIMGUISETUP_H_INCLUDED

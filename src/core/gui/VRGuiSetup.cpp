@@ -1490,6 +1490,7 @@ bool VRGuiSetup::updateSetup() {
 
 #ifndef WITHOUT_ART
     // ART
+    vector<string> viewTrackers;
     for (int ID : setup->getART()->getARTDevices() ) {
         ART_devicePtr dev = setup->getART()->getARTDevice(ID);
 
@@ -1499,12 +1500,9 @@ bool VRGuiSetup::updateSetup() {
         string artID = "art_device$"+toString(ID);
         uiSignal("on_setup_tree_append", {{ "ID",artID }, { "label",name }, { "type","art_device" }, { "parent","SecART" }});
 
-        /*if (dev->ent) {
-            gtk_list_store_append(user_list, &row);
-            gtk_list_store_set (user_list, &row, 0, dev->ent->getName().c_str(), -1);
-            gtk_list_store_set (user_list, &row, 1, dev->ent.get(), -1);
-        }*/
+        if (dev->ent) viewTrackers.push_back( dev->ent->getName() );
     }
+    uiSignal("updateViewTrackersList", {{"trackers", toString(viewTrackers)}});
 #endif
 
     /*for (auto s : setup->getScripts()) {
