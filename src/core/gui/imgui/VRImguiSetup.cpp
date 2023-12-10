@@ -244,7 +244,7 @@ void ImSetupManager::begin() {
                 ImGui::SameLine();
                 ImGui::SetNextItemWidth(150);
                 if (ImGui::Combo("##ViewTracker", &current_view_user, &tmpViewUsers[0], tmpViewUsers.size())) {
-                    uiSignal("setup_switch_view_user", {{"user",view_users[current_view_user]}});
+                    uiSignal("setup_switch_view_user", {{"tracker",view_users[current_view_user]}});
                 }
 
                 if (viewProjCenter.render(w3)) viewProjCenter.signal("setup_set_view_proj_center");

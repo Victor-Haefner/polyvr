@@ -91,16 +91,16 @@ class VRGuiSetup {
         void on_server_edit(int x, int y, string sID);
         void on_connect_mw_clicked();
 
-        void on_toggle_view_stats();
-        void on_toggle_display_stereo();
-        void on_toggle_display_projection();
-        void on_toggle_view_invert();
-        void on_toggle_view_active_stereo();
-        void on_toggle_view_user();
-        void on_toggle_view_mirror();
-        void on_change_view_user();
-        void on_pos_edit();
-        void on_eyesep_edit();
+        void on_toggle_view_stats(bool b);
+        void on_toggle_display_stereo(bool b);
+        void on_toggle_display_projection(bool b);
+        void on_toggle_view_invert(bool b);
+        void on_toggle_view_active_stereo(bool b);
+        void on_toggle_view_user(bool b);
+        void on_toggle_view_mirror(bool b);
+        void on_change_view_user(string name);
+        void on_pos_edit(Vec4d p);
+        void on_eyesep_edit(float d);
 
         void on_displays_edit_offset();
         void on_view_size_edit(Vec2d v);

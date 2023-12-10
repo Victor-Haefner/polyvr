@@ -599,219 +599,126 @@ void VRGuiSetup::on_connect_mw_clicked() {
 
 // view options
 
-void VRGuiSetup::on_toggle_view_stats() {
+void VRGuiSetup::on_toggle_view_stats(bool b) {
     if (guard) return;
     if (selected_type != "view") return;
-
-    /*bool b = getCheckButtonState("checkbutton4");
-    VRView* view = (VRView*)selected_object;
-    view->showStats(b);*/
+    if (view) view->showStats(b);
 }
 
-void VRGuiSetup::on_toggle_display_stereo() {
-    /*bool b = getCheckButtonState("checkbutton8");
-    VRGuiWidget("table7").setSensitivity(b);
+void VRGuiSetup::on_toggle_display_stereo(bool b) {
     if (guard) return;
-
     if (selected_type != "view") return;
-    VRView* view = (VRView*)selected_object;
-
-    view->setStereo(b);
-    VRGuiWidget("toolbutton12").setSensitivity(true);*/
+    if (view) view->setStereo(b);
 }
 
-void VRGuiSetup::on_toggle_display_projection() {
-    /*bool b = getCheckButtonState("checkbutton11");
-    VRGuiWidget("table8").setSensitivity(b);
+void VRGuiSetup::on_toggle_display_projection(bool b) {
     if (guard) return;
-
     if (selected_type != "view") return;
-    VRView* view = (VRView*)selected_object;
-
-    view->setProjection(b);
-    VRGuiWidget("toolbutton12").setSensitivity(true);*/
+    if (view) view->setProjection(b);
 }
 
-void VRGuiSetup::on_toggle_view_invert() {
+void VRGuiSetup::on_toggle_view_invert(bool b) {
     if (guard) return;
     if (selected_type != "view") return;
-
-    /*VRView* view = (VRView*)selected_object;
-
-    bool b = getCheckButtonState("checkbutton9");
-    view->swapEyes(b);
-    VRGuiWidget("toolbutton12").setSensitivity(true);*/
+    if (view) view->swapEyes(b);
 }
 
-void VRGuiSetup::on_toggle_view_active_stereo() {
+void VRGuiSetup::on_toggle_view_active_stereo(bool b) {
     if (guard) return;
     if (selected_type != "view") return;
-
-    /*VRView* view = (VRView*)selected_object;
-
-    bool b = getCheckButtonState("checkbutton10");
-    view->setActiveStereo(b);
-    VRGuiWidget("toolbutton12").setSensitivity(true);*/
+    if (view) view->setActiveStereo(b);
 }
 
-void VRGuiSetup::on_pos_edit() {
+void VRGuiSetup::on_pos_edit(Vec4d pos) {
     if (guard) return;
     if (selected_type != "view") return;
-
-    /*string x0 = getTextEntry("entry52");
-    string x1 = getTextEntry("entry53");
-    string y0 = getTextEntry("entry56");
-    string y1 = getTextEntry("entry57");
-    Vec4d pos = toValue<Vec4d>(x0 + " " + y0 + " " + x1 + " " + y1);
-
-    VRView* view = (VRView*)selected_object;
     view->setPosition(pos);
-    VRGuiWidget("toolbutton12").setSensitivity(true);*/
 }
 
-void VRGuiSetup::on_eyesep_edit() {
+void VRGuiSetup::on_eyesep_edit(float d) {
     if (guard) return;
     if (selected_type != "view") return;
-
-    /*string es = getTextEntry("entry12");
-
-    VRView* view = (VRView*)selected_object;
-    view->setStereoEyeSeparation(toFloat(es));
-    VRGuiWidget("toolbutton12").setSensitivity(true);*/
+    if (view) view->setStereoEyeSeparation(d);
 }
 
-void VRGuiSetup::on_toggle_view_user() {
+void VRGuiSetup::on_toggle_view_user(bool b) {
     if (guard) return;
     if (selected_type != "view") return;
-
-    /*bool b = getCheckButtonState("checkbutton26");
-    VRView* view = (VRView*)selected_object;
-    if (!b) view->setUser(0);
-    else {
-        // VRGuiSetup_UserColumns cols; //  add(name); add(user);
-        VRGuiCombobox combobox("combobox18");
-        auto U = combobox.getSelectedValue(1);
-        if (U) {
-            VRTransformPtr u = ( (VRTransform*)U )->ptr();
-            view->setUser(u);
-        }
-    }
-    VRGuiWidget("toolbutton12").setSensitivity(true);*/
+    //if (!b) view->setUser(0);
+    //else view->setUser(u);
 }
 
-void VRGuiSetup::on_toggle_view_mirror() {
+void VRGuiSetup::on_toggle_view_mirror(bool b) {
     if (guard) return;
     if (selected_type != "view") return;
-
-    /*bool b = getCheckButtonState("checkbutton30");
-    VRView* view = (VRView*)selected_object;
-    view->setMirror(b);
-    VRGuiWidget("toolbutton12").setSensitivity(true);*/
+    if (view) view->setMirror(b);
 }
 
 void VRGuiSetup::on_view_mirror_pos_edit(Vec3d v) {
     if (guard) return;
     if (selected_type != "view") return;
-
-    /*VRView* view = (VRView*)selected_object;
-    view->setMirrorPos(v);
-    VRGuiWidget("toolbutton12").setSensitivity(true);*/
+    if (view) view->setMirrorPos(v);
 }
 
 void VRGuiSetup::on_view_mirror_norm_edit(Vec3d v) {
     if (guard) return;
     if (selected_type != "view") return;
-
-    /*VRView* view = (VRView*)selected_object;
-    view->setMirrorNorm(v);
-    VRGuiWidget("toolbutton12").setSensitivity(true);*/
+    if (view) view->setMirrorNorm(v);
 }
 
-void VRGuiSetup::on_change_view_user() {
+void VRGuiSetup::on_change_view_user(string name) {
     if (guard) return;
     if (selected_type != "view") return;
-
-    // VRGuiSetup_UserColumns cols; //  add(name); add(user);
-    /*VRGuiCombobox combobox("combobox18");
-    auto U = combobox.getSelectedValue(1);
-    if (!U) return;
-    VRTransformPtr u = ( (VRTransform*)U )->ptr();
-
-    VRView* view = (VRView*)selected_object;
-    view->setUser(u);
-    VRGuiWidget("toolbutton12").setSensitivity(true);*/
+    auto u = dynamic_pointer_cast<VRTransform>( VRScene::getCurrent()->get(name) );
+    if (view && u) view->setUser(u);
 }
 
 void VRGuiSetup::on_view_size_edit(Vec2d v) {
     if (guard) return;
     if (selected_type != "view") return;
-
-    /*VRView* view = (VRView*)selected_object;
-    view->setSize(Vec2i(v));
-    VRGuiWidget("toolbutton12").setSensitivity(true);*/
+    if (view) view->setSize(Vec2i(v));
 }
 
 void VRGuiSetup::on_proj_user_edit(Vec3d v) {
     if (guard) return;
     if (selected_type != "view") return;
-
-    /*VRView* view = (VRView*)selected_object;
-    view->setProjectionUser(v);
-    VRGuiWidget("toolbutton12").setSensitivity(true);*/
+    if (view) view->setProjectionUser(v);
 }
 
 void VRGuiSetup::on_proj_center_edit(Vec3d v) {
     if (guard) return;
     if (selected_type != "view") return;
-
-    /*VRView* view = (VRView*)selected_object;
-    view->setProjectionCenter(v);
-    VRGuiWidget("toolbutton12").setSensitivity(true);*/
+    if (view) view->setProjectionCenter(v);
 }
 
 void VRGuiSetup::on_proj_normal_edit(Vec3d v) {
     if (guard) return;
     if (selected_type != "view") return;
-
-    /*VRView* view = (VRView*)selected_object;
-    view->setProjectionNormal(v);
-    VRGuiWidget("toolbutton12").setSensitivity(true);*/
+    if (view) view->setProjectionNormal(v);
 }
 
 void VRGuiSetup::on_proj_up_edit(Vec3d v) {
     if (guard) return;
     if (selected_type != "view") return;
-
-    /*VRView* view = (VRView*)selected_object;
-    view->setProjectionUp(v);
-    VRGuiWidget("toolbutton12").setSensitivity(true);*/
+    if (view) view->setProjectionUp(v);
 }
 
 void VRGuiSetup::on_proj_size_edit(Vec2d v) {
     if (guard) return;
     if (selected_type != "view") return;
-
-    /*VRView* view = (VRView*)selected_object;
-    view->setProjectionSize(v);
-    VRGuiWidget("toolbutton12").setSensitivity(true);*/
+    if (view) view->setProjectionSize(v);
 }
 
 void VRGuiSetup::on_proj_shear_edit(Vec2d v) {
     if (guard) return;
     if (selected_type != "view") return;
-
-    /*VRView* view = (VRView*)selected_object;
-    view->setProjectionShear(v);
-    VRGuiWidget("toolbutton12").setSensitivity(true);*/
+    if (view) view->setProjectionShear(v);
 }
 
 void VRGuiSetup::on_proj_warp_edit(Vec2d v) {
     if (guard) return;
     if (selected_type != "view") return;
-
-    /*VRView* view = (VRView*)selected_object;
-    view->setProjectionWarp(v);
-    VRGuiWidget("toolbutton12").setSensitivity(true);*/
+    if (view) view->setProjectionWarp(v);
 }
 
 #ifndef WITHOUT_VRPN
@@ -1348,6 +1255,25 @@ VRGuiSetup::VRGuiSetup() {
     mgr->addCallback("setup_delete", [&](OSG::VRGuiSignals::Options o) { on_del_clicked(); return true; }, true );
     mgr->addCallback("setup_save", [&](OSG::VRGuiSignals::Options o) { on_save_clicked(); return true; }, true );
     mgr->addCallback("setup_saveas", [&](OSG::VRGuiSignals::Options o) { on_save_as_clicked(); return true; }, true );
+
+    mgr->addCallback("setup_set_view_position", [&](OSG::VRGuiSignals::Options o) { on_pos_edit(Vec4d(toFloat(o["x"]), toFloat(o["y"]), toFloat(o["z"]), toFloat(o["w"]))); return true; }, true );
+    mgr->addCallback("setup_set_view_size", [&](OSG::VRGuiSignals::Options o) { on_view_size_edit(Vec2d(toFloat(o["x"]), toFloat(o["y"]))); return true; }, true );
+    mgr->addCallback("setup_set_view_stereo", [&](OSG::VRGuiSignals::Options o) { on_toggle_display_stereo(toBool(o["active"])); return true; }, true );
+    mgr->addCallback("setup_set_view_eye_separation", [&](OSG::VRGuiSignals::Options o) { on_eyesep_edit(toBool(o["active"])); return true; }, true );
+    mgr->addCallback("setup_set_view_invert_eyes", [&](OSG::VRGuiSignals::Options o) { on_toggle_view_invert(toBool(o["active"])); return true; }, true );
+    mgr->addCallback("setup_set_view_active_stereo", [&](OSG::VRGuiSignals::Options o) { on_toggle_view_active_stereo(toBool(o["active"])); return true; }, true );
+    mgr->addCallback("setup_set_view_projection", [&](OSG::VRGuiSignals::Options o) { on_toggle_display_projection(toBool(o["active"])); return true; }, true );
+    mgr->addCallback("setup_switch_view_user", [&](OSG::VRGuiSignals::Options o) { on_change_view_user(o["tracker"]); return true; }, true );
+    mgr->addCallback("setup_set_view_proj_center", [&](OSG::VRGuiSignals::Options o) { on_proj_center_edit(Vec3d(toFloat(o["x"]), toFloat(o["y"]), toFloat(o["z"]))); return true; }, true );
+    mgr->addCallback("setup_set_view_proj_user", [&](OSG::VRGuiSignals::Options o) { on_proj_user_edit(Vec3d(toFloat(o["x"]), toFloat(o["y"]), toFloat(o["z"]))); return true; }, true );
+    mgr->addCallback("setup_set_view_proj_normal", [&](OSG::VRGuiSignals::Options o) { on_proj_normal_edit(Vec3d(toFloat(o["x"]), toFloat(o["y"]), toFloat(o["z"]))); return true; }, true );
+    mgr->addCallback("setup_set_view_proj_up", [&](OSG::VRGuiSignals::Options o) { on_proj_up_edit(Vec3d(toFloat(o["x"]), toFloat(o["y"]), toFloat(o["z"]))); return true; }, true );
+    mgr->addCallback("setup_set_view_proj_size", [&](OSG::VRGuiSignals::Options o) { on_proj_size_edit(Vec2d(toFloat(o["x"]), toFloat(o["y"]))); return true; }, true );
+    mgr->addCallback("setup_set_view_proj_shear", [&](OSG::VRGuiSignals::Options o) { on_proj_shear_edit(Vec2d(toFloat(o["x"]), toFloat(o["y"]))); return true; }, true );
+    mgr->addCallback("setup_set_view_proj_warp", [&](OSG::VRGuiSignals::Options o) { on_proj_warp_edit(Vec2d(toFloat(o["x"]), toFloat(o["y"]))); return true; }, true );
+    mgr->addCallback("setup_set_view_mirror", [&](OSG::VRGuiSignals::Options o) { on_toggle_view_mirror(toBool(o["active"])); return true; }, true );
+    mgr->addCallback("setup_set_view_mirror_position", [&](OSG::VRGuiSignals::Options o) { on_view_mirror_pos_edit(Vec3d(toFloat(o["x"]), toFloat(o["y"]), toFloat(o["z"]))); return true; }, true );
+    mgr->addCallback("setup_set_view_mirror_normal", [&](OSG::VRGuiSignals::Options o) { on_view_mirror_norm_edit(Vec3d(toFloat(o["x"]), toFloat(o["y"]), toFloat(o["z"]))); return true; }, true );
 
     mgr->addCallback("win_set_NxNy", [&](OSG::VRGuiSignals::Options o) { on_servern_edit(toInt(o["Nx"]), toInt(o["Ny"])); return true; }, true );
     mgr->addCallback("win_set_serverID", [&](OSG::VRGuiSignals::Options o) { on_server_edit(toInt(o["x"]), toInt(o["y"]), o["sID"]); return true; }, true );
