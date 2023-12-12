@@ -10,6 +10,8 @@
 #include "core/networking/tcp/VRTCPClient.h"
 #include "core/networking/tcp/VRTCPServer.h"
 #include "core/networking/tcp/VRICEclient.h"
+#include "core/networking/mqtt/VRMQTTClient.h"
+#include "core/networking/mqtt/VRMQTTServer.h"
 #include "core/networking/VRCollaboration.h"
 #include "VRPyBase.h"
 
@@ -26,6 +28,14 @@ struct VRPyRestClient : public VRPyBaseT<OSG::VRRestClient> {
 };
 
 struct VRPyRestServer : public VRPyBaseT<OSG::VRRestServer> {
+    static PyMethodDef methods[];
+};
+
+struct VRPyMQTTClient : public VRPyBaseT<OSG::VRMQTTClient> {
+    static PyMethodDef methods[];
+};
+
+struct VRPyMQTTServer : public VRPyBaseT<OSG::VRMQTTServer> {
     static PyMethodDef methods[];
 };
 

@@ -2510,6 +2510,18 @@
 			<Option target="Release" />
 			<Option target="PVR-Networking-d" />
 		</Unit>
+		<Unit filename="src/core/networking/mqtt/VRMQTTClient.cpp">
+			<Option target="PVR-Networking-d" />
+		</Unit>
+		<Unit filename="src/core/networking/mqtt/VRMQTTClient.h">
+			<Option target="PVR-Networking-d" />
+		</Unit>
+		<Unit filename="src/core/networking/mqtt/VRMQTTServer.cpp">
+			<Option target="PVR-Networking-d" />
+		</Unit>
+		<Unit filename="src/core/networking/mqtt/VRMQTTServer.h">
+			<Option target="PVR-Networking-d" />
+		</Unit>
 		<Unit filename="src/core/networking/rest/VRRestClient.cpp">
 			<Option target="Release" />
 			<Option target="PVR-Networking-d" />

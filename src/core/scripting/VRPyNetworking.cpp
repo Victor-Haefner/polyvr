@@ -11,6 +11,9 @@ simpleVRPyType(RestResponse, 0);
 simpleVRPyType(RestClient, New_optNamed_ptr);
 simpleVRPyType(RestServer, New_optNamed_ptr);
 
+simpleVRPyType(MQTTClient, New_ptr);
+simpleVRPyType(MQTTServer, New_ptr);
+
 #ifndef WITHOUT_TCP
 simpleVRPyType(NetworkClient, 0);
 simpleVRPyType(UDPClient, New_optNamed_ptr);
@@ -43,6 +46,17 @@ template<> PyObject* VRPyTypeCaster::cast(const VRICEClient::CHANNEL& v) {
     return cast(s);
 }
 #endif
+
+PyMethodDef VRPyMQTTClient::methods[] = {
+    {NULL}  /* Sentinel */
+};
+
+PyMethodDef VRPyMQTTServer::methods[] = {
+    {"listen", PyWrap(MQTTServer, listen, "Listen on port", void, int) },
+    {"close", PyWrap(MQTTServer, close, "Close server", void) },
+    {"onMessage", PyWrap(MQTTServer, onMessage, "Set onMessage callback", void, function<string(string)>) },
+    {NULL}  /* Sentinel */
+};
 
 #ifndef WITHOUT_HDLC
 PyMethodDef VRPyHDLC::methods[] = {

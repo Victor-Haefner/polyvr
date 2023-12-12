@@ -6,6 +6,8 @@
 ptrFwd(VRSSHSession);
 
 namespace OSG {
+    ptrFwd(VRMQTTClient);
+    ptrFwd(VRMQTTServer);
     ptrFwd(VROPCUA);
     ptrFwd(VROPCUANode);
     ptrFwd(VRSocket);
