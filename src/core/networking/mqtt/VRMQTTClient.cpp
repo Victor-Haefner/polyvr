@@ -1,6 +1,8 @@
 #include "VRMQTTClient.h"
 #include "../mongoose/mongoose.h"
 
+#include <thread>
+
 using namespace OSG;
 
 struct VRMQTTClient::Data {
@@ -9,15 +11,18 @@ struct VRMQTTClient::Data {
     const char *s_sub_topic = "mg/+/test";     // Publish topic
     const char *s_pub_topic = "mg/clnt/test";  // Subscribe topic
     int s_qos = 1;                             // MQTT QoS
+    bool doPoll = false;
+    thread pollThread;
     mg_connection *s_conn;              // Client connection
 };
 
 VRMQTTClient::VRMQTTClient() {
     data = new Data();
-    mg_mgr_init(&data->mgr);                // Initialise event manager
+    mg_mgr_init(&data->mgr); // Initialise event manager
 }
 
 VRMQTTClient::~VRMQTTClient() {
+    mg_mgr_free(&data->mgr); // Finished, cleanup
     if (data) delete data;
 }
 
@@ -75,6 +80,8 @@ void fn(struct mg_connection *c, int ev, void *ev_data, void *fn_data) {
     if (ev == MG_EV_CLOSE) {
         MG_INFO(("%lu CLOSED", c->id));
         data->s_conn = NULL;  // Mark that we're closed
+        data->doPoll = false;
+        data->pollThread.join();
     }
 }
 
@@ -92,8 +99,8 @@ void VRMQTTClient::connect(string address, string sub_topic, string pub_topic) {
     opts.message = mg_str("bye");
     data->s_conn = mg_mqtt_connect(&data->mgr, data->s_url, &opts, fn, data);
 
-    while (true) mg_mgr_poll(&data->mgr, 1000);  // Event loop, 1s timeout, TODO: put in thread!
-    mg_mgr_free(&data->mgr); // Finished, cleanup
+    data->doPoll = true;
+    data->pollThread = thread( [&](){ while (data->doPoll) mg_mgr_poll(&data->mgr, 1000); } );
 }
 
 

@@ -48,6 +48,7 @@ template<> PyObject* VRPyTypeCaster::cast(const VRICEClient::CHANNEL& v) {
 #endif
 
 PyMethodDef VRPyMQTTClient::methods[] = {
+    {"connect", PyWrap(MQTTClient, connect, "Connect to server, address, subtopic, pubtopic", void, string, string, string) },
     {NULL}  /* Sentinel */
 };
 

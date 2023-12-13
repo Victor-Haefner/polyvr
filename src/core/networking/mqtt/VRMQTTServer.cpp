@@ -150,7 +150,7 @@ void VRMQTTServer::onMessage( function<string(string)> cb ) { onMsg = cb; }
 void VRMQTTServer::listen(int port) {
     MG_INFO(("Starting on %s", s_listen_on));      // Inform that we're starting
     mg_mqtt_listen(&data->mgr, s_listen_on, fn, NULL);   // Create MQTT listener
-    while (true) mg_mgr_poll(&data->mgr, 1000);  // Event loop, 1s timeout
+    while (true) mg_mgr_poll(&data->mgr, 1000);  // Event loop, 1s timeout TODO: put in thread
 }
 
 void VRMQTTServer::close() {
