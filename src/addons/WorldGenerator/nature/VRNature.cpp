@@ -35,9 +35,10 @@ using namespace OSG;
 
 // --------------------------------------------------------------------------------------------------
 
-VRNature::VRNature(string name) {
+VRNature::VRNature(string name) : VRObject(name) {
     trees = VRGeometry::create("trees");
     trees->hide("SHADOW");
+    trees->setPersistency(0);
 
     storeMap("templateTrees", &treeTemplates, true);
     storeMap("trees", &treeEntries, true);
@@ -82,11 +83,11 @@ VRTreePtr VRNature::createRandomBush(Vec3d p) { return createBush( getRandomKey(
 VRLodTreePtr VRNature::getLodTree() { return lodTree; }
 
 VRTreePtr VRNature::createTree(string type, Vec3d p) {
-    if (!treeTemplates.count(type)) return 0;
+    if (!treeTemplates.count(type)) { cout << "Warning in createTree! type " << type << " not in templates" << endl; return 0; }
     auto t = dynamic_pointer_cast<VRTree>(treeTemplates[type]->duplicate());
-    if (!t) return 0;
-    t->addAttachment("tree", 0);
-    if (auto t = terrain.lock()) p = t->elevatePoint(p);
+    if (!t) { cout << "Warning in createTree! duplicate template failed " << endl; return 0; }
+    t->addTag("tree");
+    if (auto tr = terrain.lock()) p = tr->elevatePoint(p);
     t->setFrom(p);
     if (lodTree) lodTree->addObject(t, p, 0);
     treeRefs[t.get()] = treeTemplates[type];
@@ -108,7 +109,7 @@ VRTreePtr VRNature::createBush(string type, Vec3d p) {
     return t;
 }
 
-void VRNature::simpleInit(int treeTypes, int bushTypes) {
+void VRNature::simpleInit(int treeTypes, int bushTypes, bool standalone) {
     auto doTree = [&]() {
 		float H = 2+rand()*6.0/RAND_MAX;
 		int Nn = int(H)-1;
@@ -137,6 +138,11 @@ void VRNature::simpleInit(int treeTypes, int bushTypes) {
 		t->addLeafs(2, 4, 0.1);
 		return t;
     };
+
+    if (standalone) {
+        lodTree = VRLodTree::create(name, 5);
+        addChild(lodTree);
+    }
 
     for (int i=0; i<treeTypes; i++) addTreeTemplate( doTree() );
     for (int i=0; i<bushTypes; i++) addBushTemplate( doBush() );

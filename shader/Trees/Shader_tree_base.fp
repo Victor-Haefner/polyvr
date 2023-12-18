@@ -17,14 +17,14 @@ in vec3 MVPos;
 in vec3 Normal;
 in vec3 gc;
 
-vec3 norm;
-vec3 normBumped;
-vec3 position;
-vec4 color;
-vec3 tc;
+vec3 norm = vec3(0.0,0.0,1.0);
+vec3 normBumped = vec3(0.0,0.0,1.0);
+vec3 position = vec3(0.0,0.0,1.0);
+vec4 color = vec4(0.0,0.0,0.0,1.0);
+vec3 tc = vec3(0.0,0.0,1.0);
 mat4 miMV;
-vec3 rayStart;
-vec3 rayDir;
+vec3 rayStart = vec3(0.0,0.0,1.0);
+vec3 rayDir = vec3(0.0,0.0,1.0);
 
 #define eps 0.0001
 #define mP gl_ProjectionMatrix
@@ -41,8 +41,8 @@ vec2 solveEq(float A, float B, float C) {
 float intersectCap(vec3 rayStart, vec3 rayDir, vec3 p0, vec3 n, float r) {
 	float t = dot((p0-rayStart),n)/dot(rayDir,n);
    	vec3 p = rayStart + t*rayDir;
-   	if ( abs(dot(n, p-p0)) > eps ) return -1;
-   	if ( distance(p,p0) > r ) return -1;
+   	if ( abs(dot(n, p-p0)) > eps ) return -1.0;
+   	if ( distance(p,p0) > r ) return -1.0;
    	return t;
 }
 

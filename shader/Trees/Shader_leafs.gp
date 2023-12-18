@@ -1,6 +1,5 @@
 //----------------------------------------------------------------------------------------------MAIN--GP
 #version 400 compatibility
-#extension GL_EXT_geometry_shader4 : enable
 layout (points) in;
 layout (triangle_strip, max_vertices = 6) out;
 in vec3 vn[];
@@ -27,7 +26,7 @@ void emit(int i) {
 }
 
 void main() {
-	vec4 p = gl_PositionIn[0];
+	vec4 p = gl_in[0].gl_Position;
 	float s = vcol[0].r;
 	vec3 u = vec3(0,1,0);
 	//vec4 x = vec4(s,0,0,0);

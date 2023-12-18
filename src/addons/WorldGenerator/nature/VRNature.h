@@ -46,7 +46,7 @@ class VRNature : public VRObject, public VRWorldModule {
         static VRNaturePtr create(string name = "woods");
         VRNaturePtr ptr();
 
-        void simpleInit(int treeTypes, int bushTypes);
+        void simpleInit(int treeTypes, int bushTypes, bool standalone = false);
 
         void clear();
         void addTreeTemplate(VRTreePtr t);

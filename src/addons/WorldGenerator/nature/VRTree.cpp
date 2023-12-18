@@ -648,10 +648,10 @@ VRGeometryPtr VRTree::createLOD(int lvl) {
         data.setTexCoord(4*i+3, Vec2d(i2,h));
     }
 
-    m->setShaderParameter("tex0", 0);
-    m->setShaderParameter("tex1", 1);
     m->setVertexShader(treeSprLODvp, "treeSprLODvp");
     m->setFragmentShader(treeSprLODdfp, "treeSprLODdfp", true);
+    m->setShaderParameter("tex0", 0);
+    m->setShaderParameter("tex1", 1);
 
     auto geo = data.asGeometry("treeLod");
     geo->setMaterial(m);

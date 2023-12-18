@@ -1,6 +1,5 @@
 //----------------------------------------------------------------------------------------------MAIN--GP
 #version 400 compatibility
-#extension GL_EXT_geometry_shader4 : enable
 layout (lines) in;
 layout (triangle_strip, max_vertices = 12) out;
 in float r[];
@@ -66,8 +65,8 @@ vec3 perp(vec3 v) {
 
 void main() {
 	gc = ec[0];
-	vec4 p1 = gl_PositionIn[0];
-	vec4 p2 = gl_PositionIn[1];
+	vec4 p1 = gl_in[0].gl_Position;
+	vec4 p2 = gl_in[1].gl_Position;
 	vec4 pm = (p1+p2)*0.5;
 	dir = p2.xyz - p1.xyz;
 
