@@ -139,8 +139,9 @@ void VRMachiningCode::computePaths(double speedMultiplier) {
 	};
 
 	// state variables
-	int motionMode = 1; // G0, G1, G2, G3
+	int motionMode = -1; // G0, G1, G2, G3
 	float speed = 50;
+	float wait = 0;
 	Vec3d rotationAxis = Vec3d(0,-1,0);
 	Vec3d cursor;
 	Vec3d target;
@@ -209,10 +210,11 @@ void VRMachiningCode::computePaths(double speedMultiplier) {
             }
 
             // apply commands to current state
+            bool doMove = false;
             rotationCenter = cursor;
             for (auto& cmd : commands) {
                 if (cmd.code == 'V') speed = cmd.value * speedMultiplier;
-                //if (cmd.code == 'F') speed = cmd.value * 0.001 * 0.01667 * speedMultiplier; // convert from mm/min to m/s
+                if (cmd.code == 'F') wait  = cmd.value * speedMultiplier; // wait time
 
                 if (cmd.code == 'M') {
                     if (cmd.value == 0) ; // pause after last movement and wait for user to continue, TODO: implement a wait/continue mechanism
@@ -220,7 +222,9 @@ void VRMachiningCode::computePaths(double speedMultiplier) {
                 }
 
                 if (cmd.code == 'G') {
+                    if (cmd.value == 4) ; // wait (use wait variable?)
                     if (cmd.value > -1 && cmd.value < 4 ) motionMode = cmd.value;
+                    if (cmd.value == 91) motionMode = cmd.value;
                     if (cmd.value > 16 && cmd.value < 20) {  // G17 (Y), G18 (Z), G19 (X)
                         if (cmd.value == 17) rotationAxis = Vec3d(0,-1,0);
                         if (cmd.value == 18) rotationAxis = Vec3d(0,0,1);
@@ -228,28 +232,42 @@ void VRMachiningCode::computePaths(double speedMultiplier) {
                     }
                 }
 
-                if (cmd.code == 'X') target[0] =  cmd.value;
-                if (cmd.code == 'Y') target[2] = -cmd.value;
-                if (cmd.code == 'Z') target[1] =  cmd.value;
+                if (cmd.code == 'X') { target[0] =  cmd.value; doMove = true; }
+                if (cmd.code == 'Y') { target[2] = -cmd.value; doMove = true; }
+                if (cmd.code == 'Z') { target[1] =  cmd.value; doMove = true; }
 
-                if (cmd.code == 'I') rotationCenter[0] = cursor[0] + cmd.value;
-                if (cmd.code == 'J') rotationCenter[2] = cursor[2] - cmd.value;
-                if (cmd.code == 'K') rotationCenter[1] = cursor[1] + cmd.value;
+                if (cmd.code == 'I') { rotationCenter[0] = cursor[0] + cmd.value; doMove = true; }
+                if (cmd.code == 'J') { rotationCenter[2] = cursor[2] - cmd.value; doMove = true; }
+                if (cmd.code == 'K') { rotationCenter[1] = cursor[1] + cmd.value; doMove = true; }
             }
 
-            if (motionMode == 0 || motionMode == 1) { // translate
-                translate(cursor, target, speed);
-            }
+            if (doMove) {
+                if (motionMode < 90) {
+                    if (motionMode == 0 || motionMode == 1) { // translate absolute
+                        translate(cursor, target, speed);
+                    }
 
-            if (motionMode == 2) { // rotate clockwise
-                rotate(cursor, target, rotationCenter, rotationAxis, speed, 1);
-            }
+                    if (motionMode == 2) { // rotate clockwise
+                        rotate(cursor, target, rotationCenter, rotationAxis, speed, 1);
+                    }
 
-            if (motionMode == 3) { // rotate counterclockwise
-                rotate(cursor, target, rotationCenter, rotationAxis, speed, -1);
-            }
+                    if (motionMode == 3) { // rotate counterclockwise
+                        rotate(cursor, target, rotationCenter, rotationAxis, speed, -1);
+                    }
 
-            cursor = target;
+                    cursor = target;
+                } else {
+                    if (motionMode == 90) { // TODO translate relative to cursor
+                        //translate(cursor, cursor+target, speed);
+                    }
+
+                    if (motionMode == 91) { // translate relative to last position
+                        translate(cursor, cursor+target, speed);
+                        cursor += target;
+                        target = Vec3d();
+                    }
+                }
+            }
 
             //implementation of the other G Code commands!
         }
@@ -268,7 +286,7 @@ VRGeometryPtr VRMachiningCode::asGeometry() {
 
         //cout << "G: " << element.G << endl;
         //cout << "d: " << element.d << endl;
-        cout << "p0: " << element.p0 << endl;
+        cout << "p0: " << element.p0 << ", G: " << element.G << ", d: " << element.d << ", T: " << element.T << endl;
         //cout << "T: " << element.T << endl;
 
         data.pushVert(element.p0, Vec3d(0,1,0));
