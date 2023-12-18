@@ -18,7 +18,6 @@ size_t VRMachiningCode::length() { return process.instructions.size() - process.
 
 void VRMachiningCode::clear() {
     program.subroutines.clear();
-    program.variables.clear();
     program.main = Function("main");
     process.instructions.clear();
     process.pointer = 0;
@@ -147,31 +146,97 @@ void VRMachiningCode::parseFile(string path, bool onlySubroutines) {
 }
 
 void VRMachiningCode::computePaths(double speedMultiplier) {
+    auto cb = [&](string s, Context& c) { parseCommands(s,c,speedMultiplier); };
+    processFlow(cb);
+}
+
+void VRMachiningCode::parseCommands(string line, Context& ctx, double speedMultiplier) {
 	struct Command {
         char code = 'G';
         float value = 0;
 	};
 
-	// state variables
-	int motionMode = -1; // G0, G1, G2, G3
-	float speed = 50;
-	float wait = 0;
-	Vec3d rotationAxis = Vec3d(0,-1,0);
-	Vec3d cursor;
-	Vec3d target;
-	Vec3d rotationCenter;
-	Vec3d vec0, vec1;
+    // parse commands
+    vector<Command> commands;
+    for (auto i : splitString(line)) {
+        if (i.size() <= 1) { cout << " Warning! empty line: '" << line << "'" << endl; continue; }
+        commands.push_back( { i[0], toFloat(subString(i, 1)) } );
+    }
 
+    // apply commands to current state
+    bool doMove = false;
+    ctx.rotationCenter = ctx.cursor;
+    for (auto& cmd : commands) {
+        if (cmd.code == 'V') ctx.speed = cmd.value * speedMultiplier;
+        if (cmd.code == 'F') ctx.wait  = cmd.value * speedMultiplier; // wait time
+
+        if (cmd.code == 'M') {
+            if (cmd.value == 0) ; // pause after last movement and wait for user to continue, TODO: implement a wait/continue mechanism
+            if (cmd.value == 30) ; // programm finished -> reset, TODO: should reset pointer to 0
+        }
+
+        if (cmd.code == 'G') {
+            if (cmd.value == 4) ; // wait (use wait variable?)
+            if (cmd.value > -1 && cmd.value < 4 ) ctx.motionMode = cmd.value;
+            if (cmd.value == 91) ctx.motionMode = cmd.value;
+            if (cmd.value > 16 && cmd.value < 20) {  // G17 (Y), G18 (Z), G19 (X)
+                if (cmd.value == 17) ctx.rotationAxis = Vec3d(0,-1,0);
+                if (cmd.value == 18) ctx.rotationAxis = Vec3d(0,0,1);
+                if (cmd.value == 19) ctx.rotationAxis = Vec3d(1,0,0);
+            }
+        }
+
+        if (cmd.code == 'X') { ctx.target[0] =  cmd.value; doMove = true; }
+        if (cmd.code == 'Y') { ctx.target[2] = -cmd.value; doMove = true; }
+        if (cmd.code == 'Z') { ctx.target[1] =  cmd.value; doMove = true; }
+
+        if (cmd.code == 'I') { ctx.rotationCenter[0] = ctx.cursor[0] + cmd.value; doMove = true; }
+        if (cmd.code == 'J') { ctx.rotationCenter[2] = ctx.cursor[2] - cmd.value; doMove = true; }
+        if (cmd.code == 'K') { ctx.rotationCenter[1] = ctx.cursor[1] + cmd.value; doMove = true; }
+    }
+
+    if (doMove) {
+        if (ctx.motionMode < 90) {
+            if (ctx.motionMode == 0 || ctx.motionMode == 1) { // translate absolute
+                translate(ctx.cursor, ctx.target, ctx.speed);
+            }
+
+            if (ctx.motionMode == 2) { // rotate clockwise
+                rotate(ctx.cursor, ctx.target, ctx.rotationCenter, ctx.rotationAxis, ctx.speed, 1);
+            }
+
+            if (ctx.motionMode == 3) { // rotate counterclockwise
+                rotate(ctx.cursor, ctx.target, ctx.rotationCenter, ctx.rotationAxis, ctx.speed, -1);
+            }
+
+            ctx.cursor = ctx.target;
+        } else {
+            if (ctx.motionMode == 90) { // TODO translate relative to cursor
+                //translate(cursor, cursor+target, speed);
+            }
+
+            if (ctx.motionMode == 91) { // translate relative to last position
+                translate(ctx.cursor, ctx.cursor+ctx.target, ctx.speed);
+                ctx.cursor += ctx.target;
+                ctx.target = Vec3d();
+            }
+        }
+    }
+
+    //implementation of the other G Code commands!
+}
+
+void VRMachiningCode::processFlow(function<void(string, Context&)> cb) {
 	bool inIf = false;
 	bool inWhile = false;
 	bool condEval = false;
 
+	Context cxtTmp; // TODO: find out which scope is correct
+
 	function<void(Function&, string, map<string, string>)> computeFunction = [&](Function& func, string indent, map<string, string> params) {
 	    cout << indent << "enter subroutine " << func.name << " (" << toString(params) << ")" << endl;
 
-	    for (auto p : params) {
-            program.variables[p.first] = p.second;
-	    }
+	    Context ctx; // TODO: find out which scope is correct
 
         for (auto& line : func.lines) {
             if (startsWith(line, "ENDIF")) { inIf = false; continue; }
@@ -186,8 +251,8 @@ void VRMachiningCode::computePaths(double speedMultiplier) {
                 auto parts = splitString(line);
                 if (parts.size() == 4) {
                     if (parts[2] != "==") continue;
-                    if (!program.variables.count(parts[1])) continue;
-                    condEval = bool(parts[3] == program.variables[parts[1]]);
+                    if (!params.count(parts[1])) continue;
+                    condEval = bool(parts[3] == params[parts[1]]);
                     cout << indent << " check if, " << line << " -> " << condEval << endl;
                 }
                 continue;
@@ -204,7 +269,7 @@ void VRMachiningCode::computePaths(double speedMultiplier) {
             // check for variable assignment
             if (contains(line, " = ")) {
                 auto parts = splitString(line, " = ");
-                program.variables[parts[0]] = parts[1];
+                params[parts[0]] = parts[1];
                 continue;
             }
 
@@ -220,10 +285,10 @@ void VRMachiningCode::computePaths(double speedMultiplier) {
                 if (f.args.size() > 0) { // params expected
                     if (contains(line, "(") && contains(line, ")")) {
                         int i=0;
-                        auto params = splitString( splitString( splitString(line, '(')[1], ')')[0], ',');
-                        for (auto p : params) {
+                        auto vals = splitString( splitString( splitString(line, '(')[1], ')')[0], ',');
+                        for (auto p : vals) {
                             if (p[0] == ' ') p = subString(p, 1);
-                            if (program.variables.count(p)) p = program.variables[p];
+                            if (params.count(p)) p = params[p];
                             values[f.args[i]] = p;
                             i++;
                         }
@@ -235,81 +300,11 @@ void VRMachiningCode::computePaths(double speedMultiplier) {
             }
 
             cout << indent << "  cmd: " << line << endl;
-
-            // parse commands
-            vector<Command> commands;
-            for (auto i : splitString(line)) {
-                if (i.size() <= 1) { cout << " Warning! empty line: '" << line << "'" << endl; continue; }
-                commands.push_back( { i[0], toFloat(subString(i, 1)) } );
-            }
-
-            // apply commands to current state
-            bool doMove = false;
-            rotationCenter = cursor;
-            for (auto& cmd : commands) {
-                if (cmd.code == 'V') speed = cmd.value * speedMultiplier;
-                if (cmd.code == 'F') wait  = cmd.value * speedMultiplier; // wait time
-
-                if (cmd.code == 'M') {
-                    if (cmd.value == 0) ; // pause after last movement and wait for user to continue, TODO: implement a wait/continue mechanism
-                    if (cmd.value == 30) ; // programm finished -> reset, TODO: should reset pointer to 0
-                }
-
-                if (cmd.code == 'G') {
-                    if (cmd.value == 4) ; // wait (use wait variable?)
-                    if (cmd.value > -1 && cmd.value < 4 ) motionMode = cmd.value;
-                    if (cmd.value == 91) motionMode = cmd.value;
-                    if (cmd.value > 16 && cmd.value < 20) {  // G17 (Y), G18 (Z), G19 (X)
-                        if (cmd.value == 17) rotationAxis = Vec3d(0,-1,0);
-                        if (cmd.value == 18) rotationAxis = Vec3d(0,0,1);
-                        if (cmd.value == 19) rotationAxis = Vec3d(1,0,0);
-                    }
-                }
-
-                if (cmd.code == 'X') { target[0] =  cmd.value; doMove = true; }
-                if (cmd.code == 'Y') { target[2] = -cmd.value; doMove = true; }
-                if (cmd.code == 'Z') { target[1] =  cmd.value; doMove = true; }
-
-                if (cmd.code == 'I') { rotationCenter[0] = cursor[0] + cmd.value; doMove = true; }
-                if (cmd.code == 'J') { rotationCenter[2] = cursor[2] - cmd.value; doMove = true; }
-                if (cmd.code == 'K') { rotationCenter[1] = cursor[1] + cmd.value; doMove = true; }
-            }
-
-            if (doMove) {
-                if (motionMode < 90) {
-                    if (motionMode == 0 || motionMode == 1) { // translate absolute
-                        translate(cursor, target, speed);
-                    }
-
-                    if (motionMode == 2) { // rotate clockwise
-                        rotate(cursor, target, rotationCenter, rotationAxis, speed, 1);
-                    }
-
-                    if (motionMode == 3) { // rotate counterclockwise
-                        rotate(cursor, target, rotationCenter, rotationAxis, speed, -1);
-                    }
-
-                    cursor = target;
-                } else {
-                    if (motionMode == 90) { // TODO translate relative to cursor
-                        //translate(cursor, cursor+target, speed);
-                    }
-
-                    if (motionMode == 91) { // translate relative to last position
-                        translate(cursor, cursor+target, speed);
-                        cursor += target;
-                        target = Vec3d();
-                    }
-                }
-            }
-
-            //implementation of the other G Code commands!
+            cb(line, cxtTmp);
         }
 	};
 
     computeFunction(program.main, "", {});
-
-    for (auto l : program.main.lines) cout << "main lines: " << l << endl;
 }
 
 //Implement here to plot the gcode path
