@@ -81,13 +81,17 @@ void VRMachiningCode::rotate(Vec3d start, Vec3d end, Vec3d center, Vec3d axis, d
 
 // https://ncviewer.com/
 
+void VRMachiningCode::parseFolder(string path) {
+	if (isFolder(path)) {
+        for (auto f : openFolder(path)) parseFile(path+'/'+f, true);
+	}
+}
+
 void VRMachiningCode::readGCode(string path, double speedMultiplier) {
 	cout << "VRMachiningCode::readGCode " << path << " " << speedMultiplier << endl;
 
 	if (isFile(path)) parseFile(path);
-	else if (isFolder(path)) {
-        for (auto f : openFolder(path)) parseFile(path+'/'+f);
-	}
+	else if (isFolder(path)) parseFolder(path);
 
 	computePaths(speedMultiplier);
 
@@ -95,7 +99,7 @@ void VRMachiningCode::readGCode(string path, double speedMultiplier) {
 	cout << " read " << process.instructions.size() << " instructions" << endl;
 }
 
-void VRMachiningCode::parseFile(string path) {
+void VRMachiningCode::parseFile(string path, bool onlySubroutines) {
 	cout << " VRMachiningCode::parseFile " << path << endl;
 
 	ifstream file;
@@ -117,14 +121,24 @@ void VRMachiningCode::parseFile(string path) {
             subName = parts[1];
             if (contains(subName, "(")) subName = splitString(subName, '(')[0];
             program.subroutines[subName] = Function(subName);
+
+            if (contains(line, "(") && contains(line, ")")) {
+                auto params = splitString( splitString( splitString(line, '(')[1], ')')[0], ',');
+                for (auto p : params) {
+                    if (p[0] == ' ') p = subString(p, 1);
+                    string param = splitString(p)[1];
+                    program.subroutines[subName].args.push_back(param);
+                }
+            }
             continue;
         }
 
         if (parts[0] == "EXTERN") continue;
         if (parts[0] == "DEF") continue;
 
-        if (!inSubroutine) program.main.lines.push_back(line);
-        else program.subroutines[subName].lines.push_back(line);
+        if (!inSubroutine) {
+            if (!onlySubroutines) program.main.lines.push_back(line);
+        } else program.subroutines[subName].lines.push_back(line);
 
         if (parts[0] == "RET") {
             inSubroutine = false;
@@ -152,8 +166,12 @@ void VRMachiningCode::computePaths(double speedMultiplier) {
 	bool inWhile = false;
 	bool condEval = false;
 
-	function<void(Function&, string)> computeFunction = [&](Function& func, string indent) {
-	    cout << indent << "enter subroutine " << func.name << endl;
+	function<void(Function&, string, map<string, string>)> computeFunction = [&](Function& func, string indent, map<string, string> params) {
+	    cout << indent << "enter subroutine " << func.name << " (" << toString(params) << ")" << endl;
+
+	    for (auto p : params) {
+            program.variables[p.first] = p.second;
+	    }
 
         for (auto& line : func.lines) {
             if (startsWith(line, "ENDIF")) { inIf = false; continue; }
@@ -196,7 +214,23 @@ void VRMachiningCode::computePaths(double speedMultiplier) {
             else sub = splitString(line)[0];
             //cout << indent << "  sub " << sub << ", known: " << program.subroutines.count(sub) << endl;
             if (program.subroutines.count(sub)) {
-                computeFunction(program.subroutines[sub], indent+" ");
+                auto& f = program.subroutines[sub];
+                map<string, string> values;
+
+                if (f.args.size() > 0) { // params expected
+                    if (contains(line, "(") && contains(line, ")")) {
+                        int i=0;
+                        auto params = splitString( splitString( splitString(line, '(')[1], ')')[0], ',');
+                        for (auto p : params) {
+                            if (p[0] == ' ') p = subString(p, 1);
+                            if (program.variables.count(p)) p = program.variables[p];
+                            values[f.args[i]] = p;
+                            i++;
+                        }
+                    }
+                }
+
+                computeFunction(f, indent+" ", values);
                 continue;
             }
 
@@ -273,7 +307,9 @@ void VRMachiningCode::computePaths(double speedMultiplier) {
         }
 	};
 
-    computeFunction(program.main, "");
+    computeFunction(program.main, "", {});
+
+    for (auto l : program.main.lines) cout << "main lines: " << l << endl;
 }
 
 //Implement here to plot the gcode path

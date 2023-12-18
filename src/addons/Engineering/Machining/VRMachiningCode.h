@@ -21,6 +21,7 @@ class VRMachiningCode : public std::enable_shared_from_this<VRMachiningCode> {
 		struct Function {
 		    string name;
             vector<string> lines;
+            vector<string> args;
             Function() {}
             Function(string n) : name(n) {}
 		};
@@ -67,7 +68,8 @@ class VRMachiningCode : public std::enable_shared_from_this<VRMachiningCode> {
 
 		void clear();
 		void readGCode(string path, double speedMultiplier);
-		void parseFile(string path);
+		void parseFile(string path, bool onlySubroutines = false);
+		void parseFolder(string path);
 		void computePaths(double speedMultiplier);
 
 		VRGeometryPtr asGeometry();
