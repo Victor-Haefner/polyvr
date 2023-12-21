@@ -274,7 +274,13 @@ void ImGui_ImplGLUT_SpecialUpFunc_main(int k, int x, int y) {
     handleSpecial(k,0);
 }
 
-void ImGui_ImplGLUT_KeyboardFunc_main(unsigned char c, int x, int y) { /*printf("imgui key down %i\n", c);*/ ImGui::SetCurrentContext(mainContext); ImGui_ImplGLUT_KeyboardFunc(c, x, y); }
+void ImGui_ImplGLUT_KeyboardFunc_main(unsigned char c, int x, int y) {
+    //printf("imgui key down %i\n", c);
+    if (c == 27) uiSignal("ui_close_popup");
+    ImGui::SetCurrentContext(mainContext);
+    ImGui_ImplGLUT_KeyboardFunc(c, x, y);
+}
+
 void ImGui_ImplGLUT_SpecialFunc_main(int k, int x, int y) { /*printf("imgui special down %i\n", k);*/  ImGui::SetCurrentContext(mainContext); ImGui_ImplGLUT_SpecialFunc(k,x,y); handleSpecial(k,1); }
 void ImGui_ImplGLUT_ReshapeFunc_main(int x, int y) { ImGui::SetCurrentContext(mainContext); ImGui_ImplGLUT_ReshapeFunc(x,y); }
 void ImGui_ImplGLUT_MotionFunc_main(int x, int y) { updateGlutCursor(); ImGui::SetCurrentContext(mainContext); ImGui_ImplGLUT_MotionFunc(x, y); }
@@ -285,7 +291,12 @@ void ImGui_ImplGLUT_MouseFunc_main(int b, int s, int x, int y) {
     uiSignal("uiGrabFocus", {});
 }
 
-void ImGui_ImplGLUT_KeyboardFunc_popup(unsigned char c, int x, int y) { ImGui::SetCurrentContext(popupContext); ImGui_ImplGLUT_KeyboardFunc(c, x, y); }
+void ImGui_ImplGLUT_KeyboardFunc_popup(unsigned char c, int x, int y) {
+    if (c == 27) uiSignal("ui_close_popup");
+    ImGui::SetCurrentContext(popupContext);
+    ImGui_ImplGLUT_KeyboardFunc(c, x, y);
+}
+
 void ImGui_ImplGLUT_KeyboardUpFunc_popup(unsigned char c, int x, int y) { ImGui::SetCurrentContext(popupContext); ImGui_ImplGLUT_KeyboardUpFunc(c,x,y); }
 void ImGui_ImplGLUT_SpecialFunc_popup(int k, int x, int y) { ImGui::SetCurrentContext(popupContext); ImGui_ImplGLUT_SpecialFunc(k,x,y); handleSpecial(k,1); }
 void ImGui_ImplGLUT_SpecialUpFunc_popup(int k, int x, int y) { ImGui::SetCurrentContext(popupContext); ImGui_ImplGLUT_SpecialUpFunc(k,x,y); handleSpecial(k,0); }
