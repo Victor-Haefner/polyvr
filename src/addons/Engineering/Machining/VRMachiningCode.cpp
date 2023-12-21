@@ -190,6 +190,11 @@ void VRMachiningCode::parseCommands(string line, Context& ctx, double speedMulti
         if (cmd.code == 'Y') { ctx.target[2] = -cmd.value; doMove = true; }
         if (cmd.code == 'Z') { ctx.target[1] =  cmd.value; doMove = true; }
 
+        // EE orientation TODO!!!!!
+        if (cmd.code == 'A') { ; doMove = true; }
+        if (cmd.code == 'B') { ; doMove = true; }
+        if (cmd.code == 'C') { ; doMove = true; }
+
         if (cmd.code == 'I') { ctx.rotationCenter[0] = ctx.cursor[0] + cmd.value; doMove = true; }
         if (cmd.code == 'J') { ctx.rotationCenter[2] = ctx.cursor[2] - cmd.value; doMove = true; }
         if (cmd.code == 'K') { ctx.rotationCenter[1] = ctx.cursor[1] + cmd.value; doMove = true; }
