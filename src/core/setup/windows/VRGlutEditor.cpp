@@ -308,15 +308,17 @@ void VRGlutEditor::onMotion(int x, int y) {
 }
 
 void VRGlutEditor::onKeyboard(int c, int s, int x, int y) {
+    //cout << " VRGlutEditor::onKeyboard " << c << " " << s << " " << x << " " << y << endl;
+    if (s == 0 && c == 27) if (fullscreen) setFullscreen(false); // ESC
     if (!glViewFocussed) { if (signal) signal("relayedKeySignal", {{"key",toString(c)},{"state",toString(s)}}); }
     else if (auto k = getKeyboard()) k->keyboard(c, s, x, y, 1);
 }
 
 void VRGlutEditor::onKeyboard_special(int c, int s, int x, int y) {
-    if (s == 0 && c == 11) setFullscreen(!fullscreen);
+    //cout << " VRGlutEditor::onKeyboard_special " << c << " " << s << " " << x << " " << y << endl;
+    if (s == 0 && c == 11) setFullscreen(!fullscreen); // F11
     if (!glViewFocussed) { if (signal) signal("relayedSpecialKeySignal", {{"key",toString(c)},{"state",toString(s)}}); }
     else if (auto k = getKeyboard()) k->keyboard_special(c, s, x, y, 1);
-    //cout << " VRGlutEditor::onKeyboard_special " << c << " " << s << " " << x << " " << y << endl;
 }
 
 void VRGlutEditor::handleRelayedKey(int key, int state, bool special) {
