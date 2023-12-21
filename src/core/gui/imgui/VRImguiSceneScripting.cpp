@@ -459,6 +459,11 @@ void ImScriptEditor::render() {
 ImScripting::ImScripting() {}
 
 void ImScripting::render() {
+
+    auto openSearch = []() {
+        uiSignal("ui_open_popup", {{"name","search"}, {"width","400"}, {"height","300"}}); // TODO: pass current editor selection
+    };
+
     ImGuiIO& io = ImGui::GetIO();
 #ifdef WIN32
     if (io.KeyCtrl && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_S))) { uiSignal("scripts_toolbar_save"); }
@@ -468,6 +473,7 @@ void ImScripting::render() {
     if (io.KeyCtrl && io.KeysDown['s']) { io.KeysDown['s'] = false; uiSignal("scripts_toolbar_save"); }
     if (io.KeyCtrl && io.KeysDown['e']) { io.KeysDown['e'] = false; uiSignal("scripts_toolbar_execute"); }
     if (io.KeyCtrl && io.KeysDown['w']) { io.KeysDown['w'] = false; uiSignal("clearConsoles"); }
+    if (io.KeyCtrl && io.KeysDown['f']) { io.KeysDown['f'] = false; openSearch(); }
 #endif
 
     // toolbar
@@ -482,7 +488,7 @@ void ImScripting::render() {
 
                        if (ImGui::Button("Save")) uiSignal("scripts_toolbar_save");
     ImGui::SameLine(); if (ImGui::Button("Execute")) uiSignal("scripts_toolbar_execute");
-    ImGui::SameLine(); if (ImGui::Button("Search")) uiSignal("ui_toggle_popup", {{"name","search"}, {"width","400"}, {"height","300"}}); // TODO: pass current editor selection
+    ImGui::SameLine(); if (ImGui::Button("Search")) openSearch();
     ImGui::SameLine(); if (ImGui::Button("Documentation")) uiSignal("ui_toggle_popup", {{"name","documentation"}, {"width","800"}, {"height","600"}});
     ImGui::SameLine(); if (ImGui::Checkbox("Performance", &perf)) { scriptlist.doPerf = perf; scriptlist.computeMinWidth(); uiSignal("scripts_toolbar_performance", {{"state",toString(perf)}}); }
     ImGui::Unindent();
