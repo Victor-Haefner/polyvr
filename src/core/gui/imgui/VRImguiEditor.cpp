@@ -546,10 +546,15 @@ ImNotifyDialog::ImNotifyDialog() : ImDialog("notify") {
     mgr->addCallback("askUser", [&](OSG::VRGuiSignals::Options o){ open(o["msg1"], o["msg2"], o["sig"]); return true; } );
 }
 
-ImRecorderDialog::ImRecorderDialog() : ImDialog("recorder") {}
+
 ImSearchDialog::ImSearchDialog() : ImDialog("search")
                                     , searchField("scriptSearch", "Search:", "", ImGuiInputTextFlags_EnterReturnsTrue)
-                                    , replaceField("scriptReplace", "Replace:", "", ImGuiInputTextFlags_EnterReturnsTrue) {}
+                                    , replaceField("scriptReplace", "Replace:", "", ImGuiInputTextFlags_EnterReturnsTrue) {
+    auto mgr = OSG::VRGuiSignals::get();
+    mgr->addCallback("ui_search_set", [&](OSG::VRGuiSignals::Options o){ searchField.value = o["string"]; return true; } );
+}
+
+ImRecorderDialog::ImRecorderDialog() : ImDialog("recorder") {}
 ImProfDialog::ImProfDialog() : ImDialog("profiler") {}
 ImImportDialog::ImImportDialog() : ImDialog("import") {}
 

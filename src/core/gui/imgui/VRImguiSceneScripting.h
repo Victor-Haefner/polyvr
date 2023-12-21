@@ -98,6 +98,7 @@ class ImScriptEditor {
     public:
         ImScriptEditor();
         void render();
+        string getSelection();
 };
 
 class ImScripting {

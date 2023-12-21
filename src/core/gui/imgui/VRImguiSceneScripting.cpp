@@ -254,6 +254,10 @@ ImScriptEditor::ImScriptEditor() {
     trigger_states = {"Pressed", "Released", "Drag", "Drop", "To edge", "From edge"};
 }
 
+string ImScriptEditor::getSelection() {
+    return imEditor.GetSelectedText();
+}
+
 void ImScriptEditor::handleShiftTab(int state) {
 	ImGuiIO& io = ImGui::GetIO();
 	io.KeysDown[int('\t')] = state;
@@ -459,9 +463,10 @@ void ImScriptEditor::render() {
 ImScripting::ImScripting() {}
 
 void ImScripting::render() {
-
-    auto openSearch = []() {
-        uiSignal("ui_open_popup", {{"name","search"}, {"width","400"}, {"height","300"}}); // TODO: pass current editor selection
+    auto openSearch = [&]() {
+        string s = editor.getSelection();
+        uiSignal("ui_open_popup", {{"name","search"}, {"width","400"}, {"height","300"}});
+        uiSignal("ui_search_set", {{"string",s}});
     };
 
     ImGuiIO& io = ImGui::GetIO();
