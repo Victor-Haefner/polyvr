@@ -271,6 +271,7 @@ void VRGlutEditor::initGlut() {
 
     putenv((char*)"__GL_SYNC_TO_VBLANK=1");
     glutInit(&VROptions::get()->argc, VROptions::get()->argv);
+    glutSetKeyRepeat(GLUT_KEY_REPEAT_OFF);
 
 #ifdef WASM
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH | GLUT_STENCIL | GLUT_MULTISAMPLE);
