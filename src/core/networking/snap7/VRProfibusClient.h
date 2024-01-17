@@ -18,6 +18,9 @@ class VRProfinetClient : public std::enable_shared_from_this<VRProfinetClient> {
     private:
         Data* data = 0;
 
+        float toFloat(string bytes);
+        int toInt(string bytes);
+
     public:
         VRProfinetClient();
         ~VRProfinetClient();
@@ -31,6 +34,14 @@ class VRProfinetClient : public std::enable_shared_from_this<VRProfinetClient> {
 
         string read(int db, int offset, int length);
         void write(int db, int offset, string val);
+
+        bool  readBool(int db, int pos, int bit);
+        int   readInt(int db, int pos);
+        float readFloat(int db, int pos);
+
+        void writeBool(int db, int pos, int bit, bool val);
+        void writeInt(int db, int pos, int val);
+        void writeFloat(int db, int pos, float val);
 };
 
 OSG_END_NAMESPACE;
