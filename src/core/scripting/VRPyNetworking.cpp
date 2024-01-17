@@ -13,6 +13,7 @@ simpleVRPyType(RestServer, New_optNamed_ptr);
 
 simpleVRPyType(MQTTClient, New_ptr);
 simpleVRPyType(MQTTServer, New_ptr);
+simpleVRPyType(ProfinetClient, New_ptr);
 
 #ifndef WITHOUT_TCP
 simpleVRPyType(NetworkClient, 0);
@@ -46,6 +47,14 @@ template<> PyObject* VRPyTypeCaster::cast(const VRICEClient::CHANNEL& v) {
     return cast(s);
 }
 #endif
+
+PyMethodDef VRPyProfinetClient::methods[] = {
+    {"connect", PyWrap(ProfinetClient, connect, "Connect to server, address, rack, slot", void, string, int, int) },
+    {"isConnected", PyWrap(ProfinetClient, isConnected, "Return if connected", bool) },
+    {"read", PyWrap(ProfinetClient, read, "Return if connected", string, int, int, int) },
+    {"write", PyWrap(ProfinetClient, write, "Return if connected", void, int, int, string) },
+    {NULL}  /* Sentinel */
+};
 
 PyMethodDef VRPyMQTTClient::methods[] = {
     {"connect", PyWrap(MQTTClient, connect, "Connect to server, address, subtopic, pubtopic", void, string, string, string) },

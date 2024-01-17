@@ -12,8 +12,13 @@
 #include "core/networking/tcp/VRICEclient.h"
 #include "core/networking/mqtt/VRMQTTClient.h"
 #include "core/networking/mqtt/VRMQTTServer.h"
+#include "core/networking/snap7/VRProfibusClient.h"
 #include "core/networking/VRCollaboration.h"
 #include "VRPyBase.h"
+
+struct VRPyProfinetClient : public VRPyBaseT<OSG::VRProfinetClient> {
+    static PyMethodDef methods[];
+};
 
 struct VRPyHDLC : public VRPyBaseT<OSG::VRHDLC> {
     static PyMethodDef methods[];
