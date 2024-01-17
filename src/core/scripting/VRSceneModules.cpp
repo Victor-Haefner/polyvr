@@ -407,6 +407,7 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPyOPCUANode>("OPCUANode", pModVR);
 #endif
 
+    sm->registerModule<VRPyProfinetClient>("ProfinetClient", pModVR);
     sm->registerModule<VRPyMQTTClient>("MQTTClient", pModVR);
     sm->registerModule<VRPyMQTTServer>("MQTTServer", pModVR);
 
