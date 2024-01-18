@@ -132,6 +132,10 @@ PyMethodDef VRPyTransform::methods[] = {
     {"setPhysicsDynamic", PyWrap(Transform, setPhysicsDynamic, "set if dynamic physics object", void, bool ) },
     {"resetForces", PyWrap(Transform, resetForces, "Reset velocity and forces to zero", void ) },
     {"showCoordAxis", PyWrapOpt(Transform, showCoordAxis, "Show the coord system axis (visible, scale = 1.0)", "1", void, bool, float ) },
+    {"setRelativePosition", PyWrap(Transform, setRelativePosition, "Set position relative to object", void, Vec3d, VRObjectPtr ) },
+    {"setRelativeDir", PyWrap(Transform, setRelativeDir, "Set dir relative to object", void, Vec3d, VRObjectPtr ) },
+    {"setRelativeUp", PyWrap(Transform, setRelativeUp, "Set up relative to object", void, Vec3d, VRObjectPtr ) },
+    {"setRelativePose", PyWrap(Transform, setRelativePose, "Set pose relative to object", void, PosePtr, VRObjectPtr ) },
 #endif
     {NULL}  /* Sentinel */
 };
