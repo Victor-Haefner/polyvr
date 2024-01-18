@@ -9,6 +9,7 @@
 #include "core/scene/VRScene.h"
 #include "core/scene/sound/VRSound.h"
 #include "core/scene/sound/VRSoundManager.h"
+#include "core/scene/sound/VRSoundUtils.h"
 
 extern "C" {
     #include <libavcodec/avcodec.h>
@@ -110,7 +111,7 @@ int avcodec_decode_video2(AVCodecContext* video_ctx, AVFrame* frame, int* got_fr
     if (video_ctx->codec_type == AVMEDIA_TYPE_VIDEO || video_ctx->codec_type == AVMEDIA_TYPE_AUDIO) {
         used = avcodec_send_packet(video_ctx, pkt);
         if (used < 0 && used != AVERROR(EAGAIN) && used != AVERROR_EOF) {
-            
+
         } else {
             if (used >= 0) pkt->size = 0;
             used = avcodec_receive_frame(video_ctx, frame);
@@ -340,6 +341,7 @@ void VRVideo::showFrame(int stream, int frame) {
 
     // video, just jump to frame
     auto f = getFrame(stream, frame);
+
     if (f) {
         //cout << " showFrame " << frame << " " << f->getSize() << " threadID: " << this_thread::get_id() << endl;
         if (auto m = material.lock()) {
@@ -353,10 +355,10 @@ void VRVideo::showFrame(int stream, int frame) {
         AStream& aStream = s.second;
         int I0 = aStream.lastFrameQueued;
         int I1 = aStream.cachedFrameMax; //min(frame+audioQueue, aStream.cachedFrameMax);
-        //cout << ", queue audio: " << I0 << " -> " << I1 << ", queued buffers: " << aStream.audio->getQueuedBuffer() << endl;
+        //cout << ", queue audio: " << I0 << " -> " << I1 << ", queued buffers: " << aStream.audio->getInterface()->getQueuedBuffer() << endl;
         for (int i=I0; i<I1; i++) {
-            for (auto frame : aStream.frames[i]) {
-                aStream.audio->playBuffer(frame);
+            for (auto aframe : aStream.frames[i]) {
+                aStream.audio->playBuffer(aframe);
             }
         }
         aStream.lastFrameQueued = I1;

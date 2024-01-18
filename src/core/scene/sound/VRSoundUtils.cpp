@@ -140,24 +140,27 @@ uint VRSoundInterface::getFreeBufferID() {
 int VRSoundInterface::getQueuedBuffer() { return queuedBuffers; }
 
 void VRSoundInterface::recycleBuffer() {
-    ALint val = -1;
+    ALint Nprocessed = -1;
     ALuint bufid = 0;
 
      // TODO: not working properly!!
-    /*do { ALCHECK_BREAK( alGetSourcei(source, AL_BUFFERS_PROCESSED, &val) ); // recycle buffers
-        cout << " recycleBuffer val " << val << endl;
-        for(; val > 0; --val) {
+    /*do { ALCHECK_BREAK( alGetSourcei(source, AL_BUFFERS_PROCESSED, &Nprocessed) ); // recycle buffers
+        cout << " recycleBuffer Nprocessed " << Nprocessed << endl;
+        for(; Nprocessed > 0; --Nprocessed) {
             ALCHECK( alSourceUnqueueBuffers(source, 1, &bufid));
             free_buffers.push_back(bufid);
             if ( queuedBuffers > 0 ) queuedBuffers -= 1;
         }
-    } while (val > 0);*/
+    } while (Nprocessed > 0);*/
 
-    do { ALCHECK_BREAK( alGetSourcei(source, AL_BUFFERS_PROCESSED, &val) ); } // recycle buffers
-    while (val <= 0 && free_buffers.size() == 0);
+    //do { ALCHECK_BREAK( alGetSourcei(source, AL_BUFFERS_PROCESSED, &Nprocessed) ); } // recycle buffers
+    //while (Nprocessed <= 0 && free_buffers.size() == 0); // wait for a buffer to be processed if no free_buffers and none processed
+    // TODO: THIS IS BAD!! -> avoid all while loops!!
 
-    //if (val <= 0 && free_buffers.size() == 0) { al->state = AL_STOPPED; return; } // no available buffer, stop!
-    for(; val > 0; --val) {
+    ALCHECK( alGetSourcei(source, AL_BUFFERS_PROCESSED, &Nprocessed) );
+
+    //if (Nprocessed <= 0 && free_buffers.size() == 0) { al->state = AL_STOPPED; return; } // no available buffer, stop!
+    for(; Nprocessed > 0; --Nprocessed) {
         ALCHECK( alSourceUnqueueBuffers(source, 1, &bufid));
         free_buffers.push_back(bufid);
         queuedBuffers = max(0,queuedBuffers-1);

@@ -94,6 +94,8 @@ VRSound::~VRSound() {
 
 VRSoundPtr VRSound::create() { return VRSoundPtr( new VRSound() ); }
 
+VRSoundInterfacePtr VRSound::getInterface() { return interface; }
+
 int VRSound::getState() { return al->state; }
 string VRSound::getPath() { return path; }
 void VRSound::setPath( string p ) { path = p; }
