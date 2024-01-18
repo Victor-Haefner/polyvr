@@ -836,6 +836,25 @@ void VRMaterial::setTextureAndUnit(VRTexturePtr img, int unit) {
     }
 }
 
+void VRMaterial::setAnisotropy(float a, int unit) {
+    auto texChunk = getTexChunk(unit);
+    if (texChunk) {
+        texChunk->setAnisotropy(a);
+    }
+}
+
+void VRMaterial::updateTexture(Vec3i min, Vec3i max, int unit) {
+    auto texChunk = getTexChunk(unit);
+    if (texChunk) {
+        texChunk->setDirtyMinX(min[0]);
+        texChunk->setDirtyMinY(min[1]);
+        texChunk->setDirtyMinZ(min[2]);
+        texChunk->setDirtyMaxX(max[0]);
+        texChunk->setDirtyMaxY(max[1]);
+        texChunk->setDirtyMaxZ(max[2]);
+    }
+}
+
 void VRMaterial::setMappingBeacon(VRObjectPtr obj, int unit) {
     auto md = mats[activePass];
     if (!md->genChunks.count(unit)) { md->genChunks[unit] = TexGenChunk::create(); md->regChunk(md->genChunks[unit], unit, 19); }
