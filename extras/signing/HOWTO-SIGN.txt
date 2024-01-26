@@ -1,0 +1,18 @@
+
+
+ 1) Sign installer
+
+https://www.ssl.com/guide/esigner-codesigntool-command-guide/
+
+.\CodeSignTool.bat get_credential_ids -username=MY-USERNAME -password="MY-PASSWORD"
+> MY-CREDENTIAL-ID
+
+mkdir signed
+
+.\CodeSignTool.bat sign -output_dir_path=signed -input_file_path="INSTALLER.exe" -credential_id=MY-CREDENTIAL-ID -username=MY-USERNAME -password="MY-PASSWORD"
+
+
+ 2) Submit to microsoft
+ 
+https://learn.microsoft.com/en-us/windows/security/operating-system-security/virus-and-threat-protection/microsoft-defender-smartscreen/#submit-files-to-microsoft-defender-smartscreen-for-review
+https://www.microsoft.com/en-us/wdsi/filesubmission/
