@@ -40,7 +40,7 @@ void FillTime(PS7Time PTime)
 
     //clock_gettime(CLOCK_REALTIME, &ts);
     //ms = ts.tv_nsec / 1000000;
-    auto now = std::chrono::high_resolution_clock::now(); 
+    auto now = std::chrono::high_resolution_clock::now();
     auto duration = now.time_since_epoch();
     ms = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
 
@@ -2272,7 +2272,7 @@ void TS7Worker::SZL_ID0A0()
     SZL.ResParams->Err  =0x0000;
     ResData->Ret = 0xFF;
     ResData->TS = TS_ResOctet;
-    ResData->DLen = SwapWord(unsigned int(bufferSize + 8));
+    ResData->DLen = SwapWord((unsigned int)(bufferSize + 8));
     ResData->ID = 0xA000;
     ResData->Index = 0x0000;
     ResData->ListLen = SwapWord(DiagItemLength);
