@@ -2,6 +2,7 @@
 #define VRPYNETWORKING_H_INCLUDED
 
 #include "core/networking/VRHDLC.h"
+#include "core/networking/VRPing.h"
 #include "core/networking/rest/VRRestResponse.h"
 #include "core/networking/rest/VRRestClient.h"
 #include "core/networking/rest/VRRestServer.h"
@@ -15,6 +16,10 @@
 #include "core/networking/snap7/VRProfibusClient.h"
 #include "core/networking/VRCollaboration.h"
 #include "VRPyBase.h"
+
+struct VRPyPing : public VRPyBaseT<OSG::VRPing> {
+    static PyMethodDef methods[];
+};
 
 struct VRPyProfinetClient : public VRPyBaseT<OSG::VRProfinetClient> {
     static PyMethodDef methods[];

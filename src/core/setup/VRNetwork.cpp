@@ -162,7 +162,7 @@ void VRNetworkNode::update() {
     if ( !p.start(address, 1) ) { stat_node = "not reachable"; return; }
 
     if (!isLocal()) {
-        if (!p.start(address, "22", 1)) { stat_node = "no ssh, install with sudo apt install ssh"; return; }
+        if (!p.startOnPort(address, "22", 1)) { stat_node = "no ssh, install with sudo apt install ssh"; return; }
         if (!ssh) openSSHSession();
         if (ssh) stat_ssh_key = ssh->getKeyStat();
         else { stat_path = "no ssh access"; return; }

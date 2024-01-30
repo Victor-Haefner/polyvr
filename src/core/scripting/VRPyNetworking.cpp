@@ -7,6 +7,7 @@ using namespace OSG;
 #ifndef WITHOUT_HDLC
 simpleVRPyType(HDLC, New_ptr);
 #endif
+simpleVRPyType(Ping, New_ptr);
 simpleVRPyType(RestResponse, 0);
 simpleVRPyType(RestClient, New_optNamed_ptr);
 simpleVRPyType(RestServer, New_optNamed_ptr);
@@ -47,6 +48,13 @@ template<> PyObject* VRPyTypeCaster::cast(const VRICEClient::CHANNEL& v) {
     return cast(s);
 }
 #endif
+
+PyMethodDef VRPyPing::methods[] = {
+    {"startOnPort", PyWrap(Ping, startOnPort, "Ping server on port (address, port, timeout)", bool, string, string, int) },
+    {"start", PyWrap(Ping, start, "Ping server (address, timeout)", bool, string, int) },
+    {"getMAC", PyWrap(Ping, getMAC, "Get MAC by IP, only works in local network (IP, interface)", string, string, string) },
+    {NULL}  /* Sentinel */
+};
 
 PyMethodDef VRPyProfinetClient::methods[] = {
     {"connect", PyWrap(ProfinetClient, connect, "Connect to server, address, rack, slot", void, string, int, int) },

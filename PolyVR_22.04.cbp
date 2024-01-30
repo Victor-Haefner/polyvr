@@ -2387,6 +2387,12 @@
 			<Option target="Release" />
 			<Option target="PVR-Navigation-d" />
 		</Unit>
+		<Unit filename="src/core/networking/VRARP.cpp">
+			<Option target="PVR-Networking-d" />
+		</Unit>
+		<Unit filename="src/core/networking/VRARP.h">
+			<Option target="PVR-Networking-d" />
+		</Unit>
 		<Unit filename="src/core/networking/VRCollaboration.cpp">
 			<Option target="Release" />
 			<Option target="PVR-Networking-d" />

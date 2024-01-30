@@ -1,5 +1,6 @@
 #include "VRPing.h"
 #include "core/utils/toString.h"
+#include "VRARP.h"
 
 #include <boost/asio.hpp>
 #include <iostream>
@@ -68,9 +69,10 @@ class ping_client {
 
 using namespace std;
 
-VRPing::VRPing() {;}
+OSG::VRPing::VRPing() {;}
+std::shared_ptr<OSG::VRPing> OSG::VRPing::create() { return std::shared_ptr<OSG::VRPing>( new OSG::VRPing() ); }
 
-bool VRPing::start(string address, string port, int timeout) {
+bool OSG::VRPing::startOnPort(string address, string port, int timeout) {
     ping_client c;
     return c.connect(address, port, boost::posix_time::seconds(timeout));
 }
@@ -81,7 +83,7 @@ the nicer solution would be to use boost asio with icmp socket!
 BUT! ..this requires root rights, thus cannot be used :(
 **/
 
-bool VRPing::start(std::string address, int timeout) {
+bool OSG::VRPing::start(std::string address, int timeout) {
     int max_attempts = 1;
 
 #ifdef _WIN32
@@ -103,4 +105,9 @@ bool VRPing::start(std::string address, int timeout) {
 #ifdef WASM
 FILE *popen(const char *command, const char *type) { return 0; }
 #endif
+
+std::string OSG::VRPing::getMAC(std::string IP, std::string interface) {
+    return ::getMAC(IP, interface);
+}
+
 
