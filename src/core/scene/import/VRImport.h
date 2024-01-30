@@ -62,7 +62,7 @@ class VRImport {
         static void osgLoad(string path, VRObjectPtr parent);
 
     public:
-        static VRObjectPtr OSGConstruct(NodeMTRecPtr n, VRObjectPtr parent = 0, string name = "", string currentFile = "", NodeCore* geoTrans = 0, string geoTransName = "");
+        static VRObjectPtr OSGConstruct(NodeMTRecPtr n, VRObjectPtr parent = 0, string name = "", string currentFile = "", NodeCore* geoTrans = 0, NodeCore* geoObj = 0, string geoTransName = "");
 
     public:
         static VRImport* get();
