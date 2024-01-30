@@ -30,6 +30,7 @@ class VRMQTTClient : public VRNetworkClient {
         static VRMQTTClientPtr create();
         VRMQTTClientPtr ptr();
 
+        void disconnect();
         void connect(string host, int port) override;
         void onMessage( function<string(string)> f ) override;
 

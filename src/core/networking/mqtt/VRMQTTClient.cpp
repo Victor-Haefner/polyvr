@@ -49,8 +49,7 @@ VRMQTTClient::VRMQTTClient() : VRNetworkClient("mqttClient") {
 
 VRMQTTClient::~VRMQTTClient() {
     cout << "VRMQTTClient::~VRMQTTClient" << endl;
-    data->doPoll = false;
-    data->pollThread.join();
+    disconnect();
     mg_mgr_free(&data->mgr); // Finished, cleanup
     if (data) delete data;
 }
@@ -87,6 +86,7 @@ void fn(struct mg_connection *c, int ev, void *ev_data, void *fn_data) {
     }
 
     if (ev == MG_EV_MQTT_MSG) { // On message
+        auto lock = VRLock(data->mtx);
         struct mg_mqtt_message *mm = (struct mg_mqtt_message *) ev_data;
         //MG_INFO(("%lu RECEIVED %.*s <- %.*s", c->id, (int) mm->data.len, mm->data.ptr, (int) mm->topic.len, mm->topic.ptr));
         data->messages.push_back( { string(mm->data.ptr, mm->data.len), string(mm->topic.ptr, mm->topic.len) } );
@@ -96,13 +96,16 @@ void fn(struct mg_connection *c, int ev, void *ev_data, void *fn_data) {
         MG_INFO(("%lu CLOSED", c->id));
         data->s_conn = NULL;  // Mark that we're closed
         data->doPoll = false;
-        //data->pollThread.join(); TODO: needs to into main thread?
     }
 }
 
-void VRMQTTClient::connect(string host, int port) { // connect("broker.hivemq.com", 1883)
-    auto lock = VRLock(data->mtx);
+void VRMQTTClient::disconnect() {
+    cout << "mqtt disconnect " << endl;
+    data->doPoll = false;
+    if (data->pollThread.joinable()) data->pollThread.join();
+}
 
+void VRMQTTClient::connect(string host, int port) { // connect("broker.hivemq.com", 1883)
     string address = "mqtt://"+host+":"+toString(port);
     data->s_url = address;
 
@@ -113,36 +116,39 @@ void VRMQTTClient::connect(string host, int port) { // connect("broker.hivemq.co
 
     data->doPoll = true;
     data->pollThread = thread( [&]() {
-        while (data->doPoll) { mg_mgr_poll(&data->mgr, 1000);
-        processJobs(); }
+        while (data->doPoll) {
+            mg_mgr_poll(&data->mgr, 1000);
+            processJobs();
+        }
     } );
 }
 
 void VRMQTTClient::handleMessages() {
-    auto lock = VRLock(data->mtx);
-    if (!data->cb) return;
+    vector<vector<string>> mcopy;
 
-    for (auto m : data->messages) {
-        data->cb(m[1] + ": " + m[0]);
+    {
+        auto lock = VRLock(data->mtx);
+        if (!data->cb) return;
+        if (!data->messages.size()) return;
+        mcopy = data->messages; // copy to avoid holding lock when calling cb
+        data->messages.clear();
     }
-    data->messages.clear();
+
+    for (auto& m : mcopy) {
+        data->cb(m[1] + "|" + m[0]);
+    }
 }
 
 void VRMQTTClient::processJobs() {
     auto lock = VRLock(data->mtx);
     if (!data->mqttConnected) return;
 
-    vector<vector<string>> postponed;
-
     for (auto job : data->jobQueue) {
         if (job[0] == "subscribe") {
-            cout << "try subscribing" << endl;
             mg_mqtt_opts opts = data->basicOpts();
             opts.topic = mg_str(job[1].c_str());
             opts.retain = bool(job[2] == "1");
             mg_mqtt_sub(data->s_conn, &opts);
-            // TODO: check if connected and logged in, else put job in postponed
-            // postponed.push_back(job);
         }
 
         if (job[0] == "publish") {
@@ -151,12 +157,10 @@ void VRMQTTClient::processJobs() {
             opts.message = mg_str(job[2].c_str());
             opts.retain = false;
             mg_mqtt_pub(data->s_conn, &opts);
-            // TODO: check if connected and logged in, else put job in postponed
-            // postponed.push_back(job);
         }
     }
 
-    data->jobQueue = postponed;
+    data->jobQueue.clear();
 }
 
 void VRMQTTClient::setAuthentication(string name, string pass) { auto lock = VRLock(data->mtx); data->name = name; data->pass = pass; }
