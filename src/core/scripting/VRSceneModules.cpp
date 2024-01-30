@@ -408,7 +408,7 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
 #endif
 
     sm->registerModule<VRPyProfinetClient>("ProfinetClient", pModVR);
-    sm->registerModule<VRPyMQTTClient>("MQTTClient", pModVR);
+    sm->registerModule<VRPyMQTTClient>("MQTTClient", pModVR, VRPyNetworkClient::typeRef);
     sm->registerModule<VRPyMQTTServer>("MQTTServer", pModVR);
 
 #ifndef WITHOUT_CRYPTOPP
