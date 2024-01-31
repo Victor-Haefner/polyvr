@@ -397,9 +397,8 @@ void VRGlutEditor::on_gl_resize(int w, int h) {
 }
 
 void VRGlutEditor::resizeGLWindow(int x, int y, int w, int h) { // glArea.surface
-    if (fullscreen || maximized) return;
+    if (fullscreen || maximized || winGL < 0) return;
     //cout << "     Glut::updateGLWindow " << x << ", " << y << ", " << w << ", " << h << endl;
-    if (winGL < 0) return;
     glutSetWindow(winGL);
     glutPositionWindow(x, y);
     resize(w, h);
@@ -410,7 +409,12 @@ void VRGlutEditor::on_resize_window(int w, int h) { // resize top window
     if (winUI < 0) return;
     glutSetWindow(winUI);
     glutReshapeWindow(w,h);
-    if (resizeSignal) resizeSignal("glutResize", 0,0,w,h);
+    if (maximized) {
+        glutSetWindow(winGL);
+        glutPositionWindow(0, 0);
+        resize(w, h);
+        glutReshapeWindow(w, h);
+    } else if (resizeSignal) resizeSignal("glutResize", 0,0,w,h);
 }
 
 void VRGlutEditor::on_gl_display() {
