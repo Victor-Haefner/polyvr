@@ -1,6 +1,8 @@
 #include "VRPing.h"
 #include "core/utils/toString.h"
+#ifndef _WIN32
 #include "VRARP.h"
+#endif
 
 #include <boost/asio.hpp>
 #include <iostream>
@@ -107,7 +109,11 @@ FILE *popen(const char *command, const char *type) { return 0; }
 #endif
 
 std::string OSG::VRPing::getMAC(std::string IP, std::string interface) {
+#ifndef _WIN32
     return ::getMAC(IP, interface);
+#else
+    return "";
+#endif
 }
 
 
