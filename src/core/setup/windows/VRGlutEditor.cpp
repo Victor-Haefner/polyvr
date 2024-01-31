@@ -178,7 +178,7 @@ void VRGlutEditor::setTitle(string title) {
 }
 
 void VRGlutEditor::setIcon(string iconpath) {
-    ;
+    setWindowIcon(iconpath);
 }
 
 int VRGlutEditor::getCurrentWinID() { return glutGetWindow(); }

@@ -29,6 +29,7 @@ struct IconList {
 
 void initGlutExtensions();
 void cleanupGlutExtensions();
+void setWindowIcon(string path);
 void startGrabShiftTab();
 
 #endif // VRGLUTEXTENSIONS_H_INCLUDED
