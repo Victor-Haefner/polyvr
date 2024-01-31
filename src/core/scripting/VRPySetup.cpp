@@ -55,6 +55,8 @@ PyMethodDef VRPyView::methods[] = {
 
 PyMethodDef VRPyWindow::methods[] = {
     {"getSize", PyWrap(Window, getSize, "Get window size (width, height) in pixel", Vec2i ) },
+    {"setTitle", PyWrap(Window, setTitle, "Set window title bar", void, string ) },
+    {"setIcon", PyWrap(Window, setIcon, "Set window icon", void, string ) },
     {NULL}  /* Sentinel */
 };
 
