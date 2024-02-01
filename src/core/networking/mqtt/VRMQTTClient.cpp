@@ -110,7 +110,7 @@ void fn(struct mg_connection *c, int ev, void *ev_data, void *fn_data) {
     }
 
     if (ev == MG_EV_CLOSE) {
-        MG_INFO(("%lu CLOSED", c->id));
+        //MG_INFO(("%lu CLOSED", c->id));
         data->s_conn = NULL;  // Mark that we're closed
         data->doPoll = false;
         data->connecting = false;
