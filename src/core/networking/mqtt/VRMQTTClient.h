@@ -34,6 +34,8 @@ class VRMQTTClient : public VRNetworkClient {
         void connect(string host, int port) override;
         void onMessage( function<string(string)> f ) override;
 
+        bool connected();
+
         void setAuthentication(string name, string password);
         void subscribe(string topic, bool retain = false);
         void publish(string topic, string message);

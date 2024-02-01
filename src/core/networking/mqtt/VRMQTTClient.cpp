@@ -16,6 +16,9 @@ struct VRMQTTClient::Data {
     int s_qos = 0;                             // MQTT QoS
     bool doPoll = false;
     bool mqttConnected = false;
+    bool connecting = false;
+    bool responsive = false;
+    bool gotReadEv = false;
     thread pollThread;
     mg_connection* s_conn = 0;              // Client connection
     function<string(string)> cb;
@@ -62,6 +65,8 @@ void VRMQTTClient::onMessage( function<string(string)> f ) { data->cb = f; };
 void fn(struct mg_connection *c, int ev, void *ev_data, void *fn_data) {
     VRMQTTClient::Data* data = (VRMQTTClient::Data*)fn_data;
 
+    //cout << "   fn " << ev << endl;
+
     if (ev == MG_EV_OPEN) {
         MG_INFO(("%lu CREATED", c->id));
         // c->is_hexdumping = 1;
@@ -79,6 +84,7 @@ void fn(struct mg_connection *c, int ev, void *ev_data, void *fn_data) {
     if (ev == MG_EV_MQTT_OPEN) { // MQTT connect is successful
         MG_INFO(("%lu CONNECTED to host: %s", c->id, data->s_url.c_str()));
         data->mqttConnected = true;
+        data->connecting = false;
     }
 
     if (ev == MG_EV_ERROR) { // On error
@@ -88,7 +94,7 @@ void fn(struct mg_connection *c, int ev, void *ev_data, void *fn_data) {
     if (ev == MG_EV_MQTT_MSG) { // On message
         auto lock = VRLock(data->mtx);
         struct mg_mqtt_message *mm = (struct mg_mqtt_message *) ev_data;
-        //MG_INFO(("%lu RECEIVED %.*s <- %.*s", c->id, (int) mm->data.len, mm->data.ptr, (int) mm->topic.len, mm->topic.ptr));
+        MG_INFO(("%lu RECEIVED %.*s <- %.*s", c->id, (int) mm->data.len, mm->data.ptr, (int) mm->topic.len, mm->topic.ptr));
         data->messages.push_back( { string(mm->data.ptr, mm->data.len), string(mm->topic.ptr, mm->topic.len) } );
     }
 
@@ -96,16 +102,28 @@ void fn(struct mg_connection *c, int ev, void *ev_data, void *fn_data) {
         MG_INFO(("%lu CLOSED", c->id));
         data->s_conn = NULL;  // Mark that we're closed
         data->doPoll = false;
+        data->connecting = false;
+        data->mqttConnected = false;
+    }
+
+    if (ev == MG_EV_READ) {
+        data->gotReadEv = true;
     }
 }
 
 void VRMQTTClient::disconnect() {
     cout << "mqtt disconnect " << endl;
     data->doPoll = false;
+    data->connecting = false;
+    data->mqttConnected = false;
     if (data->pollThread.joinable()) data->pollThread.join();
 }
 
 void VRMQTTClient::connect(string host, int port) { // connect("broker.hivemq.com", 1883)
+    if (data->connecting) return;
+    if (data->mqttConnected) return;
+    data->connecting = true;
+
     string address = "mqtt://"+host+":"+toString(port);
     data->s_url = address;
 
@@ -116,11 +134,33 @@ void VRMQTTClient::connect(string host, int port) { // connect("broker.hivemq.co
 
     data->doPoll = true;
     data->pollThread = thread( [&]() {
+
+        bool doPing = false;
+        int pingSent = 0;
         while (data->doPoll) {
+            if (doPing) {
+                mg_mqtt_ping(data->s_conn);
+                pingSent++;
+                doPing = false;
+                data->gotReadEv = false;
+            }
+
+            VRTimer t;
             mg_mgr_poll(&data->mgr, 1000);
+            double T = t.stop();
+            if (T > 500) doPing = true;
+
+            if (pingSent > 1 && !data->gotReadEv) data->responsive = false;
+            if (data->gotReadEv) { data->responsive = true; pingSent = 0; data->gotReadEv = false; }
+
+            //cout << "mqtt ping " << T << ", pingSent " << pingSent << ", responsive " << data->responsive << endl;
             processJobs();
         }
     } );
+}
+
+bool VRMQTTClient::connected() {
+    return data->responsive;
 }
 
 void VRMQTTClient::handleMessages() {

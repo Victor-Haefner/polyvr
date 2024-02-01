@@ -25,6 +25,10 @@ void initGlutExtensions() {
     xwindow = glXGetCurrentDrawable();
 }
 
+void setWindowIcon(string s) {
+    // TODO
+}
+
 void cleanupGlutExtensions() {
     doGrabShiftTab = false;
 }
