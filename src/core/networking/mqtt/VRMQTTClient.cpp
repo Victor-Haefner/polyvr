@@ -29,6 +29,14 @@ struct VRMQTTClient::Data {
     vector<vector<string>> jobQueue;
     vector<vector<string>> messages;
 
+    Data() {}
+
+    ~Data() {
+        //cout << "~Data" << endl;
+        if (pollThread.joinable()) pollThread.join();
+        mg_mgr_free(&mgr);
+    }
+
     mg_mqtt_opts basicOpts() {
         mg_mqtt_opts opts;
         memset(&opts, 0, sizeof(opts));
@@ -41,8 +49,8 @@ struct VRMQTTClient::Data {
 };
 
 VRMQTTClient::VRMQTTClient() : VRNetworkClient("mqttClient") {
-    cout << "VRMQTTClient::VRMQTTClient" << endl;
-    data = new Data();
+    //cout << "VRMQTTClient::VRMQTTClient" << endl;
+    data = shared_ptr<Data>(new Data());
     data->client = this;
     mg_mgr_init(&data->mgr); // Initialise event manager
 
@@ -51,10 +59,8 @@ VRMQTTClient::VRMQTTClient() : VRNetworkClient("mqttClient") {
 }
 
 VRMQTTClient::~VRMQTTClient() {
-    cout << "VRMQTTClient::~VRMQTTClient" << endl;
+    //cout << "VRMQTTClient::~VRMQTTClient" << endl;
     disconnect();
-    mg_mgr_free(&data->mgr); // Finished, cleanup
-    if (data) delete data;
 }
 
 VRMQTTClientPtr VRMQTTClient::create() { return VRMQTTClientPtr( new VRMQTTClient() ); }
@@ -63,12 +69,17 @@ VRMQTTClientPtr VRMQTTClient::ptr() { return dynamic_pointer_cast<VRMQTTClient>(
 void VRMQTTClient::onMessage( function<string(string)> f ) { data->cb = f; };
 
 void fn(struct mg_connection *c, int ev, void *ev_data, void *fn_data) {
+    if (ev == MG_EV_POLL) {
+        //cout << "   fn POLL, data: " << fn_data << endl;
+        return;
+    }
+
     VRMQTTClient::Data* data = (VRMQTTClient::Data*)fn_data;
 
-    //cout << "   fn " << ev << endl;
+    //cout << "   fn " << ev << ", data: " << data << endl;
 
     if (ev == MG_EV_OPEN) {
-        MG_INFO(("%lu CREATED", c->id));
+        //MG_INFO(("%lu CREATED", c->id));
         // c->is_hexdumping = 1;
     }
 
@@ -112,11 +123,16 @@ void fn(struct mg_connection *c, int ev, void *ev_data, void *fn_data) {
 }
 
 void VRMQTTClient::disconnect() {
-    cout << "mqtt disconnect " << endl;
+    //cout << "mqtt disconnect " << endl;
     data->doPoll = false;
     data->connecting = false;
     data->mqttConnected = false;
-    if (data->pollThread.joinable()) data->pollThread.join();
+    //if (data->pollThread.joinable()) data->pollThread.join(); // dont, this causes lag
+
+    auto s = VRScene::getCurrent();
+    auto f = VRUpdateCb::create("mqttThreadCleanup", bind([](shared_ptr<Data> h) { h.reset(); }, data));
+    data.reset();
+    s->queueJob(f, 0, 2000);
 }
 
 void VRMQTTClient::connect(string host, int port) { // connect("broker.hivemq.com", 1883)
@@ -130,11 +146,10 @@ void VRMQTTClient::connect(string host, int port) { // connect("broker.hivemq.co
     mg_mqtt_opts opts = data->basicOpts();
     opts.clean = true;
     opts.version = 4;
-    data->s_conn = mg_mqtt_connect(&data->mgr, data->s_url.c_str(), &opts, fn, data);
+    data->s_conn = mg_mqtt_connect(&data->mgr, data->s_url.c_str(), &opts, fn, data.get());
 
     data->doPoll = true;
-    data->pollThread = thread( [&]() {
-
+    data->pollThread = thread( bind( [&](shared_ptr<Data> data) {
         bool doPing = false;
         int pingSent = 0;
         while (data->doPoll) {
@@ -147,6 +162,7 @@ void VRMQTTClient::connect(string host, int port) { // connect("broker.hivemq.co
 
             VRTimer t;
             mg_mgr_poll(&data->mgr, 1000);
+            if (!data->doPoll) break;
             double T = t.stop();
             if (T > 500) doPing = true;
 
@@ -156,7 +172,7 @@ void VRMQTTClient::connect(string host, int port) { // connect("broker.hivemq.co
             //cout << "mqtt ping " << T << ", pingSent " << pingSent << ", responsive " << data->responsive << endl;
             processJobs();
         }
-    } );
+    }, data ) );
 }
 
 bool VRMQTTClient::connected() {

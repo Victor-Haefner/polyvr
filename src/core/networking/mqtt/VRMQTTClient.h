@@ -17,7 +17,7 @@ class VRMQTTClient : public VRNetworkClient {
         struct Data;
 
     private:
-        Data* data = 0;
+        shared_ptr<Data> data;
         VRUpdateCbPtr updateCb;
 
         void processJobs();
