@@ -21,6 +21,12 @@ void setWindowIcon(string path) {
     } else cout << "Cannot set window icon" << endl;
 }
 
+void maximizeWindow() {
+    cout << "  maximizeWindow hwnd: " << hwnd << endl;
+    if (!hwnd) return;
+    ShowWindow(hwnd, SW_MAXIMIZE);
+}
+
 void initGlutExtensions() {
     cout << " initGlutExtensions" << endl;
     string icon = "ressources/gui/logo_icon_win.ico";
@@ -32,16 +38,6 @@ void initGlutExtensions() {
 void cleanupGlutExtensions() {
     doGrabShiftTab = false;
 }
-
-void set_win_icon_list(IconList& iconList) {
-    /*Atom net_wm_icon = XInternAtom(xdisplay, "_NET_WM_ICON", False);
-    Atom cardinal = XInternAtom(xdisplay, "CARDINAL", False);
-
-    XChangeProperty (xdisplay, xwindow, net_wm_icon, cardinal, 32, PropModeReplace, (uint8_t*) iconList.data, iconList.size);*/
-}
-
-
-
 
 
 
@@ -109,26 +105,6 @@ void IconList::apply() {
     //else // TODO, implement wayland here
 }
 
-void listenForKey(/*XID grab_window*/) { // TODO: add windows and wayland versions
-    /*Display* dpy = XOpenDisplay(0);
-    unsigned int modifiers1 = ShiftMask;
-    unsigned int modifiers2 = ShiftMask | Mod2Mask;
-    KeyCode keycode = XKeysymToKeycode(dpy, XK_Tab);
-
-    XGrabKey(dpy, keycode, modifiers1, grab_window, False, GrabModeAsync, GrabModeAsync);
-    XGrabKey(dpy, keycode, modifiers2, grab_window, False, GrabModeAsync, GrabModeAsync);
-    XSelectInput(dpy, grab_window, KeyPressMask | KeyReleaseMask);
-    XEvent ev;
-    while(doGrabShiftTab) {
-         XNextEvent(dpy, &ev);
-         if (ev.type == KeyPress) uiSignal("shiftTab", {{"state","1"}});
-         if (ev.type == KeyRelease) uiSignal("shiftTab", {{"state","0"}});
-    }
-    XUngrabKey(dpy, keycode, modifiers1, grab_window);
-    XUngrabKey(dpy, keycode, modifiers2, grab_window);
-    XCloseDisplay(dpy);*/
-}
-
 void startGrabShiftTab() {
-    //static thread listener(listenForKey, xwindow);
+    ;
 }

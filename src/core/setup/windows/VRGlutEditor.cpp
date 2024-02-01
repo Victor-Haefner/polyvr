@@ -203,6 +203,7 @@ void VRGlutEditor::setMaximized(bool b) {
         glutSetWindow(topWin);
         glutPositionWindow(0, 0);
         glutReshapeWindow(width, height);
+        maximizeWindow();
     }
     else {
         cout << " glut unmaximize!" << endl;

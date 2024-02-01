@@ -31,5 +31,6 @@ void initGlutExtensions();
 void cleanupGlutExtensions();
 void setWindowIcon(string path);
 void startGrabShiftTab();
+void maximizeWindow();
 
 #endif // VRGLUTEXTENSIONS_H_INCLUDED
