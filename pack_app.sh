@@ -74,6 +74,10 @@ polyvr.exe
 EOT
 fi
 
+if [ -e $pckFolder/cleanupDeploy.sh ]; then
+	/bin/bash $pckFolder/cleanupDeploy.sh 
+fi
+
 #polyvr.exe --standalone=1 --fullscreen=1 --application ../$appProject
 #polyvr.exe --standalone=1 --application ../$appProject
 
