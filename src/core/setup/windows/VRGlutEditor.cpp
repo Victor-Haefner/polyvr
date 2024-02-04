@@ -90,6 +90,7 @@ VRGlutEditor::VRGlutEditor() {
     glutSpecialUpFunc( onMainSpecialUp );
 
     initGlutExtensions(); // just after top level window creation
+    maximizeWindow();
 
     IconList iconList;
     iconList.load("ressources/gui/logo_icon.png");
