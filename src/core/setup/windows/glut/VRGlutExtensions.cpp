@@ -29,6 +29,26 @@ void setWindowIcon(string s) {
     // TODO
 }
 
+void maximizeWindow() {
+    XEvent xev;
+    xev.xclient.type = ClientMessage;
+    xev.xclient.serial = 0;
+    xev.xclient.send_event = True;
+    xev.xclient.display = xdisplay;
+    xev.xclient.window = xwindow;
+    xev.xclient.message_type = XInternAtom(xdisplay, "_NET_WM_STATE", False);
+    xev.xclient.format = 32;
+    xev.xclient.data.l[0] = 1; // _NET_WM_STATE_ADD
+    xev.xclient.data.l[1] = XInternAtom(xdisplay, "_NET_WM_STATE_MAXIMIZED_HORZ", False);
+    xev.xclient.data.l[2] = XInternAtom(xdisplay, "_NET_WM_STATE_MAXIMIZED_VERT", False);
+    xev.xclient.data.l[3] = 0; // no second property
+    xev.xclient.data.l[4] = 0;
+
+    Window root = DefaultRootWindow(xdisplay);
+    XSendEvent(xdisplay, root, False, SubstructureRedirectMask | SubstructureNotifyMask, &xev);
+}
+
+
 void cleanupGlutExtensions() {
     doGrabShiftTab = false;
 }
