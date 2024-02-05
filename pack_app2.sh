@@ -1,8 +1,7 @@
 #!/bin/bash
 
-#./pack_app.sh PolyVR
-#./pack_app.sh FinancialFolder conceptV1.pvr /c/Users/Victor/Projects/financialocean
-#./pack_app.sh PoscarViewer poscarImport.pvr /c/Users/Victor/Projects/surfacechemistry
+#./pack_app2.sh polyvr && ./appimagetool-x86_64.AppImage -n packages/polyvr
+#./pack_app2.sh PoscarViewer poscarImport.pvr /c/Users/Victor/Projects/surfacechemistry
 
 appName=$1
 appProject=$2
@@ -32,6 +31,8 @@ fi
 echo " copy polyvr"
 mkdir $engFolder/src
 cp -r bin/Debug/VRFramework $engFolder/
+cp -r bin/Debug/*.bin $engFolder/
+cp -r bin/Debug/*.dat $engFolder/
 cp -r src/cluster $engFolder/src/cluster
 cp -r ressources $engFolder/ressources
 cp -r setup $engFolder/setup
@@ -52,6 +53,8 @@ cp -r /usr/lib/OPCUA/* $engFolder/libs/
 cp -r /usr/lib/DWG/* $engFolder/libs/
 
 echo " copy system libs"
+cp /usr/lib/x86_64-linux-gnu/nss/libsoftokn3.so $engFolder/libs/
+cp /usr/lib/x86_64-linux-gnu/nss/libnssckbi.so $engFolder/libs/
 cp /usr/lib/x86_64-linux-gnu/libpython2.7.so.1.0 $engFolder/libs/
 cp /usr/lib/x86_64-linux-gnu/libboost_program_options.so.1.74.0 $engFolder/libs/
 cp /usr/lib/x86_64-linux-gnu/libboost_filesystem.so.1.74.0 $engFolder/libs/
@@ -294,6 +297,26 @@ cp /usr/lib/x86_64-linux-gnu/libglut.so.3 $engFolder/libs/
 
 rm -rf $engFolder/libs/CMakeFiles
 
+
+
+if [ -e $pckFolder/cleanupDeploy.sh ]; then
+	/bin/bash $pckFolder/cleanupDeploy.sh 
+fi
+
+
+
+if [ -n "$appProject" ]; then # check is appProject given
+cat <<EOT >> $pckFolder/AppRun
+#!/bin/sh
+HERE="\$(dirname "\$(readlink -f "\${0}")")"
+echo "AppRun PolyVR"
+echo "work dir: '\$HERE'"
+cd \$HERE
+ls
+export LD_LIBRARY_PATH="\${HERE}/libs:\${LD_LIBRARY_PATH}"
+exec ./VRFramework --maximized=1 --application $appProject "\$@"
+EOT
+else
 cat <<EOT >> $pckFolder/AppRun
 #!/bin/sh
 HERE="\$(dirname "\$(readlink -f "\${0}")")"
@@ -304,12 +327,15 @@ ls
 export LD_LIBRARY_PATH="\${HERE}/libs:\${LD_LIBRARY_PATH}"
 exec ./VRFramework "\$@"
 EOT
+fi
+
+
 
 chmod +x $pckFolder/AppRun
 
 cat <<EOT >> $pckFolder/appimage.yml
 app:
-  name: PolyVR
+  name: $appName
   version: 1.0
   exec: PolyVR.sh
   icon: logo_icon.png
@@ -318,7 +344,7 @@ EOT
 cat <<EOT >> $pckFolder/PolyVR.desktop
 [Desktop Entry]
 Type=Application
-Name=PolyVR
+Name=$appName
 Terminal=true
 MimeType=application/x-polyvr
 Categories=Development
