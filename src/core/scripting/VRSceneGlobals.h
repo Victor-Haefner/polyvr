@@ -47,6 +47,7 @@ class VRSceneGlobals: public VRPyBase {
 		static PyObject* testDWGArcs(VRSceneGlobals* self);
 		static PyObject* setWindowTitle(VRSceneGlobals* self, PyObject* args);
 		static PyObject* sendToBrowser(VRSceneGlobals* self, PyObject* args);
+		static PyObject* getPlatform(VRSceneGlobals* self);
 };
 
 OSG_END_NAMESPACE;
