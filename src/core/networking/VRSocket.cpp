@@ -501,7 +501,7 @@ int VRSocket::getPort() { return port; }
 bool VRSocket::ping(string IP, string port) {
 #ifndef __EMSCRIPTEN__
     VRPing ping;
-    return ping.start(IP, port, 0);
+    return ping.startOnPort(IP, port, 0);
 #else
     return false;
 #endif

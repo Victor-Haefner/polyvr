@@ -70,6 +70,7 @@ PyMethodDef VRSceneGlobals::methods[] = {
 	{"getNavigator", (PyCFunction)VRSceneGlobals::getNavigator, METH_NOARGS, "Return a handle to the navigator object" },
 	{"getRendering", (PyCFunction)VRSceneGlobals::getRendering, METH_NOARGS, "Return a handle to the rendering manager" },
 	{"getSetup", (PyCFunction)VRSceneGlobals::getSetup, METH_NOARGS, "Return a handle to the active hardware setup" },
+	{"getPlatform", (PyCFunction)VRSceneGlobals::getPlatform, METH_NOARGS, "Return a string with 'windows', 'linux' or 'mac'" },
 	{"loadScene", (PyCFunction)VRSceneGlobals::loadScene, METH_VARARGS, "Close the current scene and open another - loadScene( str path/to/my/scene.xml )" },
 	{"startThread", (PyCFunction)VRSceneGlobals::startThread, METH_VARARGS, "Start a thread - int startThread( callback, [params] )" },
 	{"joinThread", (PyCFunction)VRSceneGlobals::joinThread, METH_VARARGS, "Join a thread - joinThread( int ID )" },
@@ -192,6 +193,16 @@ PyObject* VRSceneGlobals::getNavigator(VRSceneGlobals* self) {
 PyObject* VRSceneGlobals::getRendering(VRSceneGlobals* self) {
     auto scene = VRScene::getCurrent();
     return VRPyRendering::fromSharedPtr(dynamic_pointer_cast<VRRendering>(scene));
+}
+
+PyObject* VRSceneGlobals::getPlatform(VRSceneGlobals* self) {
+#ifdef _WIN32
+    return PyString_FromString("windows");
+#elif __linux__
+    return PyString_FromString("linux");
+#elif __APPLE__
+    return PyString_FromString("mac");
+#endif
 }
 
 PyObject* VRSceneGlobals::printOSG(VRSceneGlobals* self) {

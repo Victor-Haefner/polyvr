@@ -90,6 +90,7 @@ VRGlutEditor::VRGlutEditor() {
     glutSpecialUpFunc( onMainSpecialUp );
 
     initGlutExtensions(); // just after top level window creation
+    maximizeWindow();
 
     IconList iconList;
     iconList.load("ressources/gui/logo_icon.png");
@@ -170,6 +171,17 @@ VRGlutEditor::~VRGlutEditor() {
 VRGlutEditorPtr VRGlutEditor::ptr() { return static_pointer_cast<VRGlutEditor>( shared_from_this() ); }
 VRGlutEditorPtr VRGlutEditor::create() { return VRGlutEditorPtr(new VRGlutEditor() ); }
 
+void VRGlutEditor::setTitle(string title) {
+    int w = glutGetWindow();
+    glutSetWindow(topWin);
+    glutSetWindowTitle(title.c_str());
+    glutSetWindow(w);
+}
+
+void VRGlutEditor::setIcon(string iconpath) {
+    setWindowIcon(iconpath);
+}
+
 int VRGlutEditor::getCurrentWinID() { return glutGetWindow(); }
 void VRGlutEditor::setCurrentWinID(int i) { glutSetWindow(i); }
 
@@ -192,6 +204,7 @@ void VRGlutEditor::setMaximized(bool b) {
         glutSetWindow(topWin);
         glutPositionWindow(0, 0);
         glutReshapeWindow(width, height);
+        maximizeWindow();
     }
     else {
         cout << " glut unmaximize!" << endl;
@@ -386,9 +399,8 @@ void VRGlutEditor::on_gl_resize(int w, int h) {
 }
 
 void VRGlutEditor::resizeGLWindow(int x, int y, int w, int h) { // glArea.surface
-    if (fullscreen || maximized) return;
+    if (fullscreen || maximized || winGL < 0) return;
     //cout << "     Glut::updateGLWindow " << x << ", " << y << ", " << w << ", " << h << endl;
-    if (winGL < 0) return;
     glutSetWindow(winGL);
     glutPositionWindow(x, y);
     resize(w, h);
@@ -399,7 +411,12 @@ void VRGlutEditor::on_resize_window(int w, int h) { // resize top window
     if (winUI < 0) return;
     glutSetWindow(winUI);
     glutReshapeWindow(w,h);
-    if (resizeSignal) resizeSignal("glutResize", 0,0,w,h);
+    if (maximized) {
+        glutSetWindow(winGL);
+        glutPositionWindow(0, 0);
+        resize(w, h);
+        glutReshapeWindow(w, h);
+    } else if (resizeSignal) resizeSignal("glutResize", 0,0,w,h);
 }
 
 void VRGlutEditor::on_gl_display() {

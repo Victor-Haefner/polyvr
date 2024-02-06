@@ -7,6 +7,7 @@ using namespace OSG;
 #ifndef WITHOUT_HDLC
 simpleVRPyType(HDLC, New_ptr);
 #endif
+simpleVRPyType(Ping, New_ptr);
 simpleVRPyType(RestResponse, 0);
 simpleVRPyType(RestClient, New_optNamed_ptr);
 simpleVRPyType(RestServer, New_optNamed_ptr);
@@ -48,6 +49,13 @@ template<> PyObject* VRPyTypeCaster::cast(const VRICEClient::CHANNEL& v) {
 }
 #endif
 
+PyMethodDef VRPyPing::methods[] = {
+    {"startOnPort", PyWrap(Ping, startOnPort, "Ping server on port (address, port, timeout)", bool, string, string, int) },
+    {"start", PyWrap(Ping, start, "Ping server (address, timeout)", bool, string, int) },
+    {"getMAC", PyWrap(Ping, getMAC, "Get MAC by IP, only works in local network (IP, interface)", string, string, string) },
+    {NULL}  /* Sentinel */
+};
+
 PyMethodDef VRPyProfinetClient::methods[] = {
     {"connect", PyWrap(ProfinetClient, connect, "Connect to server, address, rack, slot", void, string, int, int) },
     {"isConnected", PyWrap(ProfinetClient, isConnected, "Return if connected", bool) },
@@ -63,7 +71,11 @@ PyMethodDef VRPyProfinetClient::methods[] = {
 };
 
 PyMethodDef VRPyMQTTClient::methods[] = {
-    {"connect", PyWrap(MQTTClient, connect, "Connect to server, address, subtopic, pubtopic", void, string, string, string) },
+    {"disconnect", PyWrap(MQTTClient, disconnect, "Disconnect from server", void) },
+    {"connected", PyWrap(MQTTClient, connected, "Returns if connected to a server", bool) },
+    {"setAuthentication", PyWrap(MQTTClient, setAuthentication, "Set authentication parameters, (name, password)", void, string, string) },
+    {"subscribe", PyWrapOpt(MQTTClient, subscribe, "Subscribe to topic, set retain to get current topic value, (topic, retain)", "0", void, string, bool) },
+    {"publish", PyWrap(MQTTClient, publish, "Publish a topic (topic, message)", void, string, string) },
     {NULL}  /* Sentinel */
 };
 

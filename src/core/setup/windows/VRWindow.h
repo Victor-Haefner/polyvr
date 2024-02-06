@@ -80,6 +80,9 @@ class VRWindow : public std::enable_shared_from_this<VRWindow>, public VRName {
         void setMSAA(string s);
         string getMSAA();
 
+        virtual void setTitle(string title) {};
+        virtual void setIcon(string iconpath) {};
+
         virtual void sync(bool fromThread = false);
         virtual void render(bool fromThread = false);
         virtual void clear(Color3f c);

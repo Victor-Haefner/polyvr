@@ -97,7 +97,9 @@ class VRMaterial : public VRObject {
         void setTexture(char* data, int format, Vec3i dims, bool isfloat);
         void setTextureAndUnit(VRTexturePtr img, int unit = 0);
         void setCubeTexture(VRTexturePtr img, string side, int unit = 0);
+        void updateTexture(Vec3i min, Vec3i max, int unit = 0);
         void setTextureParams(int min, int mag, int envMode = GL_MODULATE, int wrapS = GL_REPEAT, int wrapT = GL_REPEAT, int unit = 0);
+        void setAnisotropy(float a, int unit = 0);
         void setMagMinFilter(int mag, int min, int unit = 0);
         void setTextureWrapping(int wrapS, int wrapT, int unit = 0);
         void setTextureType(string type, int unit = 0);

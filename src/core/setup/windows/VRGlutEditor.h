@@ -41,6 +41,9 @@ class VRGlutEditor: public VRWindow {
         int getCurrentWinID();
         void setCurrentWinID(int i);
 
+        void setTitle(string title) override;
+        void setIcon(string iconpath) override;
+
         void onMain_Keyboard_special(int k);
 
         void openPopupWindow(string name, int width, int height);

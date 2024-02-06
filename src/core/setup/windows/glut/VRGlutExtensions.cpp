@@ -25,6 +25,30 @@ void initGlutExtensions() {
     xwindow = glXGetCurrentDrawable();
 }
 
+void setWindowIcon(string s) {
+    // TODO
+}
+
+void maximizeWindow() {
+    XEvent xev;
+    xev.xclient.type = ClientMessage;
+    xev.xclient.serial = 0;
+    xev.xclient.send_event = True;
+    xev.xclient.display = xdisplay;
+    xev.xclient.window = xwindow;
+    xev.xclient.message_type = XInternAtom(xdisplay, "_NET_WM_STATE", False);
+    xev.xclient.format = 32;
+    xev.xclient.data.l[0] = 1; // _NET_WM_STATE_ADD
+    xev.xclient.data.l[1] = XInternAtom(xdisplay, "_NET_WM_STATE_MAXIMIZED_HORZ", False);
+    xev.xclient.data.l[2] = XInternAtom(xdisplay, "_NET_WM_STATE_MAXIMIZED_VERT", False);
+    xev.xclient.data.l[3] = 0; // no second property
+    xev.xclient.data.l[4] = 0;
+
+    Window root = DefaultRootWindow(xdisplay);
+    XSendEvent(xdisplay, root, False, SubstructureRedirectMask | SubstructureNotifyMask, &xev);
+}
+
+
 void cleanupGlutExtensions() {
     doGrabShiftTab = false;
 }
@@ -119,8 +143,11 @@ void listenForKey(XID grab_window) { // TODO: add windows and wayland versions
     while(doGrabShiftTab) {
         XNextEvent(dpy, &ev);
         if (ev.xkey.keycode == 23) { // TODO: why 23?? its not XK_Tab..
-            if (ev.type == KeyPress) uiSignal("shiftTab", {{"state","1"}});
-            if (ev.type == KeyRelease) uiSignal("shiftTab", {{"state","0"}});
+            bool shiftPressed = (ev.xkey.state & ShiftMask) != 0;
+            auto s = shiftPressed ? "1" : "0";
+            //cout << "listenForKey pressed: " << (ev.type == KeyPress) << ", released: " << (ev.type == KeyRelease) << ", shift: " << shiftPressed << endl;
+            if (ev.type == KeyPress) uiSignal("shiftTab", {{"tab","1"}, {"shift",s}});
+            if (ev.type == KeyRelease) uiSignal("shiftTab", {{"tab","0"}, {"shift",s}});
         }
     }
     XUngrabKey(dpy, keycode, modifiers1, grab_window);

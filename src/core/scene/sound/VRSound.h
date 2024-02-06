@@ -71,6 +71,8 @@ class VRSound {
         ~VRSound();
         static VRSoundPtr create();
 
+        VRSoundInterfacePtr getInterface();
+
         void setPath(string path);
         void setLoop(bool loop);
         void setPitch(float pitch);

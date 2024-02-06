@@ -242,7 +242,7 @@ ImScriptEditor::ImScriptEditor() {
     mgr->addCallback("script_editor_add_argument", [&](OSG::VRGuiSignals::Options o){ addArgument(o["name"], o["type"], o["value"]); return true; } );
     mgr->addCallback("editor_cmd", [&](OSG::VRGuiSignals::Options o){ editorCommand(o["cmd"]); return true; } );
     mgr->addCallback("openUiScript", [&](OSG::VRGuiSignals::Options o){ focusOn(o["line"], o["column"]); return true; } );
-    mgr->addCallback("shiftTab", [&](OSG::VRGuiSignals::Options o){ handleShiftTab(toInt(o["state"])); return true; }, true );
+    mgr->addCallback("shiftTab", [&](OSG::VRGuiSignals::Options o){ handleShiftTab(toInt(o["tab"]), toInt(o["shift"])); return true; }, true );
 
     imEditor.SetShowWhitespaces(false); // TODO: add as feature!
     imEditor.SetLanguageDefinition(TextEditor::LanguageDefinition::Python());
@@ -258,9 +258,10 @@ string ImScriptEditor::getSelection() {
     return imEditor.GetSelectedText();
 }
 
-void ImScriptEditor::handleShiftTab(int state) {
+void ImScriptEditor::handleShiftTab(int tab, int shift) {
 	ImGuiIO& io = ImGui::GetIO();
-	io.KeysDown[int('\t')] = state;
+	io.KeysDown[int('\t')] = tab;
+	io.KeyShift = shift;
 }
 
 void ImScriptEditor::focusOn(string line, string column) {

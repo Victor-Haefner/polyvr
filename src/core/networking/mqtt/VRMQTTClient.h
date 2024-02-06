@@ -6,17 +6,22 @@
 
 #include <vector>
 #include <OpenSG/OSGConfig.h>
+#include "../VRNetworkClient.h"
 #include "core/utils/VRMutex.h"
 
 using namespace std;
 OSG_BEGIN_NAMESPACE;
 
-class VRMQTTClient : public std::enable_shared_from_this<VRMQTTClient> {
+class VRMQTTClient : public VRNetworkClient {
     public:
         struct Data;
 
     private:
-        Data* data = 0;
+        shared_ptr<Data> data;
+        VRUpdateCbPtr updateCb;
+
+        void processJobs();
+        void handleMessages();
 
     public:
         VRMQTTClient();
@@ -25,7 +30,15 @@ class VRMQTTClient : public std::enable_shared_from_this<VRMQTTClient> {
         static VRMQTTClientPtr create();
         VRMQTTClientPtr ptr();
 
-        void connect(string address, string sub_topic, string pub_topic);
+        void disconnect();
+        void connect(string host, int port) override;
+        void onMessage( function<string(string)> f ) override;
+
+        bool connected();
+
+        void setAuthentication(string name, string password);
+        void subscribe(string topic, bool retain = false);
+        void publish(string topic, string message);
 };
 
 OSG_END_NAMESPACE;

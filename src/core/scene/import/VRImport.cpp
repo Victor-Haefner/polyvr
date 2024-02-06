@@ -316,7 +316,7 @@ void VRImport::LoadJob::load(VRThreadWeakPtr tw) {
     VRImport::get()->triggerCallbacks(params);
 }
 
-VRObjectPtr VRImport::OSGConstruct(NodeMTRecPtr n, VRObjectPtr parent, string name, string currentFile, NodeCore* geoTrans, string geoTransName) {
+VRObjectPtr VRImport::OSGConstruct(NodeMTRecPtr n, VRObjectPtr parent, string name, string currentFile, NodeCore* geoTrans, NodeCore* geoObj, string geoTransName) {
     if (n == 0) return 0; // TODO add an osg wrap method for each object?
 
     VRObjectPtr tmp = 0;
@@ -335,9 +335,20 @@ VRObjectPtr VRImport::OSGConstruct(NodeMTRecPtr n, VRObjectPtr parent, string na
     if (name == "") name = "NAN";
 
     if (t_name == "Group") {//OpenSG Group
-        tmp = VRObject::create(name);
-        tmp->setCore(OSGCore::create(core), "Object");
-        tmp->addAttachment("collada_name", name);
+        if (n->getNChildren() == 1) { // try to optimize the tree by avoiding obsolete objects
+            string tp = n->getChild(0)->getCore()->getTypeName();
+            if (tp == "Geometry") {
+                geoObj = n->getCore();
+                geoTransName = name;
+                tmp = parent;
+            }
+        }
+
+        if (tmp == 0) {
+            tmp = VRObject::create(name);
+            tmp->setCore(OSGCore::create(core), "Object");
+            tmp->addAttachment("collada_name", name);
+        }
     }
 
     else if (t_name == "ComponentTransform") {
@@ -399,6 +410,11 @@ VRObjectPtr VRImport::OSGConstruct(NodeMTRecPtr n, VRObjectPtr parent, string na
             tmp_g->setMatrix(toMatrix4d(dynamic_cast<Transform*>(geoTrans)->getMatrix()));
             geoTrans = 0;
             geoTransName = "";
+        } else if (geoObj) {
+            tmp_g = VRGeometry::create(geoTransName); // more consistent with storing and loading to/from osb!
+            tmp_g->addAttachment("collada_name", geoTransName);
+            geoObj = 0;
+            geoTransName = "";
         } else {
             tmp_g = VRGeometry::create(name);
         }
@@ -416,7 +432,7 @@ VRObjectPtr VRImport::OSGConstruct(NodeMTRecPtr n, VRObjectPtr parent, string na
     }
 
     for (unsigned int i=0;i<n->getNChildren();i++) {
-        auto obj = OSGConstruct(n->getChild(i), tmp, name, currentFile, geoTrans, geoTransName);
+        auto obj = OSGConstruct(n->getChild(i), tmp, name, currentFile, geoTrans, geoObj, geoTransName);
         if (obj) tmp->addChild(obj);
     }
 

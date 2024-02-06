@@ -3,41 +3,41 @@
 #include "core/utils/system/VRSystem.h"
 #include "core/objects/material/VRTexture.h"
 
-//#include <GL/glx.h>
+#include <Windows.h>
 #include <thread>
 
-//Display* xdisplay = 0;
-//XID xwindow = 0;
 static bool doGrabShiftTab = true;
 string backend;
+HWND hwnd = 0;
+
+void setWindowIcon(string path) {
+    cout << "  SetWindowIcon hwnd: " << hwnd << ", path: " << path << endl;
+    if (!hwnd) return;
+    HICON hIcon = static_cast<HICON>(LoadImage(nullptr, path.c_str(), IMAGE_ICON, 0, 0, LR_LOADFROMFILE | LR_DEFAULTSIZE | LR_SHARED));
+    if (hIcon) {
+        // Set the icon for the window class
+        SendMessage(hwnd, WM_SETICON, ICON_BIG, reinterpret_cast<LPARAM>(hIcon));
+        SendMessage(hwnd, WM_SETICON, ICON_SMALL, reinterpret_cast<LPARAM>(hIcon));
+    } else cout << "Cannot set window icon" << endl;
+}
+
+void maximizeWindow() {
+    cout << "  maximizeWindow hwnd: " << hwnd << endl;
+    if (!hwnd) return;
+    ShowWindow(hwnd, SW_MAXIMIZE);
+}
 
 void initGlutExtensions() {
-    /*string XDG_SESSION_TYPE = getSystemVariable("XDG_SESSION_TYPE");
-    string DISPLAY = getSystemVariable("DISPLAY");
-    string WAYLAND_DISPLAY = getSystemVariable("WAYLAND_DISPLAY");
-
-    if (WAYLAND_DISPLAY != "" || XDG_SESSION_TYPE == "wayland") backend = "wayland";
-    else if (DISPLAY != "" || XDG_SESSION_TYPE == "x11") backend = "x11";
-
-    // TODO: use backend variable to guard x11 calls
-
-    xdisplay = glXGetCurrentDisplay();
-    xwindow = glXGetCurrentDrawable();*/
+    cout << " initGlutExtensions" << endl;
+    string icon = "ressources/gui/logo_icon_win.ico";
+    hwnd = FindWindow(nullptr, "PolyVR");
+    if (!hwnd) cout << "Cannot find window 'PolyVR'" << endl;
+    setWindowIcon("ressources/gui/logo_icon_win.ico");
 }
 
 void cleanupGlutExtensions() {
     doGrabShiftTab = false;
 }
-
-void set_win_icon_list(IconList& iconList) {
-    /*Atom net_wm_icon = XInternAtom(xdisplay, "_NET_WM_ICON", False);
-    Atom cardinal = XInternAtom(xdisplay, "CARDINAL", False);
-
-    XChangeProperty (xdisplay, xwindow, net_wm_icon, cardinal, 32, PropModeReplace, (uint8_t*) iconList.data, iconList.size);*/
-}
-
-
-
 
 
 
@@ -105,26 +105,6 @@ void IconList::apply() {
     //else // TODO, implement wayland here
 }
 
-void listenForKey(/*XID grab_window*/) { // TODO: add windows and wayland versions
-    /*Display* dpy = XOpenDisplay(0);
-    unsigned int modifiers1 = ShiftMask;
-    unsigned int modifiers2 = ShiftMask | Mod2Mask;
-    KeyCode keycode = XKeysymToKeycode(dpy, XK_Tab);
-
-    XGrabKey(dpy, keycode, modifiers1, grab_window, False, GrabModeAsync, GrabModeAsync);
-    XGrabKey(dpy, keycode, modifiers2, grab_window, False, GrabModeAsync, GrabModeAsync);
-    XSelectInput(dpy, grab_window, KeyPressMask | KeyReleaseMask);
-    XEvent ev;
-    while(doGrabShiftTab) {
-         XNextEvent(dpy, &ev);
-         if (ev.type == KeyPress) uiSignal("shiftTab", {{"state","1"}});
-         if (ev.type == KeyRelease) uiSignal("shiftTab", {{"state","0"}});
-    }
-    XUngrabKey(dpy, keycode, modifiers1, grab_window);
-    XUngrabKey(dpy, keycode, modifiers2, grab_window);
-    XCloseDisplay(dpy);*/
-}
-
 void startGrabShiftTab() {
-    //static thread listener(listenForKey, xwindow);
+    ;
 }

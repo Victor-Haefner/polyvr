@@ -25,6 +25,7 @@
 |=============================================================================*/
 #include "s7_server.h"
 #include "s7_firmware.h"
+#include <chrono>
 const byte BitMask[8] = {0x01,0x02,0x04,0x08,0x10,0x20,0x40,0x80};
 
 //---------------------------------------------------------------------------
@@ -37,8 +38,11 @@ void FillTime(PS7Time PTime)
     time(&Now);
     struct tm *DT = localtime(&Now);
 
-    clock_gettime(CLOCK_REALTIME, &ts);
-    ms = ts.tv_nsec / 1000000;
+    //clock_gettime(CLOCK_REALTIME, &ts);
+    //ms = ts.tv_nsec / 1000000;
+    auto now = std::chrono::high_resolution_clock::now();
+    auto duration = now.time_since_epoch();
+    ms = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
 
     PTime->bcd_year=BCD(DT->tm_year-100);
     PTime->bcd_mon =BCD(DT->tm_mon+1);
@@ -1813,7 +1817,7 @@ void TS7Worker::BLK_ListBoT(byte BlockType, bool Start, TCB &CB)
     Data=PDataFunGetBot(pbyte(&CB.Answer)+ResHeaderSize17+sizeof(TResFunGetBlockInfo));
 
     int area;
-    uint i = 0, j = 0;
+    unsigned int i = 0, j = 0;
     byte uk, blockLang;
     size_t listLen;
     switch (BlockType) {
@@ -2089,11 +2093,11 @@ uint16_t TS7Worker::SZLPrepareAnswerHeader(bool first, bool last, uint16_t dataS
     // Set DURN correctly
     if (first && last)
         SZL.ResParams->resvd = 0x0000;
-    if (first && not last)
+    if (first && !last)
         SZL.ResParams->resvd = ( 0x01 << 8 ) | ((FServer->GetNextDURN() & 0xFF) );
-    if (not first && not last)
+    if (!first && !last)
         SZL.ResParams->resvd = ( 0x01 << 8 ) | ((FServer->GetCurrentDURN() & 0xFF) );
-    if (not first && last)
+    if (!first && last)
         SZL.ResParams->resvd = ( 0x00 << 8 ) | ((FServer->GetCurrentDURN() & 0xFF) );
 
     return result;
@@ -2259,7 +2263,7 @@ void TS7Worker::SZLCData(int SZLID, void *P, int len)
 // dynamic diagnostic buffer
 void TS7Worker::SZL_ID0A0()
 {
-    uint items = FServer->GetDiagItemCount();
+    unsigned int items = FServer->GetDiagItemCount();
     size_t bufferSize = items * DiagItemLength;
     byte buffer[MaxDiagBufferItems * DiagItemLength];
     PS7ResSZLDataFirst ResData = PS7ResSZLDataFirst(SZL.ResData);
@@ -2268,7 +2272,7 @@ void TS7Worker::SZL_ID0A0()
     SZL.ResParams->Err  =0x0000;
     ResData->Ret = 0xFF;
     ResData->TS = TS_ResOctet;
-    ResData->DLen = SwapWord(uint(bufferSize + 8));
+    ResData->DLen = SwapWord((unsigned int)(bufferSize + 8));
     ResData->ID = 0xA000;
     ResData->Index = 0x0000;
     ResData->ListLen = SwapWord(DiagItemLength);
@@ -2717,7 +2721,7 @@ bool TS7Worker::PerformGroupSZL()
 {
   SZLSetup();
 
-  if (not SZLSubFuncRead()) {
+  if (!SZLSubFuncRead()) {
     return true;
   }
 
@@ -2939,7 +2943,7 @@ void TSnap7Server::AddDiagItem(pbyte Item)
     AddedDiagItemCount++;
 }
 //------------------------------------------------------------------------------
-uint TSnap7Server::GetDiagItemCount() {
+unsigned int TSnap7Server::GetDiagItemCount() {
     return AddedDiagItemCount > MaxDiagBufferItems ? MaxDiagBufferItems : AddedDiagItemCount;
 }
 //------------------------------------------------------------------------------

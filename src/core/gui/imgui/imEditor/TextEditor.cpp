@@ -709,6 +709,8 @@ void TextEditor::HandleKeyboardInputs()
 	auto ctrl = io.ConfigMacOSXBehaviors ? io.KeySuper : io.KeyCtrl;
 	auto alt = io.ConfigMacOSXBehaviors ? io.KeyCtrl : io.KeyAlt;
 
+	//std::cout << " -- HandleKeyboardInputs io.KeyShift: " << io.KeyShift << ", tab: " << ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Tab)) << std::endl;
+
 	if (ImGui::IsWindowFocused())
 	{
 		if (ImGui::IsWindowHovered())
