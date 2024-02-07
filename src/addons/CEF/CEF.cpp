@@ -24,6 +24,7 @@
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/material/VRTexture.h"
 #include "core/objects/material/VRTextureGenerator.h"
+#include "core/math/partitioning/boundingbox.h"
 #include "core/utils/VRLogger.h"
 #include "core/utils/system/VRSystem.h"
 
@@ -42,6 +43,11 @@ class CEF_handler : public CefRenderHandler, public CefLoadHandler, public CefCo
         VRTexturePtr image = 0;
         int width = 1024;
         int height = 1024;
+        bool imgSetOnce = false;
+
+    public:
+        bool updateRect = false;
+        Boundingbox bb;
 
     public:
         CEF_handler();
@@ -161,14 +167,62 @@ bool CEF_handler::OnConsoleMessage( CefRefPtr< CefBrowser > browser, cef_log_sev
 #endif
 }
 
+UInt64 setSubData(Image* img, Int32 x0, Int32 y0, Int32 z0, Int32 srcW, Int32 srcH, Int32 srcD, const UInt8 *src ) {
+    UChar8 *dest = img->editData();
+    if (!src || !dest) return 0;
+
+    UInt32 xMax = x0 + srcW;
+    UInt32 yMax = y0 + srcH;
+    UInt32 zMax = z0 + srcD;
+
+    UInt64 changedPixels = 0;
+    UInt64 lineSize = 0;
+    UInt64 dataPtr = 0;
+    for (UInt32 z = z0; z < zMax; z++) {
+        for (UInt32 y = y0; y < yMax; y++) {
+            lineSize = (xMax - x0) * img->getBpp();
+            dataPtr  = ((z * img->getHeight() + y) * img->getWidth() + x0) * img->getBpp();
+            memcpy (&dest[dataPtr], &src[dataPtr], size_t(lineSize));
+            changedPixels += lineSize;
+        }
+    }
+
+    return changedPixels;
+}
+
+/*void setDirty(Image* img, Boundingbox bb) {
+    Vec3i min = Vec3i(bb.min());
+    Vec3i max = Vec3i(bb.max());
+
+    for(auto& parent : img->getHandleParents()) {
+        TextureChunkPtr texParent = TextureChunkPtr::dcast(parent);
+        if (!texParent != NullFC) continue;
+        texParent->imageContentChanged(min[0], max[0], min[1], max[1], min[2], max[2]);
+    }
+}*/
 
 void CEF_handler::OnPaint(CefRefPtr<CefBrowser> browser, PaintElementType type, const RectList& dirtyRects, const void* buffer, int width, int height) {
     //cout << "CEF_handler::OnPaint " << image << endl;
     if (!image) return;
     auto img = image->getImage();
-    if (img) {
-        //cout << " CEF_handler::OnPaint set " << img << endl;
+    if (!img) return;
+
+    //cout << " CEF_handler::OnPaint set " << img << endl;
+    if (!imgSetOnce || width != img->getWidth() || height != img->getHeight()) {
         img->set(Image::OSG_BGRA_PF, width, height, 1, 0, 1, 0.0, (const uint8_t*)buffer, Image::OSG_UINT8_IMAGEDATA, true, 1);
+        imgSetOnce = true;
+        updateRect = false;
+        //cout << "changed all pixels!" << endl;
+    } else {
+        bb.clear();
+        UInt64 changedPixels = 0;
+        for (const CefRect& r : dirtyRects) {
+            changedPixels += setSubData(img, r.x, r.y, 0, r.width, r.height, 1, (const uint8_t*)buffer);
+            bb.update(Vec3d(r.x, r.y, 0));
+            bb.update(Vec3d(r.x+r.width, r.y+r.height, 1));
+        }
+        updateRect = true;
+        //cout << " changed pixels: " << changedPixels << ", or " << double(changedPixels)/(width*height) << "%" << endl;
     }
 }
 
@@ -327,27 +381,37 @@ void CEF::setMaterial(VRMaterialPtr mat) {
 }
 
 string CEF::getSite() { return site; }
-void CEF::reload() { 
+void CEF::reload() {
     cout << "CEF::reload " << site << ", " << internals->browser << endl;
     if (internals->browser) {
 #ifdef _WIN32
         internals->browser->GetMainFrame()->LoadURL(site); // Reload doesnt work on windows ??
 #else
-        internals->browser->Reload(); 
+        internals->browser->Reload();
 #endif
         //internals->browser->ReloadIgnoreCache(); // TODO: try this out
     }
-    if (auto m = mat.lock()) m->updateDeferredShader(); 
+    if (auto m = mat.lock()) m->updateDeferredShader();
 }
 
 void CEF::update() {
-    if (!init || !internals->client->getHandler()) return;
-    auto img = internals->client->getHandler()->getImage();
-    int dim1= img->getImage()->getDimension();
+    auto handler = internals->client->getHandler();
+    if (!init || !handler) return;
+
+    auto img = handler->getImage();
+    int dim1 = img->getImage()->getDimension();
     CefDoMessageLoopWork();
-    int dim2= img->getImage()->getDimension();
-    if (dim1 != dim2)
-        if (auto m = mat.lock()) m->updateDeferredShader();
+    int dim2 = img->getImage()->getDimension();
+
+    if (auto m = mat.lock()) {
+        if (dim1 != dim2) m->updateDeferredShader();
+        if (handler->updateRect) {
+            Vec3i m1 = Vec3i(handler->bb.min());
+            Vec3i m2 = Vec3i(handler->bb.max());
+            //cout << " " << m1 << " -> " << m2 << endl;
+            //m->updateTexture(m1, m2); // TODO !!
+        }
+    }
 }
 
 void CEF::open(string site) {
