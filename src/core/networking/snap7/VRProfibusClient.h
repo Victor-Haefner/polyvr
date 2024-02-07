@@ -32,16 +32,16 @@ class VRProfinetClient : public std::enable_shared_from_this<VRProfinetClient> {
         void disconnect();
         bool isConnected();
 
-        string read(int db, int offset, int length);
-        void write(int db, int offset, string val);
+        string read(int db, int offset, int length,string dbType = "database");
+        void write(int db, int offset, string val,string dbType = "database");
 
-        bool  readBool(int db, int pos, int bit);
-        int   readInt(int db, int pos);
-        float readFloat(int db, int pos);
+        bool  readBool(int db, int pos, int bit,string dbType = "database");
+        int   readInt(int db, int pos,string dbType = "database");
+        float readFloat(int db, int pos,string dbType = "database");
 
-        void writeBool(int db, int pos, int bit, bool val);
-        void writeInt(int db, int pos, int val);
-        void writeFloat(int db, int pos, float val);
+        void writeBool(int db, int pos, int bit, bool val,string dbType = "database");
+        void writeInt(int db, int pos, int val,string dbType = "database");
+        void writeFloat(int db, int pos, float val,string dbType = "database");
 };
 
 OSG_END_NAMESPACE;
