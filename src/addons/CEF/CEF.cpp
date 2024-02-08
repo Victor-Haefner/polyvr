@@ -168,7 +168,7 @@ bool CEF_handler::OnConsoleMessage( CefRefPtr< CefBrowser > browser, cef_log_sev
 }
 
 UInt64 setSubData(Image* img, Int32 x0, Int32 y0, Int32 z0, Int32 srcW, Int32 srcH, Int32 srcD, const UInt8 *src ) {
-    UChar8 *dest = img->editData();
+    UChar8* dest = img->editData();
     if (!src || !dest) return 0;
 
     UInt32 xMax = x0 + srcW;
@@ -189,17 +189,6 @@ UInt64 setSubData(Image* img, Int32 x0, Int32 y0, Int32 z0, Int32 srcW, Int32 sr
 
     return changedPixels;
 }
-
-/*void setDirty(Image* img, Boundingbox bb) {
-    Vec3i min = Vec3i(bb.min());
-    Vec3i max = Vec3i(bb.max());
-
-    for(auto& parent : img->getHandleParents()) {
-        TextureChunkPtr texParent = TextureChunkPtr::dcast(parent);
-        if (!texParent != NullFC) continue;
-        texParent->imageContentChanged(min[0], max[0], min[1], max[1], min[2], max[2]);
-    }
-}*/
 
 void CEF_handler::OnPaint(CefRefPtr<CefBrowser> browser, PaintElementType type, const RectList& dirtyRects, const void* buffer, int width, int height) {
     //cout << "CEF_handler::OnPaint " << image << endl;
@@ -407,9 +396,10 @@ void CEF::update() {
         if (dim1 != dim2) m->updateDeferredShader();
         if (handler->updateRect) {
             Vec3i m1 = Vec3i(handler->bb.min());
-            Vec3i m2 = Vec3i(handler->bb.max());
+            Vec3i m2 = Vec3i(handler->bb.max()) - Vec3i(1,1,1);
             //cout << " " << m1 << " -> " << m2 << endl;
-            //m->updateTexture(m1, m2); // TODO !!
+            m->updateTexture(m1, m2);
+            handler->updateRect = false;
         }
     }
 }
