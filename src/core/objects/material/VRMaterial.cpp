@@ -843,15 +843,16 @@ void VRMaterial::setAnisotropy(float a, int unit) {
     }
 }
 
-void VRMaterial::updateTexture(Vec3i min, Vec3i max, int unit) {
+void VRMaterial::updateTexture(Vec3i m1, Vec3i m2, int unit) {
     auto texChunk = getTexChunk(unit);
-    if (texChunk) {
-        texChunk->setDirtyMinX(min[0]);
-        texChunk->setDirtyMinY(min[1]);
-        texChunk->setDirtyMinZ(min[2]);
-        texChunk->setDirtyMaxX(max[0]);
-        texChunk->setDirtyMaxY(max[1]);
-        texChunk->setDirtyMaxZ(max[2]);
+    if (texChunk && texChunk->getImage()) {
+        Vec3i S = texChunk->getImage()->getSize();
+        texChunk->setDirtyMinX( max(m1[0], 0) );
+        texChunk->setDirtyMinY( max(m1[1], 0) );
+        texChunk->setDirtyMinZ( max(m1[2], 0) );
+        texChunk->setDirtyMaxX( min(m2[0], S[0]-1) );
+        texChunk->setDirtyMaxY( min(m2[1], S[1]-1) );
+        texChunk->setDirtyMaxZ( min(m2[2], S[2]-1) );
     }
 }
 

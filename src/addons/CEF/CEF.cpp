@@ -397,7 +397,6 @@ void CEF::update() {
         if (handler->updateRect) {
             Vec3i m1 = Vec3i(handler->bb.min());
             Vec3i m2 = Vec3i(handler->bb.max()) - Vec3i(1,1,1);
-            //cout << " " << m1 << " -> " << m2 << endl;
             m->updateTexture(m1, m2);
             handler->updateRect = false;
         }
