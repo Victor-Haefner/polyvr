@@ -1,5 +1,6 @@
 #include "VRGuiNetwork.h"
 #include "widgets/VRWidgetsCanvas.h"
+#include "core/gui/VRGuiManager.h"
 
 #include "core/scene/VRSceneManager.h"
 #include "core/utils/VRFunction.h"
@@ -21,11 +22,6 @@ VRNetworkWidget::VRNetworkWidget() : VRCanvasWidget() {
     wID = i;
 
     origin = TOP_LEFT;
-
-    /*auto frame = gtk_frame_new(0);
-    gtk_fixed_put(canvas, frame, 0, 0);
-    widget = GTK_FRAME(frame);
-    gtk_widget_show_all(frame);*/
 }
 
 int VRNetworkWidget::ID() {
@@ -33,57 +29,34 @@ int VRNetworkWidget::ID() {
 }
 
 VRNetNodeWidget::VRNetNodeWidget(string lbl) : VRNetworkWidget() {
-    /*auto box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
-    auto label = gtk_label_new(lbl.c_str());
-    gtk_box_pack_start(GTK_BOX(box), label, true, true, 2);
-    gtk_container_add(GTK_CONTAINER(widget), box);
-    gtk_widget_show_all(GTK_WIDGET(widget));*/
+    uiSignal("on_new_net_node", {{"ID",toString(wID)}, {"name",lbl}});
 }
 
 VRDataFlowWidget::VRDataFlowWidget() : VRNetworkWidget() {
     curve = vector<double>(W,0);
-
-    /*area = gtk_drawing_area_new();
-    connect_signal<void, cairo_t*>(area, bind(&VRDataFlowWidget::onExpose, this, placeholders::_1), "draw");
-    gtk_widget_set_size_request(area, W, H);
-
-    gtk_container_add(GTK_CONTAINER(widget), area);
-    gtk_widget_show_all(GTK_WIDGET(widget));*/
+    uiSignal("on_new_data_flow", {{"ID",toString(wID)}, {"width",toString(W)}, {"height",toString(H)}});
 }
 
 void VRDataFlowWidget::setCurve(vector<double> data) {
     curve = data;
     if (curve.size() != W) {
         W = curve.size();
-        //gtk_widget_set_size_request(area, W, H);
+        uiSignal("on_data_flow_resize", {{"ID",toString(wID)}, {"width",toString(W)}, {"height",toString(H)}});
     }
-    //gtk_widget_queue_draw_area(area, 0, 0, W, H);
 }
 
 bool VRDataFlowWidget::onExpose() {
-    /*guint width = gtk_widget_get_allocated_width (area);
-    guint height = gtk_widget_get_allocated_height (area);
-
-    GtkStyleContext* context = gtk_widget_get_style_context (area);
-    gtk_render_background(context, cr, 0, 0, width, height);
-
-    GdkRGBA color;
-    gtk_style_context_get_color (context, gtk_style_context_get_state (context), &color);
-    gdk_cairo_set_source_rgba (cr, &color);
-
-    for (int i=0; i<min(W,int(width)); i++) {
-        int h = max(1,int(curve[i]*height));
-        cairo_rectangle(cr, i, height-h, 1, h);
-    }
-    cairo_fill (cr);*/
-
+    uiSignal("on_data_flow_changed", {{"ID",toString(wID)}, {"curve",toString(curve)}});
     return false;
 }
 
 VRGuiNetwork::VRGuiNetwork() {
     canvas = VRWidgetsCanvas::create("networkCanvas");
-    //setToolButtonCallback("networkButtonUpdate", bind(&VRGuiNetwork::update, this));
-    //setNoteBookCallback("notebook3", bind(&VRGuiNetwork::onTabSwitched, this, placeholders::_1, placeholders::_2));
+
+    auto mgr = OSG::VRGuiSignals::get();
+    mgr->addCallback("ui_network_update", [&](OSG::VRGuiSignals::Options o) { update(); return true; } );
+    mgr->addCallback("ui_change_scene_tab", [&](OSG::VRGuiSignals::Options o) { onTabSwitched(o["tab"]); return true; } );
+
     update();
 
     auto sm = VRSceneManager::get();
@@ -93,14 +66,12 @@ VRGuiNetwork::VRGuiNetwork() {
 
 VRGuiNetwork::~VRGuiNetwork() {}
 
-/*void VRGuiNetwork::onTabSwitched(GtkWidget* page, unsigned int tab) {
-    auto nbook = VRGuiBuilder::get()->get_widget("notebook3");
-    string name = gtk_notebook_get_tab_label_text(GTK_NOTEBOOK(nbook), page);
-    if (name == "Network") {
+void VRGuiNetwork::onTabSwitched(string tab) {
+    if (tab == "Network") {
         update();
         tabIsVisible = true;
     } else tabIsVisible = false;
-}*/
+}
 
 void VRGuiNetwork::clear() {
     canvas->clear();
@@ -144,21 +115,19 @@ void VRGuiNetwork::updateFlows() {
 }
 
 int VRGuiNetwork::addFlow(Vec2i pos, void* key) {
-    /*auto dfw = VRDataFlowWidgetPtr( new VRDataFlowWidget(canvas->getCanvas()) );
+    auto dfw = VRDataFlowWidgetPtr( new VRDataFlowWidget() );
     canvas->addWidget(dfw->wID, dfw);
     dfw->move(Vec2d(pos));
     if (!flows.count(key)) flows[key] = vector<int>();
     flows[key].push_back( dfw->wID );
-    return dfw->wID;*/
-    return 0;
+    return dfw->wID;
 }
 
 int VRGuiNetwork::addNode(string label, Vec2i pos) {
-    /*auto cw = VRNetNodeWidgetPtr( new VRNetNodeWidget(label, canvas->getCanvas()) );
+    auto cw = VRNetNodeWidgetPtr( new VRNetNodeWidget(label) );
     canvas->addWidget(cw->wID, cw);
     cw->move(Vec2d(pos));
-    return cw->wID;*/
-    return 0;
+    return cw->wID;
 }
 
 void VRGuiNetwork::connectNodes(int n1, int n2, string color) {

@@ -51,8 +51,8 @@ VRWidgetsCanvasPtr VRWidgetsCanvas::ptr() { return static_pointer_cast<VRWidgets
 VRGraphLayoutPtr VRWidgetsCanvas::getLayout() { return layout; }
 
 void VRWidgetsCanvas::clear() {
-    layout->clear();
-    layout_graph->clear();
+    if (layout) layout->clear();
+    if (layout_graph) layout_graph->clear();
     widgets.clear();
     connectors.clear();
 }

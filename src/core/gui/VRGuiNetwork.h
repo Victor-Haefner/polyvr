@@ -42,8 +42,8 @@ class VRDataFlowWidget : public VRNetworkWidget {
 
 class VRGuiNetwork {
 	private:
-        VRWidgetsCanvasPtr canvas;
         bool tabIsVisible = false;
+        VRWidgetsCanvasPtr canvas;
         VRUpdateCbPtr updateFlowsCb;
         map<void*, vector<int>> flows;
 
@@ -58,8 +58,7 @@ class VRGuiNetwork {
         int addTCPServer(VRTCPServerPtr server, Vec2i& position);
         void addICEClient(VRICEClientPtr client, Vec2i& position);
 
-        //void onTabSwitched(_GtkWidget* page, unsigned int tab);
-
+        void onTabSwitched(string tab);
         void updateFlows();
 
 	public:

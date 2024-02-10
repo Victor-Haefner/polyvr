@@ -134,13 +134,13 @@ void VRGuiManager::init() {
     guiSignalCbs.push_back(fkt);
 
     g_di = new VRGuiSetup();
+    g_net = new VRGuiNetwork();
 
     return;
 
     //gtk_rc_parse("gui/gtkrc");
     g_mon = new VRGuiMonitor();
     g_nav = new VRGuiNav();
-    g_net = new VRGuiNetwork();
     g_sem = new VRGuiSemantics();
 
 
