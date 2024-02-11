@@ -43,11 +43,7 @@ void VRDataFlowWidget::setCurve(vector<double> data) {
         W = curve.size();
         uiSignal("on_data_flow_resize", {{"ID",toString(wID)}, {"width",toString(W)}, {"height",toString(H)}});
     }
-}
-
-bool VRDataFlowWidget::onExpose() {
     uiSignal("on_data_flow_changed", {{"ID",toString(wID)}, {"curve",toString(curve)}});
-    return false;
 }
 
 VRGuiNetwork::VRGuiNetwork() {
@@ -75,6 +71,7 @@ void VRGuiNetwork::onTabSwitched(string tab) {
 
 void VRGuiNetwork::clear() {
     canvas->clear();
+    uiSignal("on_net_ui_clear", {});
 }
 
 void VRGuiNetwork::updateFlows() {

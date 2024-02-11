@@ -32,8 +32,6 @@ class VRDataFlowWidget : public VRNetworkWidget {
         int W = 24;
         int H = 16;
 
-        bool onExpose();
-
     public:
         VRDataFlowWidget();
 

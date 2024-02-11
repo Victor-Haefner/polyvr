@@ -18,6 +18,7 @@ class VRCanvasWidget : public std::enable_shared_from_this<VRCanvasWidget> {
 
 	public:
         Vec2d pos;
+        Vec2i size;
         bool visible = true;
         bool subTreeFolded = false;
         ORIGIN origin = CENTER;

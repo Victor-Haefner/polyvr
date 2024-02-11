@@ -484,20 +484,21 @@ void ImScripting::render() {
 
     // toolbar
     ImGui::Spacing();
-    ImGui::Indent(5);  if (ImGui::Button("New")) uiSignal("scripts_toolbar_new");
-    ImGui::SameLine(); if (ImGui::Button("Template")) uiSignal("ui_toggle_popup", {{"name","template"}, {"width","800"}, {"height","600"}});
-    ImGui::SameLine(); if (ImGui::Button("Group")) uiSignal("scripts_toolbar_group");
-    ImGui::SameLine(); if (ImGui::Button("Import")) uiSignal("ui_toggle_popup", {{"name","import"}, {"width","400"}, {"height","300"}});
-    ImGui::SameLine(); if (ImGui::Button("Delete")) uiSignal("askUser", {{"msg1","This will remove the selected script!"}, {"msg2","Are you sure?"}, {"sig","scripts_toolbar_delete"}});
-    ImGui::SameLine(); if (ImGui::Checkbox("Pause Scripts", &pause)) uiSignal("scripts_toolbar_pause", {{"state",toString(pause)}});
-    ImGui::SameLine(); if (ImGui::Button("CPP")) uiSignal("scripts_toolbar_cpp");
+    ImGui::Indent(5);
+        if (ImGui::Button("New")) uiSignal("scripts_toolbar_new");
+        ImGui::SameLine(); if (ImGui::Button("Template")) uiSignal("ui_toggle_popup", {{"name","template"}, {"width","800"}, {"height","600"}});
+        ImGui::SameLine(); if (ImGui::Button("Group")) uiSignal("scripts_toolbar_group");
+        ImGui::SameLine(); if (ImGui::Button("Import")) uiSignal("ui_toggle_popup", {{"name","import"}, {"width","400"}, {"height","300"}});
+        ImGui::SameLine(); if (ImGui::Button("Delete")) uiSignal("askUser", {{"msg1","This will remove the selected script!"}, {"msg2","Are you sure?"}, {"sig","scripts_toolbar_delete"}});
+        ImGui::SameLine(); if (ImGui::Checkbox("Pause Scripts", &pause)) uiSignal("scripts_toolbar_pause", {{"state",toString(pause)}});
+        ImGui::SameLine(); if (ImGui::Button("CPP")) uiSignal("scripts_toolbar_cpp");
 
-                       if (ImGui::Button("Save")) uiSignal("scripts_toolbar_save");
-    ImGui::SameLine(); if (ImGui::Button("Execute")) uiSignal("scripts_toolbar_execute");
-    ImGui::SameLine(); if (ImGui::Button("Search")) openSearch();
-    ImGui::SameLine(); if (ImGui::Button("Documentation")) uiSignal("ui_toggle_popup", {{"name","documentation"}, {"width","800"}, {"height","600"}});
-    ImGui::SameLine(); if (ImGui::Checkbox("Performance", &perf)) { scriptlist.doPerf = perf; scriptlist.computeMinWidth(); uiSignal("scripts_toolbar_performance", {{"state",toString(perf)}}); }
-    ImGui::Unindent();
+                           if (ImGui::Button("Save")) uiSignal("scripts_toolbar_save");
+        ImGui::SameLine(); if (ImGui::Button("Execute")) uiSignal("scripts_toolbar_execute");
+        ImGui::SameLine(); if (ImGui::Button("Search")) openSearch();
+        ImGui::SameLine(); if (ImGui::Button("Documentation")) uiSignal("ui_toggle_popup", {{"name","documentation"}, {"width","800"}, {"height","600"}});
+        ImGui::SameLine(); if (ImGui::Checkbox("Performance", &perf)) { scriptlist.doPerf = perf; scriptlist.computeMinWidth(); uiSignal("scripts_toolbar_performance", {{"state",toString(perf)}}); }
+    ImGui::Unindent(5);
 
     ImGui::Spacing();
     //ImGui::Separator();
