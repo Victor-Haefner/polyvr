@@ -1,5 +1,6 @@
 #include "VRVTK.h"
 
+#include <vtkVersion.h>
 #include <vtkDataSetReader.h>
 #include <vtkDataSet.h>
 #include <vtkDataArray.h>
@@ -10,7 +11,7 @@
 #include <vtkLine.h>
 
 /* NOT COMPILING?
-sudo apt-get install libvtk7-dev
+sudo apt-get install libvtk9-dev
 */
 
 #include <fstream>
@@ -35,22 +36,31 @@ void loadVtk(string path, VRTransformPtr res) {
     reader->ReadAllTCoordsOn();
     reader->ReadAllFieldsOn();
     reader->ReadAllColorScalarsOn();
+    //reader->DebugOn();
     reader->Update();
 
     vtkDataSet* dataset = reader->GetOutput();
+
+    int fVmaj = reader->GetFileMajorVersion();
+    int fVmin = reader->GetFileMinorVersion();
+    string fVer = toString(fVmaj) + "." + toString(fVmin);
+    string vtkVer = vtkVersion::GetVTKVersion();
+    cout << " vtk version: " << vtkVer << endl;
+    cout << " file version: " << fVer << endl;
+
 
     int npoints = dataset->GetNumberOfPoints();
     int ncells = dataset->GetNumberOfCells();
     int nscalars = reader->GetNumberOfScalarsInFile();
     int nvectors = reader->GetNumberOfVectorsInFile();
     int ntensors = reader->GetNumberOfTensorsInFile();
-    cout << "dataset sizes: " << npoints << " " << ncells << " " << nscalars << " " << nvectors << " " << ntensors << endl;
+    cout << " dataset sizes: " << npoints << " " << ncells << " " << nscalars << " " << nvectors << " " << ntensors << endl;
 
     for (int i=0; i<npoints; i++) {
         auto p = dataset->GetPoint(i);
         Vec3d v(p[0], p[1], p[2]);
         geo.pushVert(v);
-        cout << "point " << v << endl;
+        //cout << "point " << v << endl;
     }
 
     auto getCellPIDs = [](vtkCell* c) {
@@ -68,7 +78,7 @@ void loadVtk(string path, VRTransformPtr res) {
         //int t = c->GetCellType();
 
         string type = c->GetClassName();
-        cout << "cell type " << type << endl;
+        //cout << "cell type " << type << endl;
         if (type == "vtkQuad") {
             auto j = getCellPIDs(c);
             geo.pushQuad(j[0], j[1], j[2], j[3]);
