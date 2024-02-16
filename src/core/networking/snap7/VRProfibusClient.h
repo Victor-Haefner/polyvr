@@ -19,6 +19,7 @@ class VRProfinetClient : public std::enable_shared_from_this<VRProfinetClient> {
         Data* data = 0;
 
         float toFloat(string bytes);
+        short toShort(string bytes);
         int toInt(string bytes);
 
     public:
@@ -36,10 +37,12 @@ class VRProfinetClient : public std::enable_shared_from_this<VRProfinetClient> {
         void write(int db, int offset, string val,string dbType = "database");
 
         bool  readBool(int db, int pos, int bit,string dbType = "database");
+        short readShort(int db, int pos,string dbType = "database");
         int   readInt(int db, int pos,string dbType = "database");
         float readFloat(int db, int pos,string dbType = "database");
 
         void writeBool(int db, int pos, int bit, bool val,string dbType = "database");
+        void writeShort(int db, int pos, short val,string dbType = "database");
         void writeInt(int db, int pos, int val,string dbType = "database");
         void writeFloat(int db, int pos, float val,string dbType = "database");
 };

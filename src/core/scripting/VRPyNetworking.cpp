@@ -62,9 +62,11 @@ PyMethodDef VRPyProfinetClient::methods[] = {
     {"read", PyWrap(ProfinetClient, read, "read binary data, db, offset, length, dbtype = database|merker", string, int, int, int, string) },
     {"write", PyWrap(ProfinetClient, write, "write binary data, db, offset, data, dbtype = database|merker", void, int, int, string, string) },
     {"readBool", PyWrap(ProfinetClient, readBool, "Read a bool, db, pos, bit, dbtype = database|merker", bool, int, int, int, string) },
+    {"readShort", PyWrap(ProfinetClient, readShort, "Read a short, db, pos, dbtype = database|merker", short, int, int, string) },
     {"readInt", PyWrap(ProfinetClient, readInt, "Read an int, db, pos, dbtype = database|merker", int, int, int, string) },
     {"readFloat", PyWrap(ProfinetClient, readFloat, "Read a float, db, pos, dbtype = database|merker", float, int, int, string) },
     {"writeBool", PyWrap(ProfinetClient, writeBool, "Write a bool, db, pos, bit, bool, dbtype = database|merker", void, int, int, int, bool, string) },
+    {"writeShort", PyWrap(ProfinetClient, writeShort, "Write a short, db, pos, int, dbtype = database|merker", void, int, int, short, string) },
     {"writeInt", PyWrap(ProfinetClient, writeInt, "Write an int, db, pos, int, dbtype = database|merker", void, int, int, int, string) },
     {"writeFloat", PyWrap(ProfinetClient, writeFloat, "Write a float, db, pos, float, dbtype = database|merker", void, int, int, float, string) },
     {NULL}  /* Sentinel */

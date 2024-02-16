@@ -105,12 +105,23 @@ float VRProfinetClient::toFloat(string bytes) {
     return f;
 }
 
-int VRProfinetClient::toInt(string bytes) {
+short VRProfinetClient::toShort(string bytes) {
     if (bytes.size() != 2) return 0;
     short f;
     char* fm = (char*)&f;
     fm[0] = bytes[1];
     fm[1] = bytes[0];
+    return f;
+}
+
+int VRProfinetClient::toInt(string bytes) {
+    if (bytes.size() != 4) return 0;
+    int f;
+    char* fm = (char*)&f;
+    fm[0] = bytes[3];
+    fm[1] = bytes[2];
+    fm[2] = bytes[1];
+    fm[3] = bytes[0];
     return f;
 }
 
@@ -121,8 +132,12 @@ bool VRProfinetClient::readBool(int db, int pos, int bit, string dbType) {
     return ((B >> bit) & 0x01);
 }
 
+short VRProfinetClient::readShort(int db, int pos, string dbType) {
+    return toShort( read(db, pos, 2, dbType) );
+}
+
 int VRProfinetClient::readInt(int db, int pos, string dbType) {
-    return toInt( read(db, pos, 2, dbType) );
+    return toInt( read(db, pos, 4, dbType) );
 }
 
 float VRProfinetClient::readFloat(int db, int pos, string dbType) {
@@ -138,13 +153,23 @@ void VRProfinetClient::writeBool(int db, int pos, int bit, bool val, string dbTy
     write(db, pos, f, dbType);
 }
 
-void VRProfinetClient::writeInt(int db, int pos, int val, string dbType) {
+void VRProfinetClient::writeShort(int db, int pos, short val, string dbType) {
     string f = string((char*)&val, 2);
+    swap(f[0], f[1]);
+    write(db, pos, f, dbType);
+}
+
+void VRProfinetClient::writeInt(int db, int pos, int val, string dbType) {
+    string f = string((char*)&val, 4);
+    swap(f[0], f[3]);
+    swap(f[1], f[2]);
     write(db, pos, f, dbType);
 }
 
 void VRProfinetClient::writeFloat(int db, int pos, float val, string dbType) {
     string f = string((char*)&val, 4);
+    swap(f[0], f[3]);
+    swap(f[1], f[2]);
     write(db, pos, f, dbType);
 }
 

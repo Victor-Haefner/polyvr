@@ -248,6 +248,7 @@ typedef void* voidPtr;
 template<> string typeName(const voidPtr* t) { return "pointer"; }
 template<> string typeName(const string* t) { return "string"; }
 template<> string typeName(const int* t) { return "int"; }
+template<> string typeName(const short* t) { return "int"; }
 template<> string typeName(const unsigned int* t) { return "int"; }
 //#ifdef _WIN32
 template<> string typeName(const size_t* t) { return "int"; }
