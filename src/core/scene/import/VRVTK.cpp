@@ -1,5 +1,6 @@
 #include "VRVTK.h"
 
+#include <vtkVersion.h>
 #include <vtkDataSetReader.h>
 #include <vtkDataSet.h>
 #include <vtkDataArray.h>
@@ -10,7 +11,7 @@
 #include <vtkLine.h>
 
 /* NOT COMPILING?
-sudo apt-get install libvtk7-dev
+sudo apt-get install libvtk9-dev
 */
 
 #include <fstream>
@@ -35,22 +36,31 @@ void loadVtk(string path, VRTransformPtr res) {
     reader->ReadAllTCoordsOn();
     reader->ReadAllFieldsOn();
     reader->ReadAllColorScalarsOn();
+    //reader->DebugOn();
     reader->Update();
 
     vtkDataSet* dataset = reader->GetOutput();
+
+    int fVmaj = reader->GetFileMajorVersion();
+    int fVmin = reader->GetFileMinorVersion();
+    string fVer = toString(fVmaj) + "." + toString(fVmin);
+    string vtkVer = vtkVersion::GetVTKVersion();
+    cout << " vtk version: " << vtkVer << endl;
+    cout << " file version: " << fVer << endl;
+
 
     int npoints = dataset->GetNumberOfPoints();
     int ncells = dataset->GetNumberOfCells();
     int nscalars = reader->GetNumberOfScalarsInFile();
     int nvectors = reader->GetNumberOfVectorsInFile();
     int ntensors = reader->GetNumberOfTensorsInFile();
-    cout << "dataset sizes: " << npoints << " " << ncells << " " << nscalars << " " << nvectors << " " << ntensors << endl;
+    cout << " dataset sizes: " << npoints << " " << ncells << " " << nscalars << " " << nvectors << " " << ntensors << endl;
 
     for (int i=0; i<npoints; i++) {
         auto p = dataset->GetPoint(i);
         Vec3d v(p[0], p[1], p[2]);
         geo.pushVert(v);
-        cout << "point " << v << endl;
+        //cout << "point " << v << endl;
     }
 
     auto getCellPIDs = [](vtkCell* c) {
@@ -68,11 +78,25 @@ void loadVtk(string path, VRTransformPtr res) {
         //int t = c->GetCellType();
 
         string type = c->GetClassName();
-        cout << "cell type " << type << endl;
         if (type == "vtkQuad") {
-            auto j = getCellPIDs(c);
+            auto j = getCellPIDs(c); // size: 4
             geo.pushQuad(j[0], j[1], j[2], j[3]);
+            continue;
         }
+
+        if (type == "vtkVoxel") {
+            auto j = getCellPIDs(c); // size: 8
+            geo.pushQuad(j[0], j[1], j[3], j[2]);
+            geo.pushQuad(j[4], j[5], j[7], j[6]);
+            geo.pushQuad(j[0], j[1], j[5], j[4]);
+            geo.pushQuad(j[1], j[3], j[7], j[5]);
+            geo.pushQuad(j[3], j[2], j[6], j[7]);
+            geo.pushQuad(j[2], j[0], j[4], j[6]);
+            continue;
+        }
+
+        cout << " unhandled cell type " << type << endl;
+        break;
     }
 
     //vtkCellData* cells = dataset->GetCellData();
@@ -114,33 +138,26 @@ void loadVtk(string path, VRTransformPtr res) {
 
 
     cout << "CELL_DATA:\n";
-
-     vtkCellData *cd = dataset->GetCellData();
-      if (cd)
-        {
-        std::cout << " contains cell data with "
-             << cd->GetNumberOfArrays()
-             << " arrays." << std::endl;
-        for (int i = 0; i < cd->GetNumberOfArrays(); i++)
-          {
-          std::cout << "\tArray " << i
-               << " is named "
-               << (cd->GetArrayName(i) ? cd->GetArrayName(i) : "NULL")
-               << std::endl;
-          }
-        }
-
-    /*if (cells) {
-        for(int i=0; vtkDataArray* a = points->GetArray(i); i++ ) {
+    vtkCellData* cd = dataset->GetCellData();
+    if (cd) {
+        std::cout << " contains cell data with " << cd->GetNumberOfArrays() << " arrays." << std::endl;
+        for (int i = 0; i < cd->GetNumberOfArrays(); i++) {
+            vtkDataArray* a = cd->GetArray(i);
             int size = a->GetNumberOfTuples();
             int comp = a->GetNumberOfComponents();
+            std::cout << "\tarray " << i << " is named " << (cd->GetArrayName(i) ? cd->GetArrayName(i) : "NULL") << std::endl;
+            std::cout << "\t size: " << size << " with " << comp << " components per element" << std::endl;
+            if (comp > 3) { cout << " Warning! too many components.. skipping array.." << endl; continue; }
+            if (i > 6) { cout << " Warning! too many arrays.. skipping array.." << endl; continue; }
+
+            std::cout << "\t put array data in texcoords properties " << 1+i << std::endl;
             for (int j=0; j<size; j++) {
-                cout << "cell:";
-                for (int k=0; k<comp; k++) cout << " " << a->GetComponent(j, k);
-                cout << endl;
+                Vec3d v;
+                for (int k=0; k<comp; k++) v[k] = a->GetComponent(j, k);
+                geo.pushTexCoord(v, 1+i);
             }
         }
-    }*/
+    }
 
     string name = "vtk";
 

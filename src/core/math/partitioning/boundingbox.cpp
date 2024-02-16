@@ -6,6 +6,7 @@
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/geometry/OSGGeometry.h"
 #include <OpenSG/OSGGeometry.h>
+#include <limits>
 
 using namespace OSG;
 
@@ -15,7 +16,7 @@ BoundingboxPtr Boundingbox::create() { return BoundingboxPtr(new Boundingbox());
 
 void Boundingbox::clear() {
     cleared = true;
-    float m = 1e6;
+    double m = std::numeric_limits<double>::max();
     bb1 = Vec3d(m,m,m);
     bb2 = Vec3d(-m,-m,-m);
 }

@@ -46,34 +46,34 @@ void VRProfinetClient::connect(string address, int rack, int slot) {
 string VRProfinetClient::read(int db, int offset, int length, string dbType) {
     if (!isConnected()) return "";
     if (dbType == "merker"){
-        cout << "VRProfinetClient::read merkerbase " << db << " at " << offset << " length " << length << ", connected? " << isConnected() << endl;
+        //cout << "VRProfinetClient::read merkerbase " << db << " at " << offset << " length " << length << ", connected? " << isConnected() << endl;
         int r = data->Client->MBRead(offset, length, data->Buffer);
-        cout << " return " << r << ", data: ";
-        for (int i=0; i<length; i++) cout << " " << (int)data->Buffer[i];
-        cout << endl;
+        //cout << " return " << r << ", data: ";
+        //for (int i=0; i<length; i++) cout << " " << (int)data->Buffer[i];
+        //cout << endl;
         return string((char*)data->Buffer, length);
     }
     if (dbType == "input"){
-        cout << "VRProfinetClient::read inputbase " << db << " at " << offset << " length " << length << ", connected? " << isConnected() << endl;
+        //cout << "VRProfinetClient::read inputbase " << db << " at " << offset << " length " << length << ", connected? " << isConnected() << endl;
         int r = data->Client->EBRead(offset, length, data->Buffer);
-        cout << " return " << r << ", data: ";
-        for (int i=0; i<length; i++) cout << " " << (int)data->Buffer[i];
-        cout << endl;
+        //cout << " return " << r << ", data: ";
+        //for (int i=0; i<length; i++) cout << " " << (int)data->Buffer[i];
+        //cout << endl;
         return string((char*)data->Buffer, length);
     }
     if (dbType == "output"){
-        cout << "VRProfinetClient::read outputbase " << db << " at " << offset << " length " << length << ", connected? " << isConnected() << endl;
+        //cout << "VRProfinetClient::read outputbase " << db << " at " << offset << " length " << length << ", connected? " << isConnected() << endl;
         int r = data->Client->ABRead(offset, length, data->Buffer);
-        cout << " return " << r << ", data: ";
-        for (int i=0; i<length; i++) cout << " " << (int)data->Buffer[i];
-        cout << endl;
+        //cout << " return " << r << ", data: ";
+        //for (int i=0; i<length; i++) cout << " " << (int)data->Buffer[i];
+        //cout << endl;
         return string((char*)data->Buffer, length);
     }
-    cout << "VRProfinetClient::read db " << db << " at " << offset << " length " << length << ", connected? " << isConnected() << endl;
+    //cout << "VRProfinetClient::read db " << db << " at " << offset << " length " << length << ", connected? " << isConnected() << endl;
     int r = data->Client->DBRead(db, offset, length, data->Buffer);
-    cout << " return " << r << ", data: ";
-    for (int i=0; i<length; i++) cout << " " << (int)data->Buffer[i];
-    cout << endl;
+    //cout << " return " << r << ", data: ";
+    //for (int i=0; i<length; i++) cout << " " << (int)data->Buffer[i];
+    //cout << endl;
     return string((char*)data->Buffer, length);
 }
 
@@ -128,7 +128,7 @@ int VRProfinetClient::toInt(string bytes) {
 
 bool VRProfinetClient::readBool(int db, int pos, int bit, string dbType) {
     byte B = read(db, pos, 1, dbType)[0];
-    cout << " readBool " << (int)B << endl;
+    //cout << " readBool " << (int)B << endl;
     return ((B >> bit) & 0x01);
 }
 

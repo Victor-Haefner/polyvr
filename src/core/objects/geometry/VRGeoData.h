@@ -89,6 +89,7 @@ class VRGeoData {
         int pushPos(Pnt3d p);
         int pushNorm(Vec3d n);
         int pushTexCoord(Vec2d t, int idx = 0);
+        int pushTexCoord(Vec3d t, int idx = 0);
         int pushColor(Color3f c);
         int pushColor(Color4f c);
         int pushColor(Color3ub c);
@@ -116,6 +117,7 @@ class VRGeoData {
         bool setPos(int i, Pnt3d p);
         bool setNorm(int i, Vec3d n);
         bool setTexCoord(int i, Vec2d t, int idx = 0);
+        bool setTexCoord(int i, Vec3d t, int idx = 0);
         bool setColor(int i, Color3f c);
         bool setColor(int i, Color4f c);
         bool setColor(int i, Color3ub c);

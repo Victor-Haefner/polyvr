@@ -296,6 +296,7 @@
 			<Add directory="/usr/include/jsoncpp" />
 			<Add directory="/usr/include/openvr" />
 			<Add directory="/usr/include/imgui" />
+			<Add directory="/usr/include/vtk-9.1" />
 		</Compiler>
 		<Linker>
 			<Add option="-lTKV3d" />
@@ -334,22 +335,20 @@
 			<Add option="-ljsoncpp" />
 			<Add option="-lvrpn" />
 			<Add option="-lquat" />
-			<Add option="-lvtkalglib-7.1" />
-			<Add option="-lvtkGeovisCore-7.1" />
-			<Add option="-lvtkChartsCore-7.1" />
-			<Add option="-lvtkRenderingCore-7.1" />
-			<Add option="-lvtkCommonCore-7.1" />
-			<Add option="-lvtksys-7.1" />
-			<Add option="-lvtkDICOMParser-7.1" />
-			<Add option="-lvtkImagingCore-7.1" />
-			<Add option="-lvtkverdict-7.1" />
-			<Add option="-lvtkexoIIc-7.1" />
-			<Add option="-lvtkInfovisCore-7.1" />
-			<Add option="-lvtkViewsCore-7.1" />
-			<Add option="-lvtkIOLegacy-7.1" />
-			<Add option="-lvtkmetaio-7.1" />
-			<Add option="-lvtkParallelCore-7.1" />
-			<Add option="-lvtkCommonDataModel-7.1" />
+			<Add option="-lvtkGeovisCore-9.1" />
+			<Add option="-lvtkChartsCore-9.1" />
+			<Add option="-lvtkRenderingCore-9.1" />
+			<Add option="-lvtkCommonCore-9.1" />
+			<Add option="-lvtksys-9.1" />
+			<Add option="-lvtkDICOMParser-9.1" />
+			<Add option="-lvtkImagingCore-9.1" />
+			<Add option="-lvtkverdict-9.1" />
+			<Add option="-lvtkInfovisCore-9.1" />
+			<Add option="-lvtkViewsCore-9.1" />
+			<Add option="-lvtkIOLegacy-9.1" />
+			<Add option="-lvtkmetaio-9.1" />
+			<Add option="-lvtkParallelCore-9.1" />
+			<Add option="-lvtkCommonDataModel-9.1" />
 			<Add option="-lvirtuose" />
 			<Add option="-lgdal" />
 			<Add option="-lgmp" />
