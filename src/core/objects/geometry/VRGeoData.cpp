@@ -233,8 +233,9 @@ void VRGeoData::apply(VRGeometryPtr geo, bool check, bool checkIndices) const {
     geo->setTypes( data->types->size() > 0 ? data->types : 0 );
     geo->setNormals( data->norms->size() > 0 ? data->norms : 0 );
     for (int i=0; i<7; i++) {
-        geo->setTexCoords( data->texs[i]->size() > 0 ? data->texs[i] : 0, i );
-        geo->setTexCoords( data->texs3[i]->size() > 0 ? data->texs3[i] : 0, i );
+        if (data->texs[i]->size() > 0) geo->setTexCoords( data->texs[i], i );
+        else if (data->texs3[i]->size() > 0) geo->setTexCoords( data->texs3[i], i );
+        else geo->setTexCoords( 0, i );
     }
     if (data->indices->size() > 0) geo->setIndices( data->indices );
 
