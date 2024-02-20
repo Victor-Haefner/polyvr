@@ -266,16 +266,12 @@ class STEPLoader {
             return obj;
         }
 
-        VRTransformPtr convertGeo(const TopoDS_Shape& shape, bool subParts = false, bool verbose = false) {
+        VRTransformPtr convertGeo(const TopoDS_Shape& shape, bool subParts = false, bool relative_deflection = true, double linear_deflection = 0.1, double angular_deflection = 0.5, bool verbose = false) {
             if (shape.IsNull()) return 0;
-
-            double linear_deflection = 0.1;
-            double angular_deflection = 0.5;
             //cout << "step convert shape dim max: " << Dmax << ", ld: " << linear_deflection << endl;
 
-            //BRepMesh_IncrementalMesh mesher(shape, linear_deflection, false, angular_deflection, true); // shape, linear deflection, relative to edge length, angular deflection, paralellize
             try {
-                BRepMesh_IncrementalMesh mesher(shape, linear_deflection, true, angular_deflection, true, on_update); // shape, linear deflection, relative to edge length, angular deflection, paralellize
+                BRepMesh_IncrementalMesh mesher(shape, linear_deflection, relative_deflection, angular_deflection, true, on_update); // shape, linear deflection, relative to edge length, angular deflection, paralellize
             }
             catch(exception& e) { cout << " Warning in STEP convertGeo: " << e.what() << endl;  return 0; }
             catch(...) { cout << " Warning in STEP convertGeo: unknown exception" << endl; return 0; }
@@ -408,7 +404,19 @@ class STEPLoader {
                 cout << "imported materials: (" << mats.Length() << ")" << endl;
 
                 bool subParts = false;
-                if (options.count("subParts")) subParts = true;
+                bool relative_deflection = true;
+                double linear_deflection = 0.1;
+                double angular_deflection = 0.5;
+                if (options.count("subParts")) subParts = toBool(options["subParts"]);
+                if (options.count("relativeDeflection")) relative_deflection = toBool(options["relativeDeflection"]);
+                if (options.count("linearDeflection")) linear_deflection = toFloat(options["linearDeflection"]);
+                if (options.count("angularDeflection")) angular_deflection = toFloat(options["angularDeflection"]);
+
+                cout << "tesselation parameters:" << endl;
+                cout << " subParts: " << subParts << endl;
+                cout << " relative deflection: " << relative_deflection << endl;
+                cout << " linear deflection: " << linear_deflection << endl;
+                cout << " angular deflection: " << angular_deflection << endl;
 
                 cout << "build STEP parts:" << endl;
                 map<int, VRTransformPtr> parts;
@@ -421,7 +429,7 @@ class STEPLoader {
                         //cout << "  shape " << name << " " << Assembly->IsSimpleShape(label) << " " << Assembly->IsAssembly(label) << " " << Assembly->IsFree(label) << endl;
                         if (Assembly->IsSimpleShape(label)) {
                             //cout << " create shape " << name << endl;
-                            VRTransformPtr obj = convertGeo(shape, subParts);
+                            VRTransformPtr obj = convertGeo(shape, subParts, relative_deflection, linear_deflection, angular_deflection);
                             if (obj) {
                                 obj->setName( name );
                                 if (parts.count(label.Tag())) cout << "Warning in STEP import, the label tag " << label.Tag() << " is allready used!" << endl;

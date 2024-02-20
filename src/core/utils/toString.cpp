@@ -328,7 +328,14 @@ template<> int toValue(stringstream& ss, double& v) { return ssToVal(ss, v, 0); 
 
 int   toInt  (string s) { return toValue<int  >(s); }
 float toFloat(string s) { return toValue<float>(s); }
-bool  toBool (string s) { return toValue<bool >(s); }
+
+bool  toBool (string s) {
+    if (s == "true") return true;
+    if (s == "True") return true;
+    if (s == "false") return false;
+    if (s == "False") return false;
+    return toValue<bool>(s);
+}
 
 template<> int toValue(stringstream& ss, Vec2d& v) {
     ssToVal(ss, v[0], 0);
