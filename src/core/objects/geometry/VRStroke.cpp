@@ -70,7 +70,6 @@ void VRStroke::strokeProfile(vector<Vec3d> profile, bool closed, bool lit, bool 
     }
     for (unsigned int i=1; i<profile.size(); i++) tcs[i] /= Lp;
 
-    clearChildren();
     for (auto path : paths) {
         auto pnts = path->getPositions();
         auto directions = path->getDirections();
