@@ -29,7 +29,7 @@ struct VRGeoData::Data {
 
     int lastPrim = -1;
 
-    int getColorChannels(GeoVectorProperty* v) {
+    int getVectorChannels(GeoVectorProperty* v) {
         if (v == 0) return 0;
 
         static map<int, int> channels;
@@ -72,24 +72,27 @@ VRGeoData::VRGeoData(VRGeometryPtr geo) : pend(this, 0) {
         data->pos = (GeoPnt3fProperty*)geo->getMesh()->geo->getPositions();
 
         data->norms = (GeoVec3fProperty*)geo->getMesh()->geo->getNormals();
+
         data->texs.resize(7);
-        data->texs[0] = (GeoVec2fProperty*)geo->getMesh()->geo->getTexCoords();
-        data->texs[1] = (GeoVec2fProperty*)geo->getMesh()->geo->getTexCoords1();
-        data->texs[2] = (GeoVec2fProperty*)geo->getMesh()->geo->getTexCoords2();
-        data->texs[3] = (GeoVec2fProperty*)geo->getMesh()->geo->getTexCoords3();
-        data->texs[4] = (GeoVec2fProperty*)geo->getMesh()->geo->getTexCoords4();
-        data->texs[5] = (GeoVec2fProperty*)geo->getMesh()->geo->getTexCoords5();
-        data->texs[6] = (GeoVec2fProperty*)geo->getMesh()->geo->getTexCoords6();
         data->texs3.resize(7);
-        data->texs3[0] = (GeoVec3fProperty*)geo->getMesh()->geo->getTexCoords();
-        data->texs3[1] = (GeoVec3fProperty*)geo->getMesh()->geo->getTexCoords1();
-        data->texs3[2] = (GeoVec3fProperty*)geo->getMesh()->geo->getTexCoords2();
-        data->texs3[3] = (GeoVec3fProperty*)geo->getMesh()->geo->getTexCoords3();
-        data->texs3[4] = (GeoVec3fProperty*)geo->getMesh()->geo->getTexCoords4();
-        data->texs3[5] = (GeoVec3fProperty*)geo->getMesh()->geo->getTexCoords5();
-        data->texs3[6] = (GeoVec3fProperty*)geo->getMesh()->geo->getTexCoords6();
+        auto getTexCoords = [&](int i, GeoVectorProperty* v) {
+            data->texs[i] = 0;
+            data->texs3[i] = 0;
+            int eN = data->getVectorChannels(v);
+            if (eN == 2) data->texs[i] = (GeoVec2fProperty*)v;
+            if (eN == 3) data->texs3[i] = (GeoVec3fProperty*)v;
+        };
+
+        getTexCoords(0, geo->getMesh()->geo->getTexCoords());
+        getTexCoords(1, geo->getMesh()->geo->getTexCoords());
+        getTexCoords(2, geo->getMesh()->geo->getTexCoords());
+        getTexCoords(3, geo->getMesh()->geo->getTexCoords());
+        getTexCoords(4, geo->getMesh()->geo->getTexCoords());
+        getTexCoords(5, geo->getMesh()->geo->getTexCoords());
+        getTexCoords(6, geo->getMesh()->geo->getTexCoords());
+
         GeoVectorPropertyMTRecPtr cols = geo->getMesh()->geo->getColors();
-        int Nc = data->getColorChannels(cols);
+        int Nc = data->getVectorChannels(cols);
         if (Nc == 3) data->cols3 = dynamic_pointer_cast<GeoVec3fProperty>(cols);
         if (Nc == 4) data->cols4 = dynamic_pointer_cast<GeoVec4fProperty>(cols);
         if (Nc == 3) data->cols3ub = dynamic_pointer_cast<GeoVec3ubProperty>(cols);
@@ -897,11 +900,13 @@ void VRGeoData::addVertexTexCoords(Vec2d tc) {
 
 void VRGeoData::makeSingleIndex() {
     if (!geo) return;
-    if (geo->getMesh()->geo->isSingleIndex()) return;
+    //if (geo->getMesh()->geo->isSingleIndex()) return;
 
     geo->convertToTriangles(); // TODO: temp fix..
-    geo->getMesh()->geo->setIndex(geo->getMesh()->geo->getIndex(Geometry::PositionsIndex), Geometry::NormalsIndex);
-    geo->getMesh()->geo->setIndex(geo->getMesh()->geo->getIndex(Geometry::PositionsIndex), Geometry::ColorsIndex);
+    auto pIdx = geo->getMesh()->geo->getIndex(Geometry::PositionsIndex);
+    geo->getMesh()->geo->setIndex(pIdx, Geometry::NormalsIndex);
+    geo->getMesh()->geo->setIndex(pIdx, Geometry::ColorsIndex);
+    geo->getMesh()->geo->setIndex(pIdx, Geometry::TexCoordsIndex);
 
     if (!geo->getMesh()->geo->isSingleIndex()) cout << "VRGeoData::makeSingleIndex FAILED!! probably needs to set more indices!" << endl;
 }

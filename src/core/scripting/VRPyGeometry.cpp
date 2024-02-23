@@ -60,7 +60,7 @@ PyMethodDef VRPyGeometry::methods[] = {
     {"getPositions", (PyCFunction)VRPyGeometry::getPositions, METH_NOARGS, "get geometry positions" },
     {"getNormals", (PyCFunction)VRPyGeometry::getNormals, METH_NOARGS, "get geometry normals" },
     {"getColors", (PyCFunction)VRPyGeometry::getColors, METH_NOARGS, "get geometry colors" },
-    {"getIndices", (PyCFunction)VRPyGeometry::getIndices, METH_NOARGS, "get geometry indices" },
+    {"getIndices", (PyCFunction)VRPyGeometry::getIndices, METH_VARARGS, "get geometry indices - optional pass 'NORMAL', 'COLOR', or 'TEXCOORDx' with x from 0 to 7" },
     {"getTexCoords", (PyCFunction)VRPyGeometry::getTexCoords, METH_VARARGS, "get geometry texture coordinates" },
     {"getMaterial", PyWrap( Geometry, getMaterial, "get material", VRMaterialPtr ) },
     {"getGeometricCenter", PyWrap(Geometry, getGeometricCenter, "Get geometric center", Vec3d ) },
@@ -566,17 +566,34 @@ PyObject* VRPyGeometry::getColors(VRPyGeometry* self) {
     return res;
 }
 
-PyObject* VRPyGeometry::getIndices(VRPyGeometry* self) {
+PyObject* VRPyGeometry::getIndices(VRPyGeometry* self, PyObject *args) {
     if (!self->valid()) return NULL;
     if (self->objPtr->getMesh() == 0) { PyErr_SetString(err, "VRPyGeometry::getIndices - Mesh is invalid"); return NULL; }
 
-    GeoIntegralProperty* pos = self->objPtr->getMesh()->geo->getIndices();
-    if (pos == 0) return PyList_New(0);
-    PyObject* res = PyList_New(pos->size());
+    const char* index = 0;
+    if (!PyArg_ParseTuple(args, "|s", &index)) return NULL;
 
-    for (unsigned int i=0; i<pos->size(); i++) {
+    GeoIntegralProperty* idProp = self->objPtr->getMesh()->geo->getIndices();
+    if (index) {
+        string idx(index);
+        if (idx == "NORMAL") idProp = self->objPtr->getMesh()->geo->getIndex(Geometry::NormalsIndex);
+        if (idx == "COLOR") idProp = self->objPtr->getMesh()->geo->getIndex(Geometry::ColorsIndex);
+        if (idx == "TEXCOORD0") idProp = self->objPtr->getMesh()->geo->getIndex(Geometry::TexCoordsIndex);
+        if (idx == "TEXCOORD1") idProp = self->objPtr->getMesh()->geo->getIndex(Geometry::TexCoords1Index);
+        if (idx == "TEXCOORD2") idProp = self->objPtr->getMesh()->geo->getIndex(Geometry::TexCoords2Index);
+        if (idx == "TEXCOORD3") idProp = self->objPtr->getMesh()->geo->getIndex(Geometry::TexCoords3Index);
+        if (idx == "TEXCOORD4") idProp = self->objPtr->getMesh()->geo->getIndex(Geometry::TexCoords4Index);
+        if (idx == "TEXCOORD5") idProp = self->objPtr->getMesh()->geo->getIndex(Geometry::TexCoords5Index);
+        if (idx == "TEXCOORD6") idProp = self->objPtr->getMesh()->geo->getIndex(Geometry::TexCoords6Index);
+        if (idx == "TEXCOORD7") idProp = self->objPtr->getMesh()->geo->getIndex(Geometry::TexCoords7Index);
+    }
+
+    if (idProp == 0) return PyList_New(0);
+    PyObject* res = PyList_New(idProp->size());
+
+    for (unsigned int i=0; i<idProp->size(); i++) {
         int v;
-        pos->getValue(v,i);
+        idProp->getValue(v,i);
         PyObject* pv = PyInt_FromLong(v);
         PyList_SetItem(res, i, pv);
     }
@@ -604,11 +621,24 @@ PyObject* VRPyGeometry::getTexCoords(VRPyGeometry* self, PyObject *args) {
     if (tc == 0) return PyList_New(0);
     PyObject* res = PyList_New(tc->size());
 
+    int type = tc->getType().getId();
+    int eN = 2;
+    if (type == GeoVec3fProperty::create()->getType().getId()) eN = 3;
+    if (type == GeoVec3dProperty::create()->getType().getId()) eN = 3;
+
     for (unsigned int i=0; i<tc->size(); i++) {
-        Vec2d v;
-        tc->getValue(v,i);
-        PyObject* pv = toPyObject(v);
-        PyList_SetItem(res, i, pv);
+        if (eN == 2) {
+            Vec2d v;
+            tc->getValue(v,i);
+            PyObject* pv = toPyObject(v);
+            PyList_SetItem(res, i, pv);
+        }
+        if (eN == 3) {
+            Vec3d v;
+            tc->getValue(v,i);
+            PyObject* pv = toPyObject(v);
+            PyList_SetItem(res, i, pv);
+        }
     }
 
     return res;

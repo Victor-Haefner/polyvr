@@ -21,7 +21,7 @@ struct VRPyGeometry : VRPyBaseT<OSG::VRGeometry> {
     static PyObject* getPositions(VRPyGeometry* self);
     static PyObject* getNormals(VRPyGeometry* self);
     static PyObject* getColors(VRPyGeometry* self);
-    static PyObject* getIndices(VRPyGeometry* self);
+    static PyObject* getIndices(VRPyGeometry* self, PyObject *args);
     static PyObject* getTexCoords(VRPyGeometry* self, PyObject *args);
 
     static PyObject* addVertex(VRPyGeometry* self, PyObject *args);

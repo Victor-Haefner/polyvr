@@ -453,8 +453,7 @@ void VRGeometry::makeUnique() {
 
 void VRGeometry::makeSingleIndex() {
     if (!mesh || !mesh->geo) return;
-    if (!mesh->geo->isSingleIndex()) {
-
+    if (!mesh->geo->isSingleIndex() || true) {
         VRGeoData data(ptr());
         data.makeSingleIndex();
     }
