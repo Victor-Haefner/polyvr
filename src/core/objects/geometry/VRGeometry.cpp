@@ -1322,9 +1322,9 @@ void VRGeometry::convertToTriangles() {
     TriangleIterator it(mesh->geo);
     VRGeoData data;
 
-    bool hasNormals = (mesh->geo->getNormals() != 0);
-    bool hasColor = (mesh->geo->getColors() != 0);
-    bool hasTexCoords = (mesh->geo->getTexCoords() != 0);
+    bool hasNormals = (mesh->geo->getNormals() != 0 && mesh->geo->getNormals()->size() != 0);
+    bool hasColor = (mesh->geo->getColors() != 0 && mesh->geo->getColors()->size() != 0);
+    bool hasTexCoords = (mesh->geo->getTexCoords() != 0 && mesh->geo->getTexCoords()->size() != 0);
 
 	for (int i=0; !it.isAtEnd(); ++it, i++) {
         data.pushVert(Pnt3d(it.getPosition(0)));
@@ -1344,7 +1344,7 @@ void VRGeometry::convertToTriangles() {
         }
 
         if (hasTexCoords) {
-            data.pushTexCoord(Vec2d(it.getTexCoords(0)));
+            data.pushTexCoord(Vec2d(it.getTexCoords(0))); // TODO: may crash, how to make sure the it has a tex coord??
             data.pushTexCoord(Vec2d(it.getTexCoords(1)));
             data.pushTexCoord(Vec2d(it.getTexCoords(2)));
         }

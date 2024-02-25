@@ -441,10 +441,30 @@ int VRGeoData::pushLength(int l) { data->lengths->addValue(l); return data->leng
 int VRGeoData::pushIndex(int i) { data->indices->addValue(i); return data->indices->size()-1; }
 int VRGeoData::pushPos(Pnt3d p) { data->pos->addValue(p); return data->pos->size()-1; }
 int VRGeoData::pushNorm(Vec3d n) { data->norms->addValue(n); return data->norms->size()-1; }
-int VRGeoData::pushColor(Color3f c) { data->cols3->addValue(c); return data->cols3->size()-1; }
-int VRGeoData::pushColor(Color4f c) { data->cols4->addValue(c); return data->cols4->size()-1; }
-int VRGeoData::pushColor(Color3ub c) { data->cols3ub->addValue(c); return data->cols3ub->size()-1; }
-int VRGeoData::pushColor(Color4ub c) { data->cols4ub->addValue(c); return data->cols4ub->size()-1; }
+
+int VRGeoData::pushColor(Color3f c) {
+    if (data->cols3->size() == 0 && data->cols4->size() > 0) return pushColor(Color4f(c[0], c[1], c[2], 1.0));
+    data->cols3->addValue(c);
+    return data->cols3->size()-1;
+}
+
+int VRGeoData::pushColor(Color4f c) {
+    if (data->cols4->size() == 0 && data->cols3->size() > 0) return pushColor(Color3f(c[0], c[1], c[2]));
+    data->cols4->addValue(c);
+    return data->cols4->size()-1;
+}
+
+int VRGeoData::pushColor(Color3ub c) {
+    if (data->cols3ub->size() == 0 && data->cols4ub->size() > 0) return pushColor(Color4ub(c[0], c[1], c[2], 255));
+    data->cols3ub->addValue(c);
+    return data->cols3ub->size()-1;
+}
+
+int VRGeoData::pushColor(Color4ub c) {
+    if (data->cols4ub->size() == 0 && data->cols3ub->size() > 0) return pushColor(Color3ub(c[0], c[1], c[2]));
+    data->cols4ub->addValue(c);
+    return data->cols4ub->size()-1;
+}
 
 int VRGeoData::pushTexCoord(Vec2d t, int idx) {
     if (idx < 0 || idx >= 7) return -1;
@@ -671,6 +691,10 @@ void VRGeoData::pushPrim(Primitive p) {
 }
 
 void VRGeoData::append(const VRGeoData& geo, const Matrix4d& m) {
+    //auto& od = geo.data;
+    //if (data->cols3 && data->cols3->size() && od->cols4 && od->cols4->size()) cout << "Warning! cols 34 mismatch! " << geo.geo->getName() << endl;
+    //if (data->cols4 && data->cols4->size() && od->cols3 && od->cols3->size()) cout << "Warning! ccols 43 mismatch! " << geo.geo->getName() << endl;
+
     map<int, int> mapping;
     for (auto p : geo) {
         vector<int> ninds;
