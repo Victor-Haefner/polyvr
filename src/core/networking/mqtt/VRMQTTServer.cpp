@@ -5,11 +5,13 @@ using namespace OSG;
 
 struct VRMQTTServer::Data {
     mg_mgr mgr;                // Event manager
+
+    Data() { mg_mgr_init(&mgr); }
+    ~Data() { mg_mgr_free(&mgr); }
 };
 
 VRMQTTServer::VRMQTTServer() {
     data = new Data();
-    mg_mgr_init(&data->mgr);                // Initialise event manager
 }
 
 VRMQTTServer::~VRMQTTServer() {

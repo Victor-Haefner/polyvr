@@ -161,7 +161,7 @@ void VRMQTTClient::connect(string host, int port) { // connect("broker.hivemq.co
             }
 
             VRTimer t;
-            mg_mgr_poll(&data->mgr, 1000);
+            mg_mgr_poll(&data->mgr, 1000); // TODO: maybe decrease this to 2 ms?
             if (!data->doPoll) break;
             double T = t.stop();
             if (T > 500) doPing = true;

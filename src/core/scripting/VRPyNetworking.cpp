@@ -110,19 +110,25 @@ PyMethodDef VRPyHDLC::methods[] = {
 #endif
 
 PyMethodDef VRPyRestResponse::methods[] = {
-    {"getStatus", PyWrap(RestResponse, getStatus, "Get response status", string) },
-    {"getData", PyWrap(RestResponse, getData, "Get response content", string) },
+    {"getStatus", PyWrap(RestResponse, getStatus, "Get response status", int) },
+    {"getHeaders", PyWrap(RestResponse, getHeaders, "Get response headers", string) },
+    {"getData", PyWrap(RestResponse, getData, "Get response data", string) },
+    {"setStatus", PyWrap(RestResponse, setStatus, "Set response status", void, int) },
+    {"setHeaders", PyWrap(RestResponse, setHeaders, "Set response headers", void, string) },
+    {"setData", PyWrap(RestResponse, setData, "Set response status", void, string) },
     {NULL}  /* Sentinel */
 };
 
 PyMethodDef VRPyRestClient::methods[] = {
     {"get", PyWrapOpt(RestClient, get, "Start GET request, (uri, timeout == 2)", "2", VRRestResponsePtr, string, int) },
     {"getAsync", PyWrapOpt(RestClient, getAsync, "Start async GET request, (uri, callback, timeout == 2)", "2", void, string, VRRestCbPtr, int) },
+    {"post", PyWrapOpt(RestClient, post, "Start POST request, (uri, data, callback, timeout == 2)", "2", void, string, const string&, int) },
     {"test", PyWrap(RestClient, test, "Run test, output in console", void) },
     {NULL}  /* Sentinel */
 };
 
 PyMethodDef VRPyRestServer::methods[] = {
+    {"listen", PyWrap(RestServer, listen, "Listen on port, (port, callback)", void, int, VRRestCbPtr) },
     {NULL}  /* Sentinel */
 };
 

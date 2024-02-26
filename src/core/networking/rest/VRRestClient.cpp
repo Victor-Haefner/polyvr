@@ -92,7 +92,7 @@ VRRestResponsePtr VRRestClient::get(string uri, int timeoutSecs) {
     curl_easy_cleanup(curl);
 #endif
 
-    res->setStatus("ok");
+    res->setStatus(200);
     return res;
     //cout << " response: " << response->getStatus() << endl;
     //cout << " response: " << response->getData() << endl;

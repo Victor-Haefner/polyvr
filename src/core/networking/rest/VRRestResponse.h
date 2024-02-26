@@ -10,7 +10,8 @@ OSG_BEGIN_NAMESPACE;
 
 class VRRestResponse : public std::enable_shared_from_this<VRRestResponse> {
 	private:
-        string status;
+        int status = 0;
+        string headers;
         string data;
 
 	public:
@@ -20,11 +21,13 @@ class VRRestResponse : public std::enable_shared_from_this<VRRestResponse> {
 		static VRRestResponsePtr create();
 		VRRestResponsePtr ptr();
 
-		void setStatus(string s);
+		void setStatus(int s);
+		void setHeaders(string s);
 		void setData(string s);
 		void appendData(string s);
 
-		string getStatus();
+		int getStatus();
+		string getHeaders();
 		string getData();
 
 		static string uriEncode(const string& s);
