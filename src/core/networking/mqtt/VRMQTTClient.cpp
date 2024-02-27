@@ -123,6 +123,9 @@ void fn(struct mg_connection *c, int ev, void *ev_data, void *fn_data) {
 }
 
 void VRMQTTClient::disconnect() {
+    if (!data) return;
+    if (!data->doPoll) return;
+
     //cout << "mqtt disconnect " << endl;
     data->doPoll = false;
     data->connecting = false;
@@ -176,6 +179,7 @@ void VRMQTTClient::connect(string host, int port) { // connect("broker.hivemq.co
 }
 
 bool VRMQTTClient::connected() {
+    if (!data) return false;
     return data->responsive;
 }
 
@@ -183,7 +187,9 @@ void VRMQTTClient::handleMessages() {
     vector<vector<string>> mcopy;
 
     {
+        if (!data) return;
         auto lock = VRLock(data->mtx);
+        if (!data) return;
         if (!data->cb) return;
         if (!data->messages.size()) return;
         mcopy = data->messages; // copy to avoid holding lock when calling cb
