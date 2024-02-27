@@ -259,11 +259,59 @@ void handleSpecial(int b, int s) { // TODO: for some reason the imgui state is i
     if (b == 116) io.KeyAlt = s;
 }
 
+struct Utf8Handler {
+    vector<unsigned char> parts;
+    bool active = false;
+
+    bool checkByte(unsigned char c) { // TODO: maybe handle continuation bytes?
+        if ((c & 0xC0) == 0xC0 && (c & 0x20) == 0) { // start byte
+            if (!active) parts.clear();
+            parts.push_back(c);
+            active = true;
+            return true;
+        }
+
+        if (active) {
+            parts.push_back(c);
+            active = false;
+            return true;
+        }
+
+        return false;
+    }
+
+    string str() {
+        return string(parts.begin(), parts.end());
+    }
+};
+
 void ImGui_ImplGLUT_KeyboardUpFunc_main(unsigned char c, int x, int y) {
+    static Utf8Handler utf8Handler;
+    if (utf8Handler.checkByte(c)) {
+        if (utf8Handler.active) return;
+    }
+
     //printf("imgui key up %i\n", c);
     uiSignal("relayedImguiKeySignal", {{"key",toString((int)c)},{"state",toString(0)}});
     ImGui::SetCurrentContext(mainContext);
     ImGui_ImplGLUT_KeyboardUpFunc(c,x,y);
+}
+
+void ImGui_ImplGLUT_KeyboardFunc_main(unsigned char c, int x, int y) {
+    static Utf8Handler utf8Handler;
+    if (utf8Handler.checkByte(c)) {
+        if (!utf8Handler.active) {
+            //printf("imgui utf8 key down %s\n", utf8Handler.str().c_str());
+            ImGui::SetCurrentContext(mainContext);
+            ImGui::GetIO().AddInputCharactersUTF8( utf8Handler.str().c_str() );
+        }
+        return;
+    }
+
+    //printf("imgui key down %i\n", c);
+    if (c == 27) uiSignal("ui_close_popup");
+    ImGui::SetCurrentContext(mainContext);
+    ImGui_ImplGLUT_KeyboardFunc(c, x, y);
 }
 
 void ImGui_ImplGLUT_SpecialUpFunc_main(int k, int x, int y) {
@@ -272,13 +320,6 @@ void ImGui_ImplGLUT_SpecialUpFunc_main(int k, int x, int y) {
     ImGui::SetCurrentContext(mainContext);
     ImGui_ImplGLUT_SpecialUpFunc(k,x,y);
     handleSpecial(k,0);
-}
-
-void ImGui_ImplGLUT_KeyboardFunc_main(unsigned char c, int x, int y) {
-    //printf("imgui key down %i\n", c);
-    if (c == 27) uiSignal("ui_close_popup");
-    ImGui::SetCurrentContext(mainContext);
-    ImGui_ImplGLUT_KeyboardFunc(c, x, y);
 }
 
 void ImGui_ImplGLUT_SpecialFunc_main(int k, int x, int y) { /*printf("imgui special down %i\n", k);*/  ImGui::SetCurrentContext(mainContext); ImGui_ImplGLUT_SpecialFunc(k,x,y); handleSpecial(k,1); }
@@ -292,12 +333,31 @@ void ImGui_ImplGLUT_MouseFunc_main(int b, int s, int x, int y) {
 }
 
 void ImGui_ImplGLUT_KeyboardFunc_popup(unsigned char c, int x, int y) {
+    static Utf8Handler utf8Handler;
+    if (utf8Handler.checkByte(c)) {
+        if (!utf8Handler.active) {
+            //printf("imgui utf8 key down %s\n", utf8Handler.str().c_str());
+            ImGui::SetCurrentContext(popupContext);
+            ImGui::GetIO().AddInputCharactersUTF8( utf8Handler.str().c_str() );
+        }
+        return;
+    }
+
     if (c == 27) uiSignal("ui_close_popup");
     ImGui::SetCurrentContext(popupContext);
     ImGui_ImplGLUT_KeyboardFunc(c, x, y);
 }
 
-void ImGui_ImplGLUT_KeyboardUpFunc_popup(unsigned char c, int x, int y) { ImGui::SetCurrentContext(popupContext); ImGui_ImplGLUT_KeyboardUpFunc(c,x,y); }
+void ImGui_ImplGLUT_KeyboardUpFunc_popup(unsigned char c, int x, int y) {
+    static Utf8Handler utf8Handler;
+    if (utf8Handler.checkByte(c)) {
+        if (utf8Handler.active) return;
+    }
+
+    ImGui::SetCurrentContext(popupContext);
+    ImGui_ImplGLUT_KeyboardUpFunc(c,x,y);
+}
+
 void ImGui_ImplGLUT_SpecialFunc_popup(int k, int x, int y) { ImGui::SetCurrentContext(popupContext); ImGui_ImplGLUT_SpecialFunc(k,x,y); handleSpecial(k,1); }
 void ImGui_ImplGLUT_SpecialUpFunc_popup(int k, int x, int y) { ImGui::SetCurrentContext(popupContext); ImGui_ImplGLUT_SpecialUpFunc(k,x,y); handleSpecial(k,0); }
 void ImGui_ImplGLUT_MouseFunc_popup(int b, int s, int x, int y) { ImGui::SetCurrentContext(popupContext); ImGui_ImplGLUT_MouseFunc(b,s,x,y); handleMouseWheel(b,s); }

@@ -653,7 +653,8 @@ void handleKeyEvent(XEvent event) {
                              &keySym, &composeStatus
         );
 
-        //printf("key event: %s %i %i\n", asciiCode, (int)asciiCode[0], len);
+        //if (len == 1) printf("key event: %s %u %i\n", asciiCode, (unsigned char)asciiCode[0], len);
+        //if (len == 2) printf("key event: %s %u %u %i\n", asciiCode, (unsigned char)asciiCode[0], (unsigned char)asciiCode[1], len);
 
         /* GLUT API tells us to have two separate callbacks... */
         if( len > 0 )
@@ -663,10 +664,7 @@ void handleKeyEvent(XEvent event) {
             {
                 fgSetWindow( window );
                 fgState.Modifiers = fgPlatformGetModifiers( event.xkey.state );
-                keyboard_cb( asciiCode[ 0 ],
-                             event.xkey.x, event.xkey.y,
-                             keyboard_ud
-                );
+                for (int i=0; i<len; i++) keyboard_cb( asciiCode[ i ], event.xkey.x, event.xkey.y, keyboard_ud );
                 fgState.Modifiers = INVALID_MODIFIERS;
             }
         }
