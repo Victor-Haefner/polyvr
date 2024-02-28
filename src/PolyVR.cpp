@@ -180,7 +180,6 @@ void PolyVR::initEnvironment() {
     //setlocale(LC_ALL, "C");
     setlocale(LC_ALL, "en_US.UTF-8");
     boost::filesystem::path::imbue(std::locale("en_US.UTF-8"));
-    std::locale::global(std::locale("en_US.UTF-8"));
 
 #ifdef _WIN32
     // to get windows to compile for UTF8
