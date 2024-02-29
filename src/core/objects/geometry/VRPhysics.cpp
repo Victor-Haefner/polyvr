@@ -591,11 +591,11 @@ vector<OSG::VRGeometryPtr> VRPhysics::getGeometries() {
 
     if (physTree) {
         for (auto o : obj->getChildren(true, "", true)) {
-            OSG::VRGeometryPtr geo = static_pointer_cast<OSG::VRGeometry>( o );
+            OSG::VRGeometryPtr geo = dynamic_pointer_cast<OSG::VRGeometry>( o );
             if (geo) res.push_back( geo );
         }
     } else {
-        OSG::VRGeometryPtr geo = static_pointer_cast<OSG::VRGeometry>( obj );
+        OSG::VRGeometryPtr geo = dynamic_pointer_cast<OSG::VRGeometry>( obj );
         if (geo) res.push_back(geo);
     }
 
