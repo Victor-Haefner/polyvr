@@ -1392,12 +1392,17 @@ void VRPhysics::updateConstraint(VRPhysics* p) {
     for (int i=0; i<6; i++) {
         joint->btJoint->setParam(BT_CONSTRAINT_STOP_CFM, 0, i);
         joint->btJoint->setParam(BT_CONSTRAINT_STOP_ERP, 0.6, i);
-    }
 
-    joint->btJoint->setLinearLowerLimit(btVector3(c->getMin(0), c->getMin(1), c->getMin(2)));
-    joint->btJoint->setLinearUpperLimit(btVector3(c->getMax(0), c->getMax(1), c->getMax(2)));
-    joint->btJoint->setAngularLowerLimit(btVector3(c->getMin(3), c->getMin(4), c->getMin(5)));
-    joint->btJoint->setAngularUpperLimit(btVector3(c->getMax(3), c->getMax(4), c->getMax(5)));
+        double a = c->getMin(i);
+        double b = c->getMax(i);
+        //if (a <= b) {
+            double pi = M_PI;
+            if (i == 3) { a = min( max(-pi, a), pi ); b = min( max(-pi, b), pi ); } // clamp to -pi/pi
+            if (i == 4) { a = min( max(-pi*0.5, a), pi*0.5 ); b = min( max(-pi*0.5, b), pi*0.5 ); } // clamp to -0.5pi/0.5pi
+            if (i == 5) { a = min( max(-pi, a), pi ); b = min( max(-pi, b), pi ); } // clamp to -pi/pi
+            joint->btJoint->setLimit(i, a, b);
+        //}
+    }
 
     if (auto cs = joint->spring) { // SPRING PARAMETERS
         for (int i=0; i<6; i++) {

@@ -245,6 +245,7 @@ class VRTransform : public VRObject {
         Vec3d getForce();
         Vec3d getTorque();
         Vec3d getVelocity();
+        Vec3d getAngularVelocity();
 #endif
 };
 

@@ -1153,6 +1153,7 @@ void VRTransform::resetForces() { if (auto p = getPhysics()) p->resetForces(); }
 Vec3d VRTransform::getForce() { if (auto p = getPhysics()) return p->getForce(); else return Vec3d(); }
 Vec3d VRTransform::getTorque() { if (auto p = getPhysics()) return p->getTorque(); else return Vec3d(); }
 Vec3d VRTransform::getVelocity() { if (auto p = getPhysics()) return p->getLinearVelocity(); else return Vec3d(); }
+Vec3d VRTransform::getAngularVelocity() { if (auto p = getPhysics()) return p->getAngularVelocity(); else return Vec3d(); }
 Vec3d VRTransform::getCenterOfMass() { if (auto p = getPhysics()) return p->getCenterOfMass(); else return Vec3d(); }
 #endif
 
