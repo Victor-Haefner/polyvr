@@ -461,7 +461,10 @@ void ImScriptEditor::render() {
 }
 
 
-ImScripting::ImScripting() {}
+ImScripting::ImScripting() {
+    auto mgr = OSG::VRGuiSignals::get();
+    mgr->addCallback("on_scripts_paused", [&](OSG::VRGuiSignals::Options o) { pause = toBool(o["paused"]); return true; }, true );
+}
 
 void ImScripting::render() {
     auto openSearch = [&]() {
@@ -490,7 +493,26 @@ void ImScripting::render() {
         ImGui::SameLine(); if (ImGui::Button("Group")) uiSignal("scripts_toolbar_group");
         ImGui::SameLine(); if (ImGui::Button("Import")) uiSignal("ui_toggle_popup", {{"name","import"}, {"width","400"}, {"height","300"}});
         ImGui::SameLine(); if (ImGui::Button("Delete")) uiSignal("askUser", {{"msg1","This will remove the selected script!"}, {"msg2","Are you sure?"}, {"sig","scripts_toolbar_delete"}});
-        ImGui::SameLine(); if (ImGui::Checkbox("Pause Scripts", &pause)) uiSignal("scripts_toolbar_pause", {{"state",toString(pause)}});
+
+        bool pausedStyle = pause;
+        if (pausedStyle) {
+            static int counter = 0; counter++; counter = counter % 120;
+            float t = 0.5 + abs(0.5 - counter/120.0); // 0.5 -> 1 -> 0.5
+            ImVec4 col(1.0*t, 0.7*t, 0.2*t, 1.0);
+            ImGui::PushStyleColor(ImGuiCol_CheckMark, col);
+            ImGui::PushStyleColor(ImGuiCol_Border, col);
+            ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.0);
+        }
+
+        ImGui::SameLine(); if (ImGui::Checkbox("Pause Scripts", &pause)) {
+            uiSignal("scripts_toolbar_pause", {{"state",toString(pause)}});
+        }
+
+        if (pausedStyle) {
+            ImGui::PopStyleVar(1);
+            ImGui::PopStyleColor(2);
+        }
+
         ImGui::SameLine(); if (ImGui::Button("CPP")) uiSignal("scripts_toolbar_cpp");
 
                            if (ImGui::Button("Save")) uiSignal("scripts_toolbar_save");
@@ -504,6 +526,15 @@ void ImScripting::render() {
     //ImGui::Separator();
 
     // script list
+    if (pausedStyle) {
+        static int counter = 0; counter++; counter = counter % 120;
+        float t = 0.5 + abs(0.5 - counter/120.0); // 0.5 -> 1 -> 0.5
+        ImVec4 col(1.0*t, 0.7*t, 0.2*t, 1.0);
+        ImGui::PushStyleColor(ImGuiCol_CheckMark, col);
+        ImGui::PushStyleColor(ImGuiCol_Border, col);
+        ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.0);
+    }
+
     ImGuiWindowFlags flags = ImGuiWindowFlags_None;
     float w = ImGui::GetContentRegionAvail().x;
     float h = ImGui::GetContentRegionAvail().y;
@@ -519,6 +550,11 @@ void ImScripting::render() {
     ImGui::EndGroup();
 
     ImGui::SameLine();
+
+    if (pausedStyle) {
+        ImGui::PopStyleVar(1);
+        ImGui::PopStyleColor(2);
+    }
 
     // script editor
     ImGui::BeginGroup();

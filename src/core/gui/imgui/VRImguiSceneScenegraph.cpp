@@ -275,7 +275,7 @@ void ImScenegraph::setupLod(OSG::VRGuiSignals::Options o) {
 }
 
 void ImScenegraph::setupGeometry(OSG::VRGuiSignals::Options o) {
-
+    ;
 }
 
 void ImScenegraph::treeClear() { tree.clear(); }

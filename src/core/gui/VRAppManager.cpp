@@ -225,13 +225,18 @@ void VRAppManager::on_diag_save_clicked(string path) { // TODO: check if ending 
     addEntry(path, "favorites_tab", true);
 }
 
-void VRAppManager::toggleDemo(VRAppLauncherPtr e) {
+void VRAppManager::toggleDemo(VRAppLauncherPtr e, bool pausedScripts) {
     bool run = !e->running;
     VRSceneManager::get()->closeScene();
     if (run) {
         string encryptionKey;
         //if (endsWith(e->path, ".pvc")) encryptionKey = askUserPass("Please insert encryption key");
         VRSceneManager::get()->loadScene(e->path, e->write_protected, encryptionKey);
+
+        if (pausedScripts) {
+            auto scene = VRScene::getCurrent();
+            if (scene) scene->pauseScripts(true);
+        }
     }
 }
 

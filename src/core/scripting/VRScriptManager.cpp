@@ -97,6 +97,7 @@ string VRScriptManager::getIthScriptName(int i) {
 }
 
 void VRScriptManager::pauseScripts(bool b) {
+    uiSignal("on_scripts_paused", {{"paused",toString(b)}});
     for (auto s : scripts) s.second->enable(!b);
 }
 

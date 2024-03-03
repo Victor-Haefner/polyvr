@@ -60,7 +60,7 @@ class VRAppManager {
         static VRAppManagerPtr create();
 
         VRAppPanelPtr addSection(string name);
-        void toggleDemo(VRAppLauncherPtr e);
+        void toggleDemo(VRAppLauncherPtr e, bool pausedScripts = false);
         void on_lock_toggle(VRAppLauncherPtr e);
         void setCurrentApp(VRAppLauncherPtr e);
 };
