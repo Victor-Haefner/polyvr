@@ -104,7 +104,7 @@ ImConsoles::ImConsoles() : ImWidget("Consoles") {
     mgr->addCallback("newConsole", [&](OSG::VRGuiSignals::Options o){ newConsole(o["ID"], o["color"]); return true; } );
     mgr->addCallback("setupConsole", [&](OSG::VRGuiSignals::Options o){ setupConsole(o["ID"], o["name"]); return true; } );
     mgr->addCallback("pushConsole", [&](OSG::VRGuiSignals::Options o){ pushConsole(o["ID"], o["string"], o["style"], o["mark"]); return true; } );
-    mgr->addCallback("clearConsole", [&](OSG::VRGuiSignals::Options o){ o["ID"].clear(); return true; } );
+    mgr->addCallback("clearConsole", [&](OSG::VRGuiSignals::Options o){ consoles[o["ID"]].clear(); return true; } );
     mgr->addCallback("clearConsoles", [&](OSG::VRGuiSignals::Options o){ for (auto& c : consoles) c.second.clear(); return true; } );
     mgr->addCallback("setConsoleLabelColor", [&](OSG::VRGuiSignals::Options o){ setConsoleLabelColor(o["ID"], o["color"]); return true; } );
 }
@@ -221,8 +221,12 @@ void ImViewControls::render() {
 void ImConsoles::begin() {
     viewControls.render();
     ImGui::Separator();
+
     if (ImGui::BeginTabBar("ConsolesTabBar", ImGuiTabBarFlags_None)) {
         for (auto& c : consolesOrder) consoles[c].render();
         ImGui::EndTabBar();
     }
+
+    ImGui::SameLine(ImGui::GetWindowWidth()-280);
+    if (ImGui::Button("clear")) uiSignal("clearConsoles");
 }
