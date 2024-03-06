@@ -155,7 +155,6 @@ VRObjectPtr VRObject::ptr() { return static_pointer_cast<VRObject>( shared_from_
 void VRObject::printInformation() {;}
 
 VRObjectPtr VRObject::copy(vector<VRObjectPtr> children) {
-    if (getBaseName() == "DeviceBeacons") cout << "-------------------- VRObject::copy " << this << endl;
     VRObjectPtr o = VRObject::create(getBaseName());
     if (specialized) o->setCore(getCore(), getType());
     o->setPersistency(getPersistency());

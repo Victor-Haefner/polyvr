@@ -77,6 +77,7 @@ VRObjectPtr VRGeometry::copy(vector<VRObjectPtr> children) {
     geo->setMaterial(mat);
     geo->source = source;
     if (primitive) geo->primitive = primitive->copy();
+    geo->setMeshVisibility(getMeshVisibility());
     return geo;
 }
 
@@ -1100,6 +1101,11 @@ void VRGeometry::setMeshVisibility(bool b) {
     if (!mesh_node) return;
     if (b) mesh_node->node->setTravMask(0xffffffff);
     else mesh_node->node->setTravMask(0);
+}
+
+bool VRGeometry::getMeshVisibility() {
+    if (!mesh_node) return true;
+    return (mesh_node->node->getTravMask() == 0xffffffff);
 }
 
 /** Set the material of the mesh **/

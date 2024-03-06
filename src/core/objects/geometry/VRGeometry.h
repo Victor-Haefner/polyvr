@@ -79,6 +79,7 @@ class VRGeometry : public VRTransform {
         vector<VRGeometryPtr> splitByVertexColors();
         void setMeshVisibility(bool b);
         void setVolumeCheck(bool b, bool recursive = false) override;
+        bool getMeshVisibility();
 
         virtual bool applyIntersectionAction(Action* ia);
         virtual void setPrimitive(string parameters);
