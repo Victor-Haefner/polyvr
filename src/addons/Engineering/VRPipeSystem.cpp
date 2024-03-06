@@ -2,6 +2,9 @@
 #include "core/utils/toString.h"
 #include "core/utils/isNan.h"
 #include "core/utils/VRFunction.h"
+#include "core/utils/system/VRSystem.h"
+#include "core/tools/VRAnalyticGeometry.h"
+#include "core/tools/VRAnnotationEngine.h"
 #include "core/objects/geometry/VRGeoData.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/scene/VRScene.h"
@@ -36,11 +39,18 @@ void VRPipeSegment::computeGeometry() {
     volume = area*length;
 }
 
-void VRPipeSegment::addEnergy(double m, double d, bool p1) {
+void VRPipeSegment::addEnergy(double m, double d, bool p1, string hint) {
     if (volume < 1e-9) return;
+
+    double pressure = p1 ? pressure1 : pressure2;
 
     if (p1) pressure1 += m/volume;
     else pressure2 += m/volume;
+
+    if (pressure1 < -1e-6 || pressure2 < -1e-6) {
+        cout << " hint: " << hint << ", m: " << m << ", mv: " << m/volume << ", p: " << pressure << " -> " << double(p1 ? pressure1 : pressure2) << endl;
+        printBacktrace();
+    }
 
     if (m>0) { // only when adding material with different density
         density = (density * volume + m*d) / (volume + m);
@@ -60,8 +70,8 @@ void VRPipeSegment::handleTank(double& otherPressure, double otherVolume, double
         m = min(m, otherPressure*otherVolume); // not more than available!
     }
 
-    //cout << "handleTank p1: " << p1 << " dP: " << dP << " P: " << pressure1 << "->" << pressure2 ;
-    addEnergy(-m, otherDensity, p1);
+    addEnergy(-m, otherDensity, p1, "handleTank");
+    //if (pressure1 < -1e-6 || pressure2 < -1e-6) cout << "handleTank, m: " << m << " mv: " << m/volume << " dP: " << dP << " P: " << pressure << "->" << otherPressure ;
     otherPressure += m/otherVolume;
     if (m>0) otherDensity = (otherDensity * otherVolume + m*density) / (otherVolume + m); // only when adding material with different density
     //cout << " ... " <<  " P: " << pressure << "->" << pressure1 << "->" << pressure2 << " pipe: " << this << endl;
@@ -74,10 +84,10 @@ double VRPipeSegment::computeExchange(double hole, VRPipeSegmentPtr other, doubl
     hole = min(hole, min(this->area, other->area));
     double m = dP*hole*dt*gasSpeed; // energy through the opening
 
-    if (dP > 0) { // energy is going out of pipe
+    if (m > 0) { // energy is going out of pipe
         m = min(m, pressure*volume); // not more than available!
     } else { // energy going out of other
-        m = min(m, otherPressure*other->volume); // not more than available!
+        m = -min(-m, otherPressure*other->volume); // not more than available!
     }
 
     return m;
@@ -85,8 +95,8 @@ double VRPipeSegment::computeExchange(double hole, VRPipeSegmentPtr other, doubl
 
 void VRPipeSegment::handleValve(double area, VRPipeSegmentPtr other, double dt, bool p1, bool op1) {
     double m = computeExchange(area, other, dt, p1, op1);
-    addEnergy(-m, other->density, p1);
-    other->addEnergy(m, density, op1);
+    addEnergy(-m, other->density, p1, "handleValveSelf");
+    other->addEnergy(m, density, op1, "handleValveOther");
 }
 
 void VRPipeSegment::handleOutlet(double area, double extPressure, double extDensity, double dt, bool p1) {
@@ -95,7 +105,7 @@ void VRPipeSegment::handleOutlet(double area, double extPressure, double extDens
     double dP = pressure - extPressure;
     double m = dP*area*dt*gasSpeed; // energy through the opening
     m = min(m, pressure*volume); // not more than available!
-    addEnergy(-m, extDensity, p1);
+    addEnergy(-m, extDensity, p1, "handleOutlet");
 }
 
 void VRPipeSegment::handlePump(double performance, double maxPressure, bool isOpen, VRPipeSegmentPtr other, double dt, bool p1, bool op1) {
@@ -112,8 +122,8 @@ void VRPipeSegment::handlePump(double performance, double maxPressure, bool isOp
     m = max(m, mO);
     //if (isOpen) m = max(m, computeExchange(area*0.1, other, dt, p1)); // minimal exchange if pump is open
     m = min(m, pressure*volume); // pump out not more than available!
-    addEnergy(-m, other->density, p1);
-    other->addEnergy(m, density, op1);
+    addEnergy(-m, other->density, p1, "handlePump");
+    other->addEnergy(m, density, op1, "handlePumpOther");
     //cout << " pump " << performance << " m " << m << " v " << v << endl;
 }
 
@@ -316,7 +326,7 @@ void VRPipeSystem::update() {
                     for (auto p : outFlowPipeIDs) tankLevel -= dt * segments[p]->flow * k / tankVolume;
                     tankLevel = clamp(tankLevel, 0.0, 1.0);
                 }
-                cout << "level: " << nID << ", " << tankLevel << endl;
+                //cout << "level: " << nID << ", " << tankLevel << endl;
                 entity->set("level", toString(tankLevel));
                 continue;
             }
@@ -402,9 +412,12 @@ void VRPipeSystem::update() {
             double k = kmax/(1.0+s.second->length)*min(1.0, dt*gasSpeed);
             s.second->pressure1 += k;
             s.second->pressure2 -= k;
+
+            if (s.second->pressure1 < -1e-6 || s.second->pressure2 < -1e-6)
+                cout << "compute pressure relaxation, p1: " << s.second->pressure1 << " p2: " << s.second->pressure1 << " k: " << k << endl;
         }
 
-        for (auto s : segments) { // compute flows accellerations
+        for (auto s : segments) { // compute flows accelerations
             double m = max(s.second->volume*s.second->density, 0.001); // make sure m doesnt drop to 0
             double dP = s.second->pressure2 - s.second->pressure1; // compute pressure gradient
             double F = dP*s.second->area;
@@ -491,7 +504,7 @@ void VRPipeSystem::update() {
                     double tankLevel = entity->getValue("level", 0.0);
                     bool empty = bool(tankLevel <= 1e-3);
                     bool full  = bool(tankLevel >= 1.0-1e-3);
-                    cout << " tank, level: " << tankLevel << ", empty? " << empty << ", full? " << full << endl;
+                    //cout << " tank, level: " << tankLevel << ", empty? " << empty << ", full? " << full << endl;
                     if (!empty && !full) continue;
 
                     //if (maxFlow > 1e-6 && maxInFlow > 1e-6 && maxOutFlow > 1e-6) {
@@ -537,7 +550,7 @@ void VRPipeSystem::update() {
         }
 
         //cout << "flows" << endl;
-        for (auto s : segments) { // add final flow accellerations
+        for (auto s : segments) { // add final flow accelerations
             auto& e = graph->getEdge(s.first);
             if (!nodes.count(e.from) || !nodes.count(e.to)) continue;
 
@@ -661,6 +674,53 @@ void VRPipeSystem::setFlowParameters(float l) {
     latency = l;
 }
 
+void VRPipeSystem::updateInspection(int nID) {
+    if (!doVisual) return;
+
+    if (!inspectionTool) {
+        inspectionTool = VRAnalyticGeometry::create("inspectionTool");
+        inspectionTool->setLabelParams(0.01, false, true);
+        addChild(inspectionTool);
+    }
+
+    //if (inspected == nID) return;
+    inspected = nID;
+    if (nID < 0 || nID >= nodes.size()) return;
+    auto node = nodes[nID];
+
+    Vec3d d = Vec3d(-spread,-spread,-spread) * 0.2;
+    Vec3d pn = getNodePose(nID)->pos();
+
+    inspectionTool->clear();
+
+    for (auto pIn : getInPipes(nID)) {
+        double p1 = pIn->pressure1;
+        double p2 = pIn->pressure2;
+        double df1 = pIn->dFl1;
+        double df2 = pIn->dFl2;
+        auto e = graph->getEdge(pIn->eID);
+        Vec3d pn2 = getNodePose(e.from)->pos();
+        Vec3d D = pn2-pn;
+        inspectionTool->addVector(pn+d+D*0.05, D*0.45, Color3f(0,1,0), "p: " +toString(p1)+"->"+toString(p2));
+        inspectionTool->addVector(pn+d+D*0.5 , D*0.45, Color3f(0,1,0), "df: " +toString(df1)+"->"+toString(df2));
+    }
+
+    for (auto pOut : getOutPipes(nID)) {
+        double p1 = pOut->pressure1;
+        double p2 = pOut->pressure2;
+        double df1 = pOut->dFl1;
+        double df2 = pOut->dFl2;
+        auto e = graph->getEdge(pOut->eID);
+        Vec3d pn2 = getNodePose(e.to)->pos();
+        Vec3d D = pn2-pn;
+        inspectionTool->addVector(pn+d+D*0.05, D*0.45, Color3f(1,0,0), "p: " +toString(p1)+"->"+toString(p2));
+        inspectionTool->addVector(pn+d+D*0.5 , D*0.45, Color3f(1,0,0), "df: " +toString(df1)+"->"+toString(df2));
+    }
+
+    auto labels = inspectionTool->getAnnotationEngine();
+    labels->add(pn, "Node "+toString(nID)+": "+node->entity->getConcept()->getName());
+}
+
 void VRPipeSystem::updateVisual() {
     if (!doVisual) return;
 
@@ -668,6 +728,7 @@ void VRPipeSystem::updateVisual() {
 
     Vec3d dO = Vec3d(-spread,-spread,-spread);
     Vec3d d1 = dO*2;
+    Vec3d d2 = dO*3;
 
     if (rebuildMesh) {
         data.reset();
@@ -676,6 +737,7 @@ void VRPipeSystem::updateVisual() {
         Color3f white(1,1,1);
         Color3f yellow(1,1,0);
         Color3f blue(0.2,0.5,1);
+        Color3f green(0.2,1.0,0.2);
 
         for (auto& s : segments) {
             auto edge = graph->getEdge(s.first);
@@ -683,14 +745,20 @@ void VRPipeSystem::updateVisual() {
             auto p1 = graph->getPosition(edge.from);
             auto p2 = graph->getPosition(edge.to);
 
-            data.pushVert(p1->pos(), norm, white);
-            data.pushVert(p2->pos(), norm, white);
+            Vec2d tcID1 = Vec2d(edge.from, 0);
+            Vec2d tcID2 = Vec2d(edge.to, 0);
+
+            data.pushVert(p1->pos(), norm, white, tcID1);
+            data.pushVert(p2->pos(), norm, white, tcID2);
             data.pushLine();
-            data.pushVert(p1->pos()+dO, norm, yellow);
-            data.pushVert(p2->pos()+dO, norm, yellow);
+            data.pushVert(p1->pos()+dO, norm, yellow, tcID1);
+            data.pushVert(p2->pos()+dO, norm, yellow, tcID2);
             data.pushLine();
-            data.pushVert(p1->pos()+d1, norm, blue);
-            data.pushVert(p2->pos()+d1, norm, blue);
+            data.pushVert(p1->pos()+d1, norm, blue, tcID1);
+            data.pushVert(p2->pos()+d1, norm, blue, tcID2);
+            data.pushLine();
+            data.pushVert(p1->pos()+d2, norm, white, tcID1);
+            data.pushVert(p2->pos()+d2, norm, green, tcID2);
             data.pushLine();
         }
 
@@ -764,6 +832,7 @@ void VRPipeSystem::updateVisual() {
         data.setColor(i, cf); i++;
         data.setColor(i, cf); i++;
 
+        i += 2;
         //cout << "flow " << s.first << " " << f << endl;
     }
 

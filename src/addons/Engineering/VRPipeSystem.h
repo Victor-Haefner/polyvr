@@ -42,7 +42,7 @@ class VRPipeSegment {
         void handleOutlet(double area, double extPressure, double extDensity, double dt, bool p1);
         void handlePump(double performance, double maxPressure, bool isOpen, VRPipeSegmentPtr other, double dt, bool p1, bool op1);
 
-        void addEnergy(double m, double d, bool p1);
+        void addEnergy(double m, double d, bool p1, string hint);
         void setLength(double l);
         void computeGeometry();
 };
@@ -66,6 +66,8 @@ class VRPipeSystem : public VRGeometry {
         VROntologyPtr ontology;
 
         VRUpdateCbPtr updateCb;
+        VRAnalyticGeometryPtr inspectionTool;
+        int inspected = -1;
 
         bool doVisual = false;
         bool rebuildMesh = true;
@@ -114,6 +116,7 @@ class VRPipeSystem : public VRGeometry {
 
 		void update();
 		void updateVisual();
+		void updateInspection(int nID);
 
 		PosePtr getNodePose(int i);
 		double getSegmentPressure(int i);
