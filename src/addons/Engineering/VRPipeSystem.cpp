@@ -134,12 +134,24 @@ VRPipeSystem::VRPipeSystem() : VRGeometry("pipeSystem") {
 
     updateCb = VRUpdateCb::create("pipesSimUpdate", bind(&VRPipeSystem::update, this) );
     VRScene::getCurrent()->addUpdateFkt(updateCb);
+
+    setupMaterial();
 }
 
 VRPipeSystem::~VRPipeSystem() {}
 
 VRPipeSystemPtr VRPipeSystem::create() { return VRPipeSystemPtr( new VRPipeSystem() ); }
 VRPipeSystemPtr VRPipeSystem::ptr() { return static_pointer_cast<VRPipeSystem>(shared_from_this()); }
+
+void VRPipeSystem::setupMaterial() {
+    auto m = VRMaterial::create("pipes");
+    m->setLineWidth(5);
+    m->setLit(0);
+    m->addPass();
+    m->setPointSize(10);
+    m->setLit(0);
+    setMaterial(m);
+}
 
 GraphPtr VRPipeSystem::getGraph() { return graph; }
 VROntologyPtr VRPipeSystem::getOntology() { return ontology; }
@@ -696,14 +708,6 @@ void VRPipeSystem::updateVisual() {
                 data.pushPoint();
             }
         }
-
-        auto m = VRMaterial::create("pipes");
-        m->setLineWidth(5);
-        m->setLit(0);
-        m->addPass();
-        m->setPointSize(10);
-        m->setLit(0);
-        setMaterial(m);
 
         //cout << "apply data: " << data.size() << endl;
         data.apply(ptr());

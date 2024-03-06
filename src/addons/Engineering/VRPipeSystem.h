@@ -85,6 +85,7 @@ class VRPipeSystem : public VRGeometry {
         bool goesIn(VRPipeSegmentPtr s, int nID);
         bool goesOut(VRPipeSegmentPtr s, int nID);
         VREntityPtr getEntity(string name);
+        void setupMaterial();
 
 	public:
 		VRPipeSystem();
