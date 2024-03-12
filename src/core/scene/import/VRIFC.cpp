@@ -13,9 +13,10 @@
 #include <ifcgeom/IfcGeom.h>
 #include <ifcgeom/IfcGeomFilter.h>
 #include <ifcgeom/IfcGeomIterator.h>
-//#include <IGESControl_Controller.hxx>
-//#include <Standard_Version.hxx>
-//#include <boost/program_options.hpp>
+#include <ifcgeom/IfcGeomElement.h>
+#include <ifcgeom/IfcGeomMaterial.h>
+#include <ifcgeom/IfcGeomIteratorSettings.h>
+#include <ifcgeom/IfcRepresentationShapeItem.h>
 
 
 #include <fstream>
@@ -118,13 +119,14 @@ class IFCLoader {
     private:
         //Color3f defaultColor = Color3f(1,1,1);
         Color3f defaultColor = Color3f(1,0,1);
+        IfcGeom::Kernel kernel;
 
         VROntologyPtr ontology;
 
-        void applyTransformation(const IfcGeom::TriangulationElement<real_t>* o, VRGeometryPtr geo) {
-            IfcGeom::Transformation<real_t> trans = o->transformation();
-            const IfcGeom::Matrix<real_t>& m = trans.matrix();
-            const vector<real_t> v = m.data();
+        void applyTransformation(const IfcGeom::TriangulationElement<float>* o, VRGeometryPtr geo) {
+            IfcGeom::Transformation<float> trans = o->transformation();
+            const IfcGeom::Matrix<float>& m = trans.matrix();
+            const vector<float> v = m.data();
             //Matrix4d osgM = Matrix4d(v[0], v[1], v[2], v[9], v[3], v[4], v[5], v[10], v[6], v[7], v[8], v[11], 0, 0, 0, 1);
             Matrix4d osgM = Matrix4d(v[0], v[3], v[6], v[9],
                                      v[1], v[4], v[7], v[10],
@@ -263,11 +265,12 @@ class IFCLoader {
             obj->setEntity(e);
         }
 
-        VRGeometryPtr convertGeo(const IfcGeom::TriangulationElement<real_t>* o) {
-            const IfcGeom::Representation::Triangulation<real_t>& mesh = o->geometry();
+        VRGeometryPtr convertGeo(const IfcGeom::TriangulationElement<float>* o) {
+            if (!o) return 0;
+            const IfcGeom::Representation::Triangulation<float>& mesh = o->geometry();
 
-            vector<real_t> verts = mesh.verts();
-            vector<real_t> norms = mesh.normals();
+            vector<float> verts = mesh.verts();
+            vector<float> norms = mesh.normals();
             vector<int> faces = mesh.faces();
             vector<int> mat_ids = mesh.material_ids();
             vector<IfcGeom::Material> materials = mesh.materials();
@@ -297,29 +300,7 @@ class IFCLoader {
             return geo;
         }
 
-        void load(string path, VRTransformPtr res) {
-            VRObjectPtr root = VRObject::create(path);
-
-            //Logger::SetOutput(&cout, &cout); // Redirect the output (both progress and log) to stdout
-            Logger::SetOutput(0, 0); // Redirect the output (both progress and log) to stdout
-
-            // Parse the IFC file provided in argv[1]
-            IfcParse::IfcFile file;
-            if ( !file.Init(path) ) {
-                cout << "Unable to parse .ifc file: " << path << endl;
-                return;
-            }
-
-            // Lets get a list of IfcBuildingElements, this is the parent
-            // type of things like walls, windows and doors.
-            // entitiesByType is a templated function and returns a
-            // templated class that behaves like a vector.
-            // Note that the return types are all typedef'ed as members of
-            // the generated classes, ::list for the templated vector class,
-            // ::ptr for a shared pointer and ::it for an iterator.
-            // We will simply iterate over the vector and print a string
-            // representation of the entity to stdout.
-
+        IfcGeom::BRepElement<float>* createBRep(IfcRepresentation* representation, IfcProduct* product) {
             IfcGeom::IteratorSettings settings;
             settings.set(IfcGeom::IteratorSettings::NO_NORMALS,                   false);
             settings.set(IfcGeom::IteratorSettings::WELD_VERTICES,                false);
@@ -335,52 +316,84 @@ class IFCLoader {
             settings.set(IfcGeom::IteratorSettings::SEARCH_FLOOR,                 false);
             settings.set(IfcGeom::IteratorSettings::SITE_LOCAL_PLACEMENT,         false);
             settings.set(IfcGeom::IteratorSettings::BUILDING_LOCAL_PLACEMENT,     false);
-            //settings.set_deflection_tolerance(1e-5);
-            //settings.precision = 1e-6;
 
-            string output_extension = ".dae";
-            vector<geom_filter> used_filters;
-            vector<IfcGeom::filter_t> filter_funcs = setup_filters(used_filters, output_extension);
-            IfcGeom::Iterator<real_t> context_iterator(settings, &file, filter_funcs);
-            if (!context_iterator.initialize()) { cout << "Failed to initialize IFC context_iterator"; return; }
+            IfcGeom::BRepElement<float>* element = kernel.create_brep_for_representation_and_product<float>(settings, representation, product);
+            return element;
+		}
 
-            //serializer->setFile(context_iterator.getFile());
-            //serializer->setUnitNameAndMagnitude("METER", 1.0f);
+        IfcGeom::TriangulationElement<float>* createMesh(IfcGeom::BRepElement<float>* brep) {
+			IfcGeom::TriangulationElement<float>* triangulation = 0;
+			if (brep) triangulation = new IfcGeom::TriangulationElement<float>(*brep);
+			return triangulation;
+		}
 
-            int i=0;
-            do {
-                //cout << "IFC process object " << i << endl;
-                IfcGeom::Element<real_t>* geom_object = context_iterator.get();
-                auto geo = convertGeo(static_cast<const IfcGeom::TriangulationElement<real_t>*>(geom_object));
-                if (geo) {
-                    root->addChild(geo);
-                    addSemantics(geo, geom_object);
-                }
+        void load(string path, VRTransformPtr res) {
+            VRObjectPtr root = VRObject::create(path);
 
-                //const int progress = context_iterator.progress() / 2;
-                //if (old_progress != progress) Logger::ProgressBar(progress);
-                //old_progress = progress;
-                i++;
-                //if (i > 2) return;
-            } while(context_iterator.next());
+            //Logger::SetOutput(&cout, &cout); // Redirect the output (both progress and log) to stdout
+            Logger::SetOutput(0, 0); // Redirect the output (both progress and log) to stdout
 
-            /*auto elements = file.entitiesByType<IfcBuildingElement>();
+            // Parse the IFC file provided in argv[1]
+            IfcParse::IfcFile file;
+            if ( !file.Init(path) ) { cout << "Unable to parse .ifc file: " << path << endl; return; }
+
+            //  see IfcGeomIterator.h
+            // IfcGeom::Iterator<real_t> context_iterator(settings, &file, filter_funcs);
+            // context_iterator.initialize()
+            // IfcGeom::Element<real_t>* geom_object = context_iterator.get();
+            // auto geo = convertGeo(static_cast<const IfcGeom::TriangulationElement<real_t>*>(geom_object));
+
+            auto elements = file.entitiesByType<IfcProduct>();
             cout << "Found " << elements->size() << " elements in " << path << ":" << endl;
 
-            for ( auto it = elements->begin(); it != elements->end(); ++ it ) {
-                const IfcBuildingElement* element = *it;
-                //cout << element->entity->toString() << endl;
+            struct Ifc_Node {
+                IfcProduct* element = 0;
+                Ifc_Node* parent = 0;
+                vector<Ifc_Node*> children;
 
-                if ( element->is(IfcWindow::Class()) ) {
-                    const IfcWindow* window = (IfcWindow*)element;
+                Ifc_Node() {}
+                Ifc_Node(IfcProduct* e) : element(e) {}
+            };
 
-                    if ( window->hasOverallWidth() && window->hasOverallHeight() ) {
-                        const double area = window->OverallWidth()*window->OverallHeight();
-                        cout << "The area of this window is " << area << endl;
+            map<IfcProduct*, Ifc_Node> nodes;
+            for ( IfcProduct* element : *elements ) nodes[element] = Ifc_Node(element);
+
+            for ( auto& n : nodes) {
+                IfcProduct* e = n.first;
+                string name = "UNNAMED";
+                if (e->hasName()) name = e->Name();
+                cout << name << ", " << e->GlobalId() << ", " << Type::ToString(e->type()) << endl;
+                if (e->hasObjectPlacement()) {
+                    gp_Trsf trsf;
+                    kernel.convert(e->ObjectPlacement(), trsf);
+                    const gp_XYZ& pos = trsf.TranslationPart();
+                    cout << " pos: " << pos.X() << ", " << pos.Y() << ", " << pos.Z() << endl;
+                }
+
+                if (e->hasRepresentation()) {
+                    IfcProductRepresentation* prod_rep = e->Representation();
+                    if (prod_rep) { // IfcProductDefinitionShape
+                        cout << "  prod_rep: " <<  Type::ToString(prod_rep->type()) << endl;
+                        auto reps = prod_rep->Representations();
+                        for (auto rep : *reps) { // IfcShapeRepresentation
+                            if (rep) {
+                                auto ifcBRep = createBRep(rep, e);
+                                auto ifcMesh = createMesh(ifcBRep);
+                                auto geo = convertGeo(ifcMesh);
+                                if (geo) root->addChild(geo);
+                                cout << "   rep: " << Type::ToString(rep->type()) << ", " << ifcBRep << ", " << ifcMesh << ", " << geo << endl;
+                            }
+                        }
                     }
                 }
 
-            }*/
+
+                /*for (int i=0; i<e->getArgumentCount(); i++) {
+                    auto an = e->getArgumentName(i);
+                    if (an) cout << " a" << i << ", " << an << endl;
+                }*/
+                //cout << " el " << e->Name() << ", " << e->Parent() << endl;
+            }
 
             res->addChild(root);
         }
