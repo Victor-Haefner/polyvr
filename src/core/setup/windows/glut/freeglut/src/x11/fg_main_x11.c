@@ -580,22 +580,22 @@ static void fghPrintEvent( XEvent *event )
 #endif
 
 
-void handleKeyEvent(XEvent event) {
+void fgHandleKeyboardEvents( XEvent* event ) {
     FGCBKeyboardUC keyboard_cb;
     FGCBSpecialUC special_cb;
     FGCBUserData keyboard_ud;
     FGCBUserData special_ud;
 
-    SFG_Window* window = fgWindowByHandle( event.xkey.window );
+    SFG_Window* window = fgWindowByHandle( event->xkey.window );
     if( window == NULL ) return;
-    window->State.MouseX = event.xkey.x;
-    window->State.MouseY = event.xkey.y;
+    window->State.MouseX = event->xkey.x;
+    window->State.MouseY = event->xkey.y;
 
     /* Detect auto repeated keys, if configured globally or per-window */
 
     if ( fgState.KeyRepeat==GLUT_KEY_REPEAT_OFF || window->State.IgnoreKeyRepeat==GL_TRUE )
     {
-        if (event.type==KeyRelease)
+        if (event->type==KeyRelease)
         {
             /*
              * Look at X11 keystate to detect repeat mode.
@@ -605,9 +605,9 @@ void handleKeyEvent(XEvent event) {
             char keys[32];
             XQueryKeymap( fgDisplay.pDisplay.Display, keys ); /* Look at X11 keystate to detect repeat mode */
 
-            if ( event.xkey.keycode<256 )            /* XQueryKeymap is limited to 256 keycodes    */
+            if ( event->xkey.keycode<256 )            /* XQueryKeymap is limited to 256 keycodes    */
             {
-                if ( keys[event.xkey.keycode>>3] & (1<<(event.xkey.keycode%8)) )
+                if ( keys[event->xkey.keycode>>3] & (1<<(event->xkey.keycode%8)) )
                     window->State.pWState.KeyRepeating = GL_TRUE;
                 else
                     window->State.pWState.KeyRepeating = GL_FALSE;
@@ -621,11 +621,11 @@ void handleKeyEvent(XEvent event) {
 
     if (window->State.pWState.KeyRepeating)
     {
-        if (event.type == KeyPress) window->State.pWState.KeyRepeating = GL_FALSE;
+        if (event->type == KeyPress) window->State.pWState.KeyRepeating = GL_FALSE;
         return;
     }
 
-    if( event.type == KeyPress )
+    if( event->type == KeyPress )
     {
         keyboard_cb = (FGCBKeyboardUC)( FETCH_WCB( *window, Keyboard ));
         special_cb  = (FGCBSpecialUC) ( FETCH_WCB( *window, Special  ));
@@ -649,12 +649,9 @@ void handleKeyEvent(XEvent event) {
         int len;
 
         /* Check for the ASCII/KeySym codes associated with the event: */
-        len = XLookupString( &event.xkey, asciiCode, sizeof(asciiCode),
+        len = XLookupString( &event->xkey, asciiCode, sizeof(asciiCode),
                              &keySym, &composeStatus
         );
-
-        //if (len == 1) printf("key event: %s %u %i\n", asciiCode, (unsigned char)asciiCode[0], len);
-        //if (len == 2) printf("key event: %s %u %u %i\n", asciiCode, (unsigned char)asciiCode[0], (unsigned char)asciiCode[1], len);
 
         /* GLUT API tells us to have two separate callbacks... */
         if( len > 0 )
@@ -663,8 +660,13 @@ void handleKeyEvent(XEvent event) {
             if( keyboard_cb )
             {
                 fgSetWindow( window );
-                fgState.Modifiers = fgPlatformGetModifiers( event.xkey.state );
-                for (int i=0; i<len; i++) keyboard_cb( asciiCode[ i ], event.xkey.x, event.xkey.y, keyboard_ud );
+                fgState.Modifiers = fgPlatformGetModifiers( event->xkey.state );
+                for (int i=0; i<len; i++) {
+                    keyboard_cb( asciiCode[ i ],
+                                 event->xkey.x, event->xkey.y,
+                                 keyboard_ud
+                    );
+                }
                 fgState.Modifiers = INVALID_MODIFIERS;
             }
         }
@@ -738,8 +740,8 @@ void handleKeyEvent(XEvent event) {
             if( special_cb && (special != -1) )
             {
                 fgSetWindow( window );
-                fgState.Modifiers = fgPlatformGetModifiers( event.xkey.state );
-                special_cb( special, event.xkey.x, event.xkey.y, special_ud );
+                fgState.Modifiers = fgPlatformGetModifiers( event->xkey.state );
+                special_cb( special, event->xkey.x, event->xkey.y, special_ud );
                 fgState.Modifiers = INVALID_MODIFIERS;
             }
         }
@@ -1040,7 +1042,7 @@ void fgPlatformProcessSingleEvent ( void )
         case KeyRelease:
         case KeyPress:
         {
-            handleKeyEvent(event);
+            fgHandleKeyboardEvents( &event );
         }
         break;
 

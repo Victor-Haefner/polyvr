@@ -22,7 +22,7 @@ void ImConsole::render() {
         auto r = ImGui::GetContentRegionAvail();
         string wID = "##"+name+"_text";
 
-        if (changed > 0) {
+        if (changed > 0 && !paused) {
             //size_t N = countLines(data);
             size_t N = lines.size();
             ImGui::SetNextWindowScroll(ImVec2(-1, N * ImGui::GetTextLineHeight()));
@@ -99,6 +99,10 @@ void ImConsole::clear() {
     changed = 0;
 }
 
+void ImConsole::pause(bool b) {
+    paused = b;
+}
+
 ImConsoles::ImConsoles() : ImWidget("Consoles") {
     auto mgr = OSG::VRGuiSignals::get();
     mgr->addCallback("newConsole", [&](OSG::VRGuiSignals::Options o){ newConsole(o["ID"], o["color"]); return true; } );
@@ -106,6 +110,7 @@ ImConsoles::ImConsoles() : ImWidget("Consoles") {
     mgr->addCallback("pushConsole", [&](OSG::VRGuiSignals::Options o){ pushConsole(o["ID"], o["string"], o["style"], o["mark"]); return true; } );
     mgr->addCallback("clearConsole", [&](OSG::VRGuiSignals::Options o){ consoles[o["ID"]].clear(); return true; } );
     mgr->addCallback("clearConsoles", [&](OSG::VRGuiSignals::Options o){ for (auto& c : consoles) c.second.clear(); return true; } );
+    mgr->addCallback("pauseConsoles", [&](OSG::VRGuiSignals::Options o){ paused = toBool(o["state"]); for (auto& c : consoles) c.second.pause(paused); return true; } );
     mgr->addCallback("setConsoleLabelColor", [&](OSG::VRGuiSignals::Options o){ setConsoleLabelColor(o["ID"], o["color"]); return true; } );
 }
 
@@ -222,6 +227,9 @@ void ImConsoles::begin() {
     viewControls.render();
     ImGui::Separator();
 
+    if (paused) pushGlowBorderStyle(3);
+    ImGui::BeginChild("highlightFrame", ImVec2(0,0), true);
+
     if (ImGui::BeginTabBar("ConsolesTabBar", ImGuiTabBarFlags_None)) {
         for (auto& c : consolesOrder) consoles[c].render();
         ImGui::EndTabBar();
@@ -229,4 +237,17 @@ void ImConsoles::begin() {
 
     ImGui::SameLine(ImGui::GetWindowWidth()-280);
     if (ImGui::Button("clear")) uiSignal("clearConsoles");
+
+    ImGui::SameLine();
+    if (ImGui::Checkbox("pause", &paused)) {
+        uiSignal("pauseConsoles", {{"state",toString(paused)}});
+    }
+
+    ImGui::EndChild();
+    popGlowBorderStyle();
 }
+
+
+
+
+

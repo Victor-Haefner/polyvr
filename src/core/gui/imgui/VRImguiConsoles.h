@@ -43,6 +43,7 @@ class ImConsole {
 
         bool sensitive = true;
         bool tabOpen = false;
+        bool paused = false;
         int changed = 0;
         string ID;
         string name;
@@ -54,6 +55,7 @@ class ImConsole {
         ImConsole(string ID);
         void render();
         void clear();
+        void pause(bool b);
 };
 
 class ImConsoles : public ImWidget {
@@ -61,6 +63,7 @@ class ImConsoles : public ImWidget {
         ImViewControls viewControls;
         vector<string> consolesOrder;
         map<string,ImConsole> consoles;
+        bool paused = false;
 
         void newConsole(string ID, string color);
         void clearConsole(string ID);

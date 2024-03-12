@@ -54,6 +54,8 @@ class ImWidget {
 };
 
 ImVec4 colorFromString(const string& c);
+void pushGlowBorderStyle(int ID);
+void popGlowBorderStyle();
 
 float strWidth(const string& s);
 

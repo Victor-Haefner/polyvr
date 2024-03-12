@@ -89,7 +89,7 @@ map<string, string> uiParameterStore;
 string uiParameterFile;
 
 void uiInitStore() {
-    uiParameterFile = absolute(".uiParameter.ini"); 
+    uiParameterFile = absolute(".uiParameter.ini");
     OSG::XML xml;
     xml.read(uiParameterFile, false);
     OSG::XMLElementPtr root = xml.getRoot();
@@ -127,9 +127,34 @@ string uiGetParameter(string name, string def) {
 float strWidth(const string& s) { // TODO
     ImGuiStyle& style = ImGui::GetStyle();
     ImGuiIO& io = ImGui::GetIO();
-    
+
     float p = style.FramePadding.x * 2.0f;
     //return ImGui::CalcTextSize(s.c_str()).x + p; // CalcTextSize may crash when starting maximized
     return s.size()*6.5*io.FontGlobalScale + p;
 }
 
+static bool borderGlowActive = false;
+static map<int, int> borderGlowTickers;
+
+void pushGlowBorderStyle(int ID) {
+    if (borderGlowActive) return;
+
+    const int N = 120;
+    if (!borderGlowTickers.count(ID)) borderGlowTickers[ID] = 0;
+    borderGlowTickers[ID] += 1;
+    borderGlowTickers[ID] %= N;
+
+    float t = 0.5 + abs(0.5 - borderGlowTickers[ID]/float(N)); // 0.5 -> 1 -> 0.5
+    ImVec4 col(1.0*t, 0.7*t, 0.2*t, 1.0);
+    ImGui::PushStyleColor(ImGuiCol_CheckMark, col);
+    ImGui::PushStyleColor(ImGuiCol_Border, col);
+    ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.0);
+    borderGlowActive = true;
+}
+
+void popGlowBorderStyle() {
+    if (!borderGlowActive) return;
+    ImGui::PopStyleVar(1);
+    ImGui::PopStyleColor(2);
+    borderGlowActive = false;
+}
