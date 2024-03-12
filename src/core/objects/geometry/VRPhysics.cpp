@@ -52,6 +52,7 @@ struct VRPhysicsJoint {
     OSG::VRConstraintPtr spring = 0;
     VRPhysics* partner = 0;
     btGeneric6DofSpringConstraint* btJoint = 0;
+    bool disableCollisions = true;
 
     VRPhysicsJoint() {;}
 
@@ -59,10 +60,11 @@ struct VRPhysicsJoint {
         if (btJoint) delete btJoint;
     }
 
-    VRPhysicsJoint(VRPhysics* p, OSG::VRConstraintPtr c, OSG::VRConstraintPtr cs) {
+    VRPhysicsJoint(VRPhysics* p, OSG::VRConstraintPtr c, OSG::VRConstraintPtr cs, bool dc) {
         constraint = c;
         spring = cs;
         partner = p;
+        disableCollisions = dc;
         btJoint = 0;
     }
 };
@@ -1347,12 +1349,12 @@ void VRPhysics::setConstraint(VRPhysics* p,int nodeIndex,OSG::Vec3d localPivot,b
     bt.soft_body->appendAnchor(nodeIndex,p->bt.body,toBtVector3(localPivot),!ignoreCollision,influence);
 }
 
-void VRPhysics::setConstraint(VRPhysics* p, OSG::VRConstraintPtr c, OSG::VRConstraintPtr cs) {
+void VRPhysics::setConstraint(VRPhysics* p, OSG::VRConstraintPtr c, OSG::VRConstraintPtr cs, bool disableCollisions) {
     if (bt.body == 0 || p == 0) return;
     if (p->bt.body == 0) return;
     VRLock lock(VRPhysics_mtx());
 
-    if (joints.count(p) == 0) joints[p] = new VRPhysicsJoint(p, c, cs);
+    if (joints.count(p) == 0) joints[p] = new VRPhysicsJoint(p, c, cs, disableCollisions);
     else {
         joints[p]->constraint = c;
         joints[p]->spring = cs;
@@ -1387,7 +1389,7 @@ void VRPhysics::updateConstraint(VRPhysics* p) {
     localA = fromMatrix( c->getReferenceA()->asMatrix(), -CoMOffset );
     localB = p->fromMatrix( c->getReferenceB()->asMatrix(), -p->CoMOffset );
     joint->btJoint = new btGeneric6DofSpringConstraint(*bt.body, *p->bt.body, localA, localB, true);
-    bt.world->addConstraint(joint->btJoint, true);
+    bt.world->addConstraint(joint->btJoint, joint->disableCollisions);
 
     for (int i=0; i<6; i++) {
         joint->btJoint->setParam(BT_CONSTRAINT_STOP_CFM, 0, i);
@@ -1440,3 +1442,17 @@ void VRPhysics::setSpringParameters(VRPhysics* p, int dof, float stiffnes, float
     joint->btJoint->setStiffness(dof, stiffnes);
     joint->btJoint->setDamping(dof, damping);
 }
+
+void VRPhysics::setSpringEquilibrium(VRPhysics* p, int dof, float equilibrium) {
+    if (bt.body == 0 || p == 0) return;
+    if (p->bt.body == 0) return;
+    if (joints.count(p) == 0) return;
+
+    VRLock lock(VRPhysics_mtx());
+    VRPhysicsJoint* joint = joints[p];
+    if (!joint->btJoint) return;
+    joint->btJoint->setEquilibriumPoint(dof, equilibrium);
+}
+
+
+

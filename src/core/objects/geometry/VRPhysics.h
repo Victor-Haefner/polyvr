@@ -235,9 +235,10 @@ class VRPhysics : public VRStorage {
         static btVector3 toBtVector3(Vec4d);
         static Vec4d toVec4d(btVector3);
 
-        void setConstraint(VRPhysics* p, VRConstraintPtr c, VRConstraintPtr cs = 0); //for Rigid to Rigid
-        void setConstraint(VRPhysics* p, int nodeIndex,Vec3d localPivot,bool ignoreCollision,float influence);//for Soft to Rigid
+        void setConstraint(VRPhysics* p, VRConstraintPtr c, VRConstraintPtr cs = 0, bool disableCollisions = true); //for Rigid to Rigid
+        void setConstraint(VRPhysics* p, int nodeIndex, Vec3d localPivot, bool ignoreCollision, float influence);//for Soft to Rigid
         void setSpringParameters(VRPhysics* p, int dof, float stiffnes, float damping);
+        void setSpringEquilibrium(VRPhysics* p, int dof, float equilibrium);
 
         void updateConstraint(VRPhysics* p);
         void updateConstraints();

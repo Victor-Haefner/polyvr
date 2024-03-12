@@ -1022,7 +1022,7 @@ void VRTransform::applyTransformation(PosePtr po) {
     //    if (auto trans = dynamic_pointer_cast<VRTransform>(obj)) trans->setWorldMatrix(matrices[trans.get()]);
 }
 
-void VRTransform::attach(VRTransformPtr b, VRConstraintPtr c, VRConstraintPtr cs) {
+void VRTransform::attach(VRTransformPtr b, VRConstraintPtr c, VRConstraintPtr cs, bool disableCollisions) {
     VRTransformPtr a = ptr();
     if (!c) { constrainedObjects.erase(b.get()); return; }
     constrainedObjects[b.get()] = b;
@@ -1030,7 +1030,7 @@ void VRTransform::attach(VRTransformPtr b, VRConstraintPtr c, VRConstraintPtr cs
     b->aJoints[a.get()] = make_pair(c, VRTransformWeakPtr(a)); // parents
     c->setActive(true);
 #ifndef WITHOUT_BULLET
-    if (auto p = getPhysics()) p->setConstraint( b->getPhysics(), c, cs );
+    if (auto p = getPhysics()) p->setConstraint( b->getPhysics(), c, cs, disableCollisions );
     //cout << "VRTransform::attach " << b->getName() << " to " << a->getName() << endl;
 #endif
 }
@@ -1044,6 +1044,12 @@ void VRTransform::detachJoint(VRTransformPtr b) { // TODO, remove joints
 void VRTransform::setSpringParameters(VRTransformPtr b, int dof, float stiffnes, float damping) {
 #ifndef WITHOUT_BULLET
     if (auto p = getPhysics()) p->setSpringParameters(b->getPhysics(), dof, stiffnes, damping);
+#endif
+}
+
+void VRTransform::setSpringEquilibrium(VRTransformPtr b, int dof, float equilibrium) {
+#ifndef WITHOUT_BULLET
+    if (auto p = getPhysics()) p->setSpringEquilibrium(b->getPhysics(), dof, equilibrium);
 #endif
 }
 
