@@ -111,84 +111,106 @@ class IFCLoader {
             return "";
         }
 
-        void processDefines(IfcRelDefines* defines, VREntityPtr e) {
+        vector<VREntityPtr> getEntities(IfcObject::list::ptr relObjs, map<IfcProduct*, VRObjectPtr>& objects) {
+            vector<VREntityPtr> res;
+            for ( IfcObject* obj : *relObjs ) {
+                if ( objects.count( (IfcProduct*)obj ) ) {
+                    auto o = objects[ (IfcProduct*)obj ];
+                    if (o) if (auto e = o->getEntity()) res.push_back(e);
+                }
+            }
+            return res;
+        }
+
+        void addProperty(VREntityPtr e, IfcUtil::IfcBaseEntity* prop) {
+            map<string, string> paramData;
+            int c = prop->getArgumentCount();
+            for (int i = 0; i < c; i++) {
+                string name = prop->getArgumentName(i);
+                Argument* arg = prop->getArgument(i);
+                paramData[name] = argVal(arg);
+            }
+
+            if (paramData.count("Name") && paramData.count("NominalValue")) {
+                string n = paramData["Name"];
+                string v = paramData["NominalValue"];
+                e->add("property", n+": "+v);
+            }
+        }
+
+        void processDefines(IfcRelDefines* defines, map<IfcProduct*, VRObjectPtr>& objects) {
+            auto entities = getEntities(defines->RelatedObjects(), objects);
+
             IfcRelDefinesByProperties* by_prop = defines->as<IfcRelDefinesByProperties>();
             if (by_prop) {
                 auto pdef = by_prop->RelatingPropertyDefinition();
                 if (IfcPropertySet* pset = pdef->as<IfcPropertySet>()) {
                     auto props = pset->HasProperties();
 
-                    for (IfcProperty* prop : *props) {
-                        map<string, string> paramData;
-                        int c = prop->getArgumentCount();
-                        for (int i = 0; i < c; i++) {
-                            string name = prop->getArgumentName(i);
-                            Argument* arg = prop->getArgument(i);
-                            paramData[name] = argVal(arg);
-                            //e->add("attribute", name+": "+paramData[name]);
-                        }
-
-                        if (paramData.count("GlobalId") && paramData.count("Name")) {
-                            string n = paramData["GlobalId"];
-                            string v = paramData["Name"];
-                            e->add("property", n+": "+v);
-                        }
+                    for (IfcUtil::IfcBaseEntity* prop : *props) {
+                        for (auto e : entities) addProperty(e, prop);
                     }
-                } else if(IfcElementQuantity* pset = pdef->as<IfcElementQuantity>()) { // TODO
+                } else if(IfcElementQuantity* pset = pdef->as<IfcElementQuantity>()) {
                     auto props = pset->Quantities();
 
-                    for (IfcPhysicalQuantity* prop : *props) {
-                        map<string, string> paramData;
-                        int c = prop->getArgumentCount();
-                        for (int i = 0; i < c; i++) {
-                            string name = prop->getArgumentName(i);
-                            Argument* arg = prop->getArgument(i);
-                            paramData[name] = argVal(arg);
-                            e->add("quantity", name+": "+paramData[name]);
-                        }
-
-                        //if (paramData.count("GlobalId") && paramData.count("Name")) {
-                        //    string n = paramData["GlobalId"];
-                        //    string v = paramData["Name"];
-                        //    e->add("attribute", n+": "+v);
-                        //}
+                    for (IfcUtil::IfcBaseEntity* prop : *props) {
+                        for (auto e : entities) addProperty(e, prop);
                     }
                 }
             }
-
 
             IfcRelDefinesByType* by_type = defines->as<IfcRelDefinesByType>();
             if (by_type) { // TODO
             }
         }
 
-        void processConnects(IfcRelConnects* connects) {
+        void processConnects(IfcRelConnects* connects, map<IfcProduct*, VRObjectPtr>& objects) {
+            cout << "processConnects " << Type::ToString(connects->type()) << endl;
 
+            auto e = setupEntity(0, connects);
+
+            IfcRelSpaceBoundary* sb = connects->as<IfcRelSpaceBoundary>();
+            if (sb) {
+                IfcSpace* space = sb->RelatingSpace();
+                string spaceName = objects[space]->getEntity()->getName(); // TODO: quite unsafe..
+                e->set("space", spaceName);
+
+                if (sb->hasRelatedBuildingElement()) {
+                    IfcElement* be = sb->RelatedBuildingElement();
+                    string beName = objects[be]->getEntity()->getName(); // TODO: quite unsafe..
+                    e->set("buildingElement", beName);
+                }
+                if (sb->hasConnectionGeometry()) {
+                    IfcConnectionGeometry* cg = sb->ConnectionGeometry();
+                    string cgName = objects[(IfcProduct*)cg]->getEntity()->getName(); // TODO: quite unsafe..
+                    e->set("connectionGeometry", cgName);
+                }
+            }
         }
 
-        void processProperty(IfcRelationship* r) {
-            VREntityPtr e;
+        void processProperty(IfcRelationship* r, map<IfcProduct*, VRObjectPtr>& objects) {
+            IfcRelDefines*  rDefs = r->as<IfcRelDefines>();
+            IfcRelConnects* rCons = r->as<IfcRelConnects>();
 
-
-
-            //if (r->is(IfcRelDefines))       processDefines( r->as<IfcRelDefines>(), e );
+            if (rDefs) processDefines( rDefs, objects );
             //if (r->is(IfcRelAssigns))       processAssigns( r->as<IfcRelAssigns>() );
             //if (r->is(IfcRelAssociates))    processAssociates( r->as<IfcRelAssociates>() );
-            //if (r->is(IfcRelConnects))      processConnects( r->as<IfcRelConnects>(), e );
+            if (rCons) processConnects( rCons, objects );
             //if (r->is(IfcRelDeclares))      processDeclares( r->as<IfcRelDeclares>() );
             //if (r->is(IfcRelDecomposes))    processDecomposes( r->as<IfcRelDecomposes>() );
         }
 
-        void setupEntity(VRObjectPtr obj, IfcProduct* element) {
-            auto e = ontology->addEntity(obj->getName(), "BIMelement");
-            e->setSGObject(obj);
-            obj->setEntity(e);
+        VREntityPtr setupEntity(VRObjectPtr obj, IfcRoot* element) {
+            auto e = ontology->addEntity(element->Name(), "BIMelement");
+            if (obj) e->setSGObject(obj);
+            if (obj) obj->setEntity(e);
             e->set("type", Type::ToString(element->type()));
             e->set("gID", element->GlobalId());
             //cout << " " << Type::ToString(element->type()) << ", " << element->Name() << ", " << element->GlobalId() << endl;
 
             //IfcRelDefines::list::ptr propertyList = element->IsDefinedBy();
             //for (IfcRelDefines* p : *propertyList) processDefines(p);
+            return e;
         }
 
         VRGeometryPtr convertGeo(const IfcGeom::TriangulationElement<float>* o) {
@@ -344,7 +366,7 @@ class IFCLoader {
             // check for relationships
             auto relationships = file.entitiesByType<IfcRelationship>();
             cout << "Found " << relationships->size() << " relationships" << endl;
-            for (auto& r : *relationships) processProperty(r);
+            for (auto& r : *relationships) processProperty(r, objects);
         }
 };
 
