@@ -111,7 +111,75 @@ class IFCLoader {
             return "";
         }
 
-        void addSemantics(VRObjectPtr obj, IfcProduct* element) {
+        void processDefines(IfcRelDefines* defines, VREntityPtr e) {
+            IfcRelDefinesByProperties* by_prop = defines->as<IfcRelDefinesByProperties>();
+            if (by_prop) {
+                auto pdef = by_prop->RelatingPropertyDefinition();
+                if (IfcPropertySet* pset = pdef->as<IfcPropertySet>()) {
+                    auto props = pset->HasProperties();
+
+                    for (IfcProperty* prop : *props) {
+                        map<string, string> paramData;
+                        int c = prop->getArgumentCount();
+                        for (int i = 0; i < c; i++) {
+                            string name = prop->getArgumentName(i);
+                            Argument* arg = prop->getArgument(i);
+                            paramData[name] = argVal(arg);
+                            //e->add("attribute", name+": "+paramData[name]);
+                        }
+
+                        if (paramData.count("GlobalId") && paramData.count("Name")) {
+                            string n = paramData["GlobalId"];
+                            string v = paramData["Name"];
+                            e->add("property", n+": "+v);
+                        }
+                    }
+                } else if(IfcElementQuantity* pset = pdef->as<IfcElementQuantity>()) { // TODO
+                    auto props = pset->Quantities();
+
+                    for (IfcPhysicalQuantity* prop : *props) {
+                        map<string, string> paramData;
+                        int c = prop->getArgumentCount();
+                        for (int i = 0; i < c; i++) {
+                            string name = prop->getArgumentName(i);
+                            Argument* arg = prop->getArgument(i);
+                            paramData[name] = argVal(arg);
+                            e->add("quantity", name+": "+paramData[name]);
+                        }
+
+                        //if (paramData.count("GlobalId") && paramData.count("Name")) {
+                        //    string n = paramData["GlobalId"];
+                        //    string v = paramData["Name"];
+                        //    e->add("attribute", n+": "+v);
+                        //}
+                    }
+                }
+            }
+
+
+            IfcRelDefinesByType* by_type = defines->as<IfcRelDefinesByType>();
+            if (by_type) { // TODO
+            }
+        }
+
+        void processConnects(IfcRelConnects* connects) {
+
+        }
+
+        void processProperty(IfcRelationship* r) {
+            VREntityPtr e;
+
+
+
+            //if (r->is(IfcRelDefines))       processDefines( r->as<IfcRelDefines>(), e );
+            //if (r->is(IfcRelAssigns))       processAssigns( r->as<IfcRelAssigns>() );
+            //if (r->is(IfcRelAssociates))    processAssociates( r->as<IfcRelAssociates>() );
+            //if (r->is(IfcRelConnects))      processConnects( r->as<IfcRelConnects>(), e );
+            //if (r->is(IfcRelDeclares))      processDeclares( r->as<IfcRelDeclares>() );
+            //if (r->is(IfcRelDecomposes))    processDecomposes( r->as<IfcRelDecomposes>() );
+        }
+
+        void setupEntity(VRObjectPtr obj, IfcProduct* element) {
             auto e = ontology->addEntity(obj->getName(), "BIMelement");
             e->setSGObject(obj);
             obj->setEntity(e);
@@ -119,74 +187,8 @@ class IFCLoader {
             e->set("gID", element->GlobalId());
             //cout << " " << Type::ToString(element->type()) << ", " << element->Name() << ", " << element->GlobalId() << endl;
 
-            // IfcRelConnects::list
-
-            IfcRelDefines::list::ptr propertyList = element->IsDefinedBy();
-            for (IfcRelDefines* p : *propertyList) {
-
-                IfcRelDefinesByProperties* by_prop = p->as<IfcRelDefinesByProperties>();
-                if (by_prop) {
-                    auto pdef = by_prop->RelatingPropertyDefinition();
-                    if (IfcPropertySet* pset = pdef->as<IfcPropertySet>()) {
-                        auto props = pset->HasProperties();
-
-                        for (IfcProperty* prop : *props) {
-                            map<string, string> paramData;
-                            int c = prop->getArgumentCount();
-                            for (int i = 0; i < c; i++) {
-                                string name = p->getArgumentName(i);
-                                Argument* arg = prop->getArgument(i);
-                                paramData[name] = argVal(arg);
-                                //e->add("attribute", name+": "+paramData[name]);
-                            }
-
-                            if (paramData.count("GlobalId") && paramData.count("Name")) {
-                                string n = paramData["GlobalId"];
-                                string v = paramData["Name"];
-                                e->add("property", n+": "+v);
-                            }
-                        }
-                    } else if(IfcElementQuantity* pset = pdef->as<IfcElementQuantity>()) { // TODO
-                        auto props = pset->Quantities();
-
-                        for (IfcPhysicalQuantity* prop : *props) {
-                            map<string, string> paramData;
-                            int c = prop->getArgumentCount();
-                            for (int i = 0; i < c; i++) {
-                                string name = p->getArgumentName(i);
-                                Argument* arg = prop->getArgument(i);
-                                paramData[name] = argVal(arg);
-                                e->add("quantity", name+": "+paramData[name]);
-                            }
-
-                            //if (paramData.count("GlobalId") && paramData.count("Name")) {
-                            //    string n = paramData["GlobalId"];
-                            //    string v = paramData["Name"];
-                            //    e->add("attribute", n+": "+v);
-                            //}
-                        }
-                    }
-                    continue;
-                }
-
-
-                IfcRelDefinesByType* by_type = p->as<IfcRelDefinesByType>();
-                if (by_type) { // TODO
-                    /*auto prop = by_type->RelatingType();
-                    map<string, string> paramData;
-                    int c = prop->getArgumentCount();
-                    for (int i = 0; i < c; i++) {
-                        string name = p->getArgumentName(i);
-                        Argument* arg = prop->getArgument(i);
-                        paramData[name] = argVal(arg);
-                        e->add("relatingType", name+": "+paramData[name]);
-                    }*/
-                    continue;
-                }
-
-
-                cout << "  unhandled property: " << Type::ToString(p->type()) << endl;
-            }
+            //IfcRelDefines::list::ptr propertyList = element->IsDefinedBy();
+            //for (IfcRelDefines* p : *propertyList) processDefines(p);
         }
 
         VRGeometryPtr convertGeo(const IfcGeom::TriangulationElement<float>* o) {
@@ -304,7 +306,7 @@ class IFCLoader {
                 }
 
                 if (!obj) obj = VRTransform::create( getName(element) );
-                addSemantics(obj, element);
+                setupEntity(obj, element);
                 objects[element] = obj;
             }
 
@@ -341,10 +343,8 @@ class IFCLoader {
 
             // check for relationships
             auto relationships = file.entitiesByType<IfcRelationship>();
-            auto relconnects = file.entitiesByType<IfcRelConnects>();
             cout << "Found " << relationships->size() << " relationships" << endl;
-            cout << "Found " << relconnects->size() << " relconnects" << endl;
-            // TODO: check what to add to ontology as entites!
+            for (auto& r : *relationships) processProperty(r);
         }
 };
 
