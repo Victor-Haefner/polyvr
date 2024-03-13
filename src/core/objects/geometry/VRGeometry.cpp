@@ -756,7 +756,7 @@ vector<VRGeometryPtr> VRGeometry::split(int N) {
 vector<VRGeometryPtr> VRGeometry::splitByVertexColors() {
     VRGeoData self(ptr());
     auto geos = self.splitByVertexColors(getMatrix());
-    for (auto geo : geos) getParent()->addChild(geo);
+    if (getParent()) for (auto geo : geos) getParent()->addChild(geo);
     destroy();
     return geos;
 }

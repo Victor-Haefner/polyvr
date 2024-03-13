@@ -8,8 +8,6 @@
 
 #include <boost/algorithm/string/join.hpp>
 #include <ifcparse/IfcFile.h>
-//if compiling fails because of "ifcparse/IfcFile.h: No such file or directory"
-//in polyvr-folder: "sudo ./ install"
 #include <ifcgeom/IfcGeom.h>
 #include <ifcgeom/IfcGeomFilter.h>
 #include <ifcgeom/IfcGeomIterator.h>
@@ -24,96 +22,12 @@
 #include <set>
 #include <time.h>
 
-typedef double real_t;
-
 using namespace OSG;
 using namespace IfcSchema;
 
-/// @todo make the filters non-global
-IfcGeom::entity_filter entity_filter; // Entity filter is used always by default.
-IfcGeom::layer_filter layer_filter;
-const string NAME_ARG = "Name", GUID_ARG = "GlobalId", DESC_ARG = "Description", TAG_ARG = "Tag";
-boost::array<string, 4> supported_args = { { NAME_ARG, GUID_ARG, DESC_ARG, TAG_ARG } };
-IfcGeom::string_arg_filter guid_filter(IfcSchema::Type::IfcRoot, 0); // IfcRoot.GlobalId
-// Note: skipping IfcRoot OwnerHistory, argument index 1
-IfcGeom::string_arg_filter name_filter(IfcSchema::Type::IfcRoot, 2); // IfcRoot.Name
-IfcGeom::string_arg_filter desc_filter(IfcSchema::Type::IfcRoot, 3); // IfcRoot.Description
-IfcGeom::string_arg_filter tag_filter(IfcSchema::Type::IfcProxy, 8, IfcSchema::Type::IfcElement, 7); // IfcProxy.Tag & IfcElement.Tag
-
-struct geom_filter {
-    geom_filter(bool include, bool traverse) : type(UNUSED), include(include), traverse(traverse) {}
-    geom_filter() : type(UNUSED), include(false), traverse(false) {}
-    enum filter_type { UNUSED, ENTITY_TYPE, LAYER_NAME, ENTITY_ARG };
-    filter_type type;
-    bool include;
-    bool traverse;
-    string arg;
-    set<string> values;
-};
-
-vector<IfcGeom::filter_t> setup_filters(const vector<geom_filter>& filters, const string& output_extension) {
-    vector<IfcGeom::filter_t> filter_funcs;
-    for (auto& f : filters) {
-        if (f.type == geom_filter::ENTITY_TYPE) {
-            entity_filter.include = f.include;
-            entity_filter.traverse = f.traverse;
-            try {
-                entity_filter.populate(f.values);
-            } catch (const IfcParse::IfcException& e) {
-                cerr << "[Error] " << e.what() << endl;
-                return vector<IfcGeom::filter_t>();
-            }
-        } else if (f.type == geom_filter::LAYER_NAME) {
-            layer_filter.include = f.include;
-            layer_filter.traverse = f.traverse;
-            layer_filter.populate(f.values);
-        } else if (f.type == geom_filter::ENTITY_ARG) {
-            if (f.arg == GUID_ARG) {
-                guid_filter.include = f.include;
-                guid_filter.traverse = f.traverse;
-                guid_filter.populate(f.values);
-            } else if (f.arg == NAME_ARG) {
-                name_filter.include = f.include;
-                name_filter.traverse = f.traverse;
-                name_filter.populate(f.values);
-            } else if (f.arg == DESC_ARG) {
-                desc_filter.include = f.include;
-                desc_filter.traverse = f.traverse;
-                desc_filter.populate(f.values);
-            } else if (f.arg == TAG_ARG) {
-                tag_filter.include = f.include;
-                tag_filter.traverse = f.traverse;
-                tag_filter.populate(f.values);
-            }
-        }
-    }
-
-    // If no entity names are specified these are the defaults to skip from output
-    if (entity_filter.values.empty()) {
-        try {
-            set<string> entities;
-            entities.insert("IfcSpace");
-            if (output_extension == ".svg") {
-                entity_filter.include = true;
-            } else {
-                entities.insert("IfcOpeningElement");
-            }
-            entity_filter.populate(entities);
-        } catch (const IfcParse::IfcException& e) {
-            cerr << "[Error] " << e.what() << endl;
-            return vector<IfcGeom::filter_t>();
-        }
-    }
-
-    if (!layer_filter.values.empty()) { filter_funcs.push_back(boost::ref(layer_filter));  }
-    if (!entity_filter.values.empty()) { filter_funcs.push_back(boost::ref(entity_filter)); }
-    if (!guid_filter.values.empty()) { filter_funcs.push_back(boost::ref(guid_filter)); }
-    if (!name_filter.values.empty()) { filter_funcs.push_back(boost::ref(name_filter)); }
-    if (!desc_filter.values.empty()) { filter_funcs.push_back(boost::ref(desc_filter)); }
-    if (!tag_filter.values.empty()) { filter_funcs.push_back(boost::ref(tag_filter)); }
-
-    return filter_funcs;
-}
+// TODO:
+// where are those:
+//   #77484= IFCRELSPACEBOUNDARY('3iG9WO1yvn7Q0liDeNczIp',#12,'2ndLevel','2a',#33774,#27421,#77483,.PHYSICAL.,.EXTERNAL.);
 
 class IFCLoader {
     private:
@@ -141,19 +55,6 @@ class IFCLoader {
             if (matID < 0 || matID >= int(materials.size())) return defaultColor;
             IfcGeom::Material& mat = materials[matID];
             return Color3f( mat.diffuse()[0], mat.diffuse()[1], mat.diffuse()[2] );
-        }
-
-    public:
-        IFCLoader() {
-            static VROntologyPtr o = 0;
-            if (!o) {
-                o = VROntology::create("BIM");
-                VROntology::library["BIM"] = o;
-                auto BIMelement = o->addConcept("BIMelement");
-                BIMelement->addProperty("meta", "string");
-            }
-
-            ontology = o;
         }
 
         string argVal(Argument* arg) {
@@ -210,12 +111,19 @@ class IFCLoader {
             return "";
         }
 
-        void addSemantics(VRGeometryPtr obj, IfcGeom::Element<real_t>* ifc) {
-            string type = ifc->type();
+        void addSemantics(VRObjectPtr obj, IfcProduct* element) {
             auto e = ontology->addEntity(obj->getName(), "BIMelement");
+            e->setSGObject(obj);
+            obj->setEntity(e);
+            e->set("type", Type::ToString(element->type()));
+            e->set("gID", element->GlobalId());
+            //cout << " " << Type::ToString(element->type()) << ", " << element->Name() << ", " << element->GlobalId() << endl;
 
-            IfcRelDefines::list::ptr propertyList = ifc->product()->IsDefinedBy();
+            // IfcRelConnects::list
+
+            IfcRelDefines::list::ptr propertyList = element->IsDefinedBy();
             for (IfcRelDefines* p : *propertyList) {
+
                 IfcRelDefinesByProperties* by_prop = p->as<IfcRelDefinesByProperties>();
                 if (by_prop) {
                     auto pdef = by_prop->RelatingPropertyDefinition();
@@ -229,17 +137,16 @@ class IFCLoader {
                                 string name = p->getArgumentName(i);
                                 Argument* arg = prop->getArgument(i);
                                 paramData[name] = argVal(arg);
-                                //e->add("meta", name+": "+paramData[name]);
+                                //e->add("attribute", name+": "+paramData[name]);
                             }
 
                             if (paramData.count("GlobalId") && paramData.count("Name")) {
                                 string n = paramData["GlobalId"];
                                 string v = paramData["Name"];
-                                e->add("meta", n+": "+v);
+                                e->add("property", n+": "+v);
                             }
                         }
                     } else if(IfcElementQuantity* pset = pdef->as<IfcElementQuantity>()) { // TODO
-                        cout << "AAA\n";
                         auto props = pset->Quantities();
 
                         for (IfcPhysicalQuantity* prop : *props) {
@@ -249,20 +156,37 @@ class IFCLoader {
                                 string name = p->getArgumentName(i);
                                 Argument* arg = prop->getArgument(i);
                                 paramData[name] = argVal(arg);
-                                e->add("meta", "AA: "+name+": "+paramData[name]);
+                                e->add("quantity", name+": "+paramData[name]);
                             }
 
-                            /*if (paramData.count("GlobalId") && paramData.count("Name")) {
-                                string n = paramData["GlobalId"];
-                                string v = paramData["Name"];
-                                e->add("meta", n+": "+v);
-                            }*/
+                            //if (paramData.count("GlobalId") && paramData.count("Name")) {
+                            //    string n = paramData["GlobalId"];
+                            //    string v = paramData["Name"];
+                            //    e->add("attribute", n+": "+v);
+                            //}
                         }
                     }
+                    continue;
                 }
-            }
 
-            obj->setEntity(e);
+
+                IfcRelDefinesByType* by_type = p->as<IfcRelDefinesByType>();
+                if (by_type) { // TODO
+                    /*auto prop = by_type->RelatingType();
+                    map<string, string> paramData;
+                    int c = prop->getArgumentCount();
+                    for (int i = 0; i < c; i++) {
+                        string name = p->getArgumentName(i);
+                        Argument* arg = prop->getArgument(i);
+                        paramData[name] = argVal(arg);
+                        e->add("relatingType", name+": "+paramData[name]);
+                    }*/
+                    continue;
+                }
+
+
+                cout << "  unhandled property: " << Type::ToString(p->type()) << endl;
+            }
         }
 
         VRGeometryPtr convertGeo(const IfcGeom::TriangulationElement<float>* o) {
@@ -313,7 +237,7 @@ class IFCLoader {
             settings.set(IfcGeom::IteratorSettings::EXCLUDE_SOLIDS_AND_SURFACES,  false);
             settings.set(IfcGeom::IteratorSettings::APPLY_LAYERSETS,              false);
             settings.set(IfcGeom::IteratorSettings::GENERATE_UVS,                 false);
-            settings.set(IfcGeom::IteratorSettings::SEARCH_FLOOR,                 false);
+            settings.set(IfcGeom::IteratorSettings::SEARCH_FLOOR,                 true);
             settings.set(IfcGeom::IteratorSettings::SITE_LOCAL_PLACEMENT,         false);
             settings.set(IfcGeom::IteratorSettings::BUILDING_LOCAL_PLACEMENT,     false);
 
@@ -327,75 +251,100 @@ class IFCLoader {
 			return triangulation;
 		}
 
+		string getName(IfcProduct* e) {
+            string name = "UNNAMED";
+            if (e->hasName()) name = e->Name();
+            return name;
+		}
+
+    public:
+        IFCLoader() {
+            static VROntologyPtr o = 0;
+            if (!o) {
+                o = VROntology::create("BIM");
+                VROntology::library["BIM"] = o;
+                auto BIMelement = o->addConcept("BIMelement");
+                BIMelement->addProperty("property", "string");
+                BIMelement->addProperty("quantity", "string");
+                BIMelement->addProperty("relatingType", "string");
+                BIMelement->addProperty("type", "string");
+                BIMelement->addProperty("gID", "string");
+            }
+
+            ontology = o;
+        }
+
         void load(string path, VRTransformPtr res) {
-            VRObjectPtr root = VRObject::create(path);
-
-            //Logger::SetOutput(&cout, &cout); // Redirect the output (both progress and log) to stdout
             Logger::SetOutput(0, 0); // Redirect the output (both progress and log) to stdout
-
-            // Parse the IFC file provided in argv[1]
             IfcParse::IfcFile file;
             if ( !file.Init(path) ) { cout << "Unable to parse .ifc file: " << path << endl; return; }
-
-            //  see IfcGeomIterator.h
-            // IfcGeom::Iterator<real_t> context_iterator(settings, &file, filter_funcs);
-            // context_iterator.initialize()
-            // IfcGeom::Element<real_t>* geom_object = context_iterator.get();
-            // auto geo = convertGeo(static_cast<const IfcGeom::TriangulationElement<real_t>*>(geom_object));
 
             auto elements = file.entitiesByType<IfcProduct>();
             cout << "Found " << elements->size() << " elements in " << path << ":" << endl;
 
-            struct Ifc_Node {
-                IfcProduct* element = 0;
-                Ifc_Node* parent = 0;
-                vector<Ifc_Node*> children;
+            // create objects
+            map<IfcProduct*, VRObjectPtr> objects;
+            for ( IfcProduct* element : *elements ) {
+                if (!element->hasName()) continue;
 
-                Ifc_Node() {}
-                Ifc_Node(IfcProduct* e) : element(e) {}
-            };
+                VRObjectPtr obj;
 
-            map<IfcProduct*, Ifc_Node> nodes;
-            for ( IfcProduct* element : *elements ) nodes[element] = Ifc_Node(element);
-
-            for ( auto& n : nodes) {
-                IfcProduct* e = n.first;
-                string name = "UNNAMED";
-                if (e->hasName()) name = e->Name();
-                cout << name << ", " << e->GlobalId() << ", " << Type::ToString(e->type()) << endl;
-                if (e->hasObjectPlacement()) {
-                    gp_Trsf trsf;
-                    kernel.convert(e->ObjectPlacement(), trsf);
-                    const gp_XYZ& pos = trsf.TranslationPart();
-                    cout << " pos: " << pos.X() << ", " << pos.Y() << ", " << pos.Z() << endl;
-                }
-
-                if (e->hasRepresentation()) {
-                    IfcProductRepresentation* prod_rep = e->Representation();
-                    if (prod_rep) { // IfcProductDefinitionShape
-                        cout << "  prod_rep: " <<  Type::ToString(prod_rep->type()) << endl;
+                if (element->hasRepresentation()) {
+                    IfcProductRepresentation* prod_rep = element->Representation();
+                    if (prod_rep) {
                         auto reps = prod_rep->Representations();
-                        for (auto rep : *reps) { // IfcShapeRepresentation
-                            if (rep) {
-                                auto ifcBRep = createBRep(rep, e);
-                                auto ifcMesh = createMesh(ifcBRep);
-                                auto geo = convertGeo(ifcMesh);
-                                if (geo) root->addChild(geo);
-                                cout << "   rep: " << Type::ToString(rep->type()) << ", " << ifcBRep << ", " << ifcMesh << ", " << geo << endl;
-                            }
+                        for (auto rep : *reps) {
+                            if (!rep) continue;
+                            auto ifcBRep = createBRep(rep, element);
+                            auto ifcMesh = createMesh(ifcBRep);
+                            auto geo = convertGeo(ifcMesh);
+                            if (geo) obj = geo;
                         }
                     }
                 }
 
-
-                /*for (int i=0; i<e->getArgumentCount(); i++) {
-                    auto an = e->getArgumentName(i);
-                    if (an) cout << " a" << i << ", " << an << endl;
-                }*/
-                //cout << " el " << e->Name() << ", " << e->Parent() << endl;
+                if (!obj) obj = VRTransform::create( getName(element) );
+                addSemantics(obj, element);
+                objects[element] = obj;
             }
 
-            res->addChild(root);
+            // create scenegraph
+            for (auto o : objects) {
+                IfcProduct* e = o.first;
+
+                IfcSchema::IfcObjectDefinition* parent_object = kernel.get_decomposing_entity(e);
+                if (parent_object) {
+                    auto k = (IfcProduct*)parent_object;
+                    if (objects.count(k)) {
+                        objects[k]->addChild(o.second);
+                        continue;
+                    }
+                }
+
+                res->addChild(o.second);
+            }
+
+            // fix transformations as they are in world coordinates
+            for (auto o : res->getChildren(true)) { // iterate depth last to get correct results
+                auto t = dynamic_pointer_cast<VRTransform>(o);
+                if (!t) continue;
+                t->setMatrixTo(t->getMatrix(), res);
+            }
+
+            // hide openings
+            for (auto o : objects) {
+                if (o.first->is(Type::IfcOpeningElement)) {
+                    auto g = dynamic_pointer_cast<VRGeometry>(o.second);
+                    if (g) g->setMeshVisibility(false);
+                }
+            }
+
+            // check for relationships
+            auto relationships = file.entitiesByType<IfcRelationship>();
+            auto relconnects = file.entitiesByType<IfcRelConnects>();
+            cout << "Found " << relationships->size() << " relationships" << endl;
+            cout << "Found " << relconnects->size() << " relconnects" << endl;
+            // TODO: check what to add to ontology as entites!
         }
 };
 
