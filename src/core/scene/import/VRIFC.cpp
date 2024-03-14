@@ -3,11 +3,15 @@
 #include "VRIFC.h"
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/geometry/VRGeoData.h"
+#include "core/objects/geometry/sprite/VRSprite.h"
 #include "core/utils/toString.h"
+#include "core/scene/import/VRSTEPCascade.h"
+#include "core/math/pose.h"
 #include "addons/Semantics/Reasoning/VROntology.h"
 
 #include <boost/algorithm/string/join.hpp>
 #include <ifcparse/IfcFile.h>
+#include <ifcparse/IfcHierarchyHelper.h>
 #include <ifcgeom/IfcGeom.h>
 #include <ifcgeom/IfcGeomFilter.h>
 #include <ifcgeom/IfcGeomIterator.h>
@@ -34,8 +38,28 @@ class IFCLoader {
         //Color3f defaultColor = Color3f(1,1,1);
         Color3f defaultColor = Color3f(1,0,1);
         IfcGeom::Kernel kernel;
+        VRTransformPtr root;
 
         VROntologyPtr ontology;
+        map<IfcUtil::IfcBaseEntity*, VRObjectPtr> ifcObjects;
+
+        Vec3d toVec3d(IfcCartesianPoint* p) {
+            if (p->Coordinates().size() != 3) return Vec3d();
+            return Vec3d( p->Coordinates()[0], p->Coordinates()[1], p->Coordinates()[2] );
+        }
+
+        Vec3d toVec3d(IfcDirection* p) {
+            if (p->DirectionRatios().size() != 3) return Vec3d();
+            return Vec3d( p->DirectionRatios()[0], p->DirectionRatios()[1], p->DirectionRatios()[2] );
+        }
+
+        PosePtr toPose(IfcAxis2Placement3D* p) {
+            auto r = Pose::create();
+            if (p->hasAxis()) r->setDir( toVec3d( p->Axis() ) );
+            if (p->hasRefDirection()) r->setUp( r->dir().cross( toVec3d( p->RefDirection() ) ) );
+            r->setPos( toVec3d(p->Location()) );
+            return r;
+        }
 
         void applyTransformation(const IfcGeom::TriangulationElement<float>* o, VRGeometryPtr geo) {
             IfcGeom::Transformation<float> trans = o->transformation();
@@ -111,11 +135,11 @@ class IFCLoader {
             return "";
         }
 
-        vector<VREntityPtr> getEntities(IfcObject::list::ptr relObjs, map<IfcProduct*, VRObjectPtr>& objects) {
+        vector<VREntityPtr> getEntities(IfcObject::list::ptr relObjs) {
             vector<VREntityPtr> res;
             for ( IfcObject* obj : *relObjs ) {
-                if ( objects.count( (IfcProduct*)obj ) ) {
-                    auto o = objects[ (IfcProduct*)obj ];
+                if ( ifcObjects.count( obj ) ) {
+                    auto o = ifcObjects[ obj ];
                     if (o) if (auto e = o->getEntity()) res.push_back(e);
                 }
             }
@@ -138,8 +162,8 @@ class IFCLoader {
             }
         }
 
-        void processDefines(IfcRelDefines* defines, map<IfcProduct*, VRObjectPtr>& objects) {
-            auto entities = getEntities(defines->RelatedObjects(), objects);
+        void processDefines(IfcRelDefines* defines) {
+            auto entities = getEntities(defines->RelatedObjects());
 
             IfcRelDefinesByProperties* by_prop = defines->as<IfcRelDefinesByProperties>();
             if (by_prop) {
@@ -164,52 +188,87 @@ class IFCLoader {
             }
         }
 
-        void processConnects(IfcRelConnects* connects, map<IfcProduct*, VRObjectPtr>& objects) {
-            cout << "processConnects " << Type::ToString(connects->type()) << endl;
+        VREntityPtr getEntity(IfcUtil::IfcBaseEntity* r) {
+            if (!r) return 0;
+            if (!ifcObjects.count(r)) return 0;
+            auto obj = ifcObjects[r];
+            if (!obj) return 0;
+            auto e = obj->getEntity();
+            if (!e) return 0;
+            return e;
+        }
 
-            auto e = setupEntity(0, connects);
+        VRTransformPtr convertIfcSurface(IfcSurfaceOrFaceSurface* s) {
+            if (!s) return 0;
+            TopoDS_Shape shape;
+            bool r = kernel.convert_shape(s, shape);
+            return convertSTEPShape(shape);
+        }
+
+        void processConnects(IfcRelConnects* connects) {
+            //cout << "processConnects " << Type::ToString(connects->type()) << endl;
+
+            auto e = setupEntity(0, connects, "Relation");
 
             IfcRelSpaceBoundary* sb = connects->as<IfcRelSpaceBoundary>();
             if (sb) {
-                IfcSpace* space = sb->RelatingSpace();
-                string spaceName = objects[space]->getEntity()->getName(); // TODO: quite unsafe..
-                e->set("space", spaceName);
-
                 if (sb->hasRelatedBuildingElement()) {
-                    IfcElement* be = sb->RelatedBuildingElement();
-                    string beName = objects[be]->getEntity()->getName(); // TODO: quite unsafe..
-                    e->set("buildingElement", beName);
+                    auto eBElement = getEntity( sb->RelatedBuildingElement() );
+                    if (eBElement) {
+                        e->set("related", eBElement->getName());
+                        eBElement->add("relation", e->getName());
+                    }
                 }
-                if (sb->hasConnectionGeometry()) {
-                    IfcConnectionGeometry* cg = sb->ConnectionGeometry();
-                    string cgName = objects[(IfcProduct*)cg]->getEntity()->getName(); // TODO: quite unsafe..
-                    e->set("connectionGeometry", cgName);
+
+                auto eSpace = getEntity( sb->RelatingSpace() );
+                if (!eSpace) return;
+
+                e->set("relating", eSpace->getName());
+                eSpace->add("relation", e->getName());
+                auto spaceGeo = eSpace->getSGObject();
+
+                if (!sb->hasConnectionGeometry()) return;
+                VRTransformPtr geo;
+
+                IfcConnectionGeometry* cGeo = sb->ConnectionGeometry();
+                IfcConnectionSurfaceGeometry* cSurf = cGeo->as<IfcConnectionSurfaceGeometry>();
+
+                if (cSurf) {
+                    geo = convertIfcSurface( cSurf->SurfaceOnRelatingElement() );
+                    /*if (cSurf->hasSurfaceOnRelatedElement()) { // TODO
+                        geo2 = convertIfcSurface( cSurf->SurfaceOnRelatedElement() );
+                    }*/
+                }
+
+                if (geo) {
+                    root->addChild(geo);
+                    if (spaceGeo) spaceGeo->addChild(geo);
+                    e->setSGObject(geo);
+                    geo->setEntity(e);
+                    geo->hide();
                 }
             }
         }
 
-        void processProperty(IfcRelationship* r, map<IfcProduct*, VRObjectPtr>& objects) {
+        void processProperty(IfcRelationship* r) {
             IfcRelDefines*  rDefs = r->as<IfcRelDefines>();
             IfcRelConnects* rCons = r->as<IfcRelConnects>();
 
-            if (rDefs) processDefines( rDefs, objects );
+            if (rDefs) processDefines( rDefs );
             //if (r->is(IfcRelAssigns))       processAssigns( r->as<IfcRelAssigns>() );
             //if (r->is(IfcRelAssociates))    processAssociates( r->as<IfcRelAssociates>() );
-            if (rCons) processConnects( rCons, objects );
+            if (rCons) processConnects( rCons );
             //if (r->is(IfcRelDeclares))      processDeclares( r->as<IfcRelDeclares>() );
             //if (r->is(IfcRelDecomposes))    processDecomposes( r->as<IfcRelDecomposes>() );
         }
 
-        VREntityPtr setupEntity(VRObjectPtr obj, IfcRoot* element) {
-            auto e = ontology->addEntity(element->Name(), "BIMelement");
+        VREntityPtr setupEntity(VRObjectPtr obj, IfcRoot* element, string type) {
+            auto e = ontology->addEntity( getName(element), type);
             if (obj) e->setSGObject(obj);
             if (obj) obj->setEntity(e);
             e->set("type", Type::ToString(element->type()));
             e->set("gID", element->GlobalId());
             //cout << " " << Type::ToString(element->type()) << ", " << element->Name() << ", " << element->GlobalId() << endl;
-
-            //IfcRelDefines::list::ptr propertyList = element->IsDefinedBy();
-            //for (IfcRelDefines* p : *propertyList) processDefines(p);
             return e;
         }
 
@@ -275,7 +334,7 @@ class IFCLoader {
 			return triangulation;
 		}
 
-		string getName(IfcProduct* e) {
+		string getName(IfcRoot* e) {
             string name = "UNNAMED";
             if (e->hasName()) name = e->Name();
             return name;
@@ -287,18 +346,27 @@ class IFCLoader {
             if (!o) {
                 o = VROntology::create("BIM");
                 VROntology::library["BIM"] = o;
-                auto BIMelement = o->addConcept("BIMelement");
-                BIMelement->addProperty("property", "string");
-                BIMelement->addProperty("quantity", "string");
-                BIMelement->addProperty("relatingType", "string");
-                BIMelement->addProperty("type", "string");
-                BIMelement->addProperty("gID", "string");
+                auto element = o->addConcept("Element");
+                auto property = o->addConcept("Property", "Element");
+                auto relation = o->addConcept("Relation", "Element");
+
+                element->addProperty("type", "string");
+                element->addProperty("gID", "string");
+                element->addProperty("property", property->getName());
+                element->addProperty("relation", relation->getName());
+
+                property->addProperty("value", "string");
+
+                relation->addProperty("relating", element->getName());
+                relation->addProperty("related", element->getName());
+                relation->addProperty("geometry", element->getName());
             }
 
             ontology = o;
         }
 
         void load(string path, VRTransformPtr res) {
+            root = res;
             Logger::SetOutput(0, 0); // Redirect the output (both progress and log) to stdout
             IfcParse::IfcFile file;
             if ( !file.Init(path) ) { cout << "Unable to parse .ifc file: " << path << endl; return; }
@@ -307,7 +375,6 @@ class IFCLoader {
             cout << "Found " << elements->size() << " elements in " << path << ":" << endl;
 
             // create objects
-            map<IfcProduct*, VRObjectPtr> objects;
             for ( IfcProduct* element : *elements ) {
                 if (!element->hasName()) continue;
 
@@ -328,23 +395,20 @@ class IFCLoader {
                 }
 
                 if (!obj) obj = VRTransform::create( getName(element) );
-                setupEntity(obj, element);
-                objects[element] = obj;
+                setupEntity(obj, element, "Element");
+                ifcObjects[element] = obj;
             }
 
             // create scenegraph
-            for (auto o : objects) {
-                IfcProduct* e = o.first;
-
+            for (auto o : ifcObjects) {
+                IfcProduct* e = o.first->as<IfcProduct>();
                 IfcSchema::IfcObjectDefinition* parent_object = kernel.get_decomposing_entity(e);
                 if (parent_object) {
-                    auto k = (IfcProduct*)parent_object;
-                    if (objects.count(k)) {
-                        objects[k]->addChild(o.second);
+                    if (ifcObjects.count(parent_object)) {
+                        ifcObjects[parent_object]->addChild(o.second);
                         continue;
                     }
                 }
-
                 res->addChild(o.second);
             }
 
@@ -356,7 +420,7 @@ class IFCLoader {
             }
 
             // hide openings
-            for (auto o : objects) {
+            for (auto o : ifcObjects) {
                 if (o.first->is(Type::IfcOpeningElement)) {
                     auto g = dynamic_pointer_cast<VRGeometry>(o.second);
                     if (g) g->setMeshVisibility(false);
@@ -366,7 +430,7 @@ class IFCLoader {
             // check for relationships
             auto relationships = file.entitiesByType<IfcRelationship>();
             cout << "Found " << relationships->size() << " relationships" << endl;
-            for (auto& r : *relationships) processProperty(r, objects);
+            for (auto& r : *relationships) processProperty(r);
         }
 };
 

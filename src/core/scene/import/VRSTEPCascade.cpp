@@ -67,6 +67,7 @@ class STEPLoader {
         Handle(XCAFDoc_MaterialTool) materials;
 
         pair<bool, Color3f> getColor(const TDF_Label& label) {
+            if (!colors) return make_pair(false, Color3f());
             bool valid = false;
             Quantity_Color c;
             if (!valid) valid = colors->GetColor(label, XCAFDoc_ColorSurf, c);
@@ -76,6 +77,7 @@ class STEPLoader {
         }
 
         pair<bool, Color3f> getColor(const TopoDS_Shape& shape) {
+            if (!colors) return make_pair(false, Color3f());
             bool valid = false;
             Quantity_Color c;
             if (!valid) valid = colors->GetColor(shape, XCAFDoc_ColorSurf, c);
@@ -224,6 +226,10 @@ class STEPLoader {
             if (!data) obj = VRTransform::create(getTypeName(shape));
             TopoDS_Iterator sIter(shape);
 
+            TopAbs_ShapeEnum t = shape.ShapeType();
+            if (t == TopAbs_SHELL) iterateShell(shape, obj, data, useVertexColors, color, verbose);
+            if (t == TopAbs_FACE) iterateFace(shape, obj, data, useVertexColors, color, verbose);
+
             do {
                 TopoDS_Shape subShape;
                 TopAbs_ShapeEnum t;
@@ -247,6 +253,7 @@ class STEPLoader {
                 //static int testN=0;
                 //testN++;
                 //cout << "  teestN " << testN << endl;
+                if (verbose) cout << "  ----- traverse subshape: " << getTypeName(subShape) << endl;
 
                 if (t == TopAbs_SHAPE) iterateShape(subShape, useVertexColors, color, obj, data, verbose);
                 if (t == TopAbs_COMPOUND) iterateShape(subShape, useVertexColors, color, obj, data, verbose);
@@ -256,7 +263,7 @@ class STEPLoader {
                 if (t == TopAbs_FACE) iterateFace(subShape, obj, data, useVertexColors, color, verbose);
                 if (t == TopAbs_EDGE) continue; // ignore edges
                 if (t == TopAbs_WIRE || t == TopAbs_VERTEX) {
-                    cout << "ERROR! unexpected shape types while iterating: " << getTypeName(subShape) << endl;
+                    if (verbose) cout << "Warning! ignoring shape type while iterating: " << getTypeName(subShape) << endl;
                 }
             } while(sIter.More());
 
@@ -264,28 +271,6 @@ class STEPLoader {
                 if (obj->getChildrenCount() > 0) parent->addChild(obj);
             }
             return obj;
-        }
-
-        VRTransformPtr convertGeo(const TopoDS_Shape& shape, bool subParts = false, bool relative_deflection = true, double linear_deflection = 0.1, double angular_deflection = 0.5, bool verbose = false) {
-            if (shape.IsNull()) return 0;
-            //cout << "step convert shape dim max: " << Dmax << ", ld: " << linear_deflection << endl;
-
-            try {
-                BRepMesh_IncrementalMesh mesher(shape, linear_deflection, relative_deflection, angular_deflection, true, on_update); // shape, linear deflection, relative to edge length, angular deflection, paralellize
-            }
-            catch(exception& e) { cout << " Warning in STEP convertGeo: " << e.what() << endl;  return 0; }
-            catch(...) { cout << " Warning in STEP convertGeo: unknown exception" << endl; return 0; }
-
-            bool useVertexColors = needsVertexColors(shape);
-
-            Color3f colDefault(0.5,0.9,0.4);
-            if (subParts) return iterateShape(shape, useVertexColors, colDefault);
-            else {
-                VRGeoData data;
-                iterateShape(shape, useVertexColors, colDefault, 0, &data, verbose);
-                if (data.size() == 0) return 0;
-                return data.asGeometry("part");
-            }
         }
 
         void applyMaterial(VRGeometryPtr geo, const TopoDS_Shape& shape) {
@@ -517,9 +502,41 @@ class STEPLoader {
                 cout << " STEP import failed, unknown exception! " << endl;
             }
         }
+
+        VRTransformPtr convertGeo(const TopoDS_Shape& shape, bool subParts = false, bool relative_deflection = true, double linear_deflection = 0.1, double angular_deflection = 0.5, bool verbose = false) {
+            if (shape.IsNull()) return 0;
+            //cout << "step convert shape, ld: " << linear_deflection << endl;
+
+            try {
+                BRepMesh_IncrementalMesh mesher(shape, linear_deflection, relative_deflection, angular_deflection, true, on_update); // shape, linear deflection, relative to edge length, angular deflection, paralellize
+            }
+            catch(exception& e) { cout << " Warning in STEP convertGeo: " << e.what() << endl;  return 0; }
+            catch(...) { cout << " Warning in STEP convertGeo: unknown exception" << endl; return 0; }
+
+            bool useVertexColors = needsVertexColors(shape);
+
+            Color3f colDefault(0.5,0.9,0.4);
+            if (subParts) return iterateShape(shape, useVertexColors, colDefault);
+            else {
+                VRGeoData data;
+                iterateShape(shape, useVertexColors, colDefault, 0, &data, verbose);
+                if (data.size() == 0) return 0;
+                return data.asGeometry("part");
+            }
+        }
 };
 
 void OSG::loadSTEPCascade(string path, VRTransformPtr res, map<string, string> options) {
     STEPLoader step;
     step.load(path, res, options);
 }
+
+VRTransformPtr OSG::convertSTEPShape(const TopoDS_Shape& shape, bool subParts, bool relative_deflection, double linear_deflection, double angular_deflection) {
+    STEPLoader step;
+    return step.convertGeo(shape, subParts, relative_deflection, linear_deflection, angular_deflection);
+}
+
+
+
+
+
