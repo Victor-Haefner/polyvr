@@ -1162,6 +1162,8 @@ Vec3d VRTransform::getVelocity() { if (auto p = getPhysics()) return p->getLinea
 Vec3d VRTransform::getAngularVelocity() { if (auto p = getPhysics()) return p->getAngularVelocity(); else return Vec3d(); }
 Vec3d VRTransform::getAcceleration() { if (auto p = getPhysics()) return p->getLinearAcceleration(); else return Vec3d(); }
 Vec3d VRTransform::getAngularAcceleration() { if (auto p = getPhysics()) return p->getAngularAcceleration(); else return Vec3d(); }
+float VRTransform::getMass() { if (auto p = getPhysics()) return p->getMass(); else return 0; }
+PosePtr VRTransform::getInertiaMoment() { if (auto p = getPhysics()) return Pose::create( p->getInertiaMoment() ); else return 0; }
 Vec3d VRTransform::getCenterOfMass() { if (auto p = getPhysics()) return p->getCenterOfMass(); else return Vec3d(); }
 #endif
 

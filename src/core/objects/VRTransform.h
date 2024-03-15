@@ -235,7 +235,6 @@ class VRTransform : public VRObject {
         void applyConstantTorque(Vec3d f);
         void setGravity(Vec3d g);
         void setCenterOfMass(Vec3d g);
-        Vec3d getCenterOfMass();
         void setGhost(bool g);
         void setDamping(float ld, float ad, bool fast = false);
 
@@ -249,6 +248,9 @@ class VRTransform : public VRObject {
         Vec3d getAngularVelocity();
         Vec3d getAcceleration();
         Vec3d getAngularAcceleration();
+        float getMass();
+        PosePtr getInertiaMoment();
+        Vec3d getCenterOfMass();
 #endif
 };
 

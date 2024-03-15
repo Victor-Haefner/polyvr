@@ -108,6 +108,7 @@ string VRPhysics::getShape() { return physicsShape; }
 bool VRPhysics::isDynamic() { return dynamic; }
 void VRPhysics::setMass(float m) { mass = m; update(); }
 float VRPhysics::getMass() { return mass; }
+Vec3d VRPhysics::getCenterOfMass() { return CoMOffset; }
 void VRPhysics::setFriction(float f) { friction = f; update(); }
 float VRPhysics::getFriction() { return friction; }
 void VRPhysics::setCollisionMargin(float m) { collisionMargin = m; update(); }
@@ -281,8 +282,6 @@ vector<string> VRPhysics::getPhysicsShapes() {
     }
     return shapes;
 }
-
-Vec3d VRPhysics::getCenterOfMass() { return CoMOffset; }
 
 void VRPhysics::setCenterOfMass(OSG::Vec3d com) {
     CoMOffset = com;
@@ -1328,6 +1327,16 @@ OSG::Matrix4d VRPhysics::getTransformation(bool scaled) {
         static Vec3d s = Vec3d(1,1,1);
         return fromBTTransform(t, s, CoMOffset);
     }
+}
+
+OSG::Matrix4d VRPhysics::getInertiaMoment() {
+    btMatrix3x3 bm = getInertiaTensor();
+    OSG::Matrix4d m;
+    m.setIdentity();
+    for (int i=0;i<3;i++) m[0][i] = bm[i][0];
+    for (int i=0;i<3;i++) m[1][i] = bm[i][1];
+    for (int i=0;i<3;i++) m[2][i] = bm[i][2];
+    return m;
 }
 
 btMatrix3x3 VRPhysics::getInertiaTensor() {

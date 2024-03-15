@@ -163,9 +163,9 @@ class VRPhysics : public VRStorage {
         btPairCachingGhostObject* getGhostBody();
         btCollisionObject* getCollisionObject();
         btCollisionShape* getCollisionShape();
+        btMatrix3x3 getInertiaTensor();
 
         void prepareStep();
-        Vec3d getCenterOfMass();
 
         void setShape(string s, float param = -1);
         void setCustomShape(btCollisionShape* shape);
@@ -188,9 +188,12 @@ class VRPhysics : public VRStorage {
         void setSoft(bool b);
         bool isSoft();
 
-        void setMass(float m);
-        float getMass();
         void setGravity(Vec3d v);
+        void setMass(float m);
+        void setCenterOfMass(Vec3d com);
+        float getMass();
+        Vec3d getCenterOfMass();
+        Matrix4d getInertiaMoment();
 
         void setFriction(float f);
         float getFriction();
@@ -227,10 +230,7 @@ class VRPhysics : public VRStorage {
         Vec3d getAngularVelocity();
         Vec3d getLinearAcceleration();
         Vec3d getAngularAcceleration();
-        btMatrix3x3 getInertiaTensor();
         void setDamping(float lin, float ang, bool fast = false);
-
-        void setCenterOfMass(Vec3d com);
 
         static vector<string> getPhysicsShapes();
         static btTransform fromMatrix(Matrix4d m, Vec3d& scale, Vec3d mc, bool& scaleChanged);
