@@ -1097,6 +1097,7 @@ void VRTransform::updatePhysics() { //should be called from the main thread only
 
 void VRTransform::updateFromBullet() {
     //cout << getName() << "  VRTransform::updateFromBullet!" << endl;
+    physics->computeAccelerations();
     Matrix4d m = physics->getTransformation();
     setWorldMatrix(m);
     auto vs = physics->getVisualShape();
@@ -1160,6 +1161,8 @@ Vec3d VRTransform::getForce() { if (auto p = getPhysics()) return p->getForce();
 Vec3d VRTransform::getTorque() { if (auto p = getPhysics()) return p->getTorque(); else return Vec3d(); }
 Vec3d VRTransform::getVelocity() { if (auto p = getPhysics()) return p->getLinearVelocity(); else return Vec3d(); }
 Vec3d VRTransform::getAngularVelocity() { if (auto p = getPhysics()) return p->getAngularVelocity(); else return Vec3d(); }
+Vec3d VRTransform::getAcceleration() { if (auto p = getPhysics()) return p->getLinearAcceleration(); else return Vec3d(); }
+Vec3d VRTransform::getAngularAcceleration() { if (auto p = getPhysics()) return p->getAngularAcceleration(); else return Vec3d(); }
 Vec3d VRTransform::getCenterOfMass() { if (auto p = getPhysics()) return p->getCenterOfMass(); else return Vec3d(); }
 #endif
 

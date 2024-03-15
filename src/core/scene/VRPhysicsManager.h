@@ -45,6 +45,7 @@ class VRPhysicsManager {
         vector<VRUpdateCbWeakPtr > updateFktsPost;
         bool active = 1;
         bool skip = 1;
+        double simulationTime = 0;
 
         btBroadphaseInterface* broadphase;
         btSoftBodyRigidBodyCollisionConfiguration* collisionConfiguration;
@@ -84,6 +85,8 @@ class VRPhysicsManager {
 
         void addPhysicsUpdateFunction(VRUpdateCbPtr fkt, bool after);
         void dropPhysicsUpdateFunction(VRUpdateCbPtr fkt, bool after);
+
+        double getSimulationTime();
 
         void setPhysicsActive(bool a);
         void setGravity(Vec3d g);

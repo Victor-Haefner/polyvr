@@ -125,11 +125,11 @@ void VRPhysicsManager::updatePhysics( VRThreadWeakPtr wthread) {
             prepareObjects();
             for (auto f : updateFktsPre) (*(f.lock()))();
             dynamicsWorld->stepSimulation(1e-6*dt, 30, 1.0/500);
+            simulationTime += 1e-6*dt;
             for (auto f : updateFktsPost) (*(f.lock()))();
         }
     }
     VRProfiler::get()->regStop(prof_id);
-
 
     prof_id = VRProfiler::get()->regStart("physics sleep");
     //t2 = getTime();
@@ -147,6 +147,10 @@ void VRPhysicsManager::updatePhysics( VRThreadWeakPtr wthread) {
         if (t3-t1 > 0) fps = 1e6/(t3-t1);
     }
     VRProfiler::get()->regStop(prof_id);
+}
+
+double VRPhysicsManager::getSimulationTime() {
+    return simulationTime;
 }
 
 void VRPhysicsManager::addPhysicsUpdateFunction(VRUpdateCbPtr fkt, bool after) {

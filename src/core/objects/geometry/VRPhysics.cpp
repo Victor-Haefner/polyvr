@@ -1156,11 +1156,29 @@ void VRPhysics::rescaleCollisionShape() {
     }
 }
 
+void VRPhysics::computeAccelerations() {
+    auto scene = OSG::VRScene::getCurrent();
+    if (!scene) return;
+    double t = scene->getSimulationTime();
+    double dt = t-lastSimTime;
+    if (lastSimTime == 0) { lastSimTime = t; return; }
+    lastSimTime = t;
+    if (dt < 1e-9) return; // 0 or negative..
+    double _dt = 1.0/dt;
+
+    Vec3d lv = getLinearVelocity();
+    Vec3d av = getAngularVelocity();
+    linearAcceleration = (lv-lastLinearVelocity) * _dt;
+    angularAcceleration = (av-lastAngularVelocity) * _dt;
+    lastLinearVelocity = lv;
+    lastAngularVelocity = av;
+    //cout << " a " << angularAcceleration << ",  " << _dt << ", " << av << ", " << lastAngularVelocity << ", body: " << toVec3d( bt.body->getAngularVelocity() ) << ", " << vr_obj.lock()->getName() << endl;
+}
+
 void VRPhysics::updateTransformation(OSG::VRTransformPtr trans) {
     if (!trans) return;
     VRLock lock(VRPhysics_mtx());
     //static VRRate FPS; int fps = FPS.getRate(); cout << "VRPhysics::updateTransformation " << fps << endl;
-
     bool scaleChanged = false;
     auto btp = fromVRTransform(trans, scale, CoMOffset, scaleChanged);
     if (scaleChanged) rescaleCollisionShape();
@@ -1275,6 +1293,9 @@ OSG::Vec3d VRPhysics::getAngularVelocity() {
      OSG::Vec3d result = OSG::Vec3d (tmp.getX(), tmp.getY(), tmp.getZ());
      return result;
 }
+
+Vec3d VRPhysics::getLinearAcceleration() { return linearAcceleration; }
+Vec3d VRPhysics::getAngularAcceleration() { return angularAcceleration; }
 
 btTransform VRPhysics::getTransform() {
     if (bt.body == 0) return btTransform();

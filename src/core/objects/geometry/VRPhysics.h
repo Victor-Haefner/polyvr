@@ -107,6 +107,12 @@ class VRPhysics : public VRStorage {
         float angDamping = 0;
         CallbackPtr callback;
 
+        double lastSimTime = 0;
+        Vec3d lastLinearVelocity;
+        Vec3d lastAngularVelocity;
+        Vec3d linearAcceleration;
+        Vec3d angularAcceleration;
+
         // convex decomposition parameters
         float compacityWeight = 0.1;
         float volumeWeight = 0.0;
@@ -198,6 +204,7 @@ class VRPhysics : public VRStorage {
 
         vector<VRCollision> getCollisions();
 
+        void computeAccelerations();
         void updateTransformation(VRTransformPtr t);
         Matrix4d getTransformation(bool scaled = true);
         btTransform getTransform();
@@ -218,6 +225,8 @@ class VRPhysics : public VRStorage {
 
         Vec3d getLinearVelocity();
         Vec3d getAngularVelocity();
+        Vec3d getLinearAcceleration();
+        Vec3d getAngularAcceleration();
         btMatrix3x3 getInertiaTensor();
         void setDamping(float lin, float ang, bool fast = false);
 
