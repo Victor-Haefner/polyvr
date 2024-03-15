@@ -107,6 +107,14 @@ void VRPhysicsManager::prepareObjects() {
     }
 }
 
+void VRPhysicsManager::postprocessObjects() {
+    for (auto o : OSGobjs) {
+        if (auto so = o.second.lock()) {
+            if (so->getPhysics()) so->getPhysics()->computeAccelerations();
+        }
+    }
+}
+
 void VRPhysicsManager::updatePhysics( VRThreadWeakPtr wthread) {
     VRTimer timer; timer.start();
     long long dt,t0,t1,t3;
@@ -124,9 +132,10 @@ void VRPhysicsManager::updatePhysics( VRThreadWeakPtr wthread) {
             VRLock lock(*mtx);
             prepareObjects();
             for (auto f : updateFktsPre) (*(f.lock()))();
-            dynamicsWorld->stepSimulation(1e-6*dt, 30, 1.0/500);
-            simulationTime += 1e-6*dt;
+            int n = dynamicsWorld->stepSimulation(1e-6*dt, 30, 1.0/500);
+            simulationTime += n*1.0/500; //1e-6*dt;
             for (auto f : updateFktsPost) (*(f.lock()))();
+            postprocessObjects();
         }
     }
     VRProfiler::get()->regStop(prof_id);

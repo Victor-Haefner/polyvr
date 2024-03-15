@@ -1097,7 +1097,6 @@ void VRTransform::updatePhysics() { //should be called from the main thread only
 
 void VRTransform::updateFromBullet() {
     //cout << getName() << "  VRTransform::updateFromBullet!" << endl;
-    physics->computeAccelerations();
     Matrix4d m = physics->getTransformation();
     setWorldMatrix(m);
     auto vs = physics->getVisualShape();

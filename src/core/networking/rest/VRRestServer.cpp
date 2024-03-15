@@ -64,7 +64,7 @@ void VRRestServer::listen(int port, VRRestCbPtr cb) {
     cout << "listen on port " << port << endl;
 
     callback = cb;
-    string addr = "http://localhost:"+toString(port);
+    string addr = ":"+toString(port);
     mg_http_listen(&data->mgr, addr.c_str(), VRRestServer_handler, this);
     data->doPoll = true;
 

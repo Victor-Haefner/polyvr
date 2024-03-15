@@ -75,6 +75,7 @@ class VRPhysicsManager {
         ~VRPhysicsManager();
 
         void prepareObjects();
+        void postprocessObjects();
         void updatePhysics( VRThreadWeakPtr  t);
         void updateSpringsVisual();
         void updatePhysObjects();

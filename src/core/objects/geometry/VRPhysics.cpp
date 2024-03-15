@@ -1157,6 +1157,7 @@ void VRPhysics::rescaleCollisionShape() {
 }
 
 void VRPhysics::computeAccelerations() {
+    if (!isDynamic()) return;
     auto scene = OSG::VRScene::getCurrent();
     if (!scene) return;
     double t = scene->getSimulationTime();
