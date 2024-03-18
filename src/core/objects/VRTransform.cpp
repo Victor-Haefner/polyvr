@@ -54,6 +54,7 @@ VRTransform::VRTransform(string name, bool doOpt) : VRObject(name) {
 
 VRTransform::~VRTransform() {
     if (physics) { delete physics; }
+    setConstraint(0);
 }
 
 VRTransformPtr VRTransform::ptr() { return static_pointer_cast<VRTransform>( shared_from_this() ); }
@@ -80,7 +81,8 @@ VRObjectPtr VRTransform::copy(vector<VRObjectPtr> children) {
     t->setEntity(entity);
     for (auto ta : getTags()) t->addTag(ta);
     t->setMatrix(getMatrix());
-    t->setConstraint(getConstraint());
+    if (constraint && constraint->isActive()) t->setConstraint(constraint);
+    else t->constraint = constraint;
     t->old_parent = getParent();
     return t;
 }
@@ -865,6 +867,7 @@ void VRTransform::updateConstraints() { // global updater
     //cout << VRGlobals::CURRENT_FRAME << " VRTransform::updateConstraints " << constrainedObjects.size() << endl;
     for (auto wc : constrainedObjects) {
         if (VRTransformPtr obj = wc.second.lock()) {
+            if (!obj->constraint || !obj->constraint->isActive()) continue;
             obj->apply_constraints();
 #ifndef WITHOUT_BULLET
             if (obj->held) obj->updatePhysics();
