@@ -19,9 +19,11 @@ void ImAppLauncher::render(string filter) {
     if (!sensitive) ImGui::BeginDisabled();
 
     ImGui::BeginGroup();
+        float w = ImGui::GetContentRegionAvail().x;
         ImGui::Spacing();
         ImGui::Indent(5.0);
         ImGui::Columns(2);
+            ImGui::SetColumnWidth(-1, w*0.4);
             if (ImGui::CollapsingHeader(("advanced##"+ID).c_str(), flags) && sensitive) {
                 if (ImGui::Button(("Run without scripts##"+ID).c_str())) uiSignal("on_toggle_app_no_scripts", {{"ID",ID}});
             }
