@@ -90,11 +90,13 @@ double VRPipeSegment::computeExchange(double hole, VRPipeSegmentPtr other, doubl
         m = -min(-m, otherPressure*other->volume); // not more than available!
     }
 
+    //cout << "computeExchange eID: " << eID << " (" << other->eID << ")" << ", dP: " << dP << ", m: " << m << " " << endl;
     return m;
 }
 
 void VRPipeSegment::handleValve(double area, VRPipeSegmentPtr other, double dt, bool p1, bool op1) {
-    double m = computeExchange(area, other, dt, p1, op1);
+    double m = computeExchange(area, other, dt, p1, op1)*0.5;
+    //cout << "handleValve " << m << endl;
     addEnergy(-m, other->density, p1, "handleValveSelf");
     other->addEnergy(m, density, op1, "handleValveOther");
 }
