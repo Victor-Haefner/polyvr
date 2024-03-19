@@ -662,6 +662,11 @@ void VRPipeSystem::setPipeRadius(int i, double r) { segments[i]->radius = r; seg
 void VRPipeSystem::setOutletDensity(string n, double p) { auto e = getEntity(n); if (e) e->set("density", toString(p)); }
 void VRPipeSystem::setOutletPressure(string n, double p) { auto e = getEntity(n); if (e) e->set("pressure", toString(p)); }
 
+void VRPipeSystem::setPipePressure(int i, double p1, double p2) {
+    segments[i]->pressure1 = p1;
+    segments[i]->pressure2 = p2;
+}
+
 void VRPipeSystem::setPump(string n, double p, double pmax) {
     auto e = getEntity(n);
     if (e) {
