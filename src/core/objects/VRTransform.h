@@ -224,6 +224,7 @@ class VRTransform : public VRObject {
         void setCollisionGroup(vector<int> gv);
         void setCollisionMask(vector<int> gv);
         void setMass(float m);
+        void setFriction(float m);
         void setCollisionMargin(float m);
         void setCollisionShape(string s, float p);
         void setPhysicsActivationMode(int m);
@@ -249,6 +250,7 @@ class VRTransform : public VRObject {
         Vec3d getAcceleration();
         Vec3d getAngularAcceleration();
         float getMass();
+        float getFriction();
         PosePtr getInertiaMoment();
         Vec3d getCenterOfMass();
 #endif

@@ -109,7 +109,6 @@ bool VRPhysics::isDynamic() { return dynamic; }
 void VRPhysics::setMass(float m) { mass = m; update(); }
 float VRPhysics::getMass() { return mass; }
 Vec3d VRPhysics::getCenterOfMass() { return CoMOffset; }
-void VRPhysics::setFriction(float f) { friction = f; update(); }
 float VRPhysics::getFriction() { return friction; }
 void VRPhysics::setCollisionMargin(float m) { collisionMargin = m; update(); }
 float VRPhysics::getCollisionMargin() { return collisionMargin; }
@@ -123,6 +122,12 @@ void VRPhysics::setGhost(bool b) { bt.ghost = b; update(); }
 bool VRPhysics::isGhost() { return bt.ghost; }
 void VRPhysics::setSoft(bool b) { bt.soft = b; update(); }
 bool VRPhysics::isSoft() { return bt.soft; }
+
+void VRPhysics::setFriction(float f) {
+    friction = f;
+    VRLock lock(VRPhysics_mtx());
+    bt.body->setFriction(btScalar(f));
+}
 
 void VRPhysics::setDamping(float lin, float ang, bool f) {
     linDamping = lin;

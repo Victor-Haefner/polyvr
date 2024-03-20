@@ -1144,6 +1144,7 @@ void VRTransform::setNoBltFlag() { noBlt = true; }
 void VRTransform::setBltOverrideFlag() { bltOverride = true; }
 void VRTransform::setPhysicalizeTree(bool b) { if (auto p = getPhysics()) p->physicalizeTree(b); }
 void VRTransform::setMass(float m) { if (auto p = getPhysics()) p->setMass(m); }
+void VRTransform::setFriction(float m) { if (auto p = getPhysics()) p->setFriction(m); }
 void VRTransform::setCollisionMargin(float m) { if (auto p = getPhysics()) p->setCollisionMargin(m); }
 void VRTransform::setCollisionShape(string s, float f) { if (auto p = getPhysics()) p->setShape(s, f); }
 void VRTransform::setPhysicsActivationMode(int m) { if (auto p = getPhysics()) p->setActivationMode(m); }
@@ -1166,6 +1167,7 @@ Vec3d VRTransform::getAngularVelocity() { if (auto p = getPhysics()) return p->g
 Vec3d VRTransform::getAcceleration() { if (auto p = getPhysics()) return p->getLinearAcceleration(); else return Vec3d(); }
 Vec3d VRTransform::getAngularAcceleration() { if (auto p = getPhysics()) return p->getAngularAcceleration(); else return Vec3d(); }
 float VRTransform::getMass() { if (auto p = getPhysics()) return p->getMass(); else return 0; }
+float VRTransform::getFriction() { if (auto p = getPhysics()) return p->getFriction(); else return 0; }
 PosePtr VRTransform::getInertiaMoment() { if (auto p = getPhysics()) return Pose::create( p->getInertiaMoment() ); else return 0; }
 Vec3d VRTransform::getCenterOfMass() { if (auto p = getPhysics()) return p->getCenterOfMass(); else return Vec3d(); }
 #endif
