@@ -1,5 +1,7 @@
 #include "VRProfibusClient.h"
 #include "snap7.h"
+#include "core/utils/toString.h"
+#include "core/utils/VRGlobals.h"
 
 #include <thread>
 #include <iostream>
@@ -45,6 +47,19 @@ void VRProfinetClient::connect(string address, int rack, int slot) {
 
 string VRProfinetClient::read(int db, int offset, int length, string dbType) {
     if (!isConnected()) return "";
+
+    string key = dbType + toString(db);
+    if (blocks.count(key)) {
+        auto& bl = blocks[key];
+        if (bl.timestamp == VRGlobals::CURRENT_FRAME) {
+            if (bl.offset <= offset && bl.size+bl.offset >= offset+length) {
+                string s = subString(bl.data, offset-bl.offset, length);
+                return s;
+            }
+        }
+    }
+
+
     if (dbType == "merker"){
         //cout << "VRProfinetClient::read merkerbase " << db << " at " << offset << " length " << length << ", connected? " << isConnected() << endl;
         int r = data->Client->MBRead(offset, length, data->Buffer);
@@ -79,6 +94,17 @@ string VRProfinetClient::read(int db, int offset, int length, string dbType) {
 
 void VRProfinetClient::write(int db, int offset, string val, string dbType) {
     if (!isConnected()) return;
+
+    string key = dbType + toString(db);
+    if (blocks.count(key)) {
+        auto& bl = blocks[key];
+        if (bl.timestamp == VRGlobals::CURRENT_FRAME) {
+            if (bl.offset <= offset && bl.size+bl.offset >= offset+val.length()) {
+                for (int i=0; i<val.length(); i++) bl.data[offset-bl.offset+i] = val[i];
+            }
+        }
+    }
+
     if (dbType == "merker") {
         data->Client->MBWrite(offset, val.size(), (void*)val.c_str());
         return;
@@ -92,6 +118,16 @@ void VRProfinetClient::write(int db, int offset, string val, string dbType) {
         return;
     }
     data->Client->DBWrite(db, offset, val.size(), (void*)val.c_str());
+}
+
+void VRProfinetClient::readBlock(int db, int pos, int size, string dbType) {
+    //return;
+    string key = dbType + toString(db);
+    blocks[key] = Block();
+    blocks[key].data = read(db, pos, size, dbType);
+    blocks[key].timestamp = VRGlobals::CURRENT_FRAME;
+    blocks[key].offset = pos;
+    blocks[key].size = size;
 }
 
 float VRProfinetClient::toFloat(string bytes) {
@@ -129,7 +165,8 @@ int VRProfinetClient::toInt(string bytes) {
 bool VRProfinetClient::readBool(int db, int pos, int bit, string dbType) {
     byte B = read(db, pos, 1, dbType)[0];
     //cout << " readBool " << (int)B << endl;
-    return ((B >> bit) & 0x01);
+    bool b = ((B >> bit) & 0x01);
+    return b;
 }
 
 short VRProfinetClient::readShort(int db, int pos, string dbType) {

@@ -61,6 +61,7 @@ PyMethodDef VRPyProfinetClient::methods[] = {
     {"isConnected", PyWrap(ProfinetClient, isConnected, "Return if connected", bool) },
     {"read", PyWrap(ProfinetClient, read, "read binary data, db, offset, length, dbtype = database|merker", string, int, int, int, string) },
     {"write", PyWrap(ProfinetClient, write, "write binary data, db, offset, data, dbtype = database|merker", void, int, int, string, string) },
+    {"readBlock", PyWrap(ProfinetClient, readBlock, "Read a whole block, db, pos, size, dbtype = database|merker", void, int, int, int, string) },
     {"readBool", PyWrap(ProfinetClient, readBool, "Read a bool, db, pos, bit, dbtype = database|merker", bool, int, int, int, string) },
     {"readShort", PyWrap(ProfinetClient, readShort, "Read a short, db, pos, dbtype = database|merker", short, int, int, string) },
     {"readInt", PyWrap(ProfinetClient, readInt, "Read an int, db, pos, dbtype = database|merker", int, int, int, string) },

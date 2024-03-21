@@ -15,6 +15,15 @@ class VRProfinetClient : public std::enable_shared_from_this<VRProfinetClient> {
     public:
         struct Data;
 
+        struct Block {
+            string data;
+            size_t offset = 0;
+            size_t size = 0;
+            size_t timestamp = 0;
+        };
+
+        map<string, Block> blocks;
+
     private:
         Data* data = 0;
 
@@ -36,6 +45,7 @@ class VRProfinetClient : public std::enable_shared_from_this<VRProfinetClient> {
         string read(int db, int offset, int length,string dbType = "database");
         void write(int db, int offset, string val,string dbType = "database");
 
+        void  readBlock(int db, int pos, int size,string dbType = "database");
         bool  readBool(int db, int pos, int bit,string dbType = "database");
         short readShort(int db, int pos,string dbType = "database");
         int   readInt(int db, int pos,string dbType = "database");
