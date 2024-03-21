@@ -130,13 +130,13 @@ void VRPhysicsManager::updatePhysics( VRThreadWeakPtr wthread) {
 
         {
             VRLock lock(*mtx);
-            double DT = 1.0/15000; // 1.0/500;
+            //double DT = 1.0/15000; // 1.0/500;
             double T = 1e-6*dt;
 
             prepareObjects();
             for (auto f : updateFktsPre) (*(f.lock()))();
-            int n = dynamicsWorld->stepSimulation(T, 100, DT);
-            simulationTime += n*DT;
+            int n = dynamicsWorld->stepSimulation(T, 100, timestep);
+            simulationTime += n*timestep;
             for (auto f : updateFktsPost) (*(f.lock()))();
             postprocessObjects();
         }
@@ -161,9 +161,8 @@ void VRPhysicsManager::updatePhysics( VRThreadWeakPtr wthread) {
     VRProfiler::get()->regStop(prof_id);
 }
 
-double VRPhysicsManager::getSimulationTime() {
-    return simulationTime;
-}
+void VRPhysicsManager::setSimulationTimestep(double ts) { VRLock lock(*mtx); timestep = ts; }
+double VRPhysicsManager::getSimulationTime() { VRLock lock(*mtx); return simulationTime; }
 
 void VRPhysicsManager::addPhysicsUpdateFunction(VRUpdateCbPtr fkt, bool after) {
     VRLock lock(*mtx);

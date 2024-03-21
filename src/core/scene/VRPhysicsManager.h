@@ -67,6 +67,7 @@ class VRPhysicsManager {
 
         VRMutex* mtx = 0;
         int fps = 500;
+        double timestep = 0.002;
 
     protected:
         VRThreadCbPtr updatePhysicsFkt;
@@ -87,6 +88,7 @@ class VRPhysicsManager {
         void addPhysicsUpdateFunction(VRUpdateCbPtr fkt, bool after);
         void dropPhysicsUpdateFunction(VRUpdateCbPtr fkt, bool after);
 
+        void setSimulationTimestep(double ts);
         double getSimulationTime();
 
         void setPhysicsActive(bool a);

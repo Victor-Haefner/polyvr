@@ -76,6 +76,7 @@ PyMethodDef VRSceneGlobals::methods[] = {
 	{"joinThread", (PyCFunction)VRSceneGlobals::joinThread, METH_VARARGS, "Join a thread - joinThread( int ID )" },
 	{"getSystemDirectory", (PyCFunction)VRSceneGlobals::getSystemDirectory, METH_VARARGS, "Return the path to one of the specific PolyVR directories - getSystemDirectory( str dir )\n\tdir can be: ROOT, EXAMPLES, RESSOURCES, TRAFFIC" },
 	{"setPhysicsActive", (PyCFunction)VRSceneGlobals::setPhysicsActive, METH_VARARGS, "Pause and unpause physics - setPhysicsActive( bool b )" },
+	{"setPhysicsTimestep", (PyCFunction)VRSceneGlobals::setPhysicsTimestep, METH_VARARGS, "Set physics timestep, default is 0.002, (single substep) - setPhysicsTimestep( double timestep )" },
 	{"runTest", (PyCFunction)VRSceneGlobals::runTest, METH_VARARGS, "Run a built-in system test - runTest( string test )" },
 	{"getSceneMaterials", (PyCFunction)VRSceneGlobals::getSceneMaterials, METH_NOARGS, "Get all materials of the scene - getSceneMaterials()" },
 	{"getSky", (PyCFunction)VRSceneGlobals::getSky, METH_NOARGS, "Get sky module" },
@@ -161,6 +162,14 @@ PyObject* VRSceneGlobals::setPhysicsActive(VRSceneGlobals* self, PyObject *args)
 #ifndef WITHOUT_BULLET
     auto scene = VRScene::getCurrent();
     if (scene) (dynamic_pointer_cast<VRPhysicsManager>(scene))->setPhysicsActive( parseBool(args) );
+#endif
+    Py_RETURN_TRUE;
+}
+
+PyObject* VRSceneGlobals::setPhysicsTimestep(VRSceneGlobals* self, PyObject *args) {
+#ifndef WITHOUT_BULLET
+    auto scene = VRScene::getCurrent();
+    if (scene) (dynamic_pointer_cast<VRPhysicsManager>(scene))->setSimulationTimestep( parseFloat(args) );
 #endif
     Py_RETURN_TRUE;
 }
