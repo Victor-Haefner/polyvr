@@ -15,7 +15,7 @@ struct VRProfinetClient::Data {
 	 byte Buffer[65536]; // 64 K buffer
 
 	 thread writeThread;
-	 bool active = false;
+	 bool active = true;
 	 VRMutex mtx;
 };
 
