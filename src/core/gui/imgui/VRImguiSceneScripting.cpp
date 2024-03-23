@@ -507,6 +507,10 @@ void ImScripting::render() {
         ImGui::SameLine(); if (ImGui::Button("Search")) openSearch();
         ImGui::SameLine(); if (ImGui::Button("Documentation")) uiSignal("ui_toggle_popup", {{"name","documentation"}, {"width","800"}, {"height","600"}});
         ImGui::SameLine(); if (ImGui::Checkbox("Performance", &perf)) { scriptlist.doPerf = perf; scriptlist.computeMinWidth(); uiSignal("scripts_toolbar_performance", {{"state",toString(perf)}}); }
+
+        ImGui::SameLine(0,30); ImGui::TextColored( io.KeyAlt   ? ImVec4(0,1,0,1) : ImVec4(0.8,0.8,0.8,1), "A");
+        ImGui::SameLine(); ImGui::TextColored( io.KeyShift ? ImVec4(0,1,0,1) : ImVec4(0.8,0.8,0.8,1), "S");
+        ImGui::SameLine(); ImGui::TextColored( io.KeyCtrl  ? ImVec4(0,1,0,1) : ImVec4(0.8,0.8,0.8,1), "C");
     ImGui::Unindent(5);
 
     ImGui::Spacing();
