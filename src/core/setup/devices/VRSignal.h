@@ -14,6 +14,7 @@ using namespace std;
 class VRSignal_base : public VRName {
     protected:
         map<int, vector<VRBaseCbWeakPtr>> callbacksPtr;
+        map<int, vector<VRBaseCbWeakPtr>> callbacksDeferredPtr;
         VRUpdateCbPtr trig_fkt = 0;
         bool _doUpdate = false;
 
@@ -26,6 +27,7 @@ class VRSignal_base : public VRName {
 
         VRUpdateCbPtr getTriggerFkt();
         map<int, vector<VRBaseCbWeakPtr>> getCallbacks();
+        map<int, vector<VRBaseCbWeakPtr>> getDeferredCallbacks();
 
         void clear();
 };
@@ -40,11 +42,12 @@ class VRSignal : public VRSignal_base {
 
         static VRSignalPtr create(VRDevicePtr dev = 0);
 
-        void add(VRBaseCbWeakPtr fkt, int priority = 0); // lower priority comes first
+        void add(VRBaseCbWeakPtr fkt, int priority = 0, bool deferred = false); // lower priority comes first
         void sub(VRBaseCbWeakPtr fkt);
 
         template<typename Event> bool trigger(vector<VRBaseCbWeakPtr>& callbacks, std::shared_ptr<Event> event = 0);
         template<typename Event> bool triggerAll(std::shared_ptr<Event> event = 0);
+        template<typename Event> bool triggerAllDeferred(std::shared_ptr<Event> event = 0);
 };
 
 OSG_END_NAMESPACE

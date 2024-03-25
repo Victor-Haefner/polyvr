@@ -3,6 +3,7 @@
 
 #include "VRSignal.h"
 #include "core/utils/VRFunction.h"
+#include "core/scene/VRScene.h"
 
 OSG_BEGIN_NAMESPACE;
 
@@ -29,6 +30,23 @@ bool VRSignal::trigger(vector<VRBaseCbWeakPtr>& callbacks, shared_ptr<Event> eve
 template<typename Event>
 bool VRSignal::triggerAll(shared_ptr<Event> event) {
     auto callbacks = callbacksPtr; // make copy to avoid corruption while iterating!
+
+    for (auto& prio : callbacks) {
+        bool abort = !trigger(prio.second, event);
+        if (abort) return false;
+    }
+
+    if (callbacksDeferredPtr.size()) {
+        auto scene = VRScene::getCurrent();
+        if (scene) scene->queueJob( VRUpdateCb::create("sigDeferred", bind(&VRSignal::triggerAllDeferred<Event>, this, event) ) );
+    }
+
+    return true;
+}
+
+template<typename Event>
+bool VRSignal::triggerAllDeferred(shared_ptr<Event> event) {
+    auto callbacks = callbacksDeferredPtr; // make copy to avoid corruption while iterating!
 
     for (auto& prio : callbacks) {
         bool abort = !trigger(prio.second, event);
