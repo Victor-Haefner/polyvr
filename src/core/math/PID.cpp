@@ -1,7 +1,10 @@
 #include "PID.h"
 #include "core/utils/VRTimer.h"
 
+#include <iostream>
+
 using namespace OSG;
+using namespace std;
 
 PID::PID() { time = VRTimer::create(); }
 PID::~PID() {}
@@ -26,6 +29,8 @@ double PID::compute( double setpoint, double pv ) {
     double d = de / dt; // derivative
 
     double res = Kerr*e + Kint*Int + Kder*d; // total increment
+
+    //cout << "PID compute " << Kerr << ", " << Kder << ", " << Kint << ",   " << e << ", " << d << ", " << Int << endl;
 
     if (max >= min) { // clamp res
         if ( res > max ) res = max;

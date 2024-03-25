@@ -28,6 +28,7 @@
 #include "core/utils/toString.h"
 #include "core/utils/xml.h"
 #include "core/setup/VRSetup.h"
+#include "core/setup/devices/VRKeyboard.h"
 #include "core/objects/material/VRMaterial.h"
 #include <frameobject.h>
 #include <pyerrors.h>
@@ -136,7 +137,8 @@ void VRScript::update() {
                 if (state == 4) t->sig = dev->getToEdgeSignal();
                 if (state == 5) t->sig = dev->getFromEdgeSignal();
                 if (t->sig == 0) continue;
-                t->sig->add(cbfkt_dev, 0, true);
+                bool isKeyboard = ( dynamic_pointer_cast<VRKeyboard>(dev) != 0 );
+                t->sig->add(cbfkt_dev, 0, isKeyboard);
             }
 
             // add dev argument
