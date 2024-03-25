@@ -2165,6 +2165,12 @@
 			<Option target="Release" />
 			<Option target="PVR-Math-d" />
 		</Unit>
+		<Unit filename="src/core/math/PID.cpp">
+			<Option target="PVR-Math-d" />
+		</Unit>
+		<Unit filename="src/core/math/PID.h">
+			<Option target="PVR-Math-d" />
+		</Unit>
 		<Unit filename="src/core/math/SingularValueDecomposition.cpp">
 			<Option target="Release" />
 			<Option target="PVR-Math-d" />

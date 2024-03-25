@@ -9,6 +9,7 @@
 #ifndef WITHOUT_LAPACKE_BLAS
 #include "core/math/PCA.h"
 #endif
+#include "core/math/PID.h"
 #include "core/math/patch.h"
 #include "core/math/datarow.h"
 #include "core/math/OSGMathFwd.h"
@@ -162,6 +163,10 @@ struct VRPyOcPytree : VRPyBaseT<OSG::OcPytree> {
 };
 
 struct VRPyPCA : VRPyBaseT<OSG::PCA> {
+    static PyMethodDef methods[];
+};
+
+struct VRPyPID : VRPyBaseT<OSG::PID> {
     static PyMethodDef methods[];
 };
 

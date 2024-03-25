@@ -605,6 +605,7 @@ simplePyType(OcPytree, VRPyOcPytree::New );
 simplePyType(PCA, New_ptr);
 #endif
 simplePyType(Patch, New_ptr);
+simplePyType(PID, New_ptr);
 simplePyType(XML, New_ptr);
 simplePyType(XMLElement, 0);
 simpleVRPyType(Spreadsheet, New_ptr);
@@ -876,6 +877,13 @@ PyMethodDef VRPyPCA::methods[] = {
     {NULL}  /* Sentinel */
 };
 #endif
+
+PyMethodDef VRPyPID::methods[] = {
+    {"compute", PyWrap2( PID, compute, "Compute increment (setpoint, measurement)", double, double, double ) },
+    {"setBounds", PyWrap2( PID, setBounds, "Clamp output (min, max)", void, double, double ) },
+    {"setParameters", PyWrap2( PID, setParameters, "Set parameters (Kerr, Kint, Kder)", void, double, double, double ) },
+    {NULL}  /* Sentinel */
+};
 
 PyMethodDef VRPyPatch::methods[] = {
     {"getSurface", PyWrap2( Patch, getSurface, "Get surface object", VRObjectPtr ) },

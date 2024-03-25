@@ -341,6 +341,7 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
 #ifndef WITHOUT_LAPACKE_BLAS
     sm->registerModule<VRPyPCA>("PCA", pModVR, 0, "Math");
 #endif
+    sm->registerModule<VRPyPID>("PID", pModVR, 0, "Math");
     sm->registerModule<VRPyPatch>("Patch", pModVR, 0, "Math");
 
     PyObject* pModSetup = sm->newModule("Setup", VRSceneGlobals::methods, "VR setup module");
