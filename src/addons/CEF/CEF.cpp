@@ -16,6 +16,7 @@
 #include <OpenSG/OSGImage.h>
 
 #include "CEFWindowsKey.h" // call after OpenSG includes because of strange windows boost issue
+#include <GL/freeglut.h>
 
 #include "core/scene/VRSceneManager.h"
 #include "core/scene/VRScene.h"
@@ -577,6 +578,87 @@ bool CEF::mouse(int lb, int mb, int rb, int wu, int wd, VRDeviceWeakPtr d) {
     return !blockSignals;
 }
 
+static KeyboardCode CefKeyFromGlut(int key) {
+    switch (key) {
+        case '\t':                      return VKEY_TAB;
+        case 256 + GLUT_KEY_LEFT:       return VKEY_LEFT;
+        case 256 + GLUT_KEY_RIGHT:      return VKEY_RIGHT;
+        case 256 + GLUT_KEY_UP:         return VKEY_UP;
+        case 256 + GLUT_KEY_DOWN:       return VKEY_DOWN;
+        case 256 + GLUT_KEY_PAGE_UP:    return VKEY_PRIOR;
+        case 256 + GLUT_KEY_PAGE_DOWN:  return VKEY_NEXT;
+        case 256 + GLUT_KEY_HOME:       return VKEY_HOME;
+        case 256 + GLUT_KEY_END:        return VKEY_END;
+        case 256 + GLUT_KEY_INSERT:     return VKEY_INSERT;
+        case 127:                       return VKEY_DELETE;
+        case 8:                         return VKEY_BACK;
+        case ' ':                       return VKEY_SPACE;
+        case 13:                        return VKEY_RETURN;
+        case 27:                        return VKEY_ESCAPE;
+        case 39:                        return VKEY_OEM_7;
+        case 44:                        return VKEY_OEM_COMMA;
+        case 45:                        return VKEY_OEM_MINUS;
+        case 46:                        return VKEY_OEM_PERIOD;
+        case 47:                        return VKEY_OEM_2;
+        case 59:                        return VKEY_OEM_1;
+        case 61:                        return VKEY_OEM_PLUS;
+        case 91:                        return VKEY_OEM_4;
+        case 92:                        return VKEY_OEM_5;
+        case 93:                        return VKEY_OEM_6;
+        case 96:                        return VKEY_OEM_102;
+        case 256 + 0x006D:              return VKEY_NUMLOCK;
+        case '0':                       return VKEY_0;
+        case '1':                       return VKEY_1;
+        case '2':                       return VKEY_2;
+        case '3':                       return VKEY_3;
+        case '4':                       return VKEY_4;
+        case '5':                       return VKEY_5;
+        case '6':                       return VKEY_6;
+        case '7':                       return VKEY_7;
+        case '8':                       return VKEY_8;
+        case '9':                       return VKEY_9;
+        case 'A': case 'a':             return VKEY_A;
+        case 'B': case 'b':             return VKEY_B;
+        case 'C': case 'c':             return VKEY_C;
+        case 'D': case 'd':             return VKEY_D;
+        case 'E': case 'e':             return VKEY_E;
+        case 'F': case 'f':             return VKEY_F;
+        case 'G': case 'g':             return VKEY_G;
+        case 'H': case 'h':             return VKEY_H;
+        case 'I': case 'i':             return VKEY_I;
+        case 'J': case 'j':             return VKEY_J;
+        case 'K': case 'k':             return VKEY_K;
+        case 'L': case 'l':             return VKEY_L;
+        case 'M': case 'm':             return VKEY_M;
+        case 'N': case 'n':             return VKEY_N;
+        case 'O': case 'o':             return VKEY_O;
+        case 'P': case 'p':             return VKEY_P;
+        case 'Q': case 'q':             return VKEY_Q;
+        case 'R': case 'r':             return VKEY_R;
+        case 'S': case 's':             return VKEY_S;
+        case 'T': case 't':             return VKEY_T;
+        case 'U': case 'u':             return VKEY_U;
+        case 'V': case 'v':             return VKEY_V;
+        case 'W': case 'w':             return VKEY_W;
+        case 'X': case 'x':             return VKEY_X;
+        case 'Y': case 'y':             return VKEY_Y;
+        case 'Z': case 'z':             return VKEY_Z;
+        case 256 + GLUT_KEY_F1:         return VKEY_F1;
+        case 256 + GLUT_KEY_F2:         return VKEY_F2;
+        case 256 + GLUT_KEY_F3:         return VKEY_F3;
+        case 256 + GLUT_KEY_F4:         return VKEY_F4;
+        case 256 + GLUT_KEY_F5:         return VKEY_F5;
+        case 256 + GLUT_KEY_F6:         return VKEY_F6;
+        case 256 + GLUT_KEY_F7:         return VKEY_F7;
+        case 256 + GLUT_KEY_F8:         return VKEY_F8;
+        case 256 + GLUT_KEY_F9:         return VKEY_F9;
+        case 256 + GLUT_KEY_F10:        return VKEY_F10;
+        case 256 + GLUT_KEY_F11:        return VKEY_F11;
+        case 256 + GLUT_KEY_F12:        return VKEY_F12;
+        default:                        return VKEY_UNKNOWN;
+    }
+}
+
 bool CEF::keyboard(VRDeviceWeakPtr d) {
     if (!doKeyboard) return true;
     auto dev = d.lock();
@@ -591,12 +673,15 @@ bool CEF::keyboard(VRDeviceWeakPtr d) {
     auto host = internals->browser->GetHost();
     if (!host) return true;
 
-    //cout << "CEF::keyboard " << event.keyval << " " << ctrlUsed << " " << keyboard->ctrlDown() << endl;
+    //cout << "CEF::keyboard " << event.keyval << " " << ctrlUsed << " ctrlDown: " << keyboard->ctrlDown() << endl;
+
 
     if (keyboard->ctrlDown() && event.state == 1) {
-        if (event.keyval == 'a') { internals->browser->GetFocusedFrame()->SelectAll(); ctrlUsed = true; }
-        if (event.keyval == 'c') { internals->browser->GetFocusedFrame()->Copy(); ctrlUsed = true; }
-        if (event.keyval == 'v') { internals->browser->GetFocusedFrame()->Paste(); ctrlUsed = true; }
+        if (event.keyval == 1) { internals->browser->GetFocusedFrame()->SelectAll(); ctrlUsed = true; cout << "SELECT ALL" << endl; }
+        if (event.keyval == 3) { internals->browser->GetFocusedFrame()->Copy(); ctrlUsed = true; }
+        if (event.keyval == 22) { internals->browser->GetFocusedFrame()->Paste(); ctrlUsed = true; }
+        if (event.keyval == 25) { internals->browser->GetFocusedFrame()->Redo(); ctrlUsed = true; }
+        if (event.keyval == 26) { internals->browser->GetFocusedFrame()->Undo(); ctrlUsed = true; }
         return false;
     }
 
@@ -609,27 +694,28 @@ bool CEF::keyboard(VRDeviceWeakPtr d) {
 
     CefKeyEvent kev;
     kev.modifiers = GetCefStateModifiers(keyboard->shiftDown(), keyboard->lockDown(), keyboard->ctrlDown(), keyboard->altDown(), false, false, false);
-    if (event.keyval >= 1100 && event.keyval <= 1111) kev.modifiers |= EVENTFLAG_IS_KEY_PAD;
+    if (event.keyval >= 356 && event.keyval <= 367) kev.modifiers |= EVENTFLAG_IS_KEY_PAD;
     if (kev.modifiers & EVENTFLAG_ALT_DOWN) kev.is_system_key = true;
 
-    KeyboardCode windows_key_code = GdkEventToWindowsKeyCode(event.keyval);
+    KeyboardCode windows_key_code = CefKeyFromGlut(event.keyval);
     kev.windows_key_code = GetWindowsKeyCodeWithoutLocation(windows_key_code);
 
-    kev.native_key_code = event.keyval;
+    kev.native_key_code = CefKeyFromGlut( event.keyval );
+    if (kev.native_key_code == 0) return false;
 
     if (windows_key_code == VKEY_RETURN) kev.unmodified_character = '\r';
     else kev.unmodified_character = static_cast<int>(event.keyval);
 
     if (kev.modifiers & EVENTFLAG_CONTROL_DOWN) kev.character = GetControlCharacter(windows_key_code, kev.modifiers & EVENTFLAG_SHIFT_DOWN);
-    else kev.character = kev.unmodified_character;
+    else kev.character = event.keyval;
 
     if (event.state == 1) {
-        //cout << " CEF::keyboard press " << event.keyval << " " << kev.native_key_code << " " << kev.character << endl;
+        //cout << " CEF::keyboard press " << kev.windows_key_code << " " << kev.native_key_code << " " << kev.character << " " << kev.unmodified_character << endl;
         kev.type = KEYEVENT_RAWKEYDOWN; host->SendKeyEvent(kev);
     } else {
-        //cout << " CEF::keyboard release " << event.keyval << " " << kev.native_key_code << " " << kev.character << endl;
+        //cout << " CEF::keyboard release " << kev.windows_key_code << " " << kev.native_key_code << " " << kev.character << " " << kev.unmodified_character << endl;
         kev.type = KEYEVENT_KEYUP; host->SendKeyEvent(kev);
-        kev.type = KEYEVENT_CHAR; host->SendKeyEvent(kev);
+        if (event.keyval < 256) kev.type = KEYEVENT_CHAR; host->SendKeyEvent(kev);
     }
     return false;
 }
