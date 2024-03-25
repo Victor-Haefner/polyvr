@@ -25,7 +25,7 @@ double PID::compute( double setpoint, double pv ) {
 
     double d = de / dt; // derivative
 
-    double res = Kerr*de + Kint*Int + Kder*d; // total increment
+    double res = Kerr*e + Kint*Int + Kder*d; // total increment
 
     if (max >= min) { // clamp res
         if ( res > max ) res = max;
