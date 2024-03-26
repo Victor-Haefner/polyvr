@@ -19,8 +19,16 @@ class PID : public std::enable_shared_from_this<PID> {
         double Kerr = 0.1;
         double Kder = 0.1;
         double Kint = 0.01;
-        double Err = 0;
+        double Kwin = 0.01;
+        double maxRate = -1;
+        double ePrev = 0;
+        double dPrev = 0;
+        double dtPrev = 0;
         double Int = 0;
+
+        bool atRun;
+        double incrPrev = 0;
+        double incrSatPrev = 0;
 
         void clamp(double& v, const double& a, const double &b);
 
@@ -32,12 +40,13 @@ class PID : public std::enable_shared_from_this<PID> {
 		PIDPtr ptr();
 
 		double compute(double setpoint, double measurement);
-
 		double getIntegral();
 
-		void setBounds(double min, double max);
-		void setIntegralBounds(double min, double max);
+		void setBounds(double min, double max, double maxRate);
+		void setIntegralBounds(double min, double max, double Kw);
 		void setParameters(double Ke, double Kd, double Ki);
+
+		void setAutotune(bool run);
 };
 
 OSG_END_NAMESPACE;

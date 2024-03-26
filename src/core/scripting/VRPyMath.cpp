@@ -881,8 +881,8 @@ PyMethodDef VRPyPCA::methods[] = {
 PyMethodDef VRPyPID::methods[] = {
     {"compute", PyWrap2( PID, compute, "Compute increment (setpoint, measurement)", double, double, double ) },
     {"getIntegral", PyWrap2( PID, getIntegral, "Get integral", double ) },
-    {"setBounds", PyWrap2( PID, setBounds, "Clamp output (min, max)", void, double, double ) },
-    {"setIntegralBounds", PyWrap2( PID, setIntegralBounds, "Clamp integral (min, max)", void, double, double ) },
+    {"setBounds", PyWrap2( PID, setBounds, "Clamp output, clamp if max>min, clamp if maxRate>0 (min, max, maxRate)", void, double, double, double ) },
+    {"setIntegralBounds", PyWrap2( PID, setIntegralBounds, "Clamp integral, clamp if max>min (min, max, windupfactor)", void, double, double, double ) },
     {"setParameters", PyWrap2( PID, setParameters, "Set parameters (Kerr, Kint, Kder)", void, double, double, double ) },
     {NULL}  /* Sentinel */
 };

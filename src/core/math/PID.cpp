@@ -20,28 +20,44 @@ void PID::clamp(double& v, const double& a, const double &b) {
     if (v < a) v = a;
 }
 
-void PID::setBounds(double a, double b) { min = a; max = b; }
-void PID::setIntegralBounds(double a, double b) { imin = a; imax = b; }
+void PID::setBounds(double a, double b, double mR) { min = a; max = b; maxRate = mR; }
+void PID::setIntegralBounds(double a, double b, double Kw) { imin = a; imax = b; Kwin = Kw; }
 void PID::setParameters(double Ke, double Kd, double Ki) { Kerr = Ke; Kder = Kd; Kint = Ki; }
+
+void PID::setAutotune(bool run) { atRun = run; }
 
 double PID::compute( double setpoint, double pv ) {
     double dt = time->stop();
     time->reset();
     if (dt <= 1e-9) return 0;
 
-    double e = setpoint - pv;
-    double de = e-Err;
-    Err = e;
+    if (atRun) { // TODO
+        //Kp =
+    }
 
-    Int += e * dt; // integrate
+    double e = setpoint - pv;
+    double de = e-ePrev;
+
+    // integral term
+    double Dinc = incrSatPrev - incrPrev;
+    Int += Kint * e * dt + Kwin * Dinc * dt;
     clamp(Int, imin, imax);
 
-    double d = de / dt; // derivative
+    // derivative term
+    double d = (de + dtPrev * dPrev) / (dt + dtPrev);
 
-    double res = Kerr*e + Kint*Int + Kder*d; // total increment
+    ePrev = e;
+    dPrev = d;
+    dtPrev = dt;
+
+    // total increment
+    double res = Kerr*e + Int + Kder*d;
 
     //cout << "PID compute " << Kerr << ", " << Kder << ", " << Kint << ",   " << e << ", " << d << ", " << Int << endl;
 
+    incrPrev = res;
     clamp(res, min, max);
+    if (maxRate > 0) clamp(res, incrSatPrev - maxRate*dt, incrSatPrev + maxRate*dt);
+    incrSatPrev = res;
     return res;
 }
