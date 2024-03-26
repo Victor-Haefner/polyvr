@@ -126,17 +126,14 @@ bool VRPhysics::isSoft() { return bt.soft; }
 void VRPhysics::setFriction(float f) {
     friction = f;
     VRLock lock(VRPhysics_mtx());
-    bt.body->setFriction(btScalar(f));
+    if (bt.body) bt.body->setFriction(btScalar(f));
 }
 
 void VRPhysics::setDamping(float lin, float ang, bool f) {
     linDamping = lin;
     angDamping = ang;
-    if (!f) update();
-    else {
-        VRLock lock(VRPhysics_mtx());
-        bt.body->setDamping(btScalar(linDamping), btScalar(angDamping));
-    }
+    VRLock lock(VRPhysics_mtx());
+    if (bt.body) bt.body->setDamping(btScalar(linDamping), btScalar(angDamping));
 }
 
 OSG::Vec3d VRPhysics::getForce() { VRLock lock(VRPhysics_mtx()); return toVec3d(bt.constantForce); }

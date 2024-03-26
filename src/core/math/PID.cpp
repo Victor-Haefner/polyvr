@@ -12,7 +12,16 @@ PID::~PID() {}
 PIDPtr PID::create() { return PIDPtr( new PID() ); }
 PIDPtr PID::ptr() { return static_pointer_cast<PID>(shared_from_this()); }
 
+double PID::getIntegral() { return Int; }
+
+void PID::clamp(double& v, const double& a, const double &b) {
+    if (a > b) return;
+    if (v > b) v = b;
+    if (v < a) v = a;
+}
+
 void PID::setBounds(double a, double b) { min = a; max = b; }
+void PID::setIntegralBounds(double a, double b) { imin = a; imax = b; }
 void PID::setParameters(double Ke, double Kd, double Ki) { Kerr = Ke; Kder = Kd; Kint = Ki; }
 
 double PID::compute( double setpoint, double pv ) {
@@ -25,6 +34,7 @@ double PID::compute( double setpoint, double pv ) {
     Err = e;
 
     Int += e * dt; // integrate
+    clamp(Int, imin, imax);
 
     double d = de / dt; // derivative
 
@@ -32,10 +42,6 @@ double PID::compute( double setpoint, double pv ) {
 
     //cout << "PID compute " << Kerr << ", " << Kder << ", " << Kint << ",   " << e << ", " << d << ", " << Int << endl;
 
-    if (max >= min) { // clamp res
-        if ( res > max ) res = max;
-        else if ( res < min ) res = min;
-    }
-
+    clamp(res, min, max);
     return res;
 }

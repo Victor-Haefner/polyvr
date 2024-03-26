@@ -14,11 +14,15 @@ class PID : public std::enable_shared_from_this<PID> {
 
         double min = 1;
         double max = -1;
+        double imin = 1;
+        double imax = -1;
         double Kerr = 0.1;
         double Kder = 0.1;
         double Kint = 0.01;
         double Err = 0;
         double Int = 0;
+
+        void clamp(double& v, const double& a, const double &b);
 
 	public:
 		PID();
@@ -29,7 +33,10 @@ class PID : public std::enable_shared_from_this<PID> {
 
 		double compute(double setpoint, double measurement);
 
+		double getIntegral();
+
 		void setBounds(double min, double max);
+		void setIntegralBounds(double min, double max);
 		void setParameters(double Ke, double Kd, double Ki);
 };
 
