@@ -273,6 +273,10 @@ void VRTransform::setMatrixTo(Matrix4d m, VRObjectPtr obj) {
     setWorldMatrix(m1);
 }
 
+void VRTransform::setPoseTo(PosePtr p, VRObjectPtr o) {
+    if (p) setMatrixTo(p->asMatrix(), o);
+}
+
 Vec3d VRTransform::getRelativePosition(VRObjectPtr o, bool parentOnly) {
     return getRelativePose(o, parentOnly)->pos();
 }

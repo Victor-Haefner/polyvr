@@ -125,6 +125,7 @@ class VRTransform : public VRObject {
         void setPose(PosePtr p);
         virtual void setMatrix(Matrix4d m);
         void setMatrixTo(Matrix4d m, VRObjectPtr o);
+        void setPoseTo(PosePtr p, VRObjectPtr o);
 
         void getWorldMatrix(Matrix4d& _m, bool parentOnly = false);
         Matrix4d getWorldMatrix(bool parentOnly = false);

@@ -24,7 +24,7 @@ void PID::setBounds(double a, double b, double mR) { min = a; max = b; maxRate =
 void PID::setIntegralBounds(double a, double b, double Kw) { imin = a; imax = b; Kwin = Kw; }
 void PID::setParameters(double Ke, double Kd, double Ki) { Kerr = Ke; Kder = Kd; Kint = Ki; }
 
-void PID::setAutotune(bool run) { atRun = run; }
+void PID::setAutotune(bool run) { atRun = run; } // TO IMPLEMENT
 
 double PID::compute( double setpoint, double pv ) {
     double dt = time->stop();
@@ -35,8 +35,8 @@ double PID::compute( double setpoint, double pv ) {
         //Kp =
     }
 
-    double e = setpoint - pv;
-    double de = e-ePrev;
+    double e = setpoint - pv; // error between setpoint and measurement
+    double de = e-ePrev; // delta to previous error
 
     // integral term
     double Dinc = incrSatPrev - incrPrev;
