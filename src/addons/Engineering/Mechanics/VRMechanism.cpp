@@ -732,6 +732,7 @@ bool MChange::isNull() {
 MChange MPart::getChange() { return change; }
 
 void VRMechanism::updateNeighbors() {
+    for (auto p : parts) p->setup(); // update rAxis
     for (auto p : parts) p->apply(); // first apply the part transformations
     for (auto p : parts) p->updateNeighbors(parts);
 }
@@ -835,6 +836,15 @@ void VRMechanism::updateVisuals() {
                 geo->addVector(pos + a*w, u*(r-ts*0.5), Color3f(1,1,0));
                 geo->addVector(pos + a*w + u*(r-ts*0.5), u*ts, Color3f(0.9,0.4,0));
             }
+        }
+
+        if (p->type == "thread") {
+            double s = p->trans->getWorldScale()[0];
+            VRScrewThread* t = (VRScrewThread*)p->prim;
+            Vec3d a = ((MThread*)p)->rAxis;
+            Vec3d pos = Vec3d(p->reference[3]);
+            float w = t->length * s;
+            geo->addVector(pos, -a*w, Color3f(0.2,1,0.3));
         }
     }
 

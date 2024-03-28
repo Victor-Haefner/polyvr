@@ -231,6 +231,7 @@ void VRSnappingEngine::updateGhost(VRDevicePtr dev, VRTransformPtr obj) {
         ghostHook = VRTransform::create("ghostHook");
         ghostMat = VRMaterial::create("ghostMat");
         ghostMat->setDiffuse(Color3f(0,0.5,1.0));
+        ghostMat->setZOffset(-1,-1);
         ghostMat->setTransparency(0.4);
         ghostMat->ignoreMeshColors(true);
         ghostMat->addChild(ghostHook);
@@ -262,11 +263,11 @@ void VRSnappingEngine::updateGhost(VRDevicePtr dev, VRTransformPtr obj) {
     Matrix4d Mp = ghostHost->getWorldMatrix(true);
     Mp.inverse(Mpi);
 
-    Vec3d scale = ghostHost->getScale(); // conserve scale
-    ghostHost->setScale(Vec3d(1,1,1));
+    Matrix4d mscale;
+    mscale.setScale( ghostHost->getScale() );
     auto mo = ghostHost->getMatrix();
     mo.inverse(moi);
-    ghostHost->setScale(scale);
+    moi.multLeft(mscale);
 
     //    Mg = Me = Mp * mg * mo
     // -> mg = Mp_1 * Me * mo_1
