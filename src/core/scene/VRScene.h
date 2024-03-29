@@ -16,6 +16,7 @@
 #include "core/utils/VRFlags.h"
 #include "core/utils/VRUtilsFwd.h"
 #include "core/utils/VRTimer.h"
+#include "core/utils/VRGlobals.h"
 #include "VRBackground.h"
 #include "rendering/VRRenderManager.h"
 
@@ -46,6 +47,7 @@ class VRScene : public VRObjectGroupManager,
         string icon;
         //physics run in own thread
         int physicsThreadID;
+        VRGlobals::Int loadingFrame = 0;
 
         VRVisualLayerPtr referentials_layer;
         VRVisualLayerPtr cameras_layer;

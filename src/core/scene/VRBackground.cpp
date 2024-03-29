@@ -16,9 +16,12 @@
 #include "core/objects/geometry/VRSky.h"
 #include "core/tools/VRTextureRenderer.h"
 
-OSG_BEGIN_NAMESPACE;
-using namespace std;
+using namespace OSG;
 
+template<> string typeName(const VRBackground::TYPE* o) { return "Background type"; }
+template<> int toValue(stringstream& s, VRBackground::TYPE& t) { return 0; } // TODO
+
+OSG_BEGIN_NAMESPACE;
 
 class VRBackgroundBase {
     public:

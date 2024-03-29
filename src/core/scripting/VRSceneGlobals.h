@@ -39,6 +39,7 @@ class VRSceneGlobals: public VRPyBase {
 		static PyObject* setPhysicsTimestep(VRSceneGlobals* self, PyObject *args);
 		static PyObject* runTest(VRSceneGlobals* self, PyObject *args);
 		static PyObject* getSceneMaterials(VRSceneGlobals* self);
+		static PyObject* getBackground(VRSceneGlobals* self);
 		static PyObject* getSky(VRSceneGlobals* self);
 		static PyObject* getSoundManager(VRSceneGlobals* self);
 		static PyObject* getFrame(VRSceneGlobals* self);

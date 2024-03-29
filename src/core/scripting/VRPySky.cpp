@@ -5,6 +5,22 @@
 using namespace OSG;
 
 simpleVRPyType(Sky, New_toZero);
+simpleVRPyType(Background, New_toZero);
+
+template<> bool toValue(PyObject* o, VRBackground::TYPE& v) {
+    if (!PyString_Check(o)) return 0;
+    string s = PyString_AsString(o);
+    if (s == "SOLID") { v = VRBackground::SOLID; return 1; }
+    if (s == "IMAGE") { v = VRBackground::IMAGE; return 1; }
+    if (s == "SKYBOX") { v = VRBackground::SKYBOX; return 1; }
+    if (s == "SKY") { v = VRBackground::SKY; return 1; }
+    return 0;
+}
+
+PyMethodDef VRPyBackground::methods[] = {
+    {"setBackground", PyWrap(Background, setBackground, "Set the background type", void, VRBackground::TYPE) },
+    {NULL}  /* Sentinel */
+};
 
 PyMethodDef VRPySky::methods[] = {
     {"setTime", PyWrap(Sky, setTime, "Set the current date and time for the sky model, flt seconds, int hours, int days, int year", void, double, int, int, int) },

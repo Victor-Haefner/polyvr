@@ -79,6 +79,7 @@ PyMethodDef VRSceneGlobals::methods[] = {
 	{"setPhysicsTimestep", (PyCFunction)VRSceneGlobals::setPhysicsTimestep, METH_VARARGS, "Set physics timestep, default is 0.002, (single substep) - setPhysicsTimestep( double timestep )" },
 	{"runTest", (PyCFunction)VRSceneGlobals::runTest, METH_VARARGS, "Run a built-in system test - runTest( string test )" },
 	{"getSceneMaterials", (PyCFunction)VRSceneGlobals::getSceneMaterials, METH_NOARGS, "Get all materials of the scene - getSceneMaterials()" },
+	{"getBackground", (PyCFunction)VRSceneGlobals::getBackground, METH_NOARGS, "Get background module" },
 	{"getSky", (PyCFunction)VRSceneGlobals::getSky, METH_NOARGS, "Get sky module" },
 	{"getSoundManager", (PyCFunction)VRSceneGlobals::getSoundManager, METH_NOARGS, "Get sound manager module" },
 	{"getFrame", (PyCFunction)VRSceneGlobals::getFrame, METH_NOARGS, "Get current frame number" },
@@ -141,6 +142,12 @@ PyObject* VRSceneGlobals::getSoundManager(VRSceneGlobals* self) {
 #else
 	return 0;
 #endif
+}
+
+PyObject* VRSceneGlobals::getBackground(VRSceneGlobals* self) {
+    auto scene = VRScene::getCurrent();
+    auto bg = dynamic_pointer_cast<VRBackground>(scene);
+    return VRPyBackground::fromSharedPtr( bg );
 }
 
 PyObject* VRSceneGlobals::getSky(VRSceneGlobals* self) {

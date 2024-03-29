@@ -198,9 +198,7 @@ void VRSceneManager::setScene(VRScenePtr scene) {
 
     on_scene_load->triggerAll<VRDevice>();
 
-#ifndef WITHOUT_GTK
     VRGuiSignals::get()->getSignal("scene_changed")->triggerAll<VRDevice>(); // update gui
-#endif
 	cout << " VRSceneManager::setScene done" << endl;
 }
 

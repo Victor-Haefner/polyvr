@@ -1,8 +1,7 @@
 #include "VRScript.h"
-#ifndef WITHOUT_GTK
 #include "core/gui/VRGuiManager.h"
 #include "core/gui/VRGuiConsole.h"
-#endif
+
 #include <iostream>
 #include <functional>
 #include "core/scene/VRScene.h"
@@ -32,6 +31,7 @@
 #include "core/objects/material/VRMaterial.h"
 #include <frameobject.h>
 #include <pyerrors.h>
+
 
 using namespace OSG;
 
