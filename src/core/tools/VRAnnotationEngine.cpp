@@ -251,45 +251,35 @@ void VRAnnotationEngine::setLine(int i, Vec3d p, string str, bool ascii) {
     l.pos = p;
 
     vector<string> graphemes;
-    //vector<string> old_graphemes;
     if (!ascii) {
         l.Ngraphemes = VRText::countGraphemes(str);
         graphemes = VRText::splitGraphemes(str);
-        //old_graphemes = VRText::splitGraphemes(l.str);
     } else {
         l.Ngraphemes = str.size();
         graphemes = vector<string>(l.Ngraphemes);
-        //old_graphemes = vector<string>(l.str.size());
         for (int i=0; i<l.Ngraphemes; i++) graphemes[i] = str[i];
-        //for (int i=0; i<l.str.size(); i++) old_graphemes[i] = l.str[i];
     }
 
 #ifndef OSG_OGL_ES2
     if (hasGS) {
-        int N = ceil(l.Ngraphemes/2.0); // 3.0); // number of points, 2(3) chars per point
+        int Nc = 2; // number of points, 2 chars per vertex
+        int N = ceil(l.Ngraphemes/double(Nc));
         resize(l,p,N + 4); // plus 4 bounding points
 
         for (int j=0; j<N; j++) {
-            char c[] = {0,0,0};
+            int c[] = {0,0};
 
-            /*for (int k = 0; k<3; k++) { // 3 chars per vertex
-                if (j*3+k < (int)graphemes.size()) {
-                    string grapheme = graphemes[j*3+k];
+            for (int k = 0; k<Nc; k++) {
+                if (j*Nc+k < (int)graphemes.size()) {
+                    string grapheme = graphemes[j*Nc+k];
+                    if (!characterIDs.count(grapheme)) addGrapheme(grapheme);
                     c[k] = characterIDs[grapheme];
+                    cout << "char: '" << grapheme << "', ID: " << characterIDs[grapheme] << endl;
                 }
             }
-            float f = c[0] + c[1]*256 + c[2]*256*256;*/
-
-            for (int k = 0; k<2; k++) { // 2 chars per vertex (some drivers have trouble with more..)
-                if (j*2+k < (int)graphemes.size()) {
-                    string grapheme = graphemes[j*2+k];
-                    c[k] = characterIDs[grapheme];
-                }
-            }
-            float f = c[0] + c[1]*256;
 
             int k = l.entries[j];
-            data->setVert(k, p, Vec3d(f,0,j));
+            data->setVert(k, p, Vec3d(c[0],c[1],j));
         }
 
         // bounding points to avoid word clipping
@@ -312,10 +302,6 @@ void VRAnnotationEngine::setLine(int i, Vec3d p, string str, bool ascii) {
 
         for (int j=0; j<N; j++) {
             string grapheme = graphemes[j];
-            /*if (j < old_graphemes.size()) {
-                if (old_graphemes[j] == grapheme) continue;
-            }*/
-
             char c = characterIDs[grapheme] - 1;
             float u1 = P+c*D*2;
             float u2 = P+(c+1)*D*2;
@@ -369,14 +355,16 @@ void VRAnnotationEngine::setOrientation(Vec3d d, Vec3d u) {
     mat->setShaderParameter("orientationUp", Vec3f(u));
 }
 
+void VRAnnotationEngine::addGrapheme(string g) {
+    characters += g;
+    updateTexture();
+}
+
 void VRAnnotationEngine::updateTexture() {
-    string txt;
-    for (int i=32; i<127; i++) txt += char(i);
-    txt += "ÄÜÖäüöß€°^";
-    int cN = VRText::countGraphemes(txt);
+    int cN = VRText::countGraphemes(characters);
     int padding = 3;
     int spread = 6;
-    auto img = VRText::get()->create(txt, "Mono.ttf", 48, padding, fg, bg, oradius, oc, spread);
+    auto img = VRText::get()->create(characters, "Mono.ttf", 48, padding, fg, bg, oradius, oc, spread);
 
     float tW = img->getSize()[0];
     float lW = VRText::get()->layoutWidth;
@@ -389,7 +377,7 @@ void VRAnnotationEngine::updateTexture() {
     //img->write(getName()+"-annChars.png");
 
     int i=1; // 0 is used for invalid/no char
-    for (auto c : VRText::splitGraphemes(txt)) {
+    for (auto c : VRText::splitGraphemes(characters)) {
         characterIDs[c] = i;
         i++;
     }
@@ -544,26 +532,17 @@ void emitChar(in int d, in float p) {
     if (d >= 0) emitQuad(p, vec4(padding+d*f, padding+(d+1)*f, 0, 1));
 }
 
-void emitString(in float str, in float offset) {
-    int stri = int(str);
-    int c0 = stri;
-    int c1 = c0/256;
-    //int c2 = c1/256;
-    c0 = c0%256;
-    c1 = c1%256;
-    //c2 = c2%256;
+void emitString(in int c0, in int c1, in float offset) {
     if (c0 > 0) emitChar(c0, 2*offset);
     if (c1 > 0) emitChar(c1, 2*offset + 1);
-    /*if (c0 > 0) emitChar(c0, 3*offset);
-    if (c1 > 0) emitChar(c1, 3*offset + 1);
-    if (c2 > 0) emitChar(c2, 3*offset + 2);*/
 }
 
 void main() {
     orientationX = cross(orientationDir, orientationUp);
-    float str = normal[0][0];
+    float c0 = normal[0][0];
+    float c1 = normal[0][1];
     float offset = normal[0][2];
-    if (offset >= 0) emitString(str, offset);
+    if (offset >= 0) emitString(int(c0), int(c1), offset);
 }
 );
 

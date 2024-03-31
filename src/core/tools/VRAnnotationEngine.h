@@ -33,6 +33,7 @@ class VRAnnotationEngine : public VRGeometry {
 
         float charTexSize;
         float texPadding;
+        string characters;
         map<string, int> characterIDs;
 
         struct Label {
@@ -49,6 +50,7 @@ class VRAnnotationEngine : public VRGeometry {
 
         void resize(Label& l, Vec3d p, int N);
         void updateTexture();
+        void addGrapheme(string g);
         bool checkUIn(int i);
         void initialize();
 
