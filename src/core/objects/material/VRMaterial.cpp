@@ -231,7 +231,7 @@ struct VRMatData {
 }
 
 map<string, VRMaterialWeakPtr> VRMaterial::materials;
-map<Material*, VRMaterialWeakPtr> VRMaterial::materialsByPtr;
+map<size_t, VRMaterialWeakPtr> VRMaterial::materialsById;
 map<size_t, size_t> VRMaterial::fieldContainerMap;
 
 VRMaterial::VRMaterial(string name) : VRObject(name) {}
@@ -245,7 +245,7 @@ VRMaterialPtr VRMaterial::create(string name, bool reg) {
     p->init();
     Material* mat = p->getMaterial()->mat.get();
     if (reg) materials[p->getName()] = p;
-    if (reg) materialsByPtr[mat] = p;
+    if (reg) materialsById[mat->getId()] = p;
 #ifdef OSG_OGL_ES2
     p->updateOGL2Shader(); // TODO: find a better place!
 #endif
@@ -516,12 +516,12 @@ void VRMaterial::testFix() {
 
 void VRMaterial::clearAll() {
     materials.clear();
-    materialsByPtr.clear();
+    materialsById.clear();
 }
 
 vector<VRMaterialPtr> VRMaterial::getAll() {
     vector<VRMaterialPtr> res;
-    for (auto wm : materialsByPtr) if (auto m = wm.second.lock()) res.push_back(m);
+    for (auto wm : materialsById) if (auto m = wm.second.lock()) res.push_back(m);
     return res;
 }
 
@@ -600,21 +600,21 @@ void VRMaterial::prependPasses(VRMaterialPtr mat) {
 }
 
 VRMaterialPtr VRMaterial::get(MaterialMTRecPtr mat) {
-    Material* key = mat.get();
+    size_t key = mat->getId();
     VRMaterialPtr m;
-    if (materialsByPtr.count(key) == 0) {
+    if (materialsById.count(key) == 0) {
         m = VRMaterial::create("mat");
         m->setMaterial(mat);
-        materialsByPtr[key] = m;
+        materialsById[key] = m;
         return m;
-    } else if (materialsByPtr[key].lock() == 0) {
+    } else if (materialsById[key].lock() == 0) {
         m = VRMaterial::create("mat");
         m->setMaterial(mat);
-        materialsByPtr[key] = m;
+        materialsById[key] = m;
         return m;
     }
 
-    return materialsByPtr[key].lock();
+    return materialsById[key].lock();
 }
 
 VRMaterialPtr VRMaterial::get(string s) {

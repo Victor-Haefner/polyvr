@@ -966,6 +966,7 @@ target_sources(polyvr PRIVATE src/core/math/patch.cpp)
 target_sources(polyvr PRIVATE src/core/math/path.cpp)
 target_sources(polyvr PRIVATE src/core/math/partitioning/graph.cpp)
 target_sources(polyvr PRIVATE src/core/math/datarow.cpp)
+target_sources(polyvr PRIVATE src/core/math/PID.cpp)
 target_sources(polyvr PRIVATE src/core/navigation/VRNavigator.cpp)
 endif()
 

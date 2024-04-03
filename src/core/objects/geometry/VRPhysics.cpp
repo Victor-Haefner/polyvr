@@ -1431,7 +1431,7 @@ void VRPhysics::updateConstraint(VRPhysics* p) {
         double a = c->getMin(i);
         double b = c->getMax(i);
         //if (a <= b) {
-            double pi = M_PI;
+            const double pi = 3.14159265358979323846;
             if (i == 3) { a = min( max(-pi, a), pi ); b = min( max(-pi, b), pi ); } // clamp to -pi/pi
             if (i == 4) { a = min( max(-pi*0.5, a), pi*0.5 ); b = min( max(-pi*0.5, b), pi*0.5 ); } // clamp to -0.5pi/0.5pi
             if (i == 5) { a = min( max(-pi, a), pi ); b = min( max(-pi, b), pi ); } // clamp to -pi/pi
