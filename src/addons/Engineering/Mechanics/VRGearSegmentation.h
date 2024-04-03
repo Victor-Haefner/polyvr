@@ -31,6 +31,7 @@ class VRGearSegmentation {
         double matchEps = 1e-3;
         double ringEps = 1e-3;
 
+        void cleanup();
         void computeAxis();
         void computePolarVertices();
         void computePlanes();

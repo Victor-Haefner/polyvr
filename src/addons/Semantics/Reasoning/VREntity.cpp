@@ -159,10 +159,12 @@ vector<VRPropertyPtr> VREntity::getVector(const string& prop, int i) { // TODO
     if (!vp) return res;
     if (auto o = ontology.lock()) {
         auto ve = o->getEntity( vp->value ); // vector entity
-        if (auto p = ve->get("x")) res.push_back( p );
-        if (auto p = ve->get("y")) res.push_back( p );
-        if (auto p = ve->get("z")) res.push_back( p );
-        if (auto p = ve->get("w")) res.push_back( p );
+        if (ve) {
+            if (auto p = ve->get("x")) res.push_back( p );
+            if (auto p = ve->get("y")) res.push_back( p );
+            if (auto p = ve->get("z")) res.push_back( p );
+            if (auto p = ve->get("w")) res.push_back( p );
+        }
     }
     return res;
 }

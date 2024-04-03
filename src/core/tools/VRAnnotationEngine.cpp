@@ -274,7 +274,7 @@ void VRAnnotationEngine::setLine(int i, Vec3d p, string str, bool ascii) {
                     string grapheme = graphemes[j*Nc+k];
                     if (!characterIDs.count(grapheme)) addGrapheme(grapheme);
                     c[k] = characterIDs[grapheme];
-                    cout << "char: '" << grapheme << "', ID: " << characterIDs[grapheme] << endl;
+                    //cout << "char: '" << grapheme << "', ID: " << characterIDs[grapheme] << endl;
                 }
             }
 

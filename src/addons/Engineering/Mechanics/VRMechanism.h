@@ -143,6 +143,7 @@ class MGear : public MPart {
         Vec3d axis = Vec3d(0,0,-1);
         Vec3d offset = Vec3d(0,0,0);
         Vec3d rAxis;
+        Vec3d rOffset;
 
         MGear();
         ~MGear();

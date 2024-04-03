@@ -1,5 +1,6 @@
 #include "VRGearSegmentation.h"
 #include "core/utils/toString.h"
+#include "core/utils/isNan.h"
 #include "core/math/PCA.h"
 #include "core/math/VRSineFit.h"
 #include "core/math/partitioning/boundingbox.h"
@@ -44,6 +45,11 @@ VRGearSegmentation::VRGearSegmentation() {}
 VRGearSegmentation::~VRGearSegmentation() {}
 
 VRGearSegmentationPtr VRGearSegmentation::create() { return VRGearSegmentationPtr(new VRGearSegmentation()); }
+
+void VRGearSegmentation::cleanup() {
+    for (auto c : obj->findAll("gearSineFits")) c->destroy();
+    for (auto c : obj->findAll("gearContours")) c->destroy();
+}
 
 void VRGearSegmentation::computeAxis() {
     PCA pca;
@@ -182,6 +188,7 @@ void VRGearSegmentation::computeContours() {
             outerVertices.push_back(v);
             vLast = v;
         }
+
         sort(outerVertices.begin(), outerVertices.end(), sortCB); // sort by angles
 
 		//for (auto v : outerVertices) plane.contour.push_back(Vec2d(v.polarCoords[0], v.polarCoords[1]));
@@ -193,6 +200,10 @@ void VRGearSegmentation::computeContours() {
             double r1 = outerVertices[i-1].polarCoords[1];
             double a2 = outerVertices[i].polarCoords[0];
             double r2 = outerVertices[i].polarCoords[1];
+            if (a2-a1 > Pi*0.4) { // not a valid gear!
+                plane.contour.clear();
+                break;
+            }
 			while (di < a1) di += d;
 			if (di > a2) continue;
 			while (di < a2) {
@@ -207,14 +218,20 @@ void VRGearSegmentation::computeContours() {
 void VRGearSegmentation::computeSineApprox() {
     //Fit sin to the input time sequence, and store fitting parameters "amp", "omega", "phase", "offset", "freq", "period" and "fitfunc")
     for (VertexPlane& plane : planes) {
-        if (plane.contour.size() < 3) continue;
+        if (plane.contour.size() < 10) continue;
 
-        cout << "do fft for plane " << plane.position << endl;
+        cout << "do fft for plane " << plane.position << ", countour size: " << plane.contour.size() << endl;
 
         SineFit sineFit;
         sineFit.vertices = plane.contour;
         sineFit.compute(fftFreqHint);
-        plane.sineFits = sineFit.fits;
+
+        for (auto& fit : sineFit.fits) {
+            if (abs(fit.fit[1]) < 5) continue;
+            if (abs(fit.fit[1]) > 1000) continue;
+            if (isNan(fit.fit[1])) continue;
+            plane.sineFits.push_back(fit);
+        }
     }
 }
 
@@ -250,7 +267,7 @@ void VRGearSegmentation::computeGearParams(int fN) {
 		double r1 = rmax - 2*abs(fit1.fit[0]);
 		double ts = rmax - r1;
 		double R = rmax - ts*0.5;
-		double f = fit1.fit[1];
+		double f = abs(fit1.fit[1]);
 		//double pitch = R*sin(1.0/f)*4;
 		//double Nteeth = round(2*pi*R/pitch);
 		double Nteeth = round(f);
@@ -270,6 +287,7 @@ void VRGearSegmentation::analyse(VRObjectPtr o) {
     if (!o) return;
     obj = o;
     cout << "VRGearSegmentation::analyse " << o->getName() << endl;
+    cleanup();
     cout << "  computeAxis" << endl;
     computeAxis();          // main orientation of gear, also its rotation axis
     cout << "  computePolarVertices" << endl;
@@ -342,7 +360,8 @@ VRTransformPtr VRGearSegmentation::getSineFitViz(int precision) {
 	auto pc = getPolarCoords();
     size_t Np = getNPlanes();
     for (int i=0; i<Np; i++) {
-        auto s = getPlaneSineApprox(i);
+        auto s = getPlaneSineApprox(i, fftFreqSel);
+        //auto s = getPlaneSineGuess(i, fftFreqSel);
         if (s.size() != 4) continue;
         cout << "sineApprox " << i << " " << toString(s) << endl;
         auto p = getPlanePosition(i);
@@ -384,7 +403,7 @@ VRTransformPtr VRGearSegmentation::getContourViz() {
             float x = c[1]*cos(c[0]);
             float y = c[1]*sin(c[0]);
             Vec3d R = pc->transform(Vec3d(-y, x, 0), false);
-            Vec3d v = axisOffset + axis*p + R;
+            Vec3d v = axisOffset + axis*p + R*1.001; // a bit bigger to be sure it is visible!
             Color3f col(1, 0.3*(i%3), 1-0.3*(i%3));
             contour.pushVert(v, Vec3d(0,1,0), col);
             contour.pushPoint();

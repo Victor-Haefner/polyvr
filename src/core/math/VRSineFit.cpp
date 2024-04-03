@@ -32,7 +32,7 @@ vector<int> getArgMax(const vector<double>& Fyy, const vector<double>& ff, int o
     vector<int> r(N,0);
     vector<double> m(N,-1e6);
     for (unsigned int i=offset; i<Fyy.size(); i++) {
-        if (ff[i] < 0) continue;
+        //if (ff[i] < 0) continue; // gabler demo needs that, ok for FT?
         for (int j=0; j<N; j++) {
             if (Fyy[i] > m[j]) {
                 m[j] = Fyy[i];
@@ -52,24 +52,53 @@ vector<int> getArgMax(const vector<double>& Fyy, const vector<double>& ff, int o
 }
 
 struct FunctorSine {
+    typedef double Scalar;
     typedef Eigen::Matrix<double,Dynamic,1> InputType;
     typedef Eigen::Matrix<double,Dynamic,1> ValueType;
     typedef Eigen::Matrix<double,Dynamic,Dynamic> JacobianType;
+
+    enum {
+        InputsAtCompileTime = Dynamic,
+        ValuesAtCompileTime = Dynamic
+    };
 
     vector<double> X;
     vector<double> Y;
     int m_inputs = 4;
     int m_values = Dynamic;
+    double delta = 1.0;
 
     FunctorSine(vector<double> x, vector<double> y) : X(x), Y(y),  m_values(X.size()) {}
 
     int inputs() const { return m_inputs; }
     int values() const { return m_values; }
 
-    // the sine function
+    // the error to sine function
     int operator() (const VectorXd &p, VectorXd &f) const {
-        for (int i = 0; i < values(); i++) f[i] = Y[i] - (p[0] * sin(p[1]*X[i] + p[2]) + p[3]);
+        double totalResiduals = 0.0;
+        double totalLoss = 0.0;
+        for (int i = 0; i < values(); i++) {
+            if (Y[i] < 71.0) {
+                f[i] = 0;
+            }
+
+            double sine = p[0] * sin(p[1]*X[i] + p[2]) + p[3];
+            double residual = Y[i] - sine;
+            f[i] = residual;
+            //f[i] = huberLoss(residual, delta); // delta is a tuning parameter for Huber loss
+            totalLoss += f[i];
+            totalResiduals += residual;
+            //cout << "  residual: " << Y[i] << " - " << sine << " = " << residual << endl;
+        }
+
+        //cout << "  FunctorSine " << p[0] << ", " << p[1] << ", " << p[2] << ", " << p[3] << " --> " << totalLoss << ", " << totalResiduals << endl;
         return 0;
+    }
+
+    // reduce impact of outliers
+    double huberLoss(double residual, double delta) const {
+        if (abs(residual) <= delta) return 0.5 * residual * residual;
+        else return delta * (abs(residual) - 0.5 * delta);
     }
 
     /*
@@ -80,7 +109,7 @@ struct FunctorSine {
     */
 
     // jacoby matrices, contains the partial derivatives
-    int df(const VectorXd &p, MatrixXd &jac) const {
+    /*int df(const VectorXd &p, MatrixXd &jac) const {
         for (int i = 0; i < values(); i++) {
             jac(i,0) = -sin(p[1]*X[i] + p[2]);
             jac(i,1) = -p[0] * cos(p[1]*X[i] + p[2])*X[i];
@@ -88,7 +117,7 @@ struct FunctorSine {
             jac(i,3) = -1;
         }
         return 0;
-    }
+    }*/
 };
 
 double CalculateSSR(const Eigen::VectorXd& observed, const Eigen::VectorXd& fitted) {
@@ -134,30 +163,52 @@ void SineFit::compute(int fftFreqHint) {
     //cout << " ff " << toString(ff) << endl;
     //cout << " yy " << toString(Fyy) << endl;
 
+    /*enum Status {
+        NotStarted = -2,
+        Running = -1,
+        ImproperInputParameters = 0,
+        RelativeReductionTooSmall = 1,
+        RelativeErrorTooSmall = 2,
+        RelativeErrorAndReductionTooSmall = 3,
+        CosinusTooSmall = 4,
+        TooManyFunctionEvaluation = 5,
+        FtolTooSmall = 6,
+        XtolTooSmall = 7,
+        GtolTooSmall = 8,
+        UserAsked = 9
+    };*/
+
     vector<int> freqs = getArgMax(Fyy, ff, 1, fftFreqHint); // excluding the zero frequency "peak", which is related to offset
     for (auto FyyMaxPos : freqs) {
-        double guess_freq = abs(ff[FyyMaxPos]);
+        //double guess_freq = abs(ff[FyyMaxPos]);
+        double guess_freq = ff[FyyMaxPos];
 
         Fit sf;
-        sf.guess = {guess_amp, Df*guess_freq, 0, guess_offset}; //
+        sf.guess = { guess_amp, Df*guess_freq, 0, guess_offset }; //
         VectorXd x = Map<VectorXd>(&sf.guess[0], sf.guess.size());
+        //cout << "SineFit::compute guess, A: " << sf.guess[0] << " f: " << sf.guess[1] << ", ff: " << ff[FyyMaxPos] << ", Fyy: " << Fyy[FyyMaxPos] << endl;
 
         FunctorSine functor(X,Y);
-        LevenbergMarquardt<FunctorSine> lm(functor);
-        lm.parameters.factor = 100; // 100
-        lm.parameters.maxfev = 100*(x.size()+1); // 400
+        functor.delta = guess_amp*0.1;
+        //LevenbergMarquardt<FunctorSine> lm(functor);
+        NumericalDiff<FunctorSine> numDiff(functor);
+        LevenbergMarquardt<NumericalDiff<FunctorSine>,double> lm(numDiff);
+
+        lm.parameters.factor = 100; // 100 // step size in the optimization process
+        lm.parameters.maxfev = 100*(x.size()+1); // 400  // max number of iterations
         lm.parameters.ftol = 1e-6; // eps
         lm.parameters.xtol = 1e-6; // eps
         lm.parameters.gtol = 0; // 0
         lm.parameters.epsfcn = 0; // 0
-        int info = lm.minimize(x);
+        int status = lm.minimize(x);
         sf.fit = vector<double>( x.data(), x.data() + 4 );
         sf.quality = lm.fnorm;
 
-        //sf.fit[0] = guess_amp;
-        //sf.fit[1] = guess_freq;
 
-        //cout << "SineFit::compute guess_freq: " << guess_freq << " (" << FyyMaxPos << ") -> comp_freq: " << sf.fit[1] << endl;
+        //sf.fit[0] = sf.guess[0];
+        //sf.fit[1] = sf.guess[1];
+
+        //cout << " SineFit::compute fit, A: " << sf.fit[0] << ", f: " << sf.fit[1] << ", qual: " << sf.quality << ", status: " << status << ", max itr: " << lm.parameters.maxfev << endl;
         fits.push_back(sf);
     }
 }

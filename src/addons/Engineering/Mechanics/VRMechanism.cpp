@@ -182,8 +182,8 @@ MGearGearRelation* checkGearGear(MGear* p1, MGear* p2) {
     double s2 = p2->geo->getWorldScale()[0];
     Matrix4d r1 = p1->reference;
     Matrix4d r2 = p2->reference;
-    Vec3d P1 = Vec3d(r1[3]) + p1->offset;//*s1;
-    Vec3d P2 = Vec3d(r2[3]) + p2->offset;//*s2;
+    Vec3d P1 = Vec3d(r1[3]) + p1->rOffset;//*s1;
+    Vec3d P2 = Vec3d(r2[3]) + p2->rOffset;//*s2;
     Vec3d a1 = p1->rAxis;
     Vec3d a2 = p2->rAxis;
     Vec3d n1 = a1; n1.normalize();
@@ -247,7 +247,7 @@ MRelation* checkGearThread(MGear* p1, MThread* p2) {
     double s2 = p2->geo->getWorldScale()[0];
     Matrix4d r1 = p1->reference;
     Matrix4d r2 = p2->reference;
-    Vec3d P1 = Vec3d(r1[3]) + p1->offset;//*s1;
+    Vec3d P1 = Vec3d(r1[3]) + p1->rOffset;//*s1;
     Vec3d P2 = Vec3d(r2[3]);
     Vec3d a1 = p1->rAxis;
     Vec3d a2 = p2->rAxis;
@@ -686,6 +686,7 @@ void MGear::setup() {
     auto m = trans->getWorldMatrix();
     //auto m = trans->getMatrix();
     m.mult(axis, rAxis);
+    m.mult(offset, rOffset);
     rAxis.normalize();
 }
 
@@ -798,7 +799,7 @@ void VRMechanism::updateVisuals() {
             double s = p->trans->getWorldScale()[0];
             VRGear* g = (VRGear*)p->prim;
             Vec3d a = ((MGear*)p)->rAxis;
-            Vec3d o = ((MGear*)p)->offset;
+            Vec3d o = ((MGear*)p)->rOffset;
             float w = g->width*0.5 * s;
             auto u = Vec3d(0,1,0); // TODO: change to orthogonal to a!
             float ts = g->teeth_size * s;
@@ -814,7 +815,7 @@ void VRMechanism::updateVisuals() {
             float d = p->change.n.dot(a);
             if (abs(d) > 1e-2) A /= d;
             geo->addVector(cP, p->change.n*w, Color3f(0.9,0,0.7)); // change rot axis
-            geo->addVector(cP, t*A, Color3f(0.6,0,0.4)); // tangant * angle
+            geo->addVector(cP, t*A, Color3f(0.6,0,0.4)); // tangent * angle
             geo->addVector(cP, u*A, Color3f(0.2,0,0.4)); // up * angle
 
 
@@ -823,7 +824,7 @@ void VRMechanism::updateVisuals() {
                 if (p2.first->type != "gear") continue;
                 if (p2.second->type != "gear") continue;
                 auto pos2 = Vec3d(p2.first->reference[3]);
-                pos2 += ((MGear*)p2.first)->offset;
+                pos2 += ((MGear*)p2.first)->rOffset;
                 auto d = pos2-pos;
                 d.normalize();
                 float ts = g->teeth_size * s;
@@ -851,12 +852,12 @@ void VRMechanism::updateVisuals() {
     // visualize neighbor relations
     for (auto p1 : parts) {
         auto pos1 = Vec3d(p1->reference[3]);
-        if (p1->type == "gear") pos1 += ((MGear*)p1)->offset;
+        if (p1->type == "gear") pos1 += ((MGear*)p1)->rOffset;
         for (auto p2 : p1->neighbors) {
             auto color = Color3f(0.4,0.6,1.0);
             if (p1->type == "chain" || p2.first->type == "chain") color = Color3f(1.0,0.6,0.4);
             auto pos2 = Vec3d(p2.first->reference[3]);
-            if (p2.first->type == "gear") pos2 += ((MGear*)p2.first)->offset;
+            if (p2.first->type == "gear") pos2 += ((MGear*)p2.first)->rOffset;
             Vec3d d = (pos2-pos1)*0.45;
             geo->addVector(pos1, d, color);
         }
@@ -866,7 +867,7 @@ void VRMechanism::updateVisuals() {
     for (auto cp : changed_parts) { // TODO: only the externally changed!
         double s = cp->geo->getWorldScale()[0];
         auto pos1 = Vec3d(cp->reference[3]);
-        if (cp->type == "gear") pos1 += ((MGear*)cp)->offset;
+        if (cp->type == "gear") pos1 += ((MGear*)cp)->rOffset;
 
         Vec3d n = Vec3d(0,1,0);
         if (cp->type == "gear") n = ((MGear*)cp)->rAxis;

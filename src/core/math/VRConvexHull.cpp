@@ -66,7 +66,7 @@ VRGeometryPtr VRConvexHull::compute(VRGeometryPtr geo) {
         Polyhedron poly; // define polyhedron to hold convex hull
         CGAL::convex_hull_3(points.begin(), points.end(), poly); // compute convex hull of non-collinear points
         res = toGeometry(poly, "convexHull");
-    } catch( exception e ) { cout << "ARGH\n" << e.what() << endl; res = 0; }
+    } catch( exception e ) { cout << "Exception in VRConvexHull::compute\n" << e.what() << endl; res = 0; }
     return res;
 }
 

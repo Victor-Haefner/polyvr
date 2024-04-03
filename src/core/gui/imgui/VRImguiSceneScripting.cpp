@@ -418,7 +418,7 @@ void ImScriptEditor::render() {
             renderCombo(t.trigger, triggerTypes, "trigType-"+t.name, "script_editor_change_trigger_type", t.name); ImGui::SameLine();
             renderInput(t.parameter, "trigParam-"+t.name, "script_editor_change_trigger_param", t.name); ImGui::SameLine();
             renderCombo(t.device, device_types, "trigDevice-"+t.name, "script_editor_change_trigger_device", t.name); ImGui::SameLine();
-            ImGui::PushItemWidth(16);
+            ImGui::PushItemWidth(w*0.07);
             renderInput(t.key, "trigKey-"+t.name, "script_editor_change_trigger_key", t.name); ImGui::SameLine();
             ImGui::PopItemWidth();
             renderCombo(t.state, trigger_states, "trigState-"+t.name, "script_editor_change_trigger_state", t.name);
