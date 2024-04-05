@@ -84,12 +84,12 @@ VRGeoData::VRGeoData(VRGeometryPtr geo) : pend(this, 0) {
         };
 
         getTexCoords(0, geo->getMesh()->geo->getTexCoords());
-        getTexCoords(1, geo->getMesh()->geo->getTexCoords());
-        getTexCoords(2, geo->getMesh()->geo->getTexCoords());
-        getTexCoords(3, geo->getMesh()->geo->getTexCoords());
-        getTexCoords(4, geo->getMesh()->geo->getTexCoords());
-        getTexCoords(5, geo->getMesh()->geo->getTexCoords());
-        getTexCoords(6, geo->getMesh()->geo->getTexCoords());
+        getTexCoords(1, geo->getMesh()->geo->getTexCoords1());
+        getTexCoords(2, geo->getMesh()->geo->getTexCoords2());
+        getTexCoords(3, geo->getMesh()->geo->getTexCoords3());
+        getTexCoords(4, geo->getMesh()->geo->getTexCoords4());
+        getTexCoords(5, geo->getMesh()->geo->getTexCoords5());
+        getTexCoords(6, geo->getMesh()->geo->getTexCoords6());
 
         GeoVectorPropertyMTRecPtr cols = geo->getMesh()->geo->getColors();
         int Nc = data->getVectorChannels(cols);
