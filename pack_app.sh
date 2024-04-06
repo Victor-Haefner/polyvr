@@ -24,6 +24,10 @@ rm -rf $pckFolder/*
 if [ -n "$appFolder" ]; then # check is appFolder given
 	echo " copy app data"
 	cp -r $appFolder/* $pckFolder/
+else # sign polyvr executable
+	if [ -e sign_polyvr.sh ]; then
+		./sign_polyvr.sh
+	fi
 fi
 
 echo " copy polyvr"
@@ -63,6 +67,14 @@ set PATH=%PATH%;%~f0\..\engine\libs;
 set PYTHONPATH=%PYTHONPATH%;%~f0\..\engine\pyLibs
 cd engine
 polyvr.exe --maximized=1 --application ../$appProject
+EOT
+cat <<EOT >> $pckFolder/startAppNoTerm.vbs
+Set WshShell = CreateObject("WScript.Shell")
+WshShell.Environment("Process")("PATH") = WshShell.Environment("Process")("PATH") & ";" & WshShell.CurrentDirectory & "\engine\libs"
+WshShell.Environment("Process")("PYTHONPATH") = WshShell.Environment("Process")("PYTHONPATH") & ";" & WshShell.CurrentDirectory & "\engine\pyLibs"
+WshShell.CurrentDirectory = WshShell.CurrentDirectory & "\engine"
+WshShell.Run "polyvr.exe --maximized=1 --application ../$appProject", 0
+Set WshShell = Nothing
 EOT
 else
 cat <<EOT >> $pckFolder/startApp.bat
