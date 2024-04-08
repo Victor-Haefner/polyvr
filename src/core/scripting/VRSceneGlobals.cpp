@@ -400,19 +400,25 @@ PyObject* VRSceneGlobals::joinThread(VRSceneGlobals* self, PyObject *args) {
 }
 
 PyObject* VRSceneGlobals::stackCall(VRSceneGlobals* self, PyObject *args) {
-    PyObject *pyFkt, *pArgs = 0;
-    float delay;
-    if (PyTuple_Size(args) == 2) {
-        if (! PyArg_ParseTuple(args, "Of", &pyFkt, &delay)) return NULL;
-    } else if (! PyArg_ParseTuple(args, "OfO", &pyFkt, &delay, &pArgs)) return NULL;
+    PyObject* pyFkt = 0;
+    PyObject* pArgs = 0;
+    float delay = 0;
+
+    if (! PyArg_ParseTuple(args, "Of|O", &pyFkt, &delay, &pArgs)) return NULL;
+    if (!pyFkt) { VRPyBase::setErr("Error: expected valid callback!"); return NULL; }
     Py_IncRef(pyFkt);
 
+    std::string type;
+    PyObject* cargs = 0;
     if (pArgs != 0) {
-        std::string type = pArgs->ob_type->tp_name;
-        if (type == "list") pArgs = PyList_AsTuple(pArgs);
+        type = pArgs->ob_type->tp_name;
+        if (type == "tuple") cargs = pArgs;
+        if (type == "list") cargs = PyList_AsTuple(pArgs);
     }
 
-    auto fkt = VRAnimCb::create( "pyExecCall", bind(execCall, pyFkt, pArgs, _1) );
+    if (pArgs && !cargs) { VRPyBase::setErr("Error: expected list or tuple, not " + type); return NULL; }
+
+    auto fkt = VRAnimCb::create( "pyExecCall", bind(execCall, pyFkt, cargs, _1) );
     auto a = VRScene::getCurrent()->addAnimation(0, delay, fkt, 0.f, 0.f, false, true);
     Py_RETURN_TRUE;
 }

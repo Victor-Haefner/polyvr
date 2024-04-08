@@ -243,7 +243,7 @@ static void mg_flash_sector_cleanup(char *sector) {
   MG_DEBUG(("Cleaning up sector %p", sector));
   while ((n = mg_flash_next(sector + ofs, sector + ss, &key, &size)) > 0) {
     // Delete an old copy of this object in the cache
-    for (size_t o = 0; o < io.len; o += size2 + hs) { 
+    for (size_t o = 0; o < io.len; o += size2 + hs) {
       uint32_t k = *(uint32_t *) (io.buf + o + sizeof(uint32_t));
       size2 = *(uint32_t *) (io.buf + o);
       if (k == key) {
@@ -252,7 +252,7 @@ static void mg_flash_sector_cleanup(char *sector) {
       }
     }
     // And add the new copy
-    mg_iobuf_add(&io, io.len, sector + ofs, size + hs);  
+    mg_iobuf_add(&io, io.len, sector + ofs, size + hs);
     ofs += n;
   }
   // All objects are cached in RAM now
@@ -902,7 +902,7 @@ void mg_error(struct mg_connection *c, const char *fmt, ...) {
   va_start(ap, fmt);
   mg_vsnprintf(buf, sizeof(buf), fmt, &ap);
   va_end(ap);
-  MG_ERROR(("%lu %ld %s", c->id, c->fd, buf));
+  //MG_ERROR(("%lu %ld %s", c->id, c->fd, buf));
   c->is_closing = 1;             // Set is_closing before sending MG_EV_CALL
   mg_call(c, MG_EV_ERROR, buf);  // Let user handler to override it
 }
@@ -6613,7 +6613,7 @@ static void connect_conn(struct mg_connection *c) {
     MG_EPOLL_MOD(c, 0);
     if (c->is_tls_hs) mg_tls_handshake(c);
   } else {
-    mg_error(c, "socket error");
+    mg_error(c, "socket error in getpeername");
   }
 }
 
@@ -6768,7 +6768,7 @@ static void mg_iotest(struct mg_mgr *mgr, int ms) {
   for (int i = 0; i < n; i++) {
     struct mg_connection *c = (struct mg_connection *) evs[i].data.ptr;
     if (evs[i].events & EPOLLERR) {
-      mg_error(c, "socket error");
+      mg_error(c, "socket timeout");
     } else if (c->is_readable == 0) {
       bool rd = evs[i].events & (EPOLLIN | EPOLLHUP);
       bool wr = evs[i].events & EPOLLOUT;
@@ -6812,7 +6812,7 @@ static void mg_iotest(struct mg_mgr *mgr, int ms) {
       c->is_readable = 1;
     } else {
       if (fds[n].revents & POLLERR) {
-        mg_error(c, "socket error");
+        mg_error(c, "socket timeout");
       } else {
         c->is_readable =
             (unsigned) (fds[n].revents & (POLLIN | POLLHUP) ? 1 : 0);
@@ -6855,7 +6855,7 @@ static void mg_iotest(struct mg_mgr *mgr, int ms) {
 
   for (c = mgr->conns; c != NULL; c = c->next) {
     if (FD(c) != MG_INVALID_SOCKET && FD_ISSET(FD(c), &eset)) {
-      mg_error(c, "socket error");
+      mg_error(c, "socket error, fd is set");
     } else {
       c->is_readable = FD(c) != MG_INVALID_SOCKET && FD_ISSET(FD(c), &rset);
       c->is_writable = FD(c) != MG_INVALID_SOCKET && FD_ISSET(FD(c), &wset);

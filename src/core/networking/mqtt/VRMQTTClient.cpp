@@ -99,6 +99,8 @@ void fn(struct mg_connection *c, int ev, void *ev_data, void *fn_data) {
     }
 
     if (ev == MG_EV_ERROR) { // On error
+        string e = string((char*)ev_data);
+        if (e == "socket timeout") return; // ignore timeout message
         MG_ERROR(("%lu ERROR %s", c->id, (char *) ev_data));
     }
 

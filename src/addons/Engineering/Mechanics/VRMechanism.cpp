@@ -68,7 +68,7 @@ MPart* MPart::make(VRTransformPtr g, VRTransformPtr t) {
     if (!geo) { cout << " Warning, not a geometry!" << endl; return 0; }
     if (!geo->getPrimitive()) { cout << " Warning, not a primitive!" << endl; return 0; }
     string type = geo->getPrimitive()->getType();
-    cout << "mechanism, make part: " << type << endl;
+    //cout << "mechanism, make part: " << type << endl;
     MPart* p = 0;
     if (type == "Gear") p = new MGear();
     if (type == "Thread") p = new MThread();
@@ -655,7 +655,7 @@ void VRMechanism::clear() {
 }
 
 void VRMechanism::add(VRTransformPtr part, VRTransformPtr trans) {
-    cout << "mechanism, add: " << part->getName() << endl;
+    //cout << "mechanism, add: " << part->getName() << endl;
     MPart* p = MPart::make(part, trans);
     if (p == 0) return;
 

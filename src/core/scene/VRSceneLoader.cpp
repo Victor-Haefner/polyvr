@@ -193,8 +193,11 @@ VRObjectPtr VRSceneLoader::importScene(string path, string encryptionKey, bool o
 #endif
 
     XMLElementPtr sceneN = xml.getRoot();
+    if (!sceneN) return 0;
     XMLElementPtr objectsN = sceneN->getChild("Objects");
+    if (!objectsN) return 0;
     XMLElementPtr root = objectsN->getChild(0);
+    if (!root) return 0;
 
     auto scene = VRScene::getCurrent();
     auto rootNode = VRObject::create("sceneProxy");

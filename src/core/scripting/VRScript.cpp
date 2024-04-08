@@ -218,6 +218,7 @@ VRScript::argPtr VRScript::addArgument() {
 }
 
 PyObject* VRScript::getPyObj(argPtr a) {
+    if (!a) Py_RETURN_NONE;
     updateArgPtr(a);
     if (a->type == "int") return Py_BuildValue("i", toInt(a->val.c_str()));
     else if (a->type == "float") return Py_BuildValue("f", toFloat(a->val.c_str()));
@@ -435,6 +436,11 @@ void VRScript::printSyntaxError(PyObject *exception, PyObject *value, PyObject *
         VRConsoleWidget::get( "Syntax" )->write( m, style, link );
     };
 
+    if (!value) {
+        cout << "Warning in printSyntaxError! value is 0!" << endl;
+        return;
+    }
+
     int err = 0;
     Py_INCREF(value);
     if (Py_FlushLine()) PyErr_Clear();
@@ -556,13 +562,16 @@ void VRScript::execute() {
 
         VRTimer timer; timer.start();
         auto args = getArguments();
-        PyObject* pArgs = PyTuple_New(args.size());
+        int N = args.size();
+        PyObject* pArgs = PyTuple_New(N);
+        for (int i=0; i<N; i++) { Py_INCREF(Py_None); PyTuple_SetItem(pArgs, i, Py_None); }
         pyErrPrint("Errors");
 
         int i=0;
         for (auto a : args) {
+            if (!a) continue;
             a->pyo = getPyObj(a);
-            PyTuple_SetItem(pArgs, i, a->pyo);
+            if (a->pyo) PyTuple_SetItem(pArgs, i, a->pyo);
             pyErrPrint("Errors");
             i++;
         }
@@ -573,7 +582,7 @@ void VRScript::execute() {
 
         execution_time = timer.stop();
 
-        Py_XDECREF(pArgs); // TODO: segfault!
+        Py_XDECREF(pArgs);
         pyErrPrint("Errors");
         PyGILState_Release(gstate);
     }
