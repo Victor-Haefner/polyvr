@@ -97,7 +97,7 @@ void loadVtk(string path, VRTransformPtr res) {
 
         if (type == "vtkTetra") {
             auto j = getCellPIDs(c); // size: 4
-            geo.pushTri(j[0], j[1], j[2]);
+            geo.pushTri(j[0], j[2], j[1]);
             geo.pushTri(j[0], j[1], j[3]);
             geo.pushTri(j[1], j[2], j[3]);
             geo.pushTri(j[2], j[0], j[3]);
@@ -106,7 +106,7 @@ void loadVtk(string path, VRTransformPtr res) {
 
         if (type == "vtkPyramid") {
             auto j = getCellPIDs(c); // size: 5
-            geo.pushQuad(j[0], j[1], j[2], j[3]);
+            geo.pushQuad(j[0], j[3], j[2], j[1]);
             geo.pushTri(j[0], j[1], j[4]);
             geo.pushTri(j[1], j[2], j[4]);
             geo.pushTri(j[2], j[3], j[4]);
@@ -117,16 +117,16 @@ void loadVtk(string path, VRTransformPtr res) {
         if (type == "vtkWedge") {
             auto j = getCellPIDs(c); // size: 6
             geo.pushTri(j[0], j[1], j[2]);
-            geo.pushTri(j[3], j[4], j[5]);
-            geo.pushQuad(j[0], j[1], j[4], j[3]);
-            geo.pushQuad(j[1], j[2], j[5], j[4]);
-            geo.pushQuad(j[2], j[0], j[3], j[5]);
+            geo.pushTri(j[3], j[5], j[4]);
+            geo.pushQuad(j[0], j[3], j[4], j[1]);
+            geo.pushQuad(j[1], j[4], j[5], j[2]);
+            geo.pushQuad(j[2], j[5], j[3], j[0]);
             continue;
         }
 
         if (type == "vtkHexahedron") {
             auto j = getCellPIDs(c); // size: 8
-            geo.pushQuad(j[0], j[1], j[2], j[3]);
+            geo.pushQuad(j[0], j[3], j[2], j[1]);
             geo.pushQuad(j[4], j[5], j[6], j[7]);
             geo.pushQuad(j[0], j[1], j[5], j[4]);
             geo.pushQuad(j[1], j[2], j[6], j[5]);
