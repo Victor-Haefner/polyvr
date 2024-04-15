@@ -8,10 +8,10 @@ namespace OSG {
 ptrFwd(VRSetup);
 ptrFwd(VRView);
 ptrFwd(VRWindow);
-ptrFwd(VRGtkWindow);
 ptrFwd(VRGlutWindow);
 ptrFwd(VRGlutEditor);
 ptrFwd(VRMultiWindow);
+ptrFwd(VRCocoaWindow);
 ptrFwd(VRHeadMountedDisplay);
 ptrFwd(VRWebXR);
 ptrFwd(VRNetwork);

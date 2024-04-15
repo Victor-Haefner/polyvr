@@ -4437,6 +4437,12 @@
 			<Option target="Release" />
 			<Option target="PVR-Setup-d" />
 		</Unit>
+		<Unit filename="src/core/setup/windows/VRCocoaWindow.cpp">
+			<Option target="PVR-Setup-d" />
+		</Unit>
+		<Unit filename="src/core/setup/windows/VRCocoaWindow.h">
+			<Option target="PVR-Setup-d" />
+		</Unit>
 		<Unit filename="src/core/setup/windows/VRGlutEditor.cpp">
 			<Option target="Release" />
 			<Option target="PVR-Setup-d" />

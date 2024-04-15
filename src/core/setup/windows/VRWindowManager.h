@@ -33,6 +33,7 @@ class VRWindowManager {
 
         VRWindowPtr addGlutWindow  (string name);
         VRWindowPtr addGlutEditor  (string name);
+        VRWindowPtr addCocoaWindow (string name);
         VRWindowPtr addMultiWindow (string name);
         void removeWindow   (string name);
 
