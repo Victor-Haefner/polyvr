@@ -51,6 +51,7 @@ cp -r /usr/lib/STEPcode/* $engFolder/libs/
 cp -r /usr/lib/OCE/* $engFolder/libs/
 cp -r /usr/lib/OPCUA/* $engFolder/libs/
 cp -r /usr/lib/DWG/* $engFolder/libs/
+cp -r /usr/lib/x86_64-linux-gnu/nss/* $engFolder/libs/
 
 echo " copy system libs"
 syslibs=$(ldd bin/Debug/VRFramework | awk 'NF == 4 {print $3}; NF == 2 {print $1}');
