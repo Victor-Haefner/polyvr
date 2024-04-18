@@ -50,11 +50,12 @@ PyMethodDef VRPySoundManager::methods[] = {
 PyMethodDef VRPyMicrophone::methods[] = {
     {"startRecording", PyWrap(Microphone, startRecording, "Starts to record from microphone", void) },
     {"stopRecording", PyWrap(Microphone, stopRecording, "Stops the recording, returns sound", VRSoundPtr) },
-    {"startStreaming", PyWrap(Microphone, startStreaming, "Start streaming to (addr, port)", void, string, int) },
-    {"startStreamingOver", PyWrap(Microphone, startStreamingOver, "Start streaming over tcp client", void, VRNetworkClientPtr) },
+    {"startStreaming", PyWrapOpt(Microphone, startStreaming, "Start streaming to (addr, port, method = 'mp3'), method is mp3 or raw", "mp3", void, string, int, string) },
+    {"startStreamingOver", PyWrapOpt(Microphone, startStreamingOver, "Start streaming over tcp (client, method)", "mp3", void, VRNetworkClientPtr, string) },
     {"pauseStreaming", PyWrap(Microphone, pauseStreaming, "Pause streaming", void, bool) },
     {"stopStreaming", PyWrap(Microphone, stopStreaming, "Stop streaming", void) },
     {"isStreaming", PyWrap(Microphone, isStreaming, "Check if streaming", bool) },
     {"simSource", PyWrap(Microphone, simSource, "Simulate input source, (active, frequency, period1, period2)", void, bool, float, float, float) },
+    {"getAmplitude", PyWrap(Microphone, getAmplitude, "Get recording amplitude", double) },
     {NULL}  /* Sentinel */
 };
