@@ -48,6 +48,7 @@ PyMethodDef VRPySoundManager::methods[] = {
 };
 
 PyMethodDef VRPyMicrophone::methods[] = {
+    {"setSampleRate", PyWrap(Microphone, setSampleRate, "Set sample rate", void, int) },
     {"startRecording", PyWrap(Microphone, startRecording, "Starts to record from microphone", void) },
     {"stopRecording", PyWrap(Microphone, stopRecording, "Stops the recording, returns sound", VRSoundPtr) },
     {"startStreaming", PyWrapOpt(Microphone, startStreaming, "Start streaming to (addr, port, method = 'mp3'), method is mp3 or raw", "mp3", void, string, int, string) },

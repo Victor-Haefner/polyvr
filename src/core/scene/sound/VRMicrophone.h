@@ -54,7 +54,6 @@ class VRMicrophone : public std::enable_shared_from_this<VRMicrophone> {
 	    int queuedStream = 0; // frames streamed at the beginning
 
 	    bool doSim = false;
-	    int sampleRate = 22050;
 	    float frequency = 440;
 	    float period1 = 0;
 	    float period2 = 0;

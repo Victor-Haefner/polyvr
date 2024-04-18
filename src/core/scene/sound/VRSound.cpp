@@ -803,6 +803,7 @@ bool VRSound::setupOutStream(string url, int port, string method) { // TODO: mak
 }
 
 void VRSound::streamBuffer(VRSoundBufferPtr frame, string method) {
+    if (!frame || frame->size == 0) return;
     if (method == "mp3") write_buffer(muxer, audio_ost, frame);
     if (method == "raw") writeStreamData( string((char*)frame->data, frame->size) );
 }

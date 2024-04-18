@@ -18,7 +18,12 @@ const double Pi  = 3.141592653589793;
 
 using namespace OSG;
 
-VRMicrophone::VRMicrophone() { setup(); }
+VRMicrophone::VRMicrophone() {
+    streamMutex = new VRMutex();
+    paramsMutex = new VRMutex();
+
+    setup();
+}
 
 VRMicrophone::~VRMicrophone() {
     stop();
@@ -30,11 +35,11 @@ VRMicrophone::~VRMicrophone() {
 VRMicrophonePtr VRMicrophone::create() { return VRMicrophonePtr( new VRMicrophone() ); }
 VRMicrophonePtr VRMicrophone::ptr() { return static_pointer_cast<VRMicrophone>(shared_from_this()); }
 
-void VRMicrophone::setup() {
-    streamMutex = new VRMutex();
-    paramsMutex = new VRMutex();
+void VRMicrophone::setSampleRate(int rate) { sample_rate = rate; setup(); }
 
+void VRMicrophone::setup() {
     alGetError();
+    if (device) alcCaptureCloseDevice(device);
     device = alcCaptureOpenDevice(NULL, sample_rate, AL_FORMAT_MONO16, sample_rate);
     if (alGetError() != AL_NO_ERROR) {
         cout << "No microphone device found!" << endl;
@@ -183,7 +188,7 @@ void VRMicrophone::startRecordingThread() {
 }
 
 void VRMicrophone::startStreamingThread(string method) {
-    auto streamCb = [&]() {
+    auto streamCb = [&](string method) {
         streaming = true;
 
         while (doStream) {
@@ -218,10 +223,8 @@ void VRMicrophone::startStreamingThread(string method) {
         streaming = false;
     };
 
-    streamingThread = new thread(streamCb);
+    streamingThread = new thread(streamCb, method);
 }
-
-void VRMicrophone::setSampleRate(int rate) { sampleRate = rate; }
 
 void VRMicrophone::startStreamingOver(VRNetworkClientPtr client, string method) {
     if (!deviceOk) return;
@@ -237,7 +240,7 @@ void VRMicrophone::startStreaming(string address, int port, string method) {
     if (!deviceOk) return;
     if (!started) start();
     doStream = true;
-    recordingSound->setupOutStream(address, port);
+    recordingSound->setupOutStream(address, port, method);
 
     if (!recording) startRecordingThread();
     if (!streaming) startStreamingThread(method);
@@ -303,7 +306,6 @@ VRSoundBufferPtr VRMicrophone::genPacket(double T) {
     // tone parameters
     float Ac = 32760;
     float wc = frequency;
-    int sample_rate = sampleRate;
 
     // allocate frame
     size_t buf_size = size_t(T * sample_rate);
