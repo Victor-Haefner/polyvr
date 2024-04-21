@@ -123,7 +123,7 @@ if(WIN32)
 		set(DISK "D")
 	endif()
 
-	set(LIB_DIRS ${LIB_DIRS} "${DISK}:/usr/vcpkg/installed/x64-windows/lib")
+	set(LIB_DIRS ${LIB_DIRS} "${DISK}:/usr/lib;${DISK}:/usr/vcpkg/installed/x64-windows/lib")
 	set(INCLUDE_DIRS ${INCLUDE_DIRS} "${DISK}:/usr/vcpkg/installed/x64-windows/include")
 	set(INCLUDE_DIRS ${INCLUDE_DIRS} "${DISK}:/usr/include")
 	set(LINKER_FLAGS ${LINKER_FLAGS} wininet.lib dwmapi.lib cairo.lib)

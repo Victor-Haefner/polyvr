@@ -187,15 +187,21 @@ bool VRGeoData::valid() const {
     int Nni = data->indicesNormals->size();
     int Nci = data->indicesColors->size();
     int Nti = data->indicesTexCoords->size();
-    if (Ni > 0) {
-        if (Nni > 0 && Nni != Ni) { cout << "VRGeoData invalid: coord and normal indices lengths mismatch!\n"; return false; }
-        if (Nci > 0 && Nci != Ni) { cout << "VRGeoData invalid: coord and color indices lengths mismatch!\n"; return false; }
-        if (Nti > 0 && Nti != Ni) { cout << "VRGeoData invalid: coord and texcoords indices lengths mismatch!\n"; return false; }
-    } else {
-        if (Nni > 0) { cout << "VRGeoData invalid: normal indices defined but no coord indices!\n"; return false; }
-        if (Nci > 0) { cout << "VRGeoData invalid: color indices defined but no coord indices!\n"; return false; }
-        if (Nti > 0) { cout << "VRGeoData invalid: texcoords indices defined but no coord indices!\n"; return false; }
-    }
+
+    int Np = data->pos->size();
+    int Nn = data->norms->size();
+    int Nc = max( max( data->cols3->size(), data->cols3ub->size() ), max(data->cols4->size(), data->cols4ub->size() ) );
+    int Nt = max( data->texs[0]->size(), data->texs3[0]->size() );
+
+    if (Ni > 0 && Nni > 0 && Nni != Ni) { cout << "VRGeoData invalid: coord and normal indices lengths mismatch!\n"; return false; }
+    if (Ni > 0 && Nci > 0 && Nci != Ni) { cout << "VRGeoData invalid: coord and color indices lengths mismatch!\n"; return false; }
+    if (Ni > 0 && Nti > 0 && Nti != Ni) { cout << "VRGeoData invalid: coord and texcoords indices lengths mismatch!\n"; return false; }
+    if (Ni == 0 && Nni > 0) { cout << "VRGeoData invalid: normal indices defined but no coord indices!\n"; return false; }
+    if (Ni == 0 && Nci > 0) { cout << "VRGeoData invalid: color indices defined but no coord indices!\n"; return false; }
+    if (Ni == 0 && Nti > 0) { cout << "VRGeoData invalid: texcoords indices defined but no coord indices!\n"; return false; }
+    if (Nni == 0 && Nn > 0 && Nn != Np) { cout << "VRGeoData invalid: common index but normals and positions length mismatch!\n"; return false; }
+    if (Nci == 0 && Nc > 0 && Nc != Np) { cout << "VRGeoData invalid: common index but colors and positions length mismatch!\n"; return false; }
+    if (Nti == 0 && Nt > 0 && Nt != Np) { cout << "VRGeoData invalid: common index but texcoords and positions length mismatch!\n"; return false; }
     return true;
 }
 
