@@ -28,7 +28,9 @@
 #ifndef WASM
 #include "VRMultiWindow.h"
 #include "VRHeadMountedDisplay.h"
+#ifndef WITHOUT_COCOA
 #include "VRCocoaWindow.h"
+#endif
 #endif
 
 
@@ -65,11 +67,15 @@ bool VRWindowManager::checkWin(string name) {
 RenderActionRefPtr VRWindowManager::getRenderAction() { return ract; }
 
 VRWindowPtr VRWindowManager::addCocoaWindow(string name) {
+#ifndef WITHOUT_COCOA
     VRCocoaWindowPtr win = VRCocoaWindow::create();
     win->setName(name);
     win->setAction(ract);
     windows[win->getName()] = win;
     return win;
+#else
+    return 0;
+#endif
 }
 
 VRWindowPtr VRWindowManager::addGlutWindow(string name) {
@@ -213,7 +219,9 @@ void VRWindowManager::updateWindows() {
         for (auto w : getWindows()) {
             if (auto win = dynamic_pointer_cast<VRGlutEditor>(w.second)) win->render();
             if (auto win = dynamic_pointer_cast<VRGlutWindow>(w.second)) win->render();
+#ifndef WITHOUT_COCOA
             if (auto win = dynamic_pointer_cast<VRCocoaWindow>(w.second)) win->render();
+#endif
 #ifndef WITHOUT_OPENVR
             if (auto win = dynamic_pointer_cast<VRHeadMountedDisplay>(w.second)) win->render();
 #endif
