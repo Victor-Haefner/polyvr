@@ -29,12 +29,19 @@ struct VRMQTTClient::Data {
     vector<vector<string>> jobQueue;
     vector<vector<string>> messages;
 
-    Data() {}
+    Data() : mgr() {
+        mg_mgr_init(&mgr); // Initialise event manager
+    }
 
     ~Data() {
-        //cout << "~Data" << endl;
+        doPoll = false;
+        connecting = false;
+        mqttConnected = false;
+        //cout << "~Data " << this << ", join thread.." << endl;
         if (pollThread.joinable()) pollThread.join();
+        //cout << "~Data mg_mgr_free" << endl;
         mg_mgr_free(&mgr);
+        //cout << "~Data done" << endl;
     }
 
     mg_mqtt_opts basicOpts() {
@@ -46,13 +53,36 @@ struct VRMQTTClient::Data {
         opts.pass = mg_str(pass.c_str());
         return opts;
     }
+
+    void processJobs() {
+        auto lock = VRLock(mtx);
+        if (!mqttConnected) return;
+
+        for (auto job : jobQueue) {
+            if (job[0] == "subscribe") {
+                mg_mqtt_opts opts = basicOpts();
+                opts.topic = mg_str(job[1].c_str());
+                opts.retain = bool(job[2] == "1");
+                mg_mqtt_sub(s_conn, &opts);
+            }
+
+            if (job[0] == "publish") {
+                mg_mqtt_opts opts = basicOpts();
+                opts.topic = mg_str(job[1].c_str());
+                opts.message = mg_str(job[2].c_str());
+                opts.retain = false;
+                mg_mqtt_pub(s_conn, &opts);
+            }
+        }
+
+        jobQueue.clear();
+    }
 };
 
 VRMQTTClient::VRMQTTClient() : VRNetworkClient("mqttClient") {
     //cout << "VRMQTTClient::VRMQTTClient" << endl;
     data = shared_ptr<Data>(new Data());
     data->client = this;
-    mg_mgr_init(&data->mgr); // Initialise event manager
 
     updateCb = VRUpdateCb::create("mqtt client update", [&](){ handleMessages(); });
     VRScene::getCurrent()->addUpdateFkt(updateCb);
@@ -128,19 +158,20 @@ void VRMQTTClient::disconnect() {
     if (!data) return;
     if (!data->doPoll) return;
 
-    //cout << "mqtt disconnect " << endl;
+    //cout << "VRMQTTClient::disconnect " << this << ", rc " << data.use_count() << endl;
     data->doPoll = false;
     data->connecting = false;
     data->mqttConnected = false;
-    //if (data->pollThread.joinable()) data->pollThread.join(); // dont, this causes lag
 
-    auto s = VRScene::getCurrent();
     auto f = VRUpdateCb::create("mqttThreadCleanup", bind([](shared_ptr<Data> h) { h.reset(); }, data));
     data.reset();
-    s->queueJob(f, 0, 2000);
+
+    auto s = VRScene::getCurrent();
+    if (s) s->queueJob(f, 0, 60); // delay in N frames
 }
 
 void VRMQTTClient::connect(string host, int port) { // connect("broker.hivemq.com", 1883)
+    //cout << "VRMQTTClient::connect " << this << endl;
     if (data->connecting) return;
     if (data->mqttConnected) return;
     data->connecting = true;
@@ -153,8 +184,9 @@ void VRMQTTClient::connect(string host, int port) { // connect("broker.hivemq.co
     opts.version = 4;
     data->s_conn = mg_mqtt_connect(&data->mgr, data->s_url.c_str(), &opts, fn, data.get());
 
+    //cout << "start mqtt thread" << endl;
     data->doPoll = true;
-    data->pollThread = thread( bind( [&](shared_ptr<Data> data) {
+    data->pollThread = thread(bind([&](Data* data) {
         bool doPing = false;
         int pingSent = 0;
         while (data->doPoll) {
@@ -166,7 +198,9 @@ void VRMQTTClient::connect(string host, int port) { // connect("broker.hivemq.co
             }
 
             VRTimer t;
+            //cout << " mg_mgr_poll" << endl;
             mg_mgr_poll(&data->mgr, 1000); // TODO: maybe decrease this to 2 ms?
+            //cout << " mg_mgr_poll done" << endl;
             if (!data->doPoll) break;
             double T = t.stop();
             if (T > 500) doPing = true;
@@ -175,9 +209,10 @@ void VRMQTTClient::connect(string host, int port) { // connect("broker.hivemq.co
             if (data->gotReadEv) { data->responsive = true; pingSent = 0; data->gotReadEv = false; }
 
             //cout << "mqtt ping " << T << ", pingSent " << pingSent << ", responsive " << data->responsive << endl;
-            processJobs();
+            data->processJobs();
         }
-    }, data ) );
+        //cout << "thread ends" << endl;
+    }, data.get() ) );
 }
 
 bool VRMQTTClient::connected() {
@@ -201,30 +236,6 @@ void VRMQTTClient::handleMessages() {
     for (auto& m : mcopy) {
         data->cb(m[1] + "|" + m[0]);
     }
-}
-
-void VRMQTTClient::processJobs() {
-    auto lock = VRLock(data->mtx);
-    if (!data->mqttConnected) return;
-
-    for (auto job : data->jobQueue) {
-        if (job[0] == "subscribe") {
-            mg_mqtt_opts opts = data->basicOpts();
-            opts.topic = mg_str(job[1].c_str());
-            opts.retain = bool(job[2] == "1");
-            mg_mqtt_sub(data->s_conn, &opts);
-        }
-
-        if (job[0] == "publish") {
-            mg_mqtt_opts opts = data->basicOpts();
-            opts.topic = mg_str(job[1].c_str());
-            opts.message = mg_str(job[2].c_str());
-            opts.retain = false;
-            mg_mqtt_pub(data->s_conn, &opts);
-        }
-    }
-
-    data->jobQueue.clear();
 }
 
 void VRMQTTClient::setAuthentication(string name, string pass) { auto lock = VRLock(data->mtx); data->name = name; data->pass = pass; }
