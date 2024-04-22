@@ -29,7 +29,9 @@ struct VRMQTTClient::Data {
     vector<vector<string>> jobQueue;
     vector<vector<string>> messages;
 
-    Data() {}
+    Data() : mgr() {
+        mg_mgr_init(&mgr); // Initialise event manager
+    }
 
     ~Data() {
         //cout << "~Data" << endl;
@@ -52,7 +54,6 @@ VRMQTTClient::VRMQTTClient() : VRNetworkClient("mqttClient") {
     //cout << "VRMQTTClient::VRMQTTClient" << endl;
     data = shared_ptr<Data>(new Data());
     data->client = this;
-    mg_mgr_init(&data->mgr); // Initialise event manager
 
     updateCb = VRUpdateCb::create("mqtt client update", [&](){ handleMessages(); });
     VRScene::getCurrent()->addUpdateFkt(updateCb);
@@ -128,16 +129,15 @@ void VRMQTTClient::disconnect() {
     if (!data) return;
     if (!data->doPoll) return;
 
-    //cout << "mqtt disconnect " << endl;
     data->doPoll = false;
     data->connecting = false;
     data->mqttConnected = false;
-    //if (data->pollThread.joinable()) data->pollThread.join(); // dont, this causes lag
 
-    auto s = VRScene::getCurrent();
     auto f = VRUpdateCb::create("mqttThreadCleanup", bind([](shared_ptr<Data> h) { h.reset(); }, data));
     data.reset();
-    s->queueJob(f, 0, 2000);
+
+    auto s = VRScene::getCurrent();
+    if (s) s->queueJob(f, 0, 2000);
 }
 
 void VRMQTTClient::connect(string host, int port) { // connect("broker.hivemq.com", 1883)
