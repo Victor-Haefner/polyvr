@@ -20,7 +20,6 @@ class VRMQTTClient : public VRNetworkClient {
         shared_ptr<Data> data;
         VRUpdateCbPtr updateCb;
 
-        void processJobs();
         void handleMessages();
 
     public:
