@@ -65,56 +65,59 @@ class STEPLoader {
         map<string, string> options;
         Handle(XCAFDoc_ColorTool) colors;
         Handle(XCAFDoc_MaterialTool) materials;
+        map<string, VRMaterialPtr> vrMaterials;
 
-        pair<bool, Color3f> getColor(const TDF_Label& label) {
-            if (!colors) return make_pair(false, Color3f());
+        struct ColorData {
+            string name = "mat";
+            Color3f col = Color3f(0,0,0);
             bool valid = false;
-            Quantity_Color c;
-            if (!valid) valid = colors->GetColor(label, XCAFDoc_ColorSurf, c);
-            if (!valid) valid = colors->GetColor(label, XCAFDoc_ColorCurv, c);
-            if (!valid) valid = colors->GetColor(label, XCAFDoc_ColorGen , c);
-            return make_pair(valid, Color3f(c.Red(), c.Green(), c.Blue()));
-        }
+        };
 
-        pair<bool, Color3f> getColor(const TopoDS_Shape& shape) {
-            if (!colors) return make_pair(false, Color3f());
-            bool valid = false;
+        template<class T>
+        ColorData getColor(const T& label) {
+            ColorData data;
+            if (!colors) return data;
             Quantity_Color c;
-            if (!valid) valid = colors->GetColor(shape, XCAFDoc_ColorSurf, c);
-            if (!valid) valid = colors->GetColor(shape, XCAFDoc_ColorCurv, c);
-            if (!valid) valid = colors->GetColor(shape, XCAFDoc_ColorGen , c);
-            return make_pair(valid, Color3f(c.Red(), c.Green(), c.Blue()));
+            if (!data.valid) data.valid = colors->GetColor(label, XCAFDoc_ColorSurf, c);
+            if (!data.valid) data.valid = colors->GetColor(label, XCAFDoc_ColorCurv, c);
+            if (!data.valid) data.valid = colors->GetColor(label, XCAFDoc_ColorGen , c);
+            if (data.valid) {
+                TDF_Label lbl = colors->FindColor(c);
+                data.name = getName(lbl);
+                data.col = Color3f(c.Red(), c.Green(), c.Blue());
+            }
+            return data;
         }
 
         bool needsVertexColors(const TopoDS_Shape& shape) {
             for (TopExp_Explorer exp(shape, TopAbs_COMPOUND); exp.More(); exp.Next()) {
                 const TopoDS_Compound& body = TopoDS::Compound(exp.Current());
                 auto color = getColor(body);
-                if (color.first) return true;
+                if (color.valid) return true;
             }
 
             for (TopExp_Explorer exp(shape, TopAbs_COMPSOLID); exp.More(); exp.Next()) {
                 const TopoDS_CompSolid& body = TopoDS::CompSolid(exp.Current());
                 auto color = getColor(body);
-                if (color.first) return true;
+                if (color.valid) return true;
             }
 
             for (TopExp_Explorer exp(shape, TopAbs_SOLID); exp.More(); exp.Next()) {
                 const TopoDS_Solid& body = TopoDS::Solid(exp.Current());
                 auto color = getColor(body);
-                if (color.first) return true;
+                if (color.valid) return true;
             }
 
             for (TopExp_Explorer exp(shape, TopAbs_SHELL); exp.More(); exp.Next()) {
                 const TopoDS_Shell& shell = TopoDS::Shell(exp.Current());
                 auto color = getColor(shell);
-                if (color.first) return true;
+                if (color.valid) return true;
             }
 
             for (TopExp_Explorer exp(shape, TopAbs_FACE); exp.More(); exp.Next()) {
                 const TopoDS_Face& face = TopoDS::Face(exp.Current());
                 auto color = getColor(face);
-                if (color.first) return true;
+                if (color.valid) return true;
             }
             return false;
         }
@@ -160,8 +163,8 @@ class STEPLoader {
             // face colors
             if (useVertexColors) {
                 auto faceC = getColor(face);
-                if (!faceC.first) faceC.second = color;//Color3f(0.5,0.9,0.4);
-                for (int i = 1; i <= nodes.Length(); ++i) data.pushColor( faceC.second );
+                if (!faceC.valid) faceC.col = color;//Color3f(0.5,0.9,0.4);
+                for (int i = 1; i <= nodes.Length(); ++i) data.pushColor( faceC.col );
             }
         }
 
@@ -188,7 +191,7 @@ class STEPLoader {
 
         void iterateShell(const TopoDS_Shape& shell, VRTransformPtr parent, VRGeoData* pdata, bool useVertexColors, Color3f color, bool verbose = false) {
             auto colShell = getColor(shell);
-            if (colShell.first) color = colShell.second;
+            if (colShell.valid) color = colShell.col;
             if (verbose) cout << endl << " ----- traverse shell: " << getTypeName(shell) << endl;
 
             if (!pdata) {
@@ -203,7 +206,7 @@ class STEPLoader {
 
         void iterateFace(const TopoDS_Shape& faceS, VRTransformPtr parent, VRGeoData* pdata, bool useVertexColors, Color3f color, bool verbose = false) {
             auto colFace = getColor(faceS);
-            if (colFace.first) color = colFace.second;
+            if (colFace.valid) color = colFace.col;
             if (verbose) cout << endl << " ----- traverse face: " << getTypeName(faceS) << endl;
 
             const TopoDS_Face& face = TopoDS::Face(faceS);
@@ -219,7 +222,7 @@ class STEPLoader {
 
         VRTransformPtr iterateShape(const TopoDS_Shape& shape, bool useVertexColors, Color3f color, VRTransformPtr parent = 0, VRGeoData* data = 0, bool verbose = false) {
             auto colShape = getColor(shape);
-            if (colShape.first) color = colShape.second;
+            if (colShape.valid) color = colShape.col;
             if (verbose) cout << " ----- traverse shape: " << getTypeName(shape) << endl;
 
             VRTransformPtr obj;
@@ -273,12 +276,20 @@ class STEPLoader {
             return obj;
         }
 
+
+
         void applyMaterial(VRGeometryPtr geo, const TopoDS_Shape& shape) {
-            auto mat = VRMaterial::create("mat");
-            geo->setMaterial(mat);
             auto color = getColor(shape);
-            if (color.first) mat->setDiffuse(color.second);
-            else mat->setDiffuse(Color3f(0.5,0.7,0.9));
+            VRMaterialPtr mat;
+            if (vrMaterials.count(color.name)) mat = vrMaterials[color.name];
+            else {
+                mat = VRMaterial::create(color.name);
+                if (color.valid) mat->setDiffuse(color.col);
+                else mat->setDiffuse(Color3f(0.5,0.7,0.9));
+                vrMaterials[color.name] = mat;
+            }
+
+            geo->setMaterial(mat);
         }
 
         float getScale(STEPCAFControl_Reader& reader) {
@@ -326,7 +337,7 @@ class STEPLoader {
             return name;
         }
 
-        string getName(TDF_Label& label) {
+        string getName(const TDF_Label& label) {
             Handle(TDataStd_Name) N;
             if ( label.FindAttribute(TDataStd_Name::GetID(),N)) return toString(N);
             return "UNKNOWN";
@@ -380,13 +391,20 @@ class STEPLoader {
                 TDF_LabelSequence cols;
                 colors->GetColors(cols);
                 cout << "imported colors: (" << cols.Length() << ")" << endl;
-                for (int i=1; i<=cols.Length(); i++) cout << " color: " << getColor( cols.Value(i) ).second << " " << getColor( cols.Value(i) ).first << endl;
+                for (int i=1; i<=cols.Length(); i++) {
+                    auto c = getColor( cols.Value(i) );
+                    cout << " color: " << c.col << ",  valid: " << c.valid << ", " << c.name << endl;
+                }
                 //for (int i=1; i<=cols.Length(); i++) cout << " color: " << getColor( shapes.Value(i) ).second << " " << getColor( shapes.Value(i) ).first << endl;
 
                 materials = XCAFDoc_DocumentTool::MaterialTool( aDoc->Main() );
                 TDF_LabelSequence mats;
                 materials->GetMaterialLabels(mats);
                 cout << "imported materials: (" << mats.Length() << ")" << endl;
+                for (int i=1; i<=mats.Length(); i++) {
+                    auto c = getColor( mats.Value(i) );
+                    cout << " color: " << c.col << ",  valid: " << c.valid << ", " << c.name << endl;
+                }
 
                 bool subParts = false;
                 bool relative_deflection = true;
@@ -494,7 +512,7 @@ class STEPLoader {
                     auto t = dynamic_pointer_cast<VRTransform>(c);
                     if (t) t->setScale(Vec3d(scale, scale, scale));
                 }
-            } catch(exception e) {
+            } catch(exception& e) {
                 cout << " STEP import failed in load: " << e.what() << endl;
             } catch(Standard_ProgramError& e) { // TODO: this is wrong, fix error handling!
                 cout << " STEP import failed in load: Standard_ProgramError "  << endl;
