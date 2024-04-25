@@ -48,6 +48,8 @@ class VRSignal : public VRSignal_base {
         template<typename Event> bool trigger(vector<VRBaseCbWeakPtr>& callbacks, std::shared_ptr<Event> event = 0);
         template<typename Event> bool triggerAll(std::shared_ptr<Event> event = 0);
         template<typename Event> bool triggerAllDeferred(std::shared_ptr<Event> event = 0);
+        template<typename Event> bool triggerAllInterleaved(VRSignalPtr other, std::shared_ptr<Event> event = 0);
+        template<typename Event> bool triggerAllInterleavedDeferred(VRSignalPtr other, std::shared_ptr<Event> event = 0);
 };
 
 OSG_END_NAMESPACE
