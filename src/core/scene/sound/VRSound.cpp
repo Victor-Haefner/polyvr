@@ -757,8 +757,9 @@ void VRSound::flushPackets() { // deprecated?
     encode_audio_frame(muxer, audio_ost, NULL); // flush last frames
 }
 
-bool VRSound::addOutStreamClient(VRNetworkClientPtr client) {
+bool VRSound::addOutStreamClient(VRNetworkClientPtr client, string method) {
     udpClients.push_back(client);
+    if (method == "raw") return true;
 
     audio_ost = new OutputStream();
 #ifndef _WIN32
@@ -795,14 +796,16 @@ bool VRSound::addOutStreamClient(VRNetworkClientPtr client) {
     return true;
 }
 
-bool VRSound::setupOutStream(string url, int port) { // TODO: make a udpClients map instead of vector
+bool VRSound::setupOutStream(string url, int port, string method) { // TODO: make a udpClients map instead of vector
     auto cli = VRUDPClient::create("sound-out");
     cli->connect(url, port);
-    return addOutStreamClient(cli);
+    return addOutStreamClient(cli, method);
 }
 
-void VRSound::streamBuffer(VRSoundBufferPtr frame) {
-    write_buffer(muxer, audio_ost, frame);
+void VRSound::streamBuffer(VRSoundBufferPtr frame, string method) {
+    if (!frame || frame->size == 0) return;
+    if (method == "mp3") write_buffer(muxer, audio_ost, frame);
+    if (method == "raw") writeStreamData( string((char*)frame->data, frame->size) );
 }
 
 void VRSound::closeStream(bool keepOpen) {

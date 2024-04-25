@@ -101,9 +101,9 @@ class VRSound {
         void playBuffer(VRSoundBufferPtr frame);
         void addBuffer(VRSoundBufferPtr frame);
 
-        bool setupOutStream(string url, int port);
-        bool addOutStreamClient(VRNetworkClientPtr client);
-        void streamBuffer(VRSoundBufferPtr frame);
+        bool setupOutStream(string url, int port, string method = "mp3");
+        bool addOutStreamClient(VRNetworkClientPtr client, string method = "mp3");
+        void streamBuffer(VRSoundBufferPtr frame, string method = "mp3");
         void closeStream(bool keepOpen = false);
         void flushPackets();
 

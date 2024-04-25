@@ -18,21 +18,28 @@ const double Pi  = 3.141592653589793;
 
 using namespace OSG;
 
-VRMicrophone::VRMicrophone() { setup(); }
+VRMicrophone::VRMicrophone() {
+    streamMutex = new VRMutex();
+    paramsMutex = new VRMutex();
+
+    setup();
+}
 
 VRMicrophone::~VRMicrophone() {
     stop();
     alcCaptureCloseDevice(device);
-    delete streamMutex;
+    if (streamMutex) delete streamMutex;
+    if (paramsMutex) delete paramsMutex;
 }
 
 VRMicrophonePtr VRMicrophone::create() { return VRMicrophonePtr( new VRMicrophone() ); }
 VRMicrophonePtr VRMicrophone::ptr() { return static_pointer_cast<VRMicrophone>(shared_from_this()); }
 
-void VRMicrophone::setup() {
-    streamMutex = new VRMutex();
+void VRMicrophone::setSampleRate(int rate) { sample_rate = rate; setup(); }
 
+void VRMicrophone::setup() {
     alGetError();
+    if (device) alcCaptureCloseDevice(device);
     device = alcCaptureOpenDevice(NULL, sample_rate, AL_FORMAT_MONO16, sample_rate);
     if (alGetError() != AL_NO_ERROR) {
         cout << "No microphone device found!" << endl;
@@ -82,21 +89,26 @@ VRSoundBufferPtr VRMicrophone::fetchDevicePacket() {
         VRSoundBufferPtr frame = VRSoundBuffer::allocate(Count*2, sample_rate, AL_FORMAT_MONO16);
         alGetError();
         alcCaptureSamples(device, frame->data, Count);
-		
+
 		// test if its in stereo, make mono
         /*VRSoundBufferPtr nframe = VRSoundBuffer::allocate(Count*2, sample_rate, AL_FORMAT_MONO16);
 		int16_t* src = (int16_t*)frame->data;
 		int16_t* dst = (int16_t*)nframe->data;
-		
+
 		for (int i=0; i<Count; i++) {
 			dst[i] = src[2*i];
 		}
 		frame = nframe;*/
-		
+
         return frame; // frame
     }
 
     return 0;
+}
+
+double VRMicrophone::getAmplitude() {
+    VRLock lock(*paramsMutex);
+    return currentAmp;
 }
 
 void VRMicrophone::startRecording() {
@@ -107,7 +119,18 @@ void VRMicrophone::startRecording() {
     auto recordCb = [&]() {
         while (doRecord) {
             auto frame = fetchDevicePacket();
-            if (frame) recordingSound->addBuffer(frame);
+            if (frame) {
+                recordingSound->addBuffer(frame);
+                double A = 0;
+                int16_t* src = (int16_t*)frame->data;
+                size_t Count = frame->size / 2;
+                if (Count > 0) {
+                    for (int i=0; i<Count; i += 5) A += abs( src[i] );
+                    A *= 5.0/Count;
+                }
+                VRLock lock(*paramsMutex);
+                currentAmp = A;
+            }
         }
     };
 
@@ -164,8 +187,8 @@ void VRMicrophone::startRecordingThread() {
     recordingThread = new thread(recordCb);
 }
 
-void VRMicrophone::startStreamingThread() {
-    auto streamCb = [&]() {
+void VRMicrophone::startStreamingThread(string method) {
+    auto streamCb = [&](string method) {
         streaming = true;
 
         while (doStream) {
@@ -180,7 +203,7 @@ void VRMicrophone::startStreamingThread() {
 
                     if (frame) {
                         //cout << " stream mike buffer " << frame->size << endl;
-                        if (recordingSound) recordingSound->streamBuffer(frame);
+                        if (recordingSound) recordingSound->streamBuffer(frame, method);
                         queuedFrames = max(queuedFrames-1, 0);
                         if (!needsFlushing) queuedStream++;
                     }
@@ -200,27 +223,27 @@ void VRMicrophone::startStreamingThread() {
         streaming = false;
     };
 
-    streamingThread = new thread(streamCb);
+    streamingThread = new thread(streamCb, method);
 }
 
-void VRMicrophone::startStreamingOver(VRNetworkClientPtr client) {
+void VRMicrophone::startStreamingOver(VRNetworkClientPtr client, string method) {
     if (!deviceOk) return;
     if (!started) start();
     doStream = true;
-    recordingSound->addOutStreamClient(client);
+    recordingSound->addOutStreamClient(client, method);
 
     if (!recording) startRecordingThread();
-    if (!streaming) startStreamingThread();
+    if (!streaming) startStreamingThread(method);
 }
 
-void VRMicrophone::startStreaming(string address, int port) {
+void VRMicrophone::startStreaming(string address, int port, string method) {
     if (!deviceOk) return;
     if (!started) start();
     doStream = true;
-    recordingSound->setupOutStream(address, port);
+    recordingSound->setupOutStream(address, port, method);
 
     if (!recording) startRecordingThread();
-    if (!streaming) startStreamingThread();
+    if (!streaming) startStreamingThread(method);
 }
 
 bool VRMicrophone::isStreaming() { return doStream; }
@@ -283,7 +306,6 @@ VRSoundBufferPtr VRMicrophone::genPacket(double T) {
     // tone parameters
     float Ac = 32760;
     float wc = frequency;
-    int sample_rate = 22050;
 
     // allocate frame
     size_t buf_size = size_t(T * sample_rate);
