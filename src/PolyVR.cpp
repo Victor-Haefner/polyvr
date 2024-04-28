@@ -196,6 +196,8 @@ void PolyVR::initEnvironment() {
     OSG::preloadSharedObject("OSGFileIO");
     OSG::preloadSharedObject("OSGImageFileIO");
 #endif
+
+    startMemoryDog();
 }
 
 void PolyVR::initOpenSG() {

@@ -380,8 +380,31 @@ namespace boost {
 }
 #endif
 
+long readAvailableRAM() {
+    std::ifstream meminfo("/proc/meminfo");
+    std::string line;
+    long available_ram = 0;
 
+    while (std::getline(meminfo, line)) {
+        if (line.compare(0, 8, "MemFree:") == 0) {
+            available_ram = std::stol(line.substr(8)) / 1024.0; // Convert kB to mB
+            break;
+        }
+    }
 
+    return available_ram;
+}
+
+void startMemoryDog() {
+    static auto dog = thread([](){
+        cout << "start memory dog..";
+        while (true) {
+            long m = readAvailableRAM();
+            if (m < 500) { cout << "Memory dog, kill system!" << endl; exit(1); }
+            sleep(1);
+        }
+    });
+}
 
 
 
