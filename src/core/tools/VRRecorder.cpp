@@ -89,8 +89,10 @@ class VRFrame {
 
 VRRecorder::VRRecorder() {
 #ifndef _WIN32
+#ifndef __APPLE__
     av_register_all();
     avcodec_register_all();
+#endif
 #endif
 
     toggleCallback = VRFunction<bool>::create("recorder toggle", bind(&VRRecorder::setRecording, this, _1));
@@ -525,6 +527,3 @@ map<string, int> VRRecorder::codecs = {
     make_pair("CLLC",AV_CODEC_ID_CLLC),
     make_pair("MSS2",AV_CODEC_ID_MSS2)
 };
-
-
-

@@ -8,7 +8,7 @@
 #include "VRSoundFwd.h"
 #include "core/utils/VRFunctionFwd.h"
 
-#ifdef WIN32
+#if defined(WIN32) || defined(__APPLE__)
 struct ALCdevice;
 struct ALCcontext;
 #else
@@ -23,7 +23,7 @@ struct VRSoundChannel;
 
 class VRSoundContext {
 	public:
-#ifdef WIN32
+#if defined(WIN32) || defined(__APPLE__)
 		ALCdevice* device = 0;
 		ALCcontext* context = 0;
 #else

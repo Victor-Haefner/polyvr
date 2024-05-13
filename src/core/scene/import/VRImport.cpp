@@ -12,7 +12,9 @@
 #include "VRIFC.h"
 #endif
 #include "VRML.h"
+#ifndef WITHOUT_STEP
 #include "VRSTEPCascade.h"
+#endif
 #ifndef WITHOUT_STEPCODE
 #include "STEP/VRSTEP.h"
 #endif
@@ -58,7 +60,9 @@ VRImport* VRImport::get() {
 
 void VRImport::analyze(string path, string out) {
     string ext = getFileExtension(path);
+#ifndef WITHOUT_GDAL
     if (ext == ".shp") analyzeSHP(path, out);
+#endif
 }
 
 void VRImport::fixEmptyNames(NodeMTRecPtr o, map<string, bool>& m, string parentName, int iChild) {
@@ -505,6 +509,3 @@ void VRImport::fillCache(string path, VRTransformPtr obj) {
 
 
 OSG_END_NAMESPACE;
-
-
-

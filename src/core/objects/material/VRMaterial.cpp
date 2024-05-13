@@ -1257,8 +1257,11 @@ ShaderProgramMTRecPtr VRMaterial::getShaderProgram() { return mats[activePass]->
 
 // type: GL_VERTEX_SHADER, GL_FRAGMENT_SHADER, ...
 bool VRMaterial::checkShader(int type, string shader, string name) {
+#ifdef __APPLE__
+  return true;
+#else
 #ifndef OSG_OGL_ES2
-#ifndef WITHOUT_GTK
+#ifndef WITHOUT_IMGUI
     auto gm = VRGuiManager::get(false);
     if (!gm) return true;
 	auto errC = gm->getConsole("Errors");
@@ -1275,7 +1278,7 @@ bool VRMaterial::checkShader(int type, string shader, string name) {
 
     GLint compiled;
     glGetObjectParameterivARB(shaderObject, GL_COMPILE_STATUS, &compiled);
-#ifndef WITHOUT_GTK
+#ifndef WITHOUT_IMGUI
     if (!compiled) errC->write( "Shader "+name+" of material "+getName()+" did not compile!\n");
 #else
 	if (!compiled) cout << "Shader " + name + " of material " + getName() + " did not compile!\n" << endl;
@@ -1321,6 +1324,7 @@ bool VRMaterial::checkShader(int type, string shader, string name) {
     }
 #endif
     return true;
+#endif // __APPLE__
 }
 
 void VRMaterial::forceShaderUpdate() {

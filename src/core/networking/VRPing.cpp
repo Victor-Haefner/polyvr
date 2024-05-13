@@ -7,7 +7,6 @@
 #include <boost/asio.hpp>
 #include <iostream>
 
-
 #include <boost/asio/connect.hpp>
 #include <boost/asio/deadline_timer.hpp>
 #include <boost/asio/io_service.hpp>
@@ -19,14 +18,9 @@
 #include <cstdlib>
 #include <iostream>
 #include <string>
-#include <boost/lambda/bind.hpp>
-#include <boost/lambda/lambda.hpp>
 
 using boost::asio::deadline_timer;
 using boost::asio::ip::tcp;
-using boost::lambda::bind;
-using boost::lambda::var;
-using boost::lambda::_1;
 
 
 class ping_client {
@@ -59,7 +53,9 @@ class ping_client {
                 deadline_.expires_from_now(timeout);
 
                 boost::system::error_code ec = boost::asio::error::would_block;
-                boost::asio::async_connect(socket_, iter, var(ec) = _1);
+                auto onErr = [&](const boost::system::error_code& e, tcp::resolver::iterator i) { ec = e; };
+                boost::asio::async_connect(socket_, iter, onErr);
+
                 do io_service_.run_one(); while (ec == boost::asio::error::would_block);
 
                 return !(ec || !socket_.is_open());
@@ -115,5 +111,3 @@ std::string OSG::VRPing::getMAC(std::string IP, std::string interface) {
     return "";
 #endif
 }
-
-

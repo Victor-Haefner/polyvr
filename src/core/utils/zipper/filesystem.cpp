@@ -31,7 +31,8 @@ string FILESYSTEM::dirName(const string& path) {
 }
 
 string FILESYSTEM::suffix(const string& path) {
-    return fs::extension(path);
+    fs::path p(path);
+    return p.extension().string();
 }
 
 bool FILESYSTEM::createDir(const string & dir) {
@@ -59,10 +60,3 @@ vector<string> FILESYSTEM::getFiles(const string& dir) {
     }
     return files;
 }
-
-
-
-
-
-
-

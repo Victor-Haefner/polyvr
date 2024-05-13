@@ -36,8 +36,12 @@ extern "C" {
 #include <climits>
 #include <complex>
 
+#ifndef WITHOUT_GTK
 #define WARN(x) \
 VRConsoleWidget::get( "Errors" )->write( x+"\n" );
+#else
+#define WARN(x) {}
+#endif
 
 using namespace OSG;
 
@@ -148,12 +152,21 @@ void VRSound::close() {
 void VRSound::reset() { al->state = AL_STOPPED; }
 void VRSound::play() { al->state = AL_INITIAL; }
 
+
 void VRSound::updateSampleAndFormat() {
+#ifdef __APPLE__
+    if (al->codec->ch_layout.u.mask == 0) {
+        if (al->codec->ch_layout.nb_channels == 1) al->codec->ch_layout.u.mask = AV_CH_LAYOUT_MONO;
+        if (al->codec->ch_layout.nb_channels == 2) al->codec->ch_layout.u.mask = AV_CH_LAYOUT_STEREO;
+        if (al->codec->ch_layout.u.mask == 0) cout << "WARNING! channel_layout is 0.\n";
+    }
+#else
     if (al->codec->channel_layout == 0) {
         if (al->codec->channels == 1) al->codec->channel_layout = AV_CH_LAYOUT_MONO;
         if (al->codec->channels == 2) al->codec->channel_layout = AV_CH_LAYOUT_STEREO;
         if (al->codec->channel_layout == 0) cout << "WARNING! channel_layout is 0.\n";
     }
+#endif
 
     frequency = al->codec->sample_rate;
     al->format = AL_FORMAT_MONO16;
@@ -173,11 +186,17 @@ void VRSound::updateSampleAndFormat() {
     if (sfmt == AV_SAMPLE_FMT_FLTP) al->sample = AL_FLOAT_SOFT;
     if (sfmt == AV_SAMPLE_FMT_DBLP) al->sample = AL_DOUBLE_SOFT;
 
-    if (al->codec->channel_layout == AV_CH_LAYOUT_MONO) al->layout = AL_MONO_SOFT;
-    if (al->codec->channel_layout == AV_CH_LAYOUT_STEREO) al->layout = AL_STEREO_SOFT;
-    if (al->codec->channel_layout == AV_CH_LAYOUT_QUAD) al->layout = AL_QUAD_SOFT;
-    if (al->codec->channel_layout == AV_CH_LAYOUT_5POINT1) al->layout = AL_5POINT1_SOFT;
-    if (al->codec->channel_layout == AV_CH_LAYOUT_7POINT1) al->layout = AL_7POINT1_SOFT;
+#ifdef __APPLE__
+    auto layout = al->codec->ch_layout.u.mask;
+#else
+    auto layout = al->codec->channel_layout;
+#endif
+
+    if (layout == AV_CH_LAYOUT_MONO   ) al->layout = AL_MONO_SOFT;
+    if (layout == AV_CH_LAYOUT_STEREO ) al->layout = AL_STEREO_SOFT;
+    if (layout == AV_CH_LAYOUT_QUAD   ) al->layout = AL_QUAD_SOFT;
+    if (layout == AV_CH_LAYOUT_5POINT1) al->layout = AL_5POINT1_SOFT;
+    if (layout == AV_CH_LAYOUT_7POINT1) al->layout = AL_7POINT1_SOFT;
 
     switch(al->sample) {
         case AL_UNSIGNED_BYTE_SOFT:
@@ -228,12 +247,21 @@ void VRSound::updateSampleAndFormat() {
         }
 
         al->resampler = swr_alloc();
+#ifdef __APPLE__
+        av_opt_set_chlayout(al->resampler, "in_channel_layout",  &al->codec->ch_layout, 0);
+        av_opt_set_sample_fmt    (al->resampler, "in_sample_fmt",      al->codec->sample_fmt,     0);
+        av_opt_set_int           (al->resampler, "in_sample_rate",     al->codec->sample_rate,    0);
+        av_opt_set_chlayout(al->resampler, "out_channel_layout", &al->codec->ch_layout, 0);
+        av_opt_set_sample_fmt    (al->resampler, "out_sample_fmt",     out_sample_fmt,            0);
+        av_opt_set_int           (al->resampler, "out_sample_rate",    al->codec->sample_rate,    0);
+#else
         av_opt_set_channel_layout(al->resampler, "in_channel_layout",  al->codec->channel_layout, 0);
         av_opt_set_sample_fmt    (al->resampler, "in_sample_fmt",      al->codec->sample_fmt,     0);
         av_opt_set_int           (al->resampler, "in_sample_rate",     al->codec->sample_rate,    0);
         av_opt_set_channel_layout(al->resampler, "out_channel_layout", al->codec->channel_layout, 0);
         av_opt_set_sample_fmt    (al->resampler, "out_sample_fmt",     out_sample_fmt,            0);
         av_opt_set_int           (al->resampler, "out_sample_rate",    al->codec->sample_rate,    0);
+#endif
         swr_init(al->resampler);
     }
 }
@@ -332,7 +360,12 @@ vector<VRSoundBufferPtr> VRSound::extractPacket(AVPacket* packet) {
 
             // Decoded data is now available in frame->data[0]
             int linesize;
+
+#ifdef __APPLE__
+            int data_size = av_samples_get_buffer_size(&linesize, al->codec->ch_layout.nb_channels, al->frame->nb_samples, al->codec->sample_fmt, 0);
+#else
             int data_size = av_samples_get_buffer_size(&linesize, al->codec->channels, al->frame->nb_samples, al->codec->sample_fmt, 0);
+#endif
 
             ALbyte* frameData;
             if (al->resampler != 0) {
@@ -447,10 +480,16 @@ void add_audio_stream(OutputStream *ost, AVFormatContext *oc, enum AVCodecID cod
     ost->enc = c;
 
     /* put sample parameters */
-	c->sample_rate    = codec->supported_samplerates ? codec->supported_samplerates[0] : 44100;
+    c->sample_rate    = codec->supported_samplerates ? codec->supported_samplerates[0] : 44100;
+#ifdef __APPLE__
+    c->ch_layout      = codec->ch_layouts            ? codec->ch_layouts[0]            : AVChannelLayout(AV_CHANNEL_LAYOUT_STEREO);
+#else
     c->channel_layout = codec->channel_layouts       ? codec->channel_layouts[0]       : AV_CH_LAYOUT_STEREO;
+#endif
     c->sample_fmt     = codec->sample_fmts           ? codec->sample_fmts[0]           : AV_SAMPLE_FMT_S16;
-	c->channels       = av_get_channel_layout_nb_channels(c->channel_layout);
+#ifndef __APPLE__
+    c->channels       = av_get_channel_layout_nb_channels(c->channel_layout);
+#endif
     c->bit_rate       = 64000;
 
 	ost->st->time_base.num = 1;
@@ -467,23 +506,44 @@ void add_audio_stream(OutputStream *ost, AVFormatContext *oc, enum AVCodecID cod
     ost->avr = swr_alloc();
     if (!ost->avr) { fprintf(stderr, "Error allocating the resampling context\n"); return; }
 
+#ifdef __APPLE__
+    auto mono = AVChannelLayout(AV_CHANNEL_LAYOUT_MONO);
+    av_opt_set_chlayout      (ost->avr, "in_channel_layout",  &mono,             0);
+    av_opt_set_sample_fmt    (ost->avr, "in_sample_fmt",      AV_SAMPLE_FMT_S16, 0);
+    av_opt_set_int           (ost->avr, "in_sample_rate",     22050,             0);
+    av_opt_set_chlayout      (ost->avr, "out_channel_layout", &c->ch_layout,      0);
+    av_opt_set_sample_fmt    (ost->avr, "out_sample_fmt",     c->sample_fmt,     0);
+    av_opt_set_int           (ost->avr, "out_sample_rate",    c->sample_rate,    0);
+#else
     av_opt_set_channel_layout(ost->avr, "in_channel_layout",  AV_CH_LAYOUT_MONO, 0);
     av_opt_set_sample_fmt    (ost->avr, "in_sample_fmt",      AV_SAMPLE_FMT_S16, 0);
     av_opt_set_int           (ost->avr, "in_sample_rate",     22050,             0);
     av_opt_set_channel_layout(ost->avr, "out_channel_layout", c->channel_layout, 0);
     av_opt_set_sample_fmt    (ost->avr, "out_sample_fmt",     c->sample_fmt,     0);
     av_opt_set_int           (ost->avr, "out_sample_rate",    c->sample_rate,    0);
+#endif
+
+
 
     int ret = swr_init(ost->avr);
     if (ret < 0) { fprintf(stderr, "Error opening the resampling context\n"); return; }
 }
 
+#ifdef __APPLE__
+AVFrame* alloc_audio_frame(enum AVSampleFormat sample_fmt, AVChannelLayout ch_layout, int sample_rate, int nb_samples) {
+#else
 AVFrame* alloc_audio_frame(enum AVSampleFormat sample_fmt, uint64_t channel_layout, int sample_rate, int nb_samples) {
+#endif
+
     AVFrame* frame = av_frame_alloc();
     if (!frame) { fprintf(stderr, "Error allocating an audio frame\n"); return 0; }
 
-    frame->format = sample_fmt;
+#ifdef __APPLE__
+    frame->ch_layout = ch_layout;
+#else
     frame->channel_layout = channel_layout;
+#endif
+    frame->format = sample_fmt;
     frame->sample_rate = sample_rate;
     frame->nb_samples = nb_samples;
 
@@ -531,8 +591,13 @@ bool open_audio(AVFormatContext *oc, OutputStream *ost) {
 
     cout << "Allocate audio frames: " << nb_samples << endl;
 
+#ifdef __APPLE__
+    ost->frame     = alloc_audio_frame(c->sample_fmt, c->ch_layout, c->sample_rate, nb_samples);
+    ost->tmp_frame = alloc_audio_frame(AV_SAMPLE_FMT_S16, AVChannelLayout(AV_CHANNEL_LAYOUT_MONO), 22050, nb_samples);
+#else
     ost->frame     = alloc_audio_frame(c->sample_fmt, c->channel_layout, c->sample_rate, nb_samples);
     ost->tmp_frame = alloc_audio_frame(AV_SAMPLE_FMT_S16, AV_CH_LAYOUT_MONO, 22050, nb_samples);
+#endif
 
     /* copy the stream parameters to the muxer */
     ret = avcodec_parameters_from_context(ost->st->codecpar, c);
@@ -564,10 +629,14 @@ void setupMP3Decoder(AVCodecContext** ctx, AVFormatContext** fmtctx) {
     auto context = avcodec_alloc_context3(codec);
     *ctx = context;
 
-    context->sample_fmt     = AV_SAMPLE_FMT_S32P;
-    context->sample_rate    = 44100;
+#ifdef __APPLE__
+    context->ch_layout = AVChannelLayout(AV_CHANNEL_LAYOUT_MONO);
+#else
     context->channel_layout = AV_CH_LAYOUT_MONO;
     context->channels       = 1;
+#endif
+    context->sample_fmt     = AV_SAMPLE_FMT_S32P;
+    context->sample_rate    = 44100;
     context->bit_rate       = 64000;
     if (fmt->flags & AVFMT_GLOBALHEADER) context->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
     int ret = avcodec_open2(context, NULL, NULL);
@@ -682,10 +751,12 @@ void close_stream(AVFormatContext *oc, OutputStream *ost) {
 }
 
 void VRSound::exportToFile(string path) {
-    OutputStream audio_st = { 0 };
+    OutputStream audio_st;
     const char *filename = path.c_str();
 #ifndef _WIN32
+#ifndef __APPLE__
     av_register_all();
+#endif
 #endif
 
 	cout << "sound exportToFile: " << filename << endl;
@@ -745,7 +816,11 @@ void VRSound::writeStreamData(const string& data) {
     //doFrameSleep(0, 60);
 }
 
+#ifdef __APPLE__
+int custom_io_write(void* opaque, const uint8_t* buffer, int32_t N) {
+#else
 int custom_io_write(void* opaque, uint8_t* buffer, int32_t N) {
+#endif
     VRSound* sound = (VRSound*)opaque;
     string data((char*)buffer, N);
     if (sound && N > 0) sound->writeStreamData(data);
@@ -762,7 +837,9 @@ bool VRSound::addOutStreamClient(VRNetworkClientPtr client) {
 
     audio_ost = new OutputStream();
 #ifndef _WIN32
+#ifndef __APPLE__
     av_register_all();
+#endif
 #endif
 
     //AVOutputFormat* fmt = av_guess_format("opus", NULL, NULL);
@@ -857,14 +934,22 @@ string VRSound::onStreamData(string data, bool stereo) {
 		if (stereo) { // windows stream
 			al->codec->sample_fmt     = AV_SAMPLE_FMT_FLTP;
 			al->codec->sample_rate    = 44100;
+#ifdef __APPLE__
+			al->codec->ch_layout      = AVChannelLayout(AV_CHANNEL_LAYOUT_STEREO);
+#else
 			al->codec->channel_layout = AV_CH_LAYOUT_STEREO;
 			al->codec->channels       = 2;
+#endif
 			al->codec->bit_rate       = 96000;
 		} else { // linux stream
 			al->codec->sample_fmt     = AV_SAMPLE_FMT_S32P;
 			al->codec->sample_rate    = 44100;
+#ifdef __APPLE__
+			al->codec->ch_layout      = AVChannelLayout(AV_CHANNEL_LAYOUT_MONO);
+#else
 			al->codec->channel_layout = AV_CH_LAYOUT_MONO;
 			al->codec->channels       = 1;
+#endif
 			al->codec->bit_rate       = 64000;
 		}
 
@@ -909,7 +994,9 @@ bool VRSound::listenStream(int port, bool stereo) {
     }
 
 #ifndef _WIN32
+#ifndef __APPLE__
     av_register_all();
+#endif
 #endif
     return true;
 }
@@ -918,7 +1005,9 @@ bool VRSound::playPeerStream(VRNetworkClientPtr client, bool stereo) {
     auto streamCb = bind(&VRSound::onStreamData, this, placeholders::_1, stereo);
     client->onMessage(streamCb);
 #ifndef _WIN32
+#ifndef __APPLE__
     av_register_all();
+#endif
 #endif
     return true;
 }
@@ -1198,10 +1287,12 @@ void VRSound::testMP3Write() {
 
 	string path = "test.mp3";
 
-    OutputStream audio_st = { 0 };
+    OutputStream audio_st;
     const char *filename = path.c_str();
 #ifndef _WIN32
+#ifndef __APPLE__
     av_register_all();
+#endif
 #endif
 
 	cout << "sound exportToFile: " << filename << endl;
@@ -1253,5 +1344,3 @@ void VRSound::testMP3Write() {
 
 	cout << "av mp3 write test success!" << endl;
 }
-
-

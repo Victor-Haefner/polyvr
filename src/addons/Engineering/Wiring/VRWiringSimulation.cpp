@@ -4,6 +4,8 @@
 #include "VRWire.h"
 #include "addons/Semantics/Reasoning/VREntity.h"
 
+#include <list>
+
 using namespace OSG;
 
 VRWiringSimulation::VRWiringSimulation(VRElectricSystemPtr s) : system(s) {}
