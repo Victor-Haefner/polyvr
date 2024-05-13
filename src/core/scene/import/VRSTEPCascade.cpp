@@ -295,10 +295,13 @@ class STEPLoader {
         float getScale(STEPCAFControl_Reader& reader) {
             const STEPControl_Reader& stpreader = reader.Reader();
             const Handle(Interface_InterfaceModel) Model = stpreader.Model();
+            if (!Model) return 1.0;
             Handle(StepData_StepModel) aSM = Handle(StepData_StepModel)::DownCast(Model);
+            if (!aSM) return 1.0;
 
             for (int i=1; i<=Model->NbEntities(); i++) {
                 Handle(Standard_Transient) enti = aSM->Entity(i);
+                if (!enti) continue;
 
                 if (enti->IsKind(STANDARD_TYPE(StepBasic_SiUnitAndLengthUnit))) {
                     Handle(StepBasic_SiUnitAndLengthUnit) unit = Handle(StepBasic_SiUnitAndLengthUnit)::DownCast(enti);
@@ -314,6 +317,15 @@ class STEPLoader {
             }
 
             return 1.0;
+        }
+
+        string statusToStr(const IFSelect_ReturnStatus& s) {
+            if (s == IFSelect_RetVoid) return "void";
+            if (s == IFSelect_RetDone) return "done";
+            if (s == IFSelect_RetError) return "error";
+            if (s == IFSelect_RetFail) return "fail";
+            if (s == IFSelect_RetStop) return "stop";
+            return "unknown";
         }
 
     public:
@@ -352,11 +364,14 @@ class STEPLoader {
                 anApp->NewDocument("MDTV-XCAF",aDoc);
 
                 STEPCAFControl_Reader reader(on_update);
+                cout << " Reader start reading!! " << endl;
                 auto status = reader.ReadFile(path.c_str());
-                if (!status) { cout << "failed to read file" << endl; return; }
+                cout << " Reader status: " << statusToStr(status) << endl;
+                if (status != IFSelect_RetDone) {
+                        cout << "failed to read file" << endl; return;
+                }
                 int Nroots = reader.NbRootsForTransfer();
                 cout << "Number of roots in STEP file: " << Nroots << endl;
-                if (Nroots == 0) { cout << "failed to read file, no roots" << endl; return; }
                 reader.SetNameMode(true);
                 reader.SetMatMode(true);
                 reader.SetColorMode(true);
@@ -365,19 +380,23 @@ class STEPLoader {
                 float scale = getScale(reader);
                 cout << "Model length unit scale: " << scale << endl;
 
-                int countTransfers = 0;
-                for (int i=1; i<=Nroots; i++) {
-                    cout << " transfer " << i << "/" << Nroots << endl;
-                    auto transferOk = reader.TransferOneRoot(i, aDoc);
-                    cout << endl;
-                    if (!transferOk) cout << "failed to transfer to XDS doc" << endl;
-                    else countTransfers++;
+                if (Nroots > 0) {
+                    int countTransfers = 0;
+                    for (int i=1; i<=Nroots; i++) {
+                        cout << " transfer " << i << "/" << Nroots << endl;
+                        auto transferOk = reader.TransferOneRoot(i, aDoc);
+                        cout << endl;
+                        if (!transferOk) cout << "failed to transfer to XDS doc" << endl;
+                        else countTransfers++;
+                    }
+
+                    if (countTransfers < Nroots) cout << "Warning! failed to transfer some roots, model might be incomplete!" << endl;
+                    if (countTransfers == 0) { cout << "Error! failed to transfer any root" << endl; return; }
+                    cout << "XCAF transfers done " << endl;
+                } else {
+                    cout << "Warning! no roots in STEP reader, trying doc transfer" << endl;
+                    reader.Transfer(aDoc);
                 }
-
-                if (countTransfers < Nroots) cout << "Warning! failed to transfer some roots, model might be incomplete!" << endl;
-                if (countTransfers == 0) { cout << "Error! failed to transfer any root" << endl; return; }
-                cout << "XCAF transfers done " << endl;
-
 
                 Handle(XCAFDoc_ShapeTool) Assembly = XCAFDoc_DocumentTool::ShapeTool(aDoc->Main());
                 TDF_LabelSequence shapes;

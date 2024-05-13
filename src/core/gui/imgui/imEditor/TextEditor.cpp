@@ -2038,7 +2038,7 @@ void TextEditor::Redo(int aSteps)
 
 const TextEditor::Palette & TextEditor::GetDarkPalette()
 {
-	const static Palette p = { {
+	const static Palette p = { { // ABGR
 			0xff7f7f7f,	// Default
 			0xffd69c56,	// Keyword
 			0xff00ff00,	// Number
@@ -2049,8 +2049,8 @@ const TextEditor::Palette & TextEditor::GetDarkPalette()
 			0xffaaaaaa, // Identifier
 			0xff9bc64d, // Known identifier
 			0xffc040a0, // Preproc identifier
-			0xff206020, // Comment (single line)
-			0xff406020, // Comment (multi line)
+			0xff709070, // Comment (single line)
+			0xff609060, // Comment (multi line)
 			0xff101010, // Background
 			0xffe0e0e0, // Cursor
 			0x80a06020, // Selection

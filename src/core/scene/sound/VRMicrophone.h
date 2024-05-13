@@ -38,6 +38,7 @@ class VRMicrophone : public std::enable_shared_from_this<VRMicrophone> {
         bool doStream = false;
         bool needsFlushing = false;
         bool streamPaused = false;
+        double currentAmp = 0;
 
         thread* recordingThread = 0;
         thread* streamingThread = 0;
@@ -51,6 +52,7 @@ class VRMicrophone : public std::enable_shared_from_this<VRMicrophone> {
 	    list<VRSoundBufferPtr> frameBuffer;
 	    bool deviceOk = false;
 	    VRMutex* streamMutex = 0;
+	    VRMutex* paramsMutex = 0;
 	    int queueSize = 10;
 	    int maxBufferSize = 20;
 	    int streamBuffer = 5;
@@ -69,7 +71,7 @@ class VRMicrophone : public std::enable_shared_from_this<VRMicrophone> {
 	    void stop();
 
 	    void startRecordingThread();
-	    void startStreamingThread();
+	    void startStreamingThread(string method);
 
 	    VRSoundBufferPtr fetchDevicePacket();
 	    VRSoundBufferPtr genPacket(double dt);
@@ -82,16 +84,19 @@ class VRMicrophone : public std::enable_shared_from_this<VRMicrophone> {
 		static VRMicrophonePtr create();
 		VRMicrophonePtr ptr();
 
+        void setSampleRate(int rate);
 		void simSource(bool active, float freq, float tone, float pause);
 
 		void startRecording();
 		VRSoundPtr stopRecording();
 
-		void startStreaming(string address, int port);
-		void startStreamingOver(VRNetworkClientPtr client);
+		void startStreaming(string address, int port, string method = "mp3");
+		void startStreamingOver(VRNetworkClientPtr client, string method = "mp3");
 		void pauseStreaming(bool p);
 		void stopStreaming();
 		bool isStreaming();
+
+		double getAmplitude();
 };
 
 OSG_END_NAMESPACE;

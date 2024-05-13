@@ -16,7 +16,8 @@ class ImAppLauncher {
 
         ImAppLauncher() {}
         ImAppLauncher(string ID, string panel, string timestamp);
-        void render(string filter);
+        ~ImAppLauncher();
+        void render(string filter, ImImage& preview);
 };
 
 class ImAppPanel {
@@ -25,12 +26,14 @@ class ImAppPanel {
         vector<string> launchers;
 
         ImAppPanel(string label);
-        void render(string filter, map<string, ImAppLauncher>& launcherPool);
+        ~ImAppPanel();
+        void render(string filter, map<string, ImAppLauncher>& launcherPool, ImImage& preview);
 };
 
 class ImAppManager : public ImWidget {
     public:
         string filter = "";
+        ImImage preview;
 
         map<string, ImAppLauncher> launchers;
 
@@ -44,6 +47,7 @@ class ImAppManager : public ImWidget {
 
         void renderLauncher(string name);
         ImAppManager();
+        ~ImAppManager();
         void begin() override;
 };
 

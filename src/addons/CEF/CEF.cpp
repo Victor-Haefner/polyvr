@@ -728,7 +728,7 @@ bool CEF::keyboard(VRDeviceWeakPtr d) {
     } else {
         //cout << " CEF::keyboard release " << kev.windows_key_code << " " << kev.native_key_code << " " << kev.character << " " << kev.unmodified_character << endl;
         kev.type = KEYEVENT_KEYUP; host->SendKeyEvent(kev);
-        if (event.keyval < 256) kev.type = KEYEVENT_CHAR; host->SendKeyEvent(kev);
+        if (event.keyval < 256) { kev.type = KEYEVENT_CHAR; host->SendKeyEvent(kev); }
     }
     return false;
 }

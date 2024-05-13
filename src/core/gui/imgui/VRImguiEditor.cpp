@@ -541,10 +541,10 @@ void VRImguiEditor::render() {
     ImGui_ImplGLUT_NewFrame();
     ImGui::GetStyle().TouchExtraPadding = ImVec2(3, 3); // make DnD of section borders easier
 
+
     toolbar.render();
     sidePanel.render();
     consoles.render();
-
     //ImGui::ShowDemoWindow(0);
 
     // Rendering
