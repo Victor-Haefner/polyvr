@@ -174,17 +174,21 @@ vector<string> VRRecorder::getResList() {
 }
 
 void VRRecorder::setViewResolution(string res) {
+#ifndef WITHOUT_IMGUI
     auto w = VRSetup::getCurrent()->getEditorWindow();
     if (res == "1080p") w->forceGLResize(1920, 1080);
     if (res == "720p")  w->forceGLResize(1280, 720);
     if (res == "480p")  w->forceGLResize(640, 480);
     if (res == "240p")  w->forceGLResize(320, 240);
+#endif
 }
 
 void VRRecorder::enableVSync(bool b) {
+#ifndef WITHOUT_IMGUI
     cout << "VRRecorder::enableVSync " << b << endl;
     auto w = VRSetup::getCurrent()->getEditorWindow();
     w->enableVSync(b);
+#endif
 }
 
 void VRRecorder::clear() {

@@ -657,7 +657,7 @@ void VRView::setFotoMode(bool b) {
 }
 
 VRTexturePtr VRView::grab() {
-#ifndef WITHOUT_GTK
+#ifndef WITHOUT_IMGUI
     //return takeSnapshot();
     return 0;
 #else
@@ -769,4 +769,3 @@ Vec2d VRView::getProjectionWarp() { return proj_warp; }
 
 void VRView::setProjectionUser(Vec3d v) { proj_user = v; update(); }
 Vec3d VRView::getProjectionUser() { return proj_user; }
-

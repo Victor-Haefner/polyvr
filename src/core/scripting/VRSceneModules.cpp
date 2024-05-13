@@ -392,7 +392,9 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
 #ifndef WITHOUT_VIRTUOSE
     sm->registerModule<VRPyHaptic>("Haptic", pModVR, VRPyDevice::typeRef);
 #endif
+#ifndef WITHOUT_OPENVR
     sm->registerModule<VRPyHeadMountedDisplay>("HeadMountedDisplay", pModVR, VRPyDevice::typeRef);
+#endif
     sm->registerModule<VRPyParticles>("Particles", pModVR, VRPyGeometry::typeRef);
     sm->registerModule<VRPyFluids>("Fluids", pModVR, VRPyParticles::typeRef);
     sm->registerModule<VRPyMetaBalls>("MetaBalls", pModVR, VRPyObject::typeRef);
@@ -410,7 +412,9 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
 #endif
 
     sm->registerModule<VRPyPing>("Ping", pModVR);
+#ifndef WITHOUT_SNAP7
     sm->registerModule<VRPyProfinetClient>("ProfinetClient", pModVR);
+#endif
     sm->registerModule<VRPyMQTTClient>("MQTTClient", pModVR, VRPyNetworkClient::typeRef);
     sm->registerModule<VRPyMQTTServer>("MQTTServer", pModVR);
 
@@ -422,7 +426,9 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPyMultiTouch>("MultiTouch", pModVR, VRPyDevice::typeRef);
 #endif
 
+#ifndef WITHOUT_IMGUI
     sm->registerModule<VRPyGui>("Gui", pModVR);
+#endif
 #ifndef WITHOUT_CEF
     sm->registerModule<VRPyCEF>("CEF", pModVR);
 #ifndef WITHOUT_AV
@@ -430,7 +436,3 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
 #endif
 #endif
 }
-
-
-
-

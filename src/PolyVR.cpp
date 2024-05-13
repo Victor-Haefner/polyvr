@@ -18,7 +18,7 @@
 #include "core/scripting/VRScript.h"
 #include "core/utils/VRInternalMonitor.h"
 #include "core/utils/coreDumpHandler.h"
-#ifndef WITHOUT_GTK
+#ifndef WITHOUT_IMGUI
 #include "core/gui/VRGuiManager.h"
 #include "core/gui/VRGuiSignals.h"
 #endif
@@ -105,7 +105,7 @@ PolyVR::~PolyVR() {
 
     pvr = 0;
 
-#ifndef WITHOUT_GTK
+#ifndef WITHOUT_IMGUI
     VRGuiSignals::get()->clear();
 #endif
     if (scene_mgr) scene_mgr->closeScene();
@@ -243,7 +243,7 @@ void PolyVR::initUI() {
 	main_interface = shared_ptr<VRMainInterface>(VRMainInterface::get());
 #endif
 
-#ifndef WITHOUT_GTK
+#ifndef WITHOUT_IMGUI
     gui_mgr = shared_ptr<VRGuiManager>(VRGuiManager::get());
     gui_mgr->init();
     gui_mgr->updateSystemInfo();
@@ -328,7 +328,7 @@ void PolyVR::startTestScene(OSGObjectPtr n, const Vec3d& camPos) {
     VRTransformPtr cam = dynamic_pointer_cast<VRTransform>( VRScene::getCurrent()->get("Default") );
     cam->setFrom(Vec3d(camPos));
 
-#ifndef WITHOUT_GTK
+#ifndef WITHOUT_IMGUI
     VRGuiManager::get()->wakeWindow();
 #endif
     run();

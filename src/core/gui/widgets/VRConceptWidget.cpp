@@ -75,7 +75,7 @@ void VRConceptWidget::on_rem_prop_clicked() {
     concept->remProperty(selected_property);
     selected_property = 0;*/
     update();
-    saveScene();
+    //saveScene();
 }
 
 void VRConceptWidget::on_rem_clicked() {
@@ -90,7 +90,7 @@ void VRConceptWidget::on_edit_clicked() {
     if (s == "") return;
     manager->getSelectedOntology()->renameConcept(concept, s);
     gtk_label_set_text(label, concept->getName().c_str());*/
-    saveScene();
+    //saveScene();
 }
 
 void VRConceptWidget::on_newp_clicked() {
@@ -105,7 +105,7 @@ void VRConceptWidget::on_newp_clicked() {
     gtk_tree_store_append(store, &itr, 0);
     setPropRow(&itr, name, "none", "orange", 0);
     concept->addProperty(name, "none");*/
-    saveScene();
+    //saveScene();
 }
 
 void VRConceptWidget::on_select_property() {
@@ -152,16 +152,12 @@ void VRConceptWidget::reparent(VRConceptWidgetPtr w) {
         concept->append(c);
         manager->connect(ptr(), w, "#00CCFF");
     }
-    saveScene();
+    //saveScene();
 }
 
 void VRConceptWidget::reparent(VRRuleWidgetPtr w) {
     w->rule->associatedConcept = concept->getName();
     manager->disconnectAny(w);
     manager->connect(ptr(), w, "#00DD00");
-    saveScene();
+    //saveScene();
 }
-
-
-
-

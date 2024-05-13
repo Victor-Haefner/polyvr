@@ -381,7 +381,9 @@ void VRGuiSetup::on_treeview_select(string selected) {
 #ifndef WITHOUT_VRPN
     else if (selected_type == "vrpn_tracker") vrpn_tracker = setup->getVRPN()->getVRPNTracker(toInt(selected_name));
 #endif
+#ifndef WITHOUT_ART
     else if (selected_type == "art_device") art_device = setup->getART()->getARTDevice(toInt(selected_name));
+#endif
     else device = setup->getDevice(selected_name);
 
     updateObjectData();

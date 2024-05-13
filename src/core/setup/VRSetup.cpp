@@ -121,11 +121,13 @@ void VRSetup::updateTracking() {
 #ifndef WITHOUT_VRPN
     if (vrpn) vrpn->update();
 #endif
+#ifndef WITHOUT_OPENVR
     if (auto hmd = dynamic_pointer_cast<VRHeadMountedDisplay>(getDevice("hmd"))) {
         //hmd->UpdateHMDMatrixPose();
         hmd->UpdateDevMatrixPoses();
         hmd->handleInput();
     }
+#endif
     for (auto view : getViews()) view->updateMirror();
 }
 
@@ -314,4 +316,3 @@ void VRSetup::sendToBrowser(const string& msg) {
     }, msg.c_str());
 #endif
 }
-

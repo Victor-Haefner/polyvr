@@ -367,7 +367,7 @@ void VRHeadMountedDisplay::addController(int devID) {
 		for (auto cef : CEF::getInstances()) cef->addMouse(dev, 0, 0, -1, -1, -1, -1);
 		for (auto script : scene->getScripts()) script.second->updateDeviceTrigger();
 
-#ifndef WITHOUT_GTK
+#ifndef WITHOUT_IMGUI
 		VRGuiManager::get()->broadcast("navpresets_changed");
 #endif
 	}

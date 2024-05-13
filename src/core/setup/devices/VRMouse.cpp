@@ -30,7 +30,7 @@ void VRMouse::setCursor(string c) { // TODO
     /*auto s = VRSetup::getCurrent();
     for (auto w : s->getWindows()) {
         if (!w.second->hasType("gtk")) continue; // not a gtk window
-#ifndef WITHOUT_GTK
+#ifndef WITHOUT_IMGUI
         auto win = dynamic_pointer_cast<VRGtkWindow>(w.second);
         win->setCursor(c);
 #endif
@@ -276,4 +276,3 @@ void VRMouse::save(XMLElementPtr e) {
 void VRMouse::load(XMLElementPtr e) {
     VRDevice::load(e);
 }
-

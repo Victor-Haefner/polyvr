@@ -7,7 +7,7 @@
 #include <list>
 #include "core/utils/toString.h"
 #include "core/utils/VRCallbackWrapper.h"
-#ifndef WITHOUT_GTK
+#ifndef WITHOUT_IMGUI
 #include "core/gui/VRGuiManager.h"
 #include "core/gui/VRGuiConsole.h"
 #endif
@@ -58,7 +58,7 @@ bool VRReasoner::startswith(string s, string subs) {
 
 void VRReasoner::print(const string& s) {
     if (verbConsole) cout << pre << s << endl;
-#ifndef WITHOUT_GTK
+#ifndef WITHOUT_IMGUI
     if (verbGui) VRConsoleWidget::get( "Reasoning" )->write( s+"\n" );
 #endif
 }
@@ -74,7 +74,7 @@ void VRReasoner::print(const string& s, COLOR c) {
         cout << pre << s << colEnd << endl;
     }
 
-#ifndef WITHOUT_GTK
+#ifndef WITHOUT_IMGUI
     if (verbGui) {
         switch(c) {
             case BLUE: VRConsoleWidget::get( "Reasoning" )->write( s+"\n", "blue" ); break;
@@ -557,8 +557,3 @@ vector<VREntityPtr> VRReasoner::process(string strQuery, VROntologyPtr onto) {
 VRReasonerPtr VRReasoner::create() { return VRReasonerPtr( new VRReasoner() ); }
 
 void VRReasoner::setVerbose(bool gui, bool console) { verbGui = gui; verbConsole = console; }
-
-
-
-
-

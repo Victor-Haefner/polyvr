@@ -5,7 +5,9 @@
 using namespace OSG;
 
 simplePyType(CEF, New_ptr);
+#ifndef WITHOUT_IMGUI
 simpleVRPyType(Gui, New_ptr);
+#endif
 
 PyMethodDef VRPyCEF::methods[] = {
     {"open", PyWrap2(CEF, open, "Open URL", void, string) },
@@ -18,6 +20,7 @@ PyMethodDef VRPyCEF::methods[] = {
     {NULL}  /* Sentinel */
 };
 
+#ifndef WITHOUT_IMGUI
 PyMethodDef VRPyGui::methods[] = {
     {"open", PyWrap(Gui, open, "Open URL", void, string) },
     {"setMaterial", PyWrap(Gui, setMaterial, "Set material", void, VRMaterialPtr) },
@@ -28,3 +31,4 @@ PyMethodDef VRPyGui::methods[] = {
     {"toggleInput", PyWrap(Gui, toggleInput, "Toggle mouse and keyboard input usage (useMouse, useKeyboard)", void, bool, bool) },
     {NULL}  /* Sentinel */
 };
+#endif

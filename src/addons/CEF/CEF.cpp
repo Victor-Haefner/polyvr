@@ -9,7 +9,7 @@
 #include <boost/utility/in_place_factory.hpp>
 namespace std {
   template <class T> using decay_t = typename decay<T>::type;
-  
+
   struct in_place_t {
     explicit in_place_t() = default;
   };
@@ -160,13 +160,13 @@ void CEF_handler::on_link_clicked(string source, int line, string s) {
     auto data = splitString(source, '/');
     if (data.size() == 0) return;
     string script = data[data.size()-1];
-#ifndef WITHOUT_GTK
+#ifndef WITHOUT_IMGUI
     VRGuiManager::get()->focusScript(script, line, 0);
 #endif
 }
 
 bool CEF_handler::OnConsoleMessage( CefRefPtr< CefBrowser > browser, cef_log_severity_t level, const CefString& message, const CefString& source, int line ) {
-#ifndef WITHOUT_GTK
+#ifndef WITHOUT_IMGUI
     VRConsoleWidget::get( "Console" )->addStyle( "blueLink", "#1133ff", "#ffffff", false, false, true, false );
 
     auto link = VRFunction<string>::create("cef_link", bind(&CEF_handler::on_link_clicked, this, source, line, _1) );
@@ -177,6 +177,9 @@ bool CEF_handler::OnConsoleMessage( CefRefPtr< CefBrowser > browser, cef_log_sev
     VRConsoleWidget::get( "Console" )->write( ": " + msg + "\n" );
     return true;
 #else
+    string msg = message;
+    string src = source;
+    cout << src << " (" + toString(line) + "): " << msg << endl;
     return false;
 #endif
 }

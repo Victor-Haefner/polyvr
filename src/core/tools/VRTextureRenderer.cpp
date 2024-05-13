@@ -518,6 +518,7 @@ class OpenRenderAction : public RenderAction {
 #endif
 
 VRTexturePtr VRTextureRenderer::renderOnce(CHANNEL c) { // TODO: not working!
+#ifndef WITHOUT_IMGUI
     cout << "VRTextureRenderer::renderOnce" << endl;
     if (!cam) return 0;
     bool deferred = VRScene::getCurrent()->getDefferedShading();
@@ -612,6 +613,7 @@ VRTexturePtr VRTextureRenderer::renderOnce(CHANNEL c) { // TODO: not working!
 
     //ew->setCurrentWinID(cwID);
     return tex;
+#endif
 }
 
 /** special setup

@@ -7,7 +7,7 @@
 #include "core/utils/toString.h"
 #include "core/utils/VRTimer.h"
 
-#ifndef WITHOUT_GTK
+#ifndef WITHOUT_IMGUI
 #include "core/gui/VRGuiConsole.h"
 #endif
 
@@ -146,14 +146,14 @@ bool VRSyncConnection::send(string message, int frameDelay) {
     timer->reset();
     if (!client) {
         cout << "Error in VRSyncConnection::send, failed! no client.. tried to send " << message << endl;
-#ifndef WITHOUT_GTK
+#ifndef WITHOUT_IMGUI
         VRConsoleWidget::get("Collaboration")->write( "Error in VRSyncConnection::send, failed! no client.. tried to send " + message + "\n", "red");
 #endif
         return 0;
     }
     if (!client->connected()) { // this only means it is connected to the turn server, NOT the other peer!
         cout << "Error in VRSyncConnection::send, failed! client not connected.. tried to send " << message << endl;
-#ifndef WITHOUT_GTK
+#ifndef WITHOUT_IMGUI
         VRConsoleWidget::get("Collaboration")->write( "Error in VRSyncConnection::send, failed! client not connected.. tried to send " + message + "\n", "red");
 #endif
         return 0;
@@ -207,7 +207,7 @@ string VRSyncConnection::setupAvatar(string name, VRTransformPtr headTransform, 
     avatar.tDevID = getTransformID(devTransform);
     avatar.tAnchorID = getNodeID(devAnchor);
     string msg = "addAvatar|"+toString(avatar.tHeadID)+":"+toString(avatar.tDevID)+":"+toString(avatar.tAnchorID);
-#ifndef WITHOUT_GTK
+#ifndef WITHOUT_IMGUI
     VRConsoleWidget::get("Collaboration")->write( "setupAvatar " + name + ", "+msg+"\n", "green");
 #endif
     return msg;
@@ -219,7 +219,7 @@ void VRSyncConnection::updateAvatar(string data) { // triggered by updateAvatar 
 }
 
 void VRSyncConnection::handleAvatar(string data) { // triggered by addAvatar message
-#ifndef WITHOUT_GTK
+#ifndef WITHOUT_IMGUI
     VRConsoleWidget::get("Collaboration")->write( "handleAvatar " + data + "\n", "green");
 #endif
 
@@ -324,4 +324,3 @@ void VRSyncConnection::handleTypeMapping(string mappingData) {
 UInt32 VRSyncConnection::getLocalType(UInt32 id) {
     return typeMapping[id];
 }
-

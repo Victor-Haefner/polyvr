@@ -105,7 +105,7 @@ FILE *popen(const char *command, const char *type) { return 0; }
 #endif
 
 std::string OSG::VRPing::getMAC(std::string IP, std::string interface) {
-#ifndef _WIN32
+#if !defined(_WIN32) && !defined(__APPLE__)
     return ::getMAC(IP, interface);
 #else
     return "";

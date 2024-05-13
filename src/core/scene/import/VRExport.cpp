@@ -1,7 +1,9 @@
 #include "VRExport.h"
 #include "VRPLY.h"
 #include "GLTF/GLTF.h"
+#ifndef WITHOUT_E57
 #include "E57/E57.h"
+#endif
 #include "COLLADA/VRCOLLADA.h"
 #include "GIS/VRGDAL.h"
 #ifndef WITHOUT_DWG
@@ -34,7 +36,9 @@ void VRExport::write(VRObjectPtr obj, string path, map<string, string> options) 
 #ifndef WITHOUT_DWG
     if (ext == ".dwg") { writeDWG(obj, path); }
 #endif
+#ifndef WITHOUT_E57
     if (ext == ".e57") { writeE57(dynamic_pointer_cast<VRPointCloud>(obj), path); }
+#endif
 
     if (ext == ".wrl" || ext == ".wrz" || ext == ".obj" || ext == ".osb" || ext == ".osg")
         SceneFileHandler::the()->write(obj->getNode()->node, path.c_str());
@@ -42,9 +46,7 @@ void VRExport::write(VRObjectPtr obj, string path, map<string, string> options) 
 #ifndef WITHOUT_COLLADA
     if (ext == ".dae") { writeCollada(obj, path, options); }
 #endif
+#ifndef WITHOUT_GDAL
     if (ext == ".shp") { writeSHP(obj, path, options); }
+#endif
 }
-
-
-
-

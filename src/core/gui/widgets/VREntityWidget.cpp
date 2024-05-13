@@ -33,7 +33,7 @@ void VREntityWidget::on_edit_prop_clicked() {
     }
     gtk_widget_hide(dialog);*/
     update();
-    saveScene();
+    //saveScene();
 }
 
 void VREntityWidget::on_rem_prop_clicked() {
@@ -43,7 +43,7 @@ void VREntityWidget::on_rem_prop_clicked() {
     entity->rem(selected_entity_property); // TODO
     selected_entity_property = 0;*/
     update();
-    saveScene();
+    //saveScene();
 }
 
 void VREntityWidget::on_newp_clicked() {
@@ -52,7 +52,7 @@ void VREntityWidget::on_newp_clicked() {
     //setPropRow(selected_concept_property->append(), name, "", "orange", 0);
     entity->add(name, "");
     update();
-    saveScene();
+    //saveScene();
 }
 
 void VREntityWidget::on_rem_clicked() {
@@ -67,7 +67,7 @@ void VREntityWidget::on_edit_clicked() {
     if (s == "") return;
     manager->getSelectedOntology()->renameEntity(entity, s);
     gtk_label_set_text(label, entity->getName().c_str());*/
-    saveScene();
+    //saveScene();
 }
 
 void VREntityWidget::on_select_property() {
@@ -125,4 +125,3 @@ void VREntityWidget::update() {
 void VREntityWidget::reparent(VRConceptWidgetPtr w) {}
 void VREntityWidget::reparent(VREntityWidgetPtr w) {}
 void VREntityWidget::reparent(VRRuleWidgetPtr w) {}
-

@@ -16,7 +16,7 @@
 #include "core/setup/devices/VRServer.h"
 #include "core/utils/system/VRSystem.h"
 
-#ifndef WITHOUT_GTK
+#ifndef WITHOUT_IMGUI
 #include "core/gui/VRGuiConsole.h"
 #endif
 
@@ -154,7 +154,7 @@ void VRCollaboration::setupUserAvatar(string rID, string name) {
 }
 
 void VRCollaboration::connectTCP(string origin, bool isWindows) {
-#ifndef WITHOUT_GTK
+#ifndef WITHOUT_IMGUI
     VRConsoleWidget::get("Collaboration")->write( "Collab: connect TCP sync node and audio, setup avatar of origin "+origin+"'\n");
 #endif
 
@@ -162,14 +162,14 @@ void VRCollaboration::connectTCP(string origin, bool isWindows) {
     auto client = dynamic_pointer_cast<VRTCPClient>(cli);
 
     if (!client) {
-#ifndef WITHOUT_GTK
+#ifndef WITHOUT_IMGUI
         VRConsoleWidget::get("Collaboration")->write( "Collab: no TCP client found for origin '"+origin+"'\n", "red");
 #endif
         return;
     }
 
     if (!client->connected()) {
-#ifndef WITHOUT_GTK
+#ifndef WITHOUT_IMGUI
         VRConsoleWidget::get("Collaboration")->write( "Collab: TCP client found for origin '"+origin+"' is not connected!\n", "red");
 #endif
         return;
@@ -348,7 +348,7 @@ vector<string> VRCollaboration::parseSubNet(string net) {
 }
 
 void VRCollaboration::acceptConnection(string origin, bool isWindows) {
-#ifndef WITHOUT_GTK
+#ifndef WITHOUT_IMGUI
     VRConsoleWidget::get("Collaboration")->write( "Collab: accepting incomming connection, connect ice to origin!\n");
 #endif
     string net = getSubnet();
@@ -365,7 +365,7 @@ void VRCollaboration::acceptConnection(string origin, bool isWindows) {
 }
 
 void VRCollaboration::finishConnection(string origin, bool isWindows, vector<string> net) {
-#ifndef WITHOUT_GTK
+#ifndef WITHOUT_IMGUI
     VRConsoleWidget::get("Collaboration")->write( "Collab: got CONACC, connect ice to origin!\n");
 #endif
     for (auto node : net) {
@@ -693,9 +693,3 @@ string VRCollaboration::userlistSite = WEBSITE(
 	</body>\n
 </html>
 );
-
-
-
-
-
-

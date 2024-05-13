@@ -19,7 +19,9 @@
 #include "core/utils/system/VRSystem.h"
 #include "core/tools/VRPathtool.h"
 #include "core/scene/import/VRImport.h"
+#ifndef WITHOUT_E57
 #include "core/scene/import/E57/E57.h"
+#endif
 #include "addons/WorldGenerator/terrain/VRPlanet.h"
 
 #include <thread>
@@ -634,13 +636,17 @@ void VRPointCloud::setupLODs() {
 
 void VRPointCloud::convert(string pathIn, string pathOut) {
     if (pathOut == "") pathOut = pathIn+".pcb";
+#ifndef WITHOUT_E57
     convertE57({pathIn}, pathOut);
+#endif
 }
 
 void VRPointCloud::convertMerge(vector<string> pathIn, string pathOut) {
     if (pathIn.size() == 0) return;
     if (pathOut == "") pathOut = pathIn[0]+".pcb";
+#ifndef WITHOUT_E57
     convertE57(pathIn, pathOut);
+#endif
 }
 
 void VRPointCloud::genTestFile(string path, size_t N, bool doColor, float pDist) {

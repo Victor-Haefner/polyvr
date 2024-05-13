@@ -68,7 +68,7 @@ void VRGuiSemantics::on_new_clicked() {
     o->setPersistency(666);
     o->setFlag("custom");
     updateOntoList();
-    saveScene();
+    //saveScene();
 }
 
 void VRGuiSemantics::on_del_clicked() {
@@ -77,7 +77,7 @@ void VRGuiSemantics::on_del_clicked() {
     mgr->remOntology(current);
     clear();
     updateOntoList();
-    saveScene();
+    //saveScene();
 }
 
 void VRGuiSemantics::on_diag_load_clicked() {
@@ -88,7 +88,7 @@ void VRGuiSemantics::on_diag_load_clicked() {
     o->setPersistency(666);
     o->setFlag("custom");*/
     updateOntoList();
-    saveScene();
+    //saveScene();
 }
 
 void VRGuiSemantics::on_open_clicked() {
@@ -191,7 +191,7 @@ void VRGuiSemantics::on_treeview_select() {
     string name = tview.getSelectedStringValue(0);
     auto o = scene->getSemanticManager()->renameOntology(name, new_name);
     tview.setSelectedStringValue(0, new_name);
-    saveScene();
+    //saveScene();
 }*/
 
 VRSemanticManagerPtr VRGuiSemantics::getManager() {
@@ -282,7 +282,7 @@ void VRGuiSemantics::copyConcept(VRConceptWidget* w) {
     canvas->addWidget(c->ID, cw);
     cw->move(w->pos + Vec2d(90,0));
     canvas->connect(canvas->getWidget(w->ID()), cw, "#00CCFF");*/
-    saveScene();
+    //saveScene();
 }
 
 void VRGuiSemantics::addEntity(VRConceptWidget* w) {
@@ -291,7 +291,7 @@ void VRGuiSemantics::addEntity(VRConceptWidget* w) {
     canvas->addWidget(c->ID, cw);
     cw->move(w->pos + Vec2d(90,0));
     canvas->connect(canvas->getWidget(w->ID()), cw, "#FFEE00");*/
-    saveScene();
+    //saveScene();
 }
 
 void VRGuiSemantics::addRule(VRConceptWidget* w) {
@@ -301,7 +301,7 @@ void VRGuiSemantics::addRule(VRConceptWidget* w) {
     canvas->addWidget(c->ID, cw);
     cw->move(w->pos + Vec2d(90,0));
     canvas->connect(canvas->getWidget(w->ID()), cw, "#00DD00");*/
-    saveScene();
+    //saveScene();
 }
 
 void VRGuiSemantics::remConcept(VRConceptWidget* w) {
@@ -309,20 +309,20 @@ void VRGuiSemantics::remConcept(VRConceptWidget* w) {
     current->remConcept(w->concept);
     canvas->remNode(w->concept->ID);
     //disconnectAny(); // TODO
-    saveScene();
+    //saveScene();
 }
 
 void VRGuiSemantics::remEntity(VREntityWidget* w) {
     canvas->remWidget(w->entity->ID);
     current->remEntity(w->entity);
     //disconnectAny(); // TODO
-    saveScene();
+    //saveScene();
 }
 
 void VRGuiSemantics::remRule(VRRuleWidget* w) {
     canvas->remWidget(w->rule->ID);
     current->remRule(w->rule);
-    saveScene();
+    //saveScene();
 }
 
 VROntologyPtr VRGuiSemantics::getSelectedOntology() { return current; }

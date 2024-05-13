@@ -191,7 +191,7 @@ class TCPClient {
                 read();
             } catch(std::exception& e) {
                 cout << "TCPClient::connect failed with: " << e.what() << endl;
-#ifndef WITHOUT_GTK
+#ifndef WITHOUT_IMGUI
                 VRConsoleWidget::get("Collaboration")->write( " TCP connect to "+host+":"+toString(port)+" failed with "+e.what()+"\n", "red");
 #endif
             }
@@ -202,7 +202,7 @@ class TCPClient {
             auto endpoints = uriToEndpoints(uri);
             if (endpoints.size() == 0) {
                 cout << "TCPClient::connect failed, no endpoints found for uri " << uri << endl;
-#ifndef WITHOUT_GTK
+#ifndef WITHOUT_IMGUI
                 VRConsoleWidget::get("Collaboration")->write( " TCP connect to "+uri+" failed, no endpoints found\n", "red");
 #endif
                 return;
@@ -213,7 +213,7 @@ class TCPClient {
                 read();
             } catch(std::exception& e) {
                 cout << "TCPClient::connect failed with: " << e.what() << endl;
-#ifndef WITHOUT_GTK
+#ifndef WITHOUT_IMGUI
                 VRConsoleWidget::get("Collaboration")->write( " TCP connect to "+uri+" ("+toString(endpoints.size())+" endpoints) failed with "+e.what()+"\n", "red");
 #endif
             }
@@ -395,5 +395,3 @@ void VRTCPClient::close() { // TODO: the onConnect and onMessage callbacks get l
 }
 
 string VRTCPClient::getPublicIP(bool cached) { return VRTCPUtils::getPublicIP(cached); }
-
-

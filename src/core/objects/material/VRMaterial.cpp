@@ -3,7 +3,7 @@
 #include "VRShaderFactory.h"
 
 #include "OSGMaterial.h"
-#ifndef WITHOUT_GTK
+#ifndef WITHOUT_IMGUI
 #include "core/gui/VRGuiManager.h"
 #include "core/gui/VRGuiConsole.h"
 #endif
@@ -988,7 +988,7 @@ bool VRMaterial::isWireFrame() {
 
 VRVideoPtr VRMaterial::setVideo(string vid_path) {
     if (!exists(vid_path)) {
-#ifndef WITHOUT_GTK
+#ifndef WITHOUT_IMGUI
         VRConsoleWidget::get("Errors")->write("Material setVideo "+vid_path+" of material "+getName()+" failed, path not found!\n");
 #endif
         return 0;
@@ -1290,7 +1290,7 @@ bool VRMaterial::checkShader(int type, string shader, string name) {
     if (blen > 1) {
         GLchar* compiler_log = (GLchar*)malloc(blen);
         glGetInfoLogARB(shaderObject, blen, &slen, compiler_log);
-#ifndef WITHOUT_GTK
+#ifndef WITHOUT_IMGUI
         errC->write( "Shader "+name+" of material "+getName()+" warnings and errors:\n");
         errC->write( string(compiler_log));
 #else

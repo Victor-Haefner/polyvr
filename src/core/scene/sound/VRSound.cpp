@@ -13,7 +13,7 @@
 #include "core/networking/rest/VRRestClient.h"
 #include "VRSoundManager.h"
 
-#ifndef WITHOUT_GTK
+#ifndef WITHOUT_IMGUI
 #include "core/gui/VRGuiManager.h"
 #include "core/gui/VRGuiConsole.h"
 #endif
@@ -36,7 +36,7 @@ extern "C" {
 #include <climits>
 #include <complex>
 
-#ifndef WITHOUT_GTK
+#ifndef WITHOUT_IMGUI
 #define WARN(x) \
 VRConsoleWidget::get( "Errors" )->write( x+"\n" );
 #else
