@@ -1,4 +1,5 @@
 #include "VRImguiApps.h"
+#include <imgui/imgui_internal.h>
 
 #include "core/utils/toString.h"
 #include "core/gui/VRGuiManager.h"
@@ -7,19 +8,24 @@
 
 ImAppLauncher::ImAppLauncher(string ID, string pnl, string ts) : ID(ID), name(ID), panel(pnl), timestamp(ts) {}
 
-void ImAppLauncher::render(string filter) {
+ImAppLauncher::~ImAppLauncher() {}
+
+void ImAppLauncher::render(string filter, ImImage& preview) {
     if (filter != "") {
         if (!contains(name, filter, false)) return;
     }
 
     string label = name;
+    bool doHover = false;
+    float w = 0;
     if (label.length() > 25) label = ".." + subString(label, label.length()-23, 23);
     ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_CollapsingHeader;
 
     if (!sensitive) ImGui::BeginDisabled();
 
+    ImVec2 cursorBeg = ImGui::GetCursorScreenPos();
     ImGui::BeginGroup();
-        float w = ImGui::GetContentRegionAvail().x;
+        w = ImGui::GetContentRegionAvail().x;
         ImGui::Spacing();
         ImGui::Indent(5.0);
         ImGui::Columns(2);
@@ -38,6 +44,15 @@ void ImAppLauncher::render(string filter) {
         ImGui::Columns(1);
         ImGui::Spacing();
     ImGui::EndGroup();
+    ImVec2 cursorEnd = ImGui::GetCursorScreenPos();
+
+    ImVec2 min_pos = ImVec2(ImMin(cursorBeg.x, cursorEnd.x), ImMin(cursorBeg.y, cursorEnd.y));
+    ImVec2 max_pos = ImVec2(ImMax(cursorBeg.x+w, cursorEnd.x+w), ImMax(cursorBeg.y, cursorEnd.y));
+    ImRect rect(min_pos, max_pos);
+
+    ImGuiID id = ImGui::GetCurrentWindow()->GetID(string("appLauncher"+ID).c_str());
+    ImGui::ItemAdd(rect, id);
+    doHover = ImGui::IsItemHovered();
 
     ImVec2 p1 = ImGui::GetItemRectMin();
     ImVec2 p2 = ImGui::GetItemRectMax();
@@ -45,13 +60,23 @@ void ImAppLauncher::render(string filter) {
     ImGui::GetWindowDrawList()->AddRect(p1, p2, IM_COL32(255, 255, 255, 255));
 
     if (!sensitive) ImGui::EndDisabled();
+
+    if (doHover && false) { // TODO: load actual screenshot!
+        int h = w * 9.0/16.0;
+        auto p = ImGui::GetCursorScreenPos();
+        ImGui::SetNextWindowPos(ImVec2(p.x, p.y+5));
+        ImGui::SetNextWindowSize(ImVec2(w,h));
+        ImGui::Begin("OpenGL Texture Text", 0, ImGuiWindowFlags_NoNav | ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoInputs);
+        preview.read("test.png");
+        preview.render(w, h);
+        ImGui::End();
+    }
 }
 
-ImAppPanel::ImAppPanel(string lbl) : label(lbl) {
-    ;
-}
+ImAppPanel::ImAppPanel(string lbl) : label(lbl) {}
+ImAppPanel::~ImAppPanel() {}
 
-void ImAppPanel::render(string filter, map<string, ImAppLauncher>& launcherPool) {
+void ImAppPanel::render(string filter, map<string, ImAppLauncher>& launcherPool, ImImage& preview) {
     if (filter != "") {
         bool anyVisible = false;
         for (auto& lID : launchers) {
@@ -72,7 +97,7 @@ void ImAppPanel::render(string filter, map<string, ImAppLauncher>& launcherPool)
 
     for (auto& lID : launchers) {
         auto& l = launcherPool[lID];
-        l.render(filter);
+        l.render(filter, preview);
     }
 }
 
@@ -82,6 +107,8 @@ ImAppManager::ImAppManager() : ImWidget("AppManager"), examples("") {
     mgr->addCallback("setupAppLauncher", [&](OSG::VRGuiSignals::Options o){ setupAppLauncher(o["ID"], o["name"]); return true; } );
     mgr->addCallback("setAppLauncherState", [&](OSG::VRGuiSignals::Options o){ setAppLauncherState(o["ID"], toBool(o["running"]), toBool(o["sensitive"])); return true; } );
 }
+
+ImAppManager::~ImAppManager() {}
 
 void getDurationString(size_t d, string& dLabel, size_t& dLabelI) {
     if (d == 0) { dLabel = "long ago"; dLabelI = 3600*24*356*2; return; }
@@ -175,7 +202,7 @@ void ImAppManager::begin() {
         if (ImGui::BeginTabItem("Projects")) {
             ImGui::Spacing();
             ImGui::BeginChild("Panel1", ImGui::GetContentRegionAvail(), false, flags);
-            for (auto panel : projects) panel.render(filter, launchers);
+            for (auto panel : projects) panel.render(filter, launchers, preview);
             ImGui::EndChild();
             ImGui::EndTabItem();
         }
@@ -183,7 +210,7 @@ void ImAppManager::begin() {
         if (ImGui::BeginTabItem("Examples")) {
             ImGui::Spacing();
             ImGui::BeginChild("Panel2", ImGui::GetContentRegionAvail(), false, flags);
-            examples.render(filter, launchers);
+            examples.render(filter, launchers, preview);
             ImGui::EndChild();
             ImGui::EndTabItem();
         }

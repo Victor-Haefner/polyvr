@@ -396,10 +396,13 @@ long readAvailableRAM() {
 }
 
 void startMemoryDog() {
+    return;// TODO: doesnt work..
+
     static auto dog = thread([](){
         cout << "start memory dog..";
         while (true) {
             long m = readAvailableRAM();
+            cout << "mem dog " << m << endl;
             if (m < 500) { cout << "Memory dog, kill system!" << endl; exit(1); }
             sleep(1);
         }
