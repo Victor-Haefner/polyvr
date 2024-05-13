@@ -8,6 +8,8 @@ OSG_BEGIN_NAMESPACE;
 
 class VRCocoaWindow : public VRWindow {
 	private:
+		void init();
+
 	public:
 		VRCocoaWindow();
 		~VRCocoaWindow();

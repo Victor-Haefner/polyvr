@@ -106,11 +106,15 @@ void VRGuiManager::init() {
 #endif
 
     string setupFile = "Desktop";
-    ifstream f1("setup/.local");
-    ifstream f2("setup/.default");
-    if (f1.good()) getline(f1, setupFile);
-    else if (f2.good()) getline(f2, setupFile);
-    VRSetupManager::get()->load("Desktop", "setup/"+setupFile+".xml");
+    if (VROptions::get()->hasOption("setup")) {
+        setupFile = VROptions::get()->getOption<string>("setup");
+    } else {
+        ifstream f1("setup/.local");
+        ifstream f2("setup/.default");
+        if (f1.good()) getline(f1, setupFile);
+        else if (f2.good()) getline(f2, setupFile);
+    }
+    VRSetupManager::get()->load(setupFile, "setup/"+setupFile+".xml");
 
     g_demos = new VRAppManager();
     g_bits = new VRGuiBits();

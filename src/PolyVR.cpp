@@ -18,10 +18,8 @@
 #include "core/scripting/VRScript.h"
 #include "core/utils/VRInternalMonitor.h"
 #include "core/utils/coreDumpHandler.h"
-#ifndef WITHOUT_IMGUI
 #include "core/gui/VRGuiManager.h"
 #include "core/gui/VRGuiSignals.h"
-#endif
 #include "core/networking/VRMainInterface.h"
 #ifndef WITHOUT_SHARED_MEMORY
 #include "core/networking/VRSharedMemory.h"
@@ -243,11 +241,9 @@ void PolyVR::initUI() {
 	main_interface = shared_ptr<VRMainInterface>(VRMainInterface::get());
 #endif
 
-#ifndef WITHOUT_IMGUI
     gui_mgr = shared_ptr<VRGuiManager>(VRGuiManager::get());
     gui_mgr->init();
     gui_mgr->updateSystemInfo();
-#endif
 
     loader = shared_ptr<VRSceneLoader>(VRSceneLoader::get());
 }

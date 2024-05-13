@@ -15,11 +15,14 @@ cd $DIR
 
 if [ -e ./build/polyvr ]; then
 	echo "run build/polyvr"
-	 ./build/polyvr
+	 ./build/polyvr $@
+	 exit 0
 fi
 
 if [ -e ./bin/Debug/VRFramework ]; then
 	./bin/Debug/VRFramework $@
+	exit 0
 else
 	./bin/Release/VRFramework $@
+	exit 0
 fi

@@ -279,7 +279,7 @@ function(FIND_OPENSG)
 	if(APPLE)
 		set(INCLUDE_DIRS ${INCLUDE_DIRS} "/usr/local/include" PARENT_SCOPE)
 		set(LIB_DIRS ${LIB_DIRS} "/usr/local/lib64" PARENT_SCOPE)
-		set(LINKER_FLAGS "${LINKER_FLAGS} -lOSGBase -lOSGContribTrapezoidalShadowMaps -lOSGCluster -lOSGDrawable -lOSGEffectGroups -lOSGFileIO -lOSGGroup -lOSGImageFileIO -lOSGState -lOSGSystem -lOSGUtil -lOSGText -lOSGWindow -lOSGWindowCOCOA -framework OpenGL" PARENT_SCOPE)
+		set(LINKER_FLAGS "${LINKER_FLAGS} -lOSGBase -lOSGContribTrapezoidalShadowMaps -lOSGCluster -lOSGDrawable -lOSGEffectGroups -lOSGFileIO -lOSGGroup -lOSGImageFileIO -lOSGState -lOSGSystem -lOSGUtil -lOSGText -lOSGWindow -lOSGWindowCOCOA -framework Cocoa -framework OpenGL" PARENT_SCOPE)
 	endif()
 	if(WASM)
 		set(INCLUDE_DIRS ${INCLUDE_DIRS} "../include" PARENT_SCOPE)
@@ -868,7 +868,7 @@ endif()
 # start with optional stuff
 
 if(APPLE)
-target_sources(polyvr PRIVATE src/core/setup/windows/VRCocoaWindow.cpp)
+target_sources(polyvr PRIVATE src/core/setup/windows/VRCocoaWindow.mm)
 endif()
 
 if(NOT WASM)
