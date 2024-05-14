@@ -12,18 +12,13 @@
 using namespace OSG;
 
 VRCocoaWindow::VRCocoaWindow() { init(); }
-VRCocoaWindow::~VRCocoaWindow() {}
+VRCocoaWindow::~VRCocoaWindow() { cleanup(); }
 
 VRCocoaWindowPtr VRCocoaWindow::create() { return VRCocoaWindowPtr( new VRCocoaWindow() ); }
 VRCocoaWindowPtr VRCocoaWindow::ptr() { return static_pointer_cast<VRCocoaWindow>(shared_from_this()); }
 
-void VRCocoaWindow::render(bool fromThread) {
-  if (fromThread) return;
-  VRWindow::render();
-}
-
-void VRCocoaWindow::save(XMLElementPtr node) {}
-void VRCocoaWindow::load(XMLElementPtr node) {}
+void VRCocoaWindow::save(XMLElementPtr node) { VRWindow::save(node); }
+void VRCocoaWindow::load(XMLElementPtr node) { VRWindow::load(node); }
 
 void VRCocoaWindow::onDisplay() {}
 void VRCocoaWindow::onMouse(int b, int s, int x, int y) {}
@@ -31,14 +26,9 @@ void VRCocoaWindow::onMotion(int x, int y) {}
 void VRCocoaWindow::onKeyboard(int k, int s, int x, int y) {}
 void VRCocoaWindow::onKeyboard_special(int k, int s, int x, int y) {}
 
-CocoaWindowUnrecPtr cocoaWin;
+CocoaWindowUnrecPtr cwin;
 VRCocoaWindow* vrCocoaWin = 0;
 
-void osx_AllowForeground() {
-    ProcessSerialNumber psn = { 0, kCurrentProcess };
-    TransformProcessType(&psn, kProcessTransformToForegroundApplication);
-    SetFrontProcess(&psn);
-}
 
 @interface MyOpenGLView: NSOpenGLView
 {
@@ -72,7 +62,7 @@ void osx_AllowForeground() {
 
 - (void) handleMouseEvent: (NSEvent*) event
 {
-    Real32 w,h,a,b,c,d;
+    Real32 a,b,c,d;
 
     int buttonNumber = [event buttonNumber];
     unsigned int modifierFlags = [event modifierFlags];
@@ -94,16 +84,19 @@ void osx_AllowForeground() {
     case NSLeftMouseDown:
     case NSRightMouseDown:
     case NSOtherMouseDown:
+        //onMouseDown(buttonNumber, location.x, location.y); // TODO
         break;
 
     case NSLeftMouseUp:
     case NSRightMouseUp:
     case NSOtherMouseUp:
+        //onMouseUp(buttonNumber); // TODO
         break;
 
     case NSLeftMouseDragged:
     case NSRightMouseDragged:
     case NSOtherMouseDragged:
+        //onMouseDragged(buttonNumber, location.x, location.y); // TODO
         break;
 
     default:
@@ -158,17 +151,8 @@ void osx_AllowForeground() {
 
 - (void) keyDown: (NSEvent*) event
 {
-    if ([[event characters] length] != 1)
-        return;
-    switch ([[event characters] characterAtIndex: 0])
-    {
-    case 27:
-//        [NSApp terminate:nil];
-        [NSApp stop:nil];
-        break;
-    default:
-        break;
-    }
+    if ([[event characters] length] != 1) return;
+    //onKeyDown( [[event characters] characterAtIndex: 0] ); // TODO
 }
 
 - (void) reshape
@@ -179,12 +163,12 @@ void osx_AllowForeground() {
     float scaleFactor = [window backingScaleFactor];
     int W = static_cast<int>(frame.size.width*scaleFactor);
     int H = static_cast<int>(frame.size.height*scaleFactor);
-    cocoaWin->resize( W, H );
+    cwin->resize( W, H );
 }
 
 - (void) drawRect: (NSRect) bounds
 {
-    vrCocoaWin->render();
+    //redraw();
 }
 
 @end
@@ -200,17 +184,10 @@ void osx_AllowForeground() {
 
 - (BOOL) applicationShouldTerminateAfterLastWindowClosed: (NSApplication*) application;
 
-- (void) performer: (id) userInfo;
-
 @end
 
+
 @implementation MyDelegate
-
-- (void) performer: (id) userInfo
-{
-    fprintf(stderr, "perform\n");
-}
-
 
 - (void) dealloc
 {
@@ -220,52 +197,10 @@ void osx_AllowForeground() {
 
 - (void) applicationWillFinishLaunching: (NSNotification*) notification
 {
-    /* Set up the menubar */
-    [NSApp setMainMenu:[[NSMenu alloc] init]];
-
-    NSString *appName = @"testWindowCocoa";
-    NSMenu *appleMenu = [[NSMenu alloc] initWithTitle:@""];
-
-    /* Add menu items */
-
-    NSMenu *servicesMenu = [[NSMenu alloc] initWithTitle:@""];
-    NSMenuItem *menuItem = [[NSMenuItem alloc] initWithTitle:@"Services" action:nil keyEquivalent:@""];
-    [menuItem setSubmenu:servicesMenu];
-    [appleMenu addItem:menuItem];
-    [NSApp setServicesMenu: servicesMenu];
-
-    [appleMenu addItem:[NSMenuItem separatorItem]];
-
-    NSString *title = [@"Hide " stringByAppendingString:appName];
-    [appleMenu addItemWithTitle:title action:@selector(hide:) keyEquivalent:@"h"];
-
-    menuItem = (NSMenuItem *)[appleMenu addItemWithTitle:@"Hide Others" action:@selector(hideOtherApplications:) keyEquivalent:@"h"];
-    [menuItem setKeyEquivalentModifierMask:(NSAlternateKeyMask|NSCommandKeyMask)];
-
-    [appleMenu addItemWithTitle:@"Show All" action:@selector(unhideAllApplications:) keyEquivalent:@""];
-
-    [appleMenu addItem:[NSMenuItem separatorItem]];
-
-    title = [@"Quit " stringByAppendingString:appName];
-    [appleMenu addItemWithTitle:title action:@selector(terminate:) keyEquivalent:@"q"];
-
-    /* Put menu into the menubar */
-    menuItem = [[NSMenuItem alloc] initWithTitle:@"" action:nil keyEquivalent:@""];
-    [menuItem setSubmenu:appleMenu];
-    [[NSApp mainMenu] addItem:menuItem];
-
-    /* Tell the application object that this is now the application menu */
-    [NSApp setAppleMenu:appleMenu];
-
-    /* Finally give up our references to the objects */
-    [appleMenu release];
-    [menuItem release];
-
-    // Create the window
     window = [NSWindow alloc];
     NSRect rect = { { 0, 0 }, { 300, 600 } };
     [window initWithContentRect: rect styleMask: (NSTitledWindowMask | NSClosableWindowMask | NSMiniaturizableWindowMask | NSResizableWindowMask) backing: NSBackingStoreBuffered defer: YES];
-    [window setTitle: @"testWindowCocoa"];
+    [window setTitle: @"PolyVR"];
     [window setReleasedWhenClosed: NO];
 
     glView = [[MyOpenGLView alloc] autorelease];
@@ -284,13 +219,11 @@ void osx_AllowForeground() {
     [glView setPixelFormat: pixFmt];
 
     // Create OpenSG window
-    cocoaWin = CocoaWindow::create();
-    //win->addPort( vp );
-    cocoaWin->setContext ( [glView openGLContext] );
-    cocoaWin->init();
-    cocoaWin->resize( 300, 300 );
+    cwin->setContext ( [glView openGLContext] );
+    cwin->init();
+    cwin->resize( 300, 300 );
 
-    cocoaWin->activate();
+    cwin->activate();
 
     // do some OpenGL init. Will move into State Chunks later.
 
@@ -310,21 +243,42 @@ void osx_AllowForeground() {
 
 @end
 
-void doPerform(id userInfo)
-{
-    fprintf(stderr, "perform\n");
-}
+NSAutoreleasePool *pool;
+MyDelegate *delegate;
 
 void VRCocoaWindow::init() {
     vrCocoaWin = this;
+    cwin = CocoaWindow::create();
 
-    osx_AllowForeground();
+    // A magic method that allows applications to react to events even
+    // when they are not organized in a bundle
+    ProcessSerialNumber psn = { 0, kCurrentProcess };
+    TransformProcessType(&psn, kProcessTransformToForegroundApplication);
+    SetFrontProcess(&psn);
 
     // Create application
     [NSApplication sharedApplication];
-    NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
-    MyDelegate *delegate =  [[MyDelegate new] autorelease];
+    pool = [[NSAutoreleasePool alloc] init];
+    delegate =  [[MyDelegate new] autorelease];
     [NSApp setDelegate: delegate];
+    [delegate applicationWillFinishLaunching:nil];
 
-    _win = cocoaWin;
+    _win = cwin;
+}
+
+void VRCocoaWindow::cleanup() {
+    cwin = 0;
+    [pool release];
+}
+
+void VRCocoaWindow::render(bool fromThread) {
+  if (fromThread) return;
+
+  NSEvent* event = 0;
+  do {
+      event = [NSApp nextEventMatchingMask:NSAnyEventMask untilDate:[NSDate distantPast] inMode:NSDefaultRunLoopMode dequeue:YES];
+      [NSApp sendEvent: event];
+  } while(event != nil);
+
+  VRWindow::render();
 }

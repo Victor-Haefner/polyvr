@@ -176,11 +176,13 @@ void VRWindow::load(XMLElementPtr node) {
     name = node->getAttribute("name");
     if (node->hasAttribute("msaa")) msaa = node->getAttribute("msaa");
 
+    cout << " VRWindow ..load views" << endl;
     for (auto el : node->getChildren()) {
         if (!el) continue;
         if (el->getName() != "View") continue;
         int i = VRSetup::getCurrent()->addView(name);
         VRViewPtr v = VRSetup::getCurrent()->getView(i);
+        if (!v) continue;
         addView(v);
         v->load(el);
     }
@@ -203,4 +205,3 @@ void VRWindow::load(XMLElementPtr node) {
         }
     }
 }
-
