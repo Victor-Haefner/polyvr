@@ -874,6 +874,7 @@ bool VRSound::addOutStreamClient(VRNetworkClientPtr client, string method) {
 }
 
 bool VRSound::setupOutStream(string url, int port, string method) { // TODO: make a udpClients map instead of vector
+    for (auto c : udpClients) if (c->isConnected(url, port)) return true;
     auto cli = VRUDPClient::create("sound-out");
     cli->connect(url, port);
     return addOutStreamClient(cli, method);

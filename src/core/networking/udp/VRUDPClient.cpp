@@ -184,4 +184,5 @@ VRUDPClientPtr VRUDPClient::create(string name) {
 
 void VRUDPClient::onMessage( function<string(string)> f ) { client->onMessage(f); }
 void VRUDPClient::connect(string host, int port) { client->connect(host, port); uri = host+":"+toString(port); }
+bool VRUDPClient::isConnected(string host, int port) { return bool(host+":"+toString(port) == uri); }
 void VRUDPClient::send(const string& message, string guard, bool verbose) { client->send(message+guard, verbose); }

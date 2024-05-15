@@ -31,6 +31,7 @@ class VRMQTTClient : public VRNetworkClient {
 
         void disconnect();
         void connect(string host, int port) override;
+        bool isConnected(string host, int port) override;
         void onMessage( function<string(string)> f ) override;
 
         bool connected();

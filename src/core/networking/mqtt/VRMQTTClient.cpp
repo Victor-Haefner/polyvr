@@ -170,14 +170,16 @@ void VRMQTTClient::disconnect() {
     if (s) s->queueJob(f, 0, 60); // delay in N frames
 }
 
+bool VRMQTTClient::isConnected(string host, int port) { return bool("mqtt://"+host+":"+toString(port) == uri); }
+
 void VRMQTTClient::connect(string host, int port) { // connect("broker.hivemq.com", 1883)
     //cout << "VRMQTTClient::connect " << this << endl;
     if (data->connecting) return;
     if (data->mqttConnected) return;
     data->connecting = true;
 
-    string address = "mqtt://"+host+":"+toString(port);
-    data->s_url = address;
+    uri = "mqtt://"+host+":"+toString(port);
+    data->s_url = uri;
 
     mg_mqtt_opts opts = data->basicOpts();
     opts.clean = true;
