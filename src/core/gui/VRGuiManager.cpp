@@ -107,7 +107,8 @@ void VRGuiManager::init() {
 
     string setupFile = "Desktop";
     if (VROptions::get()->hasOption("setup")) {
-        setupFile = VROptions::get()->getOption<string>("setup");
+        string s = VROptions::get()->getOption<string>("setup");
+        if (s != "") setupFile = s;
     } else {
         ifstream f1("setup/.local");
         ifstream f2("setup/.default");
