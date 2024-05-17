@@ -1,5 +1,9 @@
 #include "VRImguiApps.h"
+#ifdef _WIN32
+#include <imgui_internal.h>
+#else
 #include <imgui/imgui_internal.h>
+#endif
 
 #include "core/utils/toString.h"
 #include "core/gui/VRGuiManager.h"

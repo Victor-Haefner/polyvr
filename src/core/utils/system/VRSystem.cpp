@@ -414,7 +414,7 @@ void startMemoryDog() {
             long m = readAvailableRAM();
             cout << "mem dog " << m << endl;
             if (m < 500) { cout << "Memory dog, kill system!" << endl; exit(1); }
-            sleep(1);
+            this_thread::sleep_for( chrono::seconds(1) );
         }
     });
 }
