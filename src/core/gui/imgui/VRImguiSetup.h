@@ -4,6 +4,7 @@
 #include "VRImguiUtils.h"
 #include "imWidgets/VRImguiTreeview.h"
 #include "imWidgets/VRImguiVector.h"
+#include "imWidgets/VRImguiCombo.h"
 
 using namespace std;
 
@@ -53,6 +54,16 @@ class ImSetupManager : public ImWidget {
         Im_Vector viewMirrorPos;
         Im_Vector viewMirrorNorm;
 
+        // window
+        bool windowActive = false;
+        Im_Vector windowSize;
+        ImCombo windowMSAA;
+        ImCombo windowMouse;
+        ImCombo windowMultitouch;
+        ImCombo windowKeyboard;
+        string windowTitle;
+        string windowIcon;
+
         // remote window
         string remoteWinState;
         int winConnType = 0;
@@ -76,6 +87,7 @@ class ImSetupManager : public ImWidget {
         void treeAppend(string ID, string label, string type, string parent);
         void selectView(map<string,string> o);
         void selectWindow(map<string,string> o);
+        void selectMultiWindow(map<string,string> o);
 
     public:
         ImSetupManager();

@@ -18,7 +18,14 @@ ImSetupManager::ImSetupManager() : ImWidget("SetupManager"),
         viewProjWarp("viewProjWarp", "Warp"),
         viewMirrorPos("viewMPos", "Position"),
         viewMirrorNorm("viewMNorm", "Normal"),
-        NxNy("NxNy", "Nx Ny") {
+        NxNy("NxNy", "Nx Ny"),
+        windowMSAA("winMSAA", "MSAA"),
+        windowSize("winSize", "Size"),
+        windowMouse("winMouse", "Mouse"),
+        windowMultitouch("winMultitouch", "Multitouch"),
+        windowKeyboard("winKeyboard", "Keyboard") {
+    windowMSAA.setList({"none", "x2", "x4", "x8", "x16"});
+
     auto mgr = OSG::VRGuiSignals::get();
     mgr->addCallback("updateSetupsList", [&](OSG::VRGuiSignals::Options o){ updateSetupsList(o["setups"]); return true; } );
     mgr->addCallback("updateViewTrackersList", [&](OSG::VRGuiSignals::Options o){ updateViewTrackersList(o["trackers"]); return true; } );
@@ -29,7 +36,12 @@ ImSetupManager::ImSetupManager() : ImWidget("SetupManager"),
 
     mgr->addCallback("on_setup_select_clear", [&](OSG::VRGuiSignals::Options o) { hideAll(); return true; } );
     mgr->addCallback("on_setup_select_view", [&](OSG::VRGuiSignals::Options o) { selectView(o); return true; } );
-    mgr->addCallback("on_setup_select_multiwindow", [&](OSG::VRGuiSignals::Options o) { selectWindow(o); return true; } );
+    mgr->addCallback("on_setup_select_window", [&](OSG::VRGuiSignals::Options o) { selectWindow(o); return true; } );
+    mgr->addCallback("on_setup_select_multiwindow", [&](OSG::VRGuiSignals::Options o) { selectMultiWindow(o); return true; } );
+
+    mgr->addCallback("updateMouseList", [&](OSG::VRGuiSignals::Options o) { windowMouse.setList(o["list"]); return true; } );
+    mgr->addCallback("updateMTouchList", [&](OSG::VRGuiSignals::Options o) { windowMultitouch.setList(o["list"]); return true; } );
+    mgr->addCallback("updateKeyboardList", [&](OSG::VRGuiSignals::Options o) { windowKeyboard.setList(o["list"]); return true; } );
 
     tree.setNodeFlags( ImGuiTreeNodeFlags_DefaultOpen );
 }
@@ -65,6 +77,23 @@ void ImSetupManager::selectView(OSG::VRGuiSignals::Options o) {
 }
 
 void ImSetupManager::selectWindow(OSG::VRGuiSignals::Options o) {
+    hideAll();
+    showWindow = true;
+
+    selected = o["name"];
+    windowActive = toBool(o["active"]);
+    windowMSAA.set(o["msaa"]);
+    windowMouse.set(o["mouse"]);
+    windowMultitouch.set(o["multitouch"]);
+    windowKeyboard.set(o["keyboard"]);
+    windowTitle = o["title"];
+    windowIcon = o["icon"];
+    int sW = toInt(o["sizeW"]);
+    int sH = toInt(o["sizeH"]);
+    windowSize.set2(sW, sH);
+}
+
+void ImSetupManager::selectMultiWindow(OSG::VRGuiSignals::Options o) {
     hideAll();
     showWindow = true;
     showRemoteWindow = true;
@@ -157,13 +186,16 @@ void ImSetupManager::begin() {
         if (showWindow) {
             ImGui::Text(("Window: " + selected).c_str());
             ImGui::Indent(10);
-            // bool active
-            // X Display dropdown, probably deprecated
-            // fullscreen checkbutton
-            // Vec3 Position
-            // Vec2 Resolution
-            // Combo Mouse device (None / mouse)
-            // Combo MSAA ( x0 x2 x4 x8 x16 )
+            ImGui::Checkbox("active", &windowActive);
+            if (windowSize.render(220) && windowSize.vX > 0 && windowSize.vY > 0) windowSize.signal("win_set_res");
+            if (windowMSAA.render(100)) windowMSAA.signal("setup_switch_win_msaa");
+            if (windowMouse.render(200)) windowMouse.signal("setup_switch_win_mouse");
+            if (windowMultitouch.render(200)) windowMultitouch.signal("setup_switch_win_mtouch");
+            if (windowKeyboard.render(200)) windowKeyboard.signal("setup_switch_win_keyb");
+            ImInput wTitleEntry("##winTitle", "Title", windowTitle, ImGuiInputTextFlags_EnterReturnsTrue);
+            ImInput wIconEntry("##winIcon", "Icon", windowIcon, ImGuiInputTextFlags_EnterReturnsTrue);
+            if (wTitleEntry.render(240)) uiSignal("win_set_title", {{"title", wTitleEntry.value}});
+            if (wIconEntry.render(240)) uiSignal("win_set_icon", {{"icon", wIconEntry.value}});
             ImGui::Unindent(10);
         }
 
@@ -199,7 +231,7 @@ void ImSetupManager::begin() {
             if (ImGui::RadioButton("StreamSock##win", &winConnType, 2)) { uiSignal("win_set_conn_type", {{"type", "streamsock"}}); }
             ImGui::Unindent(10);
 
-            if (NxNy.render(160) && NxNy.vX > 0 && NxNy.vY > 0) uiSignal("win_set_NxNy", {{"Nx", toString(int(NxNy.vX))}, {"Ny", toString(int(NxNy.vY))}});
+            if (NxNy.render(160) && NxNy.vX > 0 && NxNy.vY > 0) NxNy.signal("win_set_NxNy");
             ImGui::Indent(10);
             int k = 0;
             for (int x=0; x<Nx; x++) {

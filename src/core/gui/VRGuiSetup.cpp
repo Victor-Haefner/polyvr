@@ -48,6 +48,23 @@ void VRGuiSetup::updateObjectData() {
     auto scene = VRScene::getCurrent();
 
     if (selected_type == "window" && window) {
+        VRWindowPtr win = dynamic_pointer_cast<VRWindow>(window);
+
+        if (win) {
+            uiSignal( "on_setup_select_window", {
+                {"name", win->getName()},
+                {"sizeW", toString(win->getSize()[0])},
+                {"sizeH", toString(win->getSize()[1])},
+                {"active", toString(win->isActive())},
+                {"mouse", win->getMouse() ? win->getMouse()->getName() : "" },
+                {"multitouch", win->getMultitouch() ? win->getMultitouch()->getName() : "" },
+                {"keyboard", win->getKeyboard() ? win->getKeyboard()->getName() : "" },
+                {"msaa", win->getMSAA()},
+                {"title", win->getTitle()},
+                {"icon", win->getIcon()}
+            } );
+        }
+
         if (window->hasType("distributed")) { // multiwindow
             VRMultiWindowPtr mwin = dynamic_pointer_cast<VRMultiWindow>(window);
             if (mwin) {
@@ -1280,7 +1297,7 @@ VRGuiSetup::VRGuiSetup() {
     mgr->addCallback("setup_set_view_mirror_position", [&](OSG::VRGuiSignals::Options o) { on_view_mirror_pos_edit(Vec3d(toFloat(o["x"]), toFloat(o["y"]), toFloat(o["z"]))); return true; }, true );
     mgr->addCallback("setup_set_view_mirror_normal", [&](OSG::VRGuiSignals::Options o) { on_view_mirror_norm_edit(Vec3d(toFloat(o["x"]), toFloat(o["y"]), toFloat(o["z"]))); return true; }, true );
 
-    mgr->addCallback("win_set_NxNy", [&](OSG::VRGuiSignals::Options o) { on_servern_edit(toInt(o["Nx"]), toInt(o["Ny"])); return true; }, true );
+    mgr->addCallback("win_set_NxNy", [&](OSG::VRGuiSignals::Options o) { on_servern_edit(toInt(o["x"]), toInt(o["y"])); return true; }, true );
     mgr->addCallback("win_set_serverID", [&](OSG::VRGuiSignals::Options o) { on_server_edit(toInt(o["x"]), toInt(o["y"]), o["sID"]); return true; }, true );
     mgr->addCallback("win_click_connect", [&](OSG::VRGuiSignals::Options o) { on_connect_mw_clicked(); return true; }, true );
 
@@ -1369,21 +1386,23 @@ bool VRGuiSetup::updateSetup() {
     if (!setup) return true;
     //setLabel("label13", "VR Setup: " + setup->getName());
 
+    vector<string> mouseList = {"none"};
+    vector<string> mtouchList = {"none"};
+    vector<string> keyboardList = {"none"};
+
     for (auto ditr : setup->getDevices()) {
         VRDevicePtr dev = ditr.second;
         string devID = dev->getType() + "$" + ditr.first;
         uiSignal("on_setup_tree_append", {{ "ID",devID }, { "label",ditr.first }, { "type",dev->getType() }, { "parent","SecDevices" }});
 
-        /*if (dev->getType() == "mouse") {
-            gtk_list_store_append(mouse_list, &row);
-            gtk_list_store_set(mouse_list, &row, 0, dev->getName().c_str(), -1);
-        }
-
-        if (dev->getType() == "multitouch") {
-            gtk_list_store_append(mouse_list, &row);
-            gtk_list_store_set(mouse_list, &row, 0, dev->getName().c_str(), -1);
-        }*/
+        if (dev->getType() == "mouse") mouseList.push_back(ditr.first);
+        if (dev->getType() == "multitouch") mtouchList.push_back(ditr.first);
+        if (dev->getType() == "keyboard") keyboardList.push_back(ditr.first);
     }
+
+    uiSignal("updateMouseList", {{"list", toString(mouseList)}});
+    uiSignal("updateMTouchList", {{"list", toString(mtouchList)}});
+    uiSignal("updateKeyboardList", {{"list", toString(keyboardList)}});
 
     for (auto node : setup->getNetwork()->getData() ) {
         string nodeID = "node$"+node->getName();
