@@ -25,8 +25,10 @@ void ImTreeview::rename(string ID, string label) {
 }
 
 void ImTreeview::Node::renderButton() {
-    if (ImGui::Button(label.c_str())) {
+    string idLbl = label + "##" + ID;
+    if (ImGui::Button(idLbl.c_str())) {
         //isSelected = true;
+        //cout << "ImTreeview::Node::renderButton " << tvID << ", " << ID << ", " << label << endl;
         uiSignal("treeview_select", {{"treeview",tvID}, {"node",ID}});
     }
 }
@@ -36,6 +38,7 @@ void ImTreeview::Node::renderEditable() {
     else {
         if (!input) input = new ImInput(ID+"_input", "", label, ImGuiInputTextFlags_EnterReturnsTrue);
         if (input->render(0)) {
+            //cout << "ImTreeview::Node::renderEditable " << tvID << ", " << ID << endl;
             uiSignal("treeview_rename", {{"treeview",tvID}, {"node",ID}, {"name",input->value}});
             uiSignal("treeview_select", {{"treeview",tvID}, {"node",ID}});
         }

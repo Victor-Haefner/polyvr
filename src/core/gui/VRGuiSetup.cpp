@@ -41,6 +41,7 @@ OSG_BEGIN_NAMESPACE;
 using namespace std;
 
 void VRGuiSetup::updateObjectData() {
+    //cout << "VRGuiSetup::updateObjectData " << selected_type << ", " << selected_name << endl;
     bool device = false;
     guard = true;
 
@@ -62,7 +63,7 @@ void VRGuiSetup::updateObjectData() {
                     }
                 }
 
-                uiSignal( "on_setup_multiwindow", {
+                uiSignal( "on_setup_select_multiwindow", {
                     {"name", mwin->getName()},
                     {"state", mwin->getStateString()},
                     {"connType", mwin->getConnectionType()},
@@ -86,7 +87,7 @@ void VRGuiSetup::updateObjectData() {
     if (selected_type == "view" && view) {
         Vec4d p = view->getPosition();
 
-        uiSignal( "on_setup_view", {
+        uiSignal( "on_setup_select_view", {
             {"name", view->getName()},
             {"position", toString(p)},
             {"size", toString(view->getSize())},
@@ -352,6 +353,8 @@ void VRGuiSetup::on_save_as_clicked() {
 
 // setup list
 void VRGuiSetup::on_treeview_select(string selected) {
+    uiSignal( "on_setup_select_clear", {} );
+
     auto setup = VRSetup::getCurrent();
     if (!setup) return;
 

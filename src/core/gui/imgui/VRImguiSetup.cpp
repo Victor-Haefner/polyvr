@@ -27,8 +27,9 @@ ImSetupManager::ImSetupManager() : ImWidget("SetupManager"),
     mgr->addCallback("on_setup_tree_append", [&](OSG::VRGuiSignals::Options o) { treeAppend(o["ID"], o["label"], o["type"], o["parent"]); return true; } );
     mgr->addCallback("on_setup_tree_expand", [&](OSG::VRGuiSignals::Options o) { tree.expandAll(); return true; } );
 
-    mgr->addCallback("on_setup_view", [&](OSG::VRGuiSignals::Options o) { selectView(o); return true; } );
-    mgr->addCallback("on_setup_multiwindow", [&](OSG::VRGuiSignals::Options o) { selectWindow(o); return true; } );
+    mgr->addCallback("on_setup_select_clear", [&](OSG::VRGuiSignals::Options o) { hideAll(); return true; } );
+    mgr->addCallback("on_setup_select_view", [&](OSG::VRGuiSignals::Options o) { selectView(o); return true; } );
+    mgr->addCallback("on_setup_select_multiwindow", [&](OSG::VRGuiSignals::Options o) { selectWindow(o); return true; } );
 
     tree.setNodeFlags( ImGuiTreeNodeFlags_DefaultOpen );
 }
