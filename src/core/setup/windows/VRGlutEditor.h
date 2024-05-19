@@ -21,8 +21,6 @@ class VRGlutEditor: public VRWindow {
         bool maximized = false;
         bool glViewFocussed = true;
         string popup;
-        string wTitle = "PolyVR";
-        string wIcon;
 
         typedef function<void(string, map<string, string>)> Signal;
         typedef function<void(string, int, int, int, int)> ResizeSignal;
@@ -45,8 +43,6 @@ class VRGlutEditor: public VRWindow {
 
         void setTitle(string title) override;
         void setIcon(string iconpath) override;
-        string getTitle() override;
-        string getIcon() override;
 
         void onMain_Keyboard_special(int k);
 

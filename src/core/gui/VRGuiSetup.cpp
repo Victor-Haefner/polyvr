@@ -1297,6 +1297,14 @@ VRGuiSetup::VRGuiSetup() {
     mgr->addCallback("setup_set_view_mirror_position", [&](OSG::VRGuiSignals::Options o) { on_view_mirror_pos_edit(Vec3d(toFloat(o["x"]), toFloat(o["y"]), toFloat(o["z"]))); return true; }, true );
     mgr->addCallback("setup_set_view_mirror_normal", [&](OSG::VRGuiSignals::Options o) { on_view_mirror_norm_edit(Vec3d(toFloat(o["x"]), toFloat(o["y"]), toFloat(o["z"]))); return true; }, true );
 
+    mgr->addCallback("win_set_res", [&](OSG::VRGuiSignals::Options o) { on_window_size_changed(toInt(o["x"]), toInt(o["y"])); return true; }, true );
+    mgr->addCallback("setup_switch_win_msaa", [&](OSG::VRGuiSignals::Options o) { on_window_msaa_changed(o["selection"]); return true; }, true );
+    mgr->addCallback("setup_switch_win_mouse", [&](OSG::VRGuiSignals::Options o) { on_window_mouse_changed(o["selection"]); return true; }, true );
+    mgr->addCallback("setup_switch_win_mtouch", [&](OSG::VRGuiSignals::Options o) { on_window_touch_changed(o["selection"]); return true; }, true );
+    mgr->addCallback("setup_switch_win_keyb", [&](OSG::VRGuiSignals::Options o) { on_window_kboard_changed(o["selection"]); return true; }, true );
+    mgr->addCallback("win_set_title", [&](OSG::VRGuiSignals::Options o) { on_window_title_changed(o["title"]); return true; }, true );
+    mgr->addCallback("win_set_icon", [&](OSG::VRGuiSignals::Options o) { on_window_icon_changed(o["icon"]); return true; }, true );
+
     mgr->addCallback("win_set_NxNy", [&](OSG::VRGuiSignals::Options o) { on_servern_edit(toInt(o["x"]), toInt(o["y"])); return true; }, true );
     mgr->addCallback("win_set_serverID", [&](OSG::VRGuiSignals::Options o) { on_server_edit(toInt(o["x"]), toInt(o["y"]), o["sID"]); return true; }, true );
     mgr->addCallback("win_click_connect", [&](OSG::VRGuiSignals::Options o) { on_connect_mw_clicked(); return true; }, true );
@@ -1337,22 +1345,48 @@ void VRGuiSetup::on_setup_changed() {
     VRSceneManager::get()->queueJob(fkt, 0, 100); // TODO: this blocks everything..
 }
 
-void VRGuiSetup::on_window_device_changed() {
+void VRGuiSetup::on_window_mouse_changed(string s) {
     if (guard || !window) return;
-    /*string name = getComboboxText("combobox13");
-    auto dev = VRSetup::getCurrent()->getDevice(name);
+    auto dev = VRSetup::getCurrent()->getDevice(s);
     window->setMouse( dynamic_pointer_cast<VRMouse>(dev) );
-#ifndef WITHOUT_MTOUCH
-    window->setMultitouch( dynamic_pointer_cast<VRMultiTouch>(dev) );
-#endif*/
 }
 
-void VRGuiSetup::on_window_msaa_changed() {
+void VRGuiSetup::on_window_touch_changed(string s) {
     if (guard || !window) return;
-    /*string name = getComboboxText("combobox15");
-    window->setMSAA( name );
-    setLabel("msaa_info", "to take effect please restart PolyVR!");*/
+#ifndef WITHOUT_MTOUCH
+    auto dev = VRSetup::getCurrent()->getDevice(s);
+    window->setMultitouch( dynamic_pointer_cast<VRMultiTouch>(dev) );
+#endif
 }
+
+void VRGuiSetup::on_window_kboard_changed(string s) {
+    if (guard || !window) return;
+    auto dev = VRSetup::getCurrent()->getDevice(s);
+    window->setKeyboard( dynamic_pointer_cast<VRKeyboard>(dev) );
+}
+
+void VRGuiSetup::on_window_msaa_changed(string s) {
+    if (guard || !window) return;
+    window->setMSAA( s );
+}
+
+void VRGuiSetup::on_window_size_changed(int w, int h) {
+    if (guard || !window) return;
+    window->resize( w, h );
+}
+
+void VRGuiSetup::on_window_title_changed(string s) {
+    if (guard || !window) return;
+    window->setTitle( s );
+    updateObjectData();
+}
+
+void VRGuiSetup::on_window_icon_changed(string s) {
+    if (guard || !window) return;
+    window->setIcon( s );
+    updateObjectData();
+}
+
 
 void VRGuiSetup::updateStatus() {
     //if (mwindow) setLabel("win_state", mwindow->getStateString());

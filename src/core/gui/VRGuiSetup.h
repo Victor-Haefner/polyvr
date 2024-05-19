@@ -82,8 +82,13 @@ class VRGuiSetup {
         void on_menu_add_script();
         void on_menu_delete();
 
-        void on_window_device_changed();
-        void on_window_msaa_changed();
+        void on_window_mouse_changed(string s);
+        void on_window_touch_changed(string s);
+        void on_window_kboard_changed(string s);
+        void on_window_msaa_changed(string s);
+        void on_window_size_changed(int w, int h);
+        void on_window_title_changed(string s);
+        void on_window_icon_changed(string s);
         void on_toggle_display_active();
         void on_toggle_display_multi();
         void on_servern_edit(int Nx, int Ny);

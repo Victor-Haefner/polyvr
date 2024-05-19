@@ -171,20 +171,17 @@ VRGlutEditor::~VRGlutEditor() {
 VRGlutEditorPtr VRGlutEditor::ptr() { return static_pointer_cast<VRGlutEditor>( shared_from_this() ); }
 VRGlutEditorPtr VRGlutEditor::create() { return VRGlutEditorPtr(new VRGlutEditor() ); }
 
-string VRGlutEditor::getTitle() { return wTitle; }
-string VRGlutEditor::getIcon() { return wIcon; }
-
 void VRGlutEditor::setTitle(string title) {
+    VRWindow::setTitle(title);
     int w = glutGetWindow();
     glutSetWindow(topWin);
     glutSetWindowTitle(title.c_str());
     glutSetWindow(w);
-    wTitle = title;
 }
 
 void VRGlutEditor::setIcon(string iconpath) {
+    VRWindow::setIcon(iconpath);
     setWindowIcon(iconpath);
-    wIcon = iconpath;
 }
 
 int VRGlutEditor::getCurrentWinID() { return glutGetWindow(); }
