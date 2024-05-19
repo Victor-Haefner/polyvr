@@ -560,27 +560,6 @@ void VRGuiSetup::on_menu_add_script() {
 
 // window options
 
-void VRGuiSetup::on_toggle_display_active() {
-    /*bool b = getCheckButtonState("checkbutton7");
-    VRGuiTreeView tree_view("treeview2");
-    tree_view.setSensitivity(b);
-    if (guard) return;
-
-    if (selected_type != "window") return;
-    VRWindow* win = (VRWindow*)selected_object;
-
-    //cout << "\nToggleActive " << name << " " << b << endl;
-    win->setActive(b);
-
-    // TODO
-    //string bg = "#FFFFFF";
-    //if (!b) bg = "#FFDDDD";
-    //VRGuiTreeView tree_view("treeview2");
-    //auto tree_store = (GtkTreeStore*)VRGuiBuilder::get()->get_object("setupTree");
-    //setTreeRow(tree_store, selected_row, win->getName().c_str(), "window", (gpointer)win, "#000000", bg);
-    VRGuiWidget("toolbutton12").setSensitivity(true);*/
-}
-
 void VRGuiSetup::on_servern_edit(int Nx, int Ny) {
     if (selected_type != "window") return;
     auto mwin = dynamic_pointer_cast<VRMultiWindow>(window);
@@ -1297,6 +1276,7 @@ VRGuiSetup::VRGuiSetup() {
     mgr->addCallback("setup_set_view_mirror_position", [&](OSG::VRGuiSignals::Options o) { on_view_mirror_pos_edit(Vec3d(toFloat(o["x"]), toFloat(o["y"]), toFloat(o["z"]))); return true; }, true );
     mgr->addCallback("setup_set_view_mirror_normal", [&](OSG::VRGuiSignals::Options o) { on_view_mirror_norm_edit(Vec3d(toFloat(o["x"]), toFloat(o["y"]), toFloat(o["z"]))); return true; }, true );
 
+    mgr->addCallback("setup_set_win_active", [&](OSG::VRGuiSignals::Options o) { on_window_set_active(toBool(o["active"])); return true; }, true );
     mgr->addCallback("win_set_res", [&](OSG::VRGuiSignals::Options o) { on_window_size_changed(toInt(o["x"]), toInt(o["y"])); return true; }, true );
     mgr->addCallback("setup_switch_win_msaa", [&](OSG::VRGuiSignals::Options o) { on_window_msaa_changed(o["selection"]); return true; }, true );
     mgr->addCallback("setup_switch_win_mouse", [&](OSG::VRGuiSignals::Options o) { on_window_mouse_changed(o["selection"]); return true; }, true );
@@ -1343,6 +1323,11 @@ void VRGuiSetup::on_setup_changed() {
 
     auto fkt = VRUpdateCb::create("setup_induced_shutdown", bind(&PolyVR::shutdown));
     VRSceneManager::get()->queueJob(fkt, 0, 100); // TODO: this blocks everything..
+}
+
+void VRGuiSetup::on_window_set_active(bool b) {
+    if (guard || !window) return;
+    window->setActive(b);
 }
 
 void VRGuiSetup::on_window_mouse_changed(string s) {

@@ -186,7 +186,7 @@ void ImSetupManager::begin() {
         if (showWindow) {
             ImGui::Text(("Window: " + selected).c_str());
             ImGui::Indent(10);
-            ImGui::Checkbox("active", &windowActive);
+            if (ImGui::Checkbox("active##winActive", &windowActive)) uiSignal("setup_set_win_active", {{"active", toString(windowActive)}});
             if (windowSize.render(220) && windowSize.vX > 0 && windowSize.vY > 0) windowSize.signal("win_set_res");
             if (windowMSAA.render(100)) windowMSAA.signal("setup_switch_win_msaa");
             if (windowMouse.render(200)) windowMouse.signal("setup_switch_win_mouse");

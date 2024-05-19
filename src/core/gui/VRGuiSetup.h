@@ -89,7 +89,7 @@ class VRGuiSetup {
         void on_window_size_changed(int w, int h);
         void on_window_title_changed(string s);
         void on_window_icon_changed(string s);
-        void on_toggle_display_active();
+        void on_window_set_active(bool b);
         void on_toggle_display_multi();
         void on_servern_edit(int Nx, int Ny);
         void on_server_ct_toggled();
