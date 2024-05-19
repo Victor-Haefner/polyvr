@@ -77,17 +77,35 @@ class ImSetupManager : public ImWidget {
         bool vrpnTestServer = 0;
         bool vrpnVerbose = 0;
 
+        // node
+        string nodeAddress;
+        string nodeUser;
+        string nodeSlave;
+        string nodeStatus;
+        string nodeSshStatus;
+        string nodeSshKeyStatus;
+        string nodePathStatus;
+
         // slave
-        int slaveConnType = 0;
+        ImCombo slaveConnectionType;
         bool slaveAutostart = 0;
-        bool slaveActStereo = 0;
+        bool slaveActiveStereo = 0;
         bool slaveFullscreen = 0;
+        string slaveConnetionID;
+        string slaveMulticast;
+        string slaveStatus;
+        string slaveDisplay;
+        int slavePort = 0;
+        int slaveStartupDelay = 0;
+        string slaveGeometry;
 
         void hideAll();
         void treeAppend(string ID, string label, string type, string parent);
         void selectView(map<string,string> o);
         void selectWindow(map<string,string> o);
         void selectMultiWindow(map<string,string> o);
+        void selectNode(map<string,string> o);
+        void selectSlave(map<string,string> o);
 
     public:
         ImSetupManager();

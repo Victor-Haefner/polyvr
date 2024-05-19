@@ -246,35 +246,35 @@ void VRGuiSetup::updateObjectData() {
     }
 
     if (selected_type == "node") {
-        /*setWidgetVisibility("expander25", true, true);
         VRNetworkNode* n = (VRNetworkNode*)selected_object;
-        setTextEntry("entry15", n->getAddress());
-        setTextEntry("entry20", n->getUser());
-        setTextEntry("entry32", n->getSlavePath());
-        setLabel("label130", n->getStatNode());
-        setLabel("label129", n->getStatSSH());
-        setLabel("label126", n->getStatSSHkey());
-        setLabel("label161", n->getStatPath());*/
+
+        uiSignal( "on_setup_select_node", {
+            {"address", n->getAddress()},
+            {"user", n->getUser()},
+            {"slave", n->getSlavePath()},
+            {"nodeStatus", n->getStatNode()},
+            {"sshStatus", n->getStatSSH()},
+            {"sshKeyStatus", n->getStatSSHkey()},
+            {"pathStatus", n->getStatPath()}
+        } );
     }
 
     if (selected_type == "slave") {
-        /*setWidgetVisibility("expander26", true, true);
         VRNetworkSlave* n = (VRNetworkSlave*)selected_object;
-        setLabel("label138", n->getConnectionIdentifier());
-        setLabel("label132", n->getStatMulticast());
-        setLabel("label136", n->getStat());
-        setToggleButton("checkbutton29", n->getFullscreen());
-        setToggleButton("checkbutton41", n->getActiveStereo());
-        setToggleButton("checkbutton42", n->getAutostart());
-        setTextEntry("entry19", n->getDisplay());
-        setTextEntry("entry22", toString(n->getPort()));
-        setTextEntry("entry37", toString(n->getStartupDelay()));
-        setTextEntry("entry38", toString(n->getGeometry()));
 
-        string ct = n->getConnectionType();
-        if (ct == "Multicast") setToggleButton("radiobutton10", 1);
-        if (ct == "SockPipeline") setToggleButton("radiobutton11", 1);
-        if (ct == "StreamSock") setToggleButton("radiobutton12", 1);*/
+        uiSignal( "on_setup_select_slave", {
+            {"connectionID", n->getConnectionIdentifier()},
+            {"multicast", n->getStatMulticast()},
+            {"status", n->getStat()},
+            {"fullscreen", toString(n->getFullscreen())},
+            {"activeStereo", toString(n->getActiveStereo())},
+            {"autostart", toString(n->getAutostart())},
+            {"display", n->getDisplay()},
+            {"connectionType", n->getConnectionType()},
+            {"port", toString(n->getPort())},
+            {"startupDelay", toString(n->getStartupDelay())},
+            {"geometry", toString(n->getGeometry())}
+        } );
     }
 
     if (selected_type == "script") {

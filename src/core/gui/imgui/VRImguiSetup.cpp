@@ -23,8 +23,10 @@ ImSetupManager::ImSetupManager() : ImWidget("SetupManager"),
         windowSize("winSize", "Size"),
         windowMouse("winMouse", "Mouse"),
         windowMultitouch("winMultitouch", "Multitouch"),
-        windowKeyboard("winKeyboard", "Keyboard") {
+        windowKeyboard("winKeyboard", "Keyboard"),
+        slaveConnectionType("slaveConnType", "Connection Type") {
     windowMSAA.setList({"none", "x2", "x4", "x8", "x16"});
+    slaveConnectionType.setList({"Multicast", "SockPipeline", "StreamSock"});
 
     auto mgr = OSG::VRGuiSignals::get();
     mgr->addCallback("updateSetupsList", [&](OSG::VRGuiSignals::Options o){ updateSetupsList(o["setups"]); return true; } );
@@ -38,6 +40,8 @@ ImSetupManager::ImSetupManager() : ImWidget("SetupManager"),
     mgr->addCallback("on_setup_select_view", [&](OSG::VRGuiSignals::Options o) { selectView(o); return true; } );
     mgr->addCallback("on_setup_select_window", [&](OSG::VRGuiSignals::Options o) { selectWindow(o); return true; } );
     mgr->addCallback("on_setup_select_multiwindow", [&](OSG::VRGuiSignals::Options o) { selectMultiWindow(o); return true; } );
+    mgr->addCallback("on_setup_select_node", [&](OSG::VRGuiSignals::Options o) { selectNode(o); return true; } );
+    mgr->addCallback("on_setup_select_slave", [&](OSG::VRGuiSignals::Options o) { selectSlave(o); return true; } );
 
     mgr->addCallback("updateMouseList", [&](OSG::VRGuiSignals::Options o) { windowMouse.setList(o["list"]); return true; } );
     mgr->addCallback("updateMTouchList", [&](OSG::VRGuiSignals::Options o) { windowMultitouch.setList(o["list"]); return true; } );
@@ -108,6 +112,36 @@ void ImSetupManager::selectMultiWindow(OSG::VRGuiSignals::Options o) {
     Ny = toInt(o["ny"]);
     NxNy.set2(Nx, Ny);
     toValue(o["serverIDs"], serverIDs);
+}
+
+void ImSetupManager::selectNode(OSG::VRGuiSignals::Options o) {
+    hideAll();
+    showNode = true;
+
+    nodeAddress = o["address"];
+    nodeUser = o["user"];
+    nodeSlave = o["slave"];
+    nodeStatus = o["nodeStatus"];
+    nodeSshStatus = o["sshStatus"];
+    nodeSshKeyStatus = o["sshKeyStatus"];
+    nodePathStatus = o["pathStatus"];
+}
+
+void ImSetupManager::selectSlave(OSG::VRGuiSignals::Options o) {
+    hideAll();
+    showSlave = true;
+
+    slaveConnetionID = o["connectionID"];
+    slaveMulticast = o["multicast"];
+    slaveStatus = o["status"];
+    slaveFullscreen = toBool(o["fullscreen"]);
+    slaveActiveStereo = toBool(o["activeStereo"]);
+    slaveAutostart = toBool(o["autostart"]);
+    slaveDisplay = o["display"];
+    slaveConnectionType.set(o["connectionType"]);
+    slavePort = toInt(o["port"]);
+    slaveStartupDelay = toInt(o["startupDelay"]);
+    slaveGeometry = o["geometry"];
 }
 
 void ImSetupManager::hideAll() {
@@ -415,19 +449,13 @@ void ImSetupManager::begin() {
             ImGui::SameLine();
             ImGui::Text("STATE");
 
-            if (ImGui::Checkbox("active stereo##slave", &slaveActStereo)) uiSignal("slave_toggle_activestereo", {{"state",toString(slaveActStereo)}});
+            if (ImGui::Checkbox("active stereo##slave", &slaveActiveStereo)) uiSignal("slave_toggle_activestereo", {{"state",toString(slaveActiveStereo)}});
             ImGui::SameLine();
             if (ImGui::Checkbox("fullscreen##slave", &slaveFullscreen)) uiSignal("slave_toggle_fullscreen", {{"state",toString(slaveFullscreen)}});
             ImGui::SameLine();
             //ImInput("##slavePort", "port:")
 
-            ImGui::Text("Connection type:");
-            ImGui::SameLine();
-            if (ImGui::RadioButton("Multicast##slave", &slaveConnType, 0)) { uiSignal("slave_set_conn_type", {{"type", "multicast"}}); }
-            ImGui::SameLine();
-            if (ImGui::RadioButton("SockPipeline##slave", &slaveConnType, 1)) { uiSignal("slave_set_conn_type", {{"type", "sockpipeline"}}); }
-            ImGui::SameLine();
-            if (ImGui::RadioButton("StreamSock##slave", &slaveConnType, 2)) { uiSignal("slave_set_conn_type", {{"type", "streamsock"}}); }
+            if (slaveConnectionType.render(200)) slaveConnectionType.signal("setup_switch_slave_conn_type");
 
             //ImInput("##screenDisplay", "local display:")
             ImGui::SameLine();
