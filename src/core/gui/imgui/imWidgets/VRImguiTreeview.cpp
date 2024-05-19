@@ -24,6 +24,22 @@ void ImTreeview::rename(string ID, string label) {
     if (nodes.count(ID)) nodes[ID]->label = label;
 }
 
+void ImTreeview::Node::setMenu(vector<pair<string, string>> m) { menu = m; }
+
+void ImTreeview::Node::renderMenu() {
+    if (menu.size() == 0) return;
+    string idPopup = "menu##" + ID;
+    if (ImGui::BeginPopupContextItem(idPopup.c_str())) {
+        for (auto& m : menu) {
+            string idOpt = m.first + "##opt_" + ID;
+            if (ImGui::MenuItem(idOpt.c_str())) {
+                uiSignal(m.second, {{"treeview",tvID}, {"node",label}, {"ID",ID}, {"option", m.first}});
+            }
+        }
+        ImGui::EndPopup();
+    }
+}
+
 void ImTreeview::Node::renderButton() {
     string idLbl = label + "##" + ID;
     if (ImGui::Button(idLbl.c_str())) {
@@ -31,6 +47,8 @@ void ImTreeview::Node::renderButton() {
         //cout << "ImTreeview::Node::renderButton " << tvID << ", " << ID << ", " << label << endl;
         uiSignal("treeview_select", {{"treeview",tvID}, {"node",ID}});
     }
+
+    renderMenu();
 }
 
 void ImTreeview::Node::renderEditable() {
@@ -42,6 +60,7 @@ void ImTreeview::Node::renderEditable() {
             uiSignal("treeview_rename", {{"treeview",tvID}, {"node",ID}, {"name",input->value}});
             uiSignal("treeview_select", {{"treeview",tvID}, {"node",ID}});
         }
+        renderMenu();
     }
 }
 

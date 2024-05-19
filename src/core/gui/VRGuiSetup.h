@@ -78,9 +78,9 @@ class VRGuiSetup {
 #endif
         template<class T> void on_menu_add_device();
         void on_menu_add_network_node();
-        void on_menu_add_network_slave();
+        void on_menu_add_network_slave(string node);
         void on_menu_add_script();
-        void on_menu_delete();
+        void on_menu_delete(string node);
 
         void on_window_mouse_changed(string s);
         void on_window_touch_changed(string s);

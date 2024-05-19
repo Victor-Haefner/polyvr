@@ -166,7 +166,12 @@ void ImSetupManager::hideAll() {
 }
 
 void ImSetupManager::treeAppend(string ID, string label, string type, string parent) {
-    tree.add(ID, label, IM_TV_NODE_EDITABLE, parent);
+    cout << " treeAppend " << ID << ", " << label << ", " << type << ", " << parent << endl;
+    auto node = tree.add(ID, label, IM_TV_NODE_EDITABLE, parent);
+    if (label == "Network") node->setMenu( {{"Add Node", "onSetupMenuAddNode"}} );
+    if (type == "node") node->setMenu( {{"Add Slave", "onSetupMenuAddSlave"}, {"Delete", "onSetupMenuDelete"}} );
+    if (type == "slave") node->setMenu( {{"Delete", "onSetupMenuDelete"}} );
+    if (type == "window") node->setMenu( {{"Delete", "onSetupMenuDelete"}} );
 }
 
 void ImSetupManager::updateSetupsList(string s) {

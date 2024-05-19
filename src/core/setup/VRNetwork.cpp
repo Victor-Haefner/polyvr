@@ -26,12 +26,31 @@ void VRNetwork::joinInitThreads() {
     for (auto n : getData()) n->joinInitThread();
 }
 
+VRNetworkNodePtr VRNetwork::getNode(string name) {
+    for (auto n : getData()) {
+        if (n->getName() == name) return n;
+    }
+    return 0;
+}
+
 VRNetworkSlavePtr VRNetwork::getSlave(string name) {
     for (auto n : getData()) {
         auto s = n->get(name);
         if (s) return s;
     }
     return 0;
+}
+
+void VRNetwork::remNode(string node) { rem(node); }
+
+void VRNetwork::remSlave(string slave) {
+    for (auto n : getData()) {
+        auto s = n->get(name);
+        if (s) {
+            n->rem(slave);
+            return;
+        }
+    }
 }
 
 VRNetworkNode::VRNetworkNode(string name) : VRManager("NetworkNode") {
