@@ -174,7 +174,7 @@ void VRNetworkNode::update() {
 #ifndef WITHOUT_SSH
     stat_node = "ok";
     stat_ssh = "";
-    stat_ssh_key = "";
+    stat_ssh_key = "no ssh used";
     stat_path = "";
 
     VRPing p;
@@ -316,10 +316,14 @@ int VRNetworkSlave::getPort() { return port; }
 int VRNetworkSlave::getStartupDelay() { return startupDelay; }
 string VRNetworkSlave::getGeometry() { return geometry; }
 
+void VRNetworkSlave::setPort(int p) { port = p; update(); }
+void VRNetworkSlave::setDelay(int d) { startupDelay = d; update(); }
 void VRNetworkSlave::setDisplay(string a) { display = a; update(); }
 void VRNetworkSlave::setConnectionType(string b) { connection_type = b; update(); }
 void VRNetworkSlave::setFullscreen(bool b) { fullscreen = b; update(); }
+void VRNetworkSlave::setActiveStereo(bool b) { active_stereo = b; update(); }
 void VRNetworkSlave::setAutostart(bool b) { autostart = b; update(); }
+void VRNetworkSlave::setGeometry(string g) { geometry = g; update(); }
 
 string VRNetworkSlave::getConnectionIdentifier() {
     if (connection_type == "Multicast") return getName();

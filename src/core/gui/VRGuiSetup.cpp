@@ -818,53 +818,45 @@ void VRGuiSetup::on_edit_VRPN_tracker_address() {
 }
 #endif
 
-void VRGuiSetup::on_netnode_edited() {
-    if (guard) return;
-    /*VRNetworkNode* n = (VRNetworkNode*)selected_object;
-    n->set(getTextEntry("entry15"), getTextEntry("entry20"), getTextEntry("entry32"));
-    VRGuiWidget("toolbutton12").setSensitivity(true);
-    updateObjectData();*/
+void VRGuiSetup::on_netnode_address_edited(string s) {
+    if (guard || !node) return;
+    node->setAddress(s);
+    updateObjectData();
+}
+
+void VRGuiSetup::on_netnode_user_edited(string s) {
+    if (guard || !node) return;
+    node->setUser(s);
+    updateObjectData();
+}
+
+void VRGuiSetup::on_netnode_path_edited(string s) {
+    if (guard || !node) return;
+    node->setSlavePath(s);
+    updateObjectData();
 }
 
 void VRGuiSetup::on_netnode_key_clicked() {
-    if (guard) return;
-    /*VRNetworkNode* n = (VRNetworkNode*)selected_object;
-    n->distributeKey();
-    updateObjectData();*/
+    if (guard || !node) return;
+    node->distributeKey();
+    updateObjectData();
 }
 
 void VRGuiSetup::on_netnode_stopall_clicked() {
-    if (guard) return;
-    /*VRNetworkNode* n = (VRNetworkNode*)selected_object;
-    n->stopSlaves();
-    updateObjectData();*/
+    if (guard || !node) return;
+    node->stopSlaves();
+    updateObjectData();
 }
 
-void VRGuiSetup::on_netslave_edited() {
-    if (guard) return;
-    /*VRNetworkSlave* n = (VRNetworkSlave*)selected_object;
-    string ct = "StreamSock";
-    if ( getRadioButtonState("radiobutton10") ) ct = "Multicast";
-    if ( getRadioButtonState("radiobutton11") ) ct = "SockPipeline";
-
-    bool fullscreen = getCheckButtonState("checkbutton29");
-    bool astereo = getCheckButtonState("checkbutton41");
-    bool astart = getCheckButtonState("checkbutton42");
-    string display = getTextEntry("entry19");
-    int port = toInt( getTextEntry("entry22") );
-    int delay = toInt( getTextEntry("entry37") );
-    string geometry = getTextEntry("entry38");
-    n->set(ct, fullscreen, astereo, astart, display, port, delay, geometry);
-    VRGuiWidget("toolbutton12").setSensitivity(true);
-    updateObjectData();*/
-}
-
-void VRGuiSetup::on_netslave_start_clicked() {
-    if (guard) return;
-    /*VRNetworkSlave* n = (VRNetworkSlave*)selected_object;
-    n->start();
-    updateObjectData();*/
-}
+void VRGuiSetup::on_netslave_set_autostart(bool b) { if (slave && !guard) { slave->setAutostart(b); updateObjectData(); } }
+void VRGuiSetup::on_netslave_set_fullscreen(bool b) { if (slave && !guard) { slave->setFullscreen(b); updateObjectData(); } }
+void VRGuiSetup::on_netslave_set_activestereo(bool b) { if (slave && !guard) { slave->setActiveStereo(b); updateObjectData(); } }
+void VRGuiSetup::on_netslave_set_port(int p) { if (slave && !guard) { slave->setPort(p); updateObjectData(); } }
+void VRGuiSetup::on_netslave_set_delay(int d) { if (slave && !guard) { slave->setDelay(d); updateObjectData(); } }
+void VRGuiSetup::on_netslave_set_screen(string s) { if (slave && !guard) { slave->setDisplay(s); updateObjectData(); } }
+void VRGuiSetup::on_netslave_set_geometry(string g) { if (slave && !guard) { slave->setGeometry(g); updateObjectData(); } }
+void VRGuiSetup::on_netslave_start_clicked() { if (slave && !guard) { slave->start(); updateObjectData(); } }
+void VRGuiSetup::on_netslave_set_connection(string ct) { if (slave && !guard) { slave->setConnectionType(ct); updateObjectData(); } }
 
 #ifndef WITHOUT_VIRTUOSE
 void VRGuiSetup::on_haptic_ip_edited() {
@@ -1268,6 +1260,22 @@ VRGuiSetup::VRGuiSetup() {
     mgr->addCallback("win_set_NxNy", [&](OSG::VRGuiSignals::Options o) { on_servern_edit(toInt(o["x"]), toInt(o["y"])); return true; }, true );
     mgr->addCallback("win_set_serverID", [&](OSG::VRGuiSignals::Options o) { on_server_edit(toInt(o["x"]), toInt(o["y"]), o["sID"]); return true; }, true );
     mgr->addCallback("win_click_connect", [&](OSG::VRGuiSignals::Options o) { on_connect_mw_clicked(); return true; }, true );
+
+    mgr->addCallback("node_set_address", [&](OSG::VRGuiSignals::Options o) { on_netnode_address_edited(o["address"]); return true; }, true );
+    mgr->addCallback("node_set_user", [&](OSG::VRGuiSignals::Options o) { on_netnode_user_edited(o["user"]); return true; }, true );
+    mgr->addCallback("node_set_path", [&](OSG::VRGuiSignals::Options o) { on_netnode_path_edited(o["path"]); return true; }, true );
+    mgr->addCallback("node_clicked_distribkey", [&](OSG::VRGuiSignals::Options o) { on_netnode_key_clicked(); return true; }, true );
+    mgr->addCallback("node_clicked_stopslaves", [&](OSG::VRGuiSignals::Options o) { on_netnode_stopall_clicked(); return true; }, true );
+
+    mgr->addCallback("slave_clicked_start", [&](OSG::VRGuiSignals::Options o) { on_netslave_start_clicked(); return true; }, true );
+    mgr->addCallback("slave_toggle_autostart", [&](OSG::VRGuiSignals::Options o) { on_netslave_set_autostart(toBool(o["state"])); return true; }, true );
+    mgr->addCallback("slave_toggle_fullscreen", [&](OSG::VRGuiSignals::Options o) { on_netslave_set_fullscreen(toBool(o["state"])); return true; }, true );
+    mgr->addCallback("slave_toggle_activestereo", [&](OSG::VRGuiSignals::Options o) { on_netslave_set_activestereo(toBool(o["state"])); return true; }, true );
+    mgr->addCallback("slave_set_port", [&](OSG::VRGuiSignals::Options o) { on_netslave_set_port(toInt(o["port"])); return true; }, true );
+    mgr->addCallback("slave_set_screen", [&](OSG::VRGuiSignals::Options o) { on_netslave_set_screen(o["screen"]); return true; }, true );
+    mgr->addCallback("slave_set_delay", [&](OSG::VRGuiSignals::Options o) { on_netslave_set_delay(toInt(o["delay"])); return true; }, true );
+    mgr->addCallback("slave_set_geometry", [&](OSG::VRGuiSignals::Options o) { on_netslave_set_geometry(o["geometry"]); return true; }, true );
+    mgr->addCallback("setup_switch_slave_conn_type", [&](OSG::VRGuiSignals::Options o) { on_netslave_set_connection(o["selection"]); return true; }, true );
 
     mgr->addCallback("onSetupMenuAddNode", [&](OSG::VRGuiSignals::Options o) { on_menu_add_network_node(); return true; }, true );
     mgr->addCallback("onSetupMenuAddSlave", [&](OSG::VRGuiSignals::Options o) { on_menu_add_network_slave(o["node"]); return true; }, true );

@@ -154,11 +154,21 @@ class VRGuiSetup {
 #endif
         void on_toggle_dev_cross();
 
-        void on_netnode_edited();
+        void on_netnode_address_edited(string s) ;
+        void on_netnode_user_edited(string s);
+        void on_netnode_path_edited(string s);
         void on_netnode_key_clicked();
         void on_netnode_stopall_clicked();
-        void on_netslave_edited();
+
+        void on_netslave_set_autostart(bool b);
+        void on_netslave_set_fullscreen(bool b);
+        void on_netslave_set_activestereo(bool b);
         void on_netslave_start_clicked();
+        void on_netslave_set_port(int port);
+        void on_netslave_set_delay(int delay);
+        void on_netslave_set_screen(string s);
+        void on_netslave_set_geometry(string g);
+        void on_netslave_set_connection(string ct);
 
         void on_script_save_clicked();
         void on_script_exec_clicked();

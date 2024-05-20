@@ -139,8 +139,8 @@ void ImSetupManager::selectSlave(OSG::VRGuiSignals::Options o) {
     slaveAutostart = toBool(o["autostart"]);
     slaveDisplay = o["display"];
     slaveConnectionType.set(o["connectionType"]);
-    slavePort = toInt(o["port"]);
-    slaveStartupDelay = toInt(o["startupDelay"]);
+    slavePort = o["port"];
+    slaveDelay = o["startupDelay"];
     slaveGeometry = o["geometry"];
 }
 
@@ -420,31 +420,38 @@ void ImSetupManager::begin() {
         }
 
         if (showNode) {
+            ImInput nAddrEntry("##nodeAddr", "address:", nodeAddress, ImGuiInputTextFlags_EnterReturnsTrue);
+            ImInput nUserEntry("##sshUsr", "ssh user:", nodeUser, ImGuiInputTextFlags_EnterReturnsTrue);
+            ImInput nPathEntry("##pvrPath", "root path:", nodeSlave, ImGuiInputTextFlags_EnterReturnsTrue);
+
             ImGui::Text(("Network Node: " + selected).c_str());
             ImGui::Indent(10);
-            //ImInput("##nodeAddr", "address:")
+            if (nAddrEntry.render(240)) uiSignal("node_set_address", {{"address", nAddrEntry.value}});
             ImGui::SameLine();
-            ImGui::Text("STATE");
+            ImGui::Text(nodeStatus.c_str());
 
-            //ImInput("##sshUsr", "ssh user:")
+            if (nUserEntry.render(240)) uiSignal("node_set_user", {{"user", nUserEntry.value}});
             ImGui::SameLine();
-            ImGui::Text("STATE");
+            ImGui::Text(nodeSshStatus.c_str());
 
             if (ImGui::Button("distribute key##node")) uiSignal("node_clicked_distribkey", {{}});
             ImGui::SameLine();
-            ImGui::Text("STATE");
+            ImGui::Text(nodeSshKeyStatus.c_str());
 
             if (ImGui::Button("stop slaves##node")) uiSignal("node_clicked_stopslaves", {{}});
-            ImGui::SameLine();
-            ImGui::Text("STATE");
 
-            //ImInput("##pvrPath", "root path:")
+            if (nPathEntry.render(240)) uiSignal("node_set_path", {{"path", nPathEntry.value}});
             ImGui::SameLine();
-            ImGui::Text("STATE");
+            ImGui::Text(nodePathStatus.c_str());
             ImGui::Unindent(10);
         }
 
         if (showSlave) {
+            ImInput sPortEntry("##slavePort", "port:", slavePort, ImGuiInputTextFlags_EnterReturnsTrue);
+            ImInput sScreenEntry("##screenDisplay", "local display:", slaveDisplay, ImGuiInputTextFlags_EnterReturnsTrue);
+            ImInput sDelayEntry("##startupDelay", "startup delay:", slaveDelay, ImGuiInputTextFlags_EnterReturnsTrue);
+            ImInput sGeometryEntry("##winGeometry", "geometry ('512x512+0+0'):", slaveGeometry, ImGuiInputTextFlags_EnterReturnsTrue);
+
             ImGui::Text(("Network Slave: " + selected).c_str());
             ImGui::Indent(10);
             // connection identifier:  CONN_ID_STR
@@ -452,21 +459,17 @@ void ImSetupManager::begin() {
             ImGui::SameLine();
             if (ImGui::Button("start##slave")) uiSignal("slave_clicked_start", {{}});
             ImGui::SameLine();
-            ImGui::Text("STATE");
+            ImGui::Text(slaveStatus.c_str());
 
             if (ImGui::Checkbox("active stereo##slave", &slaveActiveStereo)) uiSignal("slave_toggle_activestereo", {{"state",toString(slaveActiveStereo)}});
-            ImGui::SameLine();
             if (ImGui::Checkbox("fullscreen##slave", &slaveFullscreen)) uiSignal("slave_toggle_fullscreen", {{"state",toString(slaveFullscreen)}});
-            ImGui::SameLine();
-            //ImInput("##slavePort", "port:")
-
+            if (sPortEntry.render(240)) uiSignal("slave_set_port", {{"port", sPortEntry.value}});
             if (slaveConnectionType.render(200)) slaveConnectionType.signal("setup_switch_slave_conn_type");
-
-            //ImInput("##screenDisplay", "local display:")
+            if (sScreenEntry.render(240)) uiSignal("slave_set_screen", {{"screen", sScreenEntry.value}});
+            if (sDelayEntry.render(240)) uiSignal("slave_set_delay", {{"delay", sDelayEntry.value}});
             ImGui::SameLine();
-            //ImInput("##startupDelay", "startup delay:")
-
-            //ImInput("##winGeometry", "geometry ('512x512+0+0'):")
+            ImGui::Text("seconds");
+            if (sGeometryEntry.render(240)) uiSignal("slave_set_geometry", {{"geometry", sGeometryEntry.value}});
             ImGui::Unindent(10);
         }
 

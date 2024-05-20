@@ -95,8 +95,8 @@ class ImSetupManager : public ImWidget {
         string slaveMulticast;
         string slaveStatus;
         string slaveDisplay;
-        int slavePort = 0;
-        int slaveStartupDelay = 0;
+        string slavePort;
+        string slaveDelay;
         string slaveGeometry;
 
         void hideAll();
