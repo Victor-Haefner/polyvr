@@ -169,9 +169,10 @@ void ImSetupManager::treeAppend(string ID, string label, string type, string par
     cout << " treeAppend " << ID << ", " << label << ", " << type << ", " << parent << endl;
     auto node = tree.add(ID, label, IM_TV_NODE_EDITABLE, parent);
     if (label == "Network") node->setMenu( {{"Add Node", "onSetupMenuAddNode"}} );
+    if (label == "Displays") node->setMenu( {{"Add Window", "onSetupMenuAddWindow"}} );
     if (type == "node") node->setMenu( {{"Add Slave", "onSetupMenuAddSlave"}, {"Delete", "onSetupMenuDelete"}} );
     if (type == "slave") node->setMenu( {{"Delete", "onSetupMenuDelete"}} );
-    if (type == "window") node->setMenu( {{"Delete", "onSetupMenuDelete"}} );
+    if (type == "window") node->setMenu( {{"Add View", "onSetupMenuAddView"}, {"Delete", "onSetupMenuDelete"}} );
 }
 
 void ImSetupManager::updateSetupsList(string s) {
@@ -452,7 +453,7 @@ void ImSetupManager::begin() {
             ImInput sDelayEntry("##startupDelay", "startup delay:", slaveDelay, ImGuiInputTextFlags_EnterReturnsTrue);
             ImInput sGeometryEntry("##winGeometry", "geometry ('512x512+0+0'):", slaveGeometry, ImGuiInputTextFlags_EnterReturnsTrue);
 
-            ImGui::Text(("Network Slave: " + selected).c_str());
+            ImGui::Text(("Network Slave, connection ID: " + slaveConnetionID).c_str());
             ImGui::Indent(10);
             // connection identifier:  CONN_ID_STR
             if (ImGui::Checkbox("autostart##slave", &slaveAutostart)) uiSignal("slave_toggle_autostart", {{"state",toString(slaveAutostart)}});

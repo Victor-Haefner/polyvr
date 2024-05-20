@@ -72,7 +72,7 @@ class VRGuiSetup {
         bool on_treeview_rightclick();
 
         void on_menu_add_window();
-        void on_menu_add_viewport();
+        void on_menu_add_viewport(string winName);
 #ifndef WITHOUT_VRPN
         void on_menu_add_vrpn_tracker();
 #endif

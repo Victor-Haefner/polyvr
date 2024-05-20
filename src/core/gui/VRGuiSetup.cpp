@@ -334,6 +334,7 @@ void VRGuiSetup::on_del_clicked() { //TODO, should delete setup
 
 void VRGuiSetup::on_save_clicked() {
     if (auto s = VRSetup::getCurrent()) {
+        cout << "save setup " << s->getName() << endl;
         s->save(setupDir() + s->getName() + ".xml");
         //setWidgetSensitivity("toolbutton12", false);
     }
@@ -463,34 +464,29 @@ void VRGuiSetup::on_menu_delete(string node) {
 void VRGuiSetup::on_menu_add_window() {
     auto setup = VRSetup::getCurrent();
     if (!setup) return;
-    /*VRWindowPtr win = setup->addMultiWindow("Display");
+    auto win = setup->addMultiWindow("Display");
     win->setActive(true);
     if ( VRScene::getCurrent() ) win->setContent(true);
-
-    updateSetup();
-    selected_object = win.get();
-    selected_type = "window";
-    on_menu_add_viewport();*/
+    on_menu_add_viewport(win->getName());
 }
 
-void VRGuiSetup::on_menu_add_viewport() {
+void VRGuiSetup::on_menu_add_viewport(string winName) {
     auto setup = VRSetup::getCurrent();
     if (!setup) return;
-    /*if (selected_type != "window") return;
+    auto win = setup->getWindow(winName);
+    if (!win) return;
 
-    VRWindow* win = (VRWindow*)selected_object;
     int v = setup->addView(win->getBaseName());
     auto view = setup->getView(v);
     win->addView(view);
 
-    if (auto scene = current_scene.lock()) {
+    if ( auto scene = VRScene::getCurrent() ) {
         setup->setViewRoot(scene->getRoot(), v);
         view->setCamera( scene->getActiveCamera() );
         view->setBackground( scene->getBackground() );
     }
 
     updateSetup();
-    VRGuiWidget("toolbutton12").setSensitivity(true);*/
 }
 
 #ifndef WITHOUT_VRPN
@@ -1279,6 +1275,8 @@ VRGuiSetup::VRGuiSetup() {
 
     mgr->addCallback("onSetupMenuAddNode", [&](OSG::VRGuiSignals::Options o) { on_menu_add_network_node(); return true; }, true );
     mgr->addCallback("onSetupMenuAddSlave", [&](OSG::VRGuiSignals::Options o) { on_menu_add_network_slave(o["node"]); return true; }, true );
+    mgr->addCallback("onSetupMenuAddWindow", [&](OSG::VRGuiSignals::Options o) { on_menu_add_window(); return true; }, true );
+    mgr->addCallback("onSetupMenuAddSlave", [&](OSG::VRGuiSignals::Options o) { on_menu_add_viewport(o["node"]); return true; }, true );
     mgr->addCallback("onSetupMenuDelete", [&](OSG::VRGuiSignals::Options o) { on_menu_delete(o["ID"]); return true; }, true );
 
     updateSetupCb = VRDeviceCb::create("update gui setup", bind(&VRGuiSetup::updateSetup, this) );
