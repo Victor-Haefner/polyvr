@@ -19,6 +19,8 @@ class VRMultiWindow : public VRWindow {
         int state = INITIALIZING;
         int tries = 0;
 
+        void setState(int);
+
         void render(bool fromThread = false) override;
         void sync(bool fromThread = false) override;
 

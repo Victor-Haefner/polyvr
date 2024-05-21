@@ -52,6 +52,8 @@ ImSetupManager::ImSetupManager() : ImWidget("SetupManager"),
     mgr->addCallback("updateMTouchList", [&](OSG::VRGuiSignals::Options o) { windowMultitouch.setList(o["list"]); return true; } );
     mgr->addCallback("updateKeyboardList", [&](OSG::VRGuiSignals::Options o) { windowKeyboard.setList(o["list"]); return true; } );
 
+    mgr->addCallback("state_multiwindow_updated", [&](OSG::VRGuiSignals::Options o) { setWindowState(o["window"], o["state"]); return true; } );
+
     tree.setNodeFlags( ImGuiTreeNodeFlags_DefaultOpen );
 }
 
@@ -114,6 +116,10 @@ void ImSetupManager::selectMultiWindow(OSG::VRGuiSignals::Options o) {
     Ny = toInt(o["ny"]);
     NxNy.set2(Nx, Ny);
     toValue(o["serverIDs"], serverIDs);
+}
+
+void ImSetupManager::setWindowState(string window, string state) {
+    if (selected == window) remoteWinState = state;
 }
 
 void ImSetupManager::selectNode(OSG::VRGuiSignals::Options o) {

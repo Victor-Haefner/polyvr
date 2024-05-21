@@ -1,15 +1,15 @@
 #include "VRMultiWindow.h"
 #include "VRView.h"
-#include <OpenSG/OSGRemoteAspect.h>
-#include <OpenSG/OSGFieldContainerFactory.h>
-#include <OpenSG/OSGNameAttachment.h>
 #include "core/utils/toString.h"
 #include "core/scene/VRSceneManager.h"
 #include "core/utils/VRFunction.h"
 #include "core/utils/VRProfiler.h"
 #include "core/utils/xml.h"
+#include "core/gui/VRGuiManager.h"
 
-
+#include <OpenSG/OSGRemoteAspect.h>
+#include <OpenSG/OSGFieldContainerFactory.h>
+#include <OpenSG/OSGNameAttachment.h>
 #include <OpenSG/OSGChangeList.h>
 #include <OpenSG/OSGThread.h>
 #include <OpenSG/OSGThreadManager.h>
@@ -59,10 +59,15 @@ void VRMultiWindow::setNTiles(int x, int y) {
 int VRMultiWindow::getNXTiles() { return Nx; }
 int VRMultiWindow::getNYTiles() { return Ny; }
 
+void VRMultiWindow::setState(int s) {
+    state = s;
+    uiSignal("state_multiwindow_updated", {{"window", getName()}, {"state", getStateString()}});
+}
+
 bool VRMultiWindow::init_win(const std::string &msg, const std::string &server, Real32 progress) {
     cout << endl << msg << " to " << server << " : " << progress;
-    if (progress == 1) { state = JUSTCONNECTED; return true; }
-    if (tries == 3) { state = NO_CONNECTION; changeListStats.stopOutput(); return false; }
+    if (progress == 1) { setState(JUSTCONNECTED); return true; }
+    if (tries == 3) { setState(NO_CONNECTION); changeListStats.stopOutput(); return false; }
     tries++;
     return true;
 }
@@ -71,7 +76,7 @@ void VRMultiWindow::initialize() {
 #ifndef WASM
     cout << "Initializing MultiWindow\n";
     //cout << " Render MW " << getName() << " state " << getStateString() << endl;
-    win = 0; _win = 0; tries = 0; state = CONNECTING;
+    win = 0; _win = 0; tries = 0; setState(CONNECTING);
     win = MultiDisplayWindow::create(); _win = win;
 #ifdef WITH_CLUSTERING_FIX
     win->setFrameCounting(false);
@@ -124,7 +129,7 @@ void VRMultiWindow::sync(bool fromThread) {
         int pID = VRProfiler::get()->regStart("Multiwindow init "+getName());
         Thread::getCurrentChangeList()->clear();
         Thread::getCurrentChangeList()->fillFromCurrentState();
-        state = CONNECTED;
+        setState(CONNECTED);
         VRProfiler::get()->regStop(pID);
     }
 
@@ -142,15 +147,15 @@ void VRMultiWindow::render(bool fromThread) {
         try {
             int pID = VRProfiler::get()->regStart("Multiwindow render "+getName());
             //cout << "VRMultiWindow::render " << fromThread << ", " << pID << endl;
-            state = RENDERING;
+            setState(RENDERING);
             OSG_render(_win, ract);
-            state = CONNECTED;
+            setState(CONNECTED);
             VRProfiler::get()->regStop(pID);
         } catch(exception& e) { reset(); }
     }
 }
 
-void VRMultiWindow::reset() { state = INITIALIZING; }
+void VRMultiWindow::reset() { setState(INITIALIZING); }
 int VRMultiWindow::getState() { return state; }
 void VRMultiWindow::setConnectionType(string ct) { connection_type = ct; }
 string VRMultiWindow::getConnectionType() { return connection_type; }
@@ -161,7 +166,7 @@ string VRMultiWindow::getStateString() {
     if (state == INITIALIZING) return "initializing";
     if (state == CONNECTING) return "connecting";
     if (state == JUSTCONNECTED) return "just connected";
-    if (state == NO_CONNECTION) return "not connencted";
+    if (state == NO_CONNECTION) return "not connected";
     return "invalid state";
 }
 

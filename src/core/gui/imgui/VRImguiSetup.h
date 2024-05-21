@@ -107,6 +107,8 @@ class ImSetupManager : public ImWidget {
         void selectNode(map<string,string> o);
         void selectSlave(map<string,string> o);
 
+        void setWindowState(string window, string state);
+
     public:
         ImSetupManager();
         void begin() override;
