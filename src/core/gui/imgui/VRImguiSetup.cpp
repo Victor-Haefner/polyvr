@@ -24,9 +24,14 @@ ImSetupManager::ImSetupManager() : ImWidget("SetupManager"),
         windowMouse("winMouse", "Mouse"),
         windowMultitouch("winMultitouch", "Multitouch"),
         windowKeyboard("winKeyboard", "Keyboard"),
-        slaveConnectionType("slaveConnType", "Connection Type") {
+        slaveConnectionType("slaveConnType", "Connection Type"),
+        winConnectionType("winConnType", "Connection Type") {
     windowMSAA.setList({"none", "x2", "x4", "x8", "x16"});
-    slaveConnectionType.setList({"Multicast", "SockPipeline", "StreamSock"});
+
+    //vector<string> ctypes = {"Multicast", "SockPipeline", "StreamSock"};
+    vector<string> ctypes = {"Multicast", "StreamSock"};
+    slaveConnectionType.setList(ctypes);
+    winConnectionType.setList(ctypes);
 
     auto mgr = OSG::VRGuiSignals::get();
     mgr->addCallback("updateSetupsList", [&](OSG::VRGuiSignals::Options o){ updateSetupsList(o["setups"]); return true; } );
@@ -104,10 +109,7 @@ void ImSetupManager::selectMultiWindow(OSG::VRGuiSignals::Options o) {
 
     selected = o["name"];
     remoteWinState = o["state"];
-    string ct = o["connType"];
-    winConnType = 0;
-    if (ct == "SockPipeline") winConnType = 1;
-    if (ct == "StreamSock") winConnType = 2;
+    winConnectionType.set(o["connType"]);
     Nx = toInt(o["nx"]);
     Ny = toInt(o["ny"]);
     NxNy.set2(Nx, Ny);
@@ -264,12 +266,7 @@ void ImSetupManager::begin() {
             ImGui::SameLine();
             if (ImGui::Button("connect##win")) uiSignal("win_click_connect", {{}});
 
-            ImGui::Text("Connection type:");
-            ImGui::Indent(10);
-            if (ImGui::RadioButton("Multicast##win", &winConnType, 0)) { uiSignal("win_set_conn_type", {{"type", "multicast"}}); }
-            if (ImGui::RadioButton("SockPipeline##win", &winConnType, 1)) { uiSignal("win_set_conn_type", {{"type", "sockpipeline"}}); }
-            if (ImGui::RadioButton("StreamSock##win", &winConnType, 2)) { uiSignal("win_set_conn_type", {{"type", "streamsock"}}); }
-            ImGui::Unindent(10);
+            if (winConnectionType.render(200)) winConnectionType.signal("setup_switch_win_conn_type");
 
             if (NxNy.render(160) && NxNy.vX > 0 && NxNy.vY > 0) NxNy.signal("win_set_NxNy");
             ImGui::Indent(10);

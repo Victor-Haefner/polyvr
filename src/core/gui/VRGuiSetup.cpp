@@ -336,7 +336,6 @@ void VRGuiSetup::on_save_clicked() {
     if (auto s = VRSetup::getCurrent()) {
         cout << "save setup " << s->getName() << endl;
         s->save(setupDir() + s->getName() + ".xml");
-        //setWidgetSensitivity("toolbutton12", false);
     }
 }
 
@@ -537,29 +536,24 @@ void VRGuiSetup::on_menu_add_script() {
 // window options
 
 void VRGuiSetup::on_servern_edit(int Nx, int Ny) {
-    if (selected_type != "window") return;
+    if (guard || !window) return;
     auto mwin = dynamic_pointer_cast<VRMultiWindow>(window);
     if (!mwin) return;
     mwin->setNTiles(Nx, Ny);
     updateObjectData();
 }
 
-void VRGuiSetup::on_server_ct_toggled() {
-    if (guard) return;
-    if (selected_type != "window") return;
-
-    string ct = "StreamSock";
-    /*if ( getRadioButtonState("radiobutton6") ) ct = "Multicast";
-    if ( getRadioButtonState("radiobutton7") ) ct = "SockPipeline";
-
-    VRMultiWindow* mwin = (VRMultiWindow*)selected_object;
+void VRGuiSetup::on_server_set_connection(string ct) {
+    if (guard || !window) return;
+    auto mwin = dynamic_pointer_cast<VRMultiWindow>(window);
+    if (!mwin) return;
     mwin->setConnectionType(ct);
+    mwin->reset();
     updateObjectData();
-    VRGuiWidget("toolbutton12").setSensitivity(true);*/
 }
 
 void VRGuiSetup::on_server_edit(int x, int y, string sID) {
-    if (selected_type != "window") return;
+    if (guard || !window) return;
     auto mwin = dynamic_pointer_cast<VRMultiWindow>(window);
     if (!mwin) return;
     mwin->setServer(x,y,sID);
@@ -1256,6 +1250,7 @@ VRGuiSetup::VRGuiSetup() {
     mgr->addCallback("win_set_NxNy", [&](OSG::VRGuiSignals::Options o) { on_servern_edit(toInt(o["x"]), toInt(o["y"])); return true; }, true );
     mgr->addCallback("win_set_serverID", [&](OSG::VRGuiSignals::Options o) { on_server_edit(toInt(o["x"]), toInt(o["y"]), o["sID"]); return true; }, true );
     mgr->addCallback("win_click_connect", [&](OSG::VRGuiSignals::Options o) { on_connect_mw_clicked(); return true; }, true );
+    mgr->addCallback("setup_switch_win_conn_type", [&](OSG::VRGuiSignals::Options o) { on_netslave_set_connection(o["selection"]); return true; }, true );
 
     mgr->addCallback("node_set_address", [&](OSG::VRGuiSignals::Options o) { on_netnode_address_edited(o["address"]); return true; }, true );
     mgr->addCallback("node_set_user", [&](OSG::VRGuiSignals::Options o) { on_netnode_user_edited(o["user"]); return true; }, true );

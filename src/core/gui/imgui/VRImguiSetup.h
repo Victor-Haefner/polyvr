@@ -66,7 +66,7 @@ class ImSetupManager : public ImWidget {
 
         // remote window
         string remoteWinState;
-        int winConnType = 0;
+        ImCombo winConnectionType;
         Im_Vector NxNy;
         int Nx = 1;
         int Ny = 1;

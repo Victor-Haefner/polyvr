@@ -223,6 +223,7 @@ void VRSetup::setDisplaysOffset(Vec3d o) {
 }
 
 void VRSetup::save(string file) {
+    cout << " save setup " << file << endl;
     XML xml;
     XMLElementPtr setupN = xml.newRoot("Setup", "", ""); //name, ns_uri, ns_prefix
     XMLElementPtr displayN = setupN->addChild("Displays");
@@ -249,7 +250,8 @@ void VRSetup::save(string file) {
 
     if (file != "" && file != path) {
         path = file;
-        setName( getFileName(file, true) );
+        cout << " - - - - VRSetup::save " << file << ", " << getFileName(file, false) << endl;
+        setName( getFileName(file, false) );
     }
     xml.write(path);
 }

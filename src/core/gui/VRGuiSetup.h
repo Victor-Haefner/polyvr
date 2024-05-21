@@ -92,7 +92,7 @@ class VRGuiSetup {
         void on_window_set_active(bool b);
         void on_toggle_display_multi();
         void on_servern_edit(int Nx, int Ny);
-        void on_server_ct_toggled();
+        void on_server_set_connection(string ct);
         void on_server_edit(int x, int y, string sID);
         void on_connect_mw_clicked();
 

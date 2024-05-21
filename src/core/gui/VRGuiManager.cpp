@@ -81,6 +81,23 @@ string VRGuiManager::genUUID() {
     return s;
 }
 
+string getSetupFile() {
+    if (VROptions::get()->hasOption("setup")) {
+        string s = VROptions::get()->getOption<string>("setup");
+        if (s != "") {
+            cout << " use custom setup option " << s << endl;
+            return s;
+        }
+    }
+
+    string setupFile = "Desktop";
+    ifstream f1("setup/.local");
+    ifstream f2("setup/.default");
+    if (f1.good()) getline(f1, setupFile);
+    else if (f2.good()) getline(f2, setupFile);
+    return setupFile;
+}
+
 void VRGuiManager::init() {
     cout << "Init VRGuiManager.." << endl;
     mtx = new VRMutex();
@@ -105,16 +122,7 @@ void VRGuiManager::init() {
     imguiMgr = new VRImguiManager();
 #endif
 
-    string setupFile = "Desktop";
-    if (VROptions::get()->hasOption("setup")) {
-        string s = VROptions::get()->getOption<string>("setup");
-        if (s != "") setupFile = s;
-    } else {
-        ifstream f1("setup/.local");
-        ifstream f2("setup/.default");
-        if (f1.good()) getline(f1, setupFile);
-        else if (f2.good()) getline(f2, setupFile);
-    }
+    string setupFile = getSetupFile();
     VRSetupManager::get()->load(setupFile, "setup/"+setupFile+".xml");
 
     g_demos = new VRAppManager();
