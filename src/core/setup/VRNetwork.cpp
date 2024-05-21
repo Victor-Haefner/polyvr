@@ -248,6 +248,7 @@ VRNetworkSlave::~VRNetworkSlave() {}
 VRNetworkSlavePtr VRNetworkSlave::create(string name) { return VRNetworkSlavePtr( new VRNetworkSlave(name) ); }
 
 void VRNetworkSlave::start() {
+    cout << "VRNetworkSlave::start " << getName() << endl;
     if (!node) return;
     //if (!exists(path + "VRServer")) { stat = "no slave exec. VRServer in src/cluster/"; return; } // TODO: check on remote!
 
@@ -278,7 +279,9 @@ void VRNetworkSlave::start() {
         cmd = script + args + geo + pipes;
     }
 
+    cout << " start command:\n" << cmd << endl;
     stat = node->execCmd(cmd, false);
+    cout << "  stat: " << stat << endl;
     update();
 }
 
