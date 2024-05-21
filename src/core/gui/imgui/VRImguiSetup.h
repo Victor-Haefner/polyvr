@@ -88,6 +88,7 @@ class ImSetupManager : public ImWidget {
 
         // slave
         ImCombo slaveConnectionType;
+        ImCombo slaveSystemScreens;
         bool slaveAutostart = 0;
         bool slaveActiveStereo = 0;
         bool slaveFullscreen = 0;

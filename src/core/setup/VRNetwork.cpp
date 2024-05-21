@@ -305,6 +305,27 @@ void VRNetworkSlave::set(string ct, bool fs, bool as, bool au, string a, int p, 
     update();
 }
 
+vector<string> VRNetworkSlave::getAvailableDisplays() {
+    string xservers = node->execCmd("ls /tmp/.X11-unix");
+    cout << " xservers: " << xservers << endl;
+
+    vector<string> res;
+    for (auto x : splitString(xservers)) {
+        if (x.size() < 2) continue;
+        int xID = toInt( subString(x, 1) );
+        cout << "  xID " << xID << endl;
+        string screens = node->execCmd("xdpyinfo -display :0 | grep screen");
+        for ( auto screen : splitString(screens,'\n') ) {
+            if ( startsWith(screen, "screen #") ) {
+                int screenID = toInt( splitString( splitString(screen,'#')[1], ':' )[0] );
+                cout << "   screenID " << screenID << endl;
+                res.push_back(":" + toString(xID) + "." + toString(screenID));
+            }
+        }
+    }
+    return res;
+}
+
 void VRNetworkSlave::update() {}
 
 string VRNetworkSlave::getStatMulticast() { return stat_multicast; }

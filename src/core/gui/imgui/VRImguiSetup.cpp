@@ -25,8 +25,11 @@ ImSetupManager::ImSetupManager() : ImWidget("SetupManager"),
         windowMultitouch("winMultitouch", "Multitouch"),
         windowKeyboard("winKeyboard", "Keyboard"),
         slaveConnectionType("slaveConnType", "Connection Type"),
+        slaveSystemScreens("slaveSystemScreens", ""),
         winConnectionType("winConnType", "Connection Type") {
+
     windowMSAA.setList({"none", "x2", "x4", "x8", "x16"});
+    slaveSystemScreens.setList({":0.0", ":0.1", ":1.0", ":1.1"});
 
     //vector<string> ctypes = {"Multicast", "SockPipeline", "StreamSock"};
     vector<string> ctypes = {"Multicast", "StreamSock"};
@@ -51,6 +54,7 @@ ImSetupManager::ImSetupManager() : ImWidget("SetupManager"),
     mgr->addCallback("updateMouseList", [&](OSG::VRGuiSignals::Options o) { windowMouse.setList(o["list"]); return true; } );
     mgr->addCallback("updateMTouchList", [&](OSG::VRGuiSignals::Options o) { windowMultitouch.setList(o["list"]); return true; } );
     mgr->addCallback("updateKeyboardList", [&](OSG::VRGuiSignals::Options o) { windowKeyboard.setList(o["list"]); return true; } );
+    mgr->addCallback("updateDisplayList", [&](OSG::VRGuiSignals::Options o) { slaveSystemScreens.setList(o["list"]); return true; } );
 
     mgr->addCallback("state_multiwindow_updated", [&](OSG::VRGuiSignals::Options o) { setWindowState(o["window"], o["state"]); return true; } );
 
@@ -469,7 +473,9 @@ void ImSetupManager::begin() {
             if (ImGui::Checkbox("fullscreen##slave", &slaveFullscreen)) uiSignal("slave_toggle_fullscreen", {{"state",toString(slaveFullscreen)}});
             if (sPortEntry.render(240)) uiSignal("slave_set_port", {{"port", sPortEntry.value}});
             if (slaveConnectionType.render(200)) slaveConnectionType.signal("setup_switch_slave_conn_type");
-            if (sScreenEntry.render(240)) uiSignal("slave_set_screen", {{"screen", sScreenEntry.value}});
+            if (sScreenEntry.render(150)) uiSignal("slave_set_screen", {{"screen", sScreenEntry.value}});
+            ImGui::SameLine();
+            if (slaveSystemScreens.render(100)) uiSignal("slave_set_screen", {{"screen", slaveSystemScreens.get()}});
             if (sDelayEntry.render(240)) uiSignal("slave_set_delay", {{"delay", sDelayEntry.value}});
             ImGui::SameLine();
             ImGui::Text("seconds");

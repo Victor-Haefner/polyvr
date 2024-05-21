@@ -40,3 +40,5 @@ void ImCombo::set(string s) {
     current = 0;
     for (int i=0; i<strings.size(); i++) if (strings[i] == s) current = i;
 }
+
+string ImCombo::get() { return strings[current]; }

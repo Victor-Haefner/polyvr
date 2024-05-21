@@ -26,6 +26,7 @@ class ImCombo {
         void setList(vector<string> v);
         void setList(string v);
         void set(string s);
+        string get();
 };
 
 #endif // VRIMGUICOMBO_H_INCLUDED

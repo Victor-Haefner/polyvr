@@ -271,6 +271,9 @@ void VRGuiSetup::updateObjectData() {
             {"startupDelay", toString(slave->getStartupDelay())},
             {"geometry", toString(slave->getGeometry())}
         } );
+
+        auto displayList = slave->getAvailableDisplays();
+        uiSignal("updateDisplayList", {{"list", toString(displayList)}});
     }
 
     if (selected_type == "script") {
