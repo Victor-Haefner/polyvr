@@ -26,12 +26,31 @@ void VRNetwork::joinInitThreads() {
     for (auto n : getData()) n->joinInitThread();
 }
 
+VRNetworkNodePtr VRNetwork::getNode(string name) {
+    for (auto n : getData()) {
+        if (n->getName() == name) return n;
+    }
+    return 0;
+}
+
 VRNetworkSlavePtr VRNetwork::getSlave(string name) {
     for (auto n : getData()) {
         auto s = n->get(name);
         if (s) return s;
     }
     return 0;
+}
+
+void VRNetwork::remNode(string node) { rem(node); }
+
+void VRNetwork::remSlave(string slave) {
+    for (auto n : getData()) {
+        auto s = n->get(name);
+        if (s) {
+            n->rem(slave);
+            return;
+        }
+    }
 }
 
 VRNetworkNode::VRNetworkNode(string name) : VRManager("NetworkNode") {
@@ -155,7 +174,7 @@ void VRNetworkNode::update() {
 #ifndef WITHOUT_SSH
     stat_node = "ok";
     stat_ssh = "";
-    stat_ssh_key = "";
+    stat_ssh_key = "no ssh used";
     stat_path = "";
 
     VRPing p;
@@ -229,6 +248,7 @@ VRNetworkSlave::~VRNetworkSlave() {}
 VRNetworkSlavePtr VRNetworkSlave::create(string name) { return VRNetworkSlavePtr( new VRNetworkSlave(name) ); }
 
 void VRNetworkSlave::start() {
+    cout << "VRNetworkSlave::start " << getName() << endl;
     if (!node) return;
     //if (!exists(path + "VRServer")) { stat = "no slave exec. VRServer in src/cluster/"; return; } // TODO: check on remote!
 
@@ -259,7 +279,9 @@ void VRNetworkSlave::start() {
         cmd = script + args + geo + pipes;
     }
 
+    cout << " start command:\n" << cmd << endl;
     stat = node->execCmd(cmd, false);
+    cout << "  stat: " << stat << endl;
     update();
 }
 
@@ -283,6 +305,27 @@ void VRNetworkSlave::set(string ct, bool fs, bool as, bool au, string a, int p, 
     update();
 }
 
+vector<string> VRNetworkSlave::getAvailableDisplays() {
+    string xservers = node->execCmd("ls /tmp/.X11-unix");
+    cout << " xservers: " << xservers << endl;
+
+    vector<string> res;
+    for (auto x : splitString(xservers)) {
+        if (x.size() < 2) continue;
+        int xID = toInt( subString(x, 1) );
+        cout << "  xID " << xID << endl;
+        string screens = node->execCmd("xdpyinfo -display :0 | grep screen");
+        for ( auto screen : splitString(screens,'\n') ) {
+            if ( startsWith(screen, "screen #") ) {
+                int screenID = toInt( splitString( splitString(screen,'#')[1], ':' )[0] );
+                cout << "   screenID " << screenID << endl;
+                res.push_back(":" + toString(xID) + "." + toString(screenID));
+            }
+        }
+    }
+    return res;
+}
+
 void VRNetworkSlave::update() {}
 
 string VRNetworkSlave::getStatMulticast() { return stat_multicast; }
@@ -297,10 +340,14 @@ int VRNetworkSlave::getPort() { return port; }
 int VRNetworkSlave::getStartupDelay() { return startupDelay; }
 string VRNetworkSlave::getGeometry() { return geometry; }
 
+void VRNetworkSlave::setPort(int p) { port = p; update(); }
+void VRNetworkSlave::setDelay(int d) { startupDelay = d; update(); }
 void VRNetworkSlave::setDisplay(string a) { display = a; update(); }
 void VRNetworkSlave::setConnectionType(string b) { connection_type = b; update(); }
 void VRNetworkSlave::setFullscreen(bool b) { fullscreen = b; update(); }
+void VRNetworkSlave::setActiveStereo(bool b) { active_stereo = b; update(); }
 void VRNetworkSlave::setAutostart(bool b) { autostart = b; update(); }
+void VRNetworkSlave::setGeometry(string g) { geometry = g; update(); }
 
 string VRNetworkSlave::getConnectionIdentifier() {
     if (connection_type == "Multicast") return getName();

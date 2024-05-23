@@ -175,6 +175,7 @@ VRGlutEditorPtr VRGlutEditor::ptr() { return static_pointer_cast<VRGlutEditor>( 
 VRGlutEditorPtr VRGlutEditor::create() { return VRGlutEditorPtr(new VRGlutEditor() ); }
 
 void VRGlutEditor::setTitle(string title) {
+    VRWindow::setTitle(title);
     int w = glutGetWindow();
     glutSetWindow(topWin);
     glutSetWindowTitle(title.c_str());
@@ -182,6 +183,7 @@ void VRGlutEditor::setTitle(string title) {
 }
 
 void VRGlutEditor::setIcon(string iconpath) {
+    VRWindow::setIcon(iconpath);
     setWindowIcon(iconpath);
 }
 

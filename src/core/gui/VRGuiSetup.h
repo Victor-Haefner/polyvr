@@ -72,22 +72,27 @@ class VRGuiSetup {
         bool on_treeview_rightclick();
 
         void on_menu_add_window();
-        void on_menu_add_viewport();
+        void on_menu_add_viewport(string winName);
 #ifndef WITHOUT_VRPN
         void on_menu_add_vrpn_tracker();
 #endif
         template<class T> void on_menu_add_device();
         void on_menu_add_network_node();
-        void on_menu_add_network_slave();
+        void on_menu_add_network_slave(string node);
         void on_menu_add_script();
-        void on_menu_delete();
+        void on_menu_delete(string node);
 
-        void on_window_device_changed();
-        void on_window_msaa_changed();
-        void on_toggle_display_active();
+        void on_window_mouse_changed(string s);
+        void on_window_touch_changed(string s);
+        void on_window_kboard_changed(string s);
+        void on_window_msaa_changed(string s);
+        void on_window_size_changed(int w, int h);
+        void on_window_title_changed(string s);
+        void on_window_icon_changed(string s);
+        void on_window_set_active(bool b);
         void on_toggle_display_multi();
         void on_servern_edit(int Nx, int Ny);
-        void on_server_ct_toggled();
+        void on_server_set_connection(string ct);
         void on_server_edit(int x, int y, string sID);
         void on_connect_mw_clicked();
 
@@ -149,11 +154,21 @@ class VRGuiSetup {
 #endif
         void on_toggle_dev_cross();
 
-        void on_netnode_edited();
+        void on_netnode_address_edited(string s) ;
+        void on_netnode_user_edited(string s);
+        void on_netnode_path_edited(string s);
         void on_netnode_key_clicked();
         void on_netnode_stopall_clicked();
-        void on_netslave_edited();
+
+        void on_netslave_set_autostart(bool b);
+        void on_netslave_set_fullscreen(bool b);
+        void on_netslave_set_activestereo(bool b);
         void on_netslave_start_clicked();
+        void on_netslave_set_port(int port);
+        void on_netslave_set_delay(int delay);
+        void on_netslave_set_screen(string s);
+        void on_netslave_set_geometry(string g);
+        void on_netslave_set_connection(string ct);
 
         void on_script_save_clicked();
         void on_script_exec_clicked();

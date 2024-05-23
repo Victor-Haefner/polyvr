@@ -39,7 +39,6 @@ class VRNetworkSlave : public VRName {
         void setup(VRStorageContextPtr context);
 
         void setNode(VRNetworkNodePtr n);
-        void set(string ct, bool fs, bool as, bool au, string a, int p, int d, string g);
 
         void start();
         void stop();
@@ -55,12 +54,17 @@ class VRNetworkSlave : public VRName {
         int getPort();
         int getStartupDelay();
         string getGeometry();
+        vector<string> getAvailableDisplays();
 
+        void set(string ct, bool fs, bool as, bool au, string a, int p, int d, string g);
+        void setPort(int p);
+        void setDelay(int d);
         void setDisplay(string a);
         void setConnectionType(string ct);
         void setFullscreen(bool b);
         void setActiveStereo(bool b);
         void setAutostart(bool b);
+        void setGeometry(string g);
 
         string getConnectionIdentifier();
 };
@@ -133,7 +137,11 @@ class VRNetwork : public VRManager<VRNetworkNode> {
 
         void joinInitThreads();
         void stopSlaves();
+        VRNetworkNodePtr getNode(string name);
         VRNetworkSlavePtr getSlave(string name);
+
+        void remNode(string node);
+        void remSlave(string slave);
 };
 
 OSG_END_NAMESPACE;
