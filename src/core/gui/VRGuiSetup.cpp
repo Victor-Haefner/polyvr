@@ -51,13 +51,17 @@ void VRGuiSetup::updateObjectData() {
         VRWindowPtr win = dynamic_pointer_cast<VRWindow>(window);
 
         if (win) {
+            string mtouch;
+#ifndef WITHOUT_MTOUCH
+            mtouch = win->getMultitouch() ? win->getMultitouch()->getName() : "";
+#endif
             uiSignal( "on_setup_select_window", {
                 {"name", win->getName()},
                 {"sizeW", toString(win->getSize()[0])},
                 {"sizeH", toString(win->getSize()[1])},
                 {"active", toString(win->isActive())},
                 {"mouse", win->getMouse() ? win->getMouse()->getName() : "" },
-                {"multitouch", win->getMultitouch() ? win->getMultitouch()->getName() : "" },
+                {"multitouch", mtouch },
                 {"keyboard", win->getKeyboard() ? win->getKeyboard()->getName() : "" },
                 {"msaa", win->getMSAA()},
                 {"title", win->getTitle()},
