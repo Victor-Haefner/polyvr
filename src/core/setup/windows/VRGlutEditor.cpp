@@ -68,8 +68,10 @@ VRGlutEditor::VRGlutEditor() {
     type = "glutEditor";
 
 #ifndef WITHOUT_OPENVR
-    if (VRHeadMountedDisplay::checkDeviceAttached())
+    if (VRHeadMountedDisplay::checkDeviceAttached()) {
+        cout << "HMD (glut editor): init system" << endl;
         hmd = VRHeadMountedDisplay::create();
+    }
 #endif
 
     initGlut();
@@ -128,6 +130,7 @@ VRGlutEditor::VRGlutEditor() {
     win->init();
 #ifndef WITHOUT_OPENVR
     if (hmd) {
+        cout << "HMD (glut editor): init hmd" << endl;
         hmd->initHMD();
     }
 #endif

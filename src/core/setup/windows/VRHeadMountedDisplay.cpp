@@ -380,6 +380,7 @@ int mapButton(int b) {
 }
 
 void VRHeadMountedDisplay::handleInput() {
+	if (!m_pHMD) return;
 	vr::VREvent_t event;
 	while (m_pHMD->PollNextEvent(&event, sizeof(event))) {
 		auto devID = event.trackedDeviceIndex;
