@@ -14,7 +14,34 @@ OSG_BEGIN_NAMESPACE;
 using namespace std;
 
 class VRRobotArm {
-    private:
+    public:
+        struct System {
+            VRTransformPtr base;
+            vector<VRTransformPtr> parts;
+            VRAnalyticGeometryPtr ageo;
+
+            vector<float> angles;
+            vector<float> angle_targets;
+            vector<float> angle_offsets = {0,0,-0.5,0,0,0};
+            vector<int> angle_directions = {1,-1,1,1,1,1};
+            vector<float> lengths = {0,0,0,0,0};
+            vector<float> axis_offsets = {0,0};
+            vector<int> axis = {1,0,0,2,0,2};
+
+            System();
+            virtual ~System();
+
+            virtual void updateState() = 0;
+            virtual void updateSystem() = 0;
+            virtual void genKinematics() = 0;
+            virtual vector<float> calcReverseKinematics(PosePtr p) = 0;
+            virtual PosePtr calcForwardKinematics(vector<float> angles) = 0;
+            virtual void updateAnalytics() = 0;
+            virtual void applyAngles() = 0;
+
+            double convertAngle(double a, int i);
+        };
+
         struct job {
             PathPtr p = 0;
             PathPtr po = 0;
@@ -26,7 +53,8 @@ class VRRobotArm {
             job(PathPtr p, PathPtr po = 0, float t0 = 0, float t1 = 1, float d = 1, bool loop = false, bool local = false) : p(p), po(po), t0(t0), t1(t1), d(d), loop(loop), local(local) {;}
         };
 
-        VRAnalyticGeometryPtr ageo = 0;
+    private:
+        shared_ptr<System> system;
         VRAnimationPtr anim = 0;
         VRAnimCbPtr animPtr;
         VRUpdateCbPtr updatePtr;
@@ -50,23 +78,9 @@ class VRRobotArm {
         string type = "kuka";
 
         VRTransformPtr dragged = 0;
-        vector<VRTransformPtr> parts;
-        vector<float> angles;
-        vector<float> angle_targets;
-        vector<float> angle_offsets = {0,0,-0.5,0,0,0};
-        vector<int> angle_directions = {1,-1,1,1,1,1};
-        vector<float> lengths = {0,0,0,0,0};
-        vector<float> axis_offsets = {0,0};
-        vector<int> axis = {1,0,0,2,0,2};
-
-        vector<float> calcReverseKinematicsKuka(PosePtr p);
-        vector<float> calcReverseKinematicsAubo(PosePtr p);
-        PosePtr calcForwardKinematicsKuka(vector<float> angles);
-        PosePtr calcForwardKinematicsAubo(vector<float> angles);
 
         void update();
         PosePtr getLastPose();
-        double convertAngle(double a, int i);
         void applyAngles();
         void updateLGTransforms();
         PosePtr calcForwardKinematics(vector<float> angles);
@@ -81,7 +95,6 @@ class VRRobotArm {
         static shared_ptr<VRRobotArm> create(string type);
         void showAnalytics(bool b);
 
-        void setParts(vector<VRTransformPtr> parts);
         void setAngleOffsets(vector<float> offsets);
         void setAngleDirections(vector<int> directions);
         void setAxis(vector<int> axis);
@@ -89,9 +102,8 @@ class VRRobotArm {
         void setAxisOffsets(vector<float> offsets);
         void setSpeed(float s);
         void setMaxSpeed(float s);
-        VRTransformPtr genKinematics();
+        VRTransformPtr getKinematics();
 
-        vector<VRTransformPtr> getParts();
         vector<float> getAngles();
         vector<float> getTargetAngles();
         PosePtr getPose();
