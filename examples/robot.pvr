@@ -52,8 +52,8 @@
 	VR.robot.setLengths([0.16, 0.271, 0.253, 0.14, 0.026])
 	VR.robot.setAxisOffsets([-0.088, 0.061])
 	
-	kinematics = VR.robot.getKinematics()
-	VR.scene.addChild(kinematics)
+	base = VR.robot.getKinematicBase()
+	VR.scene.addChild(base)
 	
 	
 	# load geometries
@@ -69,7 +69,8 @@
 	
 	# attach geometries to kinematics
 	parts = arm.getChildren(True, 'Transform')
-	chain = kinematics.getChildren(True, 'Transform')
+	chain = [base] + VR.robot.getKinematics()
+	print len(parts), len(chain)
 	
 	for k,p in zip(chain,parts):
 		P = p.getWorldPose()

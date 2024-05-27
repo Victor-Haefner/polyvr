@@ -102,7 +102,8 @@ class VRRobotArm {
         void setAxisOffsets(vector<float> offsets);
         void setSpeed(float s);
         void setMaxSpeed(float s);
-        VRTransformPtr getKinematics();
+        VRTransformPtr getKinematicBase();
+        vector<VRTransformPtr> getKinematics();
 
         vector<float> getAngles();
         vector<float> getTargetAngles();

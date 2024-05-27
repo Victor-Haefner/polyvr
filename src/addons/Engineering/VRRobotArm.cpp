@@ -460,14 +460,15 @@ struct SystemDelta : VRRobotArm::System {
             baseArm->move(baseOffset);
             armRoots[i] = baseArm->getFrom();
             armAxis[i]  = baseArm->getPose()->x();
-            if (i == 0) cout << "  syst ---- " << armRoots[i] << ", a: " << a << ", L: " << lengths[0] << endl;
             baseArm->setEuler(Vec3d(b,a,0));
             elbow1->translate(Vec3d(elbowDistance, 0, arm1Length));
             elbow2->translate(Vec3d(-elbowDistance, 0, arm1Length));
+            elbow1->setUp(Vec3d(1,0,0));
+            elbow2->setUp(Vec3d(1,0,0));
 
-            baseArm->showCoordAxis(1, 0.4);
-            elbow1->showCoordAxis(1, 0.2);
-            elbow2->showCoordAxis(1, 0.2);
+            //baseArm->showCoordAxis(1, 0.4);
+            //elbow1->showCoordAxis(1, 0.2);
+            //elbow2->showCoordAxis(1, 0.2);
         }
 
         auto beam1 = parts[9];
@@ -480,13 +481,14 @@ struct SystemDelta : VRRobotArm::System {
 
         star->translate(Vec3d(0,-h,0));
         beam2->translate(Vec3d(0,-h,0));
+        beam1->setUp(Vec3d(1,0,0));
 
         applyAngles();
         updateState();
         updateAnalytics();
 
-        beam1->showCoordAxis(1, 0.2);
-        beam2->showCoordAxis(1, 0.2);
+        //beam1->showCoordAxis(1, 0.2);
+        //beam2->showCoordAxis(1, 0.2);
     }
 
     void genKinematics() { // delta
@@ -667,7 +669,7 @@ struct SystemDelta : VRRobotArm::System {
             Vec3d D = armAxis[i] * elbowDistance;
             Vec3d A2 = pos + Od*starOffset - A1 - O;
             ageo->setVector(12+i, O+A1+D, A2, Color3f(1,1,1), ""); // arm21
-            ageo->setVector(15+i, O+A1-D, A2, Color3f(1,1,1), toString(A2.length() / arm2Length)); // arm22
+            ageo->setVector(15+i, O+A1-D, A2, Color3f(1,1,1), ""); // arm22
         }
 
         // beams
@@ -724,7 +726,7 @@ struct SystemDelta : VRRobotArm::System {
         star->setFrom(pos);
         beam1->setDir(-norm);
         beam2->setFrom(Vec3d(0,0,L));
-        hand->setPose(ee);
+        hand->setPoseTo(ee, base);
     }
 };
 
@@ -767,7 +769,8 @@ vector<float> VRRobotArm::getTargetAngles() {
     return res;
 }
 
-VRTransformPtr VRRobotArm::getKinematics() { return system->base; }
+VRTransformPtr VRRobotArm::getKinematicBase() { return system->base; }
+vector<VRTransformPtr> VRRobotArm::getKinematics() { return system->parts; }
 
 void VRRobotArm::applyAngles() {
     system->applyAngles();
