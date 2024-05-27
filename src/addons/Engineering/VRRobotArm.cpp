@@ -55,7 +55,7 @@ struct SystemKuka : VRRobotArm::System {
 
     ~SystemKuka() {}
 
-    void updateState() {
+    void updateState() { // kuka
         eePose = calcForwardKinematics(angle_targets);
         ang_f = angle_targets[0];
         ang_a = angle_targets[1] + Pi*0.5;
@@ -70,7 +70,7 @@ struct SystemKuka : VRRobotArm::System {
         updateAnalytics();
     }
 
-    void updateSystem() {
+    void updateSystem() { // kuka
         dist2 = sqrt(lengths[2]*lengths[2] + axis_offsets[1]*axis_offsets[1]);
         ang_ba = atan(axis_offsets[1] / lengths[2]);
 
@@ -410,24 +410,31 @@ struct SystemAubo : VRRobotArm::System {
 
 struct SystemDelta : VRRobotArm::System {
     PosePtr eePose = Pose::create();
+    vector<Vec3d> armRoots;
+    vector<Vec3d> armAxis;
 
     SystemDelta() : VRRobotArm::System() {
+        armRoots.resize(3);
+        armAxis.resize(3);
         angles.resize(4,0);
         angle_targets.resize(4,0);
+        lengths = { 0.2, 0.3, 0.3, 0.2, 0.03 };
+        angle_offsets = {0,0,0,0,0,0};
+        angle_directions = {1,1,1,1,1,1};
         genKinematics();
+
+        for (int i=0; i<6; i++) angles[i] = convertAngle(0, i);
+        applyAngles();
     }
 
     ~SystemDelta() {}
 
-    void updateState() {
-
+    void updateState() { // delta
+        eePose = calcForwardKinematics(angle_targets);
+        updateAnalytics();
     }
 
-    void updateSystem() {
-
-    }
-
-    void genKinematics() { // delta
+    void updateSystem() { // delta
         double baseOffset = lengths[0];
         double arm1Length = lengths[1];
         double arm2Length = lengths[2];
@@ -439,6 +446,50 @@ struct SystemDelta : VRRobotArm::System {
         double h = sqrt( L*L - x*x );
         double b = Pi - acos(x / h);
 
+        for (int i=0; i<3; i++) {
+            auto baseArm = parts[i*3+0];
+            auto elbow1 = parts[i*3+1];
+            auto elbow2 = parts[i*3+2];
+
+            baseArm->setIdentity();
+            elbow1->setIdentity();
+            elbow2->setIdentity();
+
+            double a = Pi*2.0/3.0 * i;
+            baseArm->setEuler(Vec3d(0,a,0));
+            baseArm->move(baseOffset);
+            armRoots[i] = baseArm->getFrom();
+            armAxis[i]  = baseArm->getPose()->x();
+            if (i == 0) cout << "  syst ---- " << armRoots[i] << ", a: " << a << ", L: " << lengths[0] << endl;
+            baseArm->setEuler(Vec3d(b,a,0));
+            elbow1->translate(Vec3d(elbowDistance, 0, arm1Length));
+            elbow2->translate(Vec3d(-elbowDistance, 0, arm1Length));
+
+            baseArm->showCoordAxis(1, 0.4);
+            elbow1->showCoordAxis(1, 0.2);
+            elbow2->showCoordAxis(1, 0.2);
+        }
+
+        auto beam1 = parts[9];
+        auto beam2 = parts[10];
+        auto hand = parts[11];
+        auto star = parts[12];
+
+        star->setIdentity();
+        beam2->setIdentity();
+
+        star->translate(Vec3d(0,-h,0));
+        beam2->translate(Vec3d(0,-h,0));
+
+        applyAngles();
+        updateState();
+        updateAnalytics();
+
+        beam1->showCoordAxis(1, 0.2);
+        beam2->showCoordAxis(1, 0.2);
+    }
+
+    void genKinematics() { // delta
         for (int i=1; i<=3; i++) {
             string is = toString(i);
             auto baseArm = VRTransform::create("baseArm"+is);
@@ -451,13 +502,6 @@ struct SystemDelta : VRRobotArm::System {
             base->addChild(baseArm);
             baseArm->addChild(elbow1);
             baseArm->addChild(elbow2);
-
-            double a = Pi*2.0/3.0 * (i-1);
-            baseArm->setEuler(Vec3d(0,a,0));
-            baseArm->move(-baseOffset);
-            baseArm->setEuler(Vec3d(b,a,0));
-            elbow1->translate(Vec3d(elbowDistance, 0, arm1Length));
-            elbow2->translate(Vec3d(-elbowDistance, 0, arm1Length));
         }
 
         auto beam1 = VRTransform::create("beam1");
@@ -475,8 +519,7 @@ struct SystemDelta : VRRobotArm::System {
         base->addChild(star);
         star->addChild(hand);
 
-        star->translate(Vec3d(0,-h,0));
-        beam2->translate(Vec3d(0,-h,0));
+        updateSystem();
     }
 
     vector<float> calcReverseKinematics(PosePtr p) { // delta
@@ -534,16 +577,65 @@ struct SystemDelta : VRRobotArm::System {
     }
 
     PosePtr calcForwardKinematics(vector<float> angles) { // delta
-        return 0; //getLastPose();
-        /*if (parts.size() < 5) return 0;
-        auto pose = parts[4]->getWorldPose();
-        pose->setDir(-pose->dir());
-        Vec3d p = pose->pos() + pose->dir()*lengths[3];
-        pose->setPos(p);
-        return pose;*/
+        double baseOffset = lengths[0];
+        double arm1Length = lengths[1];
+        double arm2Length = lengths[2];
+        double elbowDistance = lengths[3];
+        double starOffset = lengths[4];
+        double r = arm2Length;
+
+        Vec3d c1, c2, c3;
+        for (int i=0; i<3; i++) {
+            double a = Pi*2.0/3.0 * i;
+            Pose C;
+            C.setEuler(0,a,0);
+            C.move(-baseOffset + starOffset);
+            //C.move(-baseOffset);
+            C.setEuler(Pi*0.5 + angles[i], a, 0);
+            C.move(arm1Length);
+            if (i == 0) c1 = C.pos();
+            if (i == 1) c2 = C.pos();
+            if (i == 2) c3 = C.pos();
+        }
+
+        //cout << "delta forward:" << endl;
+        //cout << " S1: " << c1 << endl;
+        //cout << " S2: " << c2 << endl;
+        //cout << " S3: " << c3 << endl;
+        //cout << " R: " << r << endl;
+
+
+        // Coefficients for the first linear equation
+        Vec3d D1 = c2-c1;
+        Vec3d Ex = D1; Ex.normalize();
+        Vec3d D2 = c3-c1;
+        double i = Ex.dot(D2);
+        Vec3d D3 = D2 - Ex*i;
+        Vec3d Ey = D3; Ey.normalize();
+        Vec3d Ez = Ex.cross(Ey);
+        double d = D1.length();
+        double j = Ey.dot(D2);
+        double x = d*0.5;
+        double y = (-2*i*x + i*i + j*j) / (2*j);
+        double D4 = r*r - x*x - y*y;
+        //cout << "  D4: " << D4 << endl;
+        if (D4 < 0) return Pose::create(); // no intersection points!
+
+        double z = sqrt(D4);
+        Vec3d P1 = c1 + Ex*x + Ey*y + Ez*z;
+        Vec3d P2 = c1 + Ex*x + Ey*y - Ez*z;
+        Vec3d P = P1;
+        if (P2[1] < P1[1]) P = P2;
+
+        //cout << " P1 " << P1 << endl;
+        //cout << " P2 " << P2 << endl;
+        //cout << "I " << P << endl;
+        auto res = Pose::create(P, Vec3d(cos(angles[3]),0,sin(angles[3])));
+        return res;
     }
 
     void updateAnalytics() { // delta
+        if (!eePose) return;
         Vec3d dir = eePose->dir();
         Vec3d up = eePose->up();
         Vec3d pos = eePose->pos();
@@ -555,38 +647,84 @@ struct SystemDelta : VRRobotArm::System {
 
         double baseOffset = lengths[0];
         double arm1Length = lengths[1];
-        //double arm2Length = lengths[2];
-        //double elbowDistance = lengths[3];
-        //double starOffset = lengths[4];
+        double arm2Length = lengths[2];
+        double elbowDistance = lengths[3];
+        double starOffset = lengths[4];
 
         // arms
-        for (int i=1; i<=3; i++) {
-            double a = Pi*2.0/3.0 * (i-1);
-            Vec3d O = Vec3d(cos(a),0,sin(a)) * baseOffset;
-            Vec3d A = Vec3d(sin(a),0,cos(a)) * 0.1;
-            ageo->setVector(2+i, O - A*0.5, A, Color3f(1,1,0.5), ""); // rot axis
-            ageo->setVector(5+i, Vec3d(), O, Color3f(0.5,0.5,0.5), ""); // arm offset
-            ageo->setVector(8+i, O, Vec3d(0,-arm1Length,0), Color3f(0.5,0.5,0.5), ""); // arm TODO
+        for (int i=0; i<3; i++) {
+            double a = Pi*2.0/3.0 * i;
+            Vec3d O = armRoots[i];
+            Vec3d Od = O; Od.normalize();
+            Vec3d A = armAxis[i] * 0.1;
+            ageo->setVector(3+i, O - A*0.5, A, Color3f(1,1,0.5), ""); // rot axis
+            ageo->setVector(6+i, Vec3d(), O, Color3f(0.5,0.5,0.5), ""); // arm offset
+
+            double b = angle_targets[i];
+            Vec3d A1 = Vec3d(Od[0]*sin(b),-cos(b),Od[2]*sin(b)) * arm1Length;
+            ageo->setVector(9+i, O, A1, Color3f(1,1,1), ""); // arm1
+
+            Vec3d D = armAxis[i] * elbowDistance;
+            Vec3d A2 = pos + Od*starOffset - A1 - O;
+            ageo->setVector(12+i, O+A1+D, A2, Color3f(1,1,1), ""); // arm21
+            ageo->setVector(15+i, O+A1-D, A2, Color3f(1,1,1), toString(A2.length() / arm2Length)); // arm22
         }
 
         // beams
-        /*ageo->setVector(7, Vec3d(), pJ0, Color3f(1,1,1), "l0");
-        ageo->setVector(8, pJ01, pJ1-pJ01, Color3f(1,1,1), "r1");
-        ageo->setVector(9, pJ11, pJ2-pJ11, Color3f(1,1,1), "r2");
-
-        ageo->setVector(10, pJ0, pJ01-pJ0, Color3f(0.7,0.7,0.7), "");
-        ageo->setVector(11, pJ1, pJ11-pJ1, Color3f(0.7,0.7,0.7), "");*/
+        //ageo->setVector(7, Vec3d(), pJ0, Color3f(1,1,1), "");
     }
 
     void applyAngles() {
-        //cout << "VRRobotArm::applyAngles " << N << ", " << axis.size() << ", " << angles.size() << ", " << parts.size() << endl;
-        /*for (int i=0; i<6; i++) {
-            if (i >= axis.size() || i >= angles.size() || i >= parts.size()) break;
-            Vec3d euler;
-            euler[axis[i]] = angles[i];
-            //cout << " applyAngle " << i << ", " << euler << ", " << parts[i] << endl;
-            if (parts[i]) parts[i]->setEuler(euler);
-        }*/
+        double baseOffset = lengths[0];
+        double arm1Length = lengths[1];
+        double arm2Length = lengths[2];
+        double elbowDistance = lengths[3];
+        double starOffset = lengths[4];
+
+        auto ee = calcForwardKinematics(angles);
+        Vec3d dir = ee->dir();
+        Vec3d up = ee->up();
+        Vec3d pos = ee->pos();
+
+        double L = pos.length();
+        Vec3d norm = pos*(1.0/L);
+
+        for (int i=0; i<3; i++) {
+            auto baseArm = parts[i*3+0];
+            auto elbow1 = parts[i*3+1];
+            auto elbow2 = parts[i*3+2];
+
+            double a = Pi*2.0/3.0 * i;
+            double b = Pi*0.5 + angles[i];
+            baseArm->setEuler(Vec3d(b,a,0));
+
+            // TODO: not efficient
+            Vec3d O = armRoots[i];
+            Vec3d Od = O; Od.normalize();
+            Vec3d A = baseArm->getFrom() - baseArm->getDir()*arm1Length;
+            Vec3d B = pos + Od*starOffset;
+            //Vec3d D = B-A;
+
+            auto Pa = baseArm->getPose();
+            Pa->invert();
+            Vec3d ba = Pa->transform(A, true);
+            Vec3d bb = Pa->transform(B, true);
+            Vec3d d = bb-ba;
+            d.normalize();
+
+            elbow1->setDir(-d);
+            elbow2->setDir(-d);
+        }
+
+        auto beam1 = parts[9];
+        auto beam2 = parts[10];
+        auto hand = parts[11];
+        auto star = parts[12];
+
+        star->setFrom(pos);
+        beam1->setDir(-norm);
+        beam2->setFrom(Vec3d(0,0,L));
+        hand->setPose(ee);
     }
 };
 
