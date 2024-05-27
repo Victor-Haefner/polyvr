@@ -537,12 +537,26 @@ struct SystemDelta : VRRobotArm::System {
         double elbowDistance = lengths[3];
         double starOffset = lengths[4];
 
-        // compute the orientation and axial translation of the central rod
-        double l1 = 1.0;
-        double l2 = 1.0;
-        double dl = L-l2; // central axis translation
-        Vec3d aDir = pos*(1.0/L); // central axis dir
-        Vec3d aUp = up - aDir * up.dot(aDir); // central axis up (rotation around axis)
+        // check reachability
+        Vec3d ard1 = armRoots[0]; ard1.normalize();
+        Vec3d ard2 = armRoots[1]; ard2.normalize();
+        Vec3d ard3 = armRoots[2]; ard3.normalize();
+
+        double L1 = (ard1*baseOffset - (pos + ard1*starOffset)).length();
+        double L2 = (ard2*baseOffset - (pos + ard2*starOffset)).length();
+        double L3 = (ard3*baseOffset - (pos + ard3*starOffset)).length();
+        double Lmax = arm1Length + arm2Length;
+        double Li = max(L1, max(L2, L3));
+        double Lk = Lmax/Li;
+        // TODO: the method above does not work 100%
+        // because the arm length is not a straight segment length! project something in the arm planes?
+
+        if (Lk < 1.0) {
+            pos *= Lk;
+            eePose->setPos(pos);
+            L = pos.length();
+        }
+
 
         // sphere around star
         Vec3d Sp = pos;
