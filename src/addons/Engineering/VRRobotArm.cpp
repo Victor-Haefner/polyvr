@@ -548,6 +548,10 @@ struct SystemDelta : VRRobotArm::System {
         Vec3d Sp = pos;
         double Sr = arm2Length;
 
+
+        auto sign = [](float a) { return a >= 0 ? 1 : -1; };
+        auto toDeg = [](float a) { return int(a/Pi*180); };
+
         vector<float> resultingAngles = angle_targets;
         for (int i=0; i<3; i++) {
             // upper arm circle
@@ -560,7 +564,11 @@ struct SystemDelta : VRRobotArm::System {
             // project sphere into circle plane
             double n = Cn.dot(Sp-Cp);
             Vec3d sp = Sp - Cn * n;
-            double sr = sqrt(Sr*Sr - n*n);
+            double SR = Sr*Sr - n*n;
+            if (SR < 0) { // no sphere plane intersection!
+                SR = 0;
+            }
+            double sr = sqrt(SR);
             //if (i == 0) cout << " arm O " << O << ", Cp " << Cp << endl;
             //if (i == 0) cout << " n " << n << ", sp " << sp << ", Sp " << Sp << endl;
 
@@ -569,27 +577,37 @@ struct SystemDelta : VRRobotArm::System {
             double d = D.length();
             Vec3d T = D.cross(Cn); T.normalize(); // bisect center to center segment
             double h = 0.5 + (Cr*Cr - sr*sr)/(2.0*d*d);
-            double k = sqrt(Cr*Cr - h*h*d*d);
-            //Vec3d P1 = Cp + D*h + T*k;
+            double K = Cr*Cr - h*h*d*d;
+            if (K < 0) { // no sphere/circle intersection!
+                K = 0;
+            }
+            double k = sqrt(K);
+            Vec3d P1 = Cp + D*h + T*k;
             Vec3d P2 = Cp + D*h - T*k;
+            //if (i == 0) cout << " Cr " << Cr << " and sr " << sr << " and d " << d << endl;
             //if (i == 0) cout << " D " << D << " and T " << T << endl;
             //if (i == 0) cout << " h " << h << " and k " << k << endl;
             //if (i == 0) cout << " P12 " << P1 << " and " << P2 << endl;
 
             // compute upper arm angle
-            //Vec3d cp1 = P1-Cp; cp1.normalize();
-            Vec3d cp2 = P2-Cp;// cp2.normalize();
-            //Vec3d sp1 = P1-sp;
-            //Vec3d sp2 = P2-sp;
+            Vec3d cp1 = P1-Cp;
+            Vec3d cp2 = P2-Cp;
+            Vec3d sp1 = P1-sp;
+            Vec3d sp2 = P2-sp;
             //if (i == 0) cout << " LCP12 " << cp1.length() << " and " << cp2.length() << ", arm1Length " << arm1Length << endl;
             //if (i == 0) cout << " LSP12 " << sp1.length() << " and " << sp2.length() << ", arm2Length " << arm2Length << endl;
             //if (i == 0) cout << " CP12 " << cp1 << " and " << cp2 << endl;
-            //double a1 = cp1.enclosedAngle(Vec3d(0,-1,0));// - Pi*0.5;
-            double a2 = cp2.enclosedAngle(Vec3d(0,-1,0));
-            auto toDeg = [](float a) { return int(a/Pi*180); };
-            //if (i == 0) cout << " a12 " << a1 << ", " << a2 << " -> " << toDeg(a1) << ", " << toDeg(a2) << endl;
+            //double a1 = cp1.enclosedAngle(Vec3d(0,-1,0));
+            //double a2 = cp2.enclosedAngle(Vec3d(0,-1,0));
+            Vec3d F = Vec3d(0,-1,0);
+            double a1 = cp1.enclosedAngle(F) * sign(F.cross(cp1).dot(Cn));
+            double a2 = cp2.enclosedAngle(F) * sign(F.cross(cp2).dot(Cn));
+            //cout << " a12 " << i << ": " << a1 << ", " << a2 << " -> " << toDeg(a1) << ", " << toDeg(a2) << endl;
+            //cout << " rev " << i << ": " << a2 << endl;
             resultingAngles[i] = a2;
         }
+
+        // TODO: compute rotation of EE from pose
 
         auto check = calcForwardKinematics(resultingAngles);
         //cout << " rev: " << eePose->toString() << endl;
