@@ -607,9 +607,10 @@ struct SystemDelta : VRRobotArm::System {
             resultingAngles[i] = a2;
         }
 
-        // TODO: compute rotation of EE from pose
+        Vec3d D0 = Vec3d(0,0,-1);
+        resultingAngles[3] = dir.enclosedAngle(D0) * sign(D0.cross(dir).dot(Vec3d(0,1,0)));
 
-        auto check = calcForwardKinematics(resultingAngles);
+        //auto check = calcForwardKinematics(resultingAngles);
         //cout << " rev: " << eePose->toString() << endl;
         //cout << " chk: " << check->toString() << endl;
 
@@ -670,7 +671,7 @@ struct SystemDelta : VRRobotArm::System {
         //cout << " P1 " << P1 << endl;
         //cout << " P2 " << P2 << endl;
         //cout << "I " << P << endl;
-        auto res = Pose::create(P, Vec3d(cos(angles[3]),0,sin(angles[3])));
+        auto res = Pose::create(P, -Vec3d(sin(angles[3]),0,cos(angles[3])));
         return res;
     }
 
