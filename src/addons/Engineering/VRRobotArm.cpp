@@ -544,37 +544,57 @@ struct SystemDelta : VRRobotArm::System {
         Vec3d aDir = pos*(1.0/L); // central axis dir
         Vec3d aUp = up - aDir * up.dot(aDir); // central axis up (rotation around axis)
 
-        // first arm
-        double lA = 0.5;
-        double lB = 0.7;
-        Vec3d aN = Vec3d(1,0,0);
-
-        // project lower arm sphere into upper arm plane
-        double d = pos.dot(aN);
-        Vec3d cS = pos - aN * d;
-        double rS = sqrt(lB*lB - d*d);
-
-        // compute circle circle intersection
-        Vec3d t = pos.cross(aN);
-        t.normalize(); // both points lie on this line
-        double L2 = cS.length();
-        double h = 1.0/2.0 + (lA*lA - rS*rS)/(2.0*L2*L2);
-        double r = sqrt(lA*lA - h*h*L2*L2); // circle radius
-        Vec3d cC = cS * h; // circle center
-
-        // compute upper arm angle
-        Vec3d x1 = aN.cross(Vec3d(0,1,0));
-        Vec3d e = cC - t * r;
-        double a0 = x1.enclosedAngle(e);
-        if (a0 > Pi*0.5) {
-            e = cC + t * r;
-            a0 = x1.enclosedAngle(e);
-        }
-
-        // compute lower arm orientation
-        Vec3d A2 = pos - e;
+        // sphere around star
+        Vec3d Sp = pos;
+        double Sr = arm2Length;
 
         vector<float> resultingAngles = angle_targets;
+        for (int i=0; i<3; i++) {
+            // upper arm circle
+            Vec3d O = armRoots[i];
+            Vec3d Od = O; Od.normalize();
+            Vec3d Cp = Od * (baseOffset - starOffset);
+            Vec3d Cn = armAxis[i];
+            double Cr = arm1Length;
+
+            // project sphere into circle plane
+            double n = Cn.dot(Sp-Cp);
+            Vec3d sp = Sp - Cn * n;
+            double sr = sqrt(Sr*Sr - n*n);
+            //if (i == 0) cout << " arm O " << O << ", Cp " << Cp << endl;
+            //if (i == 0) cout << " n " << n << ", sp " << sp << ", Sp " << Sp << endl;
+
+            // compute circle circle intersections
+            Vec3d D = sp-Cp;
+            double d = D.length();
+            Vec3d T = D.cross(Cn); T.normalize(); // bisect center to center segment
+            double h = 0.5 + (Cr*Cr - sr*sr)/(2.0*d*d);
+            double k = sqrt(Cr*Cr - h*h*d*d);
+            //Vec3d P1 = Cp + D*h + T*k;
+            Vec3d P2 = Cp + D*h - T*k;
+            //if (i == 0) cout << " D " << D << " and T " << T << endl;
+            //if (i == 0) cout << " h " << h << " and k " << k << endl;
+            //if (i == 0) cout << " P12 " << P1 << " and " << P2 << endl;
+
+            // compute upper arm angle
+            //Vec3d cp1 = P1-Cp; cp1.normalize();
+            Vec3d cp2 = P2-Cp;// cp2.normalize();
+            //Vec3d sp1 = P1-sp;
+            //Vec3d sp2 = P2-sp;
+            //if (i == 0) cout << " LCP12 " << cp1.length() << " and " << cp2.length() << ", arm1Length " << arm1Length << endl;
+            //if (i == 0) cout << " LSP12 " << sp1.length() << " and " << sp2.length() << ", arm2Length " << arm2Length << endl;
+            //if (i == 0) cout << " CP12 " << cp1 << " and " << cp2 << endl;
+            //double a1 = cp1.enclosedAngle(Vec3d(0,-1,0));// - Pi*0.5;
+            double a2 = cp2.enclosedAngle(Vec3d(0,-1,0));
+            auto toDeg = [](float a) { return int(a/Pi*180); };
+            //if (i == 0) cout << " a12 " << a1 << ", " << a2 << " -> " << toDeg(a1) << ", " << toDeg(a2) << endl;
+            resultingAngles[i] = a2;
+        }
+
+        auto check = calcForwardKinematics(resultingAngles);
+        //cout << " rev: " << eePose->toString() << endl;
+        //cout << " chk: " << check->toString() << endl;
+
         return resultingAngles;
     }
 
@@ -669,7 +689,7 @@ struct SystemDelta : VRRobotArm::System {
             Vec3d D = armAxis[i] * elbowDistance;
             Vec3d A2 = pos + Od*starOffset - A1 - O;
             ageo->setVector(12+i, O+A1+D, A2, Color3f(1,1,1), ""); // arm21
-            ageo->setVector(15+i, O+A1-D, A2, Color3f(1,1,1), ""); // arm22
+            ageo->setVector(15+i, O+A1-D, A2, Color3f(1,1,1), toString(A2.length() / arm2Length)); // arm22
         }
 
         // beams
@@ -705,7 +725,6 @@ struct SystemDelta : VRRobotArm::System {
             Vec3d Od = O; Od.normalize();
             Vec3d A = baseArm->getFrom() - baseArm->getDir()*arm1Length;
             Vec3d B = pos + Od*starOffset;
-            //Vec3d D = B-A;
 
             auto Pa = baseArm->getPose();
             Pa->invert();
@@ -874,6 +893,7 @@ void VRRobotArm::animOnPath(float t) {
 
     auto updateTargets = [&](float t) {
         auto pose = job.p->getPose(t);
+        //cout << "  pIn " << pose->pos() << ", job.po " << job.po << ", job.local " << job.local << endl;
         if (job.po) {
             auto poseO = job.po->getPose(t);
             pose->set(pose->pos(), poseO->dir(), poseO->up());
@@ -881,6 +901,7 @@ void VRRobotArm::animOnPath(float t) {
             pose->normalizeOrientationVectors();
         }
         if (!job.local) pose = pose->multLeft(gToL);
+        //cout << "  pOut " << pose->pos() << endl;
         system->angle_targets = calcReverseKinematics(pose);
         system->updateAnalytics();
 
