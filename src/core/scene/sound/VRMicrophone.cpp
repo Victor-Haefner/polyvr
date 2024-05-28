@@ -90,6 +90,17 @@ VRSoundBufferPtr VRMicrophone::fetchDevicePacket() {
         alGetError();
         alcCaptureSamples(device, frame->data, Count);
 
+
+        double A = 0;
+        int16_t* src = (int16_t*)frame->data;
+        size_t Count = frame->size / 2;
+        if (Count > 0) {
+            for (int i=0; i<Count; i += 5) A += abs( src[i] );
+            A *= 5.0/Count;
+        }
+        VRLock lock(*paramsMutex);
+        currentAmp = A;
+
 		// test if its in stereo, make mono
         /*VRSoundBufferPtr nframe = VRSoundBuffer::allocate(Count*2, sample_rate, AL_FORMAT_MONO16);
 		int16_t* src = (int16_t*)frame->data;
@@ -121,15 +132,6 @@ void VRMicrophone::startRecording() {
             auto frame = fetchDevicePacket();
             if (frame) {
                 recordingSound->addBuffer(frame);
-                double A = 0;
-                int16_t* src = (int16_t*)frame->data;
-                size_t Count = frame->size / 2;
-                if (Count > 0) {
-                    for (int i=0; i<Count; i += 5) A += abs( src[i] );
-                    A *= 5.0/Count;
-                }
-                VRLock lock(*paramsMutex);
-                currentAmp = A;
             }
         }
     };
