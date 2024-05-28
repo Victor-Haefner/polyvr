@@ -18,10 +18,8 @@
 #include "core/scripting/VRScript.h"
 #include "core/utils/VRInternalMonitor.h"
 #include "core/utils/coreDumpHandler.h"
-#ifndef WITHOUT_GTK
 #include "core/gui/VRGuiManager.h"
 #include "core/gui/VRGuiSignals.h"
-#endif
 #include "core/networking/VRMainInterface.h"
 #ifndef WITHOUT_SHARED_MEMORY
 #include "core/networking/VRSharedMemory.h"
@@ -105,7 +103,7 @@ PolyVR::~PolyVR() {
 
     pvr = 0;
 
-#ifndef WITHOUT_GTK
+#ifndef WITHOUT_IMGUI
     VRGuiSignals::get()->clear();
 #endif
     if (scene_mgr) scene_mgr->closeScene();
@@ -196,6 +194,8 @@ void PolyVR::initEnvironment() {
     OSG::preloadSharedObject("OSGFileIO");
     OSG::preloadSharedObject("OSGImageFileIO");
 #endif
+
+    //startMemoryDog();
 }
 
 void PolyVR::initOpenSG() {
@@ -241,11 +241,9 @@ void PolyVR::initUI() {
 	main_interface = shared_ptr<VRMainInterface>(VRMainInterface::get());
 #endif
 
-#ifndef WITHOUT_GTK
     gui_mgr = shared_ptr<VRGuiManager>(VRGuiManager::get());
     gui_mgr->init();
     gui_mgr->updateSystemInfo();
-#endif
 
     loader = shared_ptr<VRSceneLoader>(VRSceneLoader::get());
 }
@@ -326,7 +324,7 @@ void PolyVR::startTestScene(OSGObjectPtr n, const Vec3d& camPos) {
     VRTransformPtr cam = dynamic_pointer_cast<VRTransform>( VRScene::getCurrent()->get("Default") );
     cam->setFrom(Vec3d(camPos));
 
-#ifndef WITHOUT_GTK
+#ifndef WITHOUT_IMGUI
     VRGuiManager::get()->wakeWindow();
 #endif
     run();

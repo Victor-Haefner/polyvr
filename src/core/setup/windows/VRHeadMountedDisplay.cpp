@@ -367,7 +367,7 @@ void VRHeadMountedDisplay::addController(int devID) {
 		for (auto cef : CEF::getInstances()) cef->addMouse(dev, 0, 0, -1, -1, -1, -1);
 		for (auto script : scene->getScripts()) script.second->updateDeviceTrigger();
 
-#ifndef WITHOUT_GTK
+#ifndef WITHOUT_IMGUI
 		VRGuiManager::get()->broadcast("navpresets_changed");
 #endif
 	}
@@ -380,6 +380,7 @@ int mapButton(int b) {
 }
 
 void VRHeadMountedDisplay::handleInput() {
+	if (!m_pHMD) return;
 	vr::VREvent_t event;
 	while (m_pHMD->PollNextEvent(&event, sizeof(event))) {
 		auto devID = event.trackedDeviceIndex;

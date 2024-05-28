@@ -273,6 +273,7 @@
 			<Add option="-DGTK_GL_COMPILATION" />
 			<Add option="-DGTK_SOURCE_COMPILATION" />
 			<Add option="-DWITHOUT_NUMPY" />
+			<Add option="-DWITHOUT_COCOA" />
 			<Add directory="/usr/include/pango-1.0" />
 			<Add directory="/usr/include/glib-2.0" />
 			<Add directory="/usr/include/freetype2" />
@@ -2017,6 +2018,12 @@
 		</Unit>
 		<Unit filename="src/core/gui/imgui/imFileDialog/ImGuiFileDialog.cpp">
 			<Option target="Release" />
+			<Option target="PVR-Gui-d" />
+		</Unit>
+		<Unit filename="src/core/gui/imgui/imWidgets/VRImguiCombo.cpp">
+			<Option target="PVR-Gui-d" />
+		</Unit>
+		<Unit filename="src/core/gui/imgui/imWidgets/VRImguiCombo.h">
 			<Option target="PVR-Gui-d" />
 		</Unit>
 		<Unit filename="src/core/gui/imgui/imWidgets/VRImguiInput.cpp">
@@ -4435,9 +4442,6 @@
 		</Unit>
 		<Unit filename="src/core/setup/tracking/Vive.h">
 			<Option target="Release" />
-			<Option target="PVR-Setup-d" />
-		</Unit>
-		<Unit filename="src/core/setup/windows/VRCocoaWindow.cpp">
 			<Option target="PVR-Setup-d" />
 		</Unit>
 		<Unit filename="src/core/setup/windows/VRCocoaWindow.h">

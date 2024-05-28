@@ -1,17 +1,28 @@
 #!/bin/bash
 
-#export LD_PRELOAD=/home/victor/Projects/polyvr/src/debugging/exception_preload.so
-libs=/usr/lib/opensg:/usr/lib/CEF:/usr/lib/1.4:/usr/lib/virtuose:/usr/lib/STEPcode:/usr/lib/OCE:/usr/lib/OPCUA:/usr/lib/DWG
+osName=$(uname -s)
+
+if [ "$osName" == "Darwin" ]; then # on mac
+	libs=/usr/local/lib64
+	export DYLD_LIBRARY_PATH="$libs$DYLD_LIBRARY_PATH"
+else
+	libs=/usr/lib/opensg:/usr/lib/CEF:/usr/lib/1.4:/usr/lib/virtuose:/usr/lib/STEPcode:/usr/lib/OCE:/usr/lib/OPCUA:/usr/lib/DWG
+	export LD_LIBRARY_PATH="$libs$LD_LIBRARY_PATH"
+fi
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd $DIR
 
 if [ -e ./build/polyvr ]; then
-	export LD_LIBRARY_PATH=$libs && ./build/polyvr
+	echo "run build/polyvr"
+	 ./build/polyvr $@
+	 exit 0
 fi
 
 if [ -e ./bin/Debug/VRFramework ]; then
-	export LD_LIBRARY_PATH=$libs && ./bin/Debug/VRFramework $@
+	./bin/Debug/VRFramework $@
+	exit 0
 else
-	export LD_LIBRARY_PATH=$libs && ./bin/Release/VRFramework $@
+	./bin/Release/VRFramework $@
+	exit 0
 fi

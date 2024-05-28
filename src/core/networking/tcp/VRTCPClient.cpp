@@ -145,7 +145,12 @@ class TCPClient {
         }
 
         void runService() { // needed because windows complains..
-            io_service.run();
+            try {
+                io_service.run();
+            } catch(...) {
+                cout << "Error in TCPClient::runService!" << endl;
+                runService();
+            }
         }
 
     public:
@@ -171,7 +176,7 @@ class TCPClient {
                 boost::system::error_code _error_code;
                 socket->shutdown(tcp::socket::shutdown_both, _error_code);
             } catch(...) {
-                ;
+                cout << "Error in TCPClient::close!" << endl;
             }
 
             cout << "join service thread" << endl;
@@ -191,7 +196,7 @@ class TCPClient {
                 read();
             } catch(std::exception& e) {
                 cout << "TCPClient::connect failed with: " << e.what() << endl;
-#ifndef WITHOUT_GTK
+#ifndef WITHOUT_IMGUI
                 VRConsoleWidget::get("Collaboration")->write( " TCP connect to "+host+":"+toString(port)+" failed with "+e.what()+"\n", "red");
 #endif
             }
@@ -202,7 +207,7 @@ class TCPClient {
             auto endpoints = uriToEndpoints(uri);
             if (endpoints.size() == 0) {
                 cout << "TCPClient::connect failed, no endpoints found for uri " << uri << endl;
-#ifndef WITHOUT_GTK
+#ifndef WITHOUT_IMGUI
                 VRConsoleWidget::get("Collaboration")->write( " TCP connect to "+uri+" failed, no endpoints found\n", "red");
 #endif
                 return;
@@ -213,7 +218,7 @@ class TCPClient {
                 read();
             } catch(std::exception& e) {
                 cout << "TCPClient::connect failed with: " << e.what() << endl;
-#ifndef WITHOUT_GTK
+#ifndef WITHOUT_IMGUI
                 VRConsoleWidget::get("Collaboration")->write( " TCP connect to "+uri+" ("+toString(endpoints.size())+" endpoints) failed with "+e.what()+"\n", "red");
 #endif
             }
@@ -377,6 +382,7 @@ VRTCPClientPtr VRTCPClient::create(string name) {
 }
 
 void VRTCPClient::connect(string host, int port) { client->connect(host, port); uri = host+":"+toString(port); }
+bool VRTCPClient::isConnected(string host, int port) { return bool(host+":"+toString(port) == uri); }
 void VRTCPClient::connect(string host) { client->connect(host); uri = host; }
 void VRTCPClient::setGuard(string guard) { client->setGuard(guard); }
 void VRTCPClient::send(const string& message, string guard, bool verbose) { client->send(message, guard, verbose); }
@@ -395,5 +401,3 @@ void VRTCPClient::close() { // TODO: the onConnect and onMessage callbacks get l
 }
 
 string VRTCPClient::getPublicIP(bool cached) { return VRTCPUtils::getPublicIP(cached); }
-
-

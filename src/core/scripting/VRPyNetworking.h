@@ -13,7 +13,9 @@
 #include "core/networking/tcp/VRICEclient.h"
 #include "core/networking/mqtt/VRMQTTClient.h"
 #include "core/networking/mqtt/VRMQTTServer.h"
+#ifndef WITHOUT_SNAP7
 #include "core/networking/snap7/VRProfibusClient.h"
+#endif
 #include "core/networking/VRCollaboration.h"
 #include "VRPyBase.h"
 
@@ -21,9 +23,11 @@ struct VRPyPing : public VRPyBaseT<OSG::VRPing> {
     static PyMethodDef methods[];
 };
 
+#ifndef WITHOUT_SNAP7
 struct VRPyProfinetClient : public VRPyBaseT<OSG::VRProfinetClient> {
     static PyMethodDef methods[];
 };
+#endif
 
 struct VRPyHDLC : public VRPyBaseT<OSG::VRHDLC> {
     static PyMethodDef methods[];

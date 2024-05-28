@@ -68,8 +68,10 @@ VRGlutEditor::VRGlutEditor() {
     type = "glutEditor";
 
 #ifndef WITHOUT_OPENVR
-    if (VRHeadMountedDisplay::checkDeviceAttached())
+    if (VRHeadMountedDisplay::checkDeviceAttached()) {
+        cout << "HMD (glut editor): init system" << endl;
         hmd = VRHeadMountedDisplay::create();
+    }
 #endif
 
     initGlut();
@@ -128,6 +130,7 @@ VRGlutEditor::VRGlutEditor() {
     win->init();
 #ifndef WITHOUT_OPENVR
     if (hmd) {
+        cout << "HMD (glut editor): init hmd" << endl;
         hmd->initHMD();
     }
 #endif
@@ -172,6 +175,7 @@ VRGlutEditorPtr VRGlutEditor::ptr() { return static_pointer_cast<VRGlutEditor>( 
 VRGlutEditorPtr VRGlutEditor::create() { return VRGlutEditorPtr(new VRGlutEditor() ); }
 
 void VRGlutEditor::setTitle(string title) {
+    VRWindow::setTitle(title);
     int w = glutGetWindow();
     glutSetWindow(topWin);
     glutSetWindowTitle(title.c_str());
@@ -179,6 +183,7 @@ void VRGlutEditor::setTitle(string title) {
 }
 
 void VRGlutEditor::setIcon(string iconpath) {
+    VRWindow::setIcon(iconpath);
     setWindowIcon(iconpath);
 }
 

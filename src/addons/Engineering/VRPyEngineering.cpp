@@ -207,9 +207,9 @@ PyMethodDef VRPyNumberingEngine::methods[] = {
 };
 
 PyMethodDef VRPyRobotArm::methods[] = {
-    {"showAnalytics", PyWrap(RobotArm, showAnalytics, "Shows a visualization of the analytic model", void, bool ) },
-    {"setParts", PyWrap(RobotArm, setParts, "Set robot parts\n kuka: [upperBase, beam, elbow, beam, wrist {, tool, finger1, finger2 } ]", void, vector<VRTransformPtr> ) },
-    {"genKinematics", PyWrap(RobotArm, genKinematics, "Gen kinematics: base > upperBase > beam > elbow > beam > wrist", VRTransformPtr ) },
+    {"showAnalytics", PyWrap(RobotArm, showAnalytics, "Shows a visualization of the analytic model, returns AnalyticGeometry object", void, bool ) },
+    {"getKinematicBase", PyWrap(RobotArm, getKinematicBase, "Get kinematics base, kuka: base > upperBase > beam > elbow > beam > wrist", VRTransformPtr ) },
+    {"getKinematics", PyWrap(RobotArm, getKinematics, "Get kinematics parts, kuka: [ upperBase, beam, elbow, beam, wrist ]", vector<VRTransformPtr> ) },
     {"setAngleOffsets", PyWrap(RobotArm, setAngleOffsets, "Set angle offset for each part", void, vector<float> ) },
     {"setAngleDirections", PyWrap(RobotArm, setAngleDirections, "Set angles rotation direction - setAngleDirections([1/-1])", void, vector<int> ) },
     {"setAxis", PyWrap(RobotArm, setAxis, "Set rotation axis for each part - setAxis([int a])\n a: 0 = 'x', 1 = 'y', 2 = 'z'", void, vector<int> ) },
@@ -234,7 +234,6 @@ PyMethodDef VRPyRobotArm::methods[] = {
     {"setPath", PyWrapOpt(RobotArm, setPath, "Set robot path(s) - second path is optinal and overrides orientation", "0", void, PathPtr, PathPtr ) },
     {"getPath", PyWrap(RobotArm, getPath, "Get robot path", PathPtr ) },
     {"getOrientationPath", PyWrap(RobotArm, getOrientationPath, "Get robot orientation path", PathPtr ) },
-    {"getParts", PyWrap(RobotArm, getParts, "Get robot parts", vector<VRTransformPtr> ) },
     {"moveOnPath", PyWrapOpt(RobotArm, moveOnPath, "Move robot on internal path - moveOnPath(t0, t1, doLoop=0, durationMultiplier=1, local=0)", "0|1|0", void, float, float, bool, float, bool) },
     {"isMoving", PyWrap(RobotArm, isMoving, "Get animation status", bool) },
     {"setEventCallback", PyWrap(RobotArm, setEventCallback, "Set callback for move and stop events", void, VRMessageCbPtr) },

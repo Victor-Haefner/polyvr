@@ -12,11 +12,15 @@
 #include "VRIFC.h"
 #endif
 #include "VRML.h"
+#ifndef WITHOUT_STEP
 #include "VRSTEPCascade.h"
+#endif
 #ifndef WITHOUT_STEPCODE
 #include "STEP/VRSTEP.h"
 #endif
+#ifndef WITHOUT_E57
 #include "E57/E57.h"
+#endif
 #ifndef WITHOUT_GDAL
 #include "GIS/VRGDAL.h"
 #endif
@@ -58,7 +62,9 @@ VRImport* VRImport::get() {
 
 void VRImport::analyze(string path, string out) {
     string ext = getFileExtension(path);
+#ifndef WITHOUT_GDAL
     if (ext == ".shp") analyzeSHP(path, out);
+#endif
 }
 
 void VRImport::fixEmptyNames(NodeMTRecPtr o, map<string, bool>& m, string parentName, int iChild) {
@@ -234,9 +240,11 @@ void VRImport::LoadJob::load(VRThreadWeakPtr tw) {
         int Ncr0 = clist->getNumCreated();
         int Nch0 = clist->getNumChanged();
         cout << "load " << path << " ext: " << ext << " preset: " << preset << ", until now created: " << Ncr0 << ", changed: " << Nch0 << endl;
+#ifndef WITHOUT_E57
         if (ext == ".e57") { loadE57(path, res, options); return; }
         if (ext == ".pcb") { loadPCB(path, res, options); return; }
         if (ext == ".xyz") { loadXYZ(path, res, options); return; }
+#endif // TODO: move loadPCB and loadXYZ from E57 include
         if (ext == ".ply") { loadPly(path, res); return; }
         if (ext == ".step" || ext == ".stp" || ext == ".STEP" || ext == ".STP") {
             if (preset == "PVR") {
@@ -505,6 +513,3 @@ void VRImport::fillCache(string path, VRTransformPtr obj) {
 
 
 OSG_END_NAMESPACE;
-
-
-

@@ -401,7 +401,11 @@ finally:
 
 void print_error_text(int offset, char *text) {
     auto print = [&]( string m, string style = "", shared_ptr< VRFunction<string> > link = 0 ) {
+#ifndef WITHOUT_IMGUI
         VRConsoleWidget::get( "Syntax" )->write( m, style, link );
+#else
+        cout << m << endl;
+#endif
     };
 
     char *nl;
@@ -433,7 +437,11 @@ void print_error_text(int offset, char *text) {
 
 void VRScript::printSyntaxError(PyObject *exception, PyObject *value, PyObject *tb) {
     auto print = [&]( string m, string style = "", shared_ptr< VRFunction<string> > link = 0 ) {
+#ifndef WITHOUT_IMGUI
         VRConsoleWidget::get( "Syntax" )->write( m, style, link );
+#else
+        cout << m << endl;
+#endif
     };
 
     if (!value) {
@@ -472,7 +480,11 @@ void VRScript::pyErrPrint(string channel) {
     if (!PyErr_Occurred()) return;
 
     auto print = [&]( string m, string style = "", shared_ptr< VRFunction<string> > link = 0 ) {
+#ifndef WITHOUT_IMGUI
         VRConsoleWidget::get( channel )->write( m, style, link );
+#else
+        cout << m << endl;
+#endif
     };
 
     auto getTracebackFrame = [](PyTracebackObject* tb, vector<PyFrameObject*>& frames) {
@@ -488,7 +500,9 @@ void VRScript::pyErrPrint(string channel) {
         return frames;
     };
 
+#ifndef WITHOUT_IMGUI
     VRConsoleWidget::get( channel )->addStyle( "redLink", "#ff3311", "#ffffff", false, false, true, false );
+#endif
 
     struct Line {
         shared_ptr<VRFunction<string>> fkt;
@@ -752,4 +766,3 @@ void VRScript::queueExecution() {
 }
 
 VRGlobals::Int VRScript::loadingFrame = 0;
-

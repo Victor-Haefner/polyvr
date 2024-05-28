@@ -22,6 +22,7 @@ class VRUDPClient : public VRNetworkClient {
         void onMessage( function<string(string)> f ) override;
 
         void connect(string host, int port) override;
+        bool isConnected(string host, int port) override;
         void send(const string& message, string guard = "", bool verbose = false) override;
 };
 

@@ -1,8 +1,6 @@
 #include "VRScene.h"
 #include "core/scripting/VRScript.h"
-#ifndef WITHOUT_GTK
 #include "core/gui/VRGuiManager.h"
-#endif
 #include "core/setup/devices/VRFlystick.h"
 #include "core/setup/devices/VRMouse.h"
 #ifndef WITHOUT_MTOUCH
@@ -384,7 +382,7 @@ void VRScene::importScene(XMLElementPtr e, string path) {
     for (auto s : newScripts) getScript(s)->setPersistency(0);
     for (auto s : newScripts) updateScript(s, getScript(s)->getCore());
     for (auto s : newScripts) if (getScript(s)->hasTrigger("on_scene_import")) getScript(s)->execute();
-#ifndef WITHOUT_GTK
+#ifndef WITHOUT_IMGUI
     VRGuiManager::get()->broadcast("scriptlist_changed");
 #endif
 

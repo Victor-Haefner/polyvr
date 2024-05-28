@@ -10,11 +10,9 @@
 #include <new>
 #include <codecvt>
 
-
 #include <ft2build.h>
 #include FT_FREETYPE_H
 #include FT_STROKER_H
-
 
 #include "core/objects/material/VRTexture.h"
 #include "core/scene/VRSceneManager.h"
@@ -387,7 +385,3 @@ vector<string> VRText::splitGraphemes(string txt) {
     return res;
 }
 #endif
-
-
-
-

@@ -30,8 +30,8 @@
 #include "core/utils/VRTests.h"
 #include "PolyVR.h"
 
-#ifndef WITHOUT_GTK
 #include "core/gui/VRGuiManager.h"
+#ifndef WITHOUT_IMGUI
 #include "core/gui/VRGuiConsole.h"
 #endif
 
@@ -108,7 +108,7 @@ PyObject* VRSceneGlobals::sendToBrowser(VRSceneGlobals* self, PyObject* args) {
 
 PyObject* VRSceneGlobals::setWindowTitle(VRSceneGlobals* self, PyObject* args) {
     string name = parseString(args);
-#ifndef WITHOUT_GTK
+#ifndef WITHOUT_IMGUI
     VRGuiManager::get()->setWindowTitle(name);
 #endif
     Py_RETURN_TRUE;
@@ -488,7 +488,7 @@ PyObject* VRSceneGlobals::openFileDialog(VRSceneGlobals* self, PyObject *args) {
 }
 
 PyObject* VRSceneGlobals::updateGui(VRSceneGlobals* self) {
-#ifndef WITHOUT_GTK
+#ifndef WITHOUT_IMGUI
     //VRGuiManager::get()->updateGtk(); // TODO
 #endif
     Py_RETURN_TRUE;
@@ -497,7 +497,7 @@ PyObject* VRSceneGlobals::updateGui(VRSceneGlobals* self) {
 PyObject* VRSceneGlobals::render(VRSceneGlobals* self) {
     VRSceneManager::get()->updateScene();
     VRSetup::getCurrent()->updateWindows();
-#ifndef WITHOUT_GTK
+#ifndef WITHOUT_IMGUI
     //VRGuiManager::get()->updateGtk(); // TODO
 #endif
     Py_RETURN_TRUE;

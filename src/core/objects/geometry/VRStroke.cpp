@@ -64,11 +64,17 @@ void VRStroke::strokeProfile(vector<Vec3d> profile, bool closed, bool lit, bool 
 
     float Lp = 0;
     vector<Vec2d> tcs(1);
+    tcs[0] = Vec2d();
     for (unsigned int i=1; i<profile.size(); i++) {
         Lp += (profile[i]-profile[i-1]).length();
         tcs.push_back( Vec2d(0,Lp) );
     }
     for (unsigned int i=1; i<profile.size(); i++) tcs[i] /= Lp;
+
+    auto addVertex = [&](Vec3d p, Vec3d n, Color3f c, Vec2d tc) {
+        if (!doColor) data.pushVert(p, n, tc);
+        else data.pushVert(p, n, c, tc);
+    };
 
     for (auto path : paths) {
         auto pnts = path->getPositions();
@@ -105,8 +111,7 @@ void VRStroke::strokeProfile(vector<Vec3d> profile, bool closed, bool lit, bool 
                 m.mult(pos, pos);
 
                 Vec3d norm = pos; norm.normalize();
-                if (!doColor) data.pushVert(p+pos, norm, tc);
-                else data.pushVert(p+pos, norm, c, tc);
+                addVertex(p + pos, norm, c, tc);
             }
 
             if (j==0) continue;
@@ -161,8 +166,7 @@ void VRStroke::strokeProfile(vector<Vec3d> profile, bool closed, bool lit, bool 
             }
 
             int Ni = data.size();
-            if (!doColor) data.pushVert(pc + tmp, -n);
-            else data.pushVert(pc + tmp, -n, Vec3f(c));
+            addVertex(pc + tmp, -n, c, Vec2d(0,0));
 
             for (unsigned int k=0; k<profile.size(); k++) {
                 Vec3d tmp = profile[k];
@@ -170,8 +174,7 @@ void VRStroke::strokeProfile(vector<Vec3d> profile, bool closed, bool lit, bool 
 
                 if (begRound) { n = -tmp; n.normalize(); }
 
-                if (!doColor) data.pushVert(p + tmp, -n);
-                else data.pushVert(p + tmp, -n, Vec3f(c));
+                addVertex(p + tmp, -n, c, Vec2d(0, 0));
             }
 
             for (unsigned int k=1; k<=profile.size(); k++) {
@@ -196,8 +199,7 @@ void VRStroke::strokeProfile(vector<Vec3d> profile, bool closed, bool lit, bool 
                 pc += nc*profile[0].length();
             }
 
-            if (!doColor) data.pushVert(pc + tmp, n);
-            else data.pushVert(pc + tmp, n, c);
+            addVertex(pc + tmp, n, c, Vec2d(0, 0));
 
             for (unsigned int k=0; k<profile.size(); k++) {
                 Vec3d tmp = profile[k];
@@ -205,8 +207,7 @@ void VRStroke::strokeProfile(vector<Vec3d> profile, bool closed, bool lit, bool 
 
                 if (endRound) { n = tmp; n.normalize(); }
 
-                if (!doColor) data.pushVert(p + tmp, n);
-                else data.pushVert(p + tmp, n, c);
+                addVertex(p + tmp, n, c, Vec2d(0, 0));
             }
 
             for (unsigned int k=1; k<=profile.size(); k++) {

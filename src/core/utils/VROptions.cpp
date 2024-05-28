@@ -37,6 +37,8 @@ VROptions* VROptions::get() {
     return singleton;
 }
 
+bool VROptions::hasOption(string name) { return bool(vm.count(name) > 0); }
+
 void VROptions::parse(int _argc, char** _argv) {
     argc = _argc;
     argv = _argv;

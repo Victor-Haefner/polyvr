@@ -538,23 +538,21 @@ void calcFaceNormals(GeometryMTRecPtr geo) {
         }*/
     }
 
-    newIndex->resize(oldPosIndex->size());
     for(; faceIter != geo->endFaces(); ++faceIter) {
         normal = calcNormal(faceIter);
         newNormals->addValue(normal);
-        int nIndex = newNormals->size()-1;
 
         switch(faceIter.getType()) {
             case GL_TRIANGLE_FAN:
             case GL_TRIANGLE_STRIP:
-                newIndex->setValue(nIndex, faceIter.getIndex(2));
+                newIndex->addValue(faceIter.getIndex(2));
                 break;
             case GL_QUAD_STRIP:
-                newIndex->setValue(nIndex, faceIter.getIndex(3));
+                newIndex->addValue(faceIter.getIndex(3));
                 break;
             default:
                 for (UInt32 i = 0; i < faceIter.getLength(); ++i) {
-                    newIndex->setValue(nIndex, faceIter.getIndex(i));
+                    newIndex->addValue(faceIter.getIndex(i));
                 }
                 break;
             }

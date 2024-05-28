@@ -162,8 +162,11 @@ using duration = std::chrono::duration<T, std::milli>;
 }*/
 
 void VRMicrophone::startRecordingThread() {
+    if (recording) return;
+
     auto recordCb = [&]() {
         recording = true;
+        cout << "VRMicrophone::startRecordingThread" << endl;
 
         while (doStream) {
             auto frame = fetchDevicePacket();
@@ -190,8 +193,12 @@ void VRMicrophone::startRecordingThread() {
 }
 
 void VRMicrophone::startStreamingThread(string method) {
+
+    if (streaming) return;
+  
     auto streamCb = [&](string method) {
         streaming = true;
+        cout << "VRMicrophone::startStreamingThread" << endl;
 
         while (doStream) {
             bool enoughInitialQueuedFrames = bool(queuedFrames >= queueSize);
@@ -234,8 +241,10 @@ void VRMicrophone::startStreamingOver(VRNetworkClientPtr client, string method) 
     doStream = true;
     recordingSound->addOutStreamClient(client, method);
 
-    if (!recording) startRecordingThread();
-    if (!streaming) startStreamingThread(method);
+
+    startRecordingThread();
+    startStreamingThread(method);
+
 }
 
 void VRMicrophone::startStreaming(string address, int port, string method) {
@@ -244,8 +253,10 @@ void VRMicrophone::startStreaming(string address, int port, string method) {
     doStream = true;
     recordingSound->setupOutStream(address, port, method);
 
-    if (!recording) startRecordingThread();
-    if (!streaming) startStreamingThread(method);
+
+    startRecordingThread();
+    startStreamingThread(method);
+
 }
 
 bool VRMicrophone::isStreaming() { return doStream; }

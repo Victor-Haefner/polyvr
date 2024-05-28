@@ -160,7 +160,10 @@ void VRMachiningCode::parseCommands(string line, Context& ctx, double speedMulti
     vector<Command> commands;
     for (auto i : splitString(line)) {
         if (i.size() <= 1) { cout << " Warning! empty line: '" << line << "'" << endl; continue; }
-        commands.push_back( { i[0], toFloat(subString(i, 1)) } );
+        Command c;
+        c.code = i[0];
+        c.value = toFloat(subString(i, 1));
+        commands.push_back( c );
     }
 
     // apply commands to current state
@@ -337,7 +340,3 @@ VRGeometryPtr VRMachiningCode::asGeometry() {
     geo->setMaterial(m);
     return geo;
 }
-
-
-
-

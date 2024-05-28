@@ -50,7 +50,7 @@ bool VRSTEPExplorer::doIgnore(VRSTEP::Node* node) {
 }
 
 void VRSTEPExplorer::on_explorer_select(VRGuiTreeExplorer* e) {
-#ifndef WITHOUT_GTK
+#ifndef WITHOUT_IMGUI
     /*auto row = e->getSelected();
     auto id = e->get<const char*>(row, 1);
     VRSTEP::Node* node = (VRSTEP::Node*)e->get<void*>(row, 4);
@@ -126,7 +126,7 @@ void VRSTEPExplorer::explore(VRSTEP::Node* node, int parent, bool doFilter) {
 
     if (doFilter) translate(name);
 
-#ifndef WITHOUT_GTK
+#ifndef WITHOUT_IMGUI
     static size_t c = 0; c++;
     string sID = "#"+toString(ID);
     //if (ID >= 0 /*&& c < 30000*/) parent = treeview->add( parent, 5, type.c_str(), sID.c_str(), name.c_str(), data.c_str(), node);

@@ -24,14 +24,17 @@ class ImTreeview {
             int options;
             bool isSelected = false;
             vector<Node*> children;
+            vector<pair<string, string>> menu;
             ImGuiTreeNodeFlags nodeFlags = 0;
 
             Node() {}
             Node(string ID, string tvID, string label, int options);
             Node* add(string childID, string child, int options);
+            void setMenu(vector<pair<string, string>> menu);
             bool render(int lvl = 0);
             void renderButton();
             void renderEditable();
+            void renderMenu();
         };
 
     public:

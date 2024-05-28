@@ -13,7 +13,7 @@
 #include "core/setup/devices/VRDevice.h"
 //#include "core/math/pose.h"
 #include "core/utils/VRStorage_template.h"
-#ifndef WITHOUT_GTK
+#ifndef WITHOUT_IMGUI
 #include "core/gui/VRGuiConsole.h"
 #endif
 #include "core/utils/system/VRSystem.h"
@@ -117,7 +117,7 @@ string VRSyncNode::addTCPClient(VRNetworkClientPtr nclient) {
     remotes[uri] = remote;
     VRSyncConnectionWeakPtr weakRemote = remote;
     client->onMessage( bind(&VRSyncNode::handleMessage, this, std::placeholders::_1, weakRemote, -1) );
-#ifndef WITHOUT_GTK
+#ifndef WITHOUT_IMGUI
     VRConsoleWidget::get("Collaboration")->write( name+": add tcp client connected to "+uri+", connected "+toString(client->connected())+"\n");
 #endif
     remote->send("accConnect|1", 1); // delay one frame, when started locally, syncnodes may not be setup before receiving accConnect1
@@ -127,7 +127,7 @@ string VRSyncNode::addTCPClient(VRNetworkClientPtr nclient) {
 void VRSyncNode::accTCPConnection(string msg, VRSyncConnectionWeakPtr weakRemote) {
     auto remote = weakRemote.lock();
     if (!remote) return;
-#ifndef WITHOUT_GTK
+#ifndef WITHOUT_IMGUI
     VRConsoleWidget::get("Collaboration")->write( name+": got tcp client acc, "+msg+"\n");
 #endif
 
@@ -145,7 +145,7 @@ void VRSyncNode::accTCPConnection(string msg, VRSyncConnectionWeakPtr weakRemote
     }
 
     for (auto& msg : remote->initMsgQueue) {
-#ifndef WITHOUT_GTK
+#ifndef WITHOUT_IMGUI
         VRConsoleWidget::get("Collaboration")->write( "  send queued init message: "+msg+"\n");
 #endif
         remote->send(msg);
@@ -154,7 +154,7 @@ void VRSyncNode::accTCPConnection(string msg, VRSyncConnectionWeakPtr weakRemote
 }
 
 void VRSyncNode::reqInitState(VRSyncConnectionWeakPtr weakRemote) {
-#ifndef WITHOUT_GTK
+#ifndef WITHOUT_IMGUI
     VRConsoleWidget::get("Collaboration")->write( name+": got request to send initial state\n");
 #endif
     if (auto remote = weakRemote.lock()) changefilter->sendSceneState(ptr(), weakRemote);
@@ -172,7 +172,7 @@ string VRSyncNode::onServerMsg(string msg) {
             remote->setID(nuri);
             remote->send("accConnect|1", 1); // delay one frame, when started locally, syncnodes may not be setup before receiving accConnect1
             //sendTypes(remote);
-#ifndef WITHOUT_GTK
+#ifndef WITHOUT_IMGUI
             VRConsoleWidget::get("Collaboration")->write( name+": change remote ID from "+ouri+" to "+nuri+"\n");
 #endif
         }
@@ -189,7 +189,7 @@ void VRSyncNode::addRemote(string host, int port) {
     auto remote = VRSyncConnection::create(host, port, serverUri);
     remotes[uri] = remote;
 
-#ifndef WITHOUT_GTK
+#ifndef WITHOUT_IMGUI
     VRConsoleWidget::get("Collaboration")->write( name+": addRemote "+uri+"\n");
 #endif
 
@@ -475,7 +475,7 @@ VRObjectPtr VRSyncNode::OSGConstruct(NodeMTRecPtr n, VRObjectPtr parent, Node* g
         if (tmp) {
             auto child = n->getChild(i);
             if (child == n) {
-#ifndef WITHOUT_GTK
+#ifndef WITHOUT_IMGUI
                 VRConsoleWidget::get("Collaboration")->write( name+": Error in OSGConstruct, found invalid child equaling its parent!\n", "red");
 #endif
                 continue;
@@ -621,7 +621,7 @@ void VRSyncNode::registerContainer(FieldContainer* c) {
 
 void VRSyncNode::addExternalContainer(UInt32 id, UInt32 mask) {
     externalContainer[id] = mask;
-#ifndef WITHOUT_GTK
+#ifndef WITHOUT_IMGUI
     VRConsoleWidget::get("Collaboration")->write( name+": Add external container "+toString(id)+" with mask "+toString(mask)+"\n", "green");
 #endif
 }
@@ -649,7 +649,7 @@ void VRSyncNode::addRemoteAvatar(string remoteID, string name, VRTransformPtr he
     if (remoteUUIDs.count(remoteID)) remoteID = remoteUUIDs[remoteID];
     auto remote = getRemote(remoteID);
     if (!remote) {
-#ifndef WITHOUT_GTK
+#ifndef WITHOUT_IMGUI
         VRConsoleWidget::get("Collaboration")->write( name+": Add avatar representation failed, invalid remote "+remoteID+"\n", "red");
 #endif
         return;
@@ -659,14 +659,14 @@ void VRSyncNode::addRemoteAvatar(string remoteID, string name, VRTransformPtr he
 
 
 
-#ifndef WITHOUT_GTK
+#ifndef WITHOUT_IMGUI
     VRConsoleWidget::get("Collaboration")->write( "Setup avatar, send device IDs to remote, msg: "+msg+"\n");
 #endif
 
     if (peerConnectionOk) remote->send(msg);
     else remote->initMsgQueue.push_back(msg);
 
-#ifndef WITHOUT_GTK
+#ifndef WITHOUT_IMGUI
     VRConsoleWidget::get("Collaboration")->write( name+": Add avatar representation, head "+headTransform->getName()+", hand "+devTransform->getName()+"\n", "green");
 #endif
 }
@@ -680,13 +680,13 @@ void VRSyncNode::updateAvatar(string data, VRSyncConnectionWeakPtr weakRemote) {
 void VRSyncNode::handleAvatar(string data, VRSyncConnectionWeakPtr weakRemote) {
     auto remote = weakRemote.lock();
     if (!remote) {
-#ifndef WITHOUT_GTK
+#ifndef WITHOUT_IMGUI
         VRConsoleWidget::get("Collaboration")->write( name+": Handle new remote avatar failed, no valid remote\n", "red");
 #endif
         return;
     }
 
-#ifndef WITHOUT_GTK
+#ifndef WITHOUT_IMGUI
     VRConsoleWidget::get("Collaboration")->write( name+": Handle new remote avatar from "+remote->getID()+"\n", "green");
 #endif
 
@@ -841,14 +841,14 @@ string VRSyncNode::interfaceHandler(string msg, size_t sID) {
         string uuid = splitString(msg, '|')[1];
         string ruri = splitString(msg, '|')[2];
         clientsIDMap[sID] = uuid;
-#ifndef WITHOUT_GTK
+#ifndef WITHOUT_IMGUI
         VRConsoleWidget::get("Collaboration")->write( name+":  interfaceHandler, newConnect, remote: "+toString(sID)+" -> "+uuid+"\n");
 #endif
         return "mapServerID|"+ruri+"|"+UUID+"TCPPVR\n";
     }
 
     if (!clientsIDMap.count(sID)) { // TODO: how to get remote?
-#ifndef WITHOUT_GTK
+#ifndef WITHOUT_IMGUI
         VRConsoleWidget::get("Collaboration")->write( name+":  interfaceHandler, unknown sID\n", "red");
 #endif
         return "";
@@ -856,7 +856,7 @@ string VRSyncNode::interfaceHandler(string msg, size_t sID) {
 
     string ruID = clientsIDMap[sID];
     if (remotes[ruID]->getID() != ruID) {
-#ifndef WITHOUT_GTK
+#ifndef WITHOUT_IMGUI
         VRConsoleWidget::get("Collaboration")->write( name+":  interfaceHandler, ruID does not match key!\n", "red");
 #endif
     }
@@ -873,7 +873,7 @@ void VRSyncNode::startInterface(int port) {
 void VRSyncNode::handleWarning(string msg, VRSyncConnectionWeakPtr weakRemote) {
     auto data = splitString(msg, '|');
     if (data.size() != 3) { cout << "AAargh" << endl; return; }
-#ifndef WITHOUT_GTK
+#ifndef WITHOUT_IMGUI
     VRConsoleWidget::get("Collaboration")->write( name+": Warning received '"+data[1]+"' about FC "+data[2]+"\n", "red");
 #endif
     if (factory) {
@@ -883,7 +883,7 @@ void VRSyncNode::handleWarning(string msg, VRSyncConnectionWeakPtr weakRemote) {
             if (AttachmentContainer* attc = dynamic_cast<AttachmentContainer*>(fct)) {
                 if (auto n = ::getName(attc)) name = n;
             }
-#ifndef WITHOUT_GTK
+#ifndef WITHOUT_IMGUI
             VRConsoleWidget::get("Collaboration")->write( " "+name+" of type: "+fct->getTypeName()+" ("+toString(fct->getTypeId())+")\n", "red");
 #endif
         }
@@ -896,7 +896,7 @@ void VRSyncNode::handleSelfmapRequest(string msg, VRSyncConnectionWeakPtr weakRe
 
     auto data = splitString(msg, '|');
     if (data.size() < 5) {
-#ifndef WITHOUT_GTK
+#ifndef WITHOUT_IMGUI
         VRConsoleWidget::get("Collaboration")->write( name+":  Error, received remote sync node ID, data malformed!\n", "red");
 #endif
         return;
@@ -914,13 +914,13 @@ void VRSyncNode::handleSelfmapRequest(string msg, VRSyncConnectionWeakPtr weakRe
     remote->addRemoteMapping(selfNameID, remoteNameID);
     remote->addRemoteMapping(selfCoreID, remoteCoreID);
 
-#ifndef WITHOUT_GTK
+#ifndef WITHOUT_IMGUI
     VRConsoleWidget::get("Collaboration")->write( name+": map own ID "+toString(selfNodeID)+", to remote ID "+toString(remoteNodeID)+", remote UUID: "+remoteUUID+"\n");
 #endif
 }
 
 string VRSyncNode::handleMessage(string msg, VRSyncConnectionWeakPtr weakRemote, size_t sID) {
-#ifndef WITHOUT_GTK
+#ifndef WITHOUT_IMGUI
     //VRConsoleWidget::get("Collaboration")->write( name+": handleMessage from "+toString(sID)+", "+msg+"\n");
 #endif
     VRUpdateCbPtr job = 0;
@@ -1002,4 +1002,3 @@ string VRSyncNode::getConnectionStatus() {
     }
     return status;
 }
-

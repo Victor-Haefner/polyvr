@@ -4,6 +4,7 @@
 #include "VRImguiUtils.h"
 #include "imWidgets/VRImguiTreeview.h"
 #include "imWidgets/VRImguiVector.h"
+#include "imWidgets/VRImguiCombo.h"
 
 using namespace std;
 
@@ -53,9 +54,19 @@ class ImSetupManager : public ImWidget {
         Im_Vector viewMirrorPos;
         Im_Vector viewMirrorNorm;
 
+        // window
+        bool windowActive = false;
+        Im_Vector windowSize;
+        ImCombo windowMSAA;
+        ImCombo windowMouse;
+        ImCombo windowMultitouch;
+        ImCombo windowKeyboard;
+        string windowTitle;
+        string windowIcon;
+
         // remote window
         string remoteWinState;
-        int winConnType = 0;
+        ImCombo winConnectionType;
         Im_Vector NxNy;
         int Nx = 1;
         int Ny = 1;
@@ -66,16 +77,38 @@ class ImSetupManager : public ImWidget {
         bool vrpnTestServer = 0;
         bool vrpnVerbose = 0;
 
+        // node
+        string nodeAddress;
+        string nodeUser;
+        string nodeSlave;
+        string nodeStatus;
+        string nodeSshStatus;
+        string nodeSshKeyStatus;
+        string nodePathStatus;
+
         // slave
-        int slaveConnType = 0;
+        ImCombo slaveConnectionType;
+        ImCombo slaveSystemScreens;
         bool slaveAutostart = 0;
-        bool slaveActStereo = 0;
+        bool slaveActiveStereo = 0;
         bool slaveFullscreen = 0;
+        string slaveConnetionID;
+        string slaveMulticast;
+        string slaveStatus;
+        string slaveDisplay;
+        string slavePort;
+        string slaveDelay;
+        string slaveGeometry;
 
         void hideAll();
         void treeAppend(string ID, string label, string type, string parent);
         void selectView(map<string,string> o);
         void selectWindow(map<string,string> o);
+        void selectMultiWindow(map<string,string> o);
+        void selectNode(map<string,string> o);
+        void selectSlave(map<string,string> o);
+
+        void setWindowState(string window, string state);
 
     public:
         ImSetupManager();

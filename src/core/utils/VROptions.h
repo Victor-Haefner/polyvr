@@ -29,6 +29,8 @@ class VROptions {
 
         static VROptions* get();
 
+        bool hasOption(string name);
+
         template <typename T>
         T getOption(string name) {
             if (vm.count(name) == 0) {

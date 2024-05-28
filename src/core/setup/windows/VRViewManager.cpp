@@ -36,6 +36,7 @@ void VRViewManager::updateViews() {
 }
 
 int VRViewManager::addView(string name) {
+    cout << " addView " << name << endl;
     VRViewPtr view = VRView::create(name);
     int id=0;
     while(views.count(id) == 1) id++;

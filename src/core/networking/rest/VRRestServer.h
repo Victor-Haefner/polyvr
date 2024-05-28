@@ -21,6 +21,8 @@ class VRRestServer : public std::enable_shared_from_this<VRRestServer> {
         Data* data = 0;
         VRRestCbPtr callback;
 
+        void sendString(void* connection, string data, int code = 200);
+
 	public:
 		VRRestServer(string name);
 		~VRRestServer();

@@ -1634,7 +1634,7 @@ void VRSTEP::build() {
 }
 
 void VRSTEP::exploreEntity(VRSTEP::Node* n, bool doFilter) {
-#ifndef WITHOUT_GTK
+#ifndef WITHOUT_IMGUI
     explorer = VRSTEPExplorer::create(filePath);
     explorer->traverse(ptr(), n, doFilter);
 #endif

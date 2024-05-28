@@ -89,8 +89,10 @@ class VRFrame {
 
 VRRecorder::VRRecorder() {
 #ifndef _WIN32
+#ifndef __APPLE__
     av_register_all();
     avcodec_register_all();
+#endif
 #endif
 
     toggleCallback = VRFunction<bool>::create("recorder toggle", bind(&VRRecorder::setRecording, this, _1));
@@ -172,17 +174,21 @@ vector<string> VRRecorder::getResList() {
 }
 
 void VRRecorder::setViewResolution(string res) {
+#ifndef WITHOUT_IMGUI
     auto w = VRSetup::getCurrent()->getEditorWindow();
     if (res == "1080p") w->forceGLResize(1920, 1080);
     if (res == "720p")  w->forceGLResize(1280, 720);
     if (res == "480p")  w->forceGLResize(640, 480);
     if (res == "240p")  w->forceGLResize(320, 240);
+#endif
 }
 
 void VRRecorder::enableVSync(bool b) {
+#ifndef WITHOUT_IMGUI
     cout << "VRRecorder::enableVSync " << b << endl;
     auto w = VRSetup::getCurrent()->getEditorWindow();
     w->enableVSync(b);
+#endif
 }
 
 void VRRecorder::clear() {
@@ -525,6 +531,3 @@ map<string, int> VRRecorder::codecs = {
     make_pair("CLLC",AV_CODEC_ID_CLLC),
     make_pair("MSS2",AV_CODEC_ID_MSS2)
 };
-
-
-

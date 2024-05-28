@@ -53,6 +53,21 @@ class ImWidget {
         virtual void end();
 };
 
+class ImImage {
+    public:
+        string path;
+        unsigned int glID = 0;
+        int width = 0;
+        int height = 0;
+
+    public:
+        ImImage();
+        ~ImImage();
+
+        void read(string path);
+        void render(int w, int h);
+};
+
 ImVec4 colorFromString(const string& c);
 void pushGlowBorderStyle(int ID);
 void popGlowBorderStyle();
