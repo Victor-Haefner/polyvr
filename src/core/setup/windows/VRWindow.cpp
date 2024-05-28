@@ -130,6 +130,11 @@ void VRWindow::update( weak_ptr<VRThread>  wt) {
 
 bool VRWindow::isWaiting() { return waitingAtBarrier; }
 
+string VRWindow::getTitle() { return title; }
+string VRWindow::getIcon() { return icon; }
+void VRWindow::setTitle(string s) { title = s; }
+void VRWindow::setIcon(string s) { icon = s; }
+
 bool VRWindow::isActive() { return active; }
 void VRWindow::setActive(bool b) { active = b; }
 
@@ -151,6 +156,8 @@ void VRWindow::save(XMLElementPtr node) {
     node->setAttribute("height", toString(height).c_str());
     node->setAttribute("name", getName().c_str());
     node->setAttribute("msaa", msaa.c_str());
+    node->setAttribute("title", title.c_str());
+    node->setAttribute("icon", icon.c_str());
     if (mouse) node->setAttribute("mouse", mouse->getName().c_str());
 #ifndef WITHOUT_MTOUCH
     else if (multitouch) node->setAttribute("mouse", multitouch->getName().c_str());
@@ -175,12 +182,16 @@ void VRWindow::load(XMLElementPtr node) {
     height = toInt( node->getAttribute("height") );
     name = node->getAttribute("name");
     if (node->hasAttribute("msaa")) msaa = node->getAttribute("msaa");
+    if (node->hasAttribute("title")) title = node->getAttribute("title");
+    if (node->hasAttribute("icon")) icon = node->getAttribute("icon");
 
+    cout << " VRWindow ..load views" << endl;
     for (auto el : node->getChildren()) {
         if (!el) continue;
         if (el->getName() != "View") continue;
         int i = VRSetup::getCurrent()->addView(name);
         VRViewPtr v = VRSetup::getCurrent()->getView(i);
+        if (!v) continue;
         addView(v);
         v->load(el);
     }
@@ -202,5 +213,7 @@ void VRWindow::load(XMLElementPtr node) {
             keyboard = dynamic_pointer_cast<VRKeyboard>( VRSetup::getCurrent()->getDevice(_keyboard) );
         }
     }
-}
 
+    setTitle(title);
+    setIcon(icon);
+}

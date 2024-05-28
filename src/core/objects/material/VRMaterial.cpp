@@ -3,7 +3,7 @@
 #include "VRShaderFactory.h"
 
 #include "OSGMaterial.h"
-#ifndef WITHOUT_GTK
+#ifndef WITHOUT_IMGUI
 #include "core/gui/VRGuiManager.h"
 #include "core/gui/VRGuiConsole.h"
 #endif
@@ -988,7 +988,7 @@ bool VRMaterial::isWireFrame() {
 
 VRVideoPtr VRMaterial::setVideo(string vid_path) {
     if (!exists(vid_path)) {
-#ifndef WITHOUT_GTK
+#ifndef WITHOUT_IMGUI
         VRConsoleWidget::get("Errors")->write("Material setVideo "+vid_path+" of material "+getName()+" failed, path not found!\n");
 #endif
         return 0;
@@ -1257,8 +1257,11 @@ ShaderProgramMTRecPtr VRMaterial::getShaderProgram() { return mats[activePass]->
 
 // type: GL_VERTEX_SHADER, GL_FRAGMENT_SHADER, ...
 bool VRMaterial::checkShader(int type, string shader, string name) {
+#ifdef __APPLE__
+  return true;
+#else
 #ifndef OSG_OGL_ES2
-#ifndef WITHOUT_GTK
+#ifndef WITHOUT_IMGUI
     auto gm = VRGuiManager::get(false);
     if (!gm) return true;
 	auto errC = gm->getConsole("Errors");
@@ -1275,7 +1278,7 @@ bool VRMaterial::checkShader(int type, string shader, string name) {
 
     GLint compiled;
     glGetObjectParameterivARB(shaderObject, GL_COMPILE_STATUS, &compiled);
-#ifndef WITHOUT_GTK
+#ifndef WITHOUT_IMGUI
     if (!compiled) errC->write( "Shader "+name+" of material "+getName()+" did not compile!\n");
 #else
 	if (!compiled) cout << "Shader " + name + " of material " + getName() + " did not compile!\n" << endl;
@@ -1287,7 +1290,7 @@ bool VRMaterial::checkShader(int type, string shader, string name) {
     if (blen > 1) {
         GLchar* compiler_log = (GLchar*)malloc(blen);
         glGetInfoLogARB(shaderObject, blen, &slen, compiler_log);
-#ifndef WITHOUT_GTK
+#ifndef WITHOUT_IMGUI
         errC->write( "Shader "+name+" of material "+getName()+" warnings and errors:\n");
         errC->write( string(compiler_log));
 #else
@@ -1321,6 +1324,7 @@ bool VRMaterial::checkShader(int type, string shader, string name) {
     }
 #endif
     return true;
+#endif // __APPLE__
 }
 
 void VRMaterial::forceShaderUpdate() {

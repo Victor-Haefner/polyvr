@@ -29,7 +29,9 @@ VRVideo::VRVideo(VRMaterialPtr mat) {
     //avMutex = new boost::mutex();
     material = mat;
 #ifndef _WIN32
+#ifndef __APPLE__
     av_register_all(); // Register all formats && codecs
+#endif
 #endif
 }
 
@@ -105,7 +107,7 @@ int getNColors(AVPixelFormat pfmt) {
     return 3;
 }
 
-#ifdef _WIN32
+#if defined(_WIN32) || defined(__APPLE__)
 int avcodec_decode_video2(AVCodecContext* video_ctx, AVFrame* frame, int* got_frame, AVPacket* pkt) {
     int used = 0;
     if (video_ctx->codec_type == AVMEDIA_TYPE_VIDEO || video_ctx->codec_type == AVMEDIA_TYPE_AUDIO) {
@@ -391,7 +393,3 @@ VRTexturePtr VRVideo::getFrame(int stream, float t) {
     int i = vStreams[stream].fps * duration * t;
     return vStreams[stream].frames[i];
 }
-
-
-
-

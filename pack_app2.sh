@@ -89,9 +89,11 @@ for path in "${syslibs_cp_paths[@]}"; do
     cp "$path" $engFolder/libs/
 done
 cp /usr/lib/x86_64-linux-gnu/libglut.so.3 $engFolder/libs/
+cp /usr/lib/x86_64-linux-gnu/nss/* $engFolder/libs/
+cp /usr/lib/x86_64-linux-gnu/libboost_thread* $engFolder/libs/
+
 
 rm -rf $engFolder/libs/CMakeFiles
-
 
 
 if [ -e $pckFolder/cleanupDeploy.sh ]; then

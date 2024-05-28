@@ -12,6 +12,7 @@
 #include <execinfo.h>
 #endif
 #include <stdio.h>
+#include <pthread.h>
 
 #ifndef _WIN32
 #include <unistd.h>
@@ -21,6 +22,10 @@
 #define _AMD64_
 #include <fileapi.h>
 #include <windows.h>
+#endif
+
+#ifdef __APPLE__
+#include <mach/mach_time.h>
 #endif
 
 #include <thread>
@@ -260,6 +265,11 @@ long long cpu_time() {
     FILETIME utime;
     GetThreadTimes(GetCurrentThread(), &unused, &unused, &unused, &utime);
     return ((utime.dwLowDateTime) / 10);
+#elif defined(__APPLE__)
+    static mach_timebase_info_data_t timebase_info;
+    if (timebase_info.denom == 0) mach_timebase_info(&timebase_info);
+    uint64_t abs_time = mach_absolute_time();
+    return abs_time * timebase_info.numer / timebase_info.denom / 1000;
 #else
     thread_local bool initialized(false);
     thread_local clockid_t clock_id;
@@ -380,8 +390,31 @@ namespace boost {
 }
 #endif
 
+long readAvailableRAM() {
+    std::ifstream meminfo("/proc/meminfo");
+    std::string line;
+    long available_ram = 0;
 
+    while (std::getline(meminfo, line)) {
+        if (line.compare(0, 8, "MemFree:") == 0) {
+            available_ram = std::stol(line.substr(8)) / 1024.0; // Convert kB to mB
+            break;
+        }
+    }
 
+    return available_ram;
+}
 
+void startMemoryDog() {
+    return;// TODO: doesnt work..
 
-
+    static auto dog = thread([](){
+        cout << "start memory dog..";
+        while (true) {
+            long m = readAvailableRAM();
+            cout << "mem dog " << m << endl;
+            if (m < 500) { cout << "Memory dog, kill system!" << endl; exit(1); }
+            this_thread::sleep_for( chrono::seconds(1) );
+        }
+    });
+}

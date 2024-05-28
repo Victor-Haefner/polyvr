@@ -41,12 +41,34 @@ OSG_BEGIN_NAMESPACE;
 using namespace std;
 
 void VRGuiSetup::updateObjectData() {
+    //cout << "VRGuiSetup::updateObjectData " << selected_type << ", " << selected_name << endl;
     bool device = false;
     guard = true;
 
     auto scene = VRScene::getCurrent();
 
     if (selected_type == "window" && window) {
+        VRWindowPtr win = dynamic_pointer_cast<VRWindow>(window);
+
+        if (win) {
+            string mtouch;
+#ifndef WITHOUT_MTOUCH
+            mtouch = win->getMultitouch() ? win->getMultitouch()->getName() : "";
+#endif
+            uiSignal( "on_setup_select_window", {
+                {"name", win->getName()},
+                {"sizeW", toString(win->getSize()[0])},
+                {"sizeH", toString(win->getSize()[1])},
+                {"active", toString(win->isActive())},
+                {"mouse", win->getMouse() ? win->getMouse()->getName() : "" },
+                {"multitouch", mtouch },
+                {"keyboard", win->getKeyboard() ? win->getKeyboard()->getName() : "" },
+                {"msaa", win->getMSAA()},
+                {"title", win->getTitle()},
+                {"icon", win->getIcon()}
+            } );
+        }
+
         if (window->hasType("distributed")) { // multiwindow
             VRMultiWindowPtr mwin = dynamic_pointer_cast<VRMultiWindow>(window);
             if (mwin) {
@@ -62,7 +84,7 @@ void VRGuiSetup::updateObjectData() {
                     }
                 }
 
-                uiSignal( "on_setup_multiwindow", {
+                uiSignal( "on_setup_select_multiwindow", {
                     {"name", mwin->getName()},
                     {"state", mwin->getStateString()},
                     {"connType", mwin->getConnectionType()},
@@ -86,7 +108,7 @@ void VRGuiSetup::updateObjectData() {
     if (selected_type == "view" && view) {
         Vec4d p = view->getPosition();
 
-        uiSignal( "on_setup_view", {
+        uiSignal( "on_setup_select_view", {
             {"name", view->getName()},
             {"position", toString(p)},
             {"size", toString(view->getSize())},
@@ -227,36 +249,35 @@ void VRGuiSetup::updateObjectData() {
         if (dev->getCross()) setToggleButton("checkbutton37", dev->getCross()->isVisible());*/
     }
 
-    if (selected_type == "node") {
-        /*setWidgetVisibility("expander25", true, true);
-        VRNetworkNode* n = (VRNetworkNode*)selected_object;
-        setTextEntry("entry15", n->getAddress());
-        setTextEntry("entry20", n->getUser());
-        setTextEntry("entry32", n->getSlavePath());
-        setLabel("label130", n->getStatNode());
-        setLabel("label129", n->getStatSSH());
-        setLabel("label126", n->getStatSSHkey());
-        setLabel("label161", n->getStatPath());*/
+    if (selected_type == "node" && node) {
+        uiSignal( "on_setup_select_node", {
+            {"address", node->getAddress()},
+            {"user", node->getUser()},
+            {"slave", node->getSlavePath()},
+            {"nodeStatus", node->getStatNode()},
+            {"sshStatus", node->getStatSSH()},
+            {"sshKeyStatus", node->getStatSSHkey()},
+            {"pathStatus", node->getStatPath()}
+        } );
     }
 
-    if (selected_type == "slave") {
-        /*setWidgetVisibility("expander26", true, true);
-        VRNetworkSlave* n = (VRNetworkSlave*)selected_object;
-        setLabel("label138", n->getConnectionIdentifier());
-        setLabel("label132", n->getStatMulticast());
-        setLabel("label136", n->getStat());
-        setToggleButton("checkbutton29", n->getFullscreen());
-        setToggleButton("checkbutton41", n->getActiveStereo());
-        setToggleButton("checkbutton42", n->getAutostart());
-        setTextEntry("entry19", n->getDisplay());
-        setTextEntry("entry22", toString(n->getPort()));
-        setTextEntry("entry37", toString(n->getStartupDelay()));
-        setTextEntry("entry38", toString(n->getGeometry()));
+    if (selected_type == "slave" && slave) {
+        uiSignal( "on_setup_select_slave", {
+            {"connectionID", slave->getConnectionIdentifier()},
+            {"multicast", slave->getStatMulticast()},
+            {"status", slave->getStat()},
+            {"fullscreen", toString(slave->getFullscreen())},
+            {"activeStereo", toString(slave->getActiveStereo())},
+            {"autostart", toString(slave->getAutostart())},
+            {"display", slave->getDisplay()},
+            {"connectionType", slave->getConnectionType()},
+            {"port", toString(slave->getPort())},
+            {"startupDelay", toString(slave->getStartupDelay())},
+            {"geometry", toString(slave->getGeometry())}
+        } );
 
-        string ct = n->getConnectionType();
-        if (ct == "Multicast") setToggleButton("radiobutton10", 1);
-        if (ct == "SockPipeline") setToggleButton("radiobutton11", 1);
-        if (ct == "StreamSock") setToggleButton("radiobutton12", 1);*/
+        auto displayList = slave->getAvailableDisplays();
+        uiSignal("updateDisplayList", {{"list", toString(displayList)}});
     }
 
     if (selected_type == "script") {
@@ -320,8 +341,8 @@ void VRGuiSetup::on_del_clicked() { //TODO, should delete setup
 
 void VRGuiSetup::on_save_clicked() {
     if (auto s = VRSetup::getCurrent()) {
+        cout << "save setup " << s->getName() << endl;
         s->save(setupDir() + s->getName() + ".xml");
-        //setWidgetSensitivity("toolbutton12", false);
     }
 }
 
@@ -352,6 +373,8 @@ void VRGuiSetup::on_save_as_clicked() {
 
 // setup list
 void VRGuiSetup::on_treeview_select(string selected) {
+    uiSignal( "on_setup_select_clear", {} );
+
     auto setup = VRSetup::getCurrent();
     if (!setup) return;
 
@@ -381,7 +404,9 @@ void VRGuiSetup::on_treeview_select(string selected) {
 #ifndef WITHOUT_VRPN
     else if (selected_type == "vrpn_tracker") vrpn_tracker = setup->getVRPN()->getVRPNTracker(toInt(selected_name));
 #endif
+#ifndef WITHOUT_ART
     else if (selected_type == "art_device") art_device = setup->getART()->getARTDevice(toInt(selected_name));
+#endif
     else device = setup->getDevice(selected_name);
 
     updateObjectData();
@@ -419,73 +444,55 @@ bool VRGuiSetup::on_treeview_rightclick() {
 }
 
 
-void VRGuiSetup::on_menu_delete() {
-    /*auto setup = VRSetup::getCurrent();
+void VRGuiSetup::on_menu_delete(string node) {
+    auto setup = VRSetup::getCurrent();
     if (!setup) return;
 
-    if (selected_type == "window") {
-        VRWindow* win = (VRWindow*)selected_object;
-        setup->removeWindow(win->getName());
-    }
+    string name = splitString(node, '$')[1];
+    string type = splitString(node, '$')[0];
 
-    if (selected_type == "view") {
-        VRView* view = (VRView*)selected_object;
-        setup->removeView(view->getID());
-        VRWindow* win = (VRWindow*)selected_object_parent;
-        win->remView(view->ptr());
-    }
+    if (type == "window") {} // TODO
+
+    if (type == "view") {} // TODO
 
 #ifndef WITHOUT_VRPN
-    if (selected_type == "vrpn_tracker") {
-        VRPN_device* t = (VRPN_device*)selected_object;
-        setup->getVRPN()->delVRPNTracker(t->ptr());
-    }
+    if (type == "vrpn_tracker") {} // TODO
 #endif
 
-    if (selected_type == "art_device") {
-        ;
-    }
+    if (type == "art_device") {} // deprecated?
 
-    if (selected_type == "node") {
-        auto node = (VRNetworkNode*)selected_object;
-        setup->getNetwork()->rem( node->getName() );
-    }
+    if (type == "node") setup->getNetwork()->remNode( name );
+    if (type == "slave") setup->getNetwork()->remSlave( name );
 
     updateSetup();
-    VRGuiWidget("toolbutton12").setSensitivity(true);*/
 }
 
 void VRGuiSetup::on_menu_add_window() {
     auto setup = VRSetup::getCurrent();
     if (!setup) return;
-    /*VRWindowPtr win = setup->addMultiWindow("Display");
+    auto win = setup->addMultiWindow("Display");
     win->setActive(true);
     if ( VRScene::getCurrent() ) win->setContent(true);
-
-    updateSetup();
-    selected_object = win.get();
-    selected_type = "window";
-    on_menu_add_viewport();*/
+    on_menu_add_viewport(win->getName());
 }
 
-void VRGuiSetup::on_menu_add_viewport() {
+void VRGuiSetup::on_menu_add_viewport(string winName) {
     auto setup = VRSetup::getCurrent();
     if (!setup) return;
-    /*if (selected_type != "window") return;
+    auto win = setup->getWindow(winName);
+    if (!win) return;
 
-    VRWindow* win = (VRWindow*)selected_object;
     int v = setup->addView(win->getBaseName());
     auto view = setup->getView(v);
     win->addView(view);
 
-    if (auto scene = current_scene.lock()) {
+    if ( auto scene = VRScene::getCurrent() ) {
         setup->setViewRoot(scene->getRoot(), v);
         view->setCamera( scene->getActiveCamera() );
         view->setBackground( scene->getBackground() );
     }
 
     updateSetup();
-    VRGuiWidget("toolbutton12").setSensitivity(true);*/
 }
 
 #ifndef WITHOUT_VRPN
@@ -517,15 +524,12 @@ void VRGuiSetup::on_menu_add_network_node() {
     //VRGuiWidget("toolbutton12").setSensitivity(true);
 }
 
-void VRGuiSetup::on_menu_add_network_slave() {
-    if (selected_type != "node") {
-        //notifyUser("Please select a network node to add a slave.", "(Right click the node to add the slave to)");
-        return;
-    }
-    /*VRNetworkNode* n = (VRNetworkNode*)selected_object;
-    n->add("Slave");
+void VRGuiSetup::on_menu_add_network_slave(string node) {
+    auto setup = VRSetup::getCurrent();
+    if (!setup) return;
+    VRNetworkNodePtr n = setup->getNetwork()->getNode(node);
+    if (n) n->add("Slave");
     updateSetup();
-    VRGuiWidget("toolbutton12").setSensitivity(true);*/
 }
 
 void VRGuiSetup::on_menu_add_script() {
@@ -538,51 +542,25 @@ void VRGuiSetup::on_menu_add_script() {
 
 // window options
 
-void VRGuiSetup::on_toggle_display_active() {
-    /*bool b = getCheckButtonState("checkbutton7");
-    VRGuiTreeView tree_view("treeview2");
-    tree_view.setSensitivity(b);
-    if (guard) return;
-
-    if (selected_type != "window") return;
-    VRWindow* win = (VRWindow*)selected_object;
-
-    //cout << "\nToggleActive " << name << " " << b << endl;
-    win->setActive(b);
-
-    // TODO
-    //string bg = "#FFFFFF";
-    //if (!b) bg = "#FFDDDD";
-    //VRGuiTreeView tree_view("treeview2");
-    //auto tree_store = (GtkTreeStore*)VRGuiBuilder::get()->get_object("setupTree");
-    //setTreeRow(tree_store, selected_row, win->getName().c_str(), "window", (gpointer)win, "#000000", bg);
-    VRGuiWidget("toolbutton12").setSensitivity(true);*/
-}
-
 void VRGuiSetup::on_servern_edit(int Nx, int Ny) {
-    if (selected_type != "window") return;
+    if (guard || !window) return;
     auto mwin = dynamic_pointer_cast<VRMultiWindow>(window);
     if (!mwin) return;
     mwin->setNTiles(Nx, Ny);
     updateObjectData();
 }
 
-void VRGuiSetup::on_server_ct_toggled() {
-    if (guard) return;
-    if (selected_type != "window") return;
-
-    string ct = "StreamSock";
-    /*if ( getRadioButtonState("radiobutton6") ) ct = "Multicast";
-    if ( getRadioButtonState("radiobutton7") ) ct = "SockPipeline";
-
-    VRMultiWindow* mwin = (VRMultiWindow*)selected_object;
+void VRGuiSetup::on_server_set_connection(string ct) {
+    if (guard || !window) return;
+    auto mwin = dynamic_pointer_cast<VRMultiWindow>(window);
+    if (!mwin) return;
     mwin->setConnectionType(ct);
+    mwin->reset();
     updateObjectData();
-    VRGuiWidget("toolbutton12").setSensitivity(true);*/
 }
 
 void VRGuiSetup::on_server_edit(int x, int y, string sID) {
-    if (selected_type != "window") return;
+    if (guard || !window) return;
     auto mwin = dynamic_pointer_cast<VRMultiWindow>(window);
     if (!mwin) return;
     mwin->setServer(x,y,sID);
@@ -837,53 +815,45 @@ void VRGuiSetup::on_edit_VRPN_tracker_address() {
 }
 #endif
 
-void VRGuiSetup::on_netnode_edited() {
-    if (guard) return;
-    /*VRNetworkNode* n = (VRNetworkNode*)selected_object;
-    n->set(getTextEntry("entry15"), getTextEntry("entry20"), getTextEntry("entry32"));
-    VRGuiWidget("toolbutton12").setSensitivity(true);
-    updateObjectData();*/
+void VRGuiSetup::on_netnode_address_edited(string s) {
+    if (guard || !node) return;
+    node->setAddress(s);
+    updateObjectData();
+}
+
+void VRGuiSetup::on_netnode_user_edited(string s) {
+    if (guard || !node) return;
+    node->setUser(s);
+    updateObjectData();
+}
+
+void VRGuiSetup::on_netnode_path_edited(string s) {
+    if (guard || !node) return;
+    node->setSlavePath(s);
+    updateObjectData();
 }
 
 void VRGuiSetup::on_netnode_key_clicked() {
-    if (guard) return;
-    /*VRNetworkNode* n = (VRNetworkNode*)selected_object;
-    n->distributeKey();
-    updateObjectData();*/
+    if (guard || !node) return;
+    node->distributeKey();
+    updateObjectData();
 }
 
 void VRGuiSetup::on_netnode_stopall_clicked() {
-    if (guard) return;
-    /*VRNetworkNode* n = (VRNetworkNode*)selected_object;
-    n->stopSlaves();
-    updateObjectData();*/
+    if (guard || !node) return;
+    node->stopSlaves();
+    updateObjectData();
 }
 
-void VRGuiSetup::on_netslave_edited() {
-    if (guard) return;
-    /*VRNetworkSlave* n = (VRNetworkSlave*)selected_object;
-    string ct = "StreamSock";
-    if ( getRadioButtonState("radiobutton10") ) ct = "Multicast";
-    if ( getRadioButtonState("radiobutton11") ) ct = "SockPipeline";
-
-    bool fullscreen = getCheckButtonState("checkbutton29");
-    bool astereo = getCheckButtonState("checkbutton41");
-    bool astart = getCheckButtonState("checkbutton42");
-    string display = getTextEntry("entry19");
-    int port = toInt( getTextEntry("entry22") );
-    int delay = toInt( getTextEntry("entry37") );
-    string geometry = getTextEntry("entry38");
-    n->set(ct, fullscreen, astereo, astart, display, port, delay, geometry);
-    VRGuiWidget("toolbutton12").setSensitivity(true);
-    updateObjectData();*/
-}
-
-void VRGuiSetup::on_netslave_start_clicked() {
-    if (guard) return;
-    /*VRNetworkSlave* n = (VRNetworkSlave*)selected_object;
-    n->start();
-    updateObjectData();*/
-}
+void VRGuiSetup::on_netslave_set_autostart(bool b) { if (slave && !guard) { slave->setAutostart(b); updateObjectData(); } }
+void VRGuiSetup::on_netslave_set_fullscreen(bool b) { if (slave && !guard) { slave->setFullscreen(b); updateObjectData(); } }
+void VRGuiSetup::on_netslave_set_activestereo(bool b) { if (slave && !guard) { slave->setActiveStereo(b); updateObjectData(); } }
+void VRGuiSetup::on_netslave_set_port(int p) { if (slave && !guard) { slave->setPort(p); updateObjectData(); } }
+void VRGuiSetup::on_netslave_set_delay(int d) { if (slave && !guard) { slave->setDelay(d); updateObjectData(); } }
+void VRGuiSetup::on_netslave_set_screen(string s) { if (slave && !guard) { slave->setDisplay(s); updateObjectData(); } }
+void VRGuiSetup::on_netslave_set_geometry(string g) { if (slave && !guard) { slave->setGeometry(g); updateObjectData(); } }
+void VRGuiSetup::on_netslave_start_clicked() { if (slave && !guard) { slave->start(); updateObjectData(); } }
+void VRGuiSetup::on_netslave_set_connection(string ct) { if (slave && !guard) { slave->setConnectionType(ct); updateObjectData(); } }
 
 #ifndef WITHOUT_VIRTUOSE
 void VRGuiSetup::on_haptic_ip_edited() {
@@ -1275,9 +1245,41 @@ VRGuiSetup::VRGuiSetup() {
     mgr->addCallback("setup_set_view_mirror_position", [&](OSG::VRGuiSignals::Options o) { on_view_mirror_pos_edit(Vec3d(toFloat(o["x"]), toFloat(o["y"]), toFloat(o["z"]))); return true; }, true );
     mgr->addCallback("setup_set_view_mirror_normal", [&](OSG::VRGuiSignals::Options o) { on_view_mirror_norm_edit(Vec3d(toFloat(o["x"]), toFloat(o["y"]), toFloat(o["z"]))); return true; }, true );
 
-    mgr->addCallback("win_set_NxNy", [&](OSG::VRGuiSignals::Options o) { on_servern_edit(toInt(o["Nx"]), toInt(o["Ny"])); return true; }, true );
+    mgr->addCallback("setup_set_win_active", [&](OSG::VRGuiSignals::Options o) { on_window_set_active(toBool(o["active"])); return true; }, true );
+    mgr->addCallback("win_set_res", [&](OSG::VRGuiSignals::Options o) { on_window_size_changed(toInt(o["x"]), toInt(o["y"])); return true; }, true );
+    mgr->addCallback("setup_switch_win_msaa", [&](OSG::VRGuiSignals::Options o) { on_window_msaa_changed(o["selection"]); return true; }, true );
+    mgr->addCallback("setup_switch_win_mouse", [&](OSG::VRGuiSignals::Options o) { on_window_mouse_changed(o["selection"]); return true; }, true );
+    mgr->addCallback("setup_switch_win_mtouch", [&](OSG::VRGuiSignals::Options o) { on_window_touch_changed(o["selection"]); return true; }, true );
+    mgr->addCallback("setup_switch_win_keyb", [&](OSG::VRGuiSignals::Options o) { on_window_kboard_changed(o["selection"]); return true; }, true );
+    mgr->addCallback("win_set_title", [&](OSG::VRGuiSignals::Options o) { on_window_title_changed(o["title"]); return true; }, true );
+    mgr->addCallback("win_set_icon", [&](OSG::VRGuiSignals::Options o) { on_window_icon_changed(o["icon"]); return true; }, true );
+
+    mgr->addCallback("win_set_NxNy", [&](OSG::VRGuiSignals::Options o) { on_servern_edit(toInt(o["x"]), toInt(o["y"])); return true; }, true );
     mgr->addCallback("win_set_serverID", [&](OSG::VRGuiSignals::Options o) { on_server_edit(toInt(o["x"]), toInt(o["y"]), o["sID"]); return true; }, true );
     mgr->addCallback("win_click_connect", [&](OSG::VRGuiSignals::Options o) { on_connect_mw_clicked(); return true; }, true );
+    mgr->addCallback("setup_switch_win_conn_type", [&](OSG::VRGuiSignals::Options o) { on_netslave_set_connection(o["selection"]); return true; }, true );
+
+    mgr->addCallback("node_set_address", [&](OSG::VRGuiSignals::Options o) { on_netnode_address_edited(o["address"]); return true; }, true );
+    mgr->addCallback("node_set_user", [&](OSG::VRGuiSignals::Options o) { on_netnode_user_edited(o["user"]); return true; }, true );
+    mgr->addCallback("node_set_path", [&](OSG::VRGuiSignals::Options o) { on_netnode_path_edited(o["path"]); return true; }, true );
+    mgr->addCallback("node_clicked_distribkey", [&](OSG::VRGuiSignals::Options o) { on_netnode_key_clicked(); return true; }, true );
+    mgr->addCallback("node_clicked_stopslaves", [&](OSG::VRGuiSignals::Options o) { on_netnode_stopall_clicked(); return true; }, true );
+
+    mgr->addCallback("slave_clicked_start", [&](OSG::VRGuiSignals::Options o) { on_netslave_start_clicked(); return true; }, true );
+    mgr->addCallback("slave_toggle_autostart", [&](OSG::VRGuiSignals::Options o) { on_netslave_set_autostart(toBool(o["state"])); return true; }, true );
+    mgr->addCallback("slave_toggle_fullscreen", [&](OSG::VRGuiSignals::Options o) { on_netslave_set_fullscreen(toBool(o["state"])); return true; }, true );
+    mgr->addCallback("slave_toggle_activestereo", [&](OSG::VRGuiSignals::Options o) { on_netslave_set_activestereo(toBool(o["state"])); return true; }, true );
+    mgr->addCallback("slave_set_port", [&](OSG::VRGuiSignals::Options o) { on_netslave_set_port(toInt(o["port"])); return true; }, true );
+    mgr->addCallback("slave_set_screen", [&](OSG::VRGuiSignals::Options o) { on_netslave_set_screen(o["screen"]); return true; }, true );
+    mgr->addCallback("slave_set_delay", [&](OSG::VRGuiSignals::Options o) { on_netslave_set_delay(toInt(o["delay"])); return true; }, true );
+    mgr->addCallback("slave_set_geometry", [&](OSG::VRGuiSignals::Options o) { on_netslave_set_geometry(o["geometry"]); return true; }, true );
+    mgr->addCallback("setup_switch_slave_conn_type", [&](OSG::VRGuiSignals::Options o) { on_netslave_set_connection(o["selection"]); return true; }, true );
+
+    mgr->addCallback("onSetupMenuAddNode", [&](OSG::VRGuiSignals::Options o) { on_menu_add_network_node(); return true; }, true );
+    mgr->addCallback("onSetupMenuAddSlave", [&](OSG::VRGuiSignals::Options o) { on_menu_add_network_slave(o["node"]); return true; }, true );
+    mgr->addCallback("onSetupMenuAddWindow", [&](OSG::VRGuiSignals::Options o) { on_menu_add_window(); return true; }, true );
+    mgr->addCallback("onSetupMenuAddSlave", [&](OSG::VRGuiSignals::Options o) { on_menu_add_viewport(o["node"]); return true; }, true );
+    mgr->addCallback("onSetupMenuDelete", [&](OSG::VRGuiSignals::Options o) { on_menu_delete(o["ID"]); return true; }, true );
 
     updateSetupCb = VRDeviceCb::create("update gui setup", bind(&VRGuiSetup::updateSetup, this) );
 
@@ -1315,22 +1317,53 @@ void VRGuiSetup::on_setup_changed() {
     VRSceneManager::get()->queueJob(fkt, 0, 100); // TODO: this blocks everything..
 }
 
-void VRGuiSetup::on_window_device_changed() {
+void VRGuiSetup::on_window_set_active(bool b) {
     if (guard || !window) return;
-    /*string name = getComboboxText("combobox13");
-    auto dev = VRSetup::getCurrent()->getDevice(name);
-    window->setMouse( dynamic_pointer_cast<VRMouse>(dev) );
-#ifndef WITHOUT_MTOUCH
-    window->setMultitouch( dynamic_pointer_cast<VRMultiTouch>(dev) );
-#endif*/
+    window->setActive(b);
 }
 
-void VRGuiSetup::on_window_msaa_changed() {
+void VRGuiSetup::on_window_mouse_changed(string s) {
     if (guard || !window) return;
-    /*string name = getComboboxText("combobox15");
-    window->setMSAA( name );
-    setLabel("msaa_info", "to take effect please restart PolyVR!");*/
+    auto dev = VRSetup::getCurrent()->getDevice(s);
+    window->setMouse( dynamic_pointer_cast<VRMouse>(dev) );
 }
+
+void VRGuiSetup::on_window_touch_changed(string s) {
+    if (guard || !window) return;
+#ifndef WITHOUT_MTOUCH
+    auto dev = VRSetup::getCurrent()->getDevice(s);
+    window->setMultitouch( dynamic_pointer_cast<VRMultiTouch>(dev) );
+#endif
+}
+
+void VRGuiSetup::on_window_kboard_changed(string s) {
+    if (guard || !window) return;
+    auto dev = VRSetup::getCurrent()->getDevice(s);
+    window->setKeyboard( dynamic_pointer_cast<VRKeyboard>(dev) );
+}
+
+void VRGuiSetup::on_window_msaa_changed(string s) {
+    if (guard || !window) return;
+    window->setMSAA( s );
+}
+
+void VRGuiSetup::on_window_size_changed(int w, int h) {
+    if (guard || !window) return;
+    window->resize( w, h );
+}
+
+void VRGuiSetup::on_window_title_changed(string s) {
+    if (guard || !window) return;
+    window->setTitle( s );
+    updateObjectData();
+}
+
+void VRGuiSetup::on_window_icon_changed(string s) {
+    if (guard || !window) return;
+    window->setIcon( s );
+    updateObjectData();
+}
+
 
 void VRGuiSetup::updateStatus() {
     //if (mwindow) setLabel("win_state", mwindow->getStateString());
@@ -1364,21 +1397,23 @@ bool VRGuiSetup::updateSetup() {
     if (!setup) return true;
     //setLabel("label13", "VR Setup: " + setup->getName());
 
+    vector<string> mouseList = {"none"};
+    vector<string> mtouchList = {"none"};
+    vector<string> keyboardList = {"none"};
+
     for (auto ditr : setup->getDevices()) {
         VRDevicePtr dev = ditr.second;
         string devID = dev->getType() + "$" + ditr.first;
         uiSignal("on_setup_tree_append", {{ "ID",devID }, { "label",ditr.first }, { "type",dev->getType() }, { "parent","SecDevices" }});
 
-        /*if (dev->getType() == "mouse") {
-            gtk_list_store_append(mouse_list, &row);
-            gtk_list_store_set(mouse_list, &row, 0, dev->getName().c_str(), -1);
-        }
-
-        if (dev->getType() == "multitouch") {
-            gtk_list_store_append(mouse_list, &row);
-            gtk_list_store_set(mouse_list, &row, 0, dev->getName().c_str(), -1);
-        }*/
+        if (dev->getType() == "mouse") mouseList.push_back(ditr.first);
+        if (dev->getType() == "multitouch") mtouchList.push_back(ditr.first);
+        if (dev->getType() == "keyboard") keyboardList.push_back(ditr.first);
     }
+
+    uiSignal("updateMouseList", {{"list", toString(mouseList)}});
+    uiSignal("updateMTouchList", {{"list", toString(mtouchList)}});
+    uiSignal("updateKeyboardList", {{"list", toString(keyboardList)}});
 
     for (auto node : setup->getNetwork()->getData() ) {
         string nodeID = "node$"+node->getName();

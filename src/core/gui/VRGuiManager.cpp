@@ -1,6 +1,8 @@
 #include "VRGuiManager.h"
 #include "PolyVR.h"
+#ifndef WITHOUT_IMGUI
 #include "imgui/VRImguiManager.h"
+#endif
 #include "core/scene/VRScene.h"
 #include "core/scene/VRSceneLoader.h"
 #include "core/scene/VRSceneManager.h"
@@ -48,13 +50,17 @@ VRGuiSemantics* g_sem = 0;
 VRGuiGeneral* g_gen = 0;
 VRGuiMonitor* g_mon = 0;
 
+#ifndef WITHOUT_IMGUI
 VRImguiManager* imguiMgr = 0;
+#endif
 
 VRGuiManager::VRGuiManager() {}
 
 VRGuiManager::~VRGuiManager() {
     cout << "VRGuiManager::~VRGuiManager" << endl;
+#ifndef WITHOUT_IMGUI
     uiCloseStore();
+#endif
     if (g_scene) delete g_scene;
     if (g_bits) delete g_bits;
     if (g_demos) delete g_demos;
@@ -73,6 +79,23 @@ string VRGuiManager::genUUID() {
     s.reserve(len);
     for (int i = 0; i < len; ++i) s += alphanum[rand() % (sizeof(alphanum) - 1)];
     return s;
+}
+
+string getSetupFile() {
+    if (VROptions::get()->hasOption("setup")) {
+        string s = VROptions::get()->getOption<string>("setup");
+        if (s != "") {
+            cout << " use custom setup option " << s << endl;
+            return s;
+        }
+    }
+
+    string setupFile = "Desktop";
+    ifstream f1("setup/.local");
+    ifstream f2("setup/.default");
+    if (f1.good()) getline(f1, setupFile);
+    else if (f2.good()) getline(f2, setupFile);
+    return setupFile;
 }
 
 void VRGuiManager::init() {
@@ -95,14 +118,12 @@ void VRGuiManager::init() {
         return;
     }
 
+#ifndef WITHOUT_IMGUI
     imguiMgr = new VRImguiManager();
+#endif
 
-    string setupFile = "Desktop";
-    ifstream f1("setup/.local");
-    ifstream f2("setup/.default");
-    if (f1.good()) getline(f1, setupFile);
-    else if (f2.good()) getline(f2, setupFile);
-    VRSetupManager::get()->load("Desktop", "setup/"+setupFile+".xml");
+    string setupFile = getSetupFile();
+    VRSetupManager::get()->load(setupFile, "setup/"+setupFile+".xml");
 
     g_demos = new VRAppManager();
     g_bits = new VRGuiBits();
@@ -180,12 +201,16 @@ void VRGuiManager::init() {
 }
 
 void VRGuiManager::initImgui() {
+#ifndef WITHOUT_IMGUI
     imguiMgr->setupCallbacks();
     imguiMgr->initImgui();
+#endif
 }
 
 void VRGuiManager::initImguiPopup() {
+#ifndef WITHOUT_IMGUI
     imguiMgr->initImguiPopup();
+#endif
 }
 
 void VRGuiManager::onWindowClose() {
@@ -267,11 +292,3 @@ void VRGuiManager::remWindow(GtkWindow* w) {
 }*/
 
 OSG_END_NAMESPACE;
-
-
-
-
-
-
-
-

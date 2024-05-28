@@ -117,7 +117,7 @@ void VRSceneManager::closeScene() {
     }
     setWorkdir(original_workdir);
 
-#ifndef WITHOUT_GTK
+#ifndef WITHOUT_IMGUI
     VRGuiSignals::get()->getSignal("scene_changed")->triggerAll<VRDevice>(); // update gui
 #endif
 }
@@ -219,7 +219,7 @@ void VRSceneManager::remFavorite(string path) {
 }
 
 void VRSceneManager::searchExercisesAndFavorites() {
-#ifndef WITHOUT_GTK
+#ifndef WITHOUT_IMGUI
     projects->clear();
     examples->clear();
 

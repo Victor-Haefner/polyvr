@@ -140,7 +140,7 @@ class UDPClient {
                 read();
             } catch(std::exception& e) {
                 cout << "UDPClient::connect failed with: " << e.what() << endl;
-#ifndef WITHOUT_GTK
+#ifndef WITHOUT_IMGUI
                 VRConsoleWidget::get("Collaboration")->write( " UDP connect to "+host+":"+toString(port)+" failed with "+e.what()+"\n", "red");
 #endif
             }
@@ -184,6 +184,5 @@ VRUDPClientPtr VRUDPClient::create(string name) {
 
 void VRUDPClient::onMessage( function<string(string)> f ) { client->onMessage(f); }
 void VRUDPClient::connect(string host, int port) { client->connect(host, port); uri = host+":"+toString(port); }
+bool VRUDPClient::isConnected(string host, int port) { return bool(host+":"+toString(port) == uri); }
 void VRUDPClient::send(const string& message, string guard, bool verbose) { client->send(message+guard, verbose); }
-
-

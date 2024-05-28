@@ -4,6 +4,19 @@
 #undef PLOG
 #endif
 
+#if defined(__APPLE__)
+//#include <boost/type_traits/decay.hpp> // /opt/homebrew/include/boost/type_traits/decay.hpp
+#include <boost/utility/in_place_factory.hpp>
+namespace std {
+  template <class T> using decay_t = typename decay<T>::type;
+
+  struct in_place_t {
+    explicit in_place_t() = default;
+  };
+  inline constexpr std::in_place_t in_place{};
+}
+#endif
+
 #include "include/cef_app.h"
 #include "include/cef_client.h"
 #include "include/cef_render_handler.h"
@@ -54,7 +67,7 @@ class CEF_handler : public CefRenderHandler, public CefLoadHandler, public CefCo
         CEF_handler();
         ~CEF_handler();
 
-#ifdef _WIN32
+#if defined(_WIN32) || defined(__APPLE__)
         void GetViewRect(CefRefPtr<CefBrowser> browser, CefRect& rect);
 #else
         bool GetViewRect(CefRefPtr<CefBrowser> browser, CefRect& rect) override;
@@ -71,7 +84,7 @@ class CEF_handler : public CefRenderHandler, public CefLoadHandler, public CefCo
         void OnLoadError( CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, ErrorCode errorCode, const CefString& errorText, const CefString& failedUrl ) override;
         void OnLoadStart( CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, TransitionType transition_type ) override;
 
-#ifdef _WIN32
+#if defined(_WIN32) || defined(__APPLE__)
         bool OnFileDialog( CefRefPtr< CefBrowser > browser, CefDialogHandler::FileDialogMode mode, const CefString& title, const CefString& default_file_path, const std::vector< CefString >& accept_filters, CefRefPtr< CefFileDialogCallback > callback) override;
 #else
         bool OnFileDialog( CefRefPtr< CefBrowser > browser, CefDialogHandler::FileDialogMode mode, const CefString& title, const CefString& default_file_path, const std::vector< CefString >& accept_filters, int selected_accept_filter, CefRefPtr< CefFileDialogCallback > callback ) override;
@@ -119,7 +132,7 @@ CEF_handler::~CEF_handler() {
     image.reset();
 }
 
-#ifdef _WIN32
+#if defined(_WIN32) || defined(__APPLE__)
 void CEF_handler::GetViewRect(CefRefPtr<CefBrowser> browser, CefRect& rect) {
     rect = CefRect(0, 0, max(8,width), max(8,height)); // never give an empty rectangle!!
 }
@@ -147,13 +160,13 @@ void CEF_handler::on_link_clicked(string source, int line, string s) {
     auto data = splitString(source, '/');
     if (data.size() == 0) return;
     string script = data[data.size()-1];
-#ifndef WITHOUT_GTK
+#ifndef WITHOUT_IMGUI
     VRGuiManager::get()->focusScript(script, line, 0);
 #endif
 }
 
 bool CEF_handler::OnConsoleMessage( CefRefPtr< CefBrowser > browser, cef_log_severity_t level, const CefString& message, const CefString& source, int line ) {
-#ifndef WITHOUT_GTK
+#ifndef WITHOUT_IMGUI
     VRConsoleWidget::get( "Console" )->addStyle( "blueLink", "#1133ff", "#ffffff", false, false, true, false );
 
     auto link = VRFunction<string>::create("cef_link", bind(&CEF_handler::on_link_clicked, this, source, line, _1) );
@@ -164,6 +177,9 @@ bool CEF_handler::OnConsoleMessage( CefRefPtr< CefBrowser > browser, cef_log_sev
     VRConsoleWidget::get( "Console" )->write( ": " + msg + "\n" );
     return true;
 #else
+    string msg = message;
+    string src = source;
+    cout << src << " (" + toString(line) + "): " << msg << endl;
     return false;
 #endif
 }
@@ -323,12 +339,12 @@ void CEF::global_initiate() {
     CefString(&settings.resources_dir_path).FromASCII(rdp.c_str());
     CefString(&settings.log_file).FromASCII(lfp.c_str());
     settings.no_sandbox = true;
-#ifdef _WIN32
+#if defined(_WIN32) || defined(__APPLE__)
     settings.windowless_rendering_enabled = true;
     //settings.log_severity = LOGSEVERITY_VERBOSE;
 #endif
 
-#ifdef _WIN32
+#if defined(_WIN32) || defined(__APPLE__)
     CefMainArgs args;
 	//args.set(const struct_type* src, struct_type* target, bool copy); // TODO: set parameters as defined below
 #else
@@ -344,7 +360,7 @@ void CEF::initiate() {
     init = true;
     CefWindowInfo win;
     CefBrowserSettings browser_settings;
-#ifdef _WIN32
+#if defined(_WIN32) || defined(__APPLE__)
     win.SetAsWindowless(0);
     win.shared_texture_enabled = false;
 #elif defined(CEF18)
@@ -353,7 +369,7 @@ void CEF::initiate() {
     win.SetAsWindowless(0, true);
 #endif
 
-#ifdef _WIN32
+#if defined(_WIN32) || defined(__APPLE__)
     //requestContext = CefRequestContext::CreateContext(handler.get());
     internals->browser = CefBrowserHost::CreateBrowserSync(win, internals->client, "", browser_settings, nullptr, nullptr);
     internals->browser->GetHost()->WasResized();
@@ -374,7 +390,7 @@ string CEF::getSite() { return site; }
 void CEF::reload() {
     cout << "CEF::reload " << site << ", " << internals->browser << endl;
     if (internals->browser) {
-#ifdef _WIN32
+#if defined(_WIN32) || defined(__APPLE__)
         internals->browser->GetMainFrame()->LoadURL(site); // Reload doesnt work on windows ??
 #else
         internals->browser->Reload();
@@ -410,7 +426,7 @@ void CEF::open(string site) {
     if (internals->browser) {
         internals->browser->GetMainFrame()->LoadURL(site);
         //bool b = internals->browser->IsLoading();
-#ifdef _WIN32
+#if defined(_WIN32) || defined(__APPLE__)
         internals->browser->GetHost()->WasResized();
 #endif
     }
@@ -540,7 +556,7 @@ bool CEF::mouse(int lb, int mb, int rb, int wu, int wd, VRDeviceWeakPtr d) {
     if (!internals->browser) return true;
     auto host = internals->browser->GetHost();
     if (!host) return true;
-#ifdef _WIN32
+#if defined(_WIN32) || defined(__APPLE__)
     if (!ins->hit) { host->SetFocus(false); focus = false; return true; }
     if (iobj != geo) { host->SetFocus(false); focus = false; return true; }
     host->SetFocus(true); focus = true;
@@ -715,12 +731,12 @@ bool CEF::keyboard(VRDeviceWeakPtr d) {
     } else {
         //cout << " CEF::keyboard release " << kev.windows_key_code << " " << kev.native_key_code << " " << kev.character << " " << kev.unmodified_character << endl;
         kev.type = KEYEVENT_KEYUP; host->SendKeyEvent(kev);
-        if (event.keyval < 256) kev.type = KEYEVENT_CHAR; host->SendKeyEvent(kev);
+        if (event.keyval < 256) { kev.type = KEYEVENT_CHAR; host->SendKeyEvent(kev); }
     }
     return false;
 }
 
-#ifdef _WIN32
+#if defined(_WIN32) || defined(__APPLE__)
 bool CEF_handler::OnFileDialog(CefRefPtr< CefBrowser > browser, CefDialogHandler::FileDialogMode mode, const CefString& title, const CefString& default_file_path, const std::vector< CefString >& accept_filters, CefRefPtr< CefFileDialogCallback > callback) {
 #else
 bool CEF_handler::OnFileDialog( CefRefPtr< CefBrowser > browser, CefDialogHandler::FileDialogMode mode, const CefString& title, const CefString& default_file_path, const std::vector< CefString >& accept_filters, int selected_accept_filter, CefRefPtr< CefFileDialogCallback > callback ) {
@@ -742,4 +758,3 @@ bool CEF_handler::OnFileDialog( CefRefPtr< CefBrowser > browser, CefDialogHandle
     //VRGuiFile::open("Open", 0, title);
     return true;
 }
-

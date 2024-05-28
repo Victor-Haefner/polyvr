@@ -23,6 +23,7 @@ class VRTCPClient : public VRNetworkClient {
         void setGuard( string g );
 
         void connect(string host, int port) override;
+        bool isConnected(string host, int port) override;
         void connect(string uri);
         void connectToPeer(int localPort, string remoteIP, int remotePort);
         void send(const string& message, string guard = "", bool verbose = false) override;

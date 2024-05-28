@@ -41,7 +41,9 @@ string toString(ALenum error) {
 VRSoundContext::VRSoundContext() {
     cout << " create new sound context!" << endl;
 #ifndef _WIN32
+#ifndef __APPLE__
     av_register_all();
+#endif
 #endif
     device = alcOpenDevice(NULL);
     if (!device) { cout << "VRSoundContext() > alcOpenDevice failed!\n"; return; }
@@ -201,6 +203,3 @@ void VRSoundManager::queueSounds(vector<VRSoundPtr> sounds) { // TODO: only one 
     queue.play();
     soundQueue = queue.callback;
 }
-
-
-

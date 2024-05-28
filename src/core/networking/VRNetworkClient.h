@@ -44,6 +44,7 @@ class VRNetworkClient : public std::enable_shared_from_this<VRNetworkClient> {
 
         virtual void onMessage( function<string(string)> f ) {};
         virtual void connect(string host, int port) {};
+        virtual bool isConnected(string host, int port) { return false; };
         virtual void send(const string& message, string guard = "", bool verbose = false) {};
 
         string getName();

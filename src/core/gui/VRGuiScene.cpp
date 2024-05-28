@@ -27,7 +27,7 @@
 #include "addons/Semantics/Reasoning/VREntity.h"
 #include "addons/Semantics/Reasoning/VRConcept.h"
 #include "addons/Semantics/Reasoning/VRProperty.h"
-#include "VRGuiSignals.h"
+#include "VRGuiManager.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;

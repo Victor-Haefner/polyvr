@@ -19,7 +19,7 @@ VRCallbackManager::~VRCallbackManager() {
 }
 
 void VRCallbackManager::queueJob(VRUpdateCbPtr f, int priority, int delay, bool ownRef) {
-    //cout << "VRCallbackManager::queueJob " << f->name << endl;
+    //cout << "VRCallbackManager::queueJob " << f->name << ", ownRef: " << ownRef << endl;
     VRLock lock(mtx);
     updateListsChanged = true;
     VRUpdateCbWeakPtr w = f;

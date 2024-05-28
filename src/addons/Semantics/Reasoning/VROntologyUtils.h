@@ -5,7 +5,7 @@
 
 using namespace std;
 
-#ifndef WITHOUT_GTK
+#ifndef WITHOUT_IMGUI
 
 #include "core/gui/VRGuiManager.h"
 #include "core/gui/VRGuiConsole.h"

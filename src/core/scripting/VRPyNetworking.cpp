@@ -14,7 +14,10 @@ simpleVRPyType(RestServer, New_optNamed_ptr);
 
 simpleVRPyType(MQTTClient, New_ptr);
 simpleVRPyType(MQTTServer, New_ptr);
+
+#ifndef WITHOUT_SNAP7
 simpleVRPyType(ProfinetClient, New_ptr);
+#endif
 
 #ifndef WITHOUT_TCP
 simpleVRPyType(NetworkClient, 0);
@@ -56,6 +59,7 @@ PyMethodDef VRPyPing::methods[] = {
     {NULL}  /* Sentinel */
 };
 
+#ifndef WITHOUT_SNAP7
 PyMethodDef VRPyProfinetClient::methods[] = {
     {"connect", PyWrap(ProfinetClient, connect, "Connect to server, address, rack, slot", void, string, int, int) },
     {"isConnected", PyWrap(ProfinetClient, isConnected, "Return if connected", bool) },
@@ -72,6 +76,7 @@ PyMethodDef VRPyProfinetClient::methods[] = {
     {"writeFloat", PyWrap(ProfinetClient, writeFloat, "Write a float, db, pos, float, dbtype = database|merker", void, int, int, float, string) },
     {NULL}  /* Sentinel */
 };
+#endif
 
 PyMethodDef VRPyMQTTClient::methods[] = {
     {"disconnect", PyWrap(MQTTClient, disconnect, "Disconnect from server", void) },
@@ -242,7 +247,3 @@ template<> string typeName(const function<string(string)>* t) { return "string f
 template<> string typeName(const function<void(string)>* t) { return "void function(string)"; }
 template<> string typeName(const function<void(void)>* t) { return "void function()"; }
 #endif
-
-
-
-

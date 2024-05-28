@@ -5,7 +5,7 @@
 #include "../roads/VRRoadIntersection.h"
 #include "../VRWorldGenerator.h"
 #include "../terrain/VRTerrain.h"
-#ifndef WITHOUT_GTK
+#ifndef WITHOUT_IMGUI
 #include "core/gui/VRGuiManager.h"
 #include "core/gui/VRGuiConsole.h"
 #endif
@@ -31,7 +31,7 @@
 #include "core/utils/VRMutex.h"
 #include <thread>
 
-#ifndef WITHOUT_GTK
+#ifndef WITHOUT_IMGUI
 #define CPRINT(x) \
 VRConsoleWidget::get( "Console" )->write( string(x)+"\n" );
 #else
@@ -2392,6 +2392,3 @@ void VRTrafficSimulation::updateDensityVisual(bool remesh) {
         //for (auto road)
     }
 }
-
-
-

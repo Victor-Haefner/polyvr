@@ -10,13 +10,13 @@
 #include "core/utils/system/VRSystem.h"
 #include "core/scene/VRScene.h"
 #include "core/scene/VRSemanticManager.h"
-#ifndef WITHOUT_GTK
+#ifndef WITHOUT_IMGUI
 #include "core/gui/VRGuiManager.h"
 #include "core/gui/VRGuiConsole.h"
 #endif
 #include <iostream>
 
-#ifndef WITHOUT_GTK
+#ifndef WITHOUT_IMGUI
 #define WARN(x) \
 VRConsoleWidget::get( "Errors" )->write( x+"\n" );
 #else
@@ -356,5 +356,3 @@ vector<VREntityPtr> VROntology::process(string query, bool allowAssumptions) {
 VREntityPtr VROntology::addVec3Entity(string name, string concept, Vec3d v) {
     return addVectorEntity(name, concept, {::toString(v[0]), ::toString(v[1]), ::toString(v[2])});
 }
-
-

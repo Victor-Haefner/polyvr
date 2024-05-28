@@ -51,7 +51,7 @@ void VRRuleWidget::on_rem_prop_clicked() {
     rule->remStatement(selected_statement);
     selected_statement = 0;*/
     update();
-    saveScene();
+    //saveScene();
 }
 
 void VRRuleWidget::on_rem_clicked() {
@@ -66,7 +66,7 @@ void VRRuleWidget::on_edit_clicked() {
     if (s == "") return;
     rule->setQuery(s);
     if (rule->query) gtk_label_set_text(label, rule->query->toString().c_str());*/
-    saveScene();
+    //saveScene();
 }
 
 void VRRuleWidget::on_newp_clicked() {
@@ -76,7 +76,7 @@ void VRRuleWidget::on_newp_clicked() {
     gtk_tree_store_append(store, &itr, 0);
     setPropRow(&itr, name, "", "orange", 0);
     rule->addStatement(name);*/
-    saveScene();
+    //saveScene();
 }
 
 void VRRuleWidget::on_select_property() {

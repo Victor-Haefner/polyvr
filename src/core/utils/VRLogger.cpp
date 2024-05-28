@@ -1,5 +1,5 @@
 #include "VRLogger.h"
-#ifndef WITHOUT_GTK
+#ifndef WITHOUT_IMGUI
 #include "core/gui/VRGuiManager.h"
 #include "core/gui/VRGuiConsole.h"
 #endif
@@ -9,7 +9,7 @@ map<string, bool> VRLog::tags;
 void VRLog::print(string tag, string s, string c) {
     if (!tags[tag]) return;
 
-#ifndef WITHOUT_GTK
+#ifndef WITHOUT_IMGUI
     auto co = OSG::VRConsoleWidget::get(c);
     if (co) co->write(s+"\n");
 #endif

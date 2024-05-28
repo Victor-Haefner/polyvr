@@ -5,6 +5,7 @@
 
 #include "core/utils/system/VRSystem.h"
 #include "core/tools/VRProjectManager.h"
+#include "core/objects/material/VRTexture.h"
 
 
 ostream& operator<<(ostream& os, const ResizeEvent& s) {
@@ -158,3 +159,41 @@ void popGlowBorderStyle() {
     ImGui::PopStyleColor(2);
     borderGlowActive = false;
 }
+
+// image stuff
+
+ImImage::ImImage() {}
+ImImage::~ImImage() {}
+
+void ImImage::read(string p) {
+    if (path == p) return;
+    //cout << "ImImage::read " << p << ", " << this << ", " << path << ", " << glID << ", " << width << ", " << height << endl;
+    path = p;
+
+    auto tex = OSG::VRTexture::create();
+    tex->read(path);
+    const unsigned char* image_data = tex->getImage()->getData();
+    auto s = tex->getSize();
+    width = s[0];
+    height = s[1];
+
+    // Create a OpenGL texture identifier
+    glGenTextures(1, &glID);
+    glBindTexture(GL_TEXTURE_2D, glID);
+
+    // Setup filtering parameters for display
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE); // This is required on WebGL for non power-of-two textures
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE); // Same
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, image_data);
+
+}
+
+void ImImage::render(int w, int h) {
+    ImGui::Image((void*)(intptr_t)glID, ImVec2(w, h), ImVec2(0,1), ImVec2(1,0));
+}
+
+
+
+

@@ -12,8 +12,10 @@
 
 #ifdef WASM
 namespace std{ inline namespace __2{ class thread; }; }
+#elif defined(__APPLE__)
+namespace std { namespace __1 {class thread; }; }
 #else
-namespace std{ class thread; }
+namespace std { class thread; }
 #endif
 
 OSG_BEGIN_NAMESPACE;

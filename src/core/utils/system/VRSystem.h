@@ -36,5 +36,6 @@ long long getCPUTime();
 void getMemUsage(double& vm_usage, double& resident_set);
 void doFrameSleep(double tFrame, double fps);
 
+void startMemoryDog();
 
 #endif // VRSYSTEM_H_INCLUDED

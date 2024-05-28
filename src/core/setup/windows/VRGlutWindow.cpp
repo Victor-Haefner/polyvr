@@ -42,8 +42,10 @@ VRGlutWindow::VRGlutWindow() {
     type = "glut";
 
 #ifndef WITHOUT_OPENVR
-    if (VRHeadMountedDisplay::checkDeviceAttached())
+    if (VRHeadMountedDisplay::checkDeviceAttached()) {
+        cout << "HMD (glut window): init system" << endl;
         hmd = VRHeadMountedDisplay::create();
+    }
 #endif
 
     int width = 800;//20;

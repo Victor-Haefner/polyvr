@@ -6,7 +6,7 @@
 #include "core/objects/material/OSGMaterial.h"
 #include "core/objects/OSGObject.h"
 #include "core/scene/VRScene.h"
-#ifndef WITHOUT_GTK
+#ifndef WITHOUT_IMGUI
 #include "core/gui/VRGuiManager.h"
 #endif
 #include <OpenSG/OSGTransform.h>
@@ -48,7 +48,7 @@ VRCamera::VRCamera(string name) : VRTransform(name) {
 }
 
 VRCamera::~VRCamera() {
-#ifndef WITHOUT_GTK
+#ifndef WITHOUT_IMGUI
     if (registred) VRGuiManager::broadcast("camera_added");
 #endif
 }
@@ -60,7 +60,7 @@ VRCameraPtr VRCamera::create(string name, bool reg) {
     p->addChild(p->vrSetup);
     p->registred = reg;
     getAll().push_back( p );
-#ifndef WITHOUT_GTK
+#ifndef WITHOUT_IMGUI
     VRGuiManager::broadcast("camera_added");
 #endif
     if (reg) VRScene::getCurrent()->setMActiveCamera(p->getName());
@@ -154,7 +154,7 @@ void VRCamera::setup(bool reg, VRStorageContextPtr context) {
 void VRCamera::activate() {
     auto scene = VRScene::getCurrent();
     if (scene) scene->setActiveCamera(getName());
-#ifndef WITHOUT_GTK
+#ifndef WITHOUT_IMGUI
     VRGuiManager::broadcast("camera_changed");
 #endif
 }
@@ -205,7 +205,7 @@ void VRCamera::setFov(float f) { fov = f; setup(); }
 void VRCamera::setNear(float a) {
     nearClipPlaneCoeff = a;
     setup();
-#ifndef WITHOUT_GTK
+#ifndef WITHOUT_IMGUI
     VRGuiManager::broadcast("camera_near_far_changed");
 #endif
 }
@@ -213,7 +213,7 @@ void VRCamera::setNear(float a) {
 void VRCamera::setFar(float f) {
     farClipPlaneCoeff = f;
     setup();
-#ifndef WITHOUT_GTK
+#ifndef WITHOUT_IMGUI
     VRGuiManager::broadcast("camera_near_far_changed");
 #endif
 }
@@ -249,4 +249,3 @@ void VRCamera::focusObject(VRObjectPtr t) {
 
     //cout << "VRCamera::focus " << t->getName() << " pos " << c << " size " << r << endl;
 }
-

@@ -7,16 +7,16 @@
 #include <math.h>
 #include <iostream>
 #include <map>
-#ifndef _WIN32
-#include <gdal/gdal.h>
-#include <gdal/gdal_priv.h>
-#include <gdal/gdal_version.h>
-#include <gdal/ogrsf_frmts.h>
-#else
+#if defined(WIN32) || defined(__APPLE__)
 #include <gdal.h>
 #include <gdal_priv.h>
 #include <gdal_version.h>
 #include <ogrsf_frmts.h>
+#else
+#include <gdal/gdal.h>
+#include <gdal/gdal_priv.h>
+#include <gdal/gdal_version.h>
+#include <gdal/ogrsf_frmts.h>
 #endif
 #include <OpenSG/OSGVector.h>
 #include <OpenSG/OSGImage.h>

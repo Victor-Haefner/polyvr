@@ -37,9 +37,15 @@ VRRestServerPtr VRRestServer::ptr() { return static_pointer_cast<VRRestServer>(s
 VRRestServer::Data* VRRestServer::getData() { return data; }
 
 void VRRestServer::onMessage(void* connection, VRRestResponsePtr msg) {
-    (*callback)(msg);
     auto c = (mg_connection*)connection;
-    mg_http_reply(c, msg->getStatus(), msg->getHeaders().c_str(), msg->getData().c_str());
+    if (!callback) { sendString(c, ""); return; }
+    (*callback)(msg);
+    mg_http_reply(c, msg->getStatus(), "", msg->getData().c_str()); // passing headers can lead to issues
+}
+
+void VRRestServer::sendString(void* connection, string data, int code) {
+    auto c = (mg_connection*)connection;
+    mg_http_reply(c, code, "", data.c_str());
 }
 
 static void VRRestServer_handler(mg_connection* connection, int ev, void* ev_data, void* s) {
@@ -57,6 +63,7 @@ static void VRRestServer_handler(mg_connection* connection, int ev, void* ev_dat
         auto fkt = VRUpdateCb::create("VRRestServer_handler", bind(&VRRestServer::onMessage, server, (void*)connection, msg));
         auto s = VRScene::getCurrent();
         if (s) s->queueJob(fkt);
+        else mg_http_reply(connection, 200, "", "");
     }
 }
 

@@ -28,11 +28,13 @@
 #ifndef WASM
 #include "VRMultiWindow.h"
 #include "VRHeadMountedDisplay.h"
+#ifndef WITHOUT_COCOA
 #include "VRCocoaWindow.h"
+#endif
 #endif
 
 
-#ifndef WITHOUT_GTK
+#ifndef WITHOUT_IMGUI
 #include "core/gui/VRGuiManager.h"
 #include "core/gui/VRGuiConsole.h"
 #define WARN(x) \
@@ -65,28 +67,40 @@ bool VRWindowManager::checkWin(string name) {
 RenderActionRefPtr VRWindowManager::getRenderAction() { return ract; }
 
 VRWindowPtr VRWindowManager::addCocoaWindow(string name) {
+#ifndef WITHOUT_COCOA
     VRCocoaWindowPtr win = VRCocoaWindow::create();
     win->setName(name);
     win->setAction(ract);
     windows[win->getName()] = win;
     return win;
+#else
+    return 0;
+#endif
 }
 
 VRWindowPtr VRWindowManager::addGlutWindow(string name) {
+#ifndef WITHOUT_IMGUI
     VRGlutWindowPtr win = VRGlutWindow::create();
     win->setName(name);
     win->setAction(ract);
     windows[win->getName()] = win;
     return win;
+#else
+    return 0;
+#endif
 }
 
 VRWindowPtr VRWindowManager::addGlutEditor(string name) {
+#ifndef WITHOUT_IMGUI
     VRGlutEditorPtr win = VRGlutEditor::create();
     editorWindow = win;
     win->setName(name);
     win->setAction(ract);
     windows[win->getName()] = win;
     return win;
+#else
+    return 0;
+#endif
 }
 
 VRWindowPtr VRWindowManager::addMultiWindow(string name) {
@@ -209,11 +223,17 @@ void VRWindowManager::updateWindows() {
         if (!wait()) return false;
         // let the windows merge the change lists, sync and clear
         if (!wait()) return false;
+#ifndef WITHOUT_GLUT
         glutMainLoopEvent();
+#endif
         for (auto w : getWindows()) {
+#ifndef WITHOUT_GLUT
             if (auto win = dynamic_pointer_cast<VRGlutEditor>(w.second)) win->render();
             if (auto win = dynamic_pointer_cast<VRGlutWindow>(w.second)) win->render();
+#endif
+#ifndef WITHOUT_COCOA
             if (auto win = dynamic_pointer_cast<VRCocoaWindow>(w.second)) win->render();
+#endif
 #ifndef WITHOUT_OPENVR
             if (auto win = dynamic_pointer_cast<VRHeadMountedDisplay>(w.second)) win->render();
 #endif

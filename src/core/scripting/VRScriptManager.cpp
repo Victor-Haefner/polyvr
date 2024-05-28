@@ -2,8 +2,8 @@
 #include "core/utils/VRStorage_template.h"
 #include "core/utils/VROptions.h"
 #include "core/utils/VRLogger.h"
-#ifndef WITHOUT_GTK
 #include "core/gui/VRGuiManager.h"
+#ifndef WITHOUT_IMGUI
 #include "core/gui/VRGuiConsole.h"
 #endif
 #include "VRScript.h"
@@ -189,16 +189,24 @@ static PyObject* modErr = 0;
 
 // intersept python stdout
 static PyObject* writeOut(PyObject *self, PyObject *args) {
-    const char *what;
+    const char* what = 0;
     if (!PyArg_ParseTuple(args, "s", &what)) return NULL;
-    if (auto c = VRConsoleWidget::get(pyOutConsole)) c->write(what);
+#ifndef WITHOUT_IMGUI
+    if (what) if (auto c = VRConsoleWidget::get(pyOutConsole)) c->write(what);
+#else
+    if (what) cout << what << endl;
+#endif
     return Py_BuildValue("");
 }
 
 static PyObject* writeErr(PyObject *self, PyObject *args) {
-    const char *what;
+    const char* what = 0;
     if (!PyArg_ParseTuple(args, "s", &what)) return NULL;
-    if (auto c = VRConsoleWidget::get(pyErrConsole)) c->write(what);
+#ifndef WITHOUT_IMGUI
+    if (what) if (auto c = VRConsoleWidget::get(pyErrConsole)) c->write(what);
+#else
+    if (what) cout << what << endl;
+#endif
     return Py_BuildValue("");
 }
 
