@@ -473,8 +473,8 @@ struct SystemDelta : VRRobotArm::System {
 
         auto beam1 = parts[9];
         auto beam2 = parts[10];
-        auto hand = parts[11];
-        auto star = parts[12];
+        auto star = parts[11];
+        auto hand = parts[12];
 
         star->setIdentity();
         beam2->setIdentity();
@@ -508,16 +508,15 @@ struct SystemDelta : VRRobotArm::System {
 
         auto beam1 = VRTransform::create("beam1");
         auto beam2 = VRTransform::create("beam2");
+        auto star = VRTransform::create("star");
         auto hand = VRTransform::create("hand");
         parts.push_back(beam1);
         parts.push_back(beam2);
+        parts.push_back(star);
         parts.push_back(hand);
 
         base->addChild(beam1);
         beam1->addChild(beam2);
-
-        auto star = VRTransform::create("star");
-        parts.push_back(star);
         base->addChild(star);
         star->addChild(hand);
 
@@ -772,8 +771,8 @@ struct SystemDelta : VRRobotArm::System {
 
         auto beam1 = parts[9];
         auto beam2 = parts[10];
-        auto hand = parts[11];
-        auto star = parts[12];
+        auto star = parts[11];
+        auto hand = parts[12];
 
         star->setFrom(pos);
         beam1->setDir(-norm);
@@ -984,7 +983,7 @@ void VRRobotArm::setAngles(vector<float> angles, bool force) {
 
 void VRRobotArm::setSpeed(float s) { animSpeed = s; }
 void VRRobotArm::setMaxSpeed(float s) { maxSpeed = s; }
-
+float VRRobotArm::getSpeed() { return animSpeed; }
 PosePtr VRRobotArm::getLastPose() { return lastPose; }
 PosePtr VRRobotArm::getPose() { return getLastPose(); }
 

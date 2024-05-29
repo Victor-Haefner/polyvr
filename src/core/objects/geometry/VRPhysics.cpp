@@ -130,6 +130,7 @@ void VRPhysics::setFriction(float f) {
 }
 
 void VRPhysics::setDamping(float lin, float ang, bool f) {
+    if (linDamping == lin && angDamping == ang) return;
     linDamping = lin;
     angDamping = ang;
     VRLock lock(VRPhysics_mtx());
@@ -387,6 +388,7 @@ void VRPhysics::setDynamic(bool b, bool fast) {
 
 void VRPhysics::setGravity(OSG::Vec3d v) {
     bool fast = true;
+    if (bt.gravity[0] == v[0] && bt.gravity[1] == v[1] && bt.gravity[2] == v[2]) return;
     bt.gravity = toBtVector3(v);
     if (fast && bt.body) {
         VRLock lock(VRPhysics_mtx());
