@@ -1,4 +1,5 @@
 #include "VRCocoaWindow.h"
+#include "core/gui/VRGuiManager.h"
 #include "../devices/VRMouse.h"
 #include "../devices/VRKeyboard.h"
 
@@ -192,10 +193,25 @@ VRCocoaWindow* vrCocoaWin = 0;
 
 @end
 
+bool doCocoaShutdown = false;
+
+@interface WinDelegate : NSObject <NSApplicationDelegate, NSWindowDelegate>
+- (BOOL) windowShouldClose: (id) sender;
+@end
+
+@implementation WinDelegate
+- (BOOL)windowShouldClose:(id)sender {
+    doCocoaShutdown = true;
+    VRGuiManager::trigger("glutCloseWindow",{});
+    return YES;
+}
+@end
+
 @interface MyDelegate : NSObject
 
 {
     NSWindow *window;
+    WinDelegate *winDelegate;
     MyOpenGLView *glView;
 }
 
@@ -203,26 +219,27 @@ VRCocoaWindow* vrCocoaWin = 0;
 
 - (BOOL) applicationShouldTerminateAfterLastWindowClosed: (NSApplication*) application;
 
-- (BOOL) windowShouldClose: (id) sender;
-
 @end
-
 
 @implementation MyDelegate
 
 - (void) dealloc
 {
+    [winDelegate release];
     [window release];
     [super dealloc];
 }
 
 - (void) applicationWillFinishLaunching: (NSNotification*) notification
 {
+    winDelegate = [[WinDelegate alloc] init];
     window = [NSWindow alloc];
     NSRect rect = { { 0, 0 }, { 300, 600 } };
     [window initWithContentRect: rect styleMask: (NSTitledWindowMask | NSClosableWindowMask | NSMiniaturizableWindowMask | NSResizableWindowMask) backing: NSBackingStoreBuffered defer: YES];
+    [window setDelegate:winDelegate];
     [window setTitle: @"PolyVR"];
     [window setReleasedWhenClosed: NO];
+
 
     glView = [[MyOpenGLView alloc] autorelease];
     [glView initWithFrame: rect];
@@ -262,12 +279,6 @@ VRCocoaWindow* vrCocoaWin = 0;
     return YES;
 }
 
-- (BOOL) windowShouldClose: (id) sender
-{
-    cout << "windowShouldClose" << endl;
-    return YES;
-}
-
 @end
 
 NSAutoreleasePool *pool;
@@ -299,13 +310,19 @@ void VRCocoaWindow::cleanup() {
 }
 
 void VRCocoaWindow::render(bool fromThread) {
-  if (fromThread) return;
+  if (fromThread || doCocoaShutdown) return;
 
   NSEvent* event = 0;
   do {
       event = [NSApp nextEventMatchingMask:NSAnyEventMask untilDate:[NSDate distantPast] inMode:NSDefaultRunLoopMode dequeue:YES];
-      if (event and event.type != 0) cout << "event " << event.type << endl;
+
+      if (event.type == NSEventTypeSystemDefined) {
+          NSLog(@"COCOA System Event type: %ld, Subtype: %ld, data1: %ld, data2: %ld", (long)event.type, (long)event.subtype, (long)event.data1, (long)event.data2);
+      }
+
       [NSApp sendEvent: event];
+      [NSApp updateWindows];
+      if (doCocoaShutdown) return;
   } while(event != nil);
 
   VRWindow::render();

@@ -14,8 +14,12 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd $DIR
 
 if [ -e ./build/polyvr ]; then
-	echo "run build/polyvr"
+	 echo "run build/polyvr"
 	 ./build/polyvr $@
+	 # Create a temporary lldb init file
+	 #TEMP_LDBINIT=$(mktemp)
+	 #echo "settings set target.env-vars DYLD_LIBRARY_PATH=$DYLD_LIBRARY_PATH" > $TEMP_LDBINIT
+	 #lldb --source $TEMP_LDBINIT -o run -- ./build/polyvr $@ # mac debugger
 	 exit 0
 fi
 
