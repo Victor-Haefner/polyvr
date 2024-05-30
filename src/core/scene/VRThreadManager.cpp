@@ -154,14 +154,18 @@ void VRThreadManager::runLoop(VRThreadWeakPtr wt) {
 
     setThreadName(t->name);
 
-    ExternalThreadRefPtr tr = OSGThread::create(t->name.c_str(), 0);
-    tr->initialize(t->aspect);//der hauptthread nutzt Aspect 0
+    {
+        ExternalThreadRefPtr tr = OSGThread::create(t->name.c_str(), 0);
+        tr->initialize(t->aspect);//der hauptthread nutzt Aspect 0
+        t->osg_t = tr;
+    }
 
-    t->osg_t = tr;
     t->status = 1;
 
     do if (t = wt.lock()) if (auto f = t->fkt.lock()) (*f)(t);
     while(t->control_flag);
+
+    t->osg_t = 0; // avoid double free
 
     t->status = 2;
 }

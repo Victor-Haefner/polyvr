@@ -177,6 +177,7 @@ VRCocoaWindow* vrCocoaWin = 0;
 
 - (void) reshape
 {
+    if (!cwin) return;
     [self update];
     NSWindow *window = [self window];
     NSRect frame = [self bounds];
@@ -282,8 +283,8 @@ bool doCocoaShutdown = false;
 
 @end
 
-NSAutoreleasePool *pool;
-MyDelegate *delegate;
+NSAutoreleasePool *pool = 0;
+MyDelegate *delegate = 0;
 
 void VRCocoaWindow::init() {
     vrCocoaWin = this;
@@ -306,17 +307,19 @@ void VRCocoaWindow::init() {
 }
 
 void VRCocoaWindow::cleanup() {
+    cout << " --- cleanup COCOA ---" << endl;
     cwin = 0;
-    [pool release];
+    if (pool) [pool release];
 }
 
 void VRCocoaWindow::render(bool fromThread) {
-  //return;
+  //cout << "VRCocoaWindow::render " << fromThread << endl;
   if (fromThread || doCocoaShutdown) return;
 
   NSEvent* event = 0;
   do {
       event = [NSApp nextEventMatchingMask:NSAnyEventMask untilDate:[NSDate distantPast] inMode:NSDefaultRunLoopMode dequeue:YES];
+      //NSLog(@"COCOA Event type: %ld", (long)event.type);
 
       if (event.type == NSEventTypeSystemDefined) {
           NSLog(@"COCOA System Event type: %ld, Subtype: %ld, data1: %ld, data2: %ld", (long)event.type, (long)event.subtype, (long)event.data1, (long)event.data2);
@@ -324,7 +327,6 @@ void VRCocoaWindow::render(bool fromThread) {
 
       [NSApp sendEvent: event];
       [NSApp updateWindows];
-      if (doCocoaShutdown) return;
   } while(event != nil);
 
   VRWindow::render();

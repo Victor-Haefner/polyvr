@@ -299,6 +299,8 @@ void PolyVR::update() {
         if (startsWith(dcy, "serial:")) key = "123"; // TODO: access serial connection to retrieve key
         if (app != "") VRSceneManager::get()->loadScene(app, false, key);
     }
+
+    //if (VRGlobals::CURRENT_FRAME == 100) { shutdown(); }
 }
 
 void PolyVR::run() {
