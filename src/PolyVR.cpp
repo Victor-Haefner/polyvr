@@ -300,7 +300,7 @@ void PolyVR::update() {
         if (app != "") VRSceneManager::get()->loadScene(app, false, key);
     }
 
-    //if (VRGlobals::CURRENT_FRAME == 100) { shutdown(); }
+    //if (VRGlobals::CURRENT_FRAME == 1000) { shutdown(); }
 }
 
 void PolyVR::run() {

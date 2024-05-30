@@ -203,7 +203,9 @@ bool doCocoaShutdown = false;
 @implementation WinDelegate
 - (BOOL)windowShouldClose:(id)sender {
     cout << " --- cocoa window closed --- " << endl;
+
     doCocoaShutdown = true;
+    vrCocoaWin->cleanup();
     VRGuiManager::trigger("glutCloseWindow",{});
     return YES;
 }
@@ -310,6 +312,7 @@ void VRCocoaWindow::cleanup() {
     cout << " --- cleanup COCOA ---" << endl;
     cwin = 0;
     if (pool) [pool release];
+    pool = 0;
 }
 
 void VRCocoaWindow::render(bool fromThread) {
@@ -320,11 +323,6 @@ void VRCocoaWindow::render(bool fromThread) {
   do {
       event = [NSApp nextEventMatchingMask:NSAnyEventMask untilDate:[NSDate distantPast] inMode:NSDefaultRunLoopMode dequeue:YES];
       //NSLog(@"COCOA Event type: %ld", (long)event.type);
-
-      if (event.type == NSEventTypeSystemDefined) {
-          NSLog(@"COCOA System Event type: %ld, Subtype: %ld, data1: %ld, data2: %ld", (long)event.type, (long)event.subtype, (long)event.data1, (long)event.data2);
-      }
-
       [NSApp sendEvent: event];
       [NSApp updateWindows];
   } while(event != nil);

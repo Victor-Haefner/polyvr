@@ -319,6 +319,7 @@ VRView::~VRView() {
     window->subPortByObj(rView);
     window->subPortByObj(lView_act);
     window->subPortByObj(rView_act);
+    window = 0;
     lView = 0;
     rView = 0;
     lView_act = 0;
@@ -326,8 +327,6 @@ VRView::~VRView() {
     PCDecoratorLeft = 0;
     PCDecoratorRight = 0;
     stats = 0;
-    window = 0;
-    cout << "  VRView::~VRView done\n";
 }
 
 VRViewPtr VRView::create(string name) { return VRViewPtr(new VRView(name)); }
