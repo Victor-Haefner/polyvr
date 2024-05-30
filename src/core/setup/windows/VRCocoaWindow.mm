@@ -201,6 +201,7 @@ bool doCocoaShutdown = false;
 
 @implementation WinDelegate
 - (BOOL)windowShouldClose:(id)sender {
+    cout << " --- cocoa window closed --- " << endl;
     doCocoaShutdown = true;
     VRGuiManager::trigger("glutCloseWindow",{});
     return YES;
@@ -310,6 +311,7 @@ void VRCocoaWindow::cleanup() {
 }
 
 void VRCocoaWindow::render(bool fromThread) {
+  //return;
   if (fromThread || doCocoaShutdown) return;
 
   NSEvent* event = 0;

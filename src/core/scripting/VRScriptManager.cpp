@@ -37,7 +37,7 @@ void checkGarbageCollection() { // for diagnostic purposes
     while (PyDict_Next(gc_dict, &pos, &key, &value)) {
         string key_name = PyString_AsString(key);
         gc_members[key_name] = value;
-        cout << " " << key_name << "  " << value << endl;
+        //cout << " " << key_name << "  " << value << endl;
     }
 
     auto exec = [&](string cb) {
@@ -50,7 +50,9 @@ void checkGarbageCollection() { // for diagnostic purposes
         return res;
     };
 
+    cout << " GC execute 'collect'" << endl;
     exec("collect");
+    cout << " ..done" << endl;
 
     auto garbage = gc_members["garbage"];
     for (int i=0; i<PyList_Size(garbage); i++) {
