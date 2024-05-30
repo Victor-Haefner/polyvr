@@ -1,4 +1,6 @@
 #include "VRCocoaWindow.h"
+#include "../devices/VRMouse.h"
+#include "../devices/VRKeyboard.h"
 
 #include <OpenSG/OSGCocoaWindow.h>
 #import <Cocoa/Cocoa.h>
@@ -46,6 +48,9 @@ VRCocoaWindow* vrCocoaWin = 0;
 - (void) otherMouseDown: (NSEvent*) event;
 - (void) otherMouseDragged: (NSEvent*) event;
 - (void) otherMouseUp: (NSEvent*) event;
+- (void) scrollWheel: (NSEvent*) event;
+
+// NSMouseMoved
 
 - (void) keyDown: (NSEvent*) event;
 
@@ -55,13 +60,12 @@ VRCocoaWindow* vrCocoaWin = 0;
 
 @implementation MyOpenGLView
 
-- (BOOL) acceptsFirstResponder
-{
+- (BOOL) acceptsFirstResponder {
     return YES;
 }
 
-- (void) handleMouseEvent: (NSEvent*) event
-{
+- (void) handleMouseEvent: (NSEvent*) event {
+    if (!vrCocoaWin) return;
     Real32 a,b,c,d;
 
     int buttonNumber = [event buttonNumber];
@@ -69,38 +73,48 @@ VRCocoaWindow* vrCocoaWin = 0;
 
     // Traditionally, Apple mice just have one button. It is common practice to simulate
     // the middle and the right button by pressing the option or the control key.
-    if (buttonNumber == 0)
-    {
-        if (modifierFlags & NSAlternateKeyMask)
-            buttonNumber = 2;
-        if (modifierFlags & NSControlKeyMask)
-            buttonNumber = 1;
+    if (buttonNumber == 0) {
+        if (modifierFlags & NSAlternateKeyMask) buttonNumber = 2;
+        if (modifierFlags & NSControlKeyMask) buttonNumber = 1;
     }
 
     NSPoint location = [event locationInWindow];
+    location.y = vrCocoaWin->getSize()[1] - location.y; // invert y
 
-    switch ([event type])
-    {
-    case NSLeftMouseDown:
-    case NSRightMouseDown:
-    case NSOtherMouseDown:
-        //onMouseDown(buttonNumber, location.x, location.y); // TODO
-        break;
+    switch ([event type]) {
+        case NSScrollWheel:
+            {
+                int deltaY = event.scrollingDeltaY;
+                if (deltaY >= 0) buttonNumber = 3;
+                else buttonNumber = 4;
+            }
+            if (auto m = vrCocoaWin->getMouse()) m->mouse(buttonNumber, 0, location.x, location.y, 1);
+            if (auto m = vrCocoaWin->getMouse()) m->mouse(buttonNumber, 1, location.x, location.y, 1);
+            break;
 
-    case NSLeftMouseUp:
-    case NSRightMouseUp:
-    case NSOtherMouseUp:
-        //onMouseUp(buttonNumber); // TODO
-        break;
+        case NSLeftMouseDown:
+        case NSRightMouseDown:
+        case NSOtherMouseDown:
+            cout << "mouse down " << buttonNumber << endl;
+            if (auto m = vrCocoaWin->getMouse()) m->mouse(buttonNumber, 0, location.x, location.y, 1);
+            break;
 
-    case NSLeftMouseDragged:
-    case NSRightMouseDragged:
-    case NSOtherMouseDragged:
-        //onMouseDragged(buttonNumber, location.x, location.y); // TODO
-        break;
+        case NSLeftMouseUp:
+        case NSRightMouseUp:
+        case NSOtherMouseUp:
+            cout << "mouse up " << buttonNumber << endl;
+            if (auto m = vrCocoaWin->getMouse()) m->mouse(buttonNumber, 1, location.x, location.y, 1);
+            break;
 
-    default:
-        break;
+        case NSLeftMouseDragged:
+        case NSRightMouseDragged:
+        case NSOtherMouseDragged:
+            cout << "mouse move " << buttonNumber << endl;
+            if (auto m = vrCocoaWin->getMouse()) m->motion(location.x, location.y, 1);
+            break;
+
+        default:
+            break;
     }
 }
 
@@ -149,6 +163,11 @@ VRCocoaWindow* vrCocoaWin = 0;
     [self handleMouseEvent: event];
 }
 
+- (void) scrollWheel: (NSEvent*) event
+{
+    [self handleMouseEvent: event];
+}
+
 - (void) keyDown: (NSEvent*) event
 {
     if ([[event characters] length] != 1) return;
@@ -183,6 +202,8 @@ VRCocoaWindow* vrCocoaWin = 0;
 - (void) applicationWillFinishLaunching: (NSNotification*) notification;
 
 - (BOOL) applicationShouldTerminateAfterLastWindowClosed: (NSApplication*) application;
+
+- (BOOL) windowShouldClose: (id) sender;
 
 @end
 
@@ -241,6 +262,12 @@ VRCocoaWindow* vrCocoaWin = 0;
     return YES;
 }
 
+- (BOOL) windowShouldClose: (id) sender
+{
+    cout << "windowShouldClose" << endl;
+    return YES;
+}
+
 @end
 
 NSAutoreleasePool *pool;
@@ -277,6 +304,7 @@ void VRCocoaWindow::render(bool fromThread) {
   NSEvent* event = 0;
   do {
       event = [NSApp nextEventMatchingMask:NSAnyEventMask untilDate:[NSDate distantPast] inMode:NSDefaultRunLoopMode dequeue:YES];
+      if (event and event.type != 0) cout << "event " << event.type << endl;
       [NSApp sendEvent: event];
   } while(event != nil);
 

@@ -58,6 +58,7 @@
 
 #ifdef OSG_OGL_ES2
 #elif defined(_WIN32)
+#elif defined(__APPLE__)
 #else
 #include <GL/glx.h>
 #endif
