@@ -22,6 +22,7 @@
 #include "VRImguiConsoles.h"
 #include "VRImguiSetup.h"
 #include "VRImguiScene.h"
+#include "VRImguiProfiler.h"
 #include "imFileDialog/ImGuiFileDialog.h"
 #include "../clipboard/clip.h"
 #include "../VRGuiManager.h"
@@ -556,9 +557,16 @@ void VRImguiEditor::render() {
 }
 
 void VRImguiEditor::renderPopup(OSG::VRGuiSignals::Options options) {
+    float fontScale = 1.0;
+    {
+        ImGuiIO& io = ImGui::GetIO();
+        fontScale = io.FontGlobalScale;
+    }
+
     ImGui::SetCurrentContext(popupContext);
     ImGuiIO& io = ImGui::GetIO();
     if (io.DisplaySize.x < 0 || io.DisplaySize.y < 0) return;
+    io.FontGlobalScale = fontScale;
 
     // Start the Dear ImGui frame
     ImGui_ImplOpenGL3_NewFrame();
@@ -628,8 +636,11 @@ ImSearchDialog::ImSearchDialog() : ImDialog("search")
 }
 
 ImRecorderDialog::ImRecorderDialog() : ImDialog("recorder") {}
-ImProfDialog::ImProfDialog() : ImDialog("profiler") {}
 ImImportDialog::ImImportDialog() : ImDialog("import") {}
+
+ImProfDialog::ImProfDialog() : ImDialog("profiler") {
+    profiler = ImWidgetPtr(new ImProfiler());
+}
 
 ImTemplateDialog::ImTemplateDialog() : ImDialog("template"), filter("templSearch", "Search:", ""), tree("templTree") {
     auto mgr = OSG::VRGuiSignals::get();
@@ -803,12 +814,13 @@ void ImNotifyDialog::begin() {
 
 void ImProfDialog::begin() {
     ImSection::begin();
-    centeredText("Perforamnce");
+    centeredText("Profiler");
+    profiler->render();
 }
 
 void ImImportDialog::begin() {
     ImSection::begin();
-    centeredText("Search");
+    centeredText("Import");
 }
 
 void ImTemplateDialog::begin() {

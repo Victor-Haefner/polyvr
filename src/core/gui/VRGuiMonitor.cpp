@@ -1,7 +1,11 @@
 #include "VRGuiMonitor.h"
 #include "core/utils/toString.h"
 #include "core/utils/VRGlobals.h"
+#include "core/scene/VRScene.h"
 #include "core/scene/rendering/VRRenderManager.h"
+#include "core/objects/object/VRObject.h"
+#include "core/objects/geometry/VRGeometry.h"
+#include "core/gui/VRGuiManager.h"
 
 #include <functional>
 
@@ -9,21 +13,10 @@ OSG_BEGIN_NAMESPACE;
 using namespace std;
 
 VRGuiMonitor::VRGuiMonitor() {
-    /*darea = VRGuiBuilder::get()->get_widget("profiler_area");
-
-    gtk_widget_add_events(darea, (int)GDK_BUTTON_PRESS_MASK);
-    gtk_widget_add_events(darea, (int)GDK_BUTTON_RELEASE_MASK);
-    gtk_widget_add_events(darea, (int)GDK_POINTER_MOTION_MASK);
-
-    function<bool(cairo_t*)> sig1 = bind(&VRGuiMonitor::draw, this, placeholders::_1);
-    function<bool(GdkEventButton*)> sig2 = bind(&VRGuiMonitor::on_button, this, placeholders::_1);
-    function<void(void)> sig3 = bind(&VRGuiMonitor::select_fkt, this);
-
-    connect_signal(darea, sig1, "draw");
-    connect_signal(darea, sig2, "button_press_event");
-    connect_signal(darea, sig2, "button_release_event");
-
-    setTreeviewSelectCallback("treeview15", sig3 );*/
+    auto mgr = OSG::VRGuiSignals::get();
+    mgr->addCallback("profiler_update_system", [&](OSG::VRGuiSignals::Options o){ updateSystemInfo(); return true; }, true );
+    mgr->addCallback("profiler_update_scene", [&](OSG::VRGuiSignals::Options o){ updateSceneInfo(); return true; }, true );
+    mgr->addCallback("profiler_update_performance", [&](OSG::VRGuiSignals::Options o){ updatePerformanceInfo(); return true; }, true );
 
     updateSystemInfo();
 }
@@ -31,17 +24,49 @@ VRGuiMonitor::VRGuiMonitor() {
 void VRGuiMonitor::updateSystemInfo() {
     auto bToS = [](bool b) -> string { return b ? "yes" : "no"; };
 
-    string data = "\n\tOpenGL capabilities:";
-    data += "\n\t\tOpenGL vendor: \t\t\t" + VRRenderManager::getGLVendor();
-    data += "\n\t\tOpenGL version: \t\t\t" + VRRenderManager::getGLVersion();
-    data += "\n\t\tGLSL version: \t\t\t\t" + toString(VRRenderManager::getGLSLVersion());
-    data += "\n\t\thas geometry shader: \t" + bToS(VRRenderManager::hasGeomShader());
-    data += "\n\t\thas tesselation shader: \t" + bToS(VRRenderManager::hasTessShader());
+    map<string, string> data;
+    data["vendor"] = VRRenderManager::getGLVendor();
+    data["version"] = VRRenderManager::getGLVersion();
+    data["glsl"] = toString(VRRenderManager::getGLSLVersion());
+    data["hasGeomShader"] = bToS(VRRenderManager::hasGeomShader());
+    data["hasTessShader"] = bToS(VRRenderManager::hasTessShader());
 
-    // TODO
-    //auto b = VRGuiBuilder::get();
-    //gtk_text_buffer_set_text(GTK_TEXT_BUFFER(b->get_object("systemSumBuf")), data.c_str(), data.length());
+    uiSignal("set_profiler_system", data);
 }
+
+void VRGuiMonitor::updateSceneInfo() {
+    int Nobjs = 0;
+    int Ngeos = 0;
+    int Ntrans = 0;
+
+    auto scene = VRScene::getCurrent();
+    if (scene) {
+        auto objs = scene->getRoot()->getChildren(true);
+        Nobjs = objs.size();
+        for (auto& obj : objs) {
+            cout << " updateSceneInfo " << obj->getName() << ", " << obj->getType() << endl;
+            auto trans = dynamic_pointer_cast<VRTransform>(obj);
+            if (trans) {
+                cout << "  T " << endl;
+                Ntrans += 1;
+                auto geo = dynamic_pointer_cast<VRGeometry>(obj);
+                if (geo) {
+                    cout << "  G " << endl;
+                    Ngeos += 1;
+                }
+            }
+        }
+    }
+
+    map<string, string> data;
+    data["Nobjects"] = toString(Nobjs);
+    data["Ntransforms"] = toString(Ntrans);
+    data["Ngeometries"] = toString(Ngeos);
+
+    uiSignal("set_profiler_scene", data);
+}
+
+void VRGuiMonitor::updatePerformanceInfo() {}
 
 bool VRGuiMonitor::on_button() {
     //int state = 1;

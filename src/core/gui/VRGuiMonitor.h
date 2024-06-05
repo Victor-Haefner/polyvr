@@ -31,12 +31,14 @@ class VRGuiMonitor {
 
         void select_fkt();
 
+        void updateSystemInfo();
+        void updateSceneInfo();
+        void updatePerformanceInfo();
+
     public:
         VRGuiMonitor();
         void selectFrame();
         void redraw();
-
-        void updateSystemInfo();
 };
 
 OSG_END_NAMESPACE

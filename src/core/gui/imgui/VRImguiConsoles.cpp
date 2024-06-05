@@ -168,18 +168,19 @@ ImViewControls::ImViewControls() {
 }
 
 void ImViewControls::render() {
+    ImGuiIO& io = ImGui::GetIO();
     vector<const char*> tmpCameras(cameras.size(), 0);
     for (int i=0; i<cameras.size(); i++) tmpCameras[i] = cameras[i].c_str();
     ImGui::SameLine();
     ImGui::Text("Camera:");
     ImGui::SameLine();
-    ImGui::SetNextItemWidth(150);
+    ImGui::SetNextItemWidth(150*io.FontGlobalScale);
     if (ImGui::Combo("##Cameras", &current_camera, &tmpCameras[0], tmpCameras.size())) {
         uiSignal("view_switch_camera", {{"cam",cameras[current_camera]}});
     }
 
     ImGui::SameLine();
-    ImGui::SetNextItemWidth(150);
+    ImGui::SetNextItemWidth(150*io.FontGlobalScale);
     if (ImGui::BeginCombo("##Navigations", "Navigations", 0)) {
         for (auto& n : navigations) {
             if (ImGui::Checkbox(n.first.c_str(), &n.second)) uiSignal("view_toggle_navigation", {{"nav",n.first}, {"state",toString(n.second)}});
@@ -188,7 +189,7 @@ void ImViewControls::render() {
     }
 
     ImGui::SameLine();
-    ImGui::SetNextItemWidth(150);
+    ImGui::SetNextItemWidth(150*io.FontGlobalScale);
     if (ImGui::BeginCombo("##Layers", "Layers", 0)) {
         if (ImGui::Checkbox("Cameras", &showCams)) uiSignal("view_toggle_layer", {{"layer","Cameras"},{"state",toString(showCams)}});
         if (ImGui::Checkbox("Lights", &showLights)) uiSignal("view_toggle_layer", {{"layer","Lights"},{"state",toString(showLights)}});
@@ -204,8 +205,9 @@ void ImViewControls::render() {
     ImGui::SameLine();
     if (ImGui::Button("Fullscreen")) uiSignal("toolbar_fullscreen");
 
-    ImGui::SameLine(ImGui::GetWindowWidth()-280);
-    ImGui::SetNextItemWidth(100);
+
+    ImGui::SameLine(ImGui::GetWindowWidth()-250*io.FontGlobalScale);
+    ImGui::SetNextItemWidth(100*io.FontGlobalScale);
     if (ImGui::BeginCombo("##UItheme", "Theme", 0)) {
         if (ImGui::RadioButton("Light", &uiTheme, 0)) { ImGui::StyleColorsLight(); uiStoreParameter("uiTheme", "light"); }
         if (ImGui::RadioButton("Dark", &uiTheme, 1)) { ImGui::StyleColorsDark(); uiStoreParameter("uiTheme", "dark"); }
@@ -214,7 +216,6 @@ void ImViewControls::render() {
     }
     ImGui::SameLine();
 
-    ImGuiIO& io = ImGui::GetIO();
     ImGui::Text("Font size:"); ImGui::SameLine();
     //io.FontAllowUserScaling = false;
     if (ImGui::Button("+##FontSizeP")) { io.FontGlobalScale += 0.1; uiStoreParameter("fontScale", toString(io.FontGlobalScale)); } ImGui::SameLine();
