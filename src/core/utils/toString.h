@@ -52,6 +52,19 @@ template<typename T> string toString(const vector<vector<T>>& v) {
     return res+"]";
 }
 
+template<typename K, typename T> string toString(const map<K, vector<T>>& m) {
+    string res = "{";
+    int i = 0;
+    for (auto p : m) {
+        if (i > 0) res += ", ";
+        res += toString<K>(p.first);
+        res += " : ";
+        res += toString<T>(p.second);
+        i++;
+    }
+    return res+"}";
+}
+
 template<typename K, typename T> string toString(const map<K,T>& m) {
     string res = "{";
     int i = 0;
@@ -117,6 +130,20 @@ template<typename T> int toValue(string s, vector<T>& t) {
 }
 
 template<> int toValue(string sIn, vector<string>& s);
+
+template<typename K, typename T> int toValue(string s, map<K, vector<T>>& m) {
+    auto parts1 = splitString(s, ']');
+    for (auto p : parts1) {
+        if (p[0] == '{') p = subString(p, 1);
+        if (p[0] == ',') p = subString(p, 2);
+        if (p[p.size()-1] == '}') continue;
+
+        auto parts2 = splitString(p, ':');
+        string key = subString(parts2[0], 0, -1);
+        toValue(parts2[1], m[key]);
+    }
+    return true;
+}
 
 template<typename T> int toValue(string s, vector<std::shared_ptr<T>>& t) { return true; }
 template<typename T> int toValue(string s, vector<vector<T>>& t) { return true; } // not implemented
