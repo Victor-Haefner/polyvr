@@ -268,8 +268,13 @@ void VRSceneManager::updateSceneThread(VRThreadWeakPtr tw) {
 
 void VRSceneManager::updateScene() {
     if (!current) return;
+    auto profiler = VRProfiler::get();
+    int pID1 = profiler->regStart("update setup");
     if (auto setup = VRSetup::getCurrent()) setup->updateActivatedSignals();
+    profiler->regStop(pID1);
+    int pID2 = profiler->regStart("update scene");
     current->update();
+    profiler->regStop(pID2);
 }
 
 void VRSceneManager::setTargetFPS(double fps) { targetFPS = fps;  }

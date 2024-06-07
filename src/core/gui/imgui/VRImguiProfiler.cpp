@@ -163,6 +163,8 @@ void ImProfiler::renderTabPerformance() {
         int O = 5;
         int W = ImGui::GetContentRegionAvail().x;
 
+        map<double, string> hovered;
+
         for (auto& f : frameCalls) {
             string callName = f.first;
             for (auto& c : f.second) {
@@ -172,7 +174,8 @@ void ImProfiler::renderTabPerformance() {
                 int t1 = double(i1)/T * double(W);
                 int tID = c[2];
 
-                int o = L*0.25*(1.0 - double(i1-i0)/T);
+                double cT = double(i1-i0);
+                int o = L*0.25*(1.0 - cT/T);
 
                 const ImU32 col32 = ImColor(1.0f, 1.0f, 1.0f, 1.0f);
 
@@ -188,8 +191,22 @@ void ImProfiler::renderTabPerformance() {
                 ImRect rect(p1, p2);
                 ImGuiID id = ImGui::GetCurrentWindow()->GetID(string("frame"+callName).c_str());
                 ImGui::ItemAdd(rect, id);
-                if (ImGui::IsItemHovered())	ImGui::SetTooltip(callName.c_str());
+                if (ImGui::IsItemHovered())	hovered[cT*0.001] = callName;
+
             }
+        }
+
+        string tooltip;
+        string pad;
+        for (auto c = hovered.rbegin(); c != hovered.rend(); ++c) {
+            string callName = c->second;
+            string T = toString(c->first);
+            tooltip += pad + callName + " " + T + " ms\n";
+            pad += " ";
+        }
+
+        if (tooltip.size() > 0) {
+            ImGui::SetTooltip(tooltip.c_str());
         }
     ImGui::EndChild();
 }

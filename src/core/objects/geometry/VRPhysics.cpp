@@ -930,7 +930,7 @@ void VRPhysics::createVisualGeo() {
 
 OSG::VRTransformPtr VRPhysics::getVisualShape() {
     if (!visShape) createVisualGeo();
-    updateVisualGeo();
+    //updateVisualGeo();
     return visShape;
 }
 

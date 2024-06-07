@@ -25,6 +25,7 @@
 #include "core/utils/toString.h"
 #include "core/utils/VRProgress.h"
 #include "core/utils/system/VRSystem.h"
+#include "core/utils/VRProfiler.h"
 #include "core/scene/import/VRImport.h"
 
 OSG_BEGIN_NAMESPACE;
@@ -256,10 +257,22 @@ void VRScene::update() {
     //Vec3d min,max;
     //root->getNode()->updateVolume();
     //root->getNode()->getVolume().getBounds( min, max );
+    auto profiler = VRProfiler::get();
+    int pID1 = profiler->regStart("update constraints");
     VRTransform::updateConstraints(); // because of changes in devices/tracking
+    profiler->regStop(pID1);
+
+    int pID2 = profiler->regStart("update thread manager");
     ThreadManagerUpdate();
+    profiler->regStop(pID2);
+
+    int pID3 = profiler->regStart("update callbacks");
     updateCallbacks();
+    profiler->regStop(pID3);
+
+    int pID4 = profiler->regStart("update constraints");
     VRTransform::updateConstraints(); // because of changes in scripts
+    profiler->regStop(pID4);
     //cout << "  VRScene::update done" << endl;
 }
 
