@@ -3,6 +3,7 @@
 
 #include "VRGlutEditor.h"
 #include "core/utils/VROptions.h"
+#include "core/utils/VRProfiler.h"
 
 #include "../devices/VRMouse.h"
 #include "../devices/VRKeyboard.h"
@@ -350,18 +351,25 @@ void VRGlutEditor::handleRelayedKey(int key, int state, bool special) {
 
 void VRGlutEditor::render(bool fromThread) {
     if (fromThread || doShutdown) return;
+    auto profiler = VRProfiler::get();
+
+    int pID1 = profiler->regStart("glut editor reg redisplay");
     glutSetWindow(winGL);
     glutPostRedisplay();
     glutSetWindow(winUI);
     glutPostRedisplay();
+
     if (winPopup >= 0) {
         glutSetWindow(winPopup);
         glutPostRedisplay();
     }
+    profiler->regStop(pID1);
 
+    int pID2 = profiler->regStart("glut editor loop events");
     glutMainLoopEvent();
     glutMainLoopEvent(); // call again after window reshapes
     glutMainLoopEvent(); // call again after window reshapes
+    profiler->regStop(pID2);
 }
 
 void VRGlutEditor::forceGLResize(int w, int h) { // TODO
@@ -427,6 +435,9 @@ void VRGlutEditor::on_resize_window(int w, int h) { // resize top window
 void VRGlutEditor::on_gl_display() {
     //cout << "  Glut::on_gl_display " << endl;
     if (winGL < 0) return;
+    auto profiler = VRProfiler::get();
+
+    int pID1 = profiler->regStart("glut editor gl display");
     glutSetWindow(winGL);
     int w = glutGet(GLUT_WINDOW_WIDTH); // calling glutGet somehow magically fixes the resize glitches..
     int h = glutGet(GLUT_WINDOW_HEIGHT);
@@ -437,14 +448,19 @@ void VRGlutEditor::on_gl_display() {
     }
 #endif
     VRWindow::render();
+    profiler->regStop(pID1);
 }
 
 void VRGlutEditor::on_ui_display() {
     //cout << "  Glut::on_ui_display " << winUI << endl;
     if (winUI < 0) return;
+    auto profiler = VRProfiler::get();
+
+    int pID1 = profiler->regStart("glut editor ui display");
     glutSetWindow(winUI);
     if (signal) signal( "glutRenderUI", {} );
     glutSwapBuffers();
+    profiler->regStop(pID1);
 }
 
 void VRGlutEditor::on_ui_resize(int w, int h) {
@@ -457,9 +473,13 @@ void VRGlutEditor::on_ui_resize(int w, int h) {
 void VRGlutEditor::on_popup_display() {
     //cout << "  Glut::on_popup_display " << winUI << endl;
     if (winPopup < 0) return;
+    auto profiler = VRProfiler::get();
+
+    int pID1 = profiler->regStart("glut editor ui dialog display");
     glutSetWindow(winPopup);
     if (signal) signal( "glutRenderPopup", {{"name",popup}} ); // may close window
     if (winPopup >= 0) glutSwapBuffers();
+    profiler->regStop(pID1);
 }
 
 void VRGlutEditor::on_popup_resize(int w, int h) {
