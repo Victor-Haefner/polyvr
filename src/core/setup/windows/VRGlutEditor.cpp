@@ -1,6 +1,14 @@
 #include <OpenSG/OSGGLUT.h>
 #include <GL/freeglut.h>
 
+#ifdef WIN32
+#include <GL/wglext.h>
+#else
+#include <GL/gl.h>
+#include <GL/glx.h>
+#include <GL/glxext.h>
+#endif
+
 #include "VRGlutEditor.h"
 #include "core/utils/VROptions.h"
 #include "core/utils/VRProfiler.h"
@@ -353,7 +361,6 @@ void VRGlutEditor::render(bool fromThread) {
     if (fromThread || doShutdown) return;
     auto profiler = VRProfiler::get();
 
-    int pID1 = profiler->regStart("glut editor reg redisplay");
     glutSetWindow(winGL);
     glutPostRedisplay();
     glutSetWindow(winUI);
@@ -363,7 +370,6 @@ void VRGlutEditor::render(bool fromThread) {
         glutSetWindow(winPopup);
         glutPostRedisplay();
     }
-    profiler->regStop(pID1);
 
     int pID2 = profiler->regStart("glut editor loop events");
     glutMainLoopEvent();
@@ -376,11 +382,7 @@ void VRGlutEditor::forceGLResize(int w, int h) { // TODO
     ;
 }
 
-#ifdef WIN32
-#include <GL/wglext.h>
-#endif
-
-void setSwapInterval(int swapInterval) { // TODO, Linux
+void setSwapInterval(int swapInterval) {
 #ifdef WIN32
     PFNWGLSWAPINTERVALEXTPROC wglSwapIntervalEXT;
     if (wglSwapIntervalEXT = (PFNWGLSWAPINTERVALEXTPROC)wglGetProcAddress("wglSwapIntervalEXT"))
@@ -389,6 +391,31 @@ void setSwapInterval(int swapInterval) { // TODO, Linux
         wglSwapIntervalEXT(swapInterval); // 0 for off, 1 for on
     };
 #else
+    Display *display = glXGetCurrentDisplay();
+    GLXDrawable drawable = glXGetCurrentDrawable();
+
+    const char *extensions = glXQueryExtensionsString(display, DefaultScreen(display));
+    bool extSupported = strstr(extensions, "GLX_EXT_swap_control") != nullptr;
+    bool sgiSupported = strstr(extensions, "GLX_SGI_swap_control") != nullptr;
+    bool mesaSupported = strstr(extensions, "GLX_MESA_swap_control") != nullptr;
+
+    if (extSupported) {
+        typedef void (*glXSwapIntervalEXTProc)(Display*, GLXDrawable, int);
+        glXSwapIntervalEXTProc glXSwapIntervalEXTptr = (glXSwapIntervalEXTProc)glXGetProcAddress((const GLubyte *)"glXSwapIntervalEXT");
+        if (glXSwapIntervalEXTptr) glXSwapIntervalEXTptr(display, drawable, swapInterval); // 0 for off, 1 for on
+    }
+
+    if (sgiSupported) {
+        typedef int (*glXSwapIntervalSGIProc)(int);
+        glXSwapIntervalSGIProc glXSwapIntervalSGIptr = (glXSwapIntervalSGIProc)glXGetProcAddress((const GLubyte *)"glXSwapIntervalSGI");
+        if (glXSwapIntervalSGIptr) glXSwapIntervalSGIptr(swapInterval); // 0 for off, 1 for on
+    }
+
+    if (mesaSupported) {
+        typedef int (*glXSwapIntervalMESAProc)(unsigned int);
+        glXSwapIntervalMESAProc glXSwapIntervalMESAptr = (glXSwapIntervalMESAProc)glXGetProcAddress((const GLubyte *)"glXSwapIntervalMESA");
+        if (glXSwapIntervalMESAptr) glXSwapIntervalMESAptr(swapInterval); // 0 for off, 1 for on
+    }
 #endif
 }
 
