@@ -361,21 +361,30 @@ void VRGlutEditor::render(bool fromThread) {
     if (fromThread || doShutdown) return;
     auto profiler = VRProfiler::get();
 
-    glutSetWindow(winGL);
-    glutPostRedisplay();
     glutSetWindow(winUI);
     glutPostRedisplay();
+    glutMainLoopEvent();
+    glutMainLoopEvent();
 
     if (winPopup >= 0) {
         glutSetWindow(winPopup);
         glutPostRedisplay();
+        glutMainLoopEvent();
+        glutMainLoopEvent();
     }
 
-    int pID2 = profiler->regStart("glut editor loop events");
+    glutSetWindow(winGL);
+    glutPostRedisplay();
     glutMainLoopEvent();
-    glutMainLoopEvent(); // call again after window reshapes
-    glutMainLoopEvent(); // call again after window reshapes
-    profiler->regStop(pID2);
+    glutMainLoopEvent();
+
+    // swap buffers
+    glutSetWindow(winUI);
+    glutSwapBuffers();
+    if (winPopup >= 0) {
+        glutSetWindow(winPopup);
+        glutSwapBuffers();
+    }
 }
 
 void VRGlutEditor::forceGLResize(int w, int h) { // TODO
@@ -486,7 +495,7 @@ void VRGlutEditor::on_ui_display() {
     int pID1 = profiler->regStart("glut editor ui display");
     glutSetWindow(winUI);
     if (signal) signal( "glutRenderUI", {} );
-    glutSwapBuffers();
+    //glutSwapBuffers();
     profiler->regStop(pID1);
 }
 
@@ -505,7 +514,7 @@ void VRGlutEditor::on_popup_display() {
     int pID1 = profiler->regStart("glut editor ui dialog display");
     glutSetWindow(winPopup);
     if (signal) signal( "glutRenderPopup", {{"name",popup}} ); // may close window
-    if (winPopup >= 0) glutSwapBuffers();
+    //if (winPopup >= 0) glutSwapBuffers();
     profiler->regStop(pID1);
 }
 
