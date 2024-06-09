@@ -9,6 +9,8 @@
 #include <GL/glxext.h>
 #endif
 
+#include <thread>
+
 #include "VRGlutEditor.h"
 #include "core/utils/VROptions.h"
 #include "core/utils/VRProfiler.h"
@@ -361,22 +363,13 @@ void VRGlutEditor::render(bool fromThread) {
     if (fromThread || doShutdown) return;
     auto profiler = VRProfiler::get();
 
-    glutSetWindow(winUI);
-    glutPostRedisplay();
+    glutMainLoopEvent();
     glutMainLoopEvent();
     glutMainLoopEvent();
 
-    if (winPopup >= 0) {
-        glutSetWindow(winPopup);
-        glutPostRedisplay();
-        glutMainLoopEvent();
-        glutMainLoopEvent();
-    }
-
-    glutSetWindow(winGL);
-    glutPostRedisplay();
-    glutMainLoopEvent();
-    glutMainLoopEvent();
+    on_ui_display();
+    on_popup_display();
+    on_gl_display();
 
     // swap buffers
     glutSetWindow(winUI);
@@ -493,6 +486,13 @@ void VRGlutEditor::on_ui_display() {
     auto profiler = VRProfiler::get();
 
     int pID1 = profiler->regStart("glut editor ui display");
+    /*auto doRender = [&]() {
+        glutSetWindow(winUI);
+        if (signal) signal( "glutRenderUI", {} );
+        glutSwapBuffers();
+    };
+    thread t1(doRender);
+    t1.join();*/
     glutSetWindow(winUI);
     if (signal) signal( "glutRenderUI", {} );
     //glutSwapBuffers();
