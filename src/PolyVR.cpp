@@ -243,7 +243,6 @@ void PolyVR::initUI() {
 
     gui_mgr = shared_ptr<VRGuiManager>(VRGuiManager::get());
     gui_mgr->init();
-    gui_mgr->updateSystemInfo();
 
     loader = shared_ptr<VRSceneLoader>(VRSceneLoader::get());
 }
@@ -299,6 +298,8 @@ void PolyVR::update() {
         if (startsWith(dcy, "serial:")) key = "123"; // TODO: access serial connection to retrieve key
         if (app != "") VRSceneManager::get()->loadScene(app, false, key);
     }
+
+    //if (VRGlobals::CURRENT_FRAME == 1000) { shutdown(); }
 }
 
 void PolyVR::run() {

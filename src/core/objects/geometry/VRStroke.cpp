@@ -42,12 +42,13 @@ vector<PathPtr> VRStroke::getPaths() { return paths; }
 
 void VRStroke::addPolygon(VRPolygonPtr p) { polygons.push_back(p); }
 
-void VRStroke::strokeProfile(vector<Vec3d> profile, bool closed, bool lit, bool doColor, CAP l, CAP r) {
+void VRStroke::strokeProfile(vector<Vec3d> profile, bool closed, bool lit, bool doColor, CAP l, CAP r, bool doCaps) {
     mode = 0;
     this->profile = profile;
     this->closed = closed;
     this->lit = lit;
     this->doColor = doColor;
+    this->doCaps = doCaps;
     cap_beg = l;
     cap_end = r;
 
@@ -55,8 +56,9 @@ void VRStroke::strokeProfile(vector<Vec3d> profile, bool closed, bool lit, bool 
     for (auto p : profile) pCenter += p;
     pCenter *= 1.0/profile.size();
 
-    VRGeoData data;
-    bool doCaps = closed && profile.size() > 1;
+    if (!data) data = VRGeoData::create();
+    else data->reset();
+    if (!closed || profile.size() <= 1) doCaps = false;
     Vec3d z = Vec3d(0,0,1);
 
     auto paths = this->paths;
@@ -72,8 +74,8 @@ void VRStroke::strokeProfile(vector<Vec3d> profile, bool closed, bool lit, bool 
     for (unsigned int i=1; i<profile.size(); i++) tcs[i] /= Lp;
 
     auto addVertex = [&](Vec3d p, Vec3d n, Color3f c, Vec2d tc) {
-        if (!doColor) data.pushVert(p, n, tc);
-        else data.pushVert(p, n, c, tc);
+        if (!doColor) data->pushVert(p, n, tc);
+        else data->pushVert(p, n, c, tc);
     };
 
     for (auto path : paths) {
@@ -116,19 +118,19 @@ void VRStroke::strokeProfile(vector<Vec3d> profile, bool closed, bool lit, bool 
 
             if (j==0) continue;
 
-            if (profile.size() == 1) data.pushLine();
+            if (profile.size() == 1) data->pushLine();
             else { // add quad
                 for (unsigned int k=0; k<profile.size()-1; k++) {
-                    int N1 = data.size() - 2*profile.size() + k;
-                    int N2 = data.size() -   profile.size() + k;
-                    data.pushQuad(N1, N2, N2+1, N1+1);
+                    int N1 = data->size() - 2*profile.size() + k;
+                    int N2 = data->size() -   profile.size() + k;
+                    data->pushQuad(N1, N2, N2+1, N1+1);
                 }
 
                 if (closed) {
-                    int N0 = data.size() - 2*profile.size();
-                    int N1 = data.size() - profile.size() - 1;
-                    int N2 = data.size() - 1;
-                    data.pushQuad(N1, N2, N1+1, N0);
+                    int N0 = data->size() - 2*profile.size();
+                    int N1 = data->size() - profile.size() - 1;
+                    int N2 = data->size() - 1;
+                    data->pushQuad(N1, N2, N1+1, N0);
                 }
             }
         }
@@ -165,7 +167,7 @@ void VRStroke::strokeProfile(vector<Vec3d> profile, bool closed, bool lit, bool 
                 pc -= nc*profile[0].length();
             }
 
-            int Ni = data.size();
+            int Ni = data->size();
             addVertex(pc + tmp, -n, c, Vec2d(0,0));
 
             for (unsigned int k=0; k<profile.size(); k++) {
@@ -180,12 +182,12 @@ void VRStroke::strokeProfile(vector<Vec3d> profile, bool closed, bool lit, bool 
             for (unsigned int k=1; k<=profile.size(); k++) {
                 int j = k+1;
                 if (k == profile.size()) j = 1;
-                data.pushTri(Ni, Ni+k, Ni+j);
+                data->pushTri(Ni, Ni+k, Ni+j);
             }
 
              // last cap
             int N = pnts.size()-1;
-            Ni = data.size();
+            Ni = data->size();
             p = pnts[N];
             pc = p;
             n = directions[N];
@@ -213,12 +215,12 @@ void VRStroke::strokeProfile(vector<Vec3d> profile, bool closed, bool lit, bool 
             for (unsigned int k=1; k<=profile.size(); k++) {
                 int j = k+1;
                 if (k == profile.size()) j = 1;
-                data.pushTri(Ni, Ni+j, Ni+k);
+                data->pushTri(Ni, Ni+j, Ni+k);
             }
         }
     }
 
-    data.apply( ptr() );
+    data->apply( ptr() );
     if (auto m = getMaterial()) m->setLit(lit);
 }
 
@@ -245,7 +247,7 @@ void VRStroke::setDoColor(bool b) { doColor = b; }
 void VRStroke::update() {
     switch (mode) {
         case 0:
-            strokeProfile(profile, closed, lit, doColor, cap_beg, cap_end);
+            strokeProfile(profile, closed, lit, doColor, cap_beg, cap_end, doCaps);
             break;
         case 1:
             strokeStrew(strewGeo);

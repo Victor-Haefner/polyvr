@@ -9,6 +9,7 @@
 #include "core/utils/VRGlobals.h"
 #include "core/utils/VRStorage_template.h"
 #include "core/utils/VRUndoInterfaceT.h"
+#include "core/utils/VRProfiler.h"
 #include "core/objects/OSGTransform.h"
 #include "core/objects/OSGObject.h"
 #include "core/objects/object/OSGCore.h"
@@ -1103,12 +1104,15 @@ void VRTransform::updatePhysics() { //should be called from the main thread only
 
 
 void VRTransform::updateFromBullet() {
+    auto profiler = VRProfiler::get();
+    int pID1 = profiler->regStart("transform updateFromBullet");
     //cout << getName() << "  VRTransform::updateFromBullet!" << endl;
     Matrix4d m = physics->getTransformation();
     setWorldMatrix(m);
     auto vs = physics->getVisualShape();
     if (vs && vs->isVisible()) vs->setWorldMatrix(m);
     setNoBltFlag();
+    profiler->regStop(pID1);
 }
 
 void VRTransform::resolvePhysics() {

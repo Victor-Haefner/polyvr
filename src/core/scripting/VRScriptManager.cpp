@@ -35,9 +35,9 @@ void checkGarbageCollection() { // for diagnostic purposes
 
     map<string, PyObject*> gc_members;
     while (PyDict_Next(gc_dict, &pos, &key, &value)) {
-        //cout << " " << key << "  " << item << endl;
         string key_name = PyString_AsString(key);
         gc_members[key_name] = value;
+        //cout << " " << key_name << "  " << value << endl;
     }
 
     auto exec = [&](string cb) {
@@ -50,7 +50,9 @@ void checkGarbageCollection() { // for diagnostic purposes
         return res;
     };
 
+    cout << " GC execute 'collect'" << endl;
     exec("collect");
+    cout << " ..done" << endl;
 
     auto garbage = gc_members["garbage"];
     for (int i=0; i<PyList_Size(garbage); i++) {
@@ -78,7 +80,7 @@ VRScriptManager::~VRScriptManager() {
     if (PyErr_Occurred() != NULL) PyErr_Print();
     int N = Py_REFCNT(pModVR);
     for (int i=1; i<N; i++) Py_DECREF(pModVR); // reduce the count to 1!
-    //checkGarbageCollection();
+    checkGarbageCollection();
     PyErr_Clear();
     cout << " VRScriptManager Py_Finalize\n";
     Py_Finalize(); // finally destroys pModVR

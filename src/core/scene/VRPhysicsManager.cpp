@@ -227,11 +227,16 @@ void VRPhysicsManager::updateSpringsVisual() {
 void VRPhysicsManager::updatePhysObjects() {
     //VRTimer timer;
     //timer.start("D1");
+    auto profiler = VRProfiler::get();
 
+    int pID0 = profiler->regStart("wait phys lock");
     VRLock lock(*mtx);
+    profiler->regStop(pID0);
     //timer.start("D2");
     VRGlobals::PHYSICS_FRAME_RATE.fps = fps;
+    int pID1 = profiler->regStart("resolve physics objects");
     for (auto o : OSGobjs) if (auto so = o.second.lock()) so->resolvePhysics();
+    profiler->regStop(pID1);
 
     updateSpringsVisual();
 

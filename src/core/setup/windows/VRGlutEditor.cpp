@@ -1,8 +1,19 @@
 #include <OpenSG/OSGGLUT.h>
 #include <GL/freeglut.h>
 
+#ifdef WIN32
+#include <GL/wglext.h>
+#else
+#include <GL/gl.h>
+#include <GL/glx.h>
+#include <GL/glxext.h>
+#endif
+
+#include <thread>
+
 #include "VRGlutEditor.h"
 #include "core/utils/VROptions.h"
+#include "core/utils/VRProfiler.h"
 
 #include "../devices/VRMouse.h"
 #include "../devices/VRKeyboard.h"
@@ -350,29 +361,30 @@ void VRGlutEditor::handleRelayedKey(int key, int state, bool special) {
 
 void VRGlutEditor::render(bool fromThread) {
     if (fromThread || doShutdown) return;
-    glutSetWindow(winGL);
-    glutPostRedisplay();
-    glutSetWindow(winUI);
-    glutPostRedisplay();
-    if (winPopup >= 0) {
-        glutSetWindow(winPopup);
-        glutPostRedisplay();
-    }
+    auto profiler = VRProfiler::get();
 
     glutMainLoopEvent();
-    glutMainLoopEvent(); // call again after window reshapes
-    glutMainLoopEvent(); // call again after window reshapes
+    glutMainLoopEvent();
+    glutMainLoopEvent();
+
+    on_ui_display();
+    on_popup_display();
+    on_gl_display();
+
+    // swap buffers
+    glutSetWindow(winUI);
+    glutSwapBuffers();
+    if (winPopup >= 0) {
+        glutSetWindow(winPopup);
+        glutSwapBuffers();
+    }
 }
 
 void VRGlutEditor::forceGLResize(int w, int h) { // TODO
     ;
 }
 
-#ifdef WIN32
-#include <GL/wglext.h>
-#endif
-
-void setSwapInterval(int swapInterval) { // TODO, Linux
+void setSwapInterval(int swapInterval) {
 #ifdef WIN32
     PFNWGLSWAPINTERVALEXTPROC wglSwapIntervalEXT;
     if (wglSwapIntervalEXT = (PFNWGLSWAPINTERVALEXTPROC)wglGetProcAddress("wglSwapIntervalEXT"))
@@ -381,6 +393,31 @@ void setSwapInterval(int swapInterval) { // TODO, Linux
         wglSwapIntervalEXT(swapInterval); // 0 for off, 1 for on
     };
 #else
+    Display *display = glXGetCurrentDisplay();
+    GLXDrawable drawable = glXGetCurrentDrawable();
+
+    const char *extensions = glXQueryExtensionsString(display, DefaultScreen(display));
+    bool extSupported = strstr(extensions, "GLX_EXT_swap_control") != nullptr;
+    bool sgiSupported = strstr(extensions, "GLX_SGI_swap_control") != nullptr;
+    bool mesaSupported = strstr(extensions, "GLX_MESA_swap_control") != nullptr;
+
+    if (extSupported) {
+        typedef void (*glXSwapIntervalEXTProc)(Display*, GLXDrawable, int);
+        glXSwapIntervalEXTProc glXSwapIntervalEXTptr = (glXSwapIntervalEXTProc)glXGetProcAddress((const GLubyte *)"glXSwapIntervalEXT");
+        if (glXSwapIntervalEXTptr) glXSwapIntervalEXTptr(display, drawable, swapInterval); // 0 for off, 1 for on
+    }
+
+    if (sgiSupported) {
+        typedef int (*glXSwapIntervalSGIProc)(int);
+        glXSwapIntervalSGIProc glXSwapIntervalSGIptr = (glXSwapIntervalSGIProc)glXGetProcAddress((const GLubyte *)"glXSwapIntervalSGI");
+        if (glXSwapIntervalSGIptr) glXSwapIntervalSGIptr(swapInterval); // 0 for off, 1 for on
+    }
+
+    if (mesaSupported) {
+        typedef int (*glXSwapIntervalMESAProc)(unsigned int);
+        glXSwapIntervalMESAProc glXSwapIntervalMESAptr = (glXSwapIntervalMESAProc)glXGetProcAddress((const GLubyte *)"glXSwapIntervalMESA");
+        if (glXSwapIntervalMESAptr) glXSwapIntervalMESAptr(swapInterval); // 0 for off, 1 for on
+    }
 #endif
 }
 
@@ -427,6 +464,9 @@ void VRGlutEditor::on_resize_window(int w, int h) { // resize top window
 void VRGlutEditor::on_gl_display() {
     //cout << "  Glut::on_gl_display " << endl;
     if (winGL < 0) return;
+    auto profiler = VRProfiler::get();
+
+    int pID1 = profiler->regStart("glut editor gl display");
     glutSetWindow(winGL);
     int w = glutGet(GLUT_WINDOW_WIDTH); // calling glutGet somehow magically fixes the resize glitches..
     int h = glutGet(GLUT_WINDOW_HEIGHT);
@@ -437,14 +477,26 @@ void VRGlutEditor::on_gl_display() {
     }
 #endif
     VRWindow::render();
+    profiler->regStop(pID1);
 }
 
 void VRGlutEditor::on_ui_display() {
     //cout << "  Glut::on_ui_display " << winUI << endl;
     if (winUI < 0) return;
+    auto profiler = VRProfiler::get();
+
+    int pID1 = profiler->regStart("glut editor ui display");
+    /*auto doRender = [&]() {
+        glutSetWindow(winUI);
+        if (signal) signal( "glutRenderUI", {} );
+        glutSwapBuffers();
+    };
+    thread t1(doRender);
+    t1.join();*/
     glutSetWindow(winUI);
     if (signal) signal( "glutRenderUI", {} );
-    glutSwapBuffers();
+    //glutSwapBuffers();
+    profiler->regStop(pID1);
 }
 
 void VRGlutEditor::on_ui_resize(int w, int h) {
@@ -457,9 +509,13 @@ void VRGlutEditor::on_ui_resize(int w, int h) {
 void VRGlutEditor::on_popup_display() {
     //cout << "  Glut::on_popup_display " << winUI << endl;
     if (winPopup < 0) return;
+    auto profiler = VRProfiler::get();
+
+    int pID1 = profiler->regStart("glut editor ui dialog display");
     glutSetWindow(winPopup);
     if (signal) signal( "glutRenderPopup", {{"name",popup}} ); // may close window
-    if (winPopup >= 0) glutSwapBuffers();
+    //if (winPopup >= 0) glutSwapBuffers();
+    profiler->regStop(pID1);
 }
 
 void VRGlutEditor::on_popup_resize(int w, int h) {

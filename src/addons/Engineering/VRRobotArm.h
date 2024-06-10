@@ -108,6 +108,7 @@ class VRRobotArm {
         vector<float> getAngles();
         vector<float> getTargetAngles();
         PosePtr getPose();
+        float getSpeed();
 
         void move();
         void pause();

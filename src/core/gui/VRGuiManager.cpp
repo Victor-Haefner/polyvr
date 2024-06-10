@@ -156,11 +156,11 @@ void VRGuiManager::init() {
 
     g_di = new VRGuiSetup();
     g_net = new VRGuiNetwork();
+    g_mon = new VRGuiMonitor();
 
     return;
 
     //gtk_rc_parse("gui/gtkrc");
-    g_mon = new VRGuiMonitor();
     g_nav = new VRGuiNav();
     g_sem = new VRGuiSemantics();
 
@@ -229,10 +229,6 @@ void VRGuiManager::selectObject(VRObjectPtr obj) {
 
 void VRGuiManager::openHelp(string search) {
     if (g_sc) g_sc->openHelp(search);
-}
-
-void VRGuiManager::updateSystemInfo() {
-    if (g_mon) g_mon->updateSystemInfo();
 }
 
 VRMutex& VRGuiManager::guiMutex() { return *mtx; }
