@@ -551,7 +551,7 @@ AVFrame* alloc_audio_frame(enum AVSampleFormat sample_fmt, uint64_t channel_layo
         int ret = av_frame_get_buffer(frame, 0);
         if (ret < 0) { fprintf(stderr, "Error allocating an audio buffer\n"); return 0; }
     }
-
+  
     return frame;
 }
 
@@ -874,7 +874,9 @@ bool VRSound::addOutStreamClient(VRNetworkClientPtr client, string method) {
 }
 
 bool VRSound::setupOutStream(string url, int port, string method) { // TODO: make a udpClients map instead of vector
+
     for (auto c : udpClients) if (c->isConnected(url, port)) return true;
+
     auto cli = VRUDPClient::create("sound-out");
     cli->connect(url, port);
     return addOutStreamClient(cli, method);
