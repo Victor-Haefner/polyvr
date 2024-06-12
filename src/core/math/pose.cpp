@@ -64,8 +64,23 @@ Vec3d Pose::transformInv(const Vec3d& p) {
     return Vec3d(P);
 }
 
-PosePtr Pose::multLeft(PosePtr p) { auto m1 = asMatrix(); auto m2 = p->asMatrix(); m1.multLeft(m2); return Pose::create(m1); }
-PosePtr Pose::multRight(PosePtr p) { auto m1 = asMatrix(); auto m2 = p->asMatrix(); m1.mult(m2); return Pose::create(m1); }
+PosePtr Pose::multLeft(PosePtr p) {
+    auto m1 = asMatrix();
+    if (p) {
+        auto m2 = p->asMatrix();
+        m1.multLeft(m2);
+    }
+    return Pose::create(m1);
+}
+
+PosePtr Pose::multRight(PosePtr p) {
+    auto m1 = asMatrix();
+    if (p) {
+        auto m2 = p->asMatrix();
+        m1.mult(m2);
+    }
+    return Pose::create(m1);
+}
 
 void Pose::setPos(const Vec3d& p) { data[0] = p; }
 void Pose::setDir(const Vec3d& d) { data[1] = d; }
