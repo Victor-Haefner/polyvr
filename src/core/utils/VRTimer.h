@@ -5,6 +5,8 @@
 #include <string>
 #include "core/utils/VRUtilsFwd.h"
 
+namespace OSG {
+
 class VRTimer {
     private:
         struct timer {
@@ -31,5 +33,7 @@ class VRTimer {
         static void emitBeacon(std::string);
         static double getBeacon(std::string);
 };
+
+}
 
 #endif // VRTIMER_H_INCLUDED

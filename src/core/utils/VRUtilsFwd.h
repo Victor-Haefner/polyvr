@@ -11,9 +11,8 @@
 ptrTemplateFwd(VRCallbackWrapper, VRCallbackStrWrapper, std::string);
 ptrTemplateFwd(VRCallbackWrapper, VRCallbackPyWrapper, PyObject*);
 
-ptrFwd(VRTimer);
-
 namespace OSG {
+    ptrFwd(VRTimer);
     ptrFwd(VRVisualLayer);
     ptrFwd(VRProgress);
     ptrFwd(VREncryption);

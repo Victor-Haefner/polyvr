@@ -43,6 +43,7 @@ class VRSceneGlobals: public VRPyBase {
 		static PyObject* getSky(VRSceneGlobals* self);
 		static PyObject* getSoundManager(VRSceneGlobals* self);
 		static PyObject* getFrame(VRSceneGlobals* self);
+		static PyObject* getFPS(VRSceneGlobals* self);
 		static PyObject* getScript(VRSceneGlobals* self, PyObject *args);
 		static PyObject* importScene(VRSceneGlobals* self, PyObject *args);
 		static PyObject* getActiveCamera(VRSceneGlobals* self);
