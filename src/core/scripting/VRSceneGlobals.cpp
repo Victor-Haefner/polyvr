@@ -83,6 +83,7 @@ PyMethodDef VRSceneGlobals::methods[] = {
 	{"getSky", (PyCFunction)VRSceneGlobals::getSky, METH_NOARGS, "Get sky module" },
 	{"getSoundManager", (PyCFunction)VRSceneGlobals::getSoundManager, METH_NOARGS, "Get sound manager module" },
 	{"getFrame", (PyCFunction)VRSceneGlobals::getFrame, METH_NOARGS, "Get current frame number" },
+	{"getFPS", (PyCFunction)VRSceneGlobals::getFPS, METH_NOARGS, "Get current fps" },
 	{"getScript", (PyCFunction)VRSceneGlobals::getScript, METH_VARARGS, "Get python script by name" },
 	{"importScene", (PyCFunction)VRSceneGlobals::importScene, METH_VARARGS, "Import scene" },
 	{"getActiveCamera", (PyCFunction)VRSceneGlobals::getActiveCamera, METH_NOARGS, "Get active camera" },
@@ -122,6 +123,10 @@ PyObject* VRSceneGlobals::getScript(VRSceneGlobals* self, PyObject* args) {
 
 PyObject* VRSceneGlobals::getFrame(VRSceneGlobals* self) {
     return PyInt_FromLong(VRGlobals::CURRENT_FRAME);
+}
+
+PyObject* VRSceneGlobals::getFPS(VRSceneGlobals* self) {
+    return PyFloat_FromDouble(VRGlobals::FRAME_RATE.fps);
 }
 
 PyObject* VRSceneGlobals::getActiveCamera(VRSceneGlobals* self) {

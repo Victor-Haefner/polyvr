@@ -15,6 +15,7 @@
 #include "core/math/OSGMathFwd.h"
 #include "core/utils/xml.h"
 #include "core/utils/VRSpreadsheet.h"
+#include "core/utils/VRTimer.h"
 #include <OpenSG/OSGMatrix.h>
 #include <OpenSG/OSGLine.h>
 
@@ -112,6 +113,10 @@ struct VRPyLine : VRPyBaseT<OSG::Line> {
     static PyObject* intersect(VRPyLine* self, PyObject *args);
     static PyObject* pos(VRPyLine* self);
     static PyObject* dir(VRPyLine* self);
+};
+
+struct VRPyTimer : VRPyBaseT<OSG::VRTimer> {
+    static PyMethodDef methods[];
 };
 
 struct VRPyExpression : VRPyBaseT<OSG::Expression> {

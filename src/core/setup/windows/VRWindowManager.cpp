@@ -28,11 +28,11 @@
 #ifndef WASM
 #include "VRMultiWindow.h"
 #include "VRHeadMountedDisplay.h"
+#include "core/utils/VRProfiler.h"
 #ifndef WITHOUT_COCOA
 #include "VRCocoaWindow.h"
 #endif
 #endif
-
 
 #ifndef WITHOUT_IMGUI
 #include "core/gui/VRGuiManager.h"
@@ -144,9 +144,12 @@ void VRWindowManager::updateWindows() {
     auto scene = VRScene::getCurrent();
     if (scene) scene->allowScriptThreads();
 
+    auto profiler = VRProfiler::get();
+
     //auto clist = Thread::getCurrentChangeList();
     //if (clist->getNumChanged() == 0 && clist->getNumCreated() == 0) return;
 
+    int pID1 = profiler->regStart("update stats");
     ract->setResetStatistics(false);
     StatCollector* sc = ract->getStatCollector();
     if (sc) {
@@ -171,6 +174,7 @@ void VRWindowManager::updateWindows() {
         sc->getElem(VRGlobals::SETUP_FRAME_RATE.statFPS)->add(VRGlobals::SETUP_FRAME_RATE.fps);
         sc->getElem(VRGlobals::SCRIPTS_FRAME_RATE.statFPS)->add(VRGlobals::SCRIPTS_FRAME_RATE.fps);
     }
+    profiler->regStop(pID1);
 
     //TODO: use barrier->getnumwaiting to make a state machine, allways ensure all are waiting!!
 
@@ -224,12 +228,18 @@ void VRWindowManager::updateWindows() {
         // let the windows merge the change lists, sync and clear
         if (!wait()) return false;
 #ifndef WITHOUT_GLUT
+        int pID2 = profiler->regStart("process glut events");
         glutMainLoopEvent();
+        profiler->regStop(pID2);
 #endif
         for (auto w : getWindows()) {
 #ifndef WITHOUT_GLUT
+            int pID3 = profiler->regStart("render glut editor");
             if (auto win = dynamic_pointer_cast<VRGlutEditor>(w.second)) win->render();
+            profiler->regStop(pID3);
+            int pID4 = profiler->regStart("render glut");
             if (auto win = dynamic_pointer_cast<VRGlutWindow>(w.second)) win->render();
+            profiler->regStop(pID4);
 #endif
 #ifndef WITHOUT_COCOA
             if (auto win = dynamic_pointer_cast<VRCocoaWindow>(w.second)) win->render();

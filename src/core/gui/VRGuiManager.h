@@ -56,7 +56,6 @@ class VRGuiManager {
         void wakeWindow();
 
         void openHelp(string search = "");
-        void updateSystemInfo();
 
         void selectObject(VRObjectPtr obj);
 

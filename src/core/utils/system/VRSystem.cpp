@@ -316,7 +316,7 @@ void doFrameSleep(double tFrame, double fps) {
     // efficient sleep
     double precisionBuffer = 0;//1.5;
     if (sT-precisionBuffer > 0) {
-        VRTimer timer;
+        OSG::VRTimer timer;
         timer.start();
         duration<double> T((sT-precisionBuffer)*1000);
         std::this_thread::sleep_for(T);

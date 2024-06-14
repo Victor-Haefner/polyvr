@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Scene base_name="Materials" name_space="Scene" name_suffix="1" persistency="666">
+<Scene base_name="Materials" name_space="Scene" name_suffix="2" persistency="666">
   <Objects>
-    <Object base_name="Root" name_space="__global__" name_suffix="1" persistency="666" pickable="0" type="Object" visible="4294967295">
+    <Object base_name="Root" name_space="__global__" name_suffix="2" persistency="666" pickable="0" type="Object" visible="4294967295">
       <Object ambient="1 1 1 1" base_name="light" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="directional" name_space="__global__" name_suffix="0" on="1" persistency="666" photometricMap="" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" shadowVolume="1.79769e+308 1.79769e+308 1.79769e+308 -1.79769e+308 -1.79769e+308 -1.79769e+308 1" specular="1 1 1 1" type="Light" visible="4294967295">
         <Object at="-1 -1 -1" at_dir="0" base_name="Headlight_beacon" from="0 0 0" light="light" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="LightBeacon" up="0 1 0" visible="4294967295">
           <attachments>
@@ -9,7 +9,7 @@
           </attachments>
           <constraint persistency="666"/>
         </Object>
-        <Object accept_root="1" aspect="1" at="0 0 0" at_dir="0" base_name="Default" camType="perspective" far="512" fov="1.0472" from="-0.599111 0.548999 3.18542" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="4294967295">
+        <Object accept_root="1" aspect="1" at="1.13202 0.0386471 0.365667" at_dir="0" base_name="Default" camType="perspective" far="512" fov="1.0472" from="1.72802 0.611705 1.7391" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="4294967295">
           <attachments>
             <Node base_name="transform" name_space="VRAttachment" name_suffix="0" persistency="666" value=""/>
           </attachments>
@@ -272,6 +272,114 @@ void main(void) {
 }
 </core>
     </Script>
+    <Script base_name="envmapFP" group="envmap" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="GLSL">
+      <core>
+uniform sampler2D diffuseTexture;
+uniform sampler2D normalTexture;
+uniform sampler2D envTexture;
+	
+varying vec3 lightVec;
+varying vec3 halfVec;
+
+varying vec3 fragPos;
+varying vec3 fragNorm;
+
+vec3 normal;
+vec4 color;
+
+void applyLightning() {
+	float NdotL = max(dot(lightVec, normal), 0.0);
+	float NdotHV = max (dot (halfVec, normal), 0.0);
+	vec4 ambient  = gl_FrontMaterial.ambient * gl_LightSource[0].ambient * color;
+	vec4 diffuse  = gl_FrontMaterial.diffuse * gl_LightSource[0].diffuse * NdotL * color;
+	vec4 specular = gl_FrontMaterial.specular * gl_LightSource[0].specular * pow( NdotHV, gl_FrontMaterial.shininess );
+	gl_FragColor = ambient + diffuse + specular;	
+}
+
+void main() {
+	color = texture2D (diffuseTexture, gl_TexCoord[0].st);
+	
+	// lookup normal from normal map, move from [0,1] to  [-1, 1] range, normalize
+	normal = 2.0 * texture2D (normalTexture, gl_TexCoord[0].st*3.0).rgb - 1.0;
+	normal = normalize (normal);
+	
+	
+	// Calculate the reflection vector
+    //vec3 R = normalize(reflect(fragPos, normal));
+    vec3 R = normalize(reflect(fragPos, vec3(0,0,1)));
+
+    // Convert the reflection vector to spherical coordinates
+    float theta = acos(R.y);
+    float phi = atan(R.z, R.x);
+    
+    // Map spherical coordinates to texture coordinates
+    float u = phi / (2.0 * 3.14159265) + 0.5;
+    float v = theta / 3.14159265;
+
+    // Sample the environment map
+    vec4 envColor = texture2D(envTexture, vec2(u, v));
+
+    // Output the color
+    color = color*0.5 +  envColor*0.5;
+	
+	
+	applyLightning();
+	
+	//gl_FragColor = vec4(u,v,1,1);
+	//gl_FragColor = vec4(I.rgb,1);
+}	
+	
+</core>
+    </Script>
+    <Script base_name="envmapVP" group="envmap" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="GLSL">
+      <core>
+attribute vec4 osg_Vertex;
+attribute vec3 osg_Normal;
+attribute vec4 osg_MultiTexCoord0;
+
+varying vec3 lightVec;
+varying vec3 halfVec;
+
+varying vec3 fragPos;
+varying vec3 fragNorm;
+	
+void main() {
+	gl_TexCoord[0] = osg_MultiTexCoord0;
+	
+	// Building the matrix Eye Space -&gt; Tangent Space
+	vec3 n = normalize (gl_NormalMatrix * osg_Normal);
+	fragNorm = n;
+	vec3 t = vec3(n[0],-n[2],n[1]);
+	vec3 b = cross (n, t);
+	t = cross(b,n);
+	
+	vec3 vertexPosition = vec3(gl_ModelViewMatrix *  osg_Vertex);
+	vec3 lightDir = normalize(gl_LightSource[0].position.xyz); // directional light source
+	//vec3 lightDir = normalize(gl_LightSource[0].position.xyz - vertexPosition); // point light source
+		
+	// transform light and half angle vectors by tangent basis
+	vec3 v;
+	v.x = dot(lightDir, t);
+	v.y = dot(lightDir, b);
+	v.z = dot(lightDir, n);
+	lightVec = normalize(v);
+	
+	vec3 halfVector = normalize(gl_LightSource[0].halfVector.xyz);
+	v.x = dot (halfVector, t);
+	v.y = dot (halfVector, b);
+	v.z = dot (halfVector, n);
+	halfVec = v;
+	
+	// transform reflection vector
+	v.x = dot(vertexPosition, t);
+	v.y = dot(vertexPosition, b);
+	v.z = dot(vertexPosition, n);
+	fragPos = normalize(v);
+	
+	gl_Position = gl_ModelViewProjectionMatrix * osg_Vertex;
+}
+</core>
+    </Script>
     <Script base_name="init" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
       <core>
 	import VR
@@ -359,11 +467,20 @@ void main(void) {
 	
 	# metalic effect
 	noise2 = simpleNoise([1,1,1], [0.5,0.5,0.5], 512)
+	#mat5.setTexture(noise2)
+	#mat5.addPass()
+	#mat5.setTransparency(0.5)
+	#mat5.setTextureType('SphereEnv')
+	mat5.setVertexProgram('envmapVP')
+	mat5.setFragmentProgram('envmapFP')
+	bmt = VR.Image()
+	bmt.read('bumpmap.jpg')
 	mat5.setTexture(noise2)
-	mat5.addPass()
-	mat5.setTexture('sphereEnv.png')
-	mat5.setTransparency(0.5)
-	mat5.setTextureType('SphereEnv')
+	mat5.setTexture(bmt,1)
+	mat5.setTexture('sphereEnv.png',2)
+	mat5.setShaderParameter('diffuseTexture', 0)
+	mat5.setShaderParameter('normalTexture', 1)
+	mat5.setShaderParameter('envTexture', 2)
 	
 	# bumpmap
 	bmt = VR.Image()
@@ -403,7 +520,7 @@ void main(void) {
 		
 			
 </core>
-      <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" base_name="trigger" name_space="__global__" name_suffix="1" persistency="666"/>
+      <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" base_name="trigger" name_space="__global__" name_suffix="2" persistency="666"/>
     </Script>
   </Scripts>
   <Sockets persistency="666"/>

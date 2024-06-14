@@ -7,6 +7,7 @@
 #endif
 
 using namespace std;
+using namespace OSG;
 
 VRTimer::VRTimer() { start(); }
 VRTimerPtr VRTimer::create() { return VRTimerPtr(new VRTimer()); }

@@ -137,6 +137,9 @@ class ImSearchDialog : public ImDialog {
 };
 
 class ImProfDialog : public ImDialog {
+    private:
+        ImWidgetPtr profiler;
+
     public:
         ImProfDialog();
         void begin() override;

@@ -592,6 +592,7 @@ PyObject* VRPyLine::intersect(VRPyLine* self, PyObject *args) {
 
 // expression bindings
 
+simpleVRPyType(Timer, New_ptr);
 simplePyType(Expression, New_named_ptr);
 simplePyType(MathExpression, New_named_ptr);
 simplePyType(TSDF, VRPyTSDF::New );
@@ -755,6 +756,13 @@ PyMethodDef VRPyDatarow::methods[] = {
     {"getPCTs", PyWrap2( Datarow, getPCTs, "Get PCTs", DatarowPtr ) },
     {"getLogRets", PyWrap2( Datarow, getLogRets, "Get log returns", DatarowPtr ) },
     {"computeCorrelation", PyWrapOpt2( Datarow, computeCorrelation, "Compute correlation between two series", "0|0", double, DatarowPtr, int, int ) },
+    {NULL}  /* Sentinel */
+};
+
+PyMethodDef VRPyTimer::methods[] = {
+    {"start", PyWrap( Timer, start, "start timer", void ) },
+    {"stop", PyWrap( Timer, stop, "stop timer", double ) },
+    {"reset", PyWrap( Timer, reset, "reset timer", void ) },
     {NULL}  /* Sentinel */
 };
 
