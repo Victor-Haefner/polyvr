@@ -1,3 +1,4 @@
+
 #include "CEF.h"
 
 #ifdef PLOG
@@ -17,10 +18,11 @@ namespace std {
 }
 #endif
 
-#include "include/cef_app.h"
-#include "include/cef_client.h"
-#include "include/cef_render_handler.h"
-#include "include/cef_load_handler.h"
+#include <include/cef_app.h>
+#include <include/cef_client.h>
+#include <include/cef_render_handler.h>
+#include <include/cef_load_handler.h>
+#include <include/wrapper/cef_library_loader.h>
 
 #include <OpenSG/OSGGeoProperties.h>
 #include <OpenSG/OSGTextureEnvChunk.h>
@@ -51,6 +53,31 @@ vector< weak_ptr<CEF> > instances;
 bool cef_gl_init = false;
 
 
+class CEF_app : public CefApp, public CefBrowserProcessHandler {
+    public:
+        CEF_app() {}
+
+        void OnBeforeCommandLineProcessing(
+            const CefString& process_type,
+            CefRefPtr<CefCommandLine> command_line) override {
+          // Command-line flags can be modified in this callback.
+          // |process_type| is empty for the browser process.
+          if (process_type.empty()) {
+        #if defined(OS_MACOSX)
+            // Disable the macOS keychain prompt. Cookies will not be encrypted.
+            command_line->AppendSwitch("use-mock-keychain");
+                command_line->AppendSwitch("disable-gpu");
+                command_line->AppendSwitch("disable-gpu-compositing");
+        #endif
+          }
+        }
+
+
+        CefRefPtr<CefBrowserProcessHandler> GetBrowserProcessHandler() override { return this; }
+ private:
+  IMPLEMENT_REFCOUNTING(CEF_app);
+  DISALLOW_COPY_AND_ASSIGN(CEF_app);
+};
 
 class CEF_handler : public CefRenderHandler, public CefLoadHandler, public CefContextMenuHandler, public CefDialogHandler, public CefDisplayHandler {
     private:
@@ -68,10 +95,11 @@ class CEF_handler : public CefRenderHandler, public CefLoadHandler, public CefCo
         ~CEF_handler();
 
 #if defined(_WIN32) || defined(__APPLE__)
-        void GetViewRect(CefRefPtr<CefBrowser> browser, CefRect& rect);
+        void GetViewRect(CefRefPtr<CefBrowser> browser, CefRect& rect) override;
 #else
         bool GetViewRect(CefRefPtr<CefBrowser> browser, CefRect& rect) override;
 #endif
+
 
         void OnBeforeContextMenu(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, CefRefPtr<CefContextMenuParams> params, CefRefPtr<CefMenuModel> model);
         bool OnContextMenuCommand(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, CefRefPtr<CefContextMenuParams> params, int command_id, EventFlags event_flags);
@@ -295,6 +323,42 @@ CEFPtr CEF::create() {
     return cef;
 }
 
+
+#ifdef __APPLE__
+#include <dlfcn.h>
+#include <iostream>
+
+typedef void (*SetBaseBundleIDType)(const char* new_base_bundle_id);
+
+void CallSetBaseBundleID(const char* new_base_bundle_id) {
+    // Assuming the dynamic library is already loaded
+    void* handle = dlopen(NULL, RTLD_NOW);
+    if (!handle) {
+        std::cerr << "Cannot open library: " << dlerror() << '\n';
+        return;
+    }
+
+    // Obtain the function pointer using dlsym
+    SetBaseBundleIDType SetBaseBundleID = (SetBaseBundleIDType)dlsym(handle, "SetBaseBundleID");
+    const char* dlsym_error = dlerror();
+    if (dlsym_error) {
+        std::cerr << "Cannot load symbol 'SetBaseBundleID': " << dlsym_error << '\n';
+        return;
+    }
+
+    // Use the function
+    SetBaseBundleID(new_base_bundle_id);
+}
+
+namespace base::apple {
+  extern void SetBaseBundleID(const char* new_base_bundle_id) __attribute__((weak_import));
+}
+
+void overrideBundleID() {
+  base::apple::SetBaseBundleID("WTF");
+}
+#endif
+
 void CEF::global_initiate() {
     static bool global_init = false;
     if (global_init) return;
@@ -306,6 +370,8 @@ void CEF::global_initiate() {
 
 #ifdef _WIN32
     string path = "/ressources/cefWin";
+#elif __APPLE__
+    string path = "/ressources/cefMac";
 #elif defined(CEF18)
     string path = "/ressources/cef18";
 #else
@@ -320,41 +386,77 @@ void CEF::global_initiate() {
 
 #ifdef _WIN32
     string bsp = VRSceneManager::get()->getOriginalWorkdir() + path + "/CefSubProcessWin.exe";
+#elif __APPLE__
+    string bsp = VRSceneManager::get()->getOriginalWorkdir() + path + "/CefSubProcessMac";
 #else
     string bsp = VRSceneManager::get()->getOriginalWorkdir() + path + "/CefSubProcess";
 #endif
 
     checkPath("subprocess", bsp);
 
-    string ldp = VRSceneManager::get()->getOriginalWorkdir() + path + "/locales";
+#ifndef __APPLE__
+    string ldp = VRSceneManager::get()->getOriginalWorkdir() + path + "/locales"; // ignored on mac :(
+    checkPath("locales", ldp);
+#endif
     string rdp = VRSceneManager::get()->getOriginalWorkdir() + path;
     string lfp = VRSceneManager::get()->getOriginalWorkdir() + path + "/wblog.log";
 
-    checkPath("locales", ldp);
     checkPath("ressources", rdp);
     checkPath("log", lfp);
 
+    // load framework on mac
+#ifdef __APPLE__
+    cout << "load CEF framework on mac" << endl;
+    CefScopedLibraryLoader library_loader;
+    if (!library_loader.LoadInMain()) {
+        cout << " !!! loading CEF framework failed!" << endl;
+    }
+    settings.persist_session_cookies = false;
+    settings.persist_user_preferences = false;
+    string cdp = VRSceneManager::get()->getOriginalWorkdir() + path + "/cache";
+    CefString(&settings.root_cache_path).FromASCII(cdp.c_str());
+    //CefString(&settings.cache_path).FromASCII("");
+    CefString(&settings.framework_dir_path).FromASCII("/usr/local/lib/cef/Chromium Embedded Framework.framework"); // /usr/local/lib/cef/Chromium Embedded Framework.framework
+#endif
+
     CefString(&settings.browser_subprocess_path).FromASCII(bsp.c_str());
-    CefString(&settings.locales_dir_path).FromASCII(ldp.c_str());
+#ifndef __APPLE__
+    CefString(&settings.locales_dir_path).FromASCII(ldp.c_str()); // ignored on mac :(
+#endif
     CefString(&settings.resources_dir_path).FromASCII(rdp.c_str());
     CefString(&settings.log_file).FromASCII(lfp.c_str());
     settings.no_sandbox = true;
 #if defined(_WIN32) || defined(__APPLE__)
     settings.windowless_rendering_enabled = true;
-    //settings.log_severity = LOGSEVERITY_VERBOSE;
 #endif
+    settings.log_severity = LOGSEVERITY_VERBOSE;
 
-#if defined(_WIN32) || defined(__APPLE__)
+    CefRefPtr<CefApp> app;
+
+#if defined(_WIN32)
     CefMainArgs args;
 	//args.set(const struct_type* src, struct_type* target, bool copy); // TODO: set parameters as defined below
+#elif defined(__APPLE__)
+    //CefMainArgs args;
+    vector<const char *> cmdArgs;
+    cmdArgs.push_back("--use-mock-keychain=1");
+    cmdArgs.push_back("--disable-features=NetworkService=1");
+    //cmdArgs.push_back("--disable-gpu=1");
+    //cmdArgs.push_back("--disable-gpu-compositing=1");
+    CefMainArgs args(cmdArgs.size(), (char**)cmdArgs.data());
+
+    app = new CEF_app();
 #else
     vector<const char *> cmdArgs;
     cmdArgs.push_back("--enable-media-stream=1");
     cmdArgs.push_back("--use-fake-ui-for-media-stream=1");
     CefMainArgs args(cmdArgs.size(), (char**)cmdArgs.data());
 #endif
-    CefInitialize(args, settings, nullptr, 0);
+    CefInitialize(args, settings, app, 0);
+
+    CallSetBaseBundleID("WTF");
 }
+
 
 void CEF::initiate() {
     init = true;
