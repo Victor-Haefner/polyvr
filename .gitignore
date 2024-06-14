@@ -3,6 +3,7 @@ examples/*.png
 examples/core
 examples/.config
 examples/.local*
+examples/.treeLods
 *~
 *.depend
 *.layout

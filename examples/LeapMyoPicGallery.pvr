@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Scene base_name="LeapMyoPicGallery" name_space="Scene" name_suffix="0" persistency="666">
+<Scene base_name="LeapMyoPicGallery" name_space="Scene" name_suffix="2" persistency="666">
   <Objects>
-    <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" visible="1">
-      <Object ambient="0.3 0.3 0.3 1" base_name="light" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" name_space="__global__" name_suffix="0" on="1" persistency="666" photometricMap="" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" shadowVolume="1e+06 1e+06 1e+06 -1e+06 -1e+06 -1e+06 1" specular="0.1 0.1 0.1 1" type="Light" visible="1">
-        <Object accept_root="1" aspect="1" at="-0.32989 0.0378165 -0.886817" at_dir="0" base_name="Default" far="512" fov="1.0472" from="2.0095 0.0593848 3.97031" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
+    <Object base_name="Root" name_space="__global__" name_suffix="2" persistency="666" pickable="0" type="Object" visible="1">
+      <Object ambient="0.3 0.3 0.3 1" base_name="light" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" name_space="__global__" name_suffix="0" on="1" persistency="666" photometricMap="" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" shadowVolume="1.79769e+308 1.79769e+308 1.79769e+308 -1.79769e+308 -1.79769e+308 -1.79769e+308 1" specular="0.1 0.1 0.1 1" type="Light" visible="1">
+        <Object accept_root="1" aspect="1" at="-0.32989 0.0378165 -0.886817" at_dir="0" base_name="Default" camType="perspective" far="512" fov="1.0472" from="2.0095 0.0593848 3.97031" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
           <attachments>
             <Node base_name="transform" name_space="VRAttachment" name_suffix="0" persistency="666" value=""/>
           </attachments>
@@ -351,7 +351,7 @@
 		VR.myoThreadControl = False
 		VR.joinThread(VR.myoThread)
 </core>
-      <trig type="on_scene_close" dev="" state="Pressed" param="" key="0" base_name="trigger" name_space="__global__" name_suffix="2" persistency="666"/>
+      <trig type="on_scene_close" dev="" state="Pressed" param="" key="0" base_name="trigger" name_space="__global__" name_suffix="3" persistency="666"/>
     </Script>
     <Script base_name="init" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
       <core>
@@ -365,7 +365,7 @@
 	VR.updateGallery(paths)
 	VR.moveGallery(2,0)
 </core>
-      <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" base_name="trigger" name_space="__global__" name_suffix="1" persistency="666"/>
+      <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" base_name="trigger" name_space="__global__" name_suffix="6" persistency="666"/>
     </Script>
     <Script base_name="keyboardNav" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
       <core>
@@ -388,24 +388,25 @@
 	a = VR.Animation('gallery')
 	a.setDuration(2)
 	
-	if k == 65361:
+	
+	if k == 356:
 		VR.A0 = VR.GalAngle
 		a.setCallback(rotateL)
 		a.start()
-	if k == 65362:
+	if k == 357:
 		VR.R0 = VR.GalRadius
 		a.setCallback(zoomIn)
 		a.start()
-	if k == 65363:
+	if k == 358:
 		VR.A0 = VR.GalAngle
 		a.setCallback(rotateR)
 		a.start()
-	if k == 65364:
+	if k == 359:
 		VR.R0 = VR.GalRadius
 		a.setCallback(zoomOut)
 		a.start()
 </core>
-      <trig type="on_device" dev="keyboard" state="Pressed" param="" key="-1" base_name="trigger" name_space="__global__" name_suffix="0" persistency="666"/>
+      <trig type="on_device" dev="keyboard" state="Pressed" param="" key="-1" base_name="trigger" name_space="__global__" name_suffix="8" persistency="666"/>
     </Script>
     <Script base_name="moveGallery" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
       <core>
@@ -427,15 +428,13 @@
     </Script>
     <Script base_name="queryImages" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
       <core>
-	# missing module?
-	# sudo apt-get install python-bs4 python-requests
-	
-	from bs4 import BeautifulSoup
+	import VR
 	import re, os, urllib2
 
 
 	def get_soup(url,header):
-		return BeautifulSoup(urllib2.urlopen(urllib2.Request(url,headers=header)), 'lxml')
+		c = VR.RestClient()
+		return c.get(url).getData()
 
 	image_type = "Action"
 	query= query.split()
@@ -444,7 +443,12 @@
 	header = {'User-Agent': 'Mozilla/5.0'} 
 	soup = get_soup(url,header)
 
-	images = [a['src'] for a in soup.find_all("img", {"src": re.compile("gstatic.com")})]
+	images = []
+	for img in soup.split("img")[1:]:
+		src = img.split('src="')[-1].split(';s"')[0]
+		if not src.startswith("https"): continue
+		print src
+		images.append(src)
 	
 	if not os.path.exists("./tmp_pics"):
 		os.makedirs("./tmp_pics")
@@ -492,7 +496,11 @@
   </Scripts>
   <Sockets persistency="666"/>
   <Background color="1 1 1" format=".png" path="" persistency="666" type="0"/>
-  <Navigation active="Orbit" persistency="666"/>
+  <Navigation persistency="666">
+    <presetStates>
+      <Orbit>1</Orbit>
+    </presetStates>
+  </Navigation>
   <Materials persistency="666"/>
   <Semantics persistency="666"/>
 </Scene>
