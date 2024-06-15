@@ -874,5 +874,3 @@ void OSG::writeCollada(VRObjectPtr root, string path, map<string, string> option
 
     stream << "﻿</COLLADA>" << endl;
 }
-
-

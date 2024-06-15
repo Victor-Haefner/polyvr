@@ -236,9 +236,11 @@ bool doCocoaShutdown = false;
 
 - (void) applicationWillFinishLaunching: (NSNotification*) notification
 {
+    int W = 1600;
+    int H = 1200;
     winDelegate = [[WinDelegate alloc] init];
     window = [NSWindow alloc];
-    NSRect rect = { { 0, 0 }, { 300, 600 } };
+    NSRect rect = { { 0, 0 }, { double(W), double(H) } };
     [window initWithContentRect: rect styleMask: (NSTitledWindowMask | NSClosableWindowMask | NSMiniaturizableWindowMask | NSResizableWindowMask) backing: NSBackingStoreBuffered defer: YES];
     [window setDelegate:winDelegate];
     [window setTitle: @"PolyVR"];
@@ -263,7 +265,7 @@ bool doCocoaShutdown = false;
     // Create OpenSG window
     cwin->setContext ( [glView openGLContext] );
     cwin->init();
-    cwin->resize( 300, 300 );
+    cwin->resize( W, H );
 
     cwin->activate();
 

@@ -180,6 +180,7 @@ void SineFit::compute(int fftFreqHint) {
 
     vector<int> freqs = getArgMax(Fyy, ff, 1, fftFreqHint); // excluding the zero frequency "peak", which is related to offset
     for (auto FyyMaxPos : freqs) {
+			  if (FyyMaxPos >= ff.size()) continue; // TODO: debug why this can happen! (mac)
         //double guess_freq = abs(ff[FyyMaxPos]);
         double guess_freq = ff[FyyMaxPos];
 
@@ -228,8 +229,3 @@ vector<double> SineFit::getSineApprox(size_t sf) {
     if (fits.size() <= sf) return vector<double>();
     return fits[sf].fit;
 }
-
-
-
-
-
