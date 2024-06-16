@@ -454,7 +454,6 @@ PyObject* VRPyGeometry::setTexCoords(VRPyGeometry* self, PyObject *args) {
     if (! PyArg_ParseTuple(args, "O|ii", &vec, &channel, &doIndexFix)) return NULL;
 
     if (pySize(vec) == 0) {
-        cout << " -------- " << endl;
         //GeoVec2fPropertyMTRecPtr tc = GeoVec2fProperty::create();
         //self->objPtr->setTexCoords(tc, channel, doIndexFix);
         self->objPtr->setTexCoords(0, channel, doIndexFix);
@@ -646,4 +645,3 @@ PyObject* VRPyGeometry::getTexCoords(VRPyGeometry* self, PyObject *args) {
 
     return res;
 }
-

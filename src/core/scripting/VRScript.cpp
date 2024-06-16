@@ -404,7 +404,7 @@ void print_error_text(int offset, char *text) {
 #ifndef WITHOUT_IMGUI
         VRConsoleWidget::get( "Syntax" )->write( m, style, link );
 #else
-        cout << m << endl;
+        cout << m;
 #endif
     };
 
@@ -440,7 +440,7 @@ void VRScript::printSyntaxError(PyObject *exception, PyObject *value, PyObject *
 #ifndef WITHOUT_IMGUI
         VRConsoleWidget::get( "Syntax" )->write( m, style, link );
 #else
-        cout << m << endl;
+        cout << m;
 #endif
     };
 
@@ -483,7 +483,7 @@ void VRScript::pyErrPrint(string channel) {
 #ifndef WITHOUT_IMGUI
         VRConsoleWidget::get( channel )->write( m, style, link );
 #else
-        cout << m << endl;
+        cout << m;
 #endif
     };
 

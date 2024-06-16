@@ -245,11 +245,9 @@ VRAnnotationEngine::Label::Label(int id) : ID(id) {}
 void VRAnnotationEngine::setLine(int i, Vec3d p, string str, bool ascii) {
     //cout << "VRAnnotationEngine::setLine i: " << i << ", p: " << p << ", str: '" << str << "', ascii: " << ascii << endl;
     while (i >= (int)labels.size()) labels.push_back(Label(labels.size()));
-
     auto& l = labels[i];
     if (l.str == str && (l.pos-p).length() < 1e-6) return;
     l.pos = p;
-
     vector<string> graphemes;
     if (!ascii) {
         l.Ngraphemes = VRText::countGraphemes(str);
@@ -302,6 +300,7 @@ void VRAnnotationEngine::setLine(int i, Vec3d p, string str, bool ascii) {
 
         for (int j=0; j<N; j++) {
             string grapheme = graphemes[j];
+						if (!characterIDs.count(grapheme)) addGrapheme(grapheme);
             char c = characterIDs[grapheme] - 1;
             float u1 = P+c*D*2;
             float u2 = P+(c+1)*D*2;
@@ -364,6 +363,7 @@ void VRAnnotationEngine::updateTexture() {
     int cN = VRText::countGraphemes(characters);
     int padding = 3;
     int spread = 6;
+		//cout << "VRAnnotationEngine::updateTexture " << characters << ", " << cN << endl;
     auto img = VRText::get()->create(characters, "Mono.ttf", 48, padding, fg, bg, oradius, oc, spread);
 
     float tW = img->getSize()[0];
@@ -631,7 +631,3 @@ void main( void ) {
     gl_FragColor = texture2D(texture, texCoord);
 }
 );
-
-
-
-

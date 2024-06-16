@@ -196,7 +196,7 @@ static PyObject* writeOut(PyObject *self, PyObject *args) {
 #ifndef WITHOUT_IMGUI
     if (what) if (auto c = VRConsoleWidget::get(pyOutConsole)) c->write(what);
 #else
-    if (what) cout << what << endl;
+    if (what) cout << what;
 #endif
     return Py_BuildValue("");
 }
@@ -207,7 +207,7 @@ static PyObject* writeErr(PyObject *self, PyObject *args) {
 #ifndef WITHOUT_IMGUI
     if (what) if (auto c = VRConsoleWidget::get(pyErrConsole)) c->write(what);
 #else
-    if (what) cout << what << endl;
+    if (what) cout << what;
 #endif
     return Py_BuildValue("");
 }
