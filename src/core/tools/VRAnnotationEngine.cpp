@@ -24,7 +24,6 @@ bool hasGS = false;
 VRAnnotationEngine::VRAnnotationEngine(string name, bool init) : VRGeometry(name) {
     type = "AnnotationEngine";
     hasGS = VRScene::getCurrent()->hasGeomShader();
-    //hasGS = false;
     if (init) initialize();
 }
 
@@ -242,12 +241,13 @@ int VRAnnotationEngine::add(Vec3d p, string s) {
 
 VRAnnotationEngine::Label::Label(int id) : ID(id) {}
 
-void VRAnnotationEngine::setLine(int i, Vec3d p, string str, bool ascii) {
+void VRAnnotationEngine::setLine(int i, Vec3d p, string str, bool ascii, bool force) {
     //cout << "VRAnnotationEngine::setLine i: " << i << ", p: " << p << ", str: '" << str << "', ascii: " << ascii << endl;
     while (i >= (int)labels.size()) labels.push_back(Label(labels.size()));
     auto& l = labels[i];
-    if (l.str == str && (l.pos-p).length() < 1e-6) return;
+    if (l.str == str && (l.pos-p).length() < 1e-6 && !force) return;
     l.pos = p;
+		l.ascii = ascii;
     vector<string> graphemes;
     if (!ascii) {
         l.Ngraphemes = VRText::countGraphemes(str);
@@ -289,8 +289,16 @@ void VRAnnotationEngine::setLine(int i, Vec3d p, string str, bool ascii) {
     else {
 #endif
         int N = l.Ngraphemes;
+        for (int j=0; j<N; j++) {
+            string grapheme = graphemes[j];
+						if (!characterIDs.count(grapheme)) {
+								addGrapheme(grapheme);
+								updateLines();
+						}
+				}
 
-        resize(l,p,N*4+4); // plus 4 bounding points
+        //resize(l,p,N*4+4); // plus 4 bounding points
+				resize(l,p,N*4);
         float H = size*0.5;
         float D = charTexSize*0.5;
         float P = texPadding;
@@ -300,7 +308,6 @@ void VRAnnotationEngine::setLine(int i, Vec3d p, string str, bool ascii) {
 
         for (int j=0; j<N; j++) {
             string grapheme = graphemes[j];
-						if (!characterIDs.count(grapheme)) addGrapheme(grapheme);
             char c = characterIDs[grapheme] - 1;
             float u1 = P+c*D*2;
             float u2 = P+(c+1)*D*2;
@@ -318,10 +325,10 @@ void VRAnnotationEngine::setLine(int i, Vec3d p, string str, bool ascii) {
         }
 
         // bounding points to avoid word clipping
-        data->setVert(l.entries[N*4]  , p+Vec3d(-0.25*size, -0.5*size, 0), Vec3d(0,0,0));
+        /*data->setVert(l.entries[N*4]  , p+Vec3d(-0.25*size, -0.5*size, 0), Vec3d(0,0,0));
         data->setVert(l.entries[N*4+1], p+Vec3d(-0.25*size,  0.5*size, 0), Vec3d(0,0,0));
         data->setVert(l.entries[N*4+2], p+Vec3d((l.Ngraphemes-0.25)*size, -0.5*size, 0), Vec3d(0,0,0));
-        data->setVert(l.entries[N*4+3], p+Vec3d((l.Ngraphemes-0.25)*size,  0.5*size, 0), Vec3d(0,0,0));
+        data->setVert(l.entries[N*4+3], p+Vec3d((l.Ngraphemes-0.25)*size,  0.5*size, 0), Vec3d(0,0,0));*/
 #ifndef OSG_OGL_ES2
     }
 #endif
@@ -343,6 +350,13 @@ void VRAnnotationEngine::set(int i0, Vec3d p0, string txt) {
     }
 }
 
+void VRAnnotationEngine::updateLines() {
+		for (int i=0; i<labels.size(); i++) {
+				auto& l = labels[i];
+				setLine(i, l.pos, l.str, l.ascii, true);
+		}
+}
+
 void VRAnnotationEngine::setSize(float f) { size = f; mat->setShaderParameter("size", Real32(f)); }
 void VRAnnotationEngine::setBillboard(bool b) { doBillboard = b; mat->setShaderParameter("doBillboard", Real32(b)); }
 void VRAnnotationEngine::setScreensize(bool b) { doScreensize= b; mat->setShaderParameter("screen_size", Real32(b)); }
@@ -361,6 +375,7 @@ void VRAnnotationEngine::addGrapheme(string g) {
 
 void VRAnnotationEngine::updateTexture() {
     int cN = VRText::countGraphemes(characters);
+		if (cN == 0) return;
     int padding = 3;
     int spread = 6;
 		//cout << "VRAnnotationEngine::updateTexture " << characters << ", " << cN << endl;
@@ -628,6 +643,7 @@ varying vec2 texCoord;
 void main( void ) {
     //gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
     //gl_FragColor = vec4(texCoord.x,texCoord.y,0.0,1.0);
+    //gl_FragColor = vec4(texCoord.x,0.0,0.0,1.0);
     gl_FragColor = texture2D(texture, texCoord);
 }
 );

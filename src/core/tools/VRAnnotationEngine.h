@@ -31,8 +31,8 @@ class VRAnnotationEngine : public VRGeometry {
         static string vp_es2;
         static string fp_es2;
 
-        float charTexSize;
-        float texPadding;
+        float charTexSize = 0;
+        float texPadding = 0;
         string characters;
         map<string, int> characterIDs;
 
@@ -42,6 +42,7 @@ class VRAnnotationEngine : public VRGeometry {
             Vec3d pos;
             vector<int> entries;
             string str;
+						bool ascii = true;
 
             Label(int id);
         };
@@ -50,6 +51,7 @@ class VRAnnotationEngine : public VRGeometry {
 
         void resize(Label& l, Vec3d p, int N);
         void updateTexture();
+				void updateLines();
         void addGrapheme(string g);
         bool checkUIn(int i);
         void initialize();
@@ -65,7 +67,7 @@ class VRAnnotationEngine : public VRGeometry {
 
         void clear();
         void set(int i, Vec3d p, string s);
-        void setLine(int i, Vec3d p, string s, bool ascii = false);
+        void setLine(int i, Vec3d p, string s, bool ascii = false, bool force = false);
         int add(Vec3d p, string s);
 
         void setSize(float f);
