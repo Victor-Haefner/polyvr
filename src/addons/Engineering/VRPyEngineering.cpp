@@ -49,6 +49,7 @@ PyMethodDef VRPyPipeSystem::methods[] = {
     {"getNodeName", PyWrap( PipeSystem, getNodeName, "Get node name", string, int ) },
     {"getNodePose", PyWrap( PipeSystem, getNodePose, "Get node pose", PosePtr, int ) },
     {"getSegment", PyWrap( PipeSystem, getSegment, "Get segment ID by its node IDs", int, int, int ) },
+    {"getPipeRadius", PyWrap( PipeSystem, getPipeRadius, "Get pipe pressure", double, int ) },
     {"getSegmentPressure", PyWrap( PipeSystem, getSegmentPressure, "Get segment pressure", double, int ) },
     {"getSegmentGradient", PyWrap( PipeSystem, getSegmentGradient, "Get segment pressure gradient", Vec2d, int ) },
     {"getSegmentDensity", PyWrap( PipeSystem, getSegmentDensity, "Get segment density", double, int ) },

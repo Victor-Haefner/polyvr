@@ -119,6 +119,7 @@ class VRPipeSystem : public VRGeometry {
 		void updateInspection(int nID);
 
 		PosePtr getNodePose(int i);
+		double getPipeRadius(int i);
 		double getSegmentPressure(int i);
 		Vec2d getSegmentGradient(int i);
 		double getSegmentDensity(int i);
