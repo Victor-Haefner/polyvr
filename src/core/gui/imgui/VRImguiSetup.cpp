@@ -26,7 +26,9 @@ ImSetupManager::ImSetupManager() : ImWidget("SetupManager"),
         windowKeyboard("winKeyboard", "Keyboard"),
         slaveConnectionType("slaveConnType", "Connection Type"),
         slaveSystemScreens("slaveSystemScreens", ""),
-        winConnectionType("winConnType", "Connection Type") {
+        winConnectionType("winConnType", "Connection Type"),
+        artOffset("artOffset", "Offset"),
+        artAxis("artAxis", "Axis") {
 
     windowMSAA.setList({"none", "x2", "x4", "x8", "x16"});
     slaveSystemScreens.setList({":0.0", ":0.1", ":1.0", ":1.1"});
@@ -50,6 +52,8 @@ ImSetupManager::ImSetupManager() : ImWidget("SetupManager"),
     mgr->addCallback("on_setup_select_multiwindow", [&](OSG::VRGuiSignals::Options o) { selectMultiWindow(o); return true; } );
     mgr->addCallback("on_setup_select_node", [&](OSG::VRGuiSignals::Options o) { selectNode(o); return true; } );
     mgr->addCallback("on_setup_select_slave", [&](OSG::VRGuiSignals::Options o) { selectSlave(o); return true; } );
+    mgr->addCallback("on_setup_select_art_device", [&](OSG::VRGuiSignals::Options o) { selectARTDevice(o); return true; } );
+    mgr->addCallback("on_setup_select_art", [&](OSG::VRGuiSignals::Options o) { selectART(o); return true; } );
 
     mgr->addCallback("updateMouseList", [&](OSG::VRGuiSignals::Options o) { windowMouse.setList(o["list"]); return true; } );
     mgr->addCallback("updateMTouchList", [&](OSG::VRGuiSignals::Options o) { windowMultitouch.setList(o["list"]); return true; } );
@@ -59,6 +63,25 @@ ImSetupManager::ImSetupManager() : ImWidget("SetupManager"),
     mgr->addCallback("state_multiwindow_updated", [&](OSG::VRGuiSignals::Options o) { setWindowState(o["window"], o["state"]); return true; } );
 
     tree.setNodeFlags( ImGuiTreeNodeFlags_DefaultOpen );
+}
+
+void ImSetupManager::selectART(map<string,string> o) {
+    hideAll();
+    showART = true;
+
+    artPort = toInt(o["port"]);
+    artActive = toBool(o["active"]);
+    artOffset.set3( o["offset"] );
+    artAxis.set3( o["axis"] );
+}
+
+void ImSetupManager::selectARTDevice(map<string,string> o) {
+    hideAll();
+    showART = true;
+    showARTDevice = true;
+
+    selected = o["name"];
+    artID = o["ID"];
 }
 
 void ImSetupManager::selectView(OSG::VRGuiSignals::Options o) {
@@ -369,18 +392,23 @@ void ImSetupManager::begin() {
         }
 
         if (showART) {
-            ImGui::Text(("ART: " + selected).c_str());
+            int w3 = w2-20;
+            ImGui::Text("ART System");
             ImGui::Indent(10);
-            // checkbutton active    Port: entry PORT
-            // Vec3 Offset
-            // Vec3 Axis
+            if (ImGui::Checkbox("active##ART", &artActive)) uiSignal("setup_set_art_active", {{"active", toString(artActive)}});
+
+            ImInput entry("##artPort", "port", toString(artPort), ImGuiInputTextFlags_EnterReturnsTrue);
+            ImGui::SameLine();
+            if (entry.render(80)) uiSignal("setup_set_art_port", {{"port", toString(artPort)}});
+            if (artOffset.render(w3)) artOffset.signal("setup_set_art_offset");
+            if (artAxis.render(w3)) artAxis.signal("setup_set_art_axis");
             ImGui::Unindent(10);
         }
 
         if (showARTDevice) {
             ImGui::Text(("ART Device: " + selected).c_str());
             ImGui::Indent(10);
-            // ID: ID
+            ImGui::Text(artID.c_str());
             ImGui::Unindent(10);
         }
 
