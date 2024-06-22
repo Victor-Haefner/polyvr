@@ -862,17 +862,30 @@ set(INCLUDE_DIRS ${INCLUDE_DIRS} "src/core/setup/windows/glut/freeglut/include")
 include_directories(${INCLUDE_DIRS})
 link_directories(${LIB_DIRS})
 
-
-if(APPLE)
-  add_executable(CefSubProcessMac ressources/cefMac/WKSubProcess.cpp)
-  target_compile_options(CefSubProcessMac PRIVATE -std=c++17)
-  target_link_libraries(CefSubProcessMac PRIVATE -lcef_dll_wrapper)
-  set_target_properties(CefSubProcessMac PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/ressources/cefMac/"
-)
-endif()
-
 add_executable(polyvr src/main.cpp)
 target_sources(polyvr PRIVATE src/PolyVR.cpp)
+
+
+if(APPLE)
+	macro(compileHelper name suffix)
+		set(_helper_target "cefHelper${suffix}")
+		set(_helper_output_name "CefSubProcessMac${name}")
+		add_executable(${_helper_target} ressources/cefMac/WKSubProcess.cpp)
+		target_compile_options(${_helper_target} PRIVATE -std=c++17)
+		target_link_libraries(${_helper_target} cef_dll_wrapper ${CEF_STANDARD_LIBS})
+		set_target_properties(${_helper_target} PROPERTIES OUTPUT_NAME ${_helper_output_name})
+		set_target_properties(${_helper_target} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/ressources/cefMac/helper")
+		add_dependencies(polyvr "${_helper_target}")
+	endmacro()
+
+	compileHelper("" "")
+	compileHelper(" (Alerts)" "_alerts")
+	compileHelper(" (GPU)" "_gpu")
+	compileHelper(" (Plugin)" "_plugin")
+	compileHelper(" (Renderer)" "_renderer")
+
+	file(MAKE_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/build/Contents)
+endif()
 
 # command to run polyvr after building within visual studio
 if(WIN32)
@@ -1570,8 +1583,7 @@ add_dependencies(polyvr freeglut)
 endif()
 
 if(APPLE)
-add_dependencies(polyvr cefResourceCopy)
-add_dependencies(polyvr CefSubProcessMac)
+#add_dependencies(polyvr cefResourceCopy)
 set(COMPILER_FLAGS ${COMPILER_FLAGS} -fsanitize=address -fno-omit-frame-pointer -g -O1)
 endif()
 

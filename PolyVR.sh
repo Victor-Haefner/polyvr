@@ -3,7 +3,7 @@
 osName=$(uname -s)
 
 if [ "$osName" == "Darwin" ]; then # on mac
-	libs=/usr/local/lib64:/usr/local/lib/cef
+	libs="/usr/local/lib64:/usr/local/lib/cef:/usr/local/lib/cef//Chromium Embedded Framework.framework/Libraries"
 	export DYLD_LIBRARY_PATH="$libs$DYLD_LIBRARY_PATH"
 	export DYLD_FRAMEWORK_PATH="$libs$DYLD_FRAMEWORK_PATH" #  needed to find the cef framework
 else

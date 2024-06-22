@@ -387,7 +387,7 @@ void CEF::global_initiate() {
 #ifdef _WIN32
     string bsp = VRSceneManager::get()->getOriginalWorkdir() + path + "/CefSubProcessWin.exe";
 #elif __APPLE__
-    string bsp = VRSceneManager::get()->getOriginalWorkdir() + path + "/CefSubProcessMac";
+    string bsp = VRSceneManager::get()->getOriginalWorkdir() + path + "/helper/CefSubProcessMac";
 #else
     string bsp = VRSceneManager::get()->getOriginalWorkdir() + path + "/CefSubProcess";
 #endif
@@ -429,7 +429,7 @@ void CEF::global_initiate() {
 #if defined(_WIN32) || defined(__APPLE__)
     settings.windowless_rendering_enabled = true;
 #endif
-    settings.log_severity = LOGSEVERITY_VERBOSE;
+    //settings.log_severity = LOGSEVERITY_VERBOSE;
 
     CefRefPtr<CefApp> app;
 
@@ -454,7 +454,7 @@ void CEF::global_initiate() {
 #endif
     CefInitialize(args, settings, app, 0);
 
-    CallSetBaseBundleID("WTF");
+    //CallSetBaseBundleID("WTF");
 }
 
 
