@@ -72,6 +72,13 @@ class ImSetupManager : public ImWidget {
         int Ny = 1;
         vector<string> serverIDs;
 
+        // ART
+        bool artActive = 0;
+        int artPort = 0;
+        Im_Vector artOffset;
+        Im_Vector artAxis;
+        string artID;
+
         // VRPN
         bool vrpnActive = 0;
         bool vrpnTestServer = 0;
@@ -107,6 +114,8 @@ class ImSetupManager : public ImWidget {
         void selectMultiWindow(map<string,string> o);
         void selectNode(map<string,string> o);
         void selectSlave(map<string,string> o);
+        void selectART(map<string,string> o);
+        void selectARTDevice(map<string,string> o);
 
         void setWindowState(string window, string state);
 

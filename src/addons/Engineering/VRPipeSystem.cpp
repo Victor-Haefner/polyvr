@@ -646,6 +646,7 @@ VREntityPtr VRPipeSystem::getEntity(string name) {
 }
 
 PosePtr VRPipeSystem::getNodePose(int i) { return graph->getPosition(i); }
+double VRPipeSystem::getPipeRadius(int i) { return segments[i]->radius; }
 double VRPipeSystem::getSegmentPressure(int i) { return (segments[i]->pressure1+segments[i]->pressure2)*0.5; }
 Vec2d VRPipeSystem::getSegmentGradient(int i) { return Vec2d(segments[i]->pressure1,segments[i]->pressure2); }
 double VRPipeSystem::getSegmentDensity(int i) { return segments[i]->density; }

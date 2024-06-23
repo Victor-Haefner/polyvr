@@ -27,7 +27,11 @@ class VRGuiSetup {
         VRNetworkSlavePtr slave;
         VRDevicePtr device;
         ART_devicePtr art_device;
+        VRPN_devicePtr vrpn_device;
         VRPN_devicePtr vrpn_tracker;
+        VRHapticPtr haptic_device;
+        VRLeapPtr leap_device;
+        VRMultiTouchPtr mtouch_device;
 
         VRGuiVectorEntry artAxis;
         VRGuiVectorEntry artOffset;

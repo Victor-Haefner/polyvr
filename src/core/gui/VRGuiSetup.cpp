@@ -42,7 +42,7 @@ using namespace std;
 
 void VRGuiSetup::updateObjectData() {
     //cout << "VRGuiSetup::updateObjectData " << selected_type << ", " << selected_name << endl;
-    bool device = false;
+    bool isDevice = false;
     guard = true;
 
     auto scene = VRScene::getCurrent();
@@ -94,15 +94,6 @@ void VRGuiSetup::updateObjectData() {
                 } );
             }
         }
-
-        // mouse
-        string name = "None";
-        if (window->getMouse()) name = window->getMouse()->getName();
-#ifndef WITHOUT_MTOUCH
-        if (window->getMultitouch()) name = window->getMultitouch()->getName();
-#endif
-        //setCombobox("combobox13", getListStorePos("mouse_list", name));
-        //setCombobox("combobox15", getListStorePos("msaa_list", window->getMSAA()));
     }
 
     if (selected_type == "view" && view) {
@@ -131,122 +122,124 @@ void VRGuiSetup::updateObjectData() {
         } );
     }
 
-    if (selected_type == "vrpn_device") {
-        /*setWidgetVisibility("expander4", true, true);
-        setWidgetVisibility("expander7", true, true);
-        device = true;
-        VRPN_device* t = (VRPN_device*)selected_object;
-        setTextEntry("entry50", t->address);*/
-    }
-
-    if (selected_type == "vrpn_tracker") {
-        /*setWidgetVisibility("expander4", true, true);
-        setWidgetVisibility("expander7", true, true);
-        VRPN_device* t = (VRPN_device*)selected_object;
-        setTextEntry("entry50", t->address);
-        tVRPNAxisEntry.set(t->translate_axis);
-        rVRPNAxisEntry.set(t->rotation_axis);*/
-    }
-
-    if (selected_type == "art_device") {
-        /*setWidgetVisibility("expander5", true, true);
-        ART_device* t = (ART_device*)selected_object;
-        setTextEntry("entry40", toString(t->ID));*/
-    }
-
-#ifndef WITHOUT_VIRTUOSE
-    if (selected_type == "haptic") {
-        /*setWidgetVisibility("expander20", true, true);
-        device = true;
-        VRHaptic* t = (VRHaptic*)selected_object;
-        setTextEntry("entry8", t->getIP());
-        setCombobox("combobox25", getListStorePos("liststore8", t->getType()) );
-        setLabel("label64", t->getDeamonState());
-        setLabel("label66", t->getDeviceState());*/
-    }
-#endif
-
-#ifndef WITHOUT_MTOUCH
-    if (selected_type == "multitouch") {
-        /*setWidgetVisibility("expander30", true, true);
-        VRMultiTouch* t = (VRMultiTouch*)selected_object;
-        setCombobox("combobox12", getListStorePos("liststore11", t->getDevice()) );*/
-    }
-#endif
-
-    if (selected_type == "leap") {
-        /*setWidgetVisibility("expander31", true, true);
-        VRLeap* t = (VRLeap*)selected_object;
-        setTextEntry("entry28", t->getAddress());
-        setLabel("label157", t->getConnectionStatus());
-        setLabel("label159", t->getSerial());
-        auto p = t->getPose();
-        leapPosEntry.set(p->pos());
-        leapUpEntry.set(p->up());
-        leapDirEntry.set(p->dir());*/
-    }
-
-    if (selected_type == "mouse") { device = true; }
-    if (selected_type == "multitouch") { device = true; }
-    if (selected_type == "keyboard") { device = true; }
-    if (selected_type == "server") { device = true; }
-    if (selected_type == "flystick") { device = true; }
-    if (selected_type == "leap") { device = true; }
-
     auto setup = VRSetup::getCurrent();
+    if (setup) {
 #ifndef WITHOUT_VRPN
-    if (selected_type == "vrpn_device" || selected_type == "vrpn_tracker") {
-        if (setup) {
-            /*setTextEntry("entry13", toString(setup->getVRPN()->getVRPNPort()));
-            setToggleButton("checkbutton25", setup->getVRPN()->getVRPNActive());*/
+        if (selected_name == "VRPN" || selected_type == "vrpn_device" || selected_type == "vrpn_tracker") {
+            uiSignal( "on_setup_select_vrpn", {
+                {"port", toString(setup->getVRPN()->getVRPNPort())},
+                {"active", toString(setup->getVRPN()->getVRPNActive())}
+            } );
         }
-    }
 #endif
 
-    if (selected_type == "section" && setup) {
 #ifndef WITHOUT_ART
         if (selected_name == "ART") {
-            /*setWidgetVisibility("expander6", true, true);
-            setTextEntry("entry39", toString(setup->getART()->getARTPort()));
-            setToggleButton("checkbutton24", setup->getART()->getARTActive());
-
-            artOffset.set(setup->getART()->getARTOffset());
-            artAxis.set(Vec3d(setup->getART()->getARTAxis()));*/
-        }
-#endif
-
-#ifndef WITHOUT_VRPN
-        if (selected_name == "VRPN") {
-            /*setWidgetVisibility("expander7", true, true);
-            setTextEntry("entry13", toString(setup->getVRPN()->getVRPNPort()));
-            setToggleButton("checkbutton25", setup->getVRPN()->getVRPNActive());*/
+            uiSignal( "on_setup_select_art", {
+                {"port", toString(setup->getART()->getARTPort())},
+                {"active", toString(setup->getART()->getARTActive())},
+                {"offset", toString(setup->getART()->getARTOffset())},
+                {"axis", toString(setup->getART()->getARTAxis())}
+            } );
         }
 #endif
 
         if (selected_name == "Displays") {
-            /*setWidgetVisibility("expander28", true, true);
-            Vec3d o = setup->getDisplaysOffset();
-            setTextEntry("entry29", toString(o[0]));
-            setTextEntry("entry30", toString(o[1]));
-            setTextEntry("entry31", toString(o[2]));*/
+            uiSignal( "on_setup_select_display", {
+                {"offset", toString(setup->getDisplaysOffset())},
+                {"active", toString(setup->getVRPN()->getVRPNActive())}
+            } );
         }
     }
 
-    if (device) {
-        /*VRDevice* dev = (VRDevice*)selected_object;
-        auto ins = dev->getLastIntersection();
+    if (selected_type == "vrpn_device" && vrpn_device) {
+        isDevice = true;
+        uiSignal( "on_setup_select_vrpn_device", {
+            {"name", vrpn_device->getName()},
+            {"address", vrpn_device->address}
+        } );
+    }
 
-        setWidgetVisibility("expander21", true, true);
-        setLabel("label93", dev->getName());
-        if (setup) fillStringListstore("dev_types_list", setup->getDeviceTypes());
-        setCombobox("combobox26", getListStorePos("dev_types_list", dev->getType()) );
+    if (selected_type == "vrpn_tracker" && vrpn_tracker) {
+        uiSignal( "on_setup_select_vrpn_tracker", {
+            {"name", vrpn_tracker->getName()},
+            {"address", vrpn_tracker->address},
+            {"tAxis", toString(vrpn_tracker->translate_axis)},
+            {"rAxis", toString(vrpn_tracker->rotation_axis)}
+        } );
+    }
+
+    if (selected_type == "art_device" && art_device) {
+        isDevice = true;
+        uiSignal( "on_setup_select_art_device", {
+            {"name", art_device->getName()},
+            {"ID", toString(art_device->ID)}
+        } );
+    }
+
+#ifndef WITHOUT_VIRTUOSE
+    if (selected_type == "haptic" && haptic_device) {
+        isDevice = true;
+        uiSignal( "on_setup_select_haptic_device", {
+            {"name", haptic_device->getName()},
+            {"IP", haptic_device->getIP()},
+            {"type", haptic_device->getType()},
+            {"deamonState", haptic_device->getDeamonState()},
+            {"deviceState", haptic_device->getDeviceState()}
+        } );
+    }
+#endif
+
+#ifndef WITHOUT_MTOUCH
+    if (selected_type == "multitouch" && mtouch_device) {
+        isDevice = true;
+        uiSignal( "on_setup_select_multitouch", {
+            {"name", mtouch_device->getName()},
+            {"device", mtouch_device->getDevice()}
+        } );
+    }
+#endif
+
+    if (selected_type == "leap" && leap_device) {
+        isDevice = true;
+        uiSignal( "on_setup_select_multitouch", {
+            {"name", leap_device->getName()},
+            {"address", leap_device->getAddress()},
+            {"connection", leap_device->getConnectionStatus()},
+            {"serial", leap_device->getSerial()},
+            {"pose", toString(leap_device->getPose())}
+        } );
+    }
+
+    if (selected_type == "mouse") { isDevice = true; }
+    if (selected_type == "keyboard") { isDevice = true; }
+    if (selected_type == "server") { isDevice = true; }
+    if (selected_type == "flystick") { isDevice = true; }
+
+    if (isDevice) {
+        auto ins = device->getLastIntersection();
+
+        string iObj;
+        string iPnt;
+        string iTxl;
+
         if (ins) {
-            string hobj = ins->hit ? ins->name : "NONE";
-            setLabel("label110", hobj);
-            setLabel("label111", toString(ins->point));
-            setLabel("label112", toString(ins->texel));
+            iObj = ins->hit ? ins->name : "NONE";
+            iPnt = toString(ins->point);
+            iTxl = toString(ins->texel);
         }
-        if (dev->getCross()) setToggleButton("checkbutton37", dev->getCross()->isVisible());*/
+
+        bool crossVisible = false;
+        if (device->getCross()) crossVisible = device->getCross()->isVisible();
+
+        uiSignal( "on_setup_select_device", {
+            {"name", device->getName()},
+            {"type", device->getType()},
+            {"iObj", iObj},
+            {"iPnt", iPnt},
+            {"iTxl", iTxl},
+            {"cross", toString(crossVisible)}
+        } );
     }
 
     if (selected_type == "node" && node) {
@@ -297,9 +290,6 @@ void VRGuiSetup::updateObjectData() {
 
     guard = false;
 }
-
-//TODO:
-// - win->init in a thread
 
 string VRGuiSetup::setupDir() { return VRSceneManager::get()->getOriginalWorkdir()+"/setup/"; }
 
@@ -384,7 +374,11 @@ void VRGuiSetup::on_treeview_select(string selected) {
     slave = 0;
     device = 0;
     art_device = 0;
+    vrpn_device = 0;
     vrpn_tracker = 0;
+    haptic_device = 0;
+    leap_device = 0;
+    mtouch_device = 0;
 
     selected_type = "";
     selected_name = "";
@@ -403,11 +397,20 @@ void VRGuiSetup::on_treeview_select(string selected) {
     else if (selected_type == "slave") slave = setup->getNetwork()->getSlave(selected_name);
 #ifndef WITHOUT_VRPN
     else if (selected_type == "vrpn_tracker") vrpn_tracker = setup->getVRPN()->getVRPNTracker(toInt(selected_name));
+    else if (selected_type == "vrpn_device") vrpn_device = setup->getVRPN()->getVRPNTracker(toInt(selected_name));
 #endif
 #ifndef WITHOUT_ART
     else if (selected_type == "art_device") art_device = setup->getART()->getARTDevice(toInt(selected_name));
 #endif
     else device = setup->getDevice(selected_name);
+
+    if (selected_type == "leap") leap_device = dynamic_pointer_cast<VRLeap>( device );
+#ifndef WITHOUT_VIRTUOSE
+    else if (selected_type == "haptic") haptic_device = dynamic_pointer_cast<VRHaptic>( device );
+#endif
+#ifndef WITHOUT_MTOUCH
+    else if(selected_type == "multitouch") mtouch_device = dynamic_pointer_cast<VRMultiTouch>( device );
+#endif
 
     updateObjectData();
 }
@@ -1411,9 +1414,12 @@ bool VRGuiSetup::updateSetup() {
         if (dev->getType() == "keyboard") keyboardList.push_back(ditr.first);
     }
 
+    vector<string> devTypesList = setup->getDeviceTypes();
+
     uiSignal("updateMouseList", {{"list", toString(mouseList)}});
     uiSignal("updateMTouchList", {{"list", toString(mtouchList)}});
     uiSignal("updateKeyboardList", {{"list", toString(keyboardList)}});
+    uiSignal("updateDevTypesList", {{"list", toString(devTypesList)}});
 
     for (auto node : setup->getNetwork()->getData() ) {
         string nodeID = "node$"+node->getName();

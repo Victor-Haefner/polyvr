@@ -22,7 +22,9 @@ namespace std {
 #include <include/cef_client.h>
 #include <include/cef_render_handler.h>
 #include <include/cef_load_handler.h>
+#ifdef __APPLE__
 #include <include/wrapper/cef_library_loader.h>
+#endif
 
 #include <OpenSG/OSGGeoProperties.h>
 #include <OpenSG/OSGTextureEnvChunk.h>
