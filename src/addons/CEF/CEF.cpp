@@ -79,7 +79,7 @@ class CEF_app : public CefApp, public CefBrowserProcessHandler {
   DISALLOW_COPY_AND_ASSIGN(CEF_app);
 };
 
-class CEF_handler : public CefRenderHandler, public CefLoadHandler, public CefContextMenuHandler, public CefDialogHandler, public CefDisplayHandler {
+class CEF_handler : public CefRenderHandler, public CefLoadHandler, public CefContextMenuHandler, public CefDialogHandler, public CefDisplayHandler, public CefLifeSpanHandler {
     private:
         VRTexturePtr image = 0;
         int width = 1024;
@@ -101,8 +101,8 @@ class CEF_handler : public CefRenderHandler, public CefLoadHandler, public CefCo
 #endif
 
 
-        void OnBeforeContextMenu(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, CefRefPtr<CefContextMenuParams> params, CefRefPtr<CefMenuModel> model);
-        bool OnContextMenuCommand(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, CefRefPtr<CefContextMenuParams> params, int command_id, EventFlags event_flags);
+        void OnBeforeContextMenu(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, CefRefPtr<CefContextMenuParams> params, CefRefPtr<CefMenuModel> model) override;
+        bool OnContextMenuCommand(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, CefRefPtr<CefContextMenuParams> params, int command_id, EventFlags event_flags) override;
 
         void OnPaint(CefRefPtr<CefBrowser> browser, PaintElementType type, const RectList& dirtyRects, const void* buffer, int width, int height) override;
         VRTexturePtr getImage();
@@ -117,7 +117,22 @@ class CEF_handler : public CefRenderHandler, public CefLoadHandler, public CefCo
 #else
         bool OnFileDialog( CefRefPtr< CefBrowser > browser, CefDialogHandler::FileDialogMode mode, const CefString& title, const CefString& default_file_path, const std::vector< CefString >& accept_filters, int selected_accept_filter, CefRefPtr< CefFileDialogCallback > callback ) override;
 #endif
-
+				bool OnBeforePopup(
+						CefRefPtr<CefBrowser> browser,
+						CefRefPtr<CefFrame> frame,
+						const CefString& target_url,
+						const CefString& target_frame_name,
+						CefLifeSpanHandler::WindowOpenDisposition target_disposition,
+						bool user_gesture,
+						const CefPopupFeatures& popupFeatures,
+						CefWindowInfo& windowInfo,
+						CefRefPtr<CefClient>& client,
+						CefBrowserSettings& settings,
+						CefRefPtr<CefDictionaryValue>& extra_info,
+						bool* no_javascript_access) override {
+								cout << " --------------- CEF OnBeforePopup ------- " << endl;
+								return true; // Returning true cancels the popup window creation
+				}
 
         void on_link_clicked(string source, int line, string s);
         bool OnConsoleMessage( CefRefPtr< CefBrowser > browser, cef_log_severity_t level, const CefString& message, const CefString& source, int line ) override;
@@ -139,6 +154,7 @@ class CEF_client : public CefClient {
         CefRefPtr<CefContextMenuHandler> GetContextMenuHandler() override;
         CefRefPtr<CefDialogHandler> GetDialogHandler() override;
         CefRefPtr<CefDisplayHandler> GetDisplayHandler() override;
+				CefRefPtr<CefLifeSpanHandler> GetLifeSpanHandler() override;
 
         IMPLEMENT_REFCOUNTING(CEF_client);
 };
@@ -299,6 +315,7 @@ CefRefPtr<CEF_handler> CEF_client::getHandler() { return handler; }
 CefRefPtr<CefContextMenuHandler> CEF_client::GetContextMenuHandler() { return handler; }
 CefRefPtr<CefDialogHandler> CEF_client::GetDialogHandler() { return handler; }
 CefRefPtr<CefDisplayHandler> CEF_client::GetDisplayHandler() { return handler; }
+CefRefPtr<CefLifeSpanHandler> CEF_client::GetLifeSpanHandler() { return handler; }
 
 CEF::CEF() {
     global_initiate();
@@ -322,42 +339,6 @@ CEFPtr CEF::create() {
     instances.push_back(cef);
     return cef;
 }
-
-
-#ifdef __APPLE__
-#include <dlfcn.h>
-#include <iostream>
-
-typedef void (*SetBaseBundleIDType)(const char* new_base_bundle_id);
-
-void CallSetBaseBundleID(const char* new_base_bundle_id) {
-    // Assuming the dynamic library is already loaded
-    void* handle = dlopen(NULL, RTLD_NOW);
-    if (!handle) {
-        std::cerr << "Cannot open library: " << dlerror() << '\n';
-        return;
-    }
-
-    // Obtain the function pointer using dlsym
-    SetBaseBundleIDType SetBaseBundleID = (SetBaseBundleIDType)dlsym(handle, "SetBaseBundleID");
-    const char* dlsym_error = dlerror();
-    if (dlsym_error) {
-        std::cerr << "Cannot load symbol 'SetBaseBundleID': " << dlsym_error << '\n';
-        return;
-    }
-
-    // Use the function
-    SetBaseBundleID(new_base_bundle_id);
-}
-
-namespace base::apple {
-  extern void SetBaseBundleID(const char* new_base_bundle_id) __attribute__((weak_import));
-}
-
-void overrideBundleID() {
-  base::apple::SetBaseBundleID("WTF");
-}
-#endif
 
 void CEF::global_initiate() {
     static bool global_init = false;
@@ -411,6 +392,7 @@ void CEF::global_initiate() {
     if (!library_loader.LoadInMain()) {
         cout << " !!! loading CEF framework failed!" << endl;
     }
+		settings.external_message_pump = true;
     settings.persist_session_cookies = false;
     settings.persist_user_preferences = false;
     string cdp = VRSceneManager::get()->getOriginalWorkdir() + path + "/cache";
@@ -437,14 +419,7 @@ void CEF::global_initiate() {
     CefMainArgs args;
 	//args.set(const struct_type* src, struct_type* target, bool copy); // TODO: set parameters as defined below
 #elif defined(__APPLE__)
-    //CefMainArgs args;
-    vector<const char *> cmdArgs;
-    cmdArgs.push_back("--use-mock-keychain=1");
-    cmdArgs.push_back("--disable-features=NetworkService=1");
-    //cmdArgs.push_back("--disable-gpu=1");
-    //cmdArgs.push_back("--disable-gpu-compositing=1");
-    CefMainArgs args(cmdArgs.size(), (char**)cmdArgs.data());
-
+    CefMainArgs args;
     app = new CEF_app();
 #else
     vector<const char *> cmdArgs;
@@ -453,16 +428,15 @@ void CEF::global_initiate() {
     CefMainArgs args(cmdArgs.size(), (char**)cmdArgs.data());
 #endif
     CefInitialize(args, settings, app, 0);
-
-    //CallSetBaseBundleID("WTF");
 }
-
 
 void CEF::initiate() {
     init = true;
     CefWindowInfo win;
     CefBrowserSettings browser_settings;
-#if defined(_WIN32) || defined(__APPLE__)
+#if defined(__APPLE__)
+    win.SetAsWindowless(0);
+#elif defined(_WIN32)
     win.SetAsWindowless(0);
     win.shared_texture_enabled = false;
 #elif defined(CEF18)
