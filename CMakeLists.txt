@@ -1584,7 +1584,7 @@ endif()
 
 if(APPLE)
 #add_dependencies(polyvr cefResourceCopy)
-set(COMPILER_FLAGS ${COMPILER_FLAGS} -fsanitize=address -fno-omit-frame-pointer -g -O1)
+#set(COMPILER_FLAGS ${COMPILER_FLAGS} -fsanitize=address -fno-omit-frame-pointer -g -O1)
 endif()
 
 target_compile_options(polyvr PRIVATE ${COMPILER_FLAGS})
@@ -1593,5 +1593,5 @@ if(NOT APPLE)
 target_link_libraries(polyvr PRIVATE ${LINKER_FLAGS} freeglut)
 else()
 target_link_libraries(polyvr PRIVATE ${LINKER_FLAGS})
-target_link_options(polyvr PRIVATE -fsanitize=address) # for memory issues debugging
+#target_link_options(polyvr PRIVATE -fsanitize=address) # for memory issues debugging
 endif()
