@@ -146,12 +146,13 @@ void VRGuiSetup::updateObjectData() {
 
         if (selected_name == "Displays") {
             uiSignal( "on_setup_select_display", {
-                {"offset", toString(setup->getDisplaysOffset())},
-                {"active", toString(setup->getVRPN()->getVRPNActive())}
+                {"offset", toString(setup->getDisplaysOffset())}//,
+                //{"active", toString(setup->getVRPN()->getVRPNActive())}
             } );
         }
     }
 
+#ifndef WITHOUT_VRPN
     if (selected_type == "vrpn_device" && vrpn_device) {
         isDevice = true;
         uiSignal( "on_setup_select_vrpn_device", {
@@ -168,6 +169,7 @@ void VRGuiSetup::updateObjectData() {
             {"rAxis", toString(vrpn_tracker->rotation_axis)}
         } );
     }
+#endif
 
     if (selected_type == "art_device" && art_device) {
         isDevice = true;
