@@ -43,6 +43,7 @@ VRCocoaWindow* vrCocoaWin = 0;
 - (void) mouseDown: (NSEvent*) event;
 - (void) mouseDragged: (NSEvent*) event;
 - (void) mouseUp: (NSEvent*) event;
+- (void) mouseMoved:(NSEvent*) event;
 - (void) rightMouseDown: (NSEvent*) event;
 - (void) rightMouseDragged: (NSEvent*) event;
 - (void) rightMouseUp: (NSEvent*) event;
@@ -79,38 +80,47 @@ VRCocoaWindow* vrCocoaWin = 0;
         if (modifierFlags & NSControlKeyMask) buttonNumber = 1;
     }
 
+		if (buttonNumber == 1) buttonNumber = 2;
+		else if (buttonNumber == 2) buttonNumber = 1;
+
+		NSWindow* window = [event window];
     NSPoint location = [event locationInWindow];
-    location.y = vrCocoaWin->getSize()[1] - location.y; // invert y
+		float H = [[window contentView] frame].size.height;
+
+		location.x *= 2.0;
+		location.y = (H - location.y) * 2.0;
+		    //location.y = vrCocoaWin->getSize()[1] - location.y; // invert y
+
+		//cout << " mouse event " << location.x << ", " << location.y << ", " << [event type] << endl;
 
     switch ([event type]) {
-        case NSScrollWheel:
-            {
-                int deltaY = event.scrollingDeltaY;
-                if (deltaY >= 0) buttonNumber = 3;
-                else buttonNumber = 4;
-            }
+        case NSEventTypeScrollWheel:
+            if (event.scrollingDeltaY < 0) buttonNumber = 3;
+            else buttonNumber = 4;
+						//cout << " mouse scroll " << event.scrollingDeltaY << ", " << buttonNumber << endl;
             if (auto m = vrCocoaWin->getMouse()) m->mouse(buttonNumber, 0, location.x, location.y, 1);
             if (auto m = vrCocoaWin->getMouse()) m->mouse(buttonNumber, 1, location.x, location.y, 1);
             break;
 
-        case NSLeftMouseDown:
-        case NSRightMouseDown:
-        case NSOtherMouseDown:
-            cout << "mouse down " << buttonNumber << endl;
+        case NSEventTypeLeftMouseDown:
+        case NSEventTypeRightMouseDown:
+        case NSEventTypeOtherMouseDown:
+            //cout << "mouse down " << buttonNumber << ", x " << location.x << ", y " << location.y << ", H " << H << endl;
             if (auto m = vrCocoaWin->getMouse()) m->mouse(buttonNumber, 0, location.x, location.y, 1);
             break;
 
-        case NSLeftMouseUp:
-        case NSRightMouseUp:
-        case NSOtherMouseUp:
-            cout << "mouse up " << buttonNumber << endl;
+        case NSEventTypeLeftMouseUp:
+        case NSEventTypeRightMouseUp:
+        case NSEventTypeOtherMouseUp:
+            //cout << "mouse up " << buttonNumber << endl;
             if (auto m = vrCocoaWin->getMouse()) m->mouse(buttonNumber, 1, location.x, location.y, 1);
             break;
 
-        case NSLeftMouseDragged:
-        case NSRightMouseDragged:
-        case NSOtherMouseDragged:
-            cout << "mouse move " << buttonNumber << endl;
+        case NSEventTypeLeftMouseDragged:
+        case NSEventTypeRightMouseDragged:
+        case NSEventTypeOtherMouseDragged:
+		    case NSEventTypeMouseMoved:
+            //cout << "mouse move " << buttonNumber << endl;
             if (auto m = vrCocoaWin->getMouse()) m->motion(location.x, location.y, 1);
             break;
 
@@ -125,6 +135,11 @@ VRCocoaWindow* vrCocoaWin = 0;
 }
 
 - (void) mouseDragged: (NSEvent*) event
+{
+    [self handleMouseEvent: event];
+}
+
+- (void) mouseMoved: (NSEvent*) event
 {
     [self handleMouseEvent: event];
 }
@@ -251,6 +266,7 @@ bool doCocoaShutdown = false;
     [glView initWithFrame: rect];
     [glView setAutoresizingMask: NSViewMaxXMargin | NSViewWidthSizable | NSViewMaxYMargin | NSViewHeightSizable];
     [[window contentView] addSubview: glView];
+		[[glView window] setAcceptsMouseMovedEvents:YES];
 
     NSOpenGLPixelFormatAttribute attrs[] =
     {
