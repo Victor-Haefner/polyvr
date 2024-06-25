@@ -788,7 +788,9 @@ bool CEF::keyboard(VRDeviceWeakPtr d) {
 
 
     CefKeyEvent kev;
-#ifndef _WIN32
+#ifdef _WIN32
+    kev.modifiers = GetCefStateModifiers(false, false, keyboard->ctrlDown() && !keyboard->altDown(), false, false, false, false);
+#else
     kev.modifiers = GetCefStateModifiers(keyboard->shiftDown(), keyboard->lockDown(), keyboard->ctrlDown(), keyboard->altDown(), false, false, false);
     if (event.keyval >= 356 && event.keyval <= 367) kev.modifiers |= EVENTFLAG_IS_KEY_PAD;
     if (kev.modifiers & EVENTFLAG_ALT_DOWN) kev.is_system_key = true;
