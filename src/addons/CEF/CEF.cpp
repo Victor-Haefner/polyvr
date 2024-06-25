@@ -767,7 +767,7 @@ bool CEF::keyboard(VRDeviceWeakPtr d) {
     auto host = internals->browser->GetHost();
     if (!host) return true;
 
-    //cout << "CEF::keyboard " << event.keyval << " " << ctrlUsed << " ctrlDown: " << keyboard->ctrlDown() << endl;
+    //cout << "CEF::keyboard: " << event.keyval << ", ctrlUsed: " << ctrlUsed << " ctrlDown: " << keyboard->ctrlDown() << endl;
 
 
     if (keyboard->ctrlDown() && event.state == 1) {
@@ -776,7 +776,7 @@ bool CEF::keyboard(VRDeviceWeakPtr d) {
         if (event.keyval == 22) { internals->browser->GetFocusedFrame()->Paste(); ctrlUsed = true; }
         if (event.keyval == 25) { internals->browser->GetFocusedFrame()->Redo(); ctrlUsed = true; }
         if (event.keyval == 26) { internals->browser->GetFocusedFrame()->Undo(); ctrlUsed = true; }
-        return false;
+        if (ctrlUsed) return false;
     }
 
     if (!keyboard->ctrlDown() && event.state == 1) ctrlUsed = false;
@@ -786,22 +786,44 @@ bool CEF::keyboard(VRDeviceWeakPtr d) {
         return false; // ignore next key up event when ctrl was used for a shortcut above!
     }
 
+
     CefKeyEvent kev;
+#ifndef _WIN32
     kev.modifiers = GetCefStateModifiers(keyboard->shiftDown(), keyboard->lockDown(), keyboard->ctrlDown(), keyboard->altDown(), false, false, false);
     if (event.keyval >= 356 && event.keyval <= 367) kev.modifiers |= EVENTFLAG_IS_KEY_PAD;
     if (kev.modifiers & EVENTFLAG_ALT_DOWN) kev.is_system_key = true;
+#endif
 
+#ifdef _WIN32
+    if (event.keyval > 256) {
+        KeyboardCode windows_key_code = CefKeyFromGlut(event.keyval);
+        kev.windows_key_code = GetWindowsKeyCodeWithoutLocation(windows_key_code);
+    } else {
+        kev.windows_key_code = event.keyval;
+    }
+#else
     KeyboardCode windows_key_code = CefKeyFromGlut(event.keyval);
     kev.windows_key_code = GetWindowsKeyCodeWithoutLocation(windows_key_code);
+#endif
 
+#ifdef _WIN32
+    kev.native_key_code = event.keyval;
+#else
     kev.native_key_code = CefKeyFromGlut( event.keyval );
     if (kev.native_key_code == 0) return false;
+#endif
 
+#ifdef _WIN32
+    kev.unmodified_character = static_cast<int>(event.keyval);
+#else
     if (windows_key_code == VKEY_RETURN) kev.unmodified_character = '\r';
     else kev.unmodified_character = static_cast<int>(event.keyval);
+#endif
 
+#ifndef _WIN32
     if (kev.modifiers & EVENTFLAG_CONTROL_DOWN) kev.character = GetControlCharacter(windows_key_code, kev.modifiers & EVENTFLAG_SHIFT_DOWN);
     else kev.character = event.keyval;
+#endif
 
     if (event.state == 1) {
         //cout << " CEF::keyboard press " << kev.windows_key_code << " " << kev.native_key_code << " " << kev.character << " " << kev.unmodified_character << endl;

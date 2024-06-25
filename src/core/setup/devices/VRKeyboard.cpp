@@ -53,8 +53,8 @@ VRKeyboardPtr VRKeyboard::ptr() { return static_pointer_cast<VRKeyboard>( shared
 
 bool VRKeyboard::shiftDown() { return (b_state(368) == 1 || b_state(369) == 1); } // Shift left and right
 bool VRKeyboard::ctrlDown()  { return (b_state(370) == 1 || b_state(371) == 1); } // Ctrl  left and right
-bool VRKeyboard::altDown()  { return (b_state(372) == 1); } // Alt
-bool VRKeyboard::lockDown()  { return false; } // TODO
+bool VRKeyboard::altDown()  { return (b_state(372) == 1 || b_state(373) == 1); } // Alt
+bool VRKeyboard::lockDown()  { return (b_state(144) == 1); } // Num Lock
 
 VRKeyboard::KeyEvent& VRKeyboard::getEvent() { return event; }
 
