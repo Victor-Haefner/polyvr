@@ -15,6 +15,7 @@ OSG_BEGIN_NAMESPACE;
 using namespace std;
 
 class MPart;
+class MMotor;
 
 class VRProfile {
     private:
@@ -132,6 +133,7 @@ class MPart {
 
         virtual void setup();
         virtual void computeChange();
+        virtual void drivenChange(MMotor* motor) = 0;
         virtual void move();
         virtual void updateNeighbors(vector<MPart*> parts) = 0;
 
@@ -153,6 +155,7 @@ class MGear : public MPart {
         void setup() override;
 
         void computeChange() override;
+        void drivenChange(MMotor* motor) override;
         void move() override;
         void updateNeighbors(vector<MPart*> parts) override;
 };
@@ -170,6 +173,7 @@ class MThread : public MPart {
         void setup() override;
 
         void computeChange() override;
+        void drivenChange(MMotor* motor) override;
 
         void move() override;
         void updateNeighbors(vector<MPart*> parts) override;
@@ -196,7 +200,16 @@ class MChain : public MPart {
         vector<pointPolySegment> toPolygon(Vec3d p);
 
         void move() override;
+        void drivenChange(MMotor* motor) override;
         void updateNeighbors(vector<MPart*> parts) override;
+};
+
+class MMotor {
+    public:
+        string name;
+        int dof = 5; // z
+        VRTransformPtr driven;
+        float speed = 1.0;
 };
 
 class VRMechanism : public VRObject {
@@ -204,6 +217,7 @@ class VRMechanism : public VRObject {
         map<VRTransformPtr, vector<MPart*>> cache;
         vector<MPart*> parts;
         vector<MPart*> changed_parts;
+        map<string, MMotor*> motors;
 
         VRAnalyticGeometryPtr geo;
 
@@ -217,6 +231,9 @@ class VRMechanism : public VRObject {
         void addGear(VRTransformPtr trans, float width, float hole, float pitch, int N_teeth, float teeth_size, float bevel, Vec3d axis, Vec3d offset);
         VRTransformPtr addChain(float w, vector<VRTransformPtr> geos, string dirs);
         void addCoaxialConstraint(VRTransformPtr part1, VRTransformPtr part2);
+
+        void addMotor(string name, VRTransformPtr driven, float speed = 0.01, int dof = 5);
+        void setMotorSpeed(string name, float speed);
 
         int getNParts();
         double getLastChange(VRTransformPtr part);

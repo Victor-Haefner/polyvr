@@ -14,6 +14,8 @@ simpleVRPyType(ThreadSegmentation, New_ptr);
 
 PyMethodDef VRPyMechanism::methods[] = {
     {"add", PyWrapOpt(Mechanism, add, "Add part to mechanism - add(P)", "0", void, VRTransformPtr, VRTransformPtr ) },
+    {"addMotor", PyWrapOpt(Mechanism, addMotor, "Add motor to drive a part (name, obj, speed = 0.01, dof = 5)", "0.01|5", void, string, VRTransformPtr, float, int ) },
+    {"setMotorSpeed", PyWrap(Mechanism, setMotorSpeed, "Set motor speed, rad/s (name, speed)", void, string, float ) },
     {"update", PyWrap(Mechanism, update, "Update mechanism simulation", void ) },
     {"clear", PyWrap(Mechanism, clear, "Clear mechanism parts", void ) },
     {"addChain", PyWrap(Mechanism, addChain, "Add chain - addChain(float width, [G1, G2, G3, ...])", VRTransformPtr, float, vector<VRTransformPtr>, string ) },

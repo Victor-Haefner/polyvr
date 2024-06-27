@@ -256,7 +256,7 @@ MRelation* checkGearThread(MGear* p1, MThread* p2) {
 
     VRGear* g1 = (VRGear*)p1->prim;
     VRScrewThread* g2 = (VRScrewThread*)p2->prim;
-    float t = g1->teeth_size * s1;
+    //float t = g1->teeth_size * s1;
 
     // check if gear center along thread
     Line l = Line(Pnt3f(P2), Vec3f(n2));
@@ -444,6 +444,42 @@ void MThread::computeChange() {
     // 2 Pi rotation -> pitch advancement
     change.dx = - thread()->pitch * change.a / (2*Pi);
 }
+
+
+void MGear::drivenChange(MMotor* motor) {
+    int d = motor->dof;
+    if (d == 0 || d == 1 || d == 2) return; // TODO: translation for gears??
+
+    change.a = motor->speed;
+    if (d == 3) change.n = Vec3d(1,0,0);
+    if (d == 4) change.n = Vec3d(0,1,0);
+    if (d == 5) change.n = Vec3d(0,0,1);
+
+    change.time = timestamp;
+    change.origin = this;
+
+    change.a *= rAxis.dot(change.n);
+    change.dx = change.a*gear()->radius();
+}
+
+void MThread::drivenChange(MMotor* motor) {
+    int d = motor->dof;
+    if (d == 0 || d == 1 || d == 2) return; // TODO: translation for threads??
+
+    change.a = motor->speed;
+    if (d == 3) change.n = Vec3d(1,0,0);
+    if (d == 4) change.n = Vec3d(0,1,0);
+    if (d == 5) change.n = Vec3d(0,0,1);
+
+    change.time = timestamp;
+    change.origin = this;
+
+    change.a *= rAxis.dot(change.n);
+    // 2 Pi rotation -> pitch advancement
+    change.dx = - thread()->pitch * change.a / (2*Pi);
+}
+
+void MChain::drivenChange(MMotor* motor) {}
 
 bool isPossibleNeighbor(MPart* p1, MPart* p2) {
     if (p1 == p2) return false;
@@ -650,8 +686,22 @@ shared_ptr<VRMechanism> VRMechanism::create() { return shared_ptr<VRMechanism>(n
 
 void VRMechanism::clear() {
     for (auto part : parts) delete part;
+    for (auto motor : motors) delete motor.second;
     parts.clear();
     cache.clear();
+    motors.clear();
+}
+
+void VRMechanism::addMotor(string name, VRTransformPtr driven, float speed, int dof) {
+    if (!motors.count(name)) motors[name] = new MMotor();
+    motors[name]->name = name;
+    motors[name]->driven = driven;
+    motors[name]->speed = speed;
+    motors[name]->dof = dof;
+}
+
+void VRMechanism::setMotorSpeed(string name, float speed) {
+    motors[name]->speed = speed;
 }
 
 void VRMechanism::add(VRTransformPtr part, VRTransformPtr trans) {
@@ -770,6 +820,19 @@ void VRMechanism::update() {
         //part->printChange();
     }
 
+    for (auto& motor : motors) {
+        if (motor.second->speed < 1e-6) continue; // TODO: motorbremse?
+        if (!cache.count(motor.second->driven)) continue;
+        auto mCache = cache[motor.second->driven];
+        for (auto& part : mCache) {
+            part->updateNeighbors(parts);
+            part->computeState();
+            part->drivenChange(motor.second);
+            part->move();
+            changed_parts.push_back(part);
+        }
+    }
+
     for (auto& part : changed_parts) {
         //cout << " update changes " << part->geo->getName() << endl;
         if (part->getChange().isNull()) continue;
@@ -873,10 +936,10 @@ void VRMechanism::updateVisuals() {
         if (cp->type == "gear") n = ((MGear*)cp)->rAxis;
         if (cp->type == "thread") n = ((MThread*)cp)->rAxis;
 
-        double r = 1.0;
         if (cp->type == "gear") n = ((VRGear*)((MGear*)cp)->prim)->radius() *s;
         if (cp->type == "thread") n = ((VRScrewThread*)((MThread*)cp)->prim)->radius *s;
 
+        //double r = 1.0;
         //geo->addVector(pos1, Vec3d(0,10,0), Color3f(1,0,0));
         //geo->addCircle(pos1, n, r, Color3f(1,0,0));
     }
