@@ -61,14 +61,6 @@ void MPart::apply() {
         transform = Pose::create(referenceT);
     }
     timestamp++;
-
-    lastChange = change;
-    if (type == "gear") {
-        double s = trans->getWorldScale()[0];
-        VRGear* g = (VRGear*)prim;
-        double r = g->radius() * s;
-        lastChange.dx = lastChange.a*r;
-    }
 }
 
 MPart* MPart::make(VRTransformPtr g, VRTransformPtr t) {
@@ -384,6 +376,7 @@ void MPart::move() {}
 void MChain::move() { if (!geo || !geo->isVisible("", true)) return; updateGeo(); }
 void MThread::move() {
     //trans->rotateWorld(change.a, rAxis);
+    cumulativeChange.a += change.a;
     if (transform) {
         transform->rotate(change.a, rAxis);
         didMove = true;
@@ -399,6 +392,7 @@ void MGear::move() {
     //cout << " MGear::move " << change.a << ", " << change.dx;
     float a = change.dx/gear()->radius();
     change.a = a;
+    cumulativeChange.a += change.a;
     //cout << " -> " << a << endl;
 
     //trans->rotateWorld(a, rAxis);
@@ -894,6 +888,7 @@ void MPart::updateTransform() {
         }
 #endif
 
+        //Matrix4d M2 = transform
         trans->setWorldPose(transform);
 
 #ifndef WITHOUT_BULLET
@@ -904,6 +899,16 @@ void MPart::updateTransform() {
 #endif
     }
     didMove = false;
+
+    lastChange = cumulativeChange;
+    lastChange.time = timestamp;
+    cumulativeChange = MChange();
+    if (type == "gear") {
+        double s = trans->getWorldScale()[0];
+        VRGear* g = (VRGear*)prim;
+        double r = g->radius() * s;
+        lastChange.dx = lastChange.a*r;
+    }
 }
 
 void VRMechanism::updateVisuals() {

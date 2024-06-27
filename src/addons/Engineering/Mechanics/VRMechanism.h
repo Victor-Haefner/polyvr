@@ -109,6 +109,7 @@ class MPart {
         VRTransformPtr trans = 0;
         VRPrimitive* prim = 0;
         MChange change;
+        MChange cumulativeChange;
         MChange lastChange;
         Matrix4d reference;
         Matrix4d referenceT;
