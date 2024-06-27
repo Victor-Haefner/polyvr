@@ -386,6 +386,7 @@ void MThread::move() {
 void MGear::move() {
     if (!change.doMove) { // next gear on same object!
         change.dx = change.a*gear()->radius();
+        cumulativeChange.a += change.a;
         return;
     }
 
@@ -430,6 +431,7 @@ void MGear::computeChange() {
     change.a *= rAxis.dot(change.n);
     //if (abs(change.a) > 1e-2) cout << "MGear::computeChange " << rAxis << "  n " << change.n << "  " << change.a << endl;
     change.dx = change.a*gear()->radius();
+    cumulativeChange.a += change.a;
 }
 
 void MThread::computeChange() {
@@ -437,6 +439,7 @@ void MThread::computeChange() {
     change.a *= rAxis.dot(change.n);
     // 2 Pi rotation -> pitch advancement
     change.dx = - thread()->pitch * change.a / (2*Pi);
+    cumulativeChange.a += change.a;
 }
 
 
@@ -454,6 +457,7 @@ void MGear::drivenChange(MMotor* motor) {
 
     change.a *= rAxis.dot(change.n);
     change.dx = change.a*gear()->radius();
+    cumulativeChange.a += change.a;
 }
 
 void MThread::drivenChange(MMotor* motor) {
@@ -878,6 +882,16 @@ void VRMechanism::update(bool fromThread) {
 }
 
 void MPart::updateTransform() {
+    lastChange = cumulativeChange;
+    lastChange.time = timestamp;
+    cumulativeChange = MChange();
+    if (type == "gear") {
+        double s = trans->getWorldScale()[0];
+        VRGear* g = (VRGear*)prim;
+        double r = g->radius() * s;
+        lastChange.dx = lastChange.a*r;
+    }
+
     //cout << " updateTransform " << type << ", didMove " << didMove << ", transform " << transform << endl;
     if (!didMove) return;
     if (transform) {
@@ -888,8 +902,14 @@ void MPart::updateTransform() {
         }
 #endif
 
-        //Matrix4d M2 = transform
-        trans->setWorldPose(transform);
+        Matrix4d M1 = referenceT;
+        Matrix4d M2 = transform->asMatrix();
+        Matrix4d T;
+        M1.inverse(T);
+        T.mult(M2);
+        Matrix4d Mw = trans->getWorldMatrix();
+        Mw.mult(T);
+        trans->setWorldMatrix(Mw);
 
 #ifndef WITHOUT_BULLET
         if (trans->getPhysics()->isPhysicalized()) {
@@ -899,16 +919,6 @@ void MPart::updateTransform() {
 #endif
     }
     didMove = false;
-
-    lastChange = cumulativeChange;
-    lastChange.time = timestamp;
-    cumulativeChange = MChange();
-    if (type == "gear") {
-        double s = trans->getWorldScale()[0];
-        VRGear* g = (VRGear*)prim;
-        double r = g->radius() * s;
-        lastChange.dx = lastChange.a*r;
-    }
 }
 
 void VRMechanism::updateVisuals() {
