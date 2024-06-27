@@ -227,7 +227,7 @@ class VRMechanism : public VRObject {
         VRAnalyticGeometryPtr mviz;
 
         bool doRun = true;
-        bool doThread = false;
+        bool doThread = true;
         thread* simThread = 0;
 
         void updateThread();

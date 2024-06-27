@@ -11,6 +11,7 @@
 #include "core/utils/VRMutex.h"
 #include "core/utils/system/VRSystem.h"
 #include "core/tools/VRAnalyticGeometry.h"
+#include "core/utils/VRProfiler.h"
 #ifndef WITHOUT_BULLET
 #include "core/objects/geometry/VRPhysics.h"
 #endif
@@ -800,18 +801,23 @@ double VRMechanism::getLastChange(VRTransformPtr part) {
 }
 
 void VRMechanism::updateThread() {
+    auto profiler = VRProfiler::get();
     while (doRun) {
+        int pID1 = profiler->regStart("mechanism update");
         VRTimer timer;
-        //update(true);
+        update(true);
+        profiler->regStop(pID1);
+        int pID2 = profiler->regStart("mechanism sleep");
         doFrameSleep(timer.stop(), 100);
+        profiler->regStop(pID2);
     }
 }
 
 VRMutex mechMtx;
 
 void VRMechanism::update(bool fromThread) {
-    bool doSG = bool(!doThread || doThread && !fromThread);
-    bool doSim = bool(!doThread || doThread && fromThread);
+    bool doSG = bool((!doThread && !fromThread) || (doThread && !fromThread));
+    bool doSim = bool((!doThread && !fromThread) || (doThread && fromThread));
     //cout << "\nVRMechanism::update" << endl;
 
     VRLock lock(mechMtx);
