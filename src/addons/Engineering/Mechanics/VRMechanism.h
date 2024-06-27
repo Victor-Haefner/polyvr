@@ -2,6 +2,7 @@
 #define VRMECHANISM_H_INCLUDED
 
 #include <vector>
+#include <thread>
 #include <OpenSG/OSGVector.h>
 #include <OpenSG/OSGMatrix.h>
 #include "VRMechanismFwd.h"
@@ -99,6 +100,7 @@ class MPart {
         };
 
         bool resetPhysics = false;
+        bool didMove = false;
         string type = "part";
         map<MPart*, MRelation*> neighbors;
         map<MPart*, MRelation*> forcedNeighbors;
@@ -109,6 +111,8 @@ class MPart {
         MChange change;
         MChange lastChange;
         Matrix4d reference;
+        Matrix4d referenceT;
+        PosePtr transform;
         unsigned int timestamp = 0;
         STATE state = FREE;
 
@@ -116,6 +120,7 @@ class MPart {
         virtual ~MPart();
         bool changed();
 
+        void updateTransform();
         void apply();
         void setBack();
         MChange getChange();
@@ -219,7 +224,13 @@ class VRMechanism : public VRObject {
         vector<MPart*> changed_parts;
         map<string, MMotor*> motors;
 
-        VRAnalyticGeometryPtr geo;
+        VRAnalyticGeometryPtr mviz;
+
+        bool doRun = true;
+        bool doThread = false;
+        thread* simThread = 0;
+
+        void updateThread();
 
     public:
         VRMechanism();
@@ -238,7 +249,7 @@ class VRMechanism : public VRObject {
         int getNParts();
         double getLastChange(VRTransformPtr part);
 
-        void update();
+        void update(bool fromThread = false);
         void updateNeighbors();
         void updateVisuals();
 };

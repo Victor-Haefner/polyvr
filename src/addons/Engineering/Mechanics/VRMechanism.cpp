@@ -4,9 +4,12 @@
 #include "core/objects/geometry/VRGeoData.h"
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/math/partitioning/boundingbox.h"
+#include "core/math/pose.h"
 #include "core/utils/VRGlobals.h"
 #include "core/utils/toString.h"
 #include "core/utils/isNan.h"
+#include "core/utils/VRMutex.h"
+#include "core/utils/system/VRSystem.h"
 #include "core/tools/VRAnalyticGeometry.h"
 #ifndef WITHOUT_BULLET
 #include "core/objects/geometry/VRPhysics.h"
@@ -42,16 +45,20 @@ MThread::MThread() { type = "thread"; }
 MThread::~MThread() {}
 
 bool MPart::changed() {
-    if (geo == 0) return false;
-    //cout << "  part " << geo->getName() << " changed from timestamp " << timestamp << " (last change: " << geo->getLastChange() << ")";
+    if (trans == 0) return false;
     bool b = geo->changedSince(timestamp, true);
-    //cout << " to " << timestamp << ", -> " << b << endl;
     return b;
 }
 
-void MPart::setBack() { if (trans) trans->setWorldMatrix(reference); }
+//void MPart::setBack() { if (trans) trans->setWorldMatrix(reference); }
+void MPart::setBack() { transform = Pose::create(referenceT); }
+
 void MPart::apply() {
-    if (geo && type != "chain") reference = geo->getWorldMatrix();
+    if (geo && trans && type != "chain") {
+        reference = geo->getWorldMatrix();
+        referenceT = trans->getWorldMatrix();
+        transform = Pose::create(referenceT);
+    }
     timestamp++;
 
     lastChange = change;
@@ -91,7 +98,6 @@ void MPart::clearNeighbors() {
 }
 
 void MPart::addNeighbor(MPart* p, MRelation* r) {
-    //cout << "      MPart::addNeighbor " << p->geo->getName() << endl;
     neighbors[p] = r;
     p->neighbors[this] = r;
 }
@@ -376,7 +382,11 @@ VRScrewThread* MThread::thread() { return (VRScrewThread*)prim; }
 void MPart::move() {}
 void MChain::move() { if (!geo || !geo->isVisible("", true)) return; updateGeo(); }
 void MThread::move() {
-    trans->rotateWorld(change.a, rAxis);
+    //trans->rotateWorld(change.a, rAxis);
+    if (transform) {
+        transform->rotate(change.a, rAxis);
+        didMove = true;
+    }
 }
 
 void MGear::move() {
@@ -389,23 +399,12 @@ void MGear::move() {
     float a = change.dx/gear()->radius();
     change.a = a;
     //cout << " -> " << a << endl;
-#ifndef WITHOUT_BULLET
-    if (trans->getPhysics()->isPhysicalized()) {
-        trans->getPhysics()->setDynamic(false, true);
-        resetPhysics = true;
-    }
-#endif
 
-    //cout << "MGear::move " << a << " / " << rAxis << " " << trans->getName() << endl;
-    //trans->rotate(a, rAxis);
-    trans->rotateWorld(a, rAxis);
-
-#ifndef WITHOUT_BULLET
-    if (trans->getPhysics()->isPhysicalized()) {
-        trans->setBltOverrideFlag();
-        trans->updatePhysics();
+    //trans->rotateWorld(a, rAxis);
+    if (transform) {
+        transform->rotate(a, rAxis);
+        didMove = true;
     }
-#endif
 }
 
 void MPart::computeChange() {
@@ -488,11 +487,9 @@ bool isPossibleNeighbor(MPart* p1, MPart* p2) {
 }
 
 void MGear::updateNeighbors(vector<MPart*> parts) {
-    //cout << "   MGear::updateNeighbors of " << geo->getName() << endl;
     clearNeighbors();
     for (auto part : parts) {
         if (!isPossibleNeighbor(part, this)) continue;
-        //cout << "    MGear::updateNeighbors check part " << part->geo->getName() << endl;
         VRPrimitive* p = part->prim;
 
         if (p == 0) { // chain
@@ -601,15 +598,13 @@ void MChain::updateGeo() {
         Vec3d D = c2-c1;
         float d = D.length();
 
-        float s1 = 1;//nbrs[i]->geo->getWorldScale()[0];
-        float s2 = 1;//nbrs[j]->geo->getWorldScale()[0];
+        float s1 = 1;
+        float s2 = 1;
 
         float r1 = g1->radius()*s1;
         float r2 = g2->radius()*s2;
         int z2 = r2 > r1 ? z1 : 1;
         r2 *= z1;
-
-        //cout << " A " << nbrs[i]->geo->getName() << " " << D << " " << r1 << " " << r2 << endl;
 
         float x1 = 0;
         float x2 = 0;
@@ -630,8 +625,8 @@ void MChain::updateGeo() {
 
         Matrix4d M1 = nbrs[i]->reference;
         Matrix4d M2 = nbrs[j]->reference;
-        Vec3d a1 = ((MGear*)nbrs[i])->axis; // nbrs[i]->geo->getWorldDirection()
-        Vec3d a2 = ((MGear*)nbrs[j])->axis; // nbrs[j]->geo->getWorldDirection()
+        Vec3d a1 = ((MGear*)nbrs[i])->axis;
+        Vec3d a2 = ((MGear*)nbrs[j])->axis;
         M1.mult(a1,a1);
         M2.mult(a2,a2);
 
@@ -642,12 +637,6 @@ void MChain::updateGeo() {
         t2 = c2 + t2*y2 - dn*x2;
         polygon.push_back(t1);
         polygon.push_back(t2);
-
-        /*Vec3d check = t2-t1;
-        cout << nbrs[i]->geo->getName() << " " << nbrs[j]->geo->getName();
-        cout << " check " << check.dot(t1-c1) << " " << check.dot(t2-c2);
-        cout << " r1 " << r1 << " r2 " << r2;
-        cout << endl;*/
     }
 
     if (polygon.size() < 2) return;
@@ -679,8 +668,21 @@ VRTransformPtr MChain::init() {
 
 // -------------- mechanism ------------------------
 
-VRMechanism::VRMechanism() : VRObject("mechanism") { setPersistency(0); }
-VRMechanism::~VRMechanism() { clear(); }
+VRMechanism::VRMechanism() : VRObject("mechanism") {
+    if (doThread) {
+        simThread = new thread( bind(&VRMechanism::updateThread, this) );
+    }
+    setPersistency(0);
+}
+
+VRMechanism::~VRMechanism() {
+    if (doThread) {
+        doRun = false;
+        simThread->join();
+        delete simThread;
+    }
+    clear();
+}
 
 shared_ptr<VRMechanism> VRMechanism::create() { return shared_ptr<VRMechanism>(new VRMechanism()); }
 
@@ -797,64 +799,112 @@ double VRMechanism::getLastChange(VRTransformPtr part) {
     return 0;
 }
 
-void VRMechanism::update() {
+void VRMechanism::updateThread() {
+    while (doRun) {
+        VRTimer timer;
+        //update(true);
+        doFrameSleep(timer.stop(), 100);
+    }
+}
+
+VRMutex mechMtx;
+
+void VRMechanism::update(bool fromThread) {
+    bool doSG = bool(!doThread || doThread && !fromThread);
+    bool doSim = bool(!doThread || doThread && fromThread);
     //cout << "\nVRMechanism::update" << endl;
 
+    VRLock lock(mechMtx);
+
 #ifndef WITHOUT_BULLET
-    for (auto& part : parts) {
-        if (part->resetPhysics) {
-            part->trans->getPhysics()->setDynamic(true, true);
-            part->resetPhysics = false;
+    if (doSG) {
+        for (auto& part : parts) {
+            if (part->resetPhysics) {
+                part->trans->getPhysics()->setDynamic(true, true);
+                part->resetPhysics = false;
+            }
         }
     }
 #endif
 
-    changed_parts.clear();
-    //for (auto& part : parts) part->change = MChange();
-    for (auto& part : parts) if (part->changed()) changed_parts.push_back(part);
-
-    for (auto& part : changed_parts) {
-        part->updateNeighbors(parts);
-        part->computeState();
-        part->computeChange();
-        //part->printChange();
-    }
-
-    for (auto& motor : motors) {
-        if (motor.second->speed < 1e-6) continue; // TODO: motorbremse?
-        if (!cache.count(motor.second->driven)) continue;
-        auto mCache = cache[motor.second->driven];
-        for (auto& part : mCache) {
+    if (doSG) {
+        changed_parts.clear();
+        vector<MPart*> filtered;
+        //for (auto& part : parts) part->change = MChange();
+        for (auto& part : parts) if (part->changed()) filtered.push_back(part);
+        for (auto& part : filtered) {
             part->updateNeighbors(parts);
             part->computeState();
-            part->drivenChange(motor.second);
-            part->move();
-            changed_parts.push_back(part);
+            part->computeChange();
+            if (!part->change.isNull()) changed_parts.push_back(part);
         }
+
+        /*cout << " N changed " << changed_parts.size() << endl;
+        for (auto& part : changed_parts) {
+            part->printChange();
+        }*/
     }
 
-    for (auto& part : changed_parts) {
-        //cout << " update changes " << part->geo->getName() << endl;
-        if (part->getChange().isNull()) continue;
-        bool block = !part->propagateMovement();
-        if (block && 0) { // mechanism is blocked, TODO: add parameter to allow blocking or not
-            cout << "  block!" << endl;
-            for (auto part : changed_parts) {
-                if (part->state == MPart::ENGAGED) part->setBack();
+    if (doSim) {
+        for (auto& motor : motors) {
+            if (motor.second->speed < 1e-6) continue; // TODO: motorbremse?
+            if (!cache.count(motor.second->driven)) continue;
+            auto mCache = cache[motor.second->driven];
+            for (auto& part : mCache) {
+                part->updateNeighbors(parts);
+                part->computeState();
+                part->drivenChange(motor.second);
+                part->move();
+                changed_parts.push_back(part);
             }
-            return;
+        }
+
+        for (auto& part : changed_parts) {
+            if (part->getChange().isNull()) continue;
+            bool block = !part->propagateMovement(); // TODO: this changes transforms (.move)!
+            if (block && 0) { // mechanism is blocked, TODO: add parameter to allow blocking or not
+                cout << "  block!" << endl;
+                for (auto part : changed_parts) {
+                    if (part->state == MPart::ENGAGED) part->setBack();
+                }
+                return;
+            }
         }
     }
 
-    for (auto part : parts) part->apply();
-    for (auto part : changed_parts) part->changed();
+    if (doSG) for (auto part : parts) part->updateTransform();
+    if (doSG) for (auto part : parts) part->apply();
+    if (doSim) for (auto part : changed_parts) part->changed();
+}
+
+void MPart::updateTransform() {
+    //cout << " updateTransform " << type << ", didMove " << didMove << ", transform " << transform << endl;
+    if (!didMove) return;
+    if (transform) {
+#ifndef WITHOUT_BULLET
+        if (trans->getPhysics()->isPhysicalized()) {
+            trans->getPhysics()->setDynamic(false, true);
+            resetPhysics = true;
+        }
+#endif
+
+        trans->setWorldPose(transform);
+
+#ifndef WITHOUT_BULLET
+        if (trans->getPhysics()->isPhysicalized()) {
+            trans->setBltOverrideFlag();
+            trans->updatePhysics();
+        }
+#endif
+    }
+    didMove = false;
 }
 
 void VRMechanism::updateVisuals() {
-    if (!geo) geo = VRAnalyticGeometry::create();
-    if(!geo->isVisible("", true)) return;
-    addChild(geo);
-    geo->clear();
+    if (!mviz) mviz = VRAnalyticGeometry::create();
+    if(!mviz->isVisible("", true)) return;
+    addChild(mviz);
+    mviz->clear();
 
     // visualize part params
     for (auto p : parts) {
@@ -869,7 +919,7 @@ void VRMechanism::updateVisuals() {
             float r = g->radius() * s;
             a.normalize();
             Vec3d pos = Vec3d(p->reference[3]) + o;
-            geo->addVector(pos, a*w, Color3f(0.2,1,0.3));
+            mviz->addVector(pos, a*w, Color3f(0.2,1,0.3));
 
             // last change
             Vec3d t = p->change.n.cross(u);
@@ -877,9 +927,9 @@ void VRMechanism::updateVisuals() {
             float A = p->change.a;
             float d = p->change.n.dot(a);
             if (abs(d) > 1e-2) A /= d;
-            geo->addVector(cP, p->change.n*w, Color3f(0.9,0,0.7)); // change rot axis
-            geo->addVector(cP, t*A, Color3f(0.6,0,0.4)); // tangent * angle
-            geo->addVector(cP, u*A, Color3f(0.2,0,0.4)); // up * angle
+            mviz->addVector(cP, p->change.n*w, Color3f(0.9,0,0.7)); // change rot axis
+            mviz->addVector(cP, t*A, Color3f(0.6,0,0.4)); // tangent * angle
+            mviz->addVector(cP, u*A, Color3f(0.2,0,0.4)); // up * angle
 
 
             bool b = false;
@@ -891,14 +941,14 @@ void VRMechanism::updateVisuals() {
                 auto d = pos2-pos;
                 d.normalize();
                 float ts = g->teeth_size * s;
-                geo->addVector(pos + a*w, d*(r-ts*0.5), Color3f(1,1,0));
-                geo->addVector(pos + a*w + d*(r-ts*0.5), d*ts, Color3f(0.9,0.4,0));
+                mviz->addVector(pos + a*w, d*(r-ts*0.5), Color3f(1,1,0));
+                mviz->addVector(pos + a*w + d*(r-ts*0.5), d*ts, Color3f(0.9,0.4,0));
                 b = true;
             }
 
             if (!b) {
-                geo->addVector(pos + a*w, u*(r-ts*0.5), Color3f(1,1,0));
-                geo->addVector(pos + a*w + u*(r-ts*0.5), u*ts, Color3f(0.9,0.4,0));
+                mviz->addVector(pos + a*w, u*(r-ts*0.5), Color3f(1,1,0));
+                mviz->addVector(pos + a*w + u*(r-ts*0.5), u*ts, Color3f(0.9,0.4,0));
             }
         }
 
@@ -908,7 +958,7 @@ void VRMechanism::updateVisuals() {
             Vec3d a = ((MThread*)p)->rAxis;
             Vec3d pos = Vec3d(p->reference[3]);
             float w = t->length * s;
-            geo->addVector(pos, -a*w, Color3f(0.2,1,0.3));
+            mviz->addVector(pos, -a*w, Color3f(0.2,1,0.3));
         }
     }
 
@@ -919,10 +969,10 @@ void VRMechanism::updateVisuals() {
         for (auto p2 : p1->neighbors) {
             auto color = Color3f(0.4,0.6,1.0);
             if (p1->type == "chain" || p2.first->type == "chain") color = Color3f(1.0,0.6,0.4);
-            auto pos2 = Vec3d(p2.first->reference[3]);
+            auto pos2 = Vec3d(p2.first->reference[3]);;
             if (p2.first->type == "gear") pos2 += ((MGear*)p2.first)->rOffset;
             Vec3d d = (pos2-pos1)*0.45;
-            geo->addVector(pos1, d, color);
+            mviz->addVector(pos1, d, color);
         }
     }
 
@@ -940,8 +990,8 @@ void VRMechanism::updateVisuals() {
         if (cp->type == "thread") n = ((VRScrewThread*)((MThread*)cp)->prim)->radius *s;
 
         //double r = 1.0;
-        //geo->addVector(pos1, Vec3d(0,10,0), Color3f(1,0,0));
-        //geo->addCircle(pos1, n, r, Color3f(1,0,0));
+        //mviz->addVector(pos1, Vec3d(0,10,0), Color3f(1,0,0));
+        //mviz->addCircle(pos1, n, r, Color3f(1,0,0));
     }
 }
 

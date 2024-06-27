@@ -1,10 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Scene base_name="mecha_test" name_space="Scene" name_suffix="0" persistency="666">
   <Objects>
-    <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" visible="1">
-      <Object ambient="0.3 0.3 0.3 1" base_name="Headlight" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" name_space="__global__" name_suffix="0" on="1" persistency="666" photometricMap="" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" shadowVolume="1e+06 1e+06 1e+06 -1e+06 -1e+06 -1e+06 1" specular="0.1 0.1 0.1 1" type="Light" visible="1">
-        <Object accept_root="1" aspect="1" at="0.245364 -0.0381768 0.010066" at_dir="0" base_name="Default" far="250" fov="1.0472" from="1.03031 0.476812 -0.423324" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
+    <Object base_name="Root" name_space="__global__" name_suffix="1" persistency="666" pickable="0" type="Object" visible="1">
+      <Object ambient="0.3 0.3 0.3 1" base_name="Headlight" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" name_space="__global__" name_suffix="0" on="1" persistency="666" photometricMap="" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" shadowVolume="1.79769e+308 1.79769e+308 1.79769e+308 -1.79769e+308 -1.79769e+308 -1.79769e+308 1" specular="0.1 0.1 0.1 1" type="Light" visible="1">
+        <Object accept_root="1" aspect="1" at="0.245364 -0.0381768 0.010066" at_dir="0" base_name="Default" camType="perspective" far="250" fov="1.0472" from="1.14651 0.316584 -0.352238" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
+          <attachments>
+            <Node base_name="transform" name_space="VRAttachment" name_suffix="0" persistency="666" value=""/>
+          </attachments>
           <Object at="0 0 -1" at_dir="0" base_name="Headlight_beacon" from="0 0 0" light="Headlight" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="LightBeacon" up="0 1 0" visible="1">
+            <attachments>
+              <Node base_name="transform" name_space="VRAttachment" name_suffix="0" persistency="666" value=""/>
+            </attachments>
             <constraint persistency="666"/>
           </Object>
           <constraint persistency="666"/>
@@ -138,7 +144,7 @@
 		c = VR.mechanism.addChain(0.02, objs, 'l'*len(objs))
 		VR.gears.addChild(c)
 </core>
-      <trig type="on_device" dev="server1" state="Released" param="" key="-1" base_name="trigger" name_space="__global__" name_suffix="0" persistency="666"/>
+      <trig type="on_device" dev="server1" state="Released" param="" key="-1" base_name="trigger" name_space="__global__" name_suffix="3" persistency="666"/>
     </Script>
     <Script base_name="gui_init" group="gui" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
       <core>
@@ -165,7 +171,7 @@
 	
 	
 </core>
-      <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" base_name="trigger" name_space="__global__" name_suffix="3" persistency="666"/>
+      <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" base_name="trigger" name_space="__global__" name_suffix="5" persistency="666"/>
     </Script>
     <Script base_name="gui_site_toolbar" group="gui" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="HTML">
       <core>
@@ -437,24 +443,23 @@
 	axis.setTransform([cgr*4,0,0.1], [0,1,0], [0,0,1])
 	VR.scene.addChild(axis)
 	
-	VR.setPhysicsActive(0)
+	#VR.setPhysicsActive(0)
+	#aID = VR.kinematics.addBody(axis)
+	#p3ID = VR.kinematics.addBody(VR.P3)
+	#p8ID = VR.kinematics.addBody(VR.P8)
+	#p0 = VR.Pose()
+	#p1 = axis.getPoseTo(VR.P3)
+	#p2 = axis.getPoseTo(VR.P8)
+	#VR.kinematics.addFixedJoint(aID, p3ID, p1, p0)
+	#VR.kinematics.addFixedJoint(aID, p8ID, p2, p0)
+	#VR.setPhysicsActive(1)
 	
-	aID = VR.kinematics.addBody(axis)
-	p3ID = VR.kinematics.addBody(VR.P3)
-	p8ID = VR.kinematics.addBody(VR.P8)
-	
-	p0 = VR.Pose()
-	p1 = axis.getPoseTo(VR.P3)
-	p2 = axis.getPoseTo(VR.P8)
-	VR.kinematics.addFixedJoint(aID, p3ID, p1, p0)
-	VR.kinematics.addFixedJoint(aID, p8ID, p2, p0)
-	
-	VR.setPhysicsActive(1)
+	VR.mechanism.addCoaxialConstraint(VR.P3, VR.P8)
 	
 	
 	VR.mechanism.updateVisuals()
 </core>
-      <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" base_name="trigger" name_space="__global__" name_suffix="0" persistency="666"/>
+      <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" base_name="trigger" name_space="__global__" name_suffix="7" persistency="666"/>
     </Script>
     <Script base_name="test" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
       <core>
@@ -500,13 +505,17 @@
 	
 		
 </core>
-      <trig type="on_timeout" dev="" state="Pressed" param="0" key="0" base_name="trigger" name_space="__global__" name_suffix="1" persistency="666"/>
-      <trig type="on_device" dev="keyboard" state="Pressed" param="" key="32" base_name="trigger" name_space="__global__" name_suffix="6" persistency="666"/>
+      <trig type="on_timeout" dev="" state="Pressed" param="0" key="0" base_name="trigger" name_space="__global__" name_suffix="9" persistency="666"/>
+      <trig type="on_device" dev="keyboard" state="Pressed" param="" key="32" base_name="trigger" name_space="__global__" name_suffix="11" persistency="666"/>
     </Script>
   </Scripts>
   <Sockets persistency="666"/>
   <Background color="0.6 0.6 0.6" format=".png" path="" persistency="666" type="0"/>
-  <Navigation active="Orbit" persistency="666"/>
+  <Navigation persistency="666">
+    <presetStates>
+      <Orbit>1</Orbit>
+    </presetStates>
+  </Navigation>
   <Materials persistency="666"/>
   <Semantics persistency="666"/>
 </Scene>
