@@ -19,6 +19,7 @@
 #include <OpenSG/OSGGeoProperties.h>
 #include <OpenSG/OSGGeometry.h>
 #include <OpenSG/OSGQuaternion.h>
+#include <algorithm>
 
 using namespace OSG;
 
@@ -126,7 +127,6 @@ bool MChange::same(MChange c) { // returning true, blocks the mechanism
 }
 
 bool MPart::propagateMovement() { // recursion
-    cout << " propagateMovement " << this << ", " << change.a << ", N n " << neighbors.size() << endl;
     bool res = true;
     for (auto n : neighbors) {
         res = n.first->propagateMovement(change, n.second) ? res : false;
@@ -135,9 +135,8 @@ bool MPart::propagateMovement() { // recursion
 }
 
 bool MPart::propagateMovement(MChange c, MRelation* r) { // change
-    //cout << "  propagateMovement " << this << ", " << c.a << endl;
     r->translateChange(c);
-    if (change.time == c.time) { // either it is the same change OR another change in the same timestep
+    if (change.time == c.time && change.substep == c.substep) { // either it is the same change OR another change in the same timestep
         if (change.origin == c.origin) return change.same(c); // the same change
         else {} // another change in the same timestep
     }
@@ -445,7 +444,7 @@ void MThread::computeChange() {
 }
 
 
-void MGear::drivenChange(MMotor* motor, double dt) {
+void MGear::drivenChange(MMotor* motor, int step, double dt) {
     int d = motor->dof;
     if (d == 0 || d == 1 || d == 2) return; // TODO: translation for gears??
 
@@ -455,6 +454,7 @@ void MGear::drivenChange(MMotor* motor, double dt) {
     if (d == 5) change.n = Vec3d(0,0,1);
 
     change.time = timestamp;
+    change.substep = step;
     change.origin = this;
 
     change.a *= rAxis.dot(change.n);
@@ -462,7 +462,7 @@ void MGear::drivenChange(MMotor* motor, double dt) {
     cumulativeChange.a += change.a;
 }
 
-void MThread::drivenChange(MMotor* motor, double dt) {
+void MThread::drivenChange(MMotor* motor, int step, double dt) {
     int d = motor->dof;
     if (d == 0 || d == 1 || d == 2) return; // TODO: translation for threads??
 
@@ -472,6 +472,7 @@ void MThread::drivenChange(MMotor* motor, double dt) {
     if (d == 5) change.n = Vec3d(0,0,1);
 
     change.time = timestamp;
+    change.substep = step;
     change.origin = this;
 
     change.a *= rAxis.dot(change.n);
@@ -479,7 +480,7 @@ void MThread::drivenChange(MMotor* motor, double dt) {
     change.dx = - thread()->pitch * change.a / (2*Pi);
 }
 
-void MChain::drivenChange(MMotor* motor, double dt) {}
+void MChain::drivenChange(MMotor* motor, int step, double dt) {}
 
 bool isPossibleNeighbor(MPart* p1, MPart* p2) {
     if (p1 == p2) return false;
@@ -808,7 +809,7 @@ void VRMechanism::updateThread() {
         update(true);
         profiler->regStop(pID1);
         int pID2 = profiler->regStart("mechanism sleep");
-        doFrameSleep(timer.stop(), 1000);
+        doFrameSleep(timer.stop(), 300);
         profiler->regStop(pID2);
     }
 }
@@ -834,6 +835,7 @@ void VRMechanism::update(bool fromThread) {
 #endif
 
     if (doSG) {
+        substep = 0;
         changed_parts.clear();
         vector<MPart*> filtered;
         //for (auto& part : parts) part->change = MChange();
@@ -842,7 +844,7 @@ void VRMechanism::update(bool fromThread) {
             part->updateNeighbors(parts);
             part->computeState();
             part->computeChange();
-            //if (!part->change.isNull()) changed_parts.push_back(part);
+            if (!part->change.isNull()) changed_parts.push_back(part);
         }
 
         for (auto& motor : motors) {
@@ -863,20 +865,19 @@ void VRMechanism::update(bool fromThread) {
     if (doSim) {
         if (!simTime) simTime = VRTimer::create();
         auto dt = 0.001 * simTime->stop(); simTime->reset();
+        substep += 1;
         for (auto& motor : motors) {
             if (motor.second->speed < 1e-6) continue; // TODO: motorbremse?
             if (!cache.count(motor.second->driven)) continue;
             auto mCache = cache[motor.second->driven];
             for (auto& part : mCache) {
-                part->drivenChange(motor.second, dt);
+                part->drivenChange(motor.second, substep, dt);
+                if ( ::find(changed_parts.begin(), changed_parts.end(), part) == changed_parts.end() )
+                    changed_parts.push_back(part);
                 part->move();
-                //changed_parts.push_back(part);
-                part->propagateMovement();
-                cout << "drive motor " << part << ", " << part->change.a << endl;
             }
         }
 
-        cout << "N changed " << changed_parts.size() << endl;
         for (auto& part : changed_parts) {
             if (part->getChange().isNull()) continue;
             bool block = !part->propagateMovement();
