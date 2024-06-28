@@ -126,6 +126,7 @@ bool MChange::same(MChange c) { // returning true, blocks the mechanism
 }
 
 bool MPart::propagateMovement() { // recursion
+    cout << " propagateMovement " << this << ", " << change.a << ", N n " << neighbors.size() << endl;
     bool res = true;
     for (auto n : neighbors) {
         res = n.first->propagateMovement(change, n.second) ? res : false;
@@ -134,6 +135,7 @@ bool MPart::propagateMovement() { // recursion
 }
 
 bool MPart::propagateMovement(MChange c, MRelation* r) { // change
+    //cout << "  propagateMovement " << this << ", " << c.a << endl;
     r->translateChange(c);
     if (change.time == c.time) { // either it is the same change OR another change in the same timestep
         if (change.origin == c.origin) return change.same(c); // the same change
@@ -443,11 +445,11 @@ void MThread::computeChange() {
 }
 
 
-void MGear::drivenChange(MMotor* motor) {
+void MGear::drivenChange(MMotor* motor, double dt) {
     int d = motor->dof;
     if (d == 0 || d == 1 || d == 2) return; // TODO: translation for gears??
 
-    change.a = motor->speed;
+    change.a = motor->speed * dt;
     if (d == 3) change.n = Vec3d(1,0,0);
     if (d == 4) change.n = Vec3d(0,1,0);
     if (d == 5) change.n = Vec3d(0,0,1);
@@ -460,11 +462,11 @@ void MGear::drivenChange(MMotor* motor) {
     cumulativeChange.a += change.a;
 }
 
-void MThread::drivenChange(MMotor* motor) {
+void MThread::drivenChange(MMotor* motor, double dt) {
     int d = motor->dof;
     if (d == 0 || d == 1 || d == 2) return; // TODO: translation for threads??
 
-    change.a = motor->speed;
+    change.a = motor->speed * dt;
     if (d == 3) change.n = Vec3d(1,0,0);
     if (d == 4) change.n = Vec3d(0,1,0);
     if (d == 5) change.n = Vec3d(0,0,1);
@@ -477,7 +479,7 @@ void MThread::drivenChange(MMotor* motor) {
     change.dx = - thread()->pitch * change.a / (2*Pi);
 }
 
-void MChain::drivenChange(MMotor* motor) {}
+void MChain::drivenChange(MMotor* motor, double dt) {}
 
 bool isPossibleNeighbor(MPart* p1, MPart* p2) {
     if (p1 == p2) return false;
@@ -806,7 +808,7 @@ void VRMechanism::updateThread() {
         update(true);
         profiler->regStop(pID1);
         int pID2 = profiler->regStart("mechanism sleep");
-        doFrameSleep(timer.stop(), 100);
+        doFrameSleep(timer.stop(), 1000);
         profiler->regStop(pID2);
     }
 }
@@ -840,7 +842,16 @@ void VRMechanism::update(bool fromThread) {
             part->updateNeighbors(parts);
             part->computeState();
             part->computeChange();
-            if (!part->change.isNull()) changed_parts.push_back(part);
+            //if (!part->change.isNull()) changed_parts.push_back(part);
+        }
+
+        for (auto& motor : motors) {
+            if (motor.second->speed < 1e-6) continue;
+            auto mCache = cache[motor.second->driven];
+            for (auto& part : mCache) {
+                part->computeState();
+                part->updateNeighbors(parts);
+            }
         }
 
         /*cout << " N changed " << changed_parts.size() << endl;
@@ -850,22 +861,26 @@ void VRMechanism::update(bool fromThread) {
     }
 
     if (doSim) {
+        if (!simTime) simTime = VRTimer::create();
+        auto dt = 0.001 * simTime->stop(); simTime->reset();
         for (auto& motor : motors) {
             if (motor.second->speed < 1e-6) continue; // TODO: motorbremse?
             if (!cache.count(motor.second->driven)) continue;
             auto mCache = cache[motor.second->driven];
             for (auto& part : mCache) {
-                part->updateNeighbors(parts);
-                part->computeState();
-                part->drivenChange(motor.second);
+                part->drivenChange(motor.second, dt);
                 part->move();
-                changed_parts.push_back(part);
+                //changed_parts.push_back(part);
+                part->propagateMovement();
+                cout << "drive motor " << part << ", " << part->change.a << endl;
             }
         }
 
+        cout << "N changed " << changed_parts.size() << endl;
         for (auto& part : changed_parts) {
             if (part->getChange().isNull()) continue;
-            bool block = !part->propagateMovement(); // TODO: this changes transforms (.move)!
+            bool block = !part->propagateMovement();
+
             if (block && 0) { // mechanism is blocked, TODO: add parameter to allow blocking or not
                 cout << "  block!" << endl;
                 for (auto part : changed_parts) {

@@ -3,7 +3,7 @@
   <Objects>
     <Object base_name="Root" name_space="__global__" name_suffix="1" persistency="666" pickable="0" type="Object" visible="1">
       <Object ambient="0.3 0.3 0.3 1" base_name="Headlight" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" name_space="__global__" name_suffix="0" on="1" persistency="666" photometricMap="" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" shadowVolume="1.79769e+308 1.79769e+308 1.79769e+308 -1.79769e+308 -1.79769e+308 -1.79769e+308 1" specular="0.1 0.1 0.1 1" type="Light" visible="1">
-        <Object accept_root="1" aspect="1" at="0.245364 -0.0381768 0.010066" at_dir="0" base_name="Default" camType="perspective" far="250" fov="1.0472" from="1.14651 0.316584 -0.352238" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
+        <Object accept_root="1" aspect="1" at="0.245364 -0.0381768 0.010066" at_dir="0" base_name="Default" camType="perspective" far="250" fov="1.0472" from="-0.138232 0.110148 0.388276" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
           <attachments>
             <Node base_name="transform" name_space="VRAttachment" name_suffix="0" persistency="666" value=""/>
           </attachments>
@@ -433,6 +433,7 @@
 		VR.mechanism.addGear(G1, 0.02, 0.01, 0.02, cgN, 0.01, 0, [0,0,-1])
 		VR.mechanism.addGear(G1, 0.02, 0.01, 0.02, 16,  0.01, 0, [0,0,-1], [0,0,-0.02])
 		
+	VR.mechanism.addMotor('M1', VR.P1, 1) # rad/s
 	
 	VR.mechanism.updateNeighbors()
 	
@@ -454,8 +455,6 @@
 	#VR.kinematics.addFixedJoint(aID, p8ID, p2, p0)
 	#VR.setPhysicsActive(1)
 	
-	VR.mechanism.addCoaxialConstraint(VR.P3, VR.P8)
-	
 	
 	VR.mechanism.updateVisuals()
 </core>
@@ -465,8 +464,8 @@
       <core>
 	import VR, string
 
-
-
+	VR.mechanism.setMotorSpeed('M1', 1)
+	return
 
 	#VR.mechanism.updateNeighbors()
 	VR.mechanism.updateVisuals()
@@ -479,7 +478,7 @@
 	
 	if hasattr(VR, 'P1') and VR.rotate:
 		#print 'rotate P1: 0.01 around [0,0,1]'
-		VR.P1.rotate(0.011, [0,0,-1])
+		#VR.P1.rotate(0.011, [0,0,-1])
 		pass
 		
 	for gear in VR.testChangeComputationGears:

@@ -139,7 +139,7 @@ class MPart {
 
         virtual void setup();
         virtual void computeChange();
-        virtual void drivenChange(MMotor* motor) = 0;
+        virtual void drivenChange(MMotor* motor, double dt) = 0;
         virtual void move();
         virtual void updateNeighbors(vector<MPart*> parts) = 0;
 
@@ -161,7 +161,7 @@ class MGear : public MPart {
         void setup() override;
 
         void computeChange() override;
-        void drivenChange(MMotor* motor) override;
+        void drivenChange(MMotor* motor, double dt) override;
         void move() override;
         void updateNeighbors(vector<MPart*> parts) override;
 };
@@ -179,7 +179,7 @@ class MThread : public MPart {
         void setup() override;
 
         void computeChange() override;
-        void drivenChange(MMotor* motor) override;
+        void drivenChange(MMotor* motor, double dt) override;
 
         void move() override;
         void updateNeighbors(vector<MPart*> parts) override;
@@ -206,7 +206,7 @@ class MChain : public MPart {
         vector<pointPolySegment> toPolygon(Vec3d p);
 
         void move() override;
-        void drivenChange(MMotor* motor) override;
+        void drivenChange(MMotor* motor, double dt) override;
         void updateNeighbors(vector<MPart*> parts) override;
 };
 
@@ -230,6 +230,7 @@ class VRMechanism : public VRObject {
         bool doRun = true;
         bool doThread = true;
         thread* simThread = 0;
+        VRTimerPtr simTime;
 
         void updateThread();
 
