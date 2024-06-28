@@ -86,7 +86,7 @@ class CEF_handler : public CefRenderHandler, public CefLoadHandler, public CefCo
         VRTexturePtr image = 0;
         int width = 1024;
         int height = 1024;
-        bool imgSetOnce = false;
+        bool imgNeedsRedraw = true;
 
     public:
         bool updateRect = false;
@@ -222,15 +222,14 @@ bool CEF_handler::OnConsoleMessage( CefRefPtr< CefBrowser > browser, cef_log_sev
 #endif
 }
 
-UInt64 setSubData(Image* img, Int32 x0, Int32 y0, Int32 z0, Int32 srcW, Int32 srcH, Int32 srcD, const UInt8 *src ) {
+void setSubData(Image* img, Int32 x0, Int32 y0, Int32 z0, Int32 srcW, Int32 srcH, Int32 srcD, const UInt8 *src ) {
     UChar8* dest = img->editData();
-    if (!src || !dest) return 0;
+    if (!src || !dest) return;
 
     UInt32 xMax = x0 + srcW;
     UInt32 yMax = y0 + srcH;
     UInt32 zMax = z0 + srcD;
 
-    UInt64 changedPixels = 0;
     UInt64 lineSize = 0;
     UInt64 dataPtr = 0;
     for (UInt32 z = z0; z < zMax; z++) {
@@ -238,11 +237,8 @@ UInt64 setSubData(Image* img, Int32 x0, Int32 y0, Int32 z0, Int32 srcW, Int32 sr
             lineSize = (xMax - x0) * img->getBpp();
             dataPtr  = ((z * img->getHeight() + y) * img->getWidth() + x0) * img->getBpp();
             memcpy (&dest[dataPtr], &src[dataPtr], size_t(lineSize));
-            changedPixels += lineSize;
         }
     }
-
-    return changedPixels;
 }
 
 void CEF_handler::OnPaint(CefRefPtr<CefBrowser> browser, PaintElementType type, const RectList& dirtyRects, const void* buffer, int width, int height) {
@@ -252,21 +248,23 @@ void CEF_handler::OnPaint(CefRefPtr<CefBrowser> browser, PaintElementType type, 
     if (!img) return;
 
     //cout << " CEF_handler::OnPaint set " << img << endl;
-    if (!imgSetOnce || width != img->getWidth() || height != img->getHeight()) {
+    if (imgNeedsRedraw || width != img->getWidth() || height != img->getHeight()) {
         img->set(Image::OSG_BGRA_PF, width, height, 1, 0, 1, 0.0, (const uint8_t*)buffer, Image::OSG_UINT8_IMAGEDATA, true, 1);
-        imgSetOnce = true;
+        imgNeedsRedraw = false;
         updateRect = false;
         //cout << "changed all pixels!" << endl;
     } else {
         bb.clear();
         UInt64 changedPixels = 0;
         for (const CefRect& r : dirtyRects) {
-            changedPixels += setSubData(img, r.x, r.y, 0, r.width, r.height, 1, (const uint8_t*)buffer);
+            //cout << " dirtyRect x: " << r.x << ", y: " << r.y << ", w: " << r.width << ", h: " << r.height << endl;
+            changedPixels += r.width * r.height;
+            setSubData(img, r.x, r.y, 0, r.width, r.height, 1, (const uint8_t*)buffer);
             bb.update(Vec3d(r.x, r.y, 0));
             bb.update(Vec3d(r.x+r.width, r.y+r.height, 1));
         }
         updateRect = true;
-        //cout << " changed pixels: " << changedPixels << ", or " << double(changedPixels)/(width*height) << "%" << endl;
+        //cout << " changed pixels: " << changedPixels << ", or " << 100.0 * double(changedPixels)/(width*height) << "%" << " N rects: " << dirtyRects.size() << endl;
     }
 }
 
@@ -275,11 +273,13 @@ OSG::VRTexturePtr CEF_handler::getImage() { return image; }
 void CEF_handler::resize(int resolution, float aspect) {
     width = resolution;
     height = width/aspect;
+    imgNeedsRedraw = true;
     //cout << "CEF_handler::resize" << endl;
 }
 
 void CEF_handler::OnLoadEnd( CefRefPtr< CefBrowser > browser, CefRefPtr< CefFrame > frame, int httpStatusCode ) {
     if (!frame->IsMain()) return;
+    imgNeedsRedraw = true;
     //cout << "CEF_handler::OnLoadEnd" << endl;
 }
 
