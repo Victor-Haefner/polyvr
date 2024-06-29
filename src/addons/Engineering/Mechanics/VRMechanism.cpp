@@ -23,6 +23,8 @@
 
 using namespace OSG;
 
+VRMutex mechMtx;
+
 
 /**
 
@@ -449,15 +451,12 @@ void MGear::drivenChange(MMotor* motor, int step, double dt) {
     if (d == 0 || d == 1 || d == 2) return; // TODO: translation for gears??
 
     change.a = motor->speed * dt;
-    if (d == 3) change.n = Vec3d(1,0,0);
-    if (d == 4) change.n = Vec3d(0,1,0);
-    if (d == 5) change.n = Vec3d(0,0,1);
+    change.n = rAxis;
 
     change.time = timestamp;
     change.substep = step;
     change.origin = this;
 
-    change.a *= rAxis.dot(change.n);
     change.dx = change.a*gear()->radius();
     cumulativeChange.a += change.a;
 }
@@ -467,15 +466,12 @@ void MThread::drivenChange(MMotor* motor, int step, double dt) {
     if (d == 0 || d == 1 || d == 2) return; // TODO: translation for threads??
 
     change.a = motor->speed * dt;
-    if (d == 3) change.n = Vec3d(1,0,0);
-    if (d == 4) change.n = Vec3d(0,1,0);
-    if (d == 5) change.n = Vec3d(0,0,1);
+    change.n = rAxis;
 
     change.time = timestamp;
     change.substep = step;
     change.origin = this;
 
-    change.a *= rAxis.dot(change.n);
     // 2 Pi rotation -> pitch advancement
     change.dx = - thread()->pitch * change.a / (2*Pi);
 }
@@ -705,7 +701,9 @@ void VRMechanism::addMotor(string name, VRTransformPtr driven, float speed, int 
 }
 
 void VRMechanism::setMotorSpeed(string name, float speed) {
-    motors[name]->speed = speed;
+    VRLock lock(mechMtx);
+    if (!motors.count(name)) return;
+    if (motors[name]) motors[name]->speed = speed;
 }
 
 void VRMechanism::add(VRTransformPtr part, VRTransformPtr trans) {
@@ -814,8 +812,6 @@ void VRMechanism::updateThread() {
     }
 }
 
-VRMutex mechMtx;
-
 void VRMechanism::update(bool fromThread) {
     bool doSG = bool((!doThread && !fromThread) || (doThread && !fromThread));
     bool doSim = bool((!doThread && !fromThread) || (doThread && fromThread));
@@ -848,7 +844,9 @@ void VRMechanism::update(bool fromThread) {
         }
 
         for (auto& motor : motors) {
-            if (motor.second->speed < 1e-6) continue;
+            if (!motor.second) continue;
+            if (abs(motor.second->speed) < 1e-6) continue;
+            if (!cache.count(motor.second->driven)) continue;
             auto mCache = cache[motor.second->driven];
             for (auto& part : mCache) {
                 part->computeState();
@@ -867,7 +865,7 @@ void VRMechanism::update(bool fromThread) {
         auto dt = 0.001 * simTime->stop(); simTime->reset();
         substep += 1;
         for (auto& motor : motors) {
-            if (motor.second->speed < 1e-6) continue; // TODO: motorbremse?
+            if (abs(motor.second->speed) < 1e-6) continue; // TODO: motorbremse?
             if (!cache.count(motor.second->driven)) continue;
             auto mCache = cache[motor.second->driven];
             for (auto& part : mCache) {
