@@ -234,7 +234,7 @@ void setSubData(Image* img, Int32 x0, Int32 y0, Int32 z0, Int32 srcW, Int32 srcH
     UInt64 dataPtr = 0;
     for (UInt32 z = z0; z < zMax; z++) {
         for (UInt32 y = y0; y < yMax; y++) {
-            lineSize = (xMax - x0) * img->getBpp();
+            lineSize = srcW * img->getBpp();
             dataPtr  = ((z * img->getHeight() + y) * img->getWidth() + x0) * img->getBpp();
             memcpy (&dest[dataPtr], &src[dataPtr], size_t(lineSize));
         }
@@ -254,7 +254,6 @@ void CEF_handler::OnPaint(CefRefPtr<CefBrowser> browser, PaintElementType type, 
         updateRect = false;
         //cout << "changed all pixels!" << endl;
     } else {
-        bb.clear();
         UInt64 changedPixels = 0;
         for (const CefRect& r : dirtyRects) {
             //cout << " dirtyRect x: " << r.x << ", y: " << r.y << ", w: " << r.width << ", h: " << r.height << endl;
@@ -486,6 +485,7 @@ void CEF::update() {
             Vec3i m2 = Vec3i(handler->bb.max()) - Vec3i(1,1,1);
             m->updateTexture(m1, m2);
             handler->updateRect = false;
+            handler->bb.clear();
         }
     }
 }
