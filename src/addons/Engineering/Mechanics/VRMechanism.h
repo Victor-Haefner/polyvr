@@ -196,6 +196,7 @@ class MChain : public MPart {
         string dirs;
         CSTATE cstate = WHOLE;
         vector<Vec3d> polygon;
+        bool needsUpdate = false;
 
         MChain();
         ~MChain();

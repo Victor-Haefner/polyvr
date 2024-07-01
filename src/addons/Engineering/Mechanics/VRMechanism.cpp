@@ -180,6 +180,8 @@ void MPart::printNeighbors() {
 vector<BLA> blas;*/
 
 MGearGearRelation* checkGearGear(MGear* p1, MGear* p2) {
+    if (p1 == p2) return 0;
+
     double s1 = p1->geo->getWorldScale()[0];
     double s2 = p2->geo->getWorldScale()[0];
     Matrix4d r1 = p1->reference;
@@ -205,16 +207,6 @@ MGearGearRelation* checkGearGear(MGear* p1, MGear* p2) {
     R1 *= rad1;
     R2 *= rad2;
     float l = (P1+R1 - (P2+R2)).length();
-    //if (p1->trans->getBaseName() == "31082Root")
-    //    cout << " p2 " << p2->trans->getName() << " l " << l << " t " << t << "  " << p1 << "  " << p2 << endl;
-    /*if (t1 > 1e-4 && p1->trans->getBaseName() != p2->trans->getBaseName()) {
-        cout << "  p1 " << p1->trans->getName() << ", p2 " << p2->trans->getName();
-        cout << " D: " << d;
-        cout << " l " << l << " t1 " << t1 << "  " << p1 << "  " << p2 << endl;
-        blas.push_back({P1,R1,p1});
-    }*/
-
-
     if ( l > t1 ) return 0; // not touching!
 
     Vec3d w1 = R1.cross(a1);
@@ -376,7 +368,7 @@ VRGear* MGear::gear() { return (VRGear*)prim; }
 VRScrewThread* MThread::thread() { return (VRScrewThread*)prim; }
 
 void MPart::move() {}
-void MChain::move() { if (!geo || !geo->isVisible("", true)) return; updateGeo(); }
+void MChain::move() { if (!geo || !geo->isVisible("", true)) return; needsUpdate = true; }
 void MThread::move() {
     //trans->rotateWorld(change.a, rAxis);
     cumulativeChange.a += change.a;
@@ -564,6 +556,7 @@ void MChain::setDirs(string dirs) { this->dirs = dirs; }
 void MChain::addDir(char dir) { dirs.push_back(dir); }
 
 void MChain::updateGeo() {
+    needsUpdate = false;
     //cout << "update chain\n";
     // update chain geometry
 
@@ -735,16 +728,15 @@ void VRMechanism::addGear(VRTransformPtr part, float width, float hole, float pi
 void MPart::setup() {}
 
 void MGear::setup() {
-    auto m = trans->getWorldMatrix();
-    //auto m = trans->getMatrix();
+    Matrix4d m;
+    m = geo->getWorldMatrix();
     m.mult(axis, rAxis);
     m.mult(offset, rOffset);
     rAxis.normalize();
 }
 
 void MThread::setup() {
-    auto m = trans->getWorldMatrix();
-    //auto m = trans->getMatrix();
+    auto m = geo->getWorldMatrix();
     m.mult(axis, rAxis);
     rAxis.normalize();
 }
@@ -891,6 +883,7 @@ void VRMechanism::update(bool fromThread) {
     }
 
     if (doSG) for (auto part : parts) part->updateTransform();
+    if (doSG) for (auto part : parts) if (auto c = dynamic_cast<MChain*>(part)) if (c->needsUpdate) c->updateGeo();
     if (doSG) for (auto part : parts) part->apply();
     if (doSim) for (auto part : changed_parts) part->changed();
 }

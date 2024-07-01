@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Scene base_name="mecha_test" name_space="Scene" name_suffix="0" persistency="666">
   <Objects>
-    <Object base_name="Root" name_space="__global__" name_suffix="1" persistency="666" pickable="0" type="Object" visible="1">
+    <Object base_name="Root" name_space="__global__" name_suffix="2" persistency="666" pickable="0" type="Object" visible="1">
       <Object ambient="0.3 0.3 0.3 1" base_name="Headlight" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" name_space="__global__" name_suffix="0" on="1" persistency="666" photometricMap="" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" shadowVolume="1.79769e+308 1.79769e+308 1.79769e+308 -1.79769e+308 -1.79769e+308 -1.79769e+308 1" specular="0.1 0.1 0.1 1" type="Light" visible="1">
-        <Object accept_root="1" aspect="1" at="0.245364 -0.0381768 0.010066" at_dir="0" base_name="Default" camType="perspective" far="250" fov="1.0472" from="-0.138232 0.110148 0.388276" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
+        <Object accept_root="1" aspect="1" at="0.320733 0.00630889 -0.00999999" at_dir="0" base_name="Default" camType="perspective" far="250" fov="1.0472" from="1.02751 0.652537 -0.704951" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
           <attachments>
             <Node base_name="transform" name_space="VRAttachment" name_suffix="0" persistency="666" value=""/>
           </attachments>
@@ -122,7 +122,7 @@
 		
 	
 </core>
-      <trig type="on_device" dev="mouse" state="Pressed" param="" key="0" base_name="trigger" name_space="__global__" name_suffix="2" persistency="666"/>
+      <trig type="on_device" dev="mouse" state="Pressed" param="" key="0" base_name="trigger" name_space="__global__" name_suffix="3" persistency="666"/>
     </Script>
     <Script base_name="gui_handler_toolbar" group="gui" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
       <core>
@@ -144,7 +144,7 @@
 		c = VR.mechanism.addChain(0.02, objs, 'l'*len(objs))
 		VR.gears.addChild(c)
 </core>
-      <trig type="on_device" dev="server1" state="Released" param="" key="-1" base_name="trigger" name_space="__global__" name_suffix="3" persistency="666"/>
+      <trig type="on_device" dev="server1" state="Released" param="" key="-1" base_name="trigger" name_space="__global__" name_suffix="7" persistency="666"/>
     </Script>
     <Script base_name="gui_init" group="gui" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
       <core>
@@ -171,7 +171,7 @@
 	
 	
 </core>
-      <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" base_name="trigger" name_space="__global__" name_suffix="5" persistency="666"/>
+      <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" base_name="trigger" name_space="__global__" name_suffix="11" persistency="666"/>
     </Script>
     <Script base_name="gui_site_toolbar" group="gui" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="HTML">
       <core>
@@ -327,12 +327,9 @@
 		s = string.join([str(i) for i in params])
 		p.setPrimitive( s )
 		p.setPickable(True)
-		#p.getConstraint().setRotationConstraint([0,0,-1], 'LINE', 1)
 		VR.scene.addChild(p)
 		p.addTag('gear')
 		VR.gears.append(p)
-		#if mecha: VR.mechanism.add(p)
-		#if mecha: VR.mechanism.addGear(p, 0.02, 0.01, 0.02, Nt, 0.01, 0, [0,0,-1])
 		return p
 		
 	# parameters
@@ -345,6 +342,12 @@
 	
 	cgr = gp*cgN*0.5/math.pi # chain gear radius
 	VR.cgr = cgr
+	
+	# axis
+	axis = VR.Geometry('axis')
+	axis.setPrimitive('Cylinder 0.3 0.01 32 1 1 1')
+	axis.setTransform([cgr*4,0,0.1], [1,0,0], [0,0,1])
+	VR.scene.addChild(axis)
 	
 	VR.testChangeComputationGears = []
 	
@@ -391,7 +394,13 @@
 	P22 = addGear(['Gear', 0.02, ar, gp, cgN, 0.01, 0], True, cgN)
 	P22.translate([cgr*2,0,0.2])
 	
-	for gear in VR.gears: VR.mechanism.add(gear)
+	for gear in VR.gears:
+		if gear == VR.P3 or gear == VR.P8: 
+			P = gear.getWorldPose()
+			axis.addChild(gear)
+			gear.setWorldPose(P)
+			VR.mechanism.add(gear, axis)
+		else: VR.mechanism.add(gear)
 	
 	c = VR.mechanism.addChain(0.02, [VR.P7, VR.P8, VR.P9], 'lll')
 	VR.scene.addChild(c)
@@ -438,11 +447,6 @@
 	VR.mechanism.updateNeighbors()
 	
 	
-	# axis prototype
-	axis = VR.Geometry('axis')
-	axis.setPrimitive('Cylinder 0.3 0.01 32 1 1 1')
-	axis.setTransform([cgr*4,0,0.1], [0,1,0], [0,0,1])
-	VR.scene.addChild(axis)
 	
 	#VR.setPhysicsActive(0)
 	#aID = VR.kinematics.addBody(axis)
@@ -458,13 +462,14 @@
 	
 	VR.mechanism.updateVisuals()
 </core>
-      <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" base_name="trigger" name_space="__global__" name_suffix="7" persistency="666"/>
+      <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" base_name="trigger" name_space="__global__" name_suffix="13" persistency="666"/>
     </Script>
     <Script base_name="test" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
       <core>
 	import VR, string
 
-	VR.mechanism.setMotorSpeed('M1', 1)
+	VR.mechanism.setMotorSpeed('M1', 0)
+	VR.mechanism.updateNeighbors()
 	return
 
 	#VR.mechanism.updateNeighbors()
@@ -504,8 +509,8 @@
 	
 		
 </core>
-      <trig type="on_timeout" dev="" state="Pressed" param="0" key="0" base_name="trigger" name_space="__global__" name_suffix="9" persistency="666"/>
-      <trig type="on_device" dev="keyboard" state="Pressed" param="" key="32" base_name="trigger" name_space="__global__" name_suffix="11" persistency="666"/>
+      <trig type="on_timeout" dev="" state="Pressed" param="0" key="0" base_name="trigger" name_space="__global__" name_suffix="15" persistency="666"/>
+      <trig type="on_device" dev="keyboard" state="Pressed" param="" key="32" base_name="trigger" name_space="__global__" name_suffix="17" persistency="666"/>
     </Script>
   </Scripts>
   <Sockets persistency="666"/>
