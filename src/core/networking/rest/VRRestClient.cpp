@@ -44,7 +44,13 @@ size_t getOut(char *ptr, size_t size, size_t nmemb, VRRestResponse* res) {
     return size*nmemb;
 }
 
-VRRestResponsePtr VRRestClient::get(string uri, int timeoutSecs) {
+void setupHeaders(CURL* curl, vector<string>& headers) {
+    struct curl_slist* hlist = NULL;
+    for (auto h : headers) if (h != "") hlist = curl_slist_append(hlist, h.c_str());
+    curl_easy_setopt(curl, CURLOPT_HTTPHEADER, hlist);
+}
+
+VRRestResponsePtr VRRestClient::get(string uri, int timeoutSecs, vector<string> headers) {
     auto res = VRRestResponse::create();
 #ifdef __EMSCRIPTEN__
     char* data = (char*)EM_ASM_INT({
@@ -87,6 +93,7 @@ VRRestResponsePtr VRRestClient::get(string uri, int timeoutSecs) {
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &getOut);
     curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, timeoutSecs);
     curl_easy_setopt(curl, CURLOPT_URL, uri.c_str());
+    setupHeaders(curl, headers);
     CURLcode c = curl_easy_perform(curl);
     if (c != CURLE_OK) fprintf(stderr, "VRRestClient::get, curl_easy_perform() failed: %s, request was: %s\n", curl_easy_strerror(c), uri.c_str());
     curl_easy_cleanup(curl);
@@ -98,19 +105,27 @@ VRRestResponsePtr VRRestClient::get(string uri, int timeoutSecs) {
     //cout << " response: " << response->getData() << endl;
 }
 
-void VRRestClient::post(string uri, const string& data, int timeoutSecs) {
+VRRestResponsePtr VRRestClient::post(string uri, const string& data, int timeoutSecs, vector<string> headers) {
+    auto res = VRRestResponse::create();
+
 #ifndef __EMSCRIPTEN__
-    cout << " post to " << uri << ", data: " << data.size() << endl;
     auto curl = curl_easy_init();
     curl_easy_setopt(curl, CURLOPT_POSTFIELDS, data.c_str());
     curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, data.size());
+    curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1);
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, res.get());
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &getOut);
     curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, timeoutSecs);
     curl_easy_setopt(curl, CURLOPT_URL, uri.c_str());
+    setupHeaders(curl, headers);
 
     CURLcode c = curl_easy_perform(curl);
     if (c != CURLE_OK) fprintf(stderr, "VRRestClient::post, curl_easy_perform() failed: %s, request was: %s\n", curl_easy_strerror(c), uri.c_str());
     curl_easy_cleanup(curl);
 #endif
+
+    res->setStatus(200);
+    return res;
 }
 
 void VRRestClient::connectPort(string uri, int port, int timeoutSecs) {
@@ -119,7 +134,6 @@ void VRRestClient::connectPort(string uri, int port, int timeoutSecs) {
 
 void VRRestClient::connect(string uri, int timeoutSecs) { // TODO: used? deprecated?
 #ifndef __EMSCRIPTEN__
-    cout << "VRRestClient::connect " << uri << endl;
     curl = curl_easy_init();
     curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1);
     curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, timeoutSecs);
@@ -135,15 +149,15 @@ void VRRestClient::connect(string uri, int timeoutSecs) { // TODO: used? depreca
 
 bool VRRestClient::connected() { return isConnected; }
 
-void VRRestClient::getAsync(string uri, VRRestCbPtr cb, int timeoutSecs) { // TODO: implement correctly for wasm
+void VRRestClient::getAsync(string uri, VRRestCbPtr cb, int timeoutSecs, vector<string> headers) { // TODO: implement correctly for wasm
 #ifdef __EMSCRIPTEN__
     auto res = get(uri, timeoutSecs);
     auto fkt = VRUpdateCb::create("getAsync-finish", bind(&VRRestClient::finishAsync, this, cb, res));
     auto s = VRScene::getCurrent();
     if (s) s->queueJob(fkt);
 #else
-    auto job = [&](string uri, VRRestCbPtr cb, int timeoutSecs) -> void { // executed in async thread
-        auto res = get(uri, timeoutSecs);
+    auto job = [&](string uri, VRRestCbPtr cb, int timeoutSecs, vector<string> headers) -> void { // executed in async thread
+        auto res = get(uri, timeoutSecs, headers);
         if (cb) {
             auto fkt = VRUpdateCb::create("getAsync-finish", bind(&VRRestClient::finishAsync, this, cb, res));
             auto s = VRScene::getCurrent();
@@ -151,7 +165,31 @@ void VRRestClient::getAsync(string uri, VRRestCbPtr cb, int timeoutSecs) { // TO
         }
     };
 
-    future<void> f = async(launch::async, job, uri, cb, timeoutSecs);
+    future<void> f = async(launch::async, job, uri, cb, timeoutSecs, headers);
+    VRLock lock(VRRestClientMtx);
+    auto p = shared_ptr<RestPromise>(new RestPromise() );
+    p->f = move(f);
+    promises.push_back( p );
+#endif
+}
+
+void VRRestClient::postAsync(string uri, VRRestCbPtr cb, const string& data, int timeoutSecs, vector<string> headers) { // TODO: implement correctly for wasm
+#ifdef __EMSCRIPTEN__
+    auto res = get(uri, timeoutSecs);
+    auto fkt = VRUpdateCb::create("getAsync-finish", bind(&VRRestClient::finishAsync, this, cb, res));
+    auto s = VRScene::getCurrent();
+    if (s) s->queueJob(fkt);
+#else
+    auto job = [&](string uri, VRRestCbPtr cb, string data, int timeoutSecs, vector<string> headers) -> void { // executed in async thread
+        auto res = post(uri, data, timeoutSecs, headers);
+        if (cb) {
+            auto fkt = VRUpdateCb::create("getAsync-finish", bind(&VRRestClient::finishAsync, this, cb, res));
+            auto s = VRScene::getCurrent();
+            if (s) s->queueJob(fkt);
+        }
+    };
+
+    future<void> f = async(launch::async, job, uri, cb, data, timeoutSecs, headers);
     VRLock lock(VRRestClientMtx);
     auto p = shared_ptr<RestPromise>(new RestPromise() );
     p->f = move(f);

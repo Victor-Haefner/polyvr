@@ -62,7 +62,8 @@
 		
 	
 	VR.client = VR.RestClient('myClient')
-	VR.client.getAsync('http://localhost:5678', cb)
+	#VR.client.getAsync('http://localhost:5678', cb)
+	VR.client.postAsync('http://localhost:5678', cb, 'hi', 2, ["application: json"])
 	
 </core>
     </Script>
