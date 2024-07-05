@@ -44,7 +44,9 @@ shared_ptr<VRSSHSession> VRSSHSession::open(string a, string u) { return shared_
 string VRSSHSession::lastError(int pos) {
     char* msg;
     libssh2_session_last_error(session, &msg, NULL, 0);
-    return "Error: " + toString(pos) + " " + string(msg);
+    string msgStr = "Error: " + toString(pos) + " " + string(msg);
+    cout << " SSH ERR: " << msgStr << endl;
+    return msgStr;
 }
 
 string VRSSHSession::connect_session() { // close(sock);
@@ -113,11 +115,14 @@ string VRSSHSession::auth_user() {
     string kf = getenv("HOME") + keyFolder;
     string pk1 = kf + pubKeyPath;
     string pk2 = kf + privKeyPath;
-    cout << "VRSSHSession::auth_user" << endl;
+    if (!exists(pk1)) pk1 = kf + pubKeyPath2;
+    if (!exists(pk2)) pk2 = kf + privKeyPath2;
+    cout << "VRSSHSession::auth_user " << user << endl;
     cout << " key folder: " << kf << endl;
     cout << " pub key:  " << pk1 << endl;
     cout << " priv key: " << pk2 << endl;
     int rc = libssh2_userauth_publickey_fromfile(session, user.c_str(), pk1.c_str(), pk2.c_str(), NULL);
+
     if (rc < 0) {
         cout << "  pubkey auth failed, try ssh agent" << endl;
         LIBSSH2_AGENT* agent = libssh2_agent_init(session);
