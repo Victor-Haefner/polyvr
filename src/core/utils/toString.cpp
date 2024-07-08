@@ -58,6 +58,9 @@ vector<string> splitString(const string& s, const string& d) {
 
 string subString(const string& s, int beg, int len) {
     if (len < 0) len = s.size()-beg;
+    if (len < 0) return "";
+    if (beg >= s.length()) return "";
+    if (beg+len > s.length()) return "";
     return s.substr(beg, len);
 }
 
@@ -295,7 +298,9 @@ template <typename T, typename O> int ssToVal(stringstream& ss, T& t, const O& o
 template<> int toValue(string sIn, vector<string>& s) {
     s = splitString(sIn);
     int N = s.size();
+    if (N == 0) return true;
     s[0] = subString(s[0], 1);
+    if (N == 0) return true;
     s[N-1] = subString(s[N-1], 0, s[N-1].length()-1);
     for (int i=0; i<N-1; i++) s[i] = subString(s[i], 0, s[i].length()-1);
     return true;

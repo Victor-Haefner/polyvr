@@ -31,6 +31,8 @@ class VRSSHSession {
         string keyFolder = "/.ssh/";
         string privKeyPath = "id_rsa";
         string pubKeyPath = "id_rsa.pub";
+        string privKeyPath2 = "id_ecdsa";
+        string pubKeyPath2 = "id_ecdsa.pub";
         //string privKeyPath = "~/.ssh/id_rsa";
         //string pubKeyPath = "~/.ssh/id_rsa.pub";
 

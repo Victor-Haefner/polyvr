@@ -182,7 +182,8 @@ void VRNetworkNode::update() {
 
     if (!isLocal()) {
         if (!p.startOnPort(address, "22", 1)) { stat_node = "no ssh, install with sudo apt install ssh"; return; }
-        if (!ssh) openSSHSession();
+        ssh.reset();
+        openSSHSession();
         if (ssh) stat_ssh_key = ssh->getKeyStat();
         else { stat_path = "no ssh access"; return; }
         getRemoteOS();

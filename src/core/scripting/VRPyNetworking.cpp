@@ -126,9 +126,10 @@ PyMethodDef VRPyRestResponse::methods[] = {
 };
 
 PyMethodDef VRPyRestClient::methods[] = {
-    {"get", PyWrapOpt(RestClient, get, "Start GET request, (uri, timeout == 2)", "2", VRRestResponsePtr, string, int) },
-    {"getAsync", PyWrapOpt(RestClient, getAsync, "Start async GET request, (uri, callback, timeout == 2)", "2", void, string, VRRestCbPtr, int) },
-    {"post", PyWrapOpt(RestClient, post, "Start POST request, (uri, data, callback, timeout == 2)", "2", void, string, const string&, int) },
+    {"get", PyWrapOpt(RestClient, get, "Start GET request, (uri, timeout == 2, headers = {})", "2|", VRRestResponsePtr, string, int, vector<string>) },
+    {"getAsync", PyWrapOpt(RestClient, getAsync, "Start async GET request, (uri, callback, timeout == 2, headers = {})", "2|", void, string, VRRestCbPtr, int, vector<string>) },
+    {"post", PyWrapOpt(RestClient, post, "Start POST request, (uri, data, timeout == 2, headers = {})", "2|", VRRestResponsePtr, string, const string&, int, vector<string>) },
+    {"postAsync", PyWrapOpt(RestClient, postAsync, "Start async POST request, (uri, data, callback, timeout == 2, headers = {})", "2|", void, string, VRRestCbPtr, const string&, int, vector<string>) },
     {"test", PyWrap(RestClient, test, "Run test, output in console", void) },
     {NULL}  /* Sentinel */
 };
