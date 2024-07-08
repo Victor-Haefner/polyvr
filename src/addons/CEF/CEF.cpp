@@ -394,7 +394,11 @@ void CEF::global_initiate() {
     CefString(&settings.framework_dir_path).FromASCII("/usr/local/lib/cef/Chromium Embedded Framework.framework"); // /usr/local/lib/cef/Chromium Embedded Framework.framework
 #endif
 
-    CefString(&settings.browser_subprocess_path).FromASCII(bsp.c_str());
+#ifdef __APPLE__
+		string appBundleHelper = "../Frameworks/polyvr Helper.app"; // only set the subproces path if no default is present!
+		if (!exists(appBundleHelper))
+#endif
+    	CefString(&settings.browser_subprocess_path).FromASCII(bsp.c_str());
 #ifndef __APPLE__
     CefString(&settings.locales_dir_path).FromASCII(ldp.c_str()); // ignored on mac :(
 #endif
