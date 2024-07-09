@@ -84,27 +84,33 @@ if true; then
 	rm -rf $bin/ressources/cef18
 	rm -rf $bin/ressources/cefWin
 
-	if [ -e $pckPVRFolder/cleanupDeploy.sh ]; then
-		/bin/bash $pckPVRFolder/cleanupDeploy.sh
+	if [ -e $pckPVRFolder/deploy/cleanup.sh ]; then
+		/bin/bash $pckPVRFolder/deploy/cleanup.sh
 	fi
 fi
 
 #exit 0
 
 echo "create icon"
+icon="ressources/gui/logo_icon.png"
+if [ -e "$pckPVRFolder/deploy/icon.png" ]; then
+	icon="$pckPVRFolder/deploy/icon.png"
+fi
 
 addDir $res/$appName.iconset
-cp ressources/gui/logo_icon.png $res/$appName.iconset/icon_16x16.png
-cp ressources/gui/logo_icon.png $res/$appName.iconset/icon_16x16@2x.png
-cp ressources/gui/logo_icon.png $res/$appName.iconset/icon_32x32.png
-cp ressources/gui/logo_icon.png $res/$appName.iconset/icon_32x32@2x.png
-cp ressources/gui/logo_icon.png $res/$appName.iconset/icon_128x128.png
-cp ressources/gui/logo_icon.png $res/$appName.iconset/icon_128x128@2x.png
-cp ressources/gui/logo_icon.png $res/$appName.iconset/icon_256x256.png
-cp ressources/gui/logo_icon.png $res/$appName.iconset/icon_256x256@2x.png
-cp ressources/gui/logo_icon.png $res/$appName.iconset/icon_512x512.png
-cp ressources/gui/logo_icon.png $res/$appName.iconset/icon_512x512@2x.png
+cp $icon $res/$appName.iconset/icon_16x16.png
+cp $icon $res/$appName.iconset/icon_16x16@2x.png
+cp $icon $res/$appName.iconset/icon_32x32.png
+cp $icon $res/$appName.iconset/icon_32x32@2x.png
+cp $icon $res/$appName.iconset/icon_128x128.png
+cp $icon $res/$appName.iconset/icon_128x128@2x.png
+cp $icon $res/$appName.iconset/icon_256x256.png
+cp $icon $res/$appName.iconset/icon_256x256@2x.png
+cp $icon $res/$appName.iconset/icon_512x512.png
+cp $icon $res/$appName.iconset/icon_512x512@2x.png
 iconutil -c icns -o $res/$appName.icns $res/$appName.iconset
+
+# TODO: parse deploy/config
 
 echo "write Info.plist file"
 # check plist file with
@@ -174,11 +180,6 @@ chmod +x $bin/startApp2.sh
 echo "execute code signing"
 codesign --force --deep --sign - $pckFolder
 
-#set PATH=%PATH%;%~f0\..\engine\libs;
-#set PYTHONPATH=%PYTHONPATH%;%~f0\..\engine\pyLibs
-
-#polyvr.exe --standalone=1 --fullscreen=1 --application ../$appProject
-#polyvr.exe --standalone=1 --application ../$appProject
 
 echo "create disk image"
 hdiutil create -volname $appProject -srcfolder $pckFolder -ov -format UDZO "packages/$appName.dmg"
