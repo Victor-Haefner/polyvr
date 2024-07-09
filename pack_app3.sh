@@ -26,6 +26,14 @@ if [ ! -e "$appFolder/$appProject" ]; then
 	exit 1
 fi
 
+
+if [ -e "packages/$appName.dmg" ]; then
+	rm "packages/$appName.dmg"
+fi
+if [ -e "packages/${appName}_ro.dmg" ]; then
+	rm "packages/${appName}_ro.dmg"
+fi
+
 pckFolder="packages/$appName.app"
 
 addDir $pckFolder
@@ -51,7 +59,7 @@ if true; then
 	cp -r ressources $res/
 	cp -r setup $res/
 	cp -r shader $res/
-	cp -r examples $res/
+	#cp -r examples $res/
 
 	mkdir -p "$libs/polyvr Helper.app/Contents/MacOS"
 	mkdir -p "$libs/polyvr Helper (GPU).app/Contents/MacOS"
@@ -80,6 +88,8 @@ if true; then
 		/bin/bash $pckPVRFolder/cleanupDeploy.sh
 	fi
 fi
+
+#exit 0
 
 echo "create icon"
 
