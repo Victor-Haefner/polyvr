@@ -167,8 +167,8 @@ cat <<EOT >> $bin/startApp2.sh
 DIR="\$(cd "\$(dirname "\$0")" && pwd)"
 LIBS="\${DIR}/../Frameworks"
 libs="\$LIBS:\$LIBS/Chromium Embedded Framework.framework/Libraries"
-export DYLD_LIBRARY_PATH="\$libs\$DYLD_LIBRARY_PATH"
-export DYLD_FRAMEWORK_PATH="\$libs\$DYLD_FRAMEWORK_PATH"
+export DYLD_LIBRARY_PATH="\$libs"
+export DYLD_FRAMEWORK_PATH="\$libs"
 cd \$DIR/../Resources
 ../MacOS/polyvr --setup="macOS" --application $appProject
 EOT
@@ -182,7 +182,34 @@ codesign --force --deep --sign - $pckFolder
 
 
 echo "create disk image"
-hdiutil create -volname $appProject -srcfolder $pckFolder -ov -format UDZO "packages/$appName.dmg"
+hdiutil create -volname $appName -srcfolder $pckFolder -ov -format UDRW "packages/$appName.dmg"
+
+echo "configure dmg"
+MOUNT_POINT=/Volumes/$appName
+hdiutil detach $MOUNT_POINT
+hdiutil attach "packages/$appName.dmg"
+ln -s /Applications $MOUNT_POINT/Applications
+
+osascript <<EOF
+tell application "Finder"
+    tell disk "$appName"
+        open
+        set current view of container window to icon view
+        set toolbar visible of container window to false
+        set statusbar visible of container window to false
+        set the bounds of container window to {100, 100, 600, 400}
+        set viewOptions to the icon view options of container window
+        set arrangement of viewOptions to not arranged
+        set icon size of viewOptions to 72
+        set position of item "$appName" of container window to {100, 100}
+        set position of item "Applications" of container window to {400, 100}
+        update without registering applications
+        delay 5
+    end tell
+end tell
+EOF
+
+hdiutil detach $MOUNT_POINT
 echo "create read only disk image"
 hdiutil convert "packages/$appName.dmg" -format UDZO -o "packages/${appName}_ro.dmg"
 
