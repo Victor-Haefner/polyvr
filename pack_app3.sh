@@ -26,15 +26,26 @@ if [ ! -e "$appFolder/$appProject" ]; then
 	exit 1
 fi
 
+echo "get deploy config"
+deployName="$appName"
+deployExeName="$appName"
 
-if [ -e "packages/$appName.dmg" ]; then
-	rm "packages/$appName.dmg"
+if [ -e "$appFolder/deploy/config" ]; then
+	while IFS=: read -r key value; do
+		echo $key $value
+	  eval "${key}='${value}'"
+	done < "$appFolder/deploy/config"
 fi
-if [ -e "packages/${appName}_ro.dmg" ]; then
-	rm "packages/${appName}_ro.dmg"
+echo "$deployName" "$deployExeName"
+
+if [ -e "packages/$deployExeName.dmg" ]; then
+	rm "packages/$deployExeName.dmg"
+fi
+if [ -e "packages/${deployExeName}_ro.dmg" ]; then
+	rm "packages/${deployExeName}_ro.dmg"
 fi
 
-pckFolder="packages/$appName.app"
+pckFolder="packages/$deployExeName.app"
 
 addDir $pckFolder
 rm -rf $pckFolder/*
@@ -97,20 +108,18 @@ if [ -e "$pckPVRFolder/deploy/icon.png" ]; then
 	icon="$pckPVRFolder/deploy/icon.png"
 fi
 
-addDir $res/$appName.iconset
-cp $icon $res/$appName.iconset/icon_16x16.png
-cp $icon $res/$appName.iconset/icon_16x16@2x.png
-cp $icon $res/$appName.iconset/icon_32x32.png
-cp $icon $res/$appName.iconset/icon_32x32@2x.png
-cp $icon $res/$appName.iconset/icon_128x128.png
-cp $icon $res/$appName.iconset/icon_128x128@2x.png
-cp $icon $res/$appName.iconset/icon_256x256.png
-cp $icon $res/$appName.iconset/icon_256x256@2x.png
-cp $icon $res/$appName.iconset/icon_512x512.png
-cp $icon $res/$appName.iconset/icon_512x512@2x.png
-iconutil -c icns -o $res/$appName.icns $res/$appName.iconset
-
-# TODO: parse deploy/config
+addDir $res/$deployExeName.iconset
+cp $icon $res/$deployExeName.iconset/icon_16x16.png
+cp $icon $res/$deployExeName.iconset/icon_16x16@2x.png
+cp $icon $res/$deployExeName.iconset/icon_32x32.png
+cp $icon $res/$deployExeName.iconset/icon_32x32@2x.png
+cp $icon $res/$deployExeName.iconset/icon_128x128.png
+cp $icon $res/$deployExeName.iconset/icon_128x128@2x.png
+cp $icon $res/$deployExeName.iconset/icon_256x256.png
+cp $icon $res/$deployExeName.iconset/icon_256x256@2x.png
+cp $icon $res/$deployExeName.iconset/icon_512x512.png
+cp $icon $res/$deployExeName.iconset/icon_512x512@2x.png
+iconutil -c icns -o $res/$deployExeName.icns $res/$deployExeName.iconset
 
 echo "write Info.plist file"
 # check plist file with
@@ -121,15 +130,15 @@ cat <<EOT >> $pckFolder/Contents/Info.plist
 <plist version="1.0">
 <dict>
 	<key>CFBundleGetInfoString</key>
-	<string>$appName</string>
+	<string>$deployExeName</string>
 	<key>CFBundleExecutable</key>
 	<string>startApp.sh</string>
 	<key>CFBundleIdentifier</key>
 	<string>com.ees.www</string>
 	<key>CFBundleName</key>
-	<string>$appName</string>
+	<string>$deployName</string>
 	<key>CFBundleIconFile</key>
-	<string>$appName</string>
+	<string>$deployExeName</string>
 	<key>CFBundleShortVersionString</key>
 	<string>0.01</string>
 	<key>CFBundleInfoDictionaryVersion</key>
@@ -182,17 +191,17 @@ codesign --force --deep --sign - $pckFolder
 
 
 echo "create disk image"
-hdiutil create -volname $appName -srcfolder $pckFolder -ov -format UDRW "packages/$appName.dmg"
+hdiutil create -volname $deployExeName -srcfolder $pckFolder -ov -format UDRW "packages/$deployExeName.dmg"
 
 echo "configure dmg"
-MOUNT_POINT=/Volumes/$appName
+MOUNT_POINT=/Volumes/$deployExeName
 hdiutil detach $MOUNT_POINT
-hdiutil attach "packages/$appName.dmg"
+hdiutil attach "packages/$deployExeName.dmg"
 ln -s /Applications $MOUNT_POINT/Applications
 
 osascript <<EOF
 tell application "Finder"
-    tell disk "$appName"
+    tell disk "$deployExeName"
         open
         set current view of container window to icon view
         set toolbar visible of container window to false
@@ -201,7 +210,7 @@ tell application "Finder"
         set viewOptions to the icon view options of container window
         set arrangement of viewOptions to not arranged
         set icon size of viewOptions to 72
-        set position of item "$appName" of container window to {100, 100}
+        set position of item "$deployExeName" of container window to {100, 100}
         set position of item "Applications" of container window to {400, 100}
         update without registering applications
         delay 5
@@ -211,7 +220,7 @@ EOF
 
 hdiutil detach $MOUNT_POINT
 echo "create read only disk image"
-hdiutil convert "packages/$appName.dmg" -format UDZO -o "packages/${appName}_ro.dmg"
+hdiutil convert "packages/$deployExeName.dmg" -format UDZO -o "packages/${deployExeName}_ro.dmg"
 
 
 echo " done"
