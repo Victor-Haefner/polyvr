@@ -643,6 +643,7 @@ void VRView::testUpdate() {
 }
 
 void VRView::reset() {
+		cout << "reset view " << getName() << endl;
     cam = 0;
     view_root = 0;
     if (renderingL) renderingL->reset();

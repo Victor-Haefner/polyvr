@@ -26,14 +26,15 @@ using namespace std;
 class VRObject;
 class VRVisualLayer;
 
-class VRScene : public VRObjectGroupManager,
+class VRScene :
+                public VRThreadManager,
+                public VRObjectGroupManager,
                 public VRCameraManager,
                 public VRAnimationManager,
 #ifndef WITHOUT_BULLET
                 public VRPhysicsManager,
 #endif
                 public VRCallbackManager,
-                public VRThreadManager,
                 public VRScriptManager,
                 public VRNavigator,
                 public VRNetworkManager,
