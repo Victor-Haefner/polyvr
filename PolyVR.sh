@@ -17,8 +17,8 @@ cd $DIR
 if [ -e ./build/polyvr ]; then
 	 echo "run build/polyvr"
 	 #otool -L ./build/polyvr
-	 #./build/polyvr $@
-	 lldb -o "settings set target.env-vars DYLD_LIBRARY_PATH=\"$DYLD_LIBRARY_PATH\"" -o "settings append target.env-vars DYLD_FRAMEWORK_PATH=\"$DYLD_FRAMEWORK_PATH\"" -o run -- ./build/polyvr $@
+	 ./build/polyvr $@
+	 #lldb -o "settings set target.env-vars DYLD_LIBRARY_PATH=\"$DYLD_LIBRARY_PATH\"" -o "settings append target.env-vars DYLD_FRAMEWORK_PATH=\"$DYLD_FRAMEWORK_PATH\"" -o run -- ./build/polyvr $@
 	 exit 0
 fi
 

@@ -85,6 +85,8 @@ VRScriptManager::~VRScriptManager() {
     cout << " VRScriptManager Py_Finalize\n";
 #ifndef __APPLE__ // Py_Finalize, crash on apple, just upgrade to python 3 ;)
     Py_Finalize(); // finally destroys pModVR
+#else
+		Py_DECREF(pModVR);
 #endif
     VRPyBase::err = 0;
 }
