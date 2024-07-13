@@ -88,7 +88,7 @@ class CEF_handler : public CefRenderHandler, public CefLoadHandler, public CefCo
         int width = 1024;
         int height = 1024;
         bool imgNeedsRedraw = true;
-				VRMutex mtx;
+		VRMutex mtx;
 
     public:
         bool updateRect = false;
@@ -98,7 +98,7 @@ class CEF_handler : public CefRenderHandler, public CefLoadHandler, public CefCo
         CEF_handler();
         ~CEF_handler();
 
-				void resetTexture();
+		void resetTexture();
 
 #if defined(_WIN32) || defined(__APPLE__)
         void GetViewRect(CefRefPtr<CefBrowser> browser, CefRect& rect) override;
@@ -174,9 +174,9 @@ CEF_handler::~CEF_handler() {
 }
 
 void CEF_handler::resetTexture() {
-		cout << "CEF_handler::resetTexture" << endl;
-		auto lock = VRLock(mtx);
-		image = 0;
+    cout << "CEF_handler::resetTexture" << endl;
+    auto lock = VRLock(mtx);
+    image = 0;
 }
 
 #if defined(_WIN32) || defined(__APPLE__)
@@ -252,7 +252,7 @@ void setSubData(Image* img, Int32 x0, Int32 y0, Int32 z0, Int32 srcW, Int32 srcH
 
 void CEF_handler::OnPaint(CefRefPtr<CefBrowser> browser, PaintElementType type, const RectList& dirtyRects, const void* buffer, int width, int height) {
     //cout << "CEF_handler::OnPaint " << image << endl;
-		auto lock = VRLock(mtx);
+    auto lock = VRLock(mtx);
     if (!image) return;
     auto img = image->getImage();
     if (!img) return;
@@ -403,7 +403,7 @@ void CEF::global_initiate() {
     CefScopedLibraryLoader library_loader;
     if (!library_loader.LoadInMain()) {
         cout << " !!! loading CEF framework failed!" << endl;
-				return;
+        return;
     }
 		settings.external_message_pump = true;
     settings.persist_session_cookies = false;
