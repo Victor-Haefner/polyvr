@@ -248,10 +248,10 @@ void VRSound::updateSampleAndFormat() {
 
         al->resampler = swr_alloc();
 #ifdef __APPLE__
-        av_opt_set_chlayout(al->resampler, "in_channel_layout",  &al->codec->ch_layout, 0);
+        av_opt_set_chlayout      (al->resampler, "in_chlayout",       &al->codec->ch_layout,      0);
         av_opt_set_sample_fmt    (al->resampler, "in_sample_fmt",      al->codec->sample_fmt,     0);
         av_opt_set_int           (al->resampler, "in_sample_rate",     al->codec->sample_rate,    0);
-        av_opt_set_chlayout(al->resampler, "out_channel_layout", &al->codec->ch_layout, 0);
+        av_opt_set_chlayout      (al->resampler, "out_chlayout",      &al->codec->ch_layout,      0);
         av_opt_set_sample_fmt    (al->resampler, "out_sample_fmt",     out_sample_fmt,            0);
         av_opt_set_int           (al->resampler, "out_sample_rate",    al->codec->sample_rate,    0);
 #else
@@ -262,7 +262,27 @@ void VRSound::updateSampleAndFormat() {
         av_opt_set_sample_fmt    (al->resampler, "out_sample_fmt",     out_sample_fmt,            0);
         av_opt_set_int           (al->resampler, "out_sample_rate",    al->codec->sample_rate,    0);
 #endif
-        swr_init(al->resampler);
+        int r = swr_init(al->resampler);
+				if (r < 0) {
+#ifdef __APPLE__
+            auto toStr = [](AVChannelOrder o) {
+								if (o == AV_CHANNEL_ORDER_NATIVE) return "AV_CHANNEL_ORDER_NATIVE";
+								if (o == AV_CHANNEL_ORDER_AMBISONIC) return "AV_CHANNEL_ORDER_AMBISONIC";
+								if (o == AV_CHANNEL_ORDER_CUSTOM) return "AV_CHANNEL_ORDER_CUSTOM";
+								return "AV_CHANNEL_ORDER_UNKNOWN";
+						};
+
+						cout << "swr_init failed in VRSound::updateSampleAndFormat, returned " << r << endl;
+						cout << " channel layout"
+						  << ", order: " << toStr(al->codec->ch_layout.order)
+							<< ", N channels: " << al->codec->ch_layout.nb_channels
+							<< ", u.mask: " << al->codec->ch_layout.u.mask
+							<< endl;
+#endif
+
+						swr_free(&al->resampler);
+						al->resampler = 0;
+    		}
     }
 }
 
