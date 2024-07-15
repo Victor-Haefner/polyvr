@@ -103,7 +103,6 @@ void VRSceneManager::closeScene() {
     VRProfiler::get()->setActive(false);
 #endif
     on_scene_close->triggerAll<VRDevice>();
-    current = 0;
 
     auto setup = VRSetup::getCurrent();
     setup->resetViewports();
@@ -115,6 +114,9 @@ void VRSceneManager::closeScene() {
         w.second->setContent(false); // deactivate windows
         w.second->clear(Color3f(0.2,0.2,0.2)); // render last time
     }
+
+    current = 0;
+
     setWorkdir(original_workdir);
 
 #ifndef WITHOUT_IMGUI

@@ -305,8 +305,10 @@ void VRPhysics::clear() {
             VRPhysicsJoint* joint = j.second;
 
             if (joint && joint->btJoint != 0) {
-                if (bt.world) bt.world->removeConstraint(joint->btJoint);
-                delete joint->btJoint;
+                if (bt.world) {
+										bt.world->removeConstraint(joint->btJoint);
+                		delete joint->btJoint;
+								}
                 joint->btJoint = 0;
             }
 
@@ -319,8 +321,10 @@ void VRPhysics::clear() {
             VRPhysicsJoint* joint = j.second;
 
             if (joint && joint->btJoint != 0) {
-                if (bt.world) bt.world->removeConstraint(joint->btJoint);
-                delete joint->btJoint;
+                if (bt.world) {
+										bt.world->removeConstraint(joint->btJoint);
+                		delete joint->btJoint;
+								}
                 joint->btJoint = 0;
             }
 
@@ -328,20 +332,26 @@ void VRPhysics::clear() {
         }
         joints2.clear();
 
-        if (bt.world) bt.world->removeRigidBody(bt.body);
-        delete bt.body;
+        if (bt.world) {
+						bt.world->removeRigidBody(bt.body);
+        		delete bt.body;
+				}
         bt.body = 0;
     }
 
     if (bt.ghost_body != 0) {
-        if (bt.world) bt.world->removeCollisionObject(bt.ghost_body);
-        delete bt.ghost_body;
+        if (bt.world) {
+						bt.world->removeCollisionObject(bt.ghost_body);
+        		delete bt.ghost_body;
+				}
         bt.ghost_body = 0;
     }
 
     if (bt.soft_body != 0) {
-        if (bt.world) bt.world->removeCollisionObject(bt.soft_body);
-        delete bt.soft_body;
+        if (bt.world) {
+						bt.world->removeCollisionObject(bt.soft_body);
+        		delete bt.soft_body;
+				}
         bt.soft_body = 0;
     }
 
@@ -1488,6 +1498,3 @@ void VRPhysics::setSpringEquilibrium(VRPhysics* p, int dof, float equilibrium) {
     if (!joint->btJoint) return;
     joint->btJoint->setEquilibriumPoint(dof, equilibrium);
 }
-
-
-

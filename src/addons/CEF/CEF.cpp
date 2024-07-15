@@ -44,6 +44,7 @@ namespace std {
 #include "core/objects/material/VRTextureGenerator.h"
 #include "core/math/partitioning/boundingbox.h"
 #include "core/utils/VRLogger.h"
+#include "core/utils/VRMutex.h"
 #include "core/utils/system/VRSystem.h"
 
 #include "core/gui/VRGuiManager.h"
@@ -87,6 +88,7 @@ class CEF_handler : public CefRenderHandler, public CefLoadHandler, public CefCo
         int width = 1024;
         int height = 1024;
         bool imgNeedsRedraw = true;
+				VRMutex mtx;
 
     public:
         bool updateRect = false;
@@ -95,6 +97,8 @@ class CEF_handler : public CefRenderHandler, public CefLoadHandler, public CefCo
     public:
         CEF_handler();
         ~CEF_handler();
+
+				void resetTexture();
 
 #if defined(_WIN32) || defined(__APPLE__)
         void GetViewRect(CefRefPtr<CefBrowser> browser, CefRect& rect) override;
@@ -166,8 +170,13 @@ CEF_handler::CEF_handler() {
 }
 
 CEF_handler::~CEF_handler() {
-    cout << "~CEF_handler\n";
-    image.reset();
+    cout << "~CEF_handler " << this << endl;
+}
+
+void CEF_handler::resetTexture() {
+		cout << "CEF_handler::resetTexture" << endl;
+		auto lock = VRLock(mtx);
+		image = 0;
 }
 
 #if defined(_WIN32) || defined(__APPLE__)
@@ -243,6 +252,7 @@ void setSubData(Image* img, Int32 x0, Int32 y0, Int32 z0, Int32 srcW, Int32 srcH
 
 void CEF_handler::OnPaint(CefRefPtr<CefBrowser> browser, PaintElementType type, const RectList& dirtyRects, const void* buffer, int width, int height) {
     //cout << "CEF_handler::OnPaint " << image << endl;
+		auto lock = VRLock(mtx);
     if (!image) return;
     auto img = image->getImage();
     if (!img) return;
@@ -320,12 +330,21 @@ CEF::CEF() {
 }
 
 CEF::~CEF() {
-    cout << "CEF destroyed " << internals->client->HasOneRef() << " " << internals->browser->HasOneRef() << endl;
+    cout << "~CEF, client/browser HasOneRef: " << internals->client->HasOneRef() << " " << internals->browser->HasOneRef() << endl;
     internals->browser->GetHost()->CloseBrowser(false);
     if (internals) delete internals;
 }
 
-void CEF::shutdown() { if (!cef_gl_init) return; cout << "CEF shutdown\n"; CefShutdown(); }
+void CEF::shutdown() {
+	if (!cef_gl_init) return;
+	cout << "CEF shutdown\n";
+	for (auto& cef : getInstances()) {
+		auto c = cef->internals->client;
+		auto h = c->getHandler();
+		h->resetTexture();
+	}
+	//CefShutdown();
+}
 
 CEFPtr CEF::create() {
     auto cef = CEFPtr(new CEF());
@@ -384,6 +403,7 @@ void CEF::global_initiate() {
     CefScopedLibraryLoader library_loader;
     if (!library_loader.LoadInMain()) {
         cout << " !!! loading CEF framework failed!" << endl;
+				return;
     }
 		settings.external_message_pump = true;
     settings.persist_session_cookies = false;
@@ -391,10 +411,14 @@ void CEF::global_initiate() {
     string cdp = VRSceneManager::get()->getOriginalWorkdir() + path + "/cache";
     CefString(&settings.root_cache_path).FromASCII(cdp.c_str());
     //CefString(&settings.cache_path).FromASCII("");
-    CefString(&settings.framework_dir_path).FromASCII("/usr/local/lib/cef/Chromium Embedded Framework.framework"); // /usr/local/lib/cef/Chromium Embedded Framework.framework
+    CefString(&settings.framework_dir_path).FromASCII("/usr/local/lib/cef/Chromium Embedded Framework.framework");
 #endif
 
-    CefString(&settings.browser_subprocess_path).FromASCII(bsp.c_str());
+#ifdef __APPLE__
+		string appBundleHelper = "../Frameworks/polyvr Helper.app"; // only set the subproces path if no default is present!
+		if (!exists(appBundleHelper))
+#endif
+    	CefString(&settings.browser_subprocess_path).FromASCII(bsp.c_str());
 #ifndef __APPLE__
     CefString(&settings.locales_dir_path).FromASCII(ldp.c_str()); // ignored on mac :(
 #endif

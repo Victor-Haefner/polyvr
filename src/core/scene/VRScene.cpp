@@ -27,6 +27,7 @@
 #include "core/utils/system/VRSystem.h"
 #include "core/utils/VRProfiler.h"
 #include "core/scene/import/VRImport.h"
+#include "addons/CEF/CEF.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -75,6 +76,7 @@ VRScene::VRScene() {
 VRScene::~VRScene() {
     //kill physics thread
     cout << "VRScene::~VRScene " << name << endl;
+		CEF::shutdown();
     VRThreadManager::stopThread(physicsThreadID);
     root->destroy();
     VRGroup::clearGroups();

@@ -2,6 +2,7 @@
 
 #include "VRSpriteResizeTool.h"
 #include "core/tools/VRText.h"
+#include "core/utils/system/VRSystem.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/geometry/OSGGeometry.h"
 #ifndef WITHOUT_BULLET
@@ -34,7 +35,10 @@ VRSprite::VRSprite (string name, bool alpha, float w, float h) : VRGeometry(name
     type = "Sprite";
 }
 
-VRSprite::~VRSprite() {}
+VRSprite::~VRSprite() {
+	cout << "~VRSprite " << this << endl;
+	//printBacktrace();
+}
 
 VRSpritePtr VRSprite::create(string name, bool alpha, float w, float h) {
     auto s = shared_ptr<VRSprite>(new VRSprite(name, alpha, w, h) );
