@@ -367,18 +367,25 @@ vector<VRSoundBufferPtr> VRSound::extractPacket(AVPacket* packet) {
             int data_size = av_samples_get_buffer_size(&linesize, al->codec->channels, al->frame->nb_samples, al->codec->sample_fmt, 0);
 #endif
 
-            ALbyte* frameData;
+            ALbyte* frameData = 0;
             if (al->resampler != 0) {
                 frameData = (ALbyte *)av_malloc(data_size*sizeof(uint8_t));
-                swr_convert( al->resampler,
+                int r = swr_convert( al->resampler,
                             (uint8_t **)&frameData,
                             al->frame->nb_samples,
                             (const uint8_t **)al->frame->data,
                             al->frame->nb_samples);
+								if (r < 0) {
+										cout << "resampling failed!, returned " << r << endl;
+										av_free(frameData);
+										frameData = 0;
+								}
             } else frameData = (ALbyte*)al->frame->data[0];
 
-            auto frame = VRSoundBuffer::wrap(frameData, data_size, frequency, al->format);
-            res.push_back(frame);
+						if (frameData) {
+		            auto frame = VRSoundBuffer::wrap(frameData, data_size, frequency, al->format);
+		            res.push_back(frame);
+						}
         }
 
         //There may be more than one frame of audio data inside the packet.
@@ -551,7 +558,7 @@ AVFrame* alloc_audio_frame(enum AVSampleFormat sample_fmt, uint64_t channel_layo
         int ret = av_frame_get_buffer(frame, 0);
         if (ret < 0) { fprintf(stderr, "Error allocating an audio buffer\n"); return 0; }
     }
-  
+
     return frame;
 }
 
