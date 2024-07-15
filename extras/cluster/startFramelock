@@ -1,0 +1,136 @@
+#!/bin/bash
+
+# this is a example of a framelock start/stop/test script
+#  it has been written for a cluster with two render slaves, each with two GPUs
+
+# Function to check Frame Lock status
+check_framelock() {
+	node="$1"
+	cmd="nvidia-settings -c $node -q $node[gpu:0]/FrameLockEnable"
+	#echo $cmd
+	res=$($cmd)
+	#echo $res
+
+	if [ $? -ne 0 ]; then
+		echo "Error: Could not query Frame Lock status. Ensure the x host is properly configured! (https://github.com/Victor-Haefner/polyvr/wiki/Clustering)"  1>&2;
+	fi
+
+	# extract attribute value
+	framelock_status=$(echo $res | grep 'Attribute' | awk '{print $4}' | tr -d '.')
+	echo "$framelock_status"
+}
+
+disable_framelock() {
+	node="$1"
+	nvidia-settings -c $node -a $node[gpu:0]/FrameLockEnable=0
+	nvidia-settings -c $node -a $node[gpu:1]/FrameLockEnable=0
+}
+
+enable_framelock() {
+	nodeL="$1"
+	nodeR="$2"
+
+	nvidia-settings -c $nodeL \
+	-a "$nodeL[framelock:0]/FramelockUseHouseSync=0" \
+	-a "$nodeL[dpy:1]/FrameLockDisplayConfig=2" \
+	-a "$nodeL[dpy:4]/FrameLockDisplayConfig=1" \
+	-a "$nodeL[dpy:8]/FrameLockDisplayConfig=1" \
+	-a "$nodeL[dpy:11]/FrameLockDisplayConfig=1"
+
+	nvidia-settings -c $nodeR \
+	-a "$nodeR[framelock:0]/FramelockUseHouseSync=0" \
+	-a "$nodeR[dpy:1]/FrameLockDisplayConfig=1" \
+	-a "$nodeR[dpy:4]/FrameLockDisplayConfig=1" \
+	-a "$nodeR[dpy:8]/FrameLockDisplayConfig=1" \
+	-a "$nodeR[dpy:11]/FrameLockDisplayConfig=1"
+
+	nvidia-settings -c $nodeL -a $nodeL[gpu:0]/FrameLockEnable=1
+	nvidia-settings -c $nodeL -a $nodeL[gpu:1]/FrameLockEnable=1
+	nvidia-settings -c $nodeR -a $nodeR[gpu:0]/FrameLockEnable=1
+	nvidia-settings -c $nodeR -a $nodeR[gpu:1]/FrameLockEnable=1
+}
+
+test_framelock() {
+	nodeL="$1"
+	nodeR="$2"
+	
+	nvidia-settings -c $nodeL -a $nodeL[gpu:0]/FrameLockTestSignal=1
+	nvidia-settings -c $nodeL -a $nodeL[gpu:0]/FrameLockTestSignal=0
+}
+
+nodeL="192.168.0.6:0"
+nodeR="192.168.0.7:0"
+
+framelockL=$(check_framelock $nodeL)
+framelockR=$(check_framelock $nodeR)
+
+if [ "$framelockL" -eq 1 ]; then
+	echo "Framelock L is active. deactivating.."
+	disable_framelock $nodeL
+else
+	echo "Framelock L is not active."
+fi
+
+if [ "$framelockR" -eq 1 ]; then
+	echo "Framelock R is active. deactivating.."
+	disable_framelock $nodeR
+else
+	echo "Framelock R is not active."
+fi
+
+if [ "$framelockR" -eq 0 ]; then
+if [ "$framelockL" -eq 0 ]; then
+enable_framelock $nodeL $nodeR
+fi
+fi
+
+framelockL=$(check_framelock $nodeL)
+framelockR=$(check_framelock $nodeR)
+
+if [ "$framelockL" -eq 1 ]; then
+	echo "Framelock L is active."
+else
+	echo "Framelock L is not active."
+fi
+
+if [ "$framelockR" -eq 1 ]; then
+	echo "Framelock R is active."
+else
+	echo "Framelock R is not active."
+fi
+
+
+if [ "$framelockR" -eq 1 ]; then
+if [ "$framelockL" -eq 1 ]; then
+test_framelock $nodeL $nodeR
+fi
+fi
+
+#nvidia-settings -c SCC-SCS-Wall-SlaveL:0 -a SCC-SCS-Wall-SlaveL:0[gpu:0]/FrameLockEnable=0
+#nvidia-settings -c 192.168.0.6:0 -a :0[gpu:0]/FrameLockEnable=0
+
+#nvidia-settings -q SCC-SCS-Wall-SlaveR:0[gpu:0]/RefreshRate
+#nvidia-settings -q [SCC-SCS-Wall-SlaveR:0]/GPU-0/RefreshRate
+
+#nvidia-settings -c :0 -a :0[gpu:0]/FrameLockEnable=0
+#nvidia-settings -c :0 -a :0[gpu:1]/FrameLockEnable=0
+
+#nvidia-settings -c :0 \
+#-a “:0[framelock:0]/FramelockUseHouseSync=0” \
+#-a “:0[dpy:1]/FrameLockDisplayConfig=2” \
+#-a “:0[dpy:4]/FrameLockDisplayConfig=1” \
+#-a “:0[dpy:8]/FrameLockDisplayConfig=1” \
+#-a “:0[dpy:11]/FrameLockDisplayConfig=1”
+
+
+#nvidia-settings -c :0 \
+#-a “:0[framelock:0]/FramelockUseHouseSync=0” \
+#-a “:0[dpy:1]/FrameLockDisplayConfig=1” \
+#-a “:0[dpy:4]/FrameLockDisplayConfig=1” \
+#-a “:0[dpy:8]/FrameLockDisplayConfig=1” \
+#-a “:0[dpy:11]/FrameLockDisplayConfig=1”
+
+
+#Verify X server listening on TCP:
+#netstat -an | grep 6000
+
