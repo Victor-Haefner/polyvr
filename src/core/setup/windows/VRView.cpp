@@ -237,7 +237,7 @@ void VRView::setDecorators() {//set decorators, only if projection true
     PCDecoratorRight = ProjectionCameraDecorator::create();
 
     PCDecoratorLeft->setLeftEye(false);
-    PCDecoratorLeft->setEyeSeparation(0.06);
+    PCDecoratorLeft->setEyeSeparation(eyeSeparation);
     PCDecoratorLeft->editMFSurface()->clear();
     PCDecoratorLeft->editMFSurface()->push_back(screenLowerLeft);
     PCDecoratorLeft->editMFSurface()->push_back(screenLowerRight);
@@ -245,7 +245,7 @@ void VRView::setDecorators() {//set decorators, only if projection true
     PCDecoratorLeft->editMFSurface()->push_back(screenUpperLeft);
 
     PCDecoratorRight->setLeftEye(true);
-    PCDecoratorRight->setEyeSeparation(0.06);
+    PCDecoratorRight->setEyeSeparation(eyeSeparation);
     PCDecoratorRight->editMFSurface()->clear();
     PCDecoratorRight->editMFSurface()->push_back(screenLowerLeft);
     PCDecoratorRight->editMFSurface()->push_back(screenLowerRight);

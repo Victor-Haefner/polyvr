@@ -12,7 +12,6 @@ pckFolder="packages/"$appName
 
 pyPath="/c/usr/vcpkg/installed/x64-windows/share/python2/Lib"
 redistPath="/c/Program Files (x86)/Windows Kits/10/Redist/10.0.19041.0/ucrt/DLLs/x64"
-redistPath2="/c/Program Files (x86)/Microsoft Visual Studio/2019/Community/VC/Redist/MSVC/14.29.30133/x64/Microsoft.VC142.CRT/vcruntime140_1.dll"
 vcpkgLibs="/c/usr/vcpkg/installed/x64-windows/lib"
 
 if [ ! -e $pckFolder ]; then
@@ -44,7 +43,9 @@ echo " copy libs"
 cp -r $pyPath $pckFolder/engine/pyLibs
 mkdir -p $pckFolder/engine/libs
 cp -r "$redistPath"/* $pckFolder/engine/libs/
-cp -r "$redistPath2" $pckFolder/engine/libs/
+cp -r /c/Windows/system32/MSVCP140.dll $pckFolder/engine/libs/
+cp -r /c/Windows/system32/VCRUNTIME140.dll $pckFolder/engine/libs/
+cp -r /c/Windows/system32/VCRUNTIME140_1.dll $pckFolder/engine/libs/
 cp -r /c/usr/lib/opensg/* $pckFolder/engine/libs/
 cp -r /c/usr/lib/cef/* $pckFolder/engine/libs/
 cp -r /c/usr/lib/oce/* $pckFolder/engine/libs/
@@ -86,8 +87,8 @@ polyvr.exe
 EOT
 fi
 
-if [ -e $pckFolder/cleanupDeploy.sh ]; then
-	/bin/bash $pckFolder/cleanupDeploy.sh 
+if [ -e $pckFolder/deploy/cleanup.sh ]; then
+	/bin/bash $pckFolder/deploy/cleanup.sh
 fi
 
 #polyvr.exe --standalone=1 --fullscreen=1 --application ../$appProject

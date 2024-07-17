@@ -1234,7 +1234,7 @@ VRGuiSetup::VRGuiSetup() {
     mgr->addCallback("setup_set_view_position", [&](OSG::VRGuiSignals::Options o) { on_pos_edit(Vec4d(toFloat(o["x"]), toFloat(o["y"]), toFloat(o["z"]), toFloat(o["w"]))); return true; }, true );
     mgr->addCallback("setup_set_view_size", [&](OSG::VRGuiSignals::Options o) { on_view_size_edit(Vec2d(toFloat(o["x"]), toFloat(o["y"]))); return true; }, true );
     mgr->addCallback("setup_set_view_stereo", [&](OSG::VRGuiSignals::Options o) { on_toggle_display_stereo(toBool(o["active"])); return true; }, true );
-    mgr->addCallback("setup_set_view_eye_separation", [&](OSG::VRGuiSignals::Options o) { on_eyesep_edit(toBool(o["active"])); return true; }, true );
+    mgr->addCallback("setup_set_view_eye_separation", [&](OSG::VRGuiSignals::Options o) { on_eyesep_edit(toFloat(o["value"])); return true; }, true );
     mgr->addCallback("setup_set_view_invert_eyes", [&](OSG::VRGuiSignals::Options o) { on_toggle_view_invert(toBool(o["active"])); return true; }, true );
     mgr->addCallback("setup_set_view_active_stereo", [&](OSG::VRGuiSignals::Options o) { on_toggle_view_active_stereo(toBool(o["active"])); return true; }, true );
     mgr->addCallback("setup_set_view_projection", [&](OSG::VRGuiSignals::Options o) { on_toggle_display_projection(toBool(o["active"])); return true; }, true );

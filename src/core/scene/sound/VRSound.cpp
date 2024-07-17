@@ -248,10 +248,10 @@ void VRSound::updateSampleAndFormat() {
 
         al->resampler = swr_alloc();
 #ifdef __APPLE__
-        av_opt_set_chlayout(al->resampler, "in_channel_layout",  &al->codec->ch_layout, 0);
+        av_opt_set_chlayout      (al->resampler, "in_chlayout",       &al->codec->ch_layout,      0);
         av_opt_set_sample_fmt    (al->resampler, "in_sample_fmt",      al->codec->sample_fmt,     0);
         av_opt_set_int           (al->resampler, "in_sample_rate",     al->codec->sample_rate,    0);
-        av_opt_set_chlayout(al->resampler, "out_channel_layout", &al->codec->ch_layout, 0);
+        av_opt_set_chlayout      (al->resampler, "out_chlayout",      &al->codec->ch_layout,      0);
         av_opt_set_sample_fmt    (al->resampler, "out_sample_fmt",     out_sample_fmt,            0);
         av_opt_set_int           (al->resampler, "out_sample_rate",    al->codec->sample_rate,    0);
 #else
@@ -262,7 +262,27 @@ void VRSound::updateSampleAndFormat() {
         av_opt_set_sample_fmt    (al->resampler, "out_sample_fmt",     out_sample_fmt,            0);
         av_opt_set_int           (al->resampler, "out_sample_rate",    al->codec->sample_rate,    0);
 #endif
-        swr_init(al->resampler);
+        int r = swr_init(al->resampler);
+				if (r < 0) {
+#ifdef __APPLE__
+            auto toStr = [](AVChannelOrder o) {
+								if (o == AV_CHANNEL_ORDER_NATIVE) return "AV_CHANNEL_ORDER_NATIVE";
+								if (o == AV_CHANNEL_ORDER_AMBISONIC) return "AV_CHANNEL_ORDER_AMBISONIC";
+								if (o == AV_CHANNEL_ORDER_CUSTOM) return "AV_CHANNEL_ORDER_CUSTOM";
+								return "AV_CHANNEL_ORDER_UNKNOWN";
+						};
+
+						cout << "swr_init failed in VRSound::updateSampleAndFormat, returned " << r << endl;
+						cout << " channel layout"
+						  << ", order: " << toStr(al->codec->ch_layout.order)
+							<< ", N channels: " << al->codec->ch_layout.nb_channels
+							<< ", u.mask: " << al->codec->ch_layout.u.mask
+							<< endl;
+#endif
+
+						swr_free(&al->resampler);
+						al->resampler = 0;
+    		}
     }
 }
 
@@ -367,18 +387,25 @@ vector<VRSoundBufferPtr> VRSound::extractPacket(AVPacket* packet) {
             int data_size = av_samples_get_buffer_size(&linesize, al->codec->channels, al->frame->nb_samples, al->codec->sample_fmt, 0);
 #endif
 
-            ALbyte* frameData;
+            ALbyte* frameData = 0;
             if (al->resampler != 0) {
                 frameData = (ALbyte *)av_malloc(data_size*sizeof(uint8_t));
-                swr_convert( al->resampler,
+                int r = swr_convert( al->resampler,
                             (uint8_t **)&frameData,
                             al->frame->nb_samples,
                             (const uint8_t **)al->frame->data,
                             al->frame->nb_samples);
+								if (r < 0) {
+										cout << "resampling failed!, returned " << r << endl;
+										av_free(frameData);
+										frameData = 0;
+								}
             } else frameData = (ALbyte*)al->frame->data[0];
 
-            auto frame = VRSoundBuffer::wrap(frameData, data_size, frequency, al->format);
-            res.push_back(frame);
+						if (frameData) {
+		            auto frame = VRSoundBuffer::wrap(frameData, data_size, frequency, al->format);
+		            res.push_back(frame);
+						}
         }
 
         //There may be more than one frame of audio data inside the packet.
@@ -551,7 +578,7 @@ AVFrame* alloc_audio_frame(enum AVSampleFormat sample_fmt, uint64_t channel_layo
         int ret = av_frame_get_buffer(frame, 0);
         if (ret < 0) { fprintf(stderr, "Error allocating an audio buffer\n"); return 0; }
     }
-  
+
     return frame;
 }
 
