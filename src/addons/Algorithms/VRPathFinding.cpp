@@ -144,6 +144,8 @@ vector<VRPathFinding::Position> VRPathFinding::computePath(Position start, Posit
 
         for (auto neighbor : getNeighbors(current, bidirectional)) { // TODO: take edge positions into account!
             if (closedSet.count(neighbor)) continue;
+            float weight = graph->getNodeWeight(neighbor.nID);
+            if (weight < -1e-3) continue; // ignore negative weighted nodes
             gCost[current] = getDistance(start, current);
             float tentative_gCost = gCost[current] + getDistance(current, neighbor);
 

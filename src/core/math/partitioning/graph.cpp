@@ -244,3 +244,9 @@ Graph::edge::edge(int i, int j, CONNECTION c, int ID) : from(i), to(j), connecti
 
 //vector<Graph::node>::iterator Graph::begin() { return nodes.begin(); }
 //vector<Graph::node>::iterator Graph::end() { return nodes.end(); }
+
+
+void Graph::setNodeWeight(int nID, float w) { getNode(nID).weight = w; }
+void Graph::setEdgeWeight(int eID, float w) { getEdge(eID).weight = w; }
+float Graph::getNodeWeight(int nID) { return getNode(nID).weight; }
+float Graph::getEdgeWeight(int eID) { return getEdge(eID).weight; }

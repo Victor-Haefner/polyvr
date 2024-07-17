@@ -38,6 +38,10 @@ PyMethodDef VRPyGraph::methods[] = {
     {"hasEdge", PyWrap2( Graph, hasEdge, "Check if graph has edge ID", bool, int ) },
     {"remNode", PyWrap2( Graph, remNode, "Remove node", void, int ) },
     {"clear", PyWrap2( Graph, clear, "Clear", void ) },
+    {"getNodeWeight", PyWrap2( Graph, getNodeWeight, "Get node weight", float, int ) },
+    {"getEdgeWeight", PyWrap2( Graph, getEdgeWeight, "Get edge weight", float, int ) },
+    {"setNodeWeight", PyWrap2( Graph, setNodeWeight, "Set node weight", void, int, float ) },
+    {"setEdgeWeight", PyWrap2( Graph, setEdgeWeight, "Set edge weight", void, int, float ) },
     {NULL} /* Sentinel */
 };
 

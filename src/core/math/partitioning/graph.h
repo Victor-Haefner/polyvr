@@ -24,6 +24,7 @@ class Graph : public VRStorage {
             Pose p;
             Boundingbox box;
             int ID = -1;
+            float weight = 0;
 
             vector<int> inEdges;
             vector<int> outEdges;
@@ -34,6 +35,7 @@ class Graph : public VRStorage {
             int to = 0;
             CONNECTION connection = SIMPLE;
             int ID = -1;
+            float weight = 0;
 
             vector<int> relations;
             edge(int i = 0, int j = 0, CONNECTION c = SIMPLE, int ID = 0);
@@ -97,6 +99,11 @@ class Graph : public VRStorage {
         vector<edge> getConnectedEdges(node& n);
         vector<edge> getPrevEdges(edge& e);
         vector<edge> getNextEdges(edge& e);
+
+        void setNodeWeight(int nID, float w);
+        void setEdgeWeight(int eID, float w);
+        float getNodeWeight(int nID);
+        float getEdgeWeight(int eID);
 
         virtual int addNode(PosePtr p = 0, BoundingboxPtr b = 0);
         virtual void remNode(int i);
