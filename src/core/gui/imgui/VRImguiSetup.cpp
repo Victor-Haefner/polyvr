@@ -6,6 +6,7 @@
 
 ImSetupManager::ImSetupManager() : ImWidget("SetupManager"),
         tree("setup"),
+        displaysOffset("displaysOffset", "Offset"),
         viewPosition("viewPos", "Area"),
         viewSize("viewSize", "Size"),
         eyeSeparation("eyeSep", "Eye separation [m]", "0.06"),
@@ -48,6 +49,7 @@ ImSetupManager::ImSetupManager() : ImWidget("SetupManager"),
 
     mgr->addCallback("on_setup_select_clear", [&](OSG::VRGuiSignals::Options o) { hideAll(); return true; } );
     mgr->addCallback("on_setup_select_view", [&](OSG::VRGuiSignals::Options o) { selectView(o); return true; } );
+    mgr->addCallback("on_setup_select_displays", [&](OSG::VRGuiSignals::Options o) { selectDisplays(o); return true; } );
     mgr->addCallback("on_setup_select_window", [&](OSG::VRGuiSignals::Options o) { selectWindow(o); return true; } );
     mgr->addCallback("on_setup_select_multiwindow", [&](OSG::VRGuiSignals::Options o) { selectMultiWindow(o); return true; } );
     mgr->addCallback("on_setup_select_node", [&](OSG::VRGuiSignals::Options o) { selectNode(o); return true; } );
@@ -112,6 +114,15 @@ void ImSetupManager::selectView(OSG::VRGuiSignals::Options o) {
     viewProjWarp.set2( o["projWarp"]);
     viewMirrorPos.set3( o["mirrorPos"]);
     viewMirrorNorm.set3( o["mirrorNorm"]);
+}
+
+void ImSetupManager::selectDisplays(OSG::VRGuiSignals::Options o) {
+    hideAll();
+    showDisplay = true;
+
+    selected = "Displays";
+    displaysOffset.set3( o["offset"] );
+    calibOverlay = toBool( o["calibOverlay"] );
 }
 
 void ImSetupManager::selectWindow(OSG::VRGuiSignals::Options o) {
@@ -252,9 +263,11 @@ void ImSetupManager::begin() {
 
     ImGui::BeginChild("setupProps", ImVec2(w2, h), false, flags);
         if (showDisplay) {
+            int w3 = w2-20;
             ImGui::Text(("Displays: " + selected).c_str());
             ImGui::Indent(10);
-            // Global Offset Vec3
+            if (displaysOffset.render(w3)) displaysOffset.signal("setup_set_displays_offset");
+            if (ImGui::Checkbox("CalibrationOverlay", &calibOverlay)) uiSignal("setup_set_calibration_overlay", {{"active", toString(calibOverlay)}});
             ImGui::Unindent(10);
         }
 

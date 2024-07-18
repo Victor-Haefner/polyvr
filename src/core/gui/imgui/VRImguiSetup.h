@@ -54,6 +54,10 @@ class ImSetupManager : public ImWidget {
         Im_Vector viewMirrorPos;
         Im_Vector viewMirrorNorm;
 
+        // displays
+        Im_Vector displaysOffset;
+        bool calibOverlay = false;
+
         // window
         bool windowActive = false;
         Im_Vector windowSize;
@@ -110,6 +114,7 @@ class ImSetupManager : public ImWidget {
         void hideAll();
         void treeAppend(string ID, string label, string type, string parent);
         void selectView(map<string,string> o);
+        void selectDisplays(map<string,string> o);
         void selectWindow(map<string,string> o);
         void selectMultiWindow(map<string,string> o);
         void selectNode(map<string,string> o);

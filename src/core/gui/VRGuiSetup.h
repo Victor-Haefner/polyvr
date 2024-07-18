@@ -111,7 +111,9 @@ class VRGuiSetup {
         void on_pos_edit(Vec4d p);
         void on_eyesep_edit(float d);
 
-        void on_displays_edit_offset();
+        void on_displays_edit_offset(Vec3d o);
+        void on_displays_set_calib_overlay(bool b);
+
         void on_view_size_edit(Vec2d v);
         void on_proj_user_edit(Vec3d v);
         void on_proj_center_edit(Vec3d v);

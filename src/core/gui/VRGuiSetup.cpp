@@ -145,9 +145,11 @@ void VRGuiSetup::updateObjectData() {
 #endif
 
         if (selected_name == "Displays") {
-            uiSignal( "on_setup_select_display", {
-                {"offset", toString(setup->getDisplaysOffset())}//,
-                //{"active", toString(setup->getVRPN()->getVRPNActive())}
+            bool calib = false;
+            if (auto scene = VRScene::getCurrent()) calib = scene->getCalib();
+            uiSignal( "on_setup_select_displays", {
+                {"offset", toString(setup->getDisplaysOffset())},
+                {"calibOverlay", toString(calib)}
             } );
         }
     }
@@ -365,6 +367,7 @@ void VRGuiSetup::on_save_as_clicked() {
 
 // setup list
 void VRGuiSetup::on_treeview_select(string selected) {
+    //cout << "VRGuiSetup::on_treeview_select " << selected << endl;
     uiSignal( "on_setup_select_clear", {} );
 
     auto setup = VRSetup::getCurrent();
@@ -761,15 +764,18 @@ void VRGuiSetup::on_art_edit_port() {
 }
 #endif
 
-void VRGuiSetup::on_displays_edit_offset() {
+void VRGuiSetup::on_displays_set_calib_overlay(bool b) {
+    if (guard) return;
+    auto scene = VRScene::getCurrent();
+    if (!scene) return;
+    scene->setCalib(b);
+}
+
+void VRGuiSetup::on_displays_edit_offset(Vec3d o) {
     if (guard) return;
     auto setup = VRSetup::getCurrent();
     if (!setup) return;
-    /*float ox = toFloat(getTextEntry("entry29"));
-    float oy = toFloat(getTextEntry("entry30"));
-    float oz = toFloat(getTextEntry("entry31"));
-    setup->setDisplaysOffset(Vec3d(ox,oy,oz));
-    VRGuiWidget("toolbutton12").setSensitivity(true);*/
+    setup->setDisplaysOffset(o);
 }
 
 #ifndef WITHOUT_ART
@@ -1231,6 +1237,9 @@ VRGuiSetup::VRGuiSetup() {
     mgr->addCallback("setup_save", [&](OSG::VRGuiSignals::Options o) { on_save_clicked(); return true; }, true );
     mgr->addCallback("setup_saveas", [&](OSG::VRGuiSignals::Options o) { on_save_as_clicked(); return true; }, true );
 
+    mgr->addCallback("setup_set_calibration_overlay", [&](OSG::VRGuiSignals::Options o) { on_displays_set_calib_overlay(toBool(o["active"])); return true; }, true );
+    mgr->addCallback("setup_set_displays_offset", [&](OSG::VRGuiSignals::Options o) { on_displays_edit_offset(Vec3d(toFloat(o["x"]), toFloat(o["y"]), toFloat(o["z"]))); return true; }, true );
+
     mgr->addCallback("setup_set_view_position", [&](OSG::VRGuiSignals::Options o) { on_pos_edit(Vec4d(toFloat(o["x"]), toFloat(o["y"]), toFloat(o["z"]), toFloat(o["w"]))); return true; }, true );
     mgr->addCallback("setup_set_view_size", [&](OSG::VRGuiSignals::Options o) { on_view_size_edit(Vec2d(toFloat(o["x"]), toFloat(o["y"]))); return true; }, true );
     mgr->addCallback("setup_set_view_stereo", [&](OSG::VRGuiSignals::Options o) { on_toggle_display_stereo(toBool(o["active"])); return true; }, true );
@@ -1378,12 +1387,12 @@ bool VRGuiSetup::updateSetup() {
     cout << " - - - - updateSetup" << endl;
     uiSignal("on_setup_tree_clear");
 
-    uiSignal("on_setup_tree_append", {{ "ID","SecNetwork" }, { "label","Network" }, { "type","section" }, { "parent","" }});
-    uiSignal("on_setup_tree_append", {{ "ID","SecDisplays" }, { "label","Displays" }, { "type","section" }, { "parent","" }});
-    uiSignal("on_setup_tree_append", {{ "ID","SecDevices" }, { "label","Devices" }, { "type","section" }, { "parent","" }});
-    uiSignal("on_setup_tree_append", {{ "ID","SecART" }, { "label","ART" }, { "type","section" }, { "parent","" }});
-    uiSignal("on_setup_tree_append", {{ "ID","SecVRPN" }, { "label","VRPN" }, { "type","section" }, { "parent","" }});
-    uiSignal("on_setup_tree_append", {{ "ID","SecScripts" }, { "label","Scripts" }, { "type","section" }, { "parent","" }});
+    uiSignal("on_setup_tree_append", {{ "ID","Section$Network" }, { "label","Network" }, { "type","section" }, { "parent","" }});
+    uiSignal("on_setup_tree_append", {{ "ID","Section$Displays" }, { "label","Displays" }, { "type","section" }, { "parent","" }});
+    uiSignal("on_setup_tree_append", {{ "ID","Section$Devices" }, { "label","Devices" }, { "type","section" }, { "parent","" }});
+    uiSignal("on_setup_tree_append", {{ "ID","Section$ART" }, { "label","ART" }, { "type","section" }, { "parent","" }});
+    uiSignal("on_setup_tree_append", {{ "ID","Section$VRPN" }, { "label","VRPN" }, { "type","section" }, { "parent","" }});
+    uiSignal("on_setup_tree_append", {{ "ID","Section$Scripts" }, { "label","Scripts" }, { "type","section" }, { "parent","" }});
 
     /*GtkTreeIter row;
     auto user_list = (GtkListStore*)VRGuiBuilder::get()->get_object("user_list");
@@ -1409,7 +1418,7 @@ bool VRGuiSetup::updateSetup() {
     for (auto ditr : setup->getDevices()) {
         VRDevicePtr dev = ditr.second;
         string devID = dev->getType() + "$" + ditr.first;
-        uiSignal("on_setup_tree_append", {{ "ID",devID }, { "label",ditr.first }, { "type",dev->getType() }, { "parent","SecDevices" }});
+        uiSignal("on_setup_tree_append", {{ "ID",devID }, { "label",ditr.first }, { "type",dev->getType() }, { "parent","Section$Devices" }});
 
         if (dev->getType() == "mouse") mouseList.push_back(ditr.first);
         if (dev->getType() == "multitouch") mtouchList.push_back(ditr.first);
@@ -1425,7 +1434,7 @@ bool VRGuiSetup::updateSetup() {
 
     for (auto node : setup->getNetwork()->getData() ) {
         string nodeID = "node$"+node->getName();
-        uiSignal("on_setup_tree_append", {{ "ID",nodeID }, { "label",node->getName() }, { "type","node" }, { "parent","SecNetwork" }});
+        uiSignal("on_setup_tree_append", {{ "ID",nodeID }, { "label",node->getName() }, { "type","node" }, { "parent","Section$Network" }});
         for (auto slave : node->getData() ) {
             string slaveID = "slave$" + slave->getName();
             uiSignal("on_setup_tree_append", {{ "ID",slaveID }, { "label",slave->getName() }, { "type","slave" }, { "parent",nodeID }});
@@ -1436,7 +1445,7 @@ bool VRGuiSetup::updateSetup() {
         VRWindow* w = win.second.get();
         string name = win.first;
         string winID = "window$"+name;
-        uiSignal("on_setup_tree_append", {{ "ID",winID }, { "label",name }, { "type","window" }, { "parent","SecDisplays" }});
+        uiSignal("on_setup_tree_append", {{ "ID",winID }, { "label",name }, { "type","window" }, { "parent","Section$Displays" }});
 
         // add viewports
         vector<VRViewPtr> views = w->getViews();
@@ -1453,7 +1462,7 @@ bool VRGuiSetup::updateSetup() {
     for (int ID : setup->getVRPN()->getVRPNTrackerIDs() ) {
         VRPN_device* t = setup->getVRPN()->getVRPNTracker(ID).get();
         string vrpnID = "vrpn_tracker$"+toString(ID);
-        uiSignal("on_setup_tree_append", {{ "ID",vrpnID }, { "label",t->getName() }, { "type","vrpn_tracker" }, { "parent","SecVRPN" }});
+        uiSignal("on_setup_tree_append", {{ "ID",vrpnID }, { "label",t->getName() }, { "type","vrpn_tracker" }, { "parent","Section$VRPN" }});
     }
 #endif
 
@@ -1467,7 +1476,7 @@ bool VRGuiSetup::updateSetup() {
         if (dev->dev) name = dev->dev->getName();
         else if (dev->ent) name = dev->ent->getName();
         string artID = "art_device$"+toString(ID);
-        uiSignal("on_setup_tree_append", {{ "ID",artID }, { "label",name }, { "type","art_device" }, { "parent","SecART" }});
+        uiSignal("on_setup_tree_append", {{ "ID",artID }, { "label",name }, { "type","art_device" }, { "parent","Section$ART" }});
 
         if (dev->ent) viewTrackers.push_back( dev->ent->getName() );
     }
