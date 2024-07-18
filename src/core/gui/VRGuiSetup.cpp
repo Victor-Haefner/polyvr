@@ -732,35 +732,29 @@ void VRGuiSetup::on_vrpn_rot_axis_edit(Vec3d v) {
 // tracker
 
 #ifndef WITHOUT_ART
-void VRGuiSetup::on_toggle_art() {
+void VRGuiSetup::on_toggle_art(bool b) {
     if (guard) return;
     auto setup = VRSetup::getCurrent();
     if (!setup) return;
-    /*bool b = getCheckButtonState("checkbutton24");
     setup->getART()->setARTActive(b);
-    VRGuiWidget("toolbutton12").setSensitivity(true);*/
 }
 #endif
 
 #ifndef WITHOUT_VRPN
-void VRGuiSetup::on_toggle_vrpn() {
+void VRGuiSetup::on_toggle_vrpn(bool b) {
     if (guard) return;
     auto setup = VRSetup::getCurrent();
     if (!setup) return;
-    /*bool b = getCheckButtonState("checkbutton25");
     setup->getVRPN()->setVRPNActive(b);
-    VRGuiWidget("toolbutton12").setSensitivity(true);*/
 }
 #endif
 
 #ifndef WITHOUT_ART
-void VRGuiSetup::on_art_edit_port() {
+void VRGuiSetup::on_art_edit_port(int p) {
     if (guard) return;
     auto setup = VRSetup::getCurrent();
     if (!setup) return;
-    /*int p = toInt(getTextEntry("entry39"));
     setup->getART()->setARTPort(p);
-    VRGuiWidget("toolbutton12").setSensitivity(true);*/
 }
 #endif
 
@@ -783,46 +777,30 @@ void VRGuiSetup::on_art_edit_offset(Vec3d v) {
     if (guard) return;
     auto setup = VRSetup::getCurrent();
     if (!setup) return;
-    /*setup->getART()->setARTOffset(v);
-    VRGuiWidget("toolbutton12").setSensitivity(true);*/
+    setup->getART()->setARTOffset(v);
 }
 
-void VRGuiSetup::on_art_edit_axis(Vec3d v) {
+void VRGuiSetup::on_art_edit_axis(Vec3i v) {
     if (guard) return;
     auto setup = VRSetup::getCurrent();
     if (!setup) return;
-    /*setup->getART()->setARTAxis(Vec3i(round(v[0]), round(v[1]), round(v[2])));
-    VRGuiWidget("toolbutton12").setSensitivity(true);*/
-}
-
-void VRGuiSetup::on_art_edit_id() {
-    if (guard) return;
-    /*int id = toInt(getTextEntry("entry40"));
-    ART_device* dev = (ART_device*)selected_object;
-    dev->ID = id;
-    VRGuiWidget("toolbutton12").setSensitivity(true);*/
+    setup->getART()->setARTAxis(v);
 }
 #endif
 
 #ifndef WITHOUT_VRPN
-void VRGuiSetup::on_vrpn_edit_port() {
+void VRGuiSetup::on_vrpn_edit_port(int p) {
     if (guard) return;
     auto setup = VRSetup::getCurrent();
     if (!setup) return;
-    /*int p = toInt(getTextEntry("entry13"));
     setup->getVRPN()->setVRPNPort(p);
-    VRGuiWidget("toolbutton12").setSensitivity(true);*/
 }
 
-void VRGuiSetup::on_edit_VRPN_tracker_address() {
+void VRGuiSetup::on_edit_VRPN_tracker_address(string a) { // TODO
     if (guard) return;
     if (selected_type != "vrpn_tracker") return;
     /*VRPN_device* t = (VRPN_device*)selected_object;
-
-    string txt = getTextEntry("entry50");
-    t->setAddress(txt);
-
-    VRGuiWidget("toolbutton12").setSensitivity(true);*/
+    t->setAddress(a);*/
 }
 #endif
 
@@ -1239,6 +1217,11 @@ VRGuiSetup::VRGuiSetup() {
 
     mgr->addCallback("setup_set_calibration_overlay", [&](OSG::VRGuiSignals::Options o) { on_displays_set_calib_overlay(toBool(o["active"])); return true; }, true );
     mgr->addCallback("setup_set_displays_offset", [&](OSG::VRGuiSignals::Options o) { on_displays_edit_offset(Vec3d(toFloat(o["x"]), toFloat(o["y"]), toFloat(o["z"]))); return true; }, true );
+
+    mgr->addCallback("setup_set_art_active", [&](OSG::VRGuiSignals::Options o) { on_toggle_art(toBool(o["active"])); return true; }, true );
+    mgr->addCallback("setup_set_art_port", [&](OSG::VRGuiSignals::Options o) { on_art_edit_port(toInt(o["port"])); return true; }, true );
+    mgr->addCallback("setup_set_art_offset", [&](OSG::VRGuiSignals::Options o) { on_art_edit_offset(Vec3d(toFloat(o["x"]), toFloat(o["y"]), toFloat(o["z"]))); return true; }, true );
+    mgr->addCallback("setup_set_art_axis", [&](OSG::VRGuiSignals::Options o) { on_art_edit_axis(Vec3i(toInt(o["x"]), toInt(o["y"]), toInt(o["z"]))); return true; }, true );
 
     mgr->addCallback("setup_set_view_position", [&](OSG::VRGuiSignals::Options o) { on_pos_edit(Vec4d(toFloat(o["x"]), toFloat(o["y"]), toFloat(o["z"]), toFloat(o["w"]))); return true; }, true );
     mgr->addCallback("setup_set_view_size", [&](OSG::VRGuiSignals::Options o) { on_view_size_edit(Vec2d(toFloat(o["x"]), toFloat(o["y"]))); return true; }, true );

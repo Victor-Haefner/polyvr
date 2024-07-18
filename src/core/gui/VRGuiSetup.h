@@ -126,15 +126,14 @@ class VRGuiSetup {
         void on_view_mirror_norm_edit(Vec3d v);
 
 #ifndef WITHOUT_VRPN
-        void on_vrpn_edit_port();
-        void on_edit_VRPN_tracker_address();
-        void on_toggle_vrpn();
+        void on_vrpn_edit_port(int port);
+        void on_edit_VRPN_tracker_address(string address);
+        void on_toggle_vrpn(bool b);
 #endif
 #ifndef WITHOUT_ART
-        void on_toggle_art();
-        void on_art_edit_port();
-        void on_art_edit_id();
-        void on_art_edit_axis(Vec3d v);
+        void on_toggle_art(bool b);
+        void on_art_edit_port(int port);
+        void on_art_edit_axis(Vec3i v);
         void on_art_edit_offset(Vec3d v);
 #endif
 
