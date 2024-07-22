@@ -265,7 +265,7 @@ bool VRNavigator::orbit(VRDeviceWeakPtr _dev) {
     float speedT = speed[0]/0.02; // 0.02
     float speedR = speed[1]/0.04; // 0.04
 
-    if (!doPan) {
+    if (!doPan && speedR > 1e-6) {
         camDelta = camSphereRef;
         camDelta[1] += mousePos[0]*1.5*speedR; //yaw
         camDelta[2] -= mousePos[1]*1.5*speedR; //pitch
