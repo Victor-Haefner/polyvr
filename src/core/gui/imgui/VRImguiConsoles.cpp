@@ -2,6 +2,7 @@
 
 #include "core/utils/toString.h"
 #include "core/gui/VRGuiManager.h"
+#include "imConsole/imConsole.h"
 #include <imgui_internal.h>
 
 ImConsole::ImConsole(string ID) : ID(ID), name(ID) {
@@ -225,6 +226,9 @@ void ImViewControls::render() {
 }
 
 void ImConsoles::begin() {
+    //static ImGuiConsole c;
+    //c.Draw();
+
     viewControls.render();
     ImGui::Separator();
 

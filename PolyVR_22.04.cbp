@@ -2014,6 +2014,12 @@
 			<Option target="Release" />
 			<Option target="PVR-Gui-d" />
 		</Unit>
+		<Unit filename="src/core/gui/imgui/imConsole/imConsole.cpp">
+			<Option target="PVR-Gui-d" />
+		</Unit>
+		<Unit filename="src/core/gui/imgui/imConsole/imConsole.h">
+			<Option target="PVR-Gui-d" />
+		</Unit>
 		<Unit filename="src/core/gui/imgui/imEditor/TextEditor.cpp">
 			<Option target="Release" />
 			<Option target="PVR-Gui-d" />
