@@ -48,6 +48,8 @@ TextEditor::TextEditor()
 	, mHandleMouseInputs(true)
 	, mIgnoreImGuiChild(false)
 	, mShowWhitespaces(true)
+	, mDrawLineNumers(true)
+	, mDoGrabFocus(true)
 	, mStartTime(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count())
 {
 	SetPalette(GetDarkPalette());
@@ -115,6 +117,11 @@ std::string TextEditor::GetText(const Coordinates & aStart, const Coordinates & 
 TextEditor::Coordinates TextEditor::GetActualCursorCoordinates() const
 {
 	return SanitizeCoordinates(mState.mCursorPosition);
+}
+
+TextEditor::Coordinates TextEditor::GetEndCoordinates() const
+{
+	return SanitizeCoordinates(Coordinates(mLines.size(), 0));
 }
 
 TextEditor::Coordinates TextEditor::SanitizeCoordinates(const Coordinates & aValue) const
@@ -904,9 +911,11 @@ void TextEditor::Render()
 	auto lineMax = std::max(0, std::min((int)mLines.size() - 1, lineNo + (int)floor((scrollY + contentSize.y) / mCharAdvance.y)));
 
 	// Deduce mTextStart by evaluating mLines size (global lineMax) plus two spaces as text width
-	char buf[16];
-	snprintf(buf, 16, " %d ", globalLineMax);
-	mTextStart = ImGui::GetFont()->CalcTextSizeA(ImGui::GetFontSize(), FLT_MAX, -1.0f, buf, nullptr, nullptr).x + mLeftMargin;
+    char buf[16];
+	if (mDrawLineNumers) {
+        snprintf(buf, 16, " %d ", globalLineMax);
+        mTextStart = ImGui::GetFont()->CalcTextSizeA(ImGui::GetFontSize(), FLT_MAX, -1.0f, buf, nullptr, nullptr).x + mLeftMargin;
+    } else mTextStart = mLeftMargin;
 
 	std::string currentSelection = GetSelectedText();
 
@@ -981,10 +990,12 @@ void TextEditor::Render()
 			}
 
 			// Draw line number (right aligned)
-			snprintf(buf, 16, "%d  ", lineNo + 1);
+			if (mDrawLineNumers) {
+                snprintf(buf, 16, "%d  ", lineNo + 1);
 
-			auto lineNoWidth = ImGui::GetFont()->CalcTextSizeA(ImGui::GetFontSize(), FLT_MAX, -1.0f, buf, nullptr, nullptr).x;
-			drawList->AddText(ImVec2(lineStartScreenPos.x + mTextStart - lineNoWidth, lineStartScreenPos.y), mPalette[(int)PaletteIndex::LineNumber], buf);
+                auto lineNoWidth = ImGui::GetFont()->CalcTextSizeA(ImGui::GetFontSize(), FLT_MAX, -1.0f, buf, nullptr, nullptr).x;
+                drawList->AddText(ImVec2(lineStartScreenPos.x + mTextStart - lineNoWidth, lineStartScreenPos.y), mPalette[(int)PaletteIndex::LineNumber], buf);
+			}
 
 			if (mState.mCursorPosition.mLine == lineNo)
 			{
@@ -1141,7 +1152,7 @@ void TextEditor::Render()
 	if (mScrollToCursor)
 	{
 		EnsureCursorVisible();
-		ImGui::SetWindowFocus();
+		if (mDoGrabFocus) ImGui::SetWindowFocus();
 		mScrollToCursor = false;
 	}
 }

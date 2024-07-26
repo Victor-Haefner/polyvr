@@ -219,6 +219,7 @@ public:
 	void SetColorizerEnable(bool aValue);
 
 	Coordinates GetCursorPosition() const { return GetActualCursorCoordinates(); }
+	Coordinates GetEndCoordinates() const;
 	void SetCursorPosition(const Coordinates& aPosition);
 
 	inline void SetHandleMouseInputs    (bool aValue){ mHandleMouseInputs    = aValue;}
@@ -232,6 +233,9 @@ public:
 
 	inline void SetShowWhitespaces(bool aValue) { mShowWhitespaces = aValue; }
 	inline bool IsShowingWhitespaces() const { return mShowWhitespaces; }
+
+	inline void SetDrawLineNumers(bool aValue) { mDrawLineNumers = aValue; }
+	inline void SetDoGrabFocus(bool aValue) { mDoGrabFocus = aValue; }
 
 	void SetTabSize(int aValue);
 	inline int GetTabSize() const { return mTabSize; }
@@ -376,6 +380,8 @@ private:
 	bool mHandleMouseInputs;
 	bool mIgnoreImGuiChild;
 	bool mShowWhitespaces;
+	bool mDrawLineNumers;
+	bool mDoGrabFocus;
 
 	Palette mPaletteBase;
 	Palette mPalette;

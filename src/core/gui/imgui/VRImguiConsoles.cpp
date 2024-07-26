@@ -2,11 +2,45 @@
 
 #include "core/utils/toString.h"
 #include "core/gui/VRGuiManager.h"
-#include "imConsole/imConsole.h"
 #include <imgui_internal.h>
 
 ImConsole::ImConsole(string ID) : ID(ID), name(ID) {
     color = ImGui::GetColorU32(ImVec4(255,255,255,255));
+
+    console.SetShowWhitespaces(false);
+    console.SetReadOnly(true);
+    console.SetColorizerEnable(false);
+    console.SetHandleKeyboardInputs(false);
+    console.SetDrawLineNumers(false);
+    console.SetDoGrabFocus(false);
+    //console.SetLanguageDefinition(TextEditor::LanguageDefinition::Python());
+}
+
+void ImConsole::push(string data, string style, string mark) {
+    auto cursor = console.GetCursorPosition();
+
+    changed = 2;
+    console.SetCursorPosition(console.GetEndCoordinates());
+    console.InsertText(data.c_str());
+
+    // TODO: reimplement error mark/style
+
+    //cout << " - - - - - - - ImConsoles::pushConsole " << ID << "  '" << data << "'  " << style << "  " << mark << endl;
+    /*auto dataV = splitString(data, '\n');
+
+    for (int i=0; i<dataV.size(); i++) {
+        int c0 = 0;
+        if (lines.size() > 0) c0 = lines[lines.size()-1].size();
+        int L = dataV[i].size();
+
+        //if (i == 0 && lines.size() > 0) lines[lines.size()-1] += dataV[i];
+        //else lines.push_back(dataV[i]);
+
+        if (mark.size() > 0)  attributes[lines.size()-1].marks.push_back({mark, c0, L});
+        if (style.size() > 0) attributes[lines.size()-1].styles.push_back({style, c0, L});
+    }*/
+
+    //if (data[data.size()-1] == '\n') lines.push_back("");
 }
 
 void ImConsole::render() {
@@ -30,14 +64,16 @@ void ImConsole::render() {
             changed -= 1; // for some reason needs two passes
         }
 
-		//ImGui::InputTextMultiline(wID.c_str(), &data[0], data.size(), r, ImGuiInputTextFlags_ReadOnly);
-		ImGui::BeginChild(wID.c_str());
+        console.Render(wID.c_str());
+
+		/*ImGui::BeginChild(wID.c_str());
 		ImGui::PushStyleColor(ImGuiCol_FrameBg, IM_COL32(0,0,0,0));
 		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0,0));
 		ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 0);
 		ImGui::PushStyleVar(ImGuiStyleVar_ItemInnerSpacing, ImVec2(0,0));
 		ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0,0));
-		size_t i = 0;
+
+        size_t i = 0;
 		for (auto& l : lines) {
             string lID = wID + toString(i);
 
@@ -81,12 +117,13 @@ void ImConsole::render() {
             }
             i++;
 		}
+
 		ImGui::PopStyleVar();
 		ImGui::PopStyleVar();
 		ImGui::PopStyleVar();
 		ImGui::PopStyleVar();
 		ImGui::PopStyleColor();
-		ImGui::EndChild();
+		ImGui::EndChild();*/
 
         ImGui::EndTabItem();
     }
@@ -96,6 +133,7 @@ void ImConsole::render() {
 
 void ImConsole::clear() {
     lines.clear();
+    console.SetText("");
     attributes.clear();
     changed = 0;
 }
@@ -137,25 +175,9 @@ void ImConsoles::setupConsole(string ID, string name) {
 }
 
 void ImConsoles::pushConsole(string ID, string data, string style, string mark) {
-    //cout << " - - - - - - - ImConsoles::pushConsole " << ID << "  '" << data << "'  " << style << "  " << mark << endl;
     if (data.size() == 0) return;
     if (!consoles.count(ID)) return;
-    consoles[ID].changed = 2;
-    auto& lns = consoles[ID].lines;
-    auto& att = consoles[ID].attributes;
-    auto dataV = splitString(data, '\n');
-    for (int i=0; i<dataV.size(); i++) {
-        int c0 = 0;
-        if (lns.size() > 0) c0 = lns[lns.size()-1].size();
-        int L = dataV[i].size();
-
-        if (i == 0 && lns.size() > 0) lns[lns.size()-1] += dataV[i];
-        else lns.push_back(dataV[i]);
-
-        if (mark.size() > 0)  att[lns.size()-1].marks.push_back({mark, c0, L});
-        if (style.size() > 0) att[lns.size()-1].styles.push_back({style, c0, L});
-    }
-    if (data[data.size()-1] == '\n') lns.push_back("");
+    consoles[ID].push(data, style, mark);
 }
 
 ImViewControls::ImViewControls() {
@@ -226,9 +248,6 @@ void ImViewControls::render() {
 }
 
 void ImConsoles::begin() {
-    //static ImGuiConsole c;
-    //c.Draw();
-
     viewControls.render();
     ImGui::Separator();
 

@@ -2,6 +2,7 @@
 #define VRIMGUICONSOLES_H_INCLUDED
 
 #include "VRImguiUtils.h"
+#include "imEditor/TextEditor.h"
 
 using namespace std;
 
@@ -41,6 +42,8 @@ class ImConsole {
             vector<Attribute> styles;
         };
 
+        TextEditor console;
+
         bool sensitive = true;
         bool tabOpen = false;
         bool paused = false;
@@ -53,6 +56,7 @@ class ImConsole {
 
         ImConsole() {}
         ImConsole(string ID);
+        void push(string data, string style, string mark);
         void render();
         void clear();
         void pause(bool b);
