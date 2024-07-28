@@ -145,7 +145,10 @@ public:
 			mComment(false), mMultiLineComment(false), mPreprocessor(false) {}
 	};
 
-	typedef std::vector<Glyph> Line;
+	struct Line {
+        std::vector<Glyph> glyphs;
+	};
+
 	typedef std::vector<Line> Lines;
 
 	struct LanguageDefinition
