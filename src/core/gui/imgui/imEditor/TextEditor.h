@@ -145,8 +145,17 @@ public:
 			mComment(false), mMultiLineComment(false), mPreprocessor(false) {}
 	};
 
+
+    struct Attribute {
+        std::string value;
+        int c0 = 0;
+        int L = 0;
+    };
+
 	struct Line {
         std::vector<Glyph> glyphs;
+        std::vector<Attribute> marks;
+        std::vector<Attribute> styles;
 	};
 
 	typedef std::vector<Line> Lines;
@@ -243,8 +252,8 @@ public:
 	void SetTabSize(int aValue);
 	inline int GetTabSize() const { return mTabSize; }
 
+	void InsertText(const std::string& aValue, const std::string& style, const std::string& mark);
 	void InsertText(const std::string& aValue);
-	void InsertText(const char* aValue);
 
 	void MoveUp(int aAmount = 1, bool aSelect = false);
 	void MoveDown(int aAmount = 1, bool aSelect = false);
@@ -335,7 +344,7 @@ private:
 	Coordinates SanitizeCoordinates(const Coordinates& aValue) const;
 	void Advance(Coordinates& aCoordinates) const;
 	void DeleteRange(const Coordinates& aStart, const Coordinates& aEnd);
-	int InsertTextAt(Coordinates& aWhere, const char* aValue);
+	int InsertTextAt(Coordinates& aWhere, const std::string& aValue, const std::string& style, const std::string& mark);
 	void AddUndo(UndoRecord& aValue);
 	Coordinates ScreenPosToCoordinates(const ImVec2& aPosition) const;
 	Coordinates FindWordStart(const Coordinates& aFrom) const;

@@ -18,10 +18,9 @@ ImConsole::ImConsole(string ID) : ID(ID), name(ID) {
 
 void ImConsole::push(string data, string style, string mark) {
     auto cursor = console.GetCursorPosition();
-
     changed = 2;
     console.SetCursorPosition(console.GetEndCoordinates());
-    console.InsertText(data.c_str());
+    console.InsertText(data.c_str(), style, mark);
 
     // TODO: reimplement error mark/style
 

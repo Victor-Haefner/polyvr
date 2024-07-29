@@ -265,10 +265,13 @@ void TextEditor::DeleteRange(const Coordinates & aStart, const Coordinates & aEn
 	mTextChanged = true;
 }
 
-int TextEditor::InsertTextAt(Coordinates& /* inout */ aWhere, const char * aValue)
+int TextEditor::InsertTextAt(Coordinates& /* inout */ aWhere, const std::string& sValue, const std::string& style, const std::string& mark)
 {
-	assert(!mReadOnly);
+    assert(!mReadOnly);
 
+	const char* aValue = sValue.c_str();
+
+	bool marked = false;
 	int cindex = GetCharacterIndex(aWhere);
 	int totalLines = 0;
 	while (*aValue != '\0') {
@@ -276,24 +279,35 @@ int TextEditor::InsertTextAt(Coordinates& /* inout */ aWhere, const char * aValu
 
 		if (*aValue == '\r') ++aValue; // skip
 		else if (*aValue == '\n') {
-			if (cindex < (int)mLines[aWhere.mLine].glyphs.size()) {
-				auto& newLine = InsertLine(aWhere.mLine + 1).glyphs;
-				auto& line = mLines[aWhere.mLine].glyphs;
-				newLine.insert(newLine.begin(), line.begin() + cindex, line.end());
+            int L = aWhere.mLine;
+			if (cindex < (int)mLines[L].glyphs.size()) {
+				auto& newLine = InsertLine(L + 1);
+				if (style != "") newLine.styles.push_back({style, 0, L + 1});
+				if (mark != "") newLine.marks.push_back({mark, 0, L + 1});
+				auto& line = mLines[L].glyphs;
+				newLine.glyphs.insert(newLine.glyphs.begin(), line.begin() + cindex, line.end());
 				line.erase(line.begin() + cindex, line.end());
+			} else {
+                auto& newLine = InsertLine(L + 1);
+				if (style != "") newLine.styles.push_back({style, 0, L + 1});
+				if (mark != "") newLine.marks.push_back({mark, 0, L + 1});
 			}
-			else InsertLine(aWhere.mLine + 1);
 			++aWhere.mLine;
 			aWhere.mColumn = 0;
 			cindex = 0;
 			++totalLines;
 			++aValue;
 		} else {
-			auto& line = mLines[aWhere.mLine].glyphs;
+			auto& line = mLines[aWhere.mLine];
 			auto d = UTF8CharLength(*aValue);
 			bool isTab = bool(*aValue == '\t');
 			while (d-- > 0 && *aValue != '\0') {
-				line.insert(line.begin() + cindex++, Glyph(*aValue++, PaletteIndex::Default));
+				line.glyphs.insert(line.glyphs.begin() + cindex++, Glyph(*aValue++, PaletteIndex::Default));
+				if (!marked) {
+                    if (style != "") line.styles.push_back({style, cindex, aWhere.mLine});
+                    if (mark != "") line.marks.push_back({mark, cindex, aWhere.mLine});
+                    marked = true;
+				}
 			}
 
             if (isTab) {
@@ -933,7 +947,7 @@ void TextEditor::Render()
 			ImVec2 lineStartScreenPos = ImVec2(cursorScreenPos.x, cursorScreenPos.y + lineNo * mCharAdvance.y);
 			ImVec2 textScreenPos = ImVec2(lineStartScreenPos.x + mTextStart, lineStartScreenPos.y);
 
-			auto& line = mLines[lineNo].glyphs;
+			auto& line = mLines[lineNo];
 			longest = std::max(mTextStart + TextDistanceToLineStart(Coordinates(lineNo, GetLineMaxColumn(lineNo))), longest);
 			auto columnNo = 0;
 			Coordinates lineStartCoord(lineNo, 0);
@@ -1020,9 +1034,9 @@ void TextEditor::Render()
 						auto cindex = GetCharacterIndex(mState.mCursorPosition);
 						float cx = TextDistanceToLineStart(mState.mCursorPosition);
 
-						if (mOverwrite && cindex < (int)line.size())
+						if (mOverwrite && cindex < (int)line.glyphs.size())
 						{
-							auto c = line[cindex].mChar;
+							auto c = line.glyphs[cindex].mChar;
 							if (c == '\t')
 							{
 								auto x = (1.0f + std::floor((1.0f + cx) / (float(mTabSize) * spaceSize))) * (float(mTabSize) * spaceSize);
@@ -1031,7 +1045,7 @@ void TextEditor::Render()
 							else
 							{
 								char buf2[2];
-								buf2[0] = line[cindex].mChar;
+								buf2[0] = line.glyphs[cindex].mChar;
 								buf2[1] = '\0';
 								width = ImGui::GetFont()->CalcTextSizeA(ImGui::GetFontSize(), FLT_MAX, -1.0f, buf2).x;
 							}
@@ -1046,13 +1060,17 @@ void TextEditor::Render()
 			}
 
 			// Render colorized text
-			auto prevColor = line.empty() ? mPalette[(int)PaletteIndex::Default] : GetGlyphColor(line[0]);
+			auto prevColor = line.glyphs.empty() ? mPalette[(int)PaletteIndex::Default] : GetGlyphColor(line.glyphs[0]);
 			ImVec2 bufferOffset;
 
-			for (int i = 0; i < line.size();)
+			for (int i = 0; i < line.glyphs.size();)
 			{
-				auto& glyph = line[i];
+				auto& glyph = line.glyphs[i];
 				auto color = GetGlyphColor(glyph);
+				if (line.styles.size() > 0) {
+                    if (line.styles[0].value == "redLink") color = 0xff2244ff;
+                    if (line.styles[0].value == "blueLink") color = 0xffff9922;
+				}
 
 				if ((color != prevColor || glyph.mChar == '\t' || glyph.mChar == ' ') && !mLineBuffer.empty())
 				{
@@ -1102,7 +1120,7 @@ void TextEditor::Render()
 				{
 					auto l = UTF8CharLength(glyph.mChar);
 					while (l-- > 0)
-						mLineBuffer.push_back(line[i++].mChar);
+						mLineBuffer.push_back(line.glyphs[i++].mChar);
 				}
 				++columnNo;
 			}
@@ -1500,29 +1518,25 @@ void TextEditor::SetTabSize(int aValue)
 	mTabSize = std::max(0, std::min(32, aValue));
 }
 
-void TextEditor::InsertText(const std::string & aValue)
-{
-	InsertText(aValue.c_str());
+void TextEditor::InsertText(const std::string& aValue) {
+	InsertText(aValue.c_str(), "", "");
+}
+
+void TextEditor::InsertText(const std::string& aValue, const std::string& style, const std::string& mark) {
+	auto pos = GetActualCursorCoordinates();
+	auto start = std::min(pos, mState.mSelectionStart);
+	int totalLines = pos.mLine - start.mLine;
+
+	totalLines += InsertTextAt(pos, aValue, style, mark);
+
+	SetSelection(pos, pos);
+	SetCursorPosition(pos);
+	Colorize(start.mLine - 1, totalLines + 2);
 }
 
 std::ostream& operator<<(std::ostream& os, const TextEditor::Coordinates& c) {
     os << c.mLine << '/' << c.mColumn;
     return os;
-}
-
-void TextEditor::InsertText(const char * aValue)
-{
-	if (aValue == nullptr) return;
-
-	auto pos = GetActualCursorCoordinates();
-	auto start = std::min(pos, mState.mSelectionStart);
-	int totalLines = pos.mLine - start.mLine;
-
-	totalLines += InsertTextAt(pos, aValue);
-
-	SetSelection(pos, pos);
-	SetCursorPosition(pos);
-	Colorize(start.mLine - 1, totalLines + 2);
 }
 
 void TextEditor::DeleteSelection()
@@ -2050,7 +2064,7 @@ void TextEditor::Redo(int aSteps)
 const TextEditor::Palette & TextEditor::GetDarkPalette()
 {
 	const static Palette p = { { // ABGR
-			0xff7f7f7f,	// Default
+			0xffffffff,	// Default
 			0xffd69c56,	// Keyword
 			0xff00ff00,	// Number
 			0xff7070e0,	// String
@@ -2545,7 +2559,7 @@ void TextEditor::UndoRecord::Undo(TextEditor * aEditor)
 	if (!mRemoved.empty())
 	{
 		auto start = mRemovedStart;
-		aEditor->InsertTextAt(start, mRemoved.c_str());
+		aEditor->InsertTextAt(start, mRemoved, "", "");
 		aEditor->Colorize(mRemovedStart.mLine - 1, mRemovedEnd.mLine - mRemovedStart.mLine + 2);
 	}
 
@@ -2565,7 +2579,7 @@ void TextEditor::UndoRecord::Redo(TextEditor * aEditor)
 	if (!mAdded.empty())
 	{
 		auto start = mAddedStart;
-		aEditor->InsertTextAt(start, mAdded.c_str());
+		aEditor->InsertTextAt(start, mAdded, "", "");
 		aEditor->Colorize(mAddedStart.mLine - 1, mAddedEnd.mLine - mAddedStart.mLine + 1);
 	}
 
