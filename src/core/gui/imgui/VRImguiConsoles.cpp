@@ -13,6 +13,7 @@ ImConsole::ImConsole(string ID) : ID(ID), name(ID) {
     console.SetHandleKeyboardInputs(false);
     console.SetDrawLineNumers(false);
     console.SetDoGrabFocus(false);
+    console.SetID(ID);
     //console.SetLanguageDefinition(TextEditor::LanguageDefinition::Python());
 }
 

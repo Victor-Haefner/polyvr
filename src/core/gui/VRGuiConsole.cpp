@@ -119,32 +119,7 @@ void VRConsoleWidget::addStyle( string style, string fg, string bg, bool italic,
     styles[style] = "";
 }
 
-//bool VRConsoleWidget::on_link_activate(string object, string event, string itr) {
 void VRConsoleWidget::on_link_activate(string mark) {
-    /*GdkEventButton* event_btn = (GdkEventButton*)event;
-    if (event->type == GDK_BUTTON_PRESS && event_btn->button == 1) {
-        GtkTextIter markItr, tagToggle, lineEnd;
-        tagToggle = *itr;
-        lineEnd = *itr;
-
-        gtk_text_iter_forward_to_tag_toggle(&tagToggle, 0);
-        gtk_text_iter_forward_to_line_end(&lineEnd);
-        gtk_text_iter_forward_char(&lineEnd);
-        int c = gtk_text_iter_compare(&lineEnd, &tagToggle);
-        markItr = (c == -1) ? lineEnd : tagToggle;
-        GSList* marks = gtk_text_iter_get_marks(&markItr);
-        GSList* p = marks;
-        while (p) {
-            GtkTextMark* mark = (GtkTextMark*)p->data;
-            if (links.count(mark)) {
-                if (auto l = links[mark].link) (*l)( links[mark].msg );
-            }
-            p = p->next;
-        }
-        g_slist_free(marks);
-        return true;
-    }*/
-
     if (links.count(mark)) {
         if (auto l = links[mark].link) {
             (*l)( links[mark].msg );

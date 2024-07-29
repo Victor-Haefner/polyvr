@@ -6,6 +6,8 @@
 #include <iostream>
 
 #include "TextEditor.h"
+#include "core/gui/VRGuiManager.h"
+#include "core/utils/toString.h"
 
 #define IMGUI_DEFINE_MATH_OPERATORS
 #include "imgui.h" // for imGui::GetCurrentWindow()
@@ -282,15 +284,15 @@ int TextEditor::InsertTextAt(Coordinates& /* inout */ aWhere, const std::string&
             int L = aWhere.mLine;
 			if (cindex < (int)mLines[L].glyphs.size()) {
 				auto& newLine = InsertLine(L + 1);
-				if (style != "") newLine.styles.push_back({style, 0, L + 1});
-				if (mark != "") newLine.marks.push_back({mark, 0, L + 1});
+				if (style != "") newLine.styles.push_back({style, 0, cindex});
+				if (mark != "") newLine.marks.push_back({mark, 0, cindex});
 				auto& line = mLines[L].glyphs;
 				newLine.glyphs.insert(newLine.glyphs.begin(), line.begin() + cindex, line.end());
 				line.erase(line.begin() + cindex, line.end());
 			} else {
                 auto& newLine = InsertLine(L + 1);
-				if (style != "") newLine.styles.push_back({style, 0, L + 1});
-				if (mark != "") newLine.marks.push_back({mark, 0, L + 1});
+				if (style != "") newLine.styles.push_back({style, 0, cindex});
+				if (mark != "") newLine.marks.push_back({mark, 0, cindex});
 			}
 			++aWhere.mLine;
 			aWhere.mColumn = 0;
@@ -304,8 +306,8 @@ int TextEditor::InsertTextAt(Coordinates& /* inout */ aWhere, const std::string&
 			while (d-- > 0 && *aValue != '\0') {
 				line.glyphs.insert(line.glyphs.begin() + cindex++, Glyph(*aValue++, PaletteIndex::Default));
 				if (!marked) {
-                    if (style != "") line.styles.push_back({style, cindex, aWhere.mLine});
-                    if (mark != "") line.marks.push_back({mark, cindex, aWhere.mLine});
+                    if (style != "") line.styles.push_back({style, cindex, sValue.size()});
+                    if (mark != "") line.marks.push_back({mark, cindex, sValue.size()});
                     marked = true;
 				}
 			}
@@ -873,6 +875,17 @@ void TextEditor::HandleMouseInputs()
 				SetSelection(mInteractiveStart, mInteractiveEnd, mSelectionMode);
 
 				mLastClick = (float)ImGui::GetTime();
+
+
+				// handle links
+                const auto lineNo = mState.mCursorPosition.mLine;
+                if ((size_t)lineNo < mLines.size()) {
+                    auto& line = mLines[lineNo];
+                    const auto colNo = mState.mCursorPosition.mColumn;
+                    for (auto& m : line.marks) {
+                        if (colNo >= m.c0 && colNo < m.c0 + m.L) TriggerMark(m);
+                    }
+                }
 			}
 			// Mouse left button dragging (=> update selection)
 			else {
@@ -889,6 +902,12 @@ void TextEditor::HandleMouseInputs()
 		}
 	}
 }
+
+void TextEditor::TriggerMark(Attribute& mark) {
+    uiSignal("clickConsole", {{"mark",mark.value}, {"ID",ID}});
+}
+
+void TextEditor::SetID(std::string ID) { this->ID = ID; }
 
 void TextEditor::Render()
 {

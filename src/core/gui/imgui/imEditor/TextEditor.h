@@ -222,6 +222,7 @@ public:
 	int GetTotalLines() const { return (int)mLines.size(); }
 	bool IsOverwrite() const { return mOverwrite; }
 
+	void SetID(std::string ID);
 	void SetReadOnly(bool aValue);
 	bool IsReadOnly() const { return mReadOnly; }
 	bool IsTextChanged() const { return mTextChanged; }
@@ -367,8 +368,10 @@ private:
 
 	void HandleKeyboardInputs();
 	void HandleMouseInputs();
+	void TriggerMark(Attribute& mark);
 	void Render();
 
+	std::string ID;
 	float mLineSpacing;
 	Lines mLines;
 	EditorState mState;
