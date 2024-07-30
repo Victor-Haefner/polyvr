@@ -10,7 +10,7 @@ ImConsole::ImConsole(string ID) : ID(ID), name(ID) {
     console.SetShowWhitespaces(false);
     console.SetReadOnly(true);
     console.SetColorizerEnable(false);
-    console.SetHandleKeyboardInputs(false);
+    //console.SetHandleKeyboardInputs(false); // need keyboard handling for copy!
     console.SetDrawLineNumers(false);
     console.SetDoGrabFocus(false);
     console.SetID(ID);
