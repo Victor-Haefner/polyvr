@@ -2,6 +2,7 @@
 #define VRRESTRESPONSE_H_INCLUDED
 
 #include <string>
+#include <vector>
 #include <OpenSG/OSGConfig.h>
 #include "../VRNetworkingFwd.h"
 
@@ -11,7 +12,7 @@ OSG_BEGIN_NAMESPACE;
 class VRRestResponse : public std::enable_shared_from_this<VRRestResponse> {
 	private:
         int status = 0;
-        string headers;
+        vector<string> headers;
         string data;
 
 	public:
@@ -22,12 +23,13 @@ class VRRestResponse : public std::enable_shared_from_this<VRRestResponse> {
 		VRRestResponsePtr ptr();
 
 		void setStatus(int s);
-		void setHeaders(string s);
+		void setHeaders(vector<string> h);
+		void appendHeader(string s);
 		void setData(string s);
 		void appendData(string s);
 
 		int getStatus();
-		string getHeaders();
+		vector<string> getHeaders();
 		string getData();
 
 		static string uriEncode(const string& s);

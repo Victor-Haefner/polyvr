@@ -22,6 +22,7 @@ void ImConsole::push(string data, string style, string mark) {
     changed = 2;
     console.SetCursorPosition(console.GetEndCoordinates());
     console.InsertText(data.c_str(), style, mark);
+    //console.ScrollBottom();
 
     // TODO: reimplement error mark/style
 

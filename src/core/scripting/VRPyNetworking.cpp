@@ -117,10 +117,10 @@ PyMethodDef VRPyHDLC::methods[] = {
 
 PyMethodDef VRPyRestResponse::methods[] = {
     {"getStatus", PyWrap(RestResponse, getStatus, "Get response status", int) },
-    {"getHeaders", PyWrap(RestResponse, getHeaders, "Get response headers", string) },
+    {"getHeaders", PyWrap(RestResponse, getHeaders, "Get response headers", vector<string>) },
     {"getData", PyWrap(RestResponse, getData, "Get response data", string) },
     {"setStatus", PyWrap(RestResponse, setStatus, "Set response status", void, int) },
-    {"setHeaders", PyWrap(RestResponse, setHeaders, "Set response headers", void, string) },
+    {"setHeaders", PyWrap(RestResponse, setHeaders, "Set response headers", void, vector<string>) },
     {"setData", PyWrap(RestResponse, setData, "Set response status", void, string) },
     {NULL}  /* Sentinel */
 };

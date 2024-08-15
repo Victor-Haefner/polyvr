@@ -10,12 +10,13 @@ VRRestResponsePtr VRRestResponse::create() { return VRRestResponsePtr( new VRRes
 VRRestResponsePtr VRRestResponse::ptr() { return static_pointer_cast<VRRestResponse>(shared_from_this()); }
 
 void VRRestResponse::setStatus(int s) { status = s; }
-void VRRestResponse::setHeaders(string s) { headers = s; }
+void VRRestResponse::setHeaders(vector<string> h) { headers = h; }
+void VRRestResponse::appendHeader(string h) { headers.push_back(h); }
 void VRRestResponse::setData(string s) { data = s; }
 void VRRestResponse::appendData(string s) { data += s; }
 
 int VRRestResponse::getStatus() { return status; }
-string VRRestResponse::getHeaders() { return headers; }
+vector<string> VRRestResponse::getHeaders() { return headers; }
 string VRRestResponse::getData() { return data; }
 
 // alphanum

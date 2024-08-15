@@ -174,7 +174,7 @@ void VRSnappingEngine::remRule(int i) {
     rules.erase(i);
 }
 
-void VRSnappingEngine::addObjectAnchor(VRTransformPtr obj, VRTransformPtr a, int grp, int snpgrp) { // TODO: use grp and snpgrp
+void VRSnappingEngine::addObjectAnchor(VRTransformPtr obj, VRTransformPtr a, int grp, int snpgrp) {
     if (anchors.count(obj) == 0) anchors[obj] = vector<Anchor>();
     Anchor A;
     A.a = a;

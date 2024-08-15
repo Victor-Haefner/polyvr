@@ -64,6 +64,14 @@ string subString(const string& s, int beg, int len) {
     return s.substr(beg, len);
 }
 
+string stripString(const string& str) {
+    string delims = " \t\r\n";
+    auto strBegin = str.find_first_not_of(delims);
+    if (strBegin == string::npos) return "";
+    auto strEnd = str.find_last_not_of(delims);
+    return str.substr(strBegin, strEnd - strBegin + 1);
+}
+
 bool startsWith(const string& s, const string& s2, bool caseSensitive) {
     string s1 = subString(s, 0, s2.size());
     if (caseSensitive) return bool(s1 == s2);

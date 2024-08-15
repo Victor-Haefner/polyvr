@@ -38,14 +38,16 @@ VRRestServer::Data* VRRestServer::getData() { return data; }
 
 void VRRestServer::onMessage(void* connection, VRRestResponsePtr msg) {
     auto c = (mg_connection*)connection;
-    if (!callback) { sendString(c, ""); return; }
+    if (!callback) { sendString(c, "", {}); return; }
     (*callback)(msg);
-    mg_http_reply(c, msg->getStatus(), "", msg->getData().c_str()); // passing headers can lead to issues
+    sendString(c, msg->getData(), msg->getStatus(), msg->getHeaders());
 }
 
-void VRRestServer::sendString(void* connection, string data, int code) {
+void VRRestServer::sendString(void* connection, string data, int code, vector<string> headers) {
     auto c = (mg_connection*)connection;
-    mg_http_reply(c, code, "", data.c_str());
+    string headerStr;
+    for (auto h : headers) headerStr += h + "\r\n";
+    mg_http_reply(c, code, headerStr.c_str(), data.c_str());
 }
 
 static void VRRestServer_handler(mg_connection* connection, int ev, void* ev_data, void* s) {
@@ -57,13 +59,13 @@ static void VRRestServer_handler(mg_connection* connection, int ev, void* ev_dat
         string body(hm->body.ptr, hm->body.len);
 
         VRRestResponsePtr msg = VRRestResponse::create();
-        msg->setHeaders(headers);
+        msg->setHeaders( splitString(headers, '\n') );
         msg->setData(body);
 
         auto fkt = VRUpdateCb::create("VRRestServer_handler", bind(&VRRestServer::onMessage, server, (void*)connection, msg));
         auto s = VRScene::getCurrent();
         if (s) s->queueJob(fkt);
-        else mg_http_reply(connection, 200, "", "");
+        else server->sendString(connection, "", 200); // fallback
     }
 }
 

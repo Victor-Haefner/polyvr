@@ -39,10 +39,18 @@ VRRestClient::~VRRestClient() {
 VRRestClientPtr VRRestClient::create(string name) { return VRRestClientPtr( new VRRestClient(name) ); }
 //VRRestClientPtr VRRestClient::ptr() { return dynamic_pointer_cast<VRRestClient>(shared_from_this()); }
 
-size_t getOut(char *ptr, size_t size, size_t nmemb, VRRestResponse* res) {
+size_t getRespData(char *ptr, size_t size, size_t nmemb, VRRestResponse* res) {
     res->appendData(string(ptr, size*nmemb));
     return size*nmemb;
 }
+
+size_t getRespHeaders(char* ptr, size_t size, size_t nitems, VRRestResponse* res) {
+    size_t total_size = size * nitems;
+    std::string header(ptr, total_size);
+    res->appendHeader( stripString(header) );
+    return total_size;
+}
+
 
 void setupHeaders(CURL* curl, vector<string>& headers) {
     struct curl_slist* hlist = NULL;
@@ -90,10 +98,14 @@ VRRestResponsePtr VRRestClient::get(string uri, int timeoutSecs, vector<string> 
     auto curl = curl_easy_init();
     curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1);
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, res.get());
-    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &getOut);
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &getRespData);
+    curl_easy_setopt(curl, CURLOPT_HEADERDATA, res.get());
+    curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, &getRespHeaders);
     curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, timeoutSecs);
     curl_easy_setopt(curl, CURLOPT_URL, uri.c_str());
     setupHeaders(curl, headers);
+    res->setHeaders({});
+
     CURLcode c = curl_easy_perform(curl);
     if (c != CURLE_OK) fprintf(stderr, "VRRestClient::get, curl_easy_perform() failed: %s, request was: %s\n", curl_easy_strerror(c), uri.c_str());
     curl_easy_cleanup(curl);
@@ -114,10 +126,13 @@ VRRestResponsePtr VRRestClient::post(string uri, const string& data, int timeout
     curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, data.size());
     curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1);
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, res.get());
-    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &getOut);
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &getRespData);
+    curl_easy_setopt(curl, CURLOPT_HEADERDATA, res.get());
+    curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, &getRespHeaders);
     curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, timeoutSecs);
     curl_easy_setopt(curl, CURLOPT_URL, uri.c_str());
     setupHeaders(curl, headers);
+    res->setHeaders({});
 
     CURLcode c = curl_easy_perform(curl);
     if (c != CURLE_OK) fprintf(stderr, "VRRestClient::post, curl_easy_perform() failed: %s, request was: %s\n", curl_easy_strerror(c), uri.c_str());

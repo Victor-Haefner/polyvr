@@ -5,6 +5,7 @@
 #include "../VRNetworkingFwd.h"
 
 #include <string>
+#include <vector>
 
 using namespace std;
 OSG_BEGIN_NAMESPACE;
@@ -21,8 +22,6 @@ class VRRestServer : public std::enable_shared_from_this<VRRestServer> {
         Data* data = 0;
         VRRestCbPtr callback;
 
-        void sendString(void* connection, string data, int code = 200);
-
 	public:
 		VRRestServer(string name);
 		~VRRestServer();
@@ -31,6 +30,7 @@ class VRRestServer : public std::enable_shared_from_this<VRRestServer> {
 		VRRestServerPtr ptr();
 
 		void listen(int port, VRRestCbPtr cb);
+        void sendString(void* connection, string data, int code = 200, vector<string> headers = {});
 };
 
 OSG_END_NAMESPACE;

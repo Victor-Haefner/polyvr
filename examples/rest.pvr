@@ -33,15 +33,14 @@
 	def onMessage(req):
 		# handle request
 		print 'server, handle request:'
-		print ' headers:'
-		for h in req.getHeaders().split('\n'):
-			print ' ', h
 		print ' data:'
 		print req.getData()
+		print ' headers:'
+		for h in req.getHeaders(): print ' ', h
 		
 		# write answer back into request object
 		req.setStatus(200)
-		req.setHeaders("Content-Type: text/plain\r\n")
+		req.setHeaders(["Content-Type: text/plain"])
 		req.setData("Hi from server!")
 	
 	
@@ -59,6 +58,8 @@
 		print 'client, got response:'
 		print ' status: ', resp.getStatus()
 		print ' data: ', resp.getData()
+		print ' headers:'
+		for h in resp.getHeaders(): print ' ', h
 		
 	
 	VR.client = VR.RestClient('myClient')
