@@ -111,7 +111,7 @@ echo "work dir: '\$HERE'"
 cd \$HERE
 ls
 export LD_LIBRARY_PATH="\${HERE}/libs:\${LD_LIBRARY_PATH}"
-exec ./VRFramework --maximized=1 --application $appProject "\$@"
+exec ./VRFramework --dofailcheck=0 --maximized=1 --application $appProject "\$@"
 EOT
 else
 cat <<EOT >> $pckFolder/AppRun

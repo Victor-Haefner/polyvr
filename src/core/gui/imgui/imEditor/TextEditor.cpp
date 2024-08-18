@@ -1,3 +1,7 @@
+#ifdef _WIN32
+#define NOMINMAX
+#endif
+
 #include <algorithm>
 #include <chrono>
 #include <string>
@@ -306,8 +310,8 @@ int TextEditor::InsertTextAt(Coordinates& /* inout */ aWhere, const std::string&
 			while (d-- > 0 && *aValue != '\0') {
 				line.glyphs.insert(line.glyphs.begin() + cindex++, Glyph(*aValue++, PaletteIndex::Default));
 				if (!marked) {
-                    if (style != "") line.styles.push_back({style, cindex, sValue.size()});
-                    if (mark != "") line.marks.push_back({mark, cindex, sValue.size()});
+                    if (style != "") line.styles.push_back({style, cindex, (int)sValue.size()});
+                    if (mark != "") line.marks.push_back({mark, cindex, (int)sValue.size()});
                     marked = true;
 				}
 			}
