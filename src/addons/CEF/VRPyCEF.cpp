@@ -16,6 +16,7 @@ PyMethodDef VRPyCEF::methods[] = {
     {"addKeyboard", PyWrap2(CEF, addKeyboard, "Add keyboard device", void, VRDevicePtr) },
     {"setResolution", PyWrap2(CEF, setResolution, "Set horizontal resolution W", void, float) },
     {"setAspectRatio", PyWrap2(CEF, setAspectRatio, "Set aspect ratio a to define the height H: H = W/a", void, float) },
+    {"setBlockedSignal", PyWrap2(CEF, setBlockedSignal, "Set signals to be blocked and not forwarded (signal, doBlock)", void, int, bool) },
     {"toggleInput", PyWrap2(CEF, toggleInput, "Toggle mouse and keyboard input usage (useMouse, useKeyboard)", void, bool, bool) },
     {NULL}  /* Sentinel */
 };

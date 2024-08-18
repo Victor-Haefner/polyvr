@@ -32,6 +32,8 @@ class CEF {
         int mX = -1;
         int mY = -1;
 
+        map<int, bool> blockedSignals;
+
         VRUpdateCbPtr update_callback;
         map<VRDevice*, VRDeviceCbPtr> mouse_dev_callback;
         map<VRDevice*, VRUpdateCbPtr> mouse_move_callback;
@@ -54,9 +56,11 @@ class CEF {
         void setResolution(float a);
         void setAspectRatio(float a);
 
+
         void setMaterial(VRMaterialPtr mat);
         void addMouse(VRDevicePtr dev, VRObjectPtr obj, int lb, int mb, int rb, int wu, int wd);
         void addKeyboard(VRDevicePtr dev);
+        void setBlockedSignal(int s, bool b);
         void toggleInput(bool keyboard, bool mouse);
 
         void open(string site);

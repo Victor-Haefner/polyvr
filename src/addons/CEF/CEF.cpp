@@ -327,6 +327,8 @@ CEF::CEF() {
     update_callback = VRUpdateCb::create("webkit_update", bind(&CEF::update, this));
     auto scene = VRScene::getCurrent();
     if (scene) scene->addUpdateFkt(update_callback);
+    blockedSignals[3] = true; // block mouse scrolling signals
+    blockedSignals[4] = true;
 }
 
 CEF::~CEF() {
@@ -608,6 +610,10 @@ void CEF::mouse_move(VRDeviceWeakPtr d) {
     }
 }
 
+void CEF::setBlockedSignal(int s, bool b) {
+    blockedSignals[s] = b;
+}
+
 void CEF::toggleInput(bool m, bool k) {
     doMouse = m;
     doKeyboard = k;
@@ -668,7 +674,7 @@ bool CEF::mouse(int lb, int mb, int rb, int wu, int wd, VRDeviceWeakPtr d) {
     me.x = ins->texel[0]*width;
     me.y = ins->texel[1]*height;
 
-    bool blockSignals = false;
+    bool blockSignal = blockedSignals.count(b) && blockedSignals[b];
 
     if (b < 3) {
         cef_mouse_button_type_t mbt;
@@ -682,10 +688,9 @@ bool CEF::mouse(int lb, int mb, int rb, int wu, int wd, VRDeviceWeakPtr d) {
     if (b == 3 || b == 4) {
         int d = b==3 ? -1 : 1;
         host->SendMouseWheelEvent(me, d*width*0.05, d*height*0.05);
-        blockSignals = true; // only for scrolling
     }
 
-    return !blockSignals;
+    return !blockSignal;
 }
 
 static KeyboardCode CefKeyFromGlut(int key) {
