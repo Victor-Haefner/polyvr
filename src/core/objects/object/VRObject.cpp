@@ -228,6 +228,7 @@ vector<VRObjectPtr> VRObject::getLinks() {
 }
 
 void VRObject::addLink(VRObjectPtr obj) {
+    if (!obj) return;
     if (osg->links.count(obj.get())) return;
 
     NodeMTRecPtr node = obj->getNode()->node;
@@ -243,6 +244,7 @@ void VRObject::addLink(VRObjectPtr obj) {
 }
 
 void VRObject::remLink(VRObjectPtr obj) {
+    if (!obj) return;
     if (!osg->links.count(obj.get())) return;
 
     NodeMTRecPtr node = osg->links[obj.get()];
