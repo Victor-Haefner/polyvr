@@ -56,6 +56,7 @@ TextEditor::TextEditor()
 	, mShowWhitespaces(true)
 	, mDrawLineNumers(true)
 	, mDoGrabFocus(true)
+	, mDoEnsureCursorVisible(true)
 	, mStartTime(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count())
 {
 	SetPalette(GetDarkPalette());
@@ -2512,6 +2513,8 @@ float TextEditor::TextDistanceToLineStart(const Coordinates& aFrom) const
 
 void TextEditor::EnsureCursorVisible()
 {
+    if (!mDoEnsureCursorVisible) return;
+
 	if (!mWithinRender)
 	{
 		mScrollToCursor = true;

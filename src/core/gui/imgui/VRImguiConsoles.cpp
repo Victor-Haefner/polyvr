@@ -13,6 +13,7 @@ ImConsole::ImConsole(string ID) : ID(ID), name(ID) {
     //console.SetHandleKeyboardInputs(false); // need keyboard handling for copy!
     console.SetDrawLineNumers(false);
     console.SetDoGrabFocus(false);
+    console.SetDoEnsureCursorVisible(false);
     console.SetID(ID);
     //console.SetLanguageDefinition(TextEditor::LanguageDefinition::Python());
 }
@@ -60,7 +61,7 @@ void ImConsole::render() {
 
         if (changed > 0 && !paused) {
             //size_t N = countLines(data);
-            size_t N = lines.size();
+            size_t N = console.GetTotalLines();
             ImGui::SetNextWindowScroll(ImVec2(-1, N * ImGui::GetTextLineHeight()));
             changed -= 1; // for some reason needs two passes
         }

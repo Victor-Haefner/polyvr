@@ -219,7 +219,7 @@ public:
 	std::string GetSelectedText() const;
 	std::string GetCurrentLineText()const;
 
-	int GetTotalLines() const { return (int)mLines.size(); }
+	size_t GetTotalLines() const { return mLines.size(); }
 	bool IsOverwrite() const { return mOverwrite; }
 
 	void SetID(std::string ID);
@@ -249,6 +249,7 @@ public:
 
 	inline void SetDrawLineNumers(bool aValue) { mDrawLineNumers = aValue; }
 	inline void SetDoGrabFocus(bool aValue) { mDoGrabFocus = aValue; }
+	inline void SetDoEnsureCursorVisible(bool aValue) { mDoEnsureCursorVisible = aValue; }
 
 	void SetTabSize(int aValue);
 	inline int GetTabSize() const { return mTabSize; }
@@ -397,6 +398,7 @@ private:
 	bool mShowWhitespaces;
 	bool mDrawLineNumers;
 	bool mDoGrabFocus;
+	bool mDoEnsureCursorVisible;
 
 	Palette mPaletteBase;
 	Palette mPalette;
