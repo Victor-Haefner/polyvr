@@ -188,6 +188,12 @@ void VRSnappingEngine::pauseObjectAnchors(VRTransformPtr obj, bool paused) {
         for (auto& a : anchors[obj]) a.active = !paused;
 }
 
+void VRSnappingEngine::pauseObjectAnchor(VRTransformPtr obj, int i, bool paused) {
+    if (anchors.count(obj))
+        if ( i >= 0 && i < anchors[obj].size())
+            anchors[obj][i].active = !paused;
+}
+
 void VRSnappingEngine::clearObjectAnchors(VRTransformPtr obj) {
     if (anchors.count(obj)) anchors[obj].clear();
 }

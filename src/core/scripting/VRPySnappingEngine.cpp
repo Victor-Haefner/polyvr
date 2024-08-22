@@ -50,6 +50,7 @@ PyMethodDef VRPySnappingEngine::methods[] = {
     {"addObjectAnchor", PyWrapOpt(SnappingEngine, addObjectAnchor, "Remove a rule - addObjectAnchor(obj transform, obj anchor)", "0|0", void, VRTransformPtr, VRTransformPtr, int, int ) },
     {"clearObjectAnchors", PyWrap(SnappingEngine, clearObjectAnchors, "Remove a rule (obj transform)", void, VRTransformPtr ) },
     {"pauseObjectAnchors", PyWrap(SnappingEngine, pauseObjectAnchors, "Pause/unpause anchors (obj transform, bool paused)", void, VRTransformPtr, bool ) },
+    {"pauseObjectAnchor", PyWrap(SnappingEngine, pauseObjectAnchor, "Pause/unpause ith anchor (obj transform, int i, bool paused)", void, VRTransformPtr, int, bool ) },
     {"remLocalRules", PyWrap(SnappingEngine, remLocalRules, "Remove all object relative rules (obj transform)", void, VRTransformPtr ) },
     {"addCallback", PyWrap(SnappingEngine, addCallback, "Set snap callback", void, VRSnappingEngine::VRSnapCbPtr ) },
     {"enableGhosts", PyWrap(SnappingEngine, enableGhosts, "Set engine to show snapping ghosts", void, bool ) },

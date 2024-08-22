@@ -123,6 +123,7 @@ class VRSnappingEngine {
         void addObjectAnchor(VRTransformPtr obj, VRTransformPtr a, int grp = 0, int snpgrp = 0);
         void clearObjectAnchors(VRTransformPtr obj);
         void pauseObjectAnchors(VRTransformPtr obj, bool b);
+        void pauseObjectAnchor(VRTransformPtr obj, int i, bool b);
         void remLocalRules(VRTransformPtr obj);
 
         void addObject(VRTransformPtr obj, int group = 0);
