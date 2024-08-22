@@ -183,6 +183,11 @@ void VRSnappingEngine::addObjectAnchor(VRTransformPtr obj, VRTransformPtr a, int
     anchors[obj].push_back(A);
 }
 
+void VRSnappingEngine::pauseObjectAnchors(VRTransformPtr obj, bool paused) {
+    if (anchors.count(obj))
+        for (auto& a : anchors[obj]) a.active = !paused;
+}
+
 void VRSnappingEngine::clearObjectAnchors(VRTransformPtr obj) {
     if (anchors.count(obj)) anchors[obj].clear();
 }
@@ -295,6 +300,7 @@ void VRSnappingEngine::handleDraggedObject(VRDevicePtr dev, VRTransformPtr obj, 
 
         if (anchors.count(obj)) {
             for (auto& A : anchors[obj]) { // check if anchor snapped
+                if (!A.active) continue;
                 Matrix4d maL = A.a->getMatrix();
                 Matrix4d maW = m; maW.mult(maL);
                 Vec3d paW = Vec3d(maW[3]);
@@ -304,6 +310,7 @@ void VRSnappingEngine::handleDraggedObject(VRDevicePtr dev, VRTransformPtr obj, 
                 if (r->csys && anchors.count(r->csys)) { // if local system has anchors, check for snap to them
                     Matrix4d m2 = r->csys->getWorldMatrix();
                     for (auto& B : anchors[r->csys]) {
+                        if (!B.active) continue;
                         if (A.snpgrp != B.grp) continue;
                         Matrix4d ma2L = B.a->getMatrix();
                         cout << "maL " << A.a->getName() << endl;

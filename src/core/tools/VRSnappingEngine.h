@@ -43,6 +43,7 @@ class VRSnappingEngine {
             VRTransformPtr a;
             int grp = 0;
             int snpgrp = 0;
+            bool active = true;
         };
 
         struct EventSnap : public std::enable_shared_from_this<EventSnap> {
@@ -121,6 +122,7 @@ class VRSnappingEngine {
 
         void addObjectAnchor(VRTransformPtr obj, VRTransformPtr a, int grp = 0, int snpgrp = 0);
         void clearObjectAnchors(VRTransformPtr obj);
+        void pauseObjectAnchors(VRTransformPtr obj, bool b);
         void remLocalRules(VRTransformPtr obj);
 
         void addObject(VRTransformPtr obj, int group = 0);
