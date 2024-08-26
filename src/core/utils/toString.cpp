@@ -341,6 +341,7 @@ template<> int toValue(stringstream& ss, double& v) { return ssToVal(ss, v, 0); 
 
 int   toInt  (string s) { return toValue<int  >(s); }
 float toFloat(string s) { return toValue<float>(s); }
+double toDouble(string s) { return toValue<double>(s); }
 
 bool  toBool (string s) {
     if (s == "true") return true;
