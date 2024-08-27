@@ -3511,6 +3511,12 @@
 			<Option target="Release" />
 			<Option target="PVR-Scene-d" />
 		</Unit>
+		<Unit filename="src/core/scene/import/VRTS.cpp">
+			<Option target="PVR-Scene-d" />
+		</Unit>
+		<Unit filename="src/core/scene/import/VRTS.h">
+			<Option target="PVR-Scene-d" />
+		</Unit>
 		<Unit filename="src/core/scene/import/VRVTK.cpp">
 			<Option target="Release" />
 			<Option target="PVR-Scene-d" />
