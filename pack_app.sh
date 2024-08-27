@@ -10,9 +10,31 @@ appFolder=$3
 
 pckFolder="packages/"$appName
 
+vcpkgLibs="/c/usr/vcpkg/installed/x64-windows/lib"
 pyPath="/c/usr/vcpkg/installed/x64-windows/share/python2/Lib"
 redistPath="/c/Program Files (x86)/Windows Kits/10/Redist/10.0.19041.0/ucrt/DLLs/x64"
-vcpkgLibs="/c/usr/vcpkg/installed/x64-windows/lib"
+signtoolPath="/c/Program Files (x86)/Windows Kits/10/bin/10.0.19041.0/x64/signtool.exe"
+
+check_signature() {
+    "$signtoolPath" verify -pa "$1" &> /dev/null
+    if [ $? -eq 0 ]; then
+		echo "checked signature of $1, it is signed"
+        return 0 # "The executable is signed."
+    else
+		echo "checked signature of $1, it is NOT signed"
+        return 1 # "The executable is not signed."
+    fi
+}
+
+sign_polyvr() {
+	check_signature build/Release/polyvr.exe
+	if [ $? -eq 1 ]; then
+		if [ -e sign_polyvr.sh ]; then
+			echo "sign polyvr!"
+			./sign_polyvr.sh
+		fi
+	fi
+}
 
 if [ ! -e $pckFolder ]; then
 	mkdir -p $pckFolder 
@@ -20,13 +42,11 @@ fi
 
 rm -rf $pckFolder/*
 	
+sign_polyvr
+	
 if [ -n "$appFolder" ]; then # check is appFolder given
 	echo " copy app data"
 	cp -r $appFolder/* $pckFolder/
-else # sign polyvr executable
-	if [ -e sign_polyvr.sh ]; then
-		./sign_polyvr.sh
-	fi
 fi
 
 echo " copy polyvr"
@@ -93,6 +113,10 @@ fi
 
 #polyvr.exe --standalone=1 --fullscreen=1 --application ../$appProject
 #polyvr.exe --standalone=1 --application ../$appProject
+
+
+
+
 
 echo " done"
 
