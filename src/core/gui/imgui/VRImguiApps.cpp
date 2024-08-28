@@ -19,7 +19,7 @@ void ImAppLauncher::render(string filter, ImImage& preview) {
         if (!contains(name, filter, false)) return;
     }
 
-    string label = name + "_TS'" + timestamp + "'";
+    string label = name;
     bool doHover = false;
     float w = 0;
     if (label.length() > 25) label = ".." + subString(label, label.length()-23, 23);
