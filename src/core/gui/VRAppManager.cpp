@@ -306,8 +306,9 @@ void VRAppManager::on_diag_new_clicked(string path) {
     string gitIgnorePath = getFolderName(path) + "/.gitignore";
     if (!exists(gitIgnorePath)) writeGitignore(gitIgnorePath);
     saveScene(path);
-    addEntry(path, "favorites_tab", true);
-    VRSceneManager::get()->addFavorite(path);
+    string ts = toString(time(0));
+    addEntry(path, "favorites_tab", true, ts);
+    VRSceneManager::get()->addFavorite(path, ts);
 }
 
 void VRAppManager::on_search() {

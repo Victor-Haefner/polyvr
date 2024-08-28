@@ -19,7 +19,7 @@ void ImAppLauncher::render(string filter, ImImage& preview) {
         if (!contains(name, filter, false)) return;
     }
 
-    string label = name;
+    string label = name + "_TS'" + timestamp + "'";
     bool doHover = false;
     float w = 0;
     if (label.length() > 25) label = ".." + subString(label, label.length()-23, 23);
@@ -115,13 +115,13 @@ ImAppManager::ImAppManager() : ImWidget("AppManager"), examples("") {
 ImAppManager::~ImAppManager() {}
 
 void getDurationString(size_t d, string& dLabel, size_t& dLabelI) {
-    if (d == 0) { dLabel = "long ago"; dLabelI = 3600*24*356*2; return; }
+    if (d == 0) { dLabel = "just now"; dLabelI = 0; return; }
     if (d < 3600) { dLabel = "last hour"; dLabelI = 3600; return; }
     if (d < 3600*24) { dLabel = "today"; dLabelI = 3600*24; return; }
     if (d < 3600*24*2) { dLabel = "yesterday"; dLabelI = 3600*24*2; return; }
-    if (d < 3600*24*7) { dLabel = "last week"; dLabelI = 3600*24*7; return; }
-    if (d < 3600*24*30) { dLabel = "last month"; dLabelI = 3600*24*30; return; }
-    if (d < 3600*24*356) { dLabel = "last year"; dLabelI = 3600*24*356; return; }
+    if (d < 3600*24*7) { dLabel = "this week"; dLabelI = 3600*24*7; return; }
+    if (d < 3600*24*30) { dLabel = "this month"; dLabelI = 3600*24*30; return; }
+    if (d < 3600*24*356) { dLabel = "this year"; dLabelI = 3600*24*356; return; }
     { dLabel = "long ago"; dLabelI = 3600*24*356*2; return; }
 }
 
@@ -138,7 +138,7 @@ void ImAppManager::updatePannels() {
 
         time_t tl = toValue<size_t>(l.second.timestamp);
         time_t delta = 0;
-        if (tl > 0) delta = tnow-tl;
+        delta = tnow-tl;
         string dLabel;
         size_t dLabelI;
         getDurationString(delta, dLabel, dLabelI);

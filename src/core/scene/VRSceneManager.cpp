@@ -209,9 +209,9 @@ void VRSceneManager::storeFavorites() {
     projects->saveToFile(path);
 }
 
-void VRSceneManager::addFavorite(string path) {
+void VRSceneManager::addFavorite(string path, string ts) {
     if (projects->hasEntry(path)) return;
-    projects->addEntry( VRProjectEntry::create(path, ""));
+    projects->addEntry( VRProjectEntry::create(path, ts));
     storeFavorites();
 }
 

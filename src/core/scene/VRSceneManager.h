@@ -46,7 +46,7 @@ class VRSceneManager : public VRThreadManager, public VRCallbackManager, public 
         void setWorkdir(string path);
         string getOriginalWorkdir();
         void storeFavorites();
-        void addFavorite(string path);
+        void addFavorite(string path, string ts = "");
         void remFavorite(string path);
 
         VRSignalPtr getSignal_on_scene_load();

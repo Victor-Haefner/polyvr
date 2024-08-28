@@ -96,8 +96,8 @@ cp /usr/lib/x86_64-linux-gnu/libboost_thread* $engFolder/libs/
 rm -rf $engFolder/libs/CMakeFiles
 
 
-if [ -e $pckFolder/cleanupDeploy.sh ]; then
-	/bin/bash $pckFolder/cleanupDeploy.sh 
+if [ -e $pckFolder/deploy/cleanup.sh ]; then
+	/bin/bash $pckFolder/deploy/cleanup.sh 
 fi
 
 
