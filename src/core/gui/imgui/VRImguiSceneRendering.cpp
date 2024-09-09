@@ -2,12 +2,14 @@
 #include "core/gui/VRGuiManager.h"
 #include "core/utils/toString.h"
 
-ImRendering::ImRendering() : pathInput("bgPath", "Path:", ""), extInput("bgExtension", "Extension:", "") {
+ImRendering::ImRendering() : pathInput("bgPath", "Path:", ""), pathSplash("splashPath", "Path:", ""), extInput("bgExtension", "Extension:", "") {
     auto mgr = OSG::VRGuiSignals::get();
     mgr->addCallback("set_bg_type", [&](OSG::VRGuiSignals::Options o){ setBGType(o["type"]); return true; } );
     mgr->addCallback("set_bg_solid_color", [&](OSG::VRGuiSignals::Options o){ setBGColor(o["color"]); return true; } );
-    mgr->addCallback("set_bg_path", [&](OSG::VRGuiSignals::Options o){ setBGPath(o["color"]); return true; } );
-    mgr->addCallback("set_bg_file_ext", [&](OSG::VRGuiSignals::Options o){ setBGExt(o["color"]); return true; } );
+    mgr->addCallback("set_bg_path", [&](OSG::VRGuiSignals::Options o){ setBGPath(o["path"]); return true; } );
+    mgr->addCallback("set_bg_file_ext", [&](OSG::VRGuiSignals::Options o){ setBGExt(o["ext"]); return true; } );
+    mgr->addCallback("set_enable_splash", [&](OSG::VRGuiSignals::Options o){ setShowSplash(toBool(o["show"])); return true; } );
+    mgr->addCallback("set_splash_path", [&](OSG::VRGuiSignals::Options o){ setSplashPath(o["path"]); return true; } );
 }
 
 void ImRendering::setBGType(string data) {
@@ -31,6 +33,14 @@ void ImRendering::setBGPath(string data) {
 
 void ImRendering::setBGExt(string data) {
     extInput.value = data;
+}
+
+void ImRendering::setSplashPath(string data) {
+    pathSplash.value = data;
+}
+
+void ImRendering::setShowSplash(bool b) {
+    splash = b;
 }
 
 void ImRendering::render() {
@@ -79,6 +89,11 @@ void ImRendering::render() {
 
         if (bgType == 3) {
             ImGui::Text("Sky params (TODO)"); // TODO: set some of the params like speed, overcast etc..
+        }
+
+        if (ImGui::Checkbox("Splash Image", &splash)) uiSignal("on_enable_splash", {{"state",toString(splash)}});
+        if (splash) {
+            if (pathSplash.render(-1)) uiSignal("on_change_splash_path", {{"path",pathSplash.value}});
         }
     }
 }

@@ -30,12 +30,14 @@ class VRBackgroundBase {
         SolidBackgroundRecPtr sbg;
         TextureBackgroundRecPtr tbg;
         VRSkyPtr sky;
-        vector<ImageMTRecPtr> skyImgs;
+        vector<TextureObjChunkMTRecPtr> imgChunks;
 
         int type;
         string path;
         string format;
         Color3f color;
+        bool showSplash = false;
+        string splashPath;
 
         TextureObjChunkMTRecPtr createSkyTexture();
         void updateSkyTextures();
@@ -43,13 +45,16 @@ class VRBackgroundBase {
 
         void readImage(int ID, string path);
         void updateImgTexture();
+        void updateSplashTexture();
         void initImg();
+
+        void setSplash(bool b);
 };
 
 TextureObjChunkMTRecPtr VRBackgroundBase::createSkyTexture() {
     ImageMTRecPtr image = Image::create();
-    skyImgs.push_back(image);
     TextureObjChunkMTRecPtr chunk = TextureObjChunk::create();
+    imgChunks.push_back(chunk);
 
     chunk->setImage(image);
     chunk->setMinFilter( GL_LINEAR_MIPMAP_LINEAR );
@@ -72,7 +77,7 @@ void VRBackgroundBase::readImage(int ID, string path) {
         return;
     }
 
-    skyImgs[ID]->read(normPath(path).c_str());
+    imgChunks[ID]->getImage()->read(normPath(path).c_str());
 }
 
 void VRBackgroundBase::updateSkyTextures() {
@@ -101,11 +106,21 @@ void VRBackgroundBase::updateImgTexture() {
     readImage(6, path);
 }
 
+void VRBackgroundBase::updateSplashTexture() {
+    if (path == "") return;
+    readImage(7, splashPath);
+}
+
 void VRBackgroundBase::initImg() {
     tbg = TextureBackground::create();
     tbg->setTexture( createSkyTexture() );
+    createSkyTexture(); // splash
 }
 
+void VRBackgroundBase::setSplash(bool b) {
+    if (b) tbg->setTexture( imgChunks[7] );
+    else tbg->setTexture( imgChunks[6] );
+}
 
 VRBackground::VRBackground () {
     base = shared_ptr<VRBackgroundBase>( new VRBackgroundBase() );
@@ -124,6 +139,8 @@ VRBackground::VRBackground () {
     store("color", &base->color);
     store("path", &base->path);
     store("format", &base->format);
+    store("showSplash", &base->showSplash);
+    store("splashPath", &base->splashPath);
 }
 
 VRBackground::~VRBackground() {}
@@ -142,6 +159,7 @@ void VRBackground::setBackground(TYPE t) {
         case IMAGE:
             base->bg = base->tbg;
             base->updateImgTexture();
+            base->tbg->setTexture( base->imgChunks[6] );
             break;
         case SKYBOX:
             base->bg = base->skybg;
@@ -175,12 +193,24 @@ void VRBackground::setBackgroundPath(string s) {
     setBackground(TYPE(base->type));
 }
 
+void VRBackground::setSplashPath(string s) {
+    base->splashPath = s;
+    base->updateSplashTexture();
+    // TODO: preview splash texture and reset to background after some delay
+    //setBackground(SPLASH);
+    //setBackground(TYPE(base->type));
+}
+
+void VRBackground::setShowSplash(bool b) { base->showSplash = b; }
+
 BackgroundRecPtr VRBackground::getBackground() { return base->bg; }
 void VRBackground::setSkyBGExtension(string f) { base->format = f; base->updateSkyTextures(); }
 string VRBackground::getSkyBGExtension() { return base->format; }
 VRBackground::TYPE VRBackground::getBackgroundType() { return TYPE(base->type); }
 Color3f VRBackground::getBackgroundColor() { return base->color; }
 string VRBackground::getBackgroundPath() { return base->path; }
+bool VRBackground::getShowSplash() { return base->showSplash; }
+string VRBackground::getSplashPath() { return base->splashPath; }
 
 void VRBackground::updateBackground() {
     auto setup = VRSetup::getCurrent();
@@ -188,7 +218,17 @@ void VRBackground::updateBackground() {
     VRTextureRenderer::updateSceneBackground();
 }
 
-void VRBackground::update() { setBackground(TYPE(base->type)); }
+void VRBackground::update() {
+    if (base->showSplash) {
+        base->updateSplashTexture();
+        setSplash(true);
+    } else setBackground(TYPE(base->type));
+}
 
+void VRBackground::setSplash(bool b) {
+    base->setSplash(b);
+    if (b) { auto t = base->type; setBackground(IMAGE); base->type = t; }
+    else setBackground(TYPE(base->type));
+}
 
 OSG_END_NAMESPACE;

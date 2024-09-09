@@ -13,12 +13,15 @@ using namespace std;
 class VRGuiGeneral {
     private:
         bool updating = false;
+        bool splash = false;
 
         // background signals
         void setBGType(string t);
         bool setBGColor(string c);
         void setBGPath(string p);
         void setBGExt(string e);
+        void enableSplash(bool b);
+        void setSplashPath(string p);
 
         // rendering signals
         void toggleFrustumCulling();

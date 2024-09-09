@@ -35,12 +35,17 @@ class VRBackground : public VRStorage {
 
         void setBackgroundColor(Color3f c);
         void setBackgroundPath(string s);
+        void setShowSplash(bool b);
+        void setSplashPath(string p);
         Color3f getBackgroundColor();
         string getBackgroundPath();
+        bool getShowSplash();
+        string getSplashPath();
 
         void setSkyBGExtension(string f);
         string getSkyBGExtension();
 
+        void setSplash(bool b);
         void updateBackground();
 };
 

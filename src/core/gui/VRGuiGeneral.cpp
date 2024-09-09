@@ -26,6 +26,8 @@ VRGuiGeneral::VRGuiGeneral() {
     mgr->addCallback("on_change_bg_color", [&](OSG::VRGuiSignals::Options o){ setBGColor(o["color"]); return true; }, true );
     mgr->addCallback("on_change_bg_path", [&](OSG::VRGuiSignals::Options o){ setBGPath(o["path"]); return true; }, true );
     mgr->addCallback("on_change_bg_ext", [&](OSG::VRGuiSignals::Options o){ setBGExt(o["ext"]); return true; }, true );
+    mgr->addCallback("on_enable_splash", [&](OSG::VRGuiSignals::Options o){ enableSplash(toBool(o["state"])); return true; }, true );
+    mgr->addCallback("on_change_splash_path", [&](OSG::VRGuiSignals::Options o){ setSplashPath(o["path"]); return true; }, true );
 
     /*
     setCheckButtonCallback("checkbutton_01", bind(&VRGuiGeneral::toggleFrustumCulling, this) );
@@ -59,25 +61,38 @@ bool VRGuiGeneral::setBGColor(string c) {
     col[2] = toFloat(parts[2]);
     col[3] = toFloat(parts[3]);
     auto scene = VRScene::getCurrent();
-    scene->setBackgroundColor(toColor3f(col));
+    if (scene) scene->setBackgroundColor(toColor3f(col));
     return true;
+}
+
+void VRGuiGeneral::enableSplash(bool b) {
+    if (updating) return;
+    auto scene = VRScene::getCurrent();
+    if (scene) scene->setShowSplash( b );
+}
+
+void VRGuiGeneral::setSplashPath(string p) {
+    if (updating) return;
+    auto scene = VRScene::getCurrent();
+    if (scene) scene->setSplashPath( p );
 }
 
 void VRGuiGeneral::setBGPath(string p) {
     if (updating) return;
     auto scene = VRScene::getCurrent();
-    scene->setBackgroundPath( p );
+    if (scene) scene->setBackgroundPath( p );
 }
 
 void VRGuiGeneral::setBGExt(string e) {
     if (updating) return;
     auto scene = VRScene::getCurrent();
-    scene->setSkyBGExtension( e );
+    if (scene) scene->setSkyBGExtension( e );
 }
 
 void VRGuiGeneral::setBGType(string t) {
     if (updating) return;
     auto scene = VRScene::getCurrent();
+    if (!scene) return;
     if (t == "solid") scene->setBackground( VRBackground::SOLID );
     if (t == "image") scene->setBackground( VRBackground::IMAGE );
     if (t == "skybox") scene->setBackground( VRBackground::SKYBOX );
@@ -112,7 +127,7 @@ bool VRGuiGeneral::setSSAOnoise( int st, double d ) {
 
 void VRGuiGeneral::dumpOSG() {
     auto scene = VRScene::getCurrent();
-    if (scene == 0) return;
+    if (!scene) return;
 
     string pg = scene->getName() + "_osg_dump.osg";
     string pb = scene->getName() + "_osg_dump.osb";
@@ -193,7 +208,7 @@ void VRGuiGeneral::toggleOcclusionCulling() {
 bool VRGuiGeneral::updateScene() {
 	cout << "VRGuiGeneral::updateScene" << endl;
     auto scene = VRScene::getCurrent();
-    if (scene == 0) return true;
+    if (!scene) return true;
 
     updating = true;
 
@@ -204,6 +219,8 @@ bool VRGuiGeneral::updateScene() {
     uiSignal("set_bg_solid_color", {{"color",toString(color[0])+"|"+toString(color[1])+"|"+toString(color[2])+"|1"}});
     uiSignal("set_bg_path", {{"path",scene->getBackgroundPath()}});
     uiSignal("set_bg_file_ext", {{"ext",scene->getSkyBGExtension()}});
+    uiSignal("set_enable_splash", {{"show",toString(scene->getShowSplash())}});
+    uiSignal("set_splash_path", {{"path",scene->getSplashPath()}});
 
     if (t == VRBackground::SOLID) uiSignal("set_bg_type", {{"type","solid"}});
     if (t == VRBackground::IMAGE) uiSignal("set_bg_type", {{"type","image"}});

@@ -293,6 +293,8 @@ void VRScene::recLoadingTime() {
     loadingProgress->finish();
     loadingTime = loadingTimer.stop();
     cout << "measured loading time: " << loadingTime*0.001 << " s" << endl;
+
+    if (getShowSplash()) setSplash(false);
 }
 
 VRProgressPtr VRScene::getLoadingProgress() { return loadingProgress; }
