@@ -23,6 +23,7 @@ struct VRMQTTClient::Data {
     mg_connection* s_conn = 0;              // Client connection
     function<string(string)> cb;
 
+    string clientID;
     string name;
     string pass;
 
@@ -48,7 +49,7 @@ struct VRMQTTClient::Data {
         mg_mqtt_opts opts;
         memset(&opts, 0, sizeof(opts));
         opts.qos = s_qos;
-        opts.client_id = mg_str("pvrTest");
+        opts.client_id = mg_str(clientID.c_str());
         opts.user = mg_str(name.c_str());
         opts.pass = mg_str(pass.c_str());
         return opts;
@@ -240,7 +241,7 @@ void VRMQTTClient::handleMessages() {
     }
 }
 
-void VRMQTTClient::setAuthentication(string name, string pass) { auto lock = VRLock(data->mtx); data->name = name; data->pass = pass; }
+void VRMQTTClient::setAuthentication(string name, string pass, string clientID) { auto lock = VRLock(data->mtx); data->name = name; data->pass = pass; data->clientID = clientID; }
 void VRMQTTClient::publish(string topic, string message) { auto lock = VRLock(data->mtx); data->jobQueue.push_back({"publish", topic, message}); }
 
 void VRMQTTClient::subscribe(string topic, bool retain) {

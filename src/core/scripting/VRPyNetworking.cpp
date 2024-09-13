@@ -81,7 +81,7 @@ PyMethodDef VRPyProfinetClient::methods[] = {
 PyMethodDef VRPyMQTTClient::methods[] = {
     {"disconnect", PyWrap(MQTTClient, disconnect, "Disconnect from server", void) },
     {"connected", PyWrap(MQTTClient, connected, "Returns if connected to a server", bool) },
-    {"setAuthentication", PyWrap(MQTTClient, setAuthentication, "Set authentication parameters, (name, password)", void, string, string) },
+    {"setAuthentication", PyWrap(MQTTClient, setAuthentication, "Set authentication parameters, (name, password, clientID)", void, string, string, string) },
     {"subscribe", PyWrapOpt(MQTTClient, subscribe, "Subscribe to topic, set retain to get current topic value, (topic, retain)", "0", void, string, bool) },
     {"publish", PyWrap(MQTTClient, publish, "Publish a topic (topic, message)", void, string, string) },
     {NULL}  /* Sentinel */
