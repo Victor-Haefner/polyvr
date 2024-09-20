@@ -38,7 +38,7 @@ class VRMQTTClient : public VRNetworkClient {
 
         void setAuthentication(string name, string password, string clientID = "pvr");
         void subscribe(string topic, bool retain = false);
-        void publish(string topic, string message);
+        void publish(string topic, string message, bool retain = true);
 };
 
 OSG_END_NAMESPACE;

@@ -71,7 +71,7 @@ struct VRMQTTClient::Data {
                 mg_mqtt_opts opts = basicOpts();
                 opts.topic = mg_str(job[1].c_str());
                 opts.message = mg_str(job[2].c_str());
-                opts.retain = false;
+                opts.retain = bool(job[3] == "1");
                 mg_mqtt_pub(s_conn, &opts);
             }
         }
@@ -242,7 +242,11 @@ void VRMQTTClient::handleMessages() {
 }
 
 void VRMQTTClient::setAuthentication(string name, string pass, string clientID) { auto lock = VRLock(data->mtx); data->name = name; data->pass = pass; data->clientID = clientID; }
-void VRMQTTClient::publish(string topic, string message) { auto lock = VRLock(data->mtx); data->jobQueue.push_back({"publish", topic, message}); }
+
+void VRMQTTClient::publish(string topic, string message, bool retain) {
+    auto lock = VRLock(data->mtx);
+    data->jobQueue.push_back( { "publish", topic, message, string( retain ? "1" : "0" ) } );
+}
 
 void VRMQTTClient::subscribe(string topic, bool retain) {
     auto lock = VRLock(data->mtx);

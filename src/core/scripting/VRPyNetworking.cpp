@@ -83,7 +83,7 @@ PyMethodDef VRPyMQTTClient::methods[] = {
     {"connected", PyWrap(MQTTClient, connected, "Returns if connected to a server", bool) },
     {"setAuthentication", PyWrap(MQTTClient, setAuthentication, "Set authentication parameters, (name, password, clientID)", void, string, string, string) },
     {"subscribe", PyWrapOpt(MQTTClient, subscribe, "Subscribe to topic, set retain to get current topic value, (topic, retain)", "0", void, string, bool) },
-    {"publish", PyWrap(MQTTClient, publish, "Publish a topic (topic, message)", void, string, string) },
+    {"publish", PyWrap(MQTTClient, publish, "Publish a topic (topic, message, retain)", void, string, string, bool) },
     {NULL}  /* Sentinel */
 };
 
