@@ -53,6 +53,12 @@ class VRSnappingEngine {
             VRTransformPtr o2 = 0;
             VRTransformPtr a1 = 0;
             VRTransformPtr a2 = 0;
+
+            Vec3d po1;
+            Vec3d po2;
+            Vec3d pa1;
+            Vec3d pa2;
+
             Matrix4d m;
             VRDevicePtr dev = 0;
 

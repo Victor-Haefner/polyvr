@@ -77,12 +77,11 @@ struct VRSnappingEngine::Rule {
 
         if (translation == LINE) {
             Line l(Vec3f(prim_t->pos()), Vec3f(prim_t->dir()));
-            snapP = Vec3d( l.getClosestPoint( Vec3f(local(p)) ) ); // project on line
+            snapP = Vec3d( l.getClosestPoint( Vec3f(p) ) ); // project on line
         }
 
         if (translation == PLANE) {
             Plane pl(Vec3f(prim_t->pos()), Vec3f(prim_t->dir()));
-            p = local(p);
             float d = pl.distance(Pnt3f(p)); // project on plane
             snapP = p + Vec3d(d*pl.getNormal());
         }
@@ -104,9 +103,9 @@ struct VRSnappingEngine::Rule {
         }
     }
 
-    bool inRange(Vec3d pa, double& dmin) {
-        Vec3d paL = local( pa );
-        Vec3d psnap = getSnapPoint(pa);
+    bool inRange(Vec3d pa, double& dmin, Vec3d pAnchor = Vec3d()) {
+        Vec3d paL = local( pa ) - pAnchor;
+        Vec3d psnap = getSnapPoint( paL );
         float D = (psnap-paL).length(); // check distance
         bool b = (D <= distance && D < dmin);
         if (b) dmin = D;
@@ -293,8 +292,8 @@ void VRSnappingEngine::updateGhost(VRDevicePtr dev, VRTransformPtr obj) {
 }
 
 void VRSnappingEngine::handleDraggedObject(VRDevicePtr dev, VRTransformPtr obj, VRTransformPtr gobj) { // dragged object, dragged ghost object
-    Matrix4d m = gobj->getWorldMatrix();
-    Vec3d p = Vec3d(m[3]);
+    Matrix4d moW = obj->getWorldMatrix();
+    Vec3d p = Vec3d(moW[3]);
 
     event->snap = 0;
     int snapID = -1;
@@ -310,50 +309,60 @@ void VRSnappingEngine::handleDraggedObject(VRDevicePtr dev, VRTransformPtr obj, 
             for (auto& A : anchors[obj]) { // check if anchor snapped
                 if (!A.active) continue;
                 Matrix4d maL = A.a->getMatrix();
-                Matrix4d maW = m; maW.mult(maL);
+                Matrix4d maW = moW; maW.mult(maL);
                 Vec3d paW = Vec3d(maW[3]);
                 Matrix4d maLi;
                 maL.inverse(maLi);
 
                 if (r->csys && anchors.count(r->csys)) { // if local system has anchors, check for snap to them
                     Matrix4d m2 = r->csys->getWorldMatrix();
+                    Vec3d po2W = Vec3d(m2[3]);
+
                     for (auto& B : anchors[r->csys]) {
                         if (!B.active) continue;
                         if (A.snpgrp != B.grp) continue;
                         Matrix4d ma2L = B.a->getMatrix();
-                        cout << "maL " << A.a->getName() << endl;
-                        cout << " ma2L " << B.a->getName() << endl;
-                        //Matrix4d ma2W = m; ma2W.mult(maL);
-                        //Vec3d pa2 = Vec3d(ma2W[3]);
+                        Matrix4d ma2W = m2; ma2W.mult(ma2L);
+                        Vec3d pa2W = Vec3d(ma2W[3]);
                         Vec3d pa2 = Vec3d(ma2L[3]);
                         snapID++;
-                        if (!r->inRange(paW-pa2, dmin)) continue;
+                        if (!r->inRange(paW, dmin, pa2)) continue;
+                        //cout << " " << paW << ", -> " << pa2W << ", d: " << (paW - pa2W).length() << ", rd: " << r->distance << endl;
 
                         ma2L[3] = Vec4d(0,0,0,1);
                         Matrix4d ma2Li;
                         ma2L.inverse(ma2Li);
 
                         r->snapP += pa2;
-                        Matrix4d mm = m;
+                        Matrix4d mm = moW;
                         r->snap(mm, B.a->getPose());
                         mm.mult(maLi);
                         event->set(obj, r->csys, mm, dev, 1, snapID, A.a, B.a);
+                        event->po1 = p;
+                        event->pa1 = paW;
+                        event->po2 = po2W;
+                        event->pa2 = pa2W;
                     }
                 } else { // just check if anchor snapps to rule
                     snapID++;
                     if (!r->inRange(paW, dmin)) continue;
-                    Matrix4d mm = m;
+                    Matrix4d mm = moW;
                     r->snap(mm);
                     mm.mult(maLi);
                     event->set(obj, r->csys, mm, dev, 1, snapID, A.a, 0);
+                    event->po1 = p;
+                    event->pa1 = paW;
+                    if (r->csys) event->po2 = r->csys->getWorldPosition();
                 }
             }
         } else { // simple snap, obj origin
             snapID++;
             if (!r->inRange(p, dmin)) continue;
-            Matrix4d mm = m;
+            Matrix4d mm = moW;
             r->snap(mm);
             event->set(obj, r->csys, mm, dev, 1, snapID, 0, 0);
+            event->po1 = p;
+            if (r->csys) event->po2 = r->csys->getWorldPosition();
         }
     }
 }
@@ -389,6 +398,14 @@ void VRSnappingEngine::updateSnapVisual() {
         data.pushColor(Color3f(0.2,0.6,1));
         data.pushLine(0,1);
 
+        if (0) {
+            data.pushVert(Vec3d(0,0,0));
+            data.pushVert(Vec3d(0,0,0));
+            data.pushColor(Color3f(1,0.6,0));
+            data.pushColor(Color3f(1,0.6,0));
+            data.pushLine(2,3);
+        }
+
         auto m = VRMaterial::create("snapMat");
         m->setLit(false);
         m->setLineWidth(5);
@@ -401,14 +418,16 @@ void VRSnappingEngine::updateSnapVisual() {
     snapVisual->setVisible(event->snap);
 
     if (event->snap) {
-        Vec3d p1 = event->o1->getWorldPosition();
-        Vec3d p2 = event->o2->getWorldPosition();
-        if (event->a1) p1 = event->a1->getWorldPosition();
-        if (event->a2) p2 = event->a2->getWorldPosition();
-
         auto pos = (GeoPnt3fProperty*)snapVisual->getMesh()->geo->getPositions();
-        pos->setValue(p1,0);
-        pos->setValue(p2,1);
+        if (event->a1) pos->setValue(event->pa1,0);
+        else           pos->setValue(event->po1,0);
+        if (event->a2) pos->setValue(event->pa2,1);
+        else           pos->setValue(event->po2,0);
+
+        if (0) {
+            pos->setValue(event->po1,2);
+            pos->setValue(event->po2,3);
+        }
     }
 }
 
