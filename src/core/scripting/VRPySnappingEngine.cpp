@@ -56,6 +56,7 @@ PyMethodDef VRPySnappingEngine::methods[] = {
     {"enableGhosts", PyWrap(SnappingEngine, enableGhosts, "Set engine to show snapping ghosts", void, bool ) },
     {"setActive", PyWrap(SnappingEngine, setActive, "Set engine active or not", void, bool ) },
     {"isActive", PyWrap(SnappingEngine, isActive, "Returns if engine is active", bool ) },
+    {"showSnapping", PyWrap(SnappingEngine, showSnapping, "Show debug visuals of snapping bahavior", void, bool ) },
     {NULL}  /* Sentinel */
 };
 

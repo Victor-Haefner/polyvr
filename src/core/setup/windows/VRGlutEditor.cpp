@@ -466,6 +466,7 @@ void VRGlutEditor::on_resize_window(int w, int h) { // resize top window
 void VRGlutEditor::on_gl_display() {
     //cout << "  Glut::on_gl_display " << endl;
     if (winGL < 0) return;
+    //if (VRGlobals::CURRENT_FRAME%20 != 0) return; // power saving mode
     auto profiler = VRProfiler::get();
 
     int pID1 = profiler->regStart("glut editor gl display");

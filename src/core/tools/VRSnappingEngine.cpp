@@ -3,6 +3,7 @@
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/object/VRObjectT.h"
 #include "core/objects/material/VRMaterial.h"
+#include "core/objects/geometry/OSGGeometry.h"
 #include "core/setup/devices/VRDevice.h"
 #include "core/setup/VRSetup.h"
 #include "core/scene/VRScene.h"
@@ -12,6 +13,8 @@
 #include "core/utils/toString.h"
 #include "core/utils/VRDoublebuffer.h"
 #include "core/setup/devices/VRSignalT.h"
+
+#include <OpenSG/OSGGeoProperties.h>
 
 using namespace OSG;
 
@@ -224,6 +227,7 @@ void VRSnappingEngine::addTree(VRObjectPtr obj, int group) {
 }
 
 VRSignalPtr VRSnappingEngine::getSignalSnap() { return snapSignal; }
+void VRSnappingEngine::showSnapping(bool b) { showSnaps = b; }
 
 void VRSnappingEngine::terminateGhost() {
     Vec3d scale = ghostHost->getScale(); // conserve scale
@@ -292,8 +296,6 @@ void VRSnappingEngine::handleDraggedObject(VRDevicePtr dev, VRTransformPtr obj, 
     Matrix4d m = gobj->getWorldMatrix();
     Vec3d p = Vec3d(m[3]);
 
-    lastEvent = event->snap;
-    lastEventID = event->snapID;
     event->snap = 0;
     int snapID = -1;
 
@@ -354,8 +356,6 @@ void VRSnappingEngine::handleDraggedObject(VRDevicePtr dev, VRTransformPtr obj, 
             event->set(obj, r->csys, mm, dev, 1, snapID, 0, 0);
         }
     }
-
-    postProcessEvent(dev, obj, gobj);
 }
 
 void VRSnappingEngine::postProcessEvent(VRDevicePtr dev, VRTransformPtr obj, VRTransformPtr gobj) {
@@ -380,6 +380,39 @@ void VRSnappingEngine::postProcessEvent(VRDevicePtr dev, VRTransformPtr obj, VRT
     }
 }
 
+void VRSnappingEngine::updateSnapVisual() {
+    if (!snapVisual) {
+        VRGeoData data;
+        data.pushVert(Vec3d(0,0,0));
+        data.pushVert(Vec3d(0,0,0));
+        data.pushColor(Color3f(1,0,0));
+        data.pushColor(Color3f(1,1,0));
+        data.pushLine(0,1);
+
+        auto m = VRMaterial::create("snapMat");
+        m->setLit(false);
+        m->setLineWidth(3);
+        m->setDepthTest(GL_ALWAYS);
+        snapVisual = data.asGeometry("snap");
+        snapVisual->setMaterial(m);
+        VRScene::getCurrent()->getRoot()->addChild(snapVisual);
+    }
+
+    snapVisual->setVisible(event->snap);
+
+    if (event->snap) {
+        Vec3d p1 = event->o1->getWorldPosition();
+        Vec3d p2 = event->o2->getWorldPosition();
+        //if (event->a1) p1 = event->a1->getWorldPosition();
+        //if (event->a2) p2 = event->a2->getWorldPosition();
+
+        auto pos = (GeoPnt3fProperty*)snapVisual->getMesh()->geo->getPositions();
+        pos->setValue(p1,0);
+        pos->setValue(p2,1);
+        cout << "snap visual: " << p1 << ", " << p2 << ", " << event->o1->getName() << ", " << event->o2->getName() << endl;
+    }
+}
+
 void VRSnappingEngine::update() {
     if (!active) return;
 
@@ -390,9 +423,13 @@ void VRSnappingEngine::update() {
         VRTransformPtr obj = dev.second->getDraggedObject();
         VRTransformPtr gobj = dev.second->getDraggedGhost();
         if (ghostDevice == dev.second && ghostHost && objects.count(obj) == 0) terminateGhost();
-        if (obj == 0 || gobj == 0) continue;
-        if (objects.count(obj) == 0) continue;
-        handleDraggedObject(dev.second, obj, gobj);
+        if (obj != 0 && gobj != 0 && objects.count(obj) != 0) {
+            lastEvent = event->snap;
+            lastEventID = event->snapID;
+            handleDraggedObject(dev.second, obj, gobj);
+            postProcessEvent(dev.second, obj, gobj);
+            if (showSnaps) updateSnapVisual();
+        } //else event->snap = 0;
     }
 }
 

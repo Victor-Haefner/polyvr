@@ -81,6 +81,7 @@ class VRSnappingEngine {
         VRMaterialPtr ghostMat;
         VRObjectPtr ghostParent;
         VRDevicePtr ghostDevice;
+        VRGeometryPtr snapVisual;
 
         float influence_radius = 1000;
         float distance_snap = 0.05;
@@ -92,10 +93,12 @@ class VRSnappingEngine {
 
         bool doGhosts = false;
         bool active = true;
+        bool showSnaps = false;
 
         // update sub functions
         void terminateGhost();
         void updateGhost(VRDevicePtr dev, VRTransformPtr obj);
+        void updateSnapVisual();
         void handleDraggedObject(VRDevicePtr dev, VRTransformPtr obj, VRTransformPtr gobj);
         void postProcessEvent(VRDevicePtr dev, VRTransformPtr obj, VRTransformPtr gobj);
 
@@ -131,6 +134,7 @@ class VRSnappingEngine {
         void remObject(VRTransformPtr obj);
 
         void setPreset(PRESET preset);
+        void showSnapping(bool b);
 
         void update();
 };
