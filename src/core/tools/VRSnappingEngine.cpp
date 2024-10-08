@@ -385,13 +385,13 @@ void VRSnappingEngine::updateSnapVisual() {
         VRGeoData data;
         data.pushVert(Vec3d(0,0,0));
         data.pushVert(Vec3d(0,0,0));
-        data.pushColor(Color3f(1,0,0));
-        data.pushColor(Color3f(1,1,0));
+        data.pushColor(Color3f(0.2,0.6,1));
+        data.pushColor(Color3f(0.2,0.6,1));
         data.pushLine(0,1);
 
         auto m = VRMaterial::create("snapMat");
         m->setLit(false);
-        m->setLineWidth(3);
+        m->setLineWidth(5);
         m->setDepthTest(GL_ALWAYS);
         snapVisual = data.asGeometry("snap");
         snapVisual->setMaterial(m);
@@ -403,13 +403,12 @@ void VRSnappingEngine::updateSnapVisual() {
     if (event->snap) {
         Vec3d p1 = event->o1->getWorldPosition();
         Vec3d p2 = event->o2->getWorldPosition();
-        //if (event->a1) p1 = event->a1->getWorldPosition();
-        //if (event->a2) p2 = event->a2->getWorldPosition();
+        if (event->a1) p1 = event->a1->getWorldPosition();
+        if (event->a2) p2 = event->a2->getWorldPosition();
 
         auto pos = (GeoPnt3fProperty*)snapVisual->getMesh()->geo->getPositions();
         pos->setValue(p1,0);
         pos->setValue(p2,1);
-        cout << "snap visual: " << p1 << ", " << p2 << ", " << event->o1->getName() << ", " << event->o2->getName() << endl;
     }
 }
 
@@ -419,11 +418,13 @@ void VRSnappingEngine::update() {
     auto setup = VRSetup::getCurrent();
     if (!setup) return;
 
+    bool noneDragged = true;
     for (auto dev : setup->getDevices()) { // get dragged objects
         VRTransformPtr obj = dev.second->getDraggedObject();
         VRTransformPtr gobj = dev.second->getDraggedGhost();
         if (ghostDevice == dev.second && ghostHost && objects.count(obj) == 0) terminateGhost();
         if (obj != 0 && gobj != 0 && objects.count(obj) != 0) {
+            noneDragged = false;
             lastEvent = event->snap;
             lastEventID = event->snapID;
             handleDraggedObject(dev.second, obj, gobj);
@@ -431,6 +432,8 @@ void VRSnappingEngine::update() {
             if (showSnaps) updateSnapVisual();
         } //else event->snap = 0;
     }
+
+    if (noneDragged && showSnaps && snapVisual) snapVisual->hide();
 }
 
 void VRSnappingEngine::setPreset(PRESET preset) {
