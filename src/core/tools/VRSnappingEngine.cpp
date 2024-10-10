@@ -412,6 +412,7 @@ void VRSnappingEngine::updateSnapVisual() {
         m->setDepthTest(GL_ALWAYS);
         snapVisual = data.asGeometry("snap");
         snapVisual->setMaterial(m);
+        snapVisual->setPersistency(0);
         VRScene::getCurrent()->getRoot()->addChild(snapVisual);
     }
 

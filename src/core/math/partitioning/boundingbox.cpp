@@ -169,6 +169,7 @@ VRGeometryPtr Boundingbox::asGeometry() {
     m->setLit(0);
     m->setWireFrame(1);
     auto res = data.asGeometry("bbox");
+    res->setPersistency(0);
     res->setMaterial(m);
     return res;
 }
