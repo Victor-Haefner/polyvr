@@ -56,7 +56,7 @@ class VRPathFinding {
 
         void setGraph(GraphPtr g);
         void setPaths(vector<PathPtr> p);
-        vector<Position> computePath(Position start, Position goal, bool bidirectional = false);
+        vector<Position> computePath(Position start, Position goal, bool bidirectional = false, bool ignoreWeigths = false);
 };
 
 OSG_END_NAMESPACE

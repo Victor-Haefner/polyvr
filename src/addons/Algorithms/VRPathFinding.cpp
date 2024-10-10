@@ -120,7 +120,7 @@ vector<VRPathFinding::Position> VRPathFinding::getNeighbors(Position& p, bool bi
     return res;
 }
 
-vector<VRPathFinding::Position> VRPathFinding::computePath(Position start, Position goal, bool bidirectional) {
+vector<VRPathFinding::Position> VRPathFinding::computePath(Position start, Position goal, bool bidirectional, bool ignoreWeigths) {
     if (!valid(start) || !valid(goal)) {
         string p = valid(start)?"goal":"start";
         cout << "VRPathFinding::computePath Error: " << p << " position invalid!" << endl;
@@ -144,8 +144,10 @@ vector<VRPathFinding::Position> VRPathFinding::computePath(Position start, Posit
 
         for (auto neighbor : getNeighbors(current, bidirectional)) { // TODO: take edge positions into account!
             if (closedSet.count(neighbor)) continue;
-            float weight = graph->getNodeWeight(neighbor.nID);
-            if (weight < -1e-3) continue; // ignore negative weighted nodes
+            if (!ignoreWeigths) {
+                float weight = graph->getNodeWeight(neighbor.nID);
+                if (weight < -1e-3) continue; // ignore negative weighted nodes
+            }
             gCost[current] = getDistance(start, current);
             float tentative_gCost = gCost[current] + getDistance(current, neighbor);
 

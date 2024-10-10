@@ -25,13 +25,14 @@ PyObject* VRPyPathFinding::computePath(VRPyPathFinding* self, PyObject* args) {
     float t1 = -1;
     float t2 = -1;
     int bd = 0;
-    if (!PyArg_ParseTuple(args, "ii|ffi", &i, &j, &t1, &t2, &bd)) return NULL;
+    int iw = 0;
+    if (!PyArg_ParseTuple(args, "ii|ffii", &i, &j, &t1, &t2, &bd, &iw)) return NULL;
 
     VRPathFinding::Position p1(i);
     VRPathFinding::Position p2(j);
     if (t1 >= 0) p1 = VRPathFinding::Position(i,t1);
     if (t2 >= 0) p2 = VRPathFinding::Position(j,t2);
-    auto route = self->objPtr->computePath( p1, p2, bd );
+    auto route = self->objPtr->computePath( p1, p2, bd, iw );
 
     PyObject* res = PyList_New(0);
     for (auto p : route) PyList_Append(res, PyInt_FromLong(p.nID));

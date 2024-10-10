@@ -271,7 +271,7 @@ int VRAnalyticGeometry::addVector(Vec3d pos, Vec3d vec, Color3f color, string la
 
 void VRAnalyticGeometry::clear() {
     if (ae) ae->clear();
-    init();
+    // TODO
 }
 
 void VRAnalyticGeometry::setZOffset(float factor, float bias) {
