@@ -133,6 +133,7 @@ class VRMaterial : public VRObject {
         void setSortKey(int key);
         void setFrontBackModes(int front, int back);
         void setClipPlane(bool active, Vec4d equation, VRTransformPtr beacon);
+        void addClipPlane(Vec4d equation, VRTransformPtr beacon);
         void setStencilBuffer(bool clear, int value, int mask, int func, int opFail, int opZFail, int opPass);
 
         bool isWireFrame();

@@ -970,6 +970,18 @@ void VRMaterial::setClipPlane(bool active, Vec4d equation, VRTransformPtr beacon
     }
 }
 
+void VRMaterial::addClipPlane(Vec4d equation, VRTransformPtr beacon) {
+    for (int i=0; i<getNPasses(); i++) {
+        auto md = mats[i];
+        ClipPlaneChunkMTRecPtr clipChunk = ClipPlaneChunk::create();
+        md->regChunk(clipChunk, -2, 10);
+
+        clipChunk->setEquation(Vec4f(equation));
+        clipChunk->setEnable  (true);
+        if (beacon) clipChunk->setBeacon(beacon->getNode()->node);
+    }
+}
+
 void VRMaterial::setWireFrame(bool b) {
 #ifndef OSG_OGL_ES2
     if (b) setFrontBackModes(GL_LINE, GL_LINE);

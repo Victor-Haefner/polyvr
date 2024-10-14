@@ -39,6 +39,8 @@ PyMethodDef VRPyMaterial::methods[] = {
     {"setSpecular", PyWrapPack(Material, setSpecular, "Sets the specular color", void, Color3f ) },
     {"getTransparency", (PyCFunction)VRPyMaterial::getTransparency, METH_NOARGS, "Returns the transparency - f getTransparency()" },
     {"setTransparency", (PyCFunction)VRPyMaterial::setTransparency, METH_VARARGS, "Sets the transparency - setTransparency(f)" },
+    {"setClipPlane", PyWrap(Material, setClipPlane, "Set the clip chunk, (active, plane eq., beacon)", void, bool, Vec4d, VRTransformPtr) },
+    {"addClipPlane", PyWrap(Material, addClipPlane, "Add a clip chunk, (plane eq., beacon)", void, Vec4d, VRTransformPtr) },
     {"setDepthTest", PyWrap(Material, setDepthTest, "Sets the depth test function\t\n'GL_ALWAYS'", void, int ) },
     {"getDepthTest", PyWrap(Material, getDepthTest, "Get depth test function", int ) },
     {"clearTransparency", (PyCFunction)VRPyMaterial::clearTransparency, METH_NOARGS, "Clears the transparency channel - clearTransparency()" },

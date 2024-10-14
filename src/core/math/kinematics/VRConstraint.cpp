@@ -55,6 +55,7 @@ void VRConstraint::setReferential(VRTransformPtr t) { Referential = t; }
 VRTransformPtr VRConstraint::getReferential() { return Referential.lock(); }
 
 void VRConstraint::lockRotation(bool b) { if (b) lock({3,4,5}); else free({3,4,5}); }
+void VRConstraint::lockTranslation(bool b) { if (b) lock({0,1,2}); else free({0,1,2}); }
 
 
 void VRConstraint::setTConstraint(Vec3d params, TCMode mode, bool local) {
