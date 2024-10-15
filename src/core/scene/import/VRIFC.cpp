@@ -220,7 +220,7 @@ class IFCLoader {
                     }
                 }
 
-                auto eSpace = getEntity( sb->RelatingSpace() );
+                auto eSpace = getEntity( (IfcUtil::IfcBaseEntity*) sb->RelatingSpace() );
                 if (!eSpace) return;
 
                 e->set("relating", eSpace->getName());
@@ -273,7 +273,11 @@ class IFCLoader {
         }
 
         VRGeometryPtr convertGeo(const IfcGeom::TriangulationElement<float>* o) {
-            if (!o) return 0;
+            if (!o) {
+                //cout << "Warning! no valid object passed to IFC::convertGeo, " << o << endl;
+                return 0;
+            }
+
             const IfcGeom::Representation::Triangulation<float>& mesh = o->geometry();
 
             vector<float> verts = mesh.verts();
@@ -325,12 +329,19 @@ class IFCLoader {
             settings.set(IfcGeom::IteratorSettings::BUILDING_LOCAL_PLACEMENT,     false);
 
             IfcGeom::BRepElement<float>* element = kernel.create_brep_for_representation_and_product<float>(settings, representation, product);
+            if (!element) {
+                //cout << "Warning in IFC::createBRep, create brep failed! " << Type::ToString(representation->type()) << " " << Type::ToString(product->type()) << endl;
+                /*Logger::SetOutput( &cout, &cout );
+                kernel.create_brep_for_representation_and_product<float>(settings, representation, product); // try again with logging
+                Logger::SetOutput( 0, 0 );*/
+            }
             return element;
 		}
 
         IfcGeom::TriangulationElement<float>* createMesh(IfcGeom::BRepElement<float>* brep) {
 			IfcGeom::TriangulationElement<float>* triangulation = 0;
 			if (brep) triangulation = new IfcGeom::TriangulationElement<float>(*brep);
+			//else  cout << "Warning! no valid object passed to IFC::createMesh, " << brep << endl;
 			return triangulation;
 		}
 
@@ -338,6 +349,14 @@ class IFCLoader {
             string name = "UNNAMED";
             if (e->hasName()) name = e->Name();
             return name;
+		}
+
+		void analyseElement(IfcParse::IfcFile& file, int ID) {
+            auto e = file.entityById(ID);
+            if (!e) return;
+            cout << "analyse element " << ID << ":" << endl;
+            cout << " type: " << Type::ToString(e->type()) << endl;
+            //if (e->hasName()) cout << " name: " << e->Name() << endl;
 		}
 
     public:
@@ -367,26 +386,35 @@ class IFCLoader {
 
         void load(string path, VRTransformPtr res) {
             root = res;
-            Logger::SetOutput(0, 0); // Redirect the output (both progress and log) to stdout
+
+            Logger::SetOutput( 0, &cout ); // Redirect the output (both progress and log) to stdout
+            //Logger::SetOutput( 0, 0 ); // Redirect the output (both progress and log) to stdout
+            Logger::Verbosity( Logger::LOG_NOTICE );
+            //Logger::Verbosity( Logger::LOG_WARNING );
+            //Logger::Verbosity( Logger::LOG_ERROR );
+
             IfcParse::IfcFile file;
             if ( !file.Init(path) ) { cout << "Unable to parse .ifc file: " << path << endl; return; }
 
-            auto elements = file.entitiesByType<IfcProduct>();
-            cout << "Found " << elements->size() << " elements in " << path << ":" << endl;
 
             // create objects
-            for ( IfcProduct* element : *elements ) {
-                if (!element->hasName()) continue;
+            auto products = file.entitiesByType<IfcProduct>();
+            cout << "Found " << products->size() << " products in " << path << endl;
+
+            for ( IfcProduct* product : *products ) {
+                //cout << " product " << product->id() << endl;
+
+                if (!product->hasName()) continue;
 
                 VRObjectPtr obj;
 
-                if (element->hasRepresentation()) {
-                    IfcProductRepresentation* prod_rep = element->Representation();
+                if (product->hasRepresentation()) {
+                    IfcProductRepresentation* prod_rep = product->Representation();
                     if (prod_rep) {
                         auto reps = prod_rep->Representations();
                         for (auto rep : *reps) {
                             if (!rep) continue;
-                            auto ifcBRep = createBRep(rep, element);
+                            auto ifcBRep = createBRep(rep, product);
                             auto ifcMesh = createMesh(ifcBRep);
                             auto geo = convertGeo(ifcMesh);
                             if (geo) obj = geo;
@@ -394,9 +422,9 @@ class IFCLoader {
                     }
                 }
 
-                if (!obj) obj = VRTransform::create( getName(element) );
-                setupEntity(obj, element, "Element");
-                ifcObjects[element] = obj;
+                if (!obj) obj = VRTransform::create( getName(product) );
+                setupEntity(obj, product, "Element");
+                ifcObjects[product] = obj;
             }
 
             // create scenegraph
@@ -431,6 +459,8 @@ class IFCLoader {
             auto relationships = file.entitiesByType<IfcRelationship>();
             cout << "Found " << relationships->size() << " relationships" << endl;
             for (auto& r : *relationships) processProperty(r);
+
+            //analyseElement(file, 83008);
         }
 };
 
