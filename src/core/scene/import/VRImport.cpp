@@ -397,10 +397,10 @@ VRObjectPtr VRImport::OSGConstruct(NodeMTRecPtr n, VRObjectPtr parent, string na
     else if (t_name == "DistanceLOD") {
         DistanceLOD* lod = dynamic_cast<DistanceLOD*>(n->getCore());
         tmp_l = VRLod::create(name);
+        tmp_l->setCore(OSGCore::create(core), "Lod", true);
         tmp_l->setCenter(Vec3d(lod->getCenter()));
         auto dists = lod->getMFRange();
         for (size_t i=0; i<dists->size(); i++) tmp_l->addDistance(lod->getRange(i));
-        tmp_l->setCore(OSGCore::create(core), "Lod");
         tmp = tmp_l;
     }
 

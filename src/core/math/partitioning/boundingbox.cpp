@@ -5,6 +5,7 @@
 #include "core/objects/geometry/VRGeoData.h"
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/geometry/OSGGeometry.h"
+#include "core/math/pose.h"
 #include <OpenSG/OSGGeometry.h>
 #include <limits>
 
@@ -69,6 +70,25 @@ bool Boundingbox::isInside(Vec3d p, double margin) const {
     return (p[0] <= bb2[0]+margin && p[0] >= bb1[0]-margin
          && p[1] <= bb2[1]+margin && p[1] >= bb1[1]-margin
          && p[2] <= bb2[2]+margin && p[2] >= bb1[2]-margin);
+}
+
+BoundingboxPtr Boundingbox::transformed(PosePtr p) {
+    auto bb = Boundingbox::create();
+    bb->update( p->transform(Vec3d(bb1[0], bb1[1], bb1[2])) );
+    bb->update( p->transform(Vec3d(bb1[0], bb1[1], bb2[2])) );
+    bb->update( p->transform(Vec3d(bb1[0], bb2[1], bb1[2])) );
+    bb->update( p->transform(Vec3d(bb1[0], bb2[1], bb2[2])) );
+    bb->update( p->transform(Vec3d(bb2[0], bb1[1], bb1[2])) );
+    bb->update( p->transform(Vec3d(bb2[0], bb1[1], bb2[2])) );
+    bb->update( p->transform(Vec3d(bb2[0], bb2[1], bb1[2])) );
+    bb->update( p->transform(Vec3d(bb2[0], bb2[1], bb2[2])) );
+    return bb;
+}
+
+void Boundingbox::transform(PosePtr p) {
+    auto bb = transformed(p);
+    bb1 = bb->bb1;
+    bb2 = bb->bb2;
 }
 
 void Boundingbox::move(const Vec3d& t) {

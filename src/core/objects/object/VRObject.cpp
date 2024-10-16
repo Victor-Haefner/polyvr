@@ -266,7 +266,7 @@ void VRObject::clearLinks() {
 
 void VRObject::setCore(OSGCorePtr c, string _type, bool force) {
     if (specialized && !force) {
-        cout << "\nError, Object allready specialized, skip setCore()\n";
+        cout << "\nError, Object already specialized, skip setCore with type " << _type << endl;
         return;
     }
 

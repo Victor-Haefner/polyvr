@@ -28,5 +28,7 @@ PyMethodDef VRPyBoundingbox::methods[] = {
     {"getRandomPoint", PyWrap(Boundingbox, getRandomPoint, "Get the size", Vec3d) },
     {"intersect", PyWrap(Boundingbox, intersect, "Check if intersects other boundingbox", bool, BoundingboxPtr) },
     {"asGeometry", PyWrap(Boundingbox, asGeometry, "Return boundingbox as cube geometry", VRGeometryPtr) },
+    {"transform", PyWrap(Boundingbox, transform, "Transform boundingbox", void, PosePtr) },
+    {"transformed", PyWrap(Boundingbox, transformed, "Return transformed boundingbox", BoundingboxPtr, PosePtr) },
     {NULL}  /* Sentinel */
 };

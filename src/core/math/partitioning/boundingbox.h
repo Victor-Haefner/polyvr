@@ -36,6 +36,8 @@ class Boundingbox {
         void move(const Vec3d& t);
         void scale(float s);
         void inflate(float D);
+        void transform(PosePtr p);
+        BoundingboxPtr transformed(PosePtr p);
 
         bool isInside(Vec3d p, double margin = 0) const;
         bool intersectedBy(Line l);
