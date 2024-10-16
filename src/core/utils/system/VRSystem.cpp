@@ -10,6 +10,7 @@
 #include <boost/filesystem.hpp>
 #ifndef WITHOUT_EXECINFO
 #include <execinfo.h>
+#include <cxxabi.h>
 #endif
 #include <stdio.h>
 #include <pthread.h>
@@ -79,6 +80,65 @@ string getSystemVariable(string name) {
     return val ? val : "";
 }
 
+#ifndef WITHOUT_EXECINFO
+std::string demangle(const std::string& mangled_name) {
+    int status = 0;
+
+    // Use __cxa_demangle to convert the mangled name to a human-readable format
+    char* demangled = abi::__cxa_demangle(mangled_name.c_str(), nullptr, nullptr, &status);
+
+    if (status == 0 && demangled != nullptr) {
+        std::string result(demangled);
+        free(demangled);  // Free the memory allocated by __cxa_demangle
+        return result;
+    } else {
+        return mangled_name;  // Return the original if demangling fails
+    }
+}
+
+struct BacktraceEntry {
+    bool valid = false;
+    string entry;
+    vector<string> parts;
+
+
+    BacktraceEntry(string s) {
+        entry = s;
+
+        auto sv = splitString(s, '(');
+        if (sv.size() != 2) return;
+        string path = sv[0];
+        parts.push_back(path);
+
+        sv = splitString(sv[1], ')');
+        if (sv.size() != 2) return;
+        string call = sv[0];
+        //parts.push_back(call);
+
+        auto parts2 = splitString(call, '+');
+        if (!parts2.empty()) {
+            string mangled_name = parts2[0];
+            string offset = (parts2.size() > 1) ? parts2[1] : "";
+            string demangled_name = demangle(mangled_name);
+
+            parts.push_back(demangled_name);
+            if (!offset.empty()) parts.push_back("Offset: +"+offset);
+        }
+
+        parts.push_back(sv[1]);
+        valid = true;
+    }
+
+    void print() {
+        if (!valid) cout << entry << endl;
+        else {
+            for (auto p : parts) cout << " " << p;
+            cout << endl;
+        }
+    }
+};
+#endif
+
 void printBacktrace() {
 #ifndef WITHOUT_EXECINFO
     void *buffer[100];
@@ -89,7 +149,11 @@ void printBacktrace() {
 
     strings = backtrace_symbols(buffer, nptrs);
     if (strings != NULL) {
-        for (int j = 0; j < nptrs; j++) printf("%s\n", strings[j]);
+        for (int j = 0; j < nptrs; j++) {
+            if (strings[j] == 0) continue;
+            BacktraceEntry entry(strings[j]);
+            entry.print();
+        }
         free(strings);
     }
 #endif
