@@ -11,6 +11,7 @@ class Thread {
         string name;
         thread t;
         bool* stopFlag = 0;
+        bool doDetach = false;
 
     public:
         template<typename Callable, typename... Args>
@@ -25,12 +26,14 @@ class Thread {
         ~Thread();
 
         Thread(Thread&& __t) noexcept { swap(__t); }
-        void swap(Thread& __t) noexcept { t.swap(__t.t); }
+        void swap(Thread& __t) noexcept;
         Thread& operator=(Thread&& __t) noexcept { return *this; }
 
         bool joinable();
         void join();
         void detach();
+
+        void onStopDetach();
 
         static void sleepMilli(int ms);
 };

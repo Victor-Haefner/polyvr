@@ -19,7 +19,7 @@ struct VRMQTTClient::Data {
     bool connecting = false;
     bool responsive = false;
     bool gotReadEv = false;
-    ::Thread pollThread;
+    ::Thread* pollThread = 0;
     mg_connection* s_conn = 0;              // Client connection
     function<string(string)> cb;
 
@@ -39,7 +39,8 @@ struct VRMQTTClient::Data {
         connecting = false;
         mqttConnected = false;
         //cout << "~Data " << this << ", join thread.." << endl;
-        if (pollThread.joinable()) pollThread.join();
+        if (pollThread && pollThread->joinable()) pollThread->join();
+        if (pollThread) delete pollThread;
         //cout << "~Data mg_mgr_free" << endl;
         mg_mgr_free(&mgr);
         //cout << "~Data done" << endl;
@@ -163,6 +164,7 @@ void VRMQTTClient::disconnect() {
     data->doPoll = false;
     data->connecting = false;
     data->mqttConnected = false;
+    if (data->pollThread) { delete data->pollThread; data->pollThread = 0; }
 
     auto f = VRUpdateCb::create("mqttThreadCleanup", bind([](shared_ptr<Data> h) { h.reset(); }, data));
     data.reset();
@@ -189,7 +191,7 @@ void VRMQTTClient::connect(string host, int port) { // connect("broker.hivemq.co
 
     //cout << "start mqtt thread" << endl;
     data->doPoll = true;
-    data->pollThread = ::Thread("MQTT_client", bind([&](Data* data) {
+    data->pollThread = new ::Thread("MQTT_client", bind([&](Data* data) {
         bool doPing = false;
         int pingSent = 0;
         while (data->doPoll) {
@@ -216,6 +218,8 @@ void VRMQTTClient::connect(string host, int port) { // connect("broker.hivemq.co
         }
         //cout << "thread ends" << endl;
     }, data.get() ) );
+
+    data->pollThread->onStopDetach();
 }
 
 bool VRMQTTClient::connected() {

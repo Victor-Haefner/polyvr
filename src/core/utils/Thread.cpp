@@ -6,14 +6,26 @@ Thread::Thread() {}
 
 Thread::~Thread() {
     cout << "~Thread " << name << endl;
-    //if (t.joinable()) { cout << " ..join " << endl; t.detach(); }
     if (stopFlag) *stopFlag = false;
-    if (t.joinable()) { cout << " ..join " << endl; t.join(); }
+    if (t.joinable()) {
+        if (doDetach) { cout << " ..detach " << endl; t.detach(); }
+        else          { cout << " ..join "   << endl; t.join(); }
+    }
+}
+
+void Thread::swap(Thread& __t) noexcept {
+    t.swap(__t.t);
+    std::swap(name, __t.name);
+    std::swap(stopFlag, __t.stopFlag);
+    std::swap(doDetach, __t.doDetach);
 }
 
 bool Thread::joinable() { return t.joinable(); }
 void Thread::join() { t.join(); }
 void Thread::detach() { t.detach(); }
+
+void Thread::onStopDetach() {
+    doDetach = true; }
 
 void Thread::sleepMilli(int ms) {
     this_thread::sleep_for(chrono::milliseconds(ms));
