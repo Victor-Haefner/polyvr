@@ -4,7 +4,7 @@
 #include "core/objects/material/VRTexture.h"
 
 #include <GL/glx.h>
-#include <thread>
+#include "core/utils/Thread.h"
 
 Display* xdisplay = 0;
 XID xwindow = 0;
@@ -141,14 +141,16 @@ void listenForKey(XID grab_window) { // TODO: add windows and wayland versions
     XSelectInput(dpy, grab_window, KeyPressMask | KeyReleaseMask);
     XEvent ev;
     while(doGrabShiftTab) {
-        XNextEvent(dpy, &ev);
-        if (ev.xkey.keycode == 23) { // TODO: why 23?? its not XK_Tab..
-            bool shiftPressed = (ev.xkey.state & ShiftMask) != 0;
-            auto s = shiftPressed ? "1" : "0";
-            //cout << "listenForKey pressed: " << (ev.type == KeyPress) << ", released: " << (ev.type == KeyRelease) << ", shift: " << shiftPressed << endl;
-            if (ev.type == KeyPress) uiSignal("shiftTab", {{"tab","1"}, {"shift",s}});
-            if (ev.type == KeyRelease) uiSignal("shiftTab", {{"tab","0"}, {"shift",s}});
-        }
+        if (XPending(dpy) > 0) {
+            XNextEvent(dpy, &ev);
+            if (ev.xkey.keycode == 23) { // TODO: why 23?? its not XK_Tab..
+                bool shiftPressed = (ev.xkey.state & ShiftMask) != 0;
+                auto s = shiftPressed ? "1" : "0";
+                //cout << "listenForKey pressed: " << (ev.type == KeyPress) << ", released: " << (ev.type == KeyRelease) << ", shift: " << shiftPressed << endl;
+                if (ev.type == KeyPress) uiSignal("shiftTab", {{"tab","1"}, {"shift",s}});
+                if (ev.type == KeyRelease) uiSignal("shiftTab", {{"tab","0"}, {"shift",s}});
+            }
+        } else Thread::sleepMilli(2);
     }
     XUngrabKey(dpy, keycode, modifiers1, grab_window);
     XUngrabKey(dpy, keycode, modifiers2, grab_window);
@@ -156,5 +158,6 @@ void listenForKey(XID grab_window) { // TODO: add windows and wayland versions
 }
 
 void startGrabShiftTab() {
-    static thread listener(listenForKey, xwindow);
+    static ::Thread listener("GrabShiftTab", listenForKey, xwindow);
+    listener.manageFlag(doGrabShiftTab);
 }

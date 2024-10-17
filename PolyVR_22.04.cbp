@@ -4937,6 +4937,12 @@
 			<Option target="Release" />
 			<Option target="PVR-Tools-d" />
 		</Unit>
+		<Unit filename="src/core/utils/Thread.cpp">
+			<Option target="PVR-Utils-d" />
+		</Unit>
+		<Unit filename="src/core/utils/Thread.h">
+			<Option target="PVR-Utils-d" />
+		</Unit>
 		<Unit filename="src/core/utils/VRCallbackWrapper.cpp">
 			<Option target="Release" />
 			<Option target="PVR-Utils-d" />

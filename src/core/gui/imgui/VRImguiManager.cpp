@@ -1,7 +1,7 @@
 #include "VRImguiManager.h"
 
 #include <iostream>
-#include <thread>
+#include "core/utils/Thread.h"
 #include <core/gui/VRGuiManager.h>
 
 using namespace OSG;

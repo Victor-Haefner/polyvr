@@ -24,7 +24,7 @@
 #endif
 #include "addons/WorldGenerator/terrain/VRPlanet.h"
 
-#include <thread>
+#include "core/utils/Thread.h"
 
 #define GLSL(shader) #shader
 
@@ -1353,8 +1353,8 @@ void VRPointCloud::externalComputeSplats(string path, float neighborsRadius, boo
 
         {
             //for (int j=0; j<Nthreads; j++) processSplat(j);
-            vector<thread> threads(Nthreads);
-            for (int j=0; j<Nthreads; j++) threads[j] = thread(processSplat, j);
+            vector<::Thread> threads(Nthreads);
+            for (int j=0; j<Nthreads; j++) threads[j] = ::Thread("processSplat", processSplat, j);
             for (int j=0; j<Nthreads; j++) threads[j].join();
         }
 

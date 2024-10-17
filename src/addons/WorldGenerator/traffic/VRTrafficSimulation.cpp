@@ -29,7 +29,7 @@
 #include "core/tools/VRAnnotationEngine.h"
 
 #include "core/utils/VRMutex.h"
-#include <thread>
+#include "core/utils/Thread.h"
 
 #ifndef WITHOUT_IMGUI
 #define CPRINT(x) \

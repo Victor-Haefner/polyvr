@@ -30,7 +30,7 @@
 
 #endif
 #include <time.h>
-#include <thread>
+#include "core/utils/Thread.h"
 
 
 OSG_BEGIN_NAMESPACE

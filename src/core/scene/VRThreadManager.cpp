@@ -2,7 +2,7 @@
 #include "core/utils/VRFunction.h"
 #include "core/utils/system/VRSystem.h"
 
-#include <thread>
+#include "core/utils/Thread.h"
 #include <OpenSG/OSGChangeList.h>
 #include <OpenSG/OSGThread.h>
 #include <OpenSG/OSGThreadManager.h>
@@ -18,16 +18,8 @@ class OSGThread : public ExternalThread {
         }
 };
 
-VRThreadManager::VRThreadManager() {
-    appThread = dynamic_cast<Thread *>(ThreadManager::getAppThread());
-    setThreadName("PolyVR_main");
-}
-
-VRThreadManager::~VRThreadManager() {
-    cout << "~VRThreadManager " << threads.size() << endl;
-}
-
 VRThread::VRThread() {}
+
 VRThread::~VRThread() {
     control_flag = false;
     if (std_thread) {
@@ -57,6 +49,15 @@ void VRThread::syncFromMain() { // called in thread
     } else {
         cout << "Warning, syncFromMain aspect is 0! -> ignore" << endl;
     }
+}
+
+VRThreadManager::VRThreadManager() {
+    appThread = dynamic_cast<Thread *>(ThreadManager::getAppThread());
+    setThreadName("PolyVR_main");
+}
+
+VRThreadManager::~VRThreadManager() {
+    cout << "~VRThreadManager " << threads.size() << endl;
 }
 
 void VRThreadManager::setupThreadState(VRThreadPtr t) {
@@ -185,7 +186,7 @@ int VRThreadManager::initThread(VRThreadCbPtr f, string name, bool loop, int asp
     t->selfSyncBarrier = Barrier::create();
     t->mainSyncBarrier = Barrier::create();
     t->initCl = ChangeList::create();
-    t->std_thread = new thread(bind(&VRThreadManager::runLoop, this, t));
+    t->std_thread = new ::Thread(name, bind(&VRThreadManager::runLoop, this, t));
     threads[id] = t;
 
     id++;

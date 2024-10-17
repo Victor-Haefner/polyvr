@@ -4,7 +4,7 @@
 #include "core/utils/VRGlobals.h"
 #include "core/utils/system/VRSystem.h"
 
-#include <thread>
+#include "core/utils/Thread.h"
 #include <iostream>
 
 using namespace OSG;
@@ -14,7 +14,7 @@ struct VRProfinetClient::Data {
      string Address;     // PLC IP Address
 	 byte Buffer[65536]; // 64 K buffer
 
-	 thread writeThread;
+	 Thread writeThread;
 	 bool active = true;
 	 VRMutex mtx;
 };
@@ -24,7 +24,7 @@ VRProfinetClient::VRProfinetClient() {
     data->Client = new TS7Client();
     //data->Client->SetAsCallback(CliCompletion,NULL);
 
-    data->writeThread = thread( [&](){ while (data->active) processWriteQueue(); } );
+    data->writeThread = Thread( "profinetClient", [&](){ while (data->active) processWriteQueue(); } );
 }
 
 VRProfinetClient::~VRProfinetClient() {

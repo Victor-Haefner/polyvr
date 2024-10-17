@@ -6,7 +6,7 @@
 
 #include <cstdlib>
 #include <iostream>
-#include <thread>
+#include "core/utils/Thread.h"
 #include <string>
 #include <memory>
 
@@ -109,8 +109,8 @@ class TCPServer {
         boost::asio::io_service::work worker;
         vector<Session*> sessions;
         unique_ptr<tcp::acceptor> acceptor;
-        thread waiting;
-        thread service;
+        Thread waiting;
+        Thread service;
         string guard;
 
         function<string (string, size_t)> onMessageCb;
@@ -132,7 +132,7 @@ class TCPServer {
 
     public:
         TCPServer(VRTCPServer* p) : parent(p), worker(io_service) {
-            service = thread([this](){ run(); });
+            service = Thread("TCPServer_service", [this](){ run(); });
         }
 
         ~TCPServer() { close(); }

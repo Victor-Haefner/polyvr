@@ -14,13 +14,7 @@ struct ALCdevice;
 struct ALCdevice_struct;
 #endif
 
-#ifdef WASM
-namespace std{ inline namespace __2{ class thread; }; }
-#elif defined(__APPLE__)
-namespace std { namespace __1 {class thread; }; }
-#else
-namespace std { class thread; }
-#endif
+class Thread;
 
 using namespace std;
 OSG_BEGIN_NAMESPACE;
@@ -40,8 +34,8 @@ class VRMicrophone : public std::enable_shared_from_this<VRMicrophone> {
         bool streamPaused = false;
         double currentAmp = 0;
 
-        thread* recordingThread = 0;
-        thread* streamingThread = 0;
+        ::Thread* recordingThread = 0;
+        ::Thread* streamingThread = 0;
 #if defined(WIN32) || defined(__APPLE__)
 	    ALCdevice* device = 0;
 #else

@@ -8,7 +8,7 @@
 #include "core/scene/VRSceneManager.h"
 #include "core/utils/system/VRSystem.h"
 
-#include <thread>
+#include "core/utils/Thread.h"
 
 using namespace OSG;
 
@@ -72,7 +72,7 @@ VRNetworkNodePtr VRNetworkNode::ptr() { return static_pointer_cast<VRNetworkNode
 
 void VRNetworkNode::setup(VRStorageContextPtr context) {
     cout << "       ----------------------- VRNetworkNode::setup ------------------------" << endl;
-    initThread = thread( [&](){ update(); initSlaves();} );
+    initThread = ::Thread("Network_init", [&](){ update(); initSlaves();} );
 }
 
 void VRNetworkNode::joinInitThread() {
@@ -138,9 +138,9 @@ void VRNetworkNode::initSlaves() {
 
 void VRNetwork::stopSlaves() {
     cout << "VRNetwork::stopSlaves" << endl;
-    vector<thread*> threads;
+    vector<::Thread*> threads;
     for (auto n : getData()) {
-	auto t = new thread( [&](){n->stopSlaves();} );
+	auto t = new ::Thread("stop slaves", [&](){n->stopSlaves();} );
         threads.push_back(t);
     }
     cout << " wait for all threads to finish.. (" << threads.size() << ")" << endl;

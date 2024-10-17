@@ -4,7 +4,7 @@
 #include "core/utils/toString.h"
 #include "core/scene/VRScene.h"
 
-#include <thread>
+#include "core/utils/Thread.h"
 
 using namespace OSG;
 
@@ -19,7 +19,7 @@ struct VRMQTTClient::Data {
     bool connecting = false;
     bool responsive = false;
     bool gotReadEv = false;
-    thread pollThread;
+    ::Thread pollThread;
     mg_connection* s_conn = 0;              // Client connection
     function<string(string)> cb;
 
@@ -189,7 +189,7 @@ void VRMQTTClient::connect(string host, int port) { // connect("broker.hivemq.co
 
     //cout << "start mqtt thread" << endl;
     data->doPoll = true;
-    data->pollThread = thread(bind([&](Data* data) {
+    data->pollThread = ::Thread("MQTT_client", bind([&](Data* data) {
         bool doPing = false;
         int pingSent = 0;
         while (data->doPoll) {

@@ -60,7 +60,7 @@ void KeepAliveThread::Start(Services::SharedPtr server, Node node, Duration peri
   Period = period;
   Running = true;
   StopRequest = false;
-  Thread = std::thread([this] { this->Run(); });
+  thread = ::Thread("OPCUA_keepalive", [this] { this->Run(); });
 }
 
 
@@ -122,7 +122,7 @@ void KeepAliveThread::Stop()
 
   try
     {
-      Thread.join();
+      thread.join();
     }
 
   catch (std::system_error & ex)

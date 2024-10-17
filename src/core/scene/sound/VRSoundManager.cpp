@@ -23,7 +23,7 @@ extern "C" {
 #include <AL/alc.h>
 #include <AL/alext.h>
 
-#include <thread>
+#include "core/utils/Thread.h"
 
 using namespace OSG;
 
@@ -79,13 +79,13 @@ void VRSoundContext::enumerateDevices() {
 namespace OSG {
 struct VRSoundChannel {
     bool running = true;
-    std::thread* thread = 0;
+    ::Thread* thread = 0;
     VRMutex mutex;
     map<int, VRSoundPtr> current;
 
     VRSoundChannel() {
         cout << " create new channel!" << endl;
-        thread = new std::thread(bind(&VRSoundChannel::soundThread, this));
+        thread = new ::Thread("SoundChannel", bind(&VRSoundChannel::soundThread, this));
     }
 
     ~VRSoundChannel() {

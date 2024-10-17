@@ -24,7 +24,7 @@
 #include "VRThreadManager.h"
 #include "core/objects/geometry/VRPrimitive.h"
 
-#include <thread>
+#include "core/utils/Thread.h"
 
 #define PHYSICS_THREAD_TIMESTEP_MS 2
 

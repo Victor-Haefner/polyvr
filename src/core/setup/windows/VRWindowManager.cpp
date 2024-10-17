@@ -4,7 +4,7 @@
 #include <OpenSG/OSGRenderAction.h>
 
 #include <OpenSG/OSGGLUTWindow.h>
-#include <thread>
+#include "core/utils/Thread.h"
 
 #include "VRWindowManager.h"
 #include "core/setup/devices/VRMouse.h"

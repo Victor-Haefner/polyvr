@@ -10,13 +10,7 @@
 
 #include "core/utils/VRFunctionFwd.h"
 
-#ifdef WASM
-namespace std{ inline namespace __2{ class thread; }; }
-#elif defined(__APPLE__)
-namespace std { namespace __1 {class thread; }; }
-#else
-namespace std { class thread; }
-#endif
+class Thread;
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -31,7 +25,7 @@ class VRThread {
 
         ThreadRefPtr appThread;
         int ID = -1;
-        std::thread* std_thread = 0;
+        ::Thread* std_thread = 0;
         ExternalThreadRefPtr osg_t = 0;
         BarrierRefPtr mainSyncBarrier;
         BarrierRefPtr selfSyncBarrier;

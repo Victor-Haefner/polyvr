@@ -9,7 +9,7 @@
 #include <AL/al.h>
 #include <AL/alc.h>
 #include <iostream>
-#include <thread>
+#include "core/utils/Thread.h"
 #include <chrono>
 
 #include "core/utils/toString.h"
@@ -136,7 +136,7 @@ void VRMicrophone::startRecording() {
         }
     };
 
-    recordingThread = new thread(recordCb);
+    recordingThread = new ::Thread("recording", recordCb);
 }
 
 template <typename T>
@@ -189,13 +189,13 @@ void VRMicrophone::startRecordingThread() {
         recording = false;
     };
 
-    recordingThread = new thread(recordCb);
+    recordingThread = new ::Thread("recording", recordCb);
 }
 
 void VRMicrophone::startStreamingThread(string method) {
 
     if (streaming) return;
-  
+
     auto streamCb = [&](string method) {
         streaming = true;
         cout << "VRMicrophone::startStreamingThread" << endl;
@@ -232,7 +232,7 @@ void VRMicrophone::startStreamingThread(string method) {
         streaming = false;
     };
 
-    streamingThread = new thread(streamCb, method);
+    streamingThread = new ::Thread("streaming", streamCb, method);
 }
 
 void VRMicrophone::startStreamingOver(VRNetworkClientPtr client, string method) {

@@ -8,7 +8,7 @@
 #include <boost/array.hpp>
 #include <iostream>
 #include <list>
-#include <thread>
+#include "core/utils/Thread.h"
 
 using namespace OSG;
 using boost::asio::ip::udp;
@@ -21,7 +21,7 @@ class UDPClient {
         udp::endpoint remote_endpoint;
         udp::socket socket;
         list<string> messages;
-        thread service;
+        ::Thread service;
         string guard;
         VRMutex mtx;
         bool stop = false;
@@ -108,7 +108,7 @@ class UDPClient {
     public:
         UDPClient(VRUDPClient* c) : parent(c), worker(io_service), socket(io_service) {
             socket.open(udp::v4());
-            service = thread([this]() { runService(); });
+            service = ::Thread("UDPClient_service", [this]() { runService(); });
         }
 
         ~UDPClient() { close(); }

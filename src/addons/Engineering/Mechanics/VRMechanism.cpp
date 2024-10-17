@@ -661,7 +661,7 @@ VRTransformPtr MChain::init() {
 
 VRMechanism::VRMechanism() : VRObject("mechanism") {
     if (doThread) {
-        simThread = new thread( bind(&VRMechanism::updateThread, this) );
+        simThread = new ::Thread( "mechanism", bind(&VRMechanism::updateThread, this) );
     }
     setPersistency(0);
 }

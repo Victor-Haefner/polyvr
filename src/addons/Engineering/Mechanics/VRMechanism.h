@@ -2,7 +2,7 @@
 #define VRMECHANISM_H_INCLUDED
 
 #include <vector>
-#include <thread>
+#include "core/utils/Thread.h"
 #include <OpenSG/OSGVector.h>
 #include <OpenSG/OSGMatrix.h>
 #include "VRMechanismFwd.h"
@@ -231,7 +231,7 @@ class VRMechanism : public VRObject {
 
         bool doRun = true;
         bool doThread = true;
-        thread* simThread = 0;
+        ::Thread* simThread = 0;
         VRTimerPtr simTime;
         int substep = 0;
 

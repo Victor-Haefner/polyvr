@@ -3,7 +3,7 @@
 #include "core/utils/VRGlobals.h"
 
 #include <time.h>
-#include <thread>
+#include "core/utils/Thread.h"
 #include <iostream>
 
 using namespace OSG;

@@ -20,7 +20,7 @@
 #include <map>
 #include <memory>
 #include <mutex>
-#include <thread>
+#include "core/utils/Thread.h"
 #include <vector>
 
 #ifdef HAVE_PNG_H
@@ -106,7 +106,7 @@ public:
                       XCB_CW_EVENT_MASK,
                       &event_mask);
 
-    m_thread = std::thread(
+    m_thread = Thread("clipboard",
       [this]{
         process_x11_events();
       });
@@ -154,7 +154,7 @@ public:
       // TODO make this configurable (the same for Windows retries)
       for (int i=0; i<5 && !res; ++i) {
         res = m_lock.try_lock();
-        std::this_thread::sleep_for(std::chrono::milliseconds(20));
+        Thread::sleepMilli(20);
       }
     }
     return res;
@@ -959,7 +959,7 @@ private:
   // Thread used to run a background message loop to wait X11 events
   // about clipboard. The X11 selection owner will be a hidden window
   // created by us just for the clipboard purpose/communication.
-  std::thread m_thread;
+  Thread m_thread;
 
   // Internal callback used when a SelectionNotify is received (or the
   // whole data content is received by the INCR method). So this

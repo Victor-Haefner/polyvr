@@ -6,7 +6,7 @@
 #include <STEPaggregate.h>
 #include <schema.h>
 
-#include <thread>
+#include "core/utils/Thread.h"
 #include <unistd.h>
 #include <memory>
 #include <algorithm>
@@ -32,7 +32,7 @@ using namespace std;
 using namespace OSG;
 
 struct VRThreadPool {
-    vector<thread> threads;
+    vector<::Thread> threads;
     VRMutex mtx;
     int N = 1;
     int next = 0;
@@ -41,7 +41,7 @@ struct VRThreadPool {
     ~VRThreadPool() { stop(); }
 
     void start(function<void(void)> cb) {
-        for (int i=0; i<N; i++) threads.push_back(thread(cb));
+        for (int i=0; i<N; i++) threads.push_back(::Thread("step_thread_pool", cb));
     }
 
     void stop() {
@@ -626,7 +626,7 @@ template<class T> void VRSTEP::parse(STEPentity* e, string path, string cpath, s
 void VRSTEP::open(string file) {
     filePath = file;
     bool done = false;
-    thread t(&VRSTEP::loadT, this, file, sfile, &done);
+    ::Thread t("STEP_load", &VRSTEP::loadT, this, file, sfile, &done);
 
     while(!done) {
         double p = sfile->GetReadProgress()*0.01;

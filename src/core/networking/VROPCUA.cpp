@@ -6,7 +6,7 @@
 #include <algorithm>
 #include <time.h>
 
-#include <thread>
+#include "core/utils/Thread.h"
 #include <chrono>
 
 #include <opc/ua/node.h>

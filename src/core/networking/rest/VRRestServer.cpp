@@ -5,13 +5,13 @@
 #include "core/utils/toString.h"
 #include "core/utils/VRFunction.h"
 
-#include <thread>
+#include "core/utils/Thread.h"
 
 using namespace OSG;
 
 struct VRRestServer::Data {
     mg_mgr mgr;                // Event manager
-    thread pollThread;
+    ::Thread pollThread;
     bool doPoll = true;
 
     Data() { mg_mgr_init(&mgr); }
@@ -77,7 +77,7 @@ void VRRestServer::listen(int port, VRRestCbPtr cb) {
     mg_http_listen(&data->mgr, addr.c_str(), VRRestServer_handler, this);
     data->doPoll = true;
 
-    data->pollThread = thread( [&]() {
+    data->pollThread = ::Thread("RestServer", [&]() {
         while (data->doPoll) {
             mg_mgr_poll(&data->mgr, 2);
             if (!data->doPoll) break;

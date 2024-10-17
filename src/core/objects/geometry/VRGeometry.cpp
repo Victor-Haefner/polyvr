@@ -1,7 +1,7 @@
 #include "VRGeometry.h"
 #include "VRGeoData.h"
 #include <sstream>
-#include <thread>
+#include "core/utils/Thread.h"
 
 #include <OpenSG/OSGSimpleMaterial.h>
 #include <OpenSG/OSGSimpleGeometry.h>        // Methods to create simple geos.

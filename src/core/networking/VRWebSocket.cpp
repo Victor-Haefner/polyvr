@@ -1,7 +1,7 @@
 #include <core/utils/VRFunction.h>
 #include <core/scene/VRScene.h>
 #include <functional>
-#include <thread>
+#include "core/utils/Thread.h"
 #include "core/scene/VRSceneManager.h"
 #include "VRWebSocket.h"
 

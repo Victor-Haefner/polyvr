@@ -5,7 +5,7 @@
 
 #include <cstdlib>
 #include <iostream>
-#include <thread>
+#include "core/utils/Thread.h"
 #include <string>
 #include <memory>
 
@@ -28,7 +28,7 @@ class UDPServer {
         boost::asio::io_service io_service;
         boost::asio::io_service::work worker;
         udp::socket socket;
-        thread service;
+        ::Thread service;
         //boost::array<char, 1024> recv_buffer;
         //boost::asio::streambuf buffer;
         boost::array<char, 1024> buffer;
@@ -79,7 +79,7 @@ class UDPServer {
 
     public:
         UDPServer(VRUDPServer* s) : parent(s), worker(io_service), socket(io_service) {
-            service = thread([this](){ run(); });
+            service = ::Thread("UDPServer_service", [this](){ run(); });
         }
 
         ~UDPServer() { close(); }

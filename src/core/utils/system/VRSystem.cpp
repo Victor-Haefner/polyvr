@@ -29,7 +29,7 @@
 #include <mach/mach_time.h>
 #endif
 
-#include <thread>
+#include "core/utils/Thread.h"
 #include <chrono>
 
 #ifdef WASM
@@ -472,13 +472,13 @@ long readAvailableRAM() {
 void startMemoryDog() {
     return;// TODO: doesnt work..
 
-    static auto dog = thread([](){
+    static auto dog = Thread("memDog", [](){
         cout << "start memory dog..";
         while (true) {
             long m = readAvailableRAM();
             cout << "mem dog " << m << endl;
             if (m < 500) { cout << "Memory dog, kill system!" << endl; exit(1); }
-            this_thread::sleep_for( chrono::seconds(1) );
+            Thread::sleepMilli( 1000 );
         }
     });
 }

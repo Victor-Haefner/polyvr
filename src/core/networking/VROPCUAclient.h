@@ -27,7 +27,7 @@
 #include <opc/ua/server_operations.h>
 #include <opc/common/logger.h>
 
-#include <thread>
+#include "core/utils/Thread.h"
 #include <condition_variable>
 #include <chrono>
 #include <atomic>
@@ -50,7 +50,7 @@ public:
 
 private:
   void Run();
-  mutable std::thread Thread;
+  mutable ::Thread thread;
   Node NodeToRead;
   Services::SharedPtr Server;
   Duration Period = 1200000;

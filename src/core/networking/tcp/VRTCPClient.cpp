@@ -9,7 +9,7 @@
 
 #include <cstdlib>
 #include <iostream>
-#include <thread>
+#include "core/utils/Thread.h"
 #include <string>
 #include <memory>
 #include <list>
@@ -34,14 +34,14 @@ class TCPClient {
         SocketPtr socket;
         list<string> messages;
         boost::asio::streambuf buffer;
-        thread service;
+        ::Thread service;
         string guard;
         VRMutex mtx;
 
         // hole punching
-        thread tunnelAccept;
-        thread tunnelConnect;
-        thread tunnelRead;
+        ::Thread tunnelAccept;
+        ::Thread tunnelConnect;
+        ::Thread tunnelRead;
         SocketPtr aSocket;
         SocketPtr cSocket;
         AcceptorPtr acceptor;
@@ -156,7 +156,7 @@ class TCPClient {
     public:
         TCPClient(VRTCPClient* p) : parent(p), worker(io_service) {
             socket = SocketPtr( new tcp::socket(io_service) );
-            service = thread([this]() { runService(); });
+            service = ::Thread("TCPClient_service", [this]() { runService(); });
         }
 
         ~TCPClient() { close(); }
@@ -248,8 +248,8 @@ class TCPClient {
         void connectToPeer(int lPort, string rIP, int rPort) {
             string lIP = VRTCPUtils::getLocalIP();
             cout << "TCPClient::connectToPeer " << lIP << ":" << lPort << ", to " << rIP << ":" << rPort << endl;
-            tunnelAccept = thread([this, lPort]() { acceptHolePunching(lPort); }); // needed??? if yes, then TODO: fix close (timeout)!
-            tunnelConnect = thread([this, lIP, lPort, rIP, rPort]() { connectHolePunching(lIP, lPort, rIP, rPort); });
+            tunnelAccept = ::Thread("tunnelAccept", [this, lPort]() { acceptHolePunching(lPort); }); // needed??? if yes, then TODO: fix close (timeout)!
+            tunnelConnect = ::Thread("tunnelConnect", [this, lIP, lPort, rIP, rPort]() { connectHolePunching(lIP, lPort, rIP, rPort); });
             //tunnelAccept.detach(); // TODO: implement timeout or other abort method to control that thread!
 		}
 
@@ -268,7 +268,7 @@ class TCPClient {
             //tunnelConnect.join();
             cout << " finalizeP2P, close threads done" << endl;
 
-            tunnelRead = thread([this]() { bool run = true; while(run) run = read(true); });
+            tunnelRead = ::Thread("tunnelRead", [this]() { bool run = true; while(run) run = read(true); });
 
             if (onConnectCb) onConnectCb();
 		}

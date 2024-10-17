@@ -8,7 +8,7 @@
 
 #include <map>
 #include <vector>
-#include <thread>
+#include "core/utils/Thread.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -89,7 +89,7 @@ class VRNetworkNode : public VRManager<VRNetworkSlave>, public std::enable_share
         string stat_ssh_key = "none";
         string stat_path = "none";
 
-        thread initThread;
+        ::Thread initThread;
 
         void openSSHSession();
         void initSlaves();

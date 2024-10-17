@@ -1,6 +1,6 @@
 #include "VRMutex.h"
 
-#include <thread>
+#include "core/utils/Thread.h"
 #include <mutex>
 
 using namespace OSG;

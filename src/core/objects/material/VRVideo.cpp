@@ -18,7 +18,7 @@ extern "C" {
 }
 
 #include <string>
-#include <thread>
+#include "core/utils/Thread.h"
 #include "core/utils/VRMutex.h"
 
 

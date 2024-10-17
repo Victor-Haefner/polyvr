@@ -9,7 +9,7 @@
 #include <GL/glxext.h>
 #endif
 
-#include <thread>
+#include "core/utils/Thread.h"
 
 #include "VRGlutEditor.h"
 #include "core/utils/VROptions.h"
