@@ -106,10 +106,8 @@ public:
                       XCB_CW_EVENT_MASK,
                       &event_mask);
 
-    m_thread = Thread("clipboard",
-      [this]{
-        process_x11_events();
-      });
+    m_thread = new Thread("clipboard", [this]{ process_x11_events(); });
+    m_thread->onStopDetach();
   }
 
   ~Manager() {
@@ -141,11 +139,9 @@ public:
       xcb_flush(m_connection);
     }
 
-    if (m_thread.joinable())
-      m_thread.join();
-
-    if (m_connection)
-      xcb_disconnect(m_connection);
+    if (m_thread->joinable()) m_thread->join();
+    if (m_connection) xcb_disconnect(m_connection);
+    delete m_thread;
   }
 
   bool try_lock() {
@@ -959,7 +955,7 @@ private:
   // Thread used to run a background message loop to wait X11 events
   // about clipboard. The X11 selection owner will be a hidden window
   // created by us just for the clipboard purpose/communication.
-  Thread m_thread;
+  Thread* m_thread = 0;
 
   // Internal callback used when a SelectionNotify is received (or the
   // whole data content is received by the INCR method). So this
