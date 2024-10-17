@@ -12,6 +12,7 @@ class Thread {
         thread t;
         bool* stopFlag = 0;
         bool doDetach = false;
+        bool doNothing = false;
 
     public:
         template<typename Callable, typename... Args>
@@ -34,6 +35,7 @@ class Thread {
         void detach();
 
         void onStopDetach();
+        void onStopNothing();
 
         static void sleepMilli(int ms);
 };

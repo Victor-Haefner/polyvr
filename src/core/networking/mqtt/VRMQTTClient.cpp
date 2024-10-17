@@ -38,8 +38,11 @@ struct VRMQTTClient::Data {
         doPoll = false;
         connecting = false;
         mqttConnected = false;
-        //cout << "~Data " << this << ", join thread.." << endl;
-        if (pollThread && pollThread->joinable()) pollThread->join();
+        //cout << "~Data " << this << endl;
+        if (pollThread && pollThread->joinable()) {
+            //cout << "  join thread.." << endl;
+            pollThread->join();
+        }
         if (pollThread) delete pollThread;
         //cout << "~Data mg_mgr_free" << endl;
         mg_mgr_free(&mgr);
@@ -164,7 +167,6 @@ void VRMQTTClient::disconnect() {
     data->doPoll = false;
     data->connecting = false;
     data->mqttConnected = false;
-    if (data->pollThread) { delete data->pollThread; data->pollThread = 0; }
 
     auto f = VRUpdateCb::create("mqttThreadCleanup", bind([](shared_ptr<Data> h) { h.reset(); }, data));
     data.reset();
@@ -219,7 +221,7 @@ void VRMQTTClient::connect(string host, int port) { // connect("broker.hivemq.co
         //cout << "thread ends" << endl;
     }, data.get() ) );
 
-    data->pollThread->onStopDetach();
+    //data->pollThread->onStopNothing();
 }
 
 bool VRMQTTClient::connected() {
