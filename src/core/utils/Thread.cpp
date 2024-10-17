@@ -5,11 +5,11 @@
 Thread::Thread() {}
 
 Thread::~Thread() {
-    cout << "~Thread " << name << endl;
+    //cout << "~Thread " << name << endl;
     if (stopFlag) *stopFlag = false;
     if (t.joinable()) {
-        if (doDetach) { cout << " ..detach " << endl; t.detach(); }
-        else          { cout << " ..join "   << endl; t.join(); }
+        if (doDetach) { /*cout << " ..detach " << endl;*/ t.detach(); }
+        else          { /*cout << " ..join "   << endl;*/ t.join(); }
     }
 }
 
