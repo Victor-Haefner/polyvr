@@ -78,6 +78,7 @@ VRScene::~VRScene() {
     cout << "VRScene::~VRScene " << name << endl;
 		CEF::shutdown();
     VRThreadManager::stopThread(physicsThreadID);
+    VRImport::get()->clearCache();
     root->destroy();
     VRGroup::clearGroups();
     VRLightBeacon::getAll().clear();

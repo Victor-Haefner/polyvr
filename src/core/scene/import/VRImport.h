@@ -66,6 +66,7 @@ class VRImport {
 
     public:
         static VRImport* get();
+        void clearCache();
 
         void addPath(string folder);
         bool checkPath(string& path);

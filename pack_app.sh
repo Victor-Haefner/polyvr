@@ -29,21 +29,23 @@ check_signature() {
 sign_polyvr() {
 	check_signature build/Release/polyvr.exe
 	if [ $? -eq 1 ]; then
-		if [ -e sign_polyvr.sh ]; then
+		if [ -e codeSigning/sign_polyvr.sh ]; then
 			echo "sign polyvr!"
+			cd codeSigning
 			./sign_polyvr.sh
+			cd ..
 		fi
 	fi
 }
 
 if [ ! -e $pckFolder ]; then
-	mkdir -p $pckFolder 
+	mkdir -p $pckFolder
 fi
 
 rm -rf $pckFolder/*
-	
+
 sign_polyvr
-	
+
 if [ -n "$appFolder" ]; then # check is appFolder given
 	echo " copy app data"
 	cp -r $appFolder/* $pckFolder/

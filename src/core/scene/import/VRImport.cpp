@@ -193,6 +193,11 @@ VRTransformPtr VRImport::load(string path, VRObjectPtr parent, bool useCache, st
     }
 }
 
+void VRImport::clearCache() {
+    cout << " - - - - - - clearCache " << endl;
+    cache.clear();
+}
+
 void VRImport::addEventCallback(VRImportCbPtr cb) {
     callbacks.push_back(cb);
 }
