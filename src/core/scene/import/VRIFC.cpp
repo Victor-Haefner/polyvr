@@ -4,6 +4,7 @@
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/geometry/VRGeoData.h"
 #include "core/objects/geometry/sprite/VRSprite.h"
+#include "core/objects/material/VRMaterial.h"
 #include "core/utils/toString.h"
 #include "core/scene/import/VRSTEPCascade.h"
 #include "core/math/pose.h"
@@ -35,10 +36,10 @@ using namespace IfcSchema;
 
 class IFCLoader {
     private:
-        //Color3f defaultColor = Color3f(1,1,1);
-        Color3f defaultColor = Color3f(1,0,1);
+        Color4f defaultColor = Color4f(1,0,1,1);
         IfcGeom::Kernel kernel;
         VRTransformPtr root;
+        VRMaterialPtr baseMat;
 
         VROntologyPtr ontology;
         map<IfcUtil::IfcBaseEntity*, VRObjectPtr> ifcObjects;
@@ -71,14 +72,6 @@ class IFCLoader {
                                      v[2], v[5], v[8], v[11],
                                      0,    0,    0,    1);
             geo->setMatrix(osgM);
-        }
-
-        Color3f getColor(int faceID, vector<int>& mat_ids, vector<IfcGeom::Material>& materials) {
-            if (faceID < 0 || faceID >= int(mat_ids.size())) return defaultColor;
-            int matID = mat_ids[faceID];
-            if (matID < 0 || matID >= int(materials.size())) return defaultColor;
-            IfcGeom::Material& mat = materials[matID];
-            return Color3f( mat.diffuse()[0], mat.diffuse()[1], mat.diffuse()[2] );
         }
 
         string argVal(Argument* arg) {
@@ -272,6 +265,30 @@ class IFCLoader {
             return e;
         }
 
+        Color4f getColor(int faceID, vector<int>& mat_ids, vector<IfcGeom::Material>& materials) {
+            if (faceID < 0 || faceID >= int(mat_ids.size())) return defaultColor;
+            int matID = mat_ids[faceID];
+            if (matID < 0 || matID >= int(materials.size())) return defaultColor;
+            IfcGeom::Material& mat = materials[matID];
+
+            Color4f c = defaultColor;
+            if (mat.hasDiffuse()) {
+                c[0] = mat.diffuse()[0];
+                c[1] = mat.diffuse()[1];
+                c[2] = mat.diffuse()[2];
+            }
+
+            if (mat.hasTransparency()) {
+                cout << "mat with trans " << mat.transparency() << endl;
+                c[3] = mat.transparency();
+                baseMat->enableTransparency();
+            }
+
+            //if (mat.hasSpecular()) mat.specularity() mat.specular() // TODO
+
+            return c;
+        }
+
         VRGeometryPtr convertGeo(const IfcGeom::TriangulationElement<float>* o) {
             if (!o) {
                 //cout << "Warning! no valid object passed to IFC::convertGeo, " << o << endl;
@@ -294,11 +311,11 @@ class IFCLoader {
             for (uint i=0; i<norms.size(); i+=3) data.pushNorm( Vec3d(norms[i], norms[i+1], norms[i+2]) );
             for (uint i=0; i<faces.size(); i+=3) data.pushTri( faces[i], faces[i+1], faces[i+2] );
 
-            vector<Color3f> cols = vector<Color3f>(verts.size()/3, defaultColor); // TODO: replace by material system!
+            vector<Color4f> cols = vector<Color4f>(verts.size()/3, defaultColor); // TODO: replace by material system!
             int Nfaces = faces.size()/3;
             //cout << "Mat " << Nfaces << " " << mat.original_name() << " " << color << endl;
             for (int i=0; i<Nfaces; i++) {
-                Color3f color = getColor(i, mat_ids, materials);
+                Color4f color = getColor(i, mat_ids, materials);
                 cols[faces[3*i  ]] = color;
                 cols[faces[3*i+1]] = color;
                 cols[faces[3*i+2]] = color;
@@ -307,6 +324,7 @@ class IFCLoader {
 
             string name = o->name();// + "_" + o->unique_id();
             auto geo = data.asGeometry(name);
+            geo->setMaterial(baseMat);
             applyTransformation(o,geo);
             return geo;
         }
@@ -382,6 +400,8 @@ class IFCLoader {
             }
 
             ontology = o;
+
+            baseMat = VRMaterial::create("IFCMat");
         }
 
         void load(string path, VRTransformPtr res) {
