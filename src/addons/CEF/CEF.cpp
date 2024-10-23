@@ -59,27 +59,26 @@ bool cef_gl_init = false;
 class CEF_app : public CefApp, public CefBrowserProcessHandler {
     public:
         CEF_app() {}
+        ~CEF_app() { cout << "~CEF_app" << endl; }
 
-        void OnBeforeCommandLineProcessing(
-            const CefString& process_type,
-            CefRefPtr<CefCommandLine> command_line) override {
-          // Command-line flags can be modified in this callback.
-          // |process_type| is empty for the browser process.
-          if (process_type.empty()) {
-        #if defined(OS_MACOSX)
-            // Disable the macOS keychain prompt. Cookies will not be encrypted.
-            command_line->AppendSwitch("use-mock-keychain");
+        void OnBeforeCommandLineProcessing( const CefString& process_type, CefRefPtr<CefCommandLine> command_line) override {
+            // Command-line flags can be modified in this callback.
+            // |process_type| is empty for the browser process.
+            if (process_type.empty()) {
+                #if defined(OS_MACOSX)
+                // Disable the macOS keychain prompt. Cookies will not be encrypted.
+                command_line->AppendSwitch("use-mock-keychain");
                 command_line->AppendSwitch("disable-gpu");
                 command_line->AppendSwitch("disable-gpu-compositing");
-        #endif
-          }
+                #endif
+            }
         }
 
-
         CefRefPtr<CefBrowserProcessHandler> GetBrowserProcessHandler() override { return this; }
- private:
-  IMPLEMENT_REFCOUNTING(CEF_app);
-  DISALLOW_COPY_AND_ASSIGN(CEF_app);
+
+    private:
+        IMPLEMENT_REFCOUNTING(CEF_app);
+        DISALLOW_COPY_AND_ASSIGN(CEF_app);
 };
 
 class CEF_handler : public CefRenderHandler, public CefLoadHandler, public CefContextMenuHandler, public CefDialogHandler, public CefDisplayHandler, public CefLifeSpanHandler {
@@ -344,8 +343,15 @@ void CEF::shutdown() {
 		auto c = cef->internals->client;
 		auto h = c->getHandler();
 		h->resetTexture();
+
+		auto host = cef->internals->browser->GetHost();
+		host->CloseBrowser(true);
+
+		cef->internals->browser = 0;
+		cef->internals->client = 0;
 	}
-	//CefShutdown();
+	cout << "CEF::shutdown!" << endl;
+	CefShutdown();
 }
 
 CEFPtr CEF::create() {
