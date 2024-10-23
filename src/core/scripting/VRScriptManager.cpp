@@ -24,6 +24,42 @@
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
+void clear_sys_modules() {
+    PyObject *sys_module = PyImport_ImportModule("sys");
+    if (sys_module) {
+        PyObject *modules_dict = PyObject_GetAttrString(sys_module, "modules");
+        if (modules_dict && PyDict_Check(modules_dict)) {
+            PyDict_Clear(modules_dict);  // Clear all modules
+        }
+        Py_XDECREF(modules_dict);
+        Py_DECREF(sys_module);
+    }
+}
+
+void clear_global_objects() {
+    PyObject *globals = PyEval_GetGlobals();
+    if (globals && PyDict_Check(globals)) {
+        PyDict_Clear(globals);  // Clear all global variables
+    }
+}
+
+void clear_all_objects() {
+    PyObject *gc_module = PyImport_ImportModule("gc");
+    if (gc_module) {
+        PyObject *all_objects = PyObject_CallMethod(gc_module, "get_objects", NULL);
+        if (all_objects && PyList_Check(all_objects)) {
+            for (Py_ssize_t i = 0; i < PyList_Size(all_objects); ++i) {
+                PyObject *obj = PyList_GetItem(all_objects, i);
+                if (obj) {
+                    Py_DECREF(obj);  // Decrease ref count
+                }
+            }
+        }
+        Py_XDECREF(all_objects);
+        Py_DECREF(gc_module);
+    }
+}
+
 void checkGarbageCollection() { // for diagnostic purposes
     auto gc = PyImport_ImportModule("gc");
     string name = PyModule_GetName(gc);
@@ -61,6 +97,14 @@ void checkGarbageCollection() { // for diagnostic purposes
     }
 }
 
+void clearModule(PyObject* mod) {
+    PyObject* module_dict = PyModule_GetDict(mod);
+    if (module_dict && PyDict_Check(module_dict)) {
+        cout << "clear py module!" << endl;
+        PyDict_Clear(module_dict);  // Clear mod
+    }
+}
+
 VRScriptManager::VRScriptManager() {
     cout << "Init ScriptManager" << endl;
     initPyModules();
@@ -78,15 +122,25 @@ VRScriptManager::~VRScriptManager() {
     if (PyErr_Occurred() != NULL) PyErr_Print();
     //Py_XDECREF(pModBase);
     if (PyErr_Occurred() != NULL) PyErr_Print();
+
+    clearModule(pModVR); // helps with fixing cycles
+
     int N = Py_REFCNT(pModVR);
-    for (int i=1; i<N; i++) Py_DECREF(pModVR); // reduce the count to 1!
+    for (int i=1; i<N; i++) Py_DECREF(pModVR); // reduce the count to 1, clear pModVR in Py_Finalize
+
+    //Py_DECREF(pModVR);
+    //clear_sys_modules();
+    //clear_global_objects();
+    //clear_all_objects();
     checkGarbageCollection();
+
     PyErr_Clear();
     cout << " VRScriptManager Py_Finalize\n";
 #ifndef __APPLE__ // Py_Finalize, crash on apple, just upgrade to python 3 ;)
-    Py_Finalize(); // finally destroys pModVR
+    Py_Finalize();
 #else
-		Py_DECREF(pModVR);
+    N = Py_REFCNT(pModVR);
+    if (N == 1) Py_DECREF(pModVR);
 #endif
     VRPyBase::err = 0;
 }
