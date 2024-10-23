@@ -331,8 +331,8 @@ CEF::CEF() {
 }
 
 CEF::~CEF() {
-    cout << "~CEF, client/browser HasOneRef: " << internals->client->HasOneRef() << " " << internals->browser->HasOneRef() << endl;
-    internals->browser->GetHost()->CloseBrowser(false);
+    cout << "~CEF" << endl;
+    if (internals->browser) internals->browser->GetHost()->CloseBrowser(false);
     if (internals) delete internals;
 }
 
