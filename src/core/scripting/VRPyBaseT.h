@@ -68,6 +68,7 @@ newPyType( X , X , NEWfkt ) \
 newPyTypeToValue( X, X ) \
 newPyTypeCast( X , X )
 
+
 template<class T> PyTypeObject* VRPyBaseT<T>::typeRef = &VRPyBaseT<T>::type;
 template<class T> vector<PyTypeObject*> VRPyBaseT<T>::typeBases = vector<PyTypeObject*>();
 template<class T> map<PyTypeObject*, int> VRPyBaseT<T>::typeOffsets = map<PyTypeObject*, int>();
@@ -150,6 +151,7 @@ VRFunction<T, R>* VRPyBase::parseCallback(PyObject* args) {
     if (pySize(args) == 2) if (! PyArg_ParseTuple(args, "OO", &pyFkt, &pArgs)) return 0;
 	if (pyFkt == 0) return 0;
     Py_IncRef(pyFkt);
+    addPyCallback(pyFkt);
 
     if (pArgs == 0) pArgs = PyTuple_New(0);
     else if (string(pArgs->ob_type->tp_name) == "list") pArgs = PyList_AsTuple(pArgs);

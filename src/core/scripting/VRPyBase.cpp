@@ -14,6 +14,16 @@ PyGILState_STATE PyGILState_Ensure() {
 void PyGILState_Release(PyGILState_STATE state) {}
 #endif
 
+static vector<PyObject*> pyCallbacks;
+
+void addPyCallback(PyObject* o) {
+    pyCallbacks.push_back(o);
+}
+
+void cleanupPyCallbacks() {
+    for (auto& o : pyCallbacks) Py_DecRef(o);
+    pyCallbacks.clear();
+}
 
 PyObject* VRPyBase::err = NULL;
 

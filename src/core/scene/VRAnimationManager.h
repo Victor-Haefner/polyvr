@@ -20,6 +20,9 @@ class VRAnimationManager {
 
     public:
         VRAnimationManager();
+        ~VRAnimationManager();
+
+        void clear();
 
         void addAnimation(VRAnimationPtr anim);
         void remAnimation(VRAnimationPtr anim);

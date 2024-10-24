@@ -133,6 +133,7 @@ template<> bool toValue(PyObject* o, std::shared_ptr<VRFunction<void>>& v) {
     if (VRPyBase::isNone(o)) v = 0;
     else {
         Py_IncRef(o);
+        addPyCallback(o);
         v = VRFunction<void>::create( "pyExecCall", bind(VRPyBase::execPyCallVoidVoid, o, PyTuple_New(0)) );
     }
     return 1;

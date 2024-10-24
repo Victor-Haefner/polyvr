@@ -384,6 +384,7 @@ PyObject* VRSceneGlobals::startThread(VRSceneGlobals* self, PyObject *args) {
     PyObject *pyFkt, *pArgs = 0;
     if (! PyArg_ParseTuple(args, "O|O", &pyFkt, &pArgs)) return NULL;
     Py_IncRef(pyFkt);
+    addPyCallback(pyFkt);
 
     if (pArgs != 0) {
         std::string type = pArgs->ob_type->tp_name;
@@ -412,6 +413,7 @@ PyObject* VRSceneGlobals::stackCall(VRSceneGlobals* self, PyObject *args) {
     if (! PyArg_ParseTuple(args, "Of|O", &pyFkt, &delay, &pArgs)) return NULL;
     if (!pyFkt) { VRPyBase::setErr("Error: expected valid callback!"); return NULL; }
     Py_IncRef(pyFkt);
+    addPyCallback(pyFkt);
 
     std::string type;
     PyObject* cargs = 0;
@@ -451,6 +453,7 @@ PyObject* VRSceneGlobals::openFileDialog(VRSceneGlobals* self, PyObject *args) {
     PyObject *cb, *mode, *title, *default_path, *filter;
     if (! PyArg_ParseTuple(args, "OOOOO", &cb, &mode, &title, &default_path, &filter)) return NULL;
     Py_IncRef(cb);
+    addPyCallback(cb);
 
     /*string filters = "PolyVR Project (.pvr .pvc){.pvr,.pvc,.xml}";
     filters += ",Mesh Model (.dae .wrl .obj .3ds .ply){.dae,.wrl,.obj,.3ds,.3DS,.ply}";

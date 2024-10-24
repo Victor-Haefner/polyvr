@@ -21,6 +21,14 @@ VRAnimationManager::VRAnimationManager() {
     updateAnimationsFkt = VRUpdateCb::create("AnimationUpdateFkt", bind(&VRAnimationManager::updateAnimations, this));
 }
 
+VRAnimationManager::~VRAnimationManager() {
+    cout << "~VRAnimationManager" << endl;
+}
+
+void VRAnimationManager::clear() {
+    anim_map.clear();
+}
+
 void VRAnimationManager::addAnimation(VRAnimationPtr anim) {
     anim_map[anim->getName()] = anim;
 }

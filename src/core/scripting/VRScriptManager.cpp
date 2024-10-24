@@ -10,6 +10,7 @@
 #include "VRSceneModules.h"
 #include "VRSceneGlobals.h"
 #include "VRPyListMath.h"
+#include "VRPyBaseT.h"
 
 #undef _XOPEN_SOURCE
 #undef _POSIX_C_SOURCE
@@ -124,6 +125,7 @@ VRScriptManager::~VRScriptManager() {
     if (PyErr_Occurred() != NULL) PyErr_Print();
 
     clearModule(pModVR); // helps with fixing cycles
+    cleanupPyCallbacks();
 
     int N = Py_REFCNT(pModVR);
     for (int i=1; i<N; i++) Py_DECREF(pModVR); // reduce the count to 1, clear pModVR in Py_Finalize

@@ -15,6 +15,9 @@
 
 using namespace std;
 
+void addPyCallback(PyObject* o);
+void cleanupPyCallbacks();
+
 struct VRPyBase {
     PyObject_HEAD;
     static PyObject* err;
