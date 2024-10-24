@@ -9,5 +9,5 @@ rem TODO: fix gschemas path!
 rem  set XDG_DATA_DIR=%XDG_DATA_DIR%;ressources\gui\schemas
 
 echo "start polyvr.exe"
-build\Release\polyvr.exe %*
-rem "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\devenv" /debugexe build\RelWithDebInfo\polyvr.exe %*
+rem build\Release\polyvr.exe %*
+"C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\devenv" /debugexe build\RelWithDebInfo\polyvr.exe %*

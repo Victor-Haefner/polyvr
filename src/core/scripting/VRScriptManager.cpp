@@ -132,7 +132,7 @@ VRScriptManager::~VRScriptManager() {
     //clear_sys_modules();
     //clear_global_objects();
     //clear_all_objects();
-    checkGarbageCollection();
+    //checkGarbageCollection();
 
     PyErr_Clear();
     cout << " VRScriptManager Py_Finalize\n";

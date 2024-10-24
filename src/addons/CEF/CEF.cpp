@@ -347,8 +347,8 @@ void CEF::shutdown() {
 		auto host = cef->internals->browser->GetHost();
 		host->CloseBrowser(true);
 
-		cef->internals->browser = 0;
-		cef->internals->client = 0;
+		cef->internals->browser.reset();
+		cef->internals->client.reset();
 	}
 	cout << "CEF::shutdown!" << endl;
 	CefShutdown();
