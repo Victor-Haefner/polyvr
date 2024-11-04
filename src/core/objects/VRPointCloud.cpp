@@ -1353,9 +1353,9 @@ void VRPointCloud::externalComputeSplats(string path, float neighborsRadius, boo
 
         {
             //for (int j=0; j<Nthreads; j++) processSplat(j);
-            vector<::Thread> threads(Nthreads);
-            for (int j=0; j<Nthreads; j++) threads[j] = ::Thread("processSplat", processSplat, j);
-            for (int j=0; j<Nthreads; j++) threads[j].join();
+            vector<::Thread*> threads(Nthreads);
+            for (int j=0; j<Nthreads; j++) threads[j] = new ::Thread("processSplat", processSplat, j);
+            for (int j=0; j<Nthreads; j++) threads[j]->join();
         }
 
         epcTimer.start("write pnt");

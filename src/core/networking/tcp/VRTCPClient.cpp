@@ -34,14 +34,14 @@ class TCPClient {
         SocketPtr socket;
         list<string> messages;
         boost::asio::streambuf buffer;
-        ::Thread service;
+        ::Thread* service = 0;
         string guard;
         VRMutex mtx;
 
         // hole punching
-        ::Thread tunnelAccept;
-        ::Thread tunnelConnect;
-        ::Thread tunnelRead;
+        ::Thread* tunnelAccept = 0;
+        ::Thread* tunnelConnect = 0;
+        ::Thread* tunnelRead = 0;
         SocketPtr aSocket;
         SocketPtr cSocket;
         AcceptorPtr acceptor;
@@ -156,7 +156,7 @@ class TCPClient {
     public:
         TCPClient(VRTCPClient* p) : parent(p), worker(io_service) {
             socket = SocketPtr( new tcp::socket(io_service) );
-            service = ::Thread("TCPClient_service", [this]() { runService(); });
+            service = new ::Thread("TCPClient_service", [this]() { runService(); });
         }
 
         ~TCPClient() { close(); }
@@ -180,13 +180,26 @@ class TCPClient {
             }
 
             cout << "join service thread" << endl;
-            if (service.joinable()) service.join();
-            cout << "join hp accept thread" << endl;
-            if (tunnelAccept.joinable()) tunnelAccept.join();
-            cout << "join hp connect thread" << endl;
-            if (tunnelConnect.joinable()) tunnelConnect.join();
-            cout << "join hp read thread" << endl;
-            if (tunnelRead.joinable()) tunnelRead.join();
+            if (service->joinable()) service->join();
+            delete service;
+
+            if (tunnelAccept) {
+                cout << "join hp accept thread" << endl;
+                if (tunnelAccept->joinable()) tunnelAccept->join();
+                delete tunnelAccept;
+            }
+
+            if (tunnelConnect) {
+                cout << "join hp connect thread" << endl;
+                if (tunnelConnect->joinable()) tunnelConnect->join();
+                delete tunnelConnect;
+            }
+
+            if (tunnelRead) {
+                cout << "join hp read thread" << endl;
+                if (tunnelRead->joinable()) tunnelRead->join();
+                delete tunnelRead;
+            }
         }
 
         void connect(string host, int port) {
@@ -248,8 +261,8 @@ class TCPClient {
         void connectToPeer(int lPort, string rIP, int rPort) {
             string lIP = VRTCPUtils::getLocalIP();
             cout << "TCPClient::connectToPeer " << lIP << ":" << lPort << ", to " << rIP << ":" << rPort << endl;
-            tunnelAccept = ::Thread("tunnelAccept", [this, lPort]() { acceptHolePunching(lPort); }); // needed??? if yes, then TODO: fix close (timeout)!
-            tunnelConnect = ::Thread("tunnelConnect", [this, lIP, lPort, rIP, rPort]() { connectHolePunching(lIP, lPort, rIP, rPort); });
+            tunnelAccept = new ::Thread("tunnelAccept", [this, lPort]() { acceptHolePunching(lPort); }); // needed??? if yes, then TODO: fix close (timeout)!
+            tunnelConnect = new ::Thread("tunnelConnect", [this, lIP, lPort, rIP, rPort]() { connectHolePunching(lIP, lPort, rIP, rPort); });
             //tunnelAccept.detach(); // TODO: implement timeout or other abort method to control that thread!
 		}
 
@@ -268,7 +281,7 @@ class TCPClient {
             //tunnelConnect.join();
             cout << " finalizeP2P, close threads done" << endl;
 
-            tunnelRead = ::Thread("tunnelRead", [this]() { bool run = true; while(run) run = read(true); });
+            tunnelRead = new ::Thread("tunnelRead", [this]() { bool run = true; while(run) run = read(true); });
 
             if (onConnectCb) onConnectCb();
 		}

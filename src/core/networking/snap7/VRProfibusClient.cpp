@@ -14,7 +14,7 @@ struct VRProfinetClient::Data {
      string Address;     // PLC IP Address
 	 byte Buffer[65536]; // 64 K buffer
 
-	 Thread writeThread;
+	 ::Thread* writeThread = 0;
 	 bool active = true;
 	 VRMutex mtx;
 };
@@ -24,14 +24,15 @@ VRProfinetClient::VRProfinetClient() {
     data->Client = new TS7Client();
     //data->Client->SetAsCallback(CliCompletion,NULL);
 
-    data->writeThread = Thread( "profinetClient", [&](){ while (data->active) processWriteQueue(); } );
+    data->writeThread = new ::Thread( "profinetClient", [&](){ while (data->active) processWriteQueue(); } );
 }
 
 VRProfinetClient::~VRProfinetClient() {
     disconnect();
     if (data) {
         data->active = false;
-        data->writeThread.join();
+        data->writeThread->join();
+        delete data->writeThread;
         if (data->Client) delete data->Client;
         delete data;
     }

@@ -11,14 +11,17 @@ using namespace OSG;
 
 struct VRRestServer::Data {
     mg_mgr mgr;                // Event manager
-    ::Thread pollThread;
+    ::Thread* pollThread = 0;
     bool doPoll = true;
 
     Data() { mg_mgr_init(&mgr); }
 
     ~Data() {
         doPoll = false;
-        pollThread.join();
+        if (pollThread) {
+            pollThread->join();
+            delete pollThread;
+        }
         mg_mgr_free(&mgr);
     }
 };
@@ -77,7 +80,7 @@ void VRRestServer::listen(int port, VRRestCbPtr cb) {
     mg_http_listen(&data->mgr, addr.c_str(), VRRestServer_handler, this);
     data->doPoll = true;
 
-    data->pollThread = ::Thread("RestServer", [&]() {
+    data->pollThread = new ::Thread("RestServer", [&]() {
         while (data->doPoll) {
             mg_mgr_poll(&data->mgr, 2);
             if (!data->doPoll) break;

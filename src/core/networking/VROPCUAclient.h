@@ -50,7 +50,7 @@ public:
 
 private:
   void Run();
-  mutable ::Thread thread;
+  ::Thread* thread = 0;
   Node NodeToRead;
   Services::SharedPtr Server;
   Duration Period = 1200000;

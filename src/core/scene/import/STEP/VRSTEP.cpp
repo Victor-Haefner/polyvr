@@ -32,7 +32,7 @@ using namespace std;
 using namespace OSG;
 
 struct VRThreadPool {
-    vector<::Thread> threads;
+    vector<::Thread*> threads;
     VRMutex mtx;
     int N = 1;
     int next = 0;
@@ -41,11 +41,14 @@ struct VRThreadPool {
     ~VRThreadPool() { stop(); }
 
     void start(function<void(void)> cb) {
-        for (int i=0; i<N; i++) threads.push_back(::Thread("step_thread_pool", cb));
+        for (int i=0; i<N; i++) threads.push_back(new ::Thread("step_thread_pool", cb));
     }
 
     void stop() {
-        for (auto& t : threads) t.join();
+        for (auto& t : threads) {
+            t->join();
+            delete t;
+        }
         threads.clear();
         next = 0;
     }

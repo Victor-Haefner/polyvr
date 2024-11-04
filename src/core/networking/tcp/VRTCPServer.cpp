@@ -109,8 +109,7 @@ class TCPServer {
         boost::asio::io_service::work worker;
         vector<Session*> sessions;
         unique_ptr<tcp::acceptor> acceptor;
-        Thread waiting;
-        Thread service;
+        Thread* service = 0;
         string guard;
 
         function<string (string, size_t)> onMessageCb;
@@ -132,7 +131,7 @@ class TCPServer {
 
     public:
         TCPServer(VRTCPServer* p) : parent(p), worker(io_service) {
-            service = Thread("TCPServer_service", [this](){ run(); });
+            service = new ::Thread("TCPServer_service", [this](){ run(); });
         }
 
         ~TCPServer() { close(); }
@@ -152,7 +151,9 @@ class TCPServer {
         void close() {
             io_service.stop();
             for (auto s : sessions) delete s;
-            if (service.joinable()) service.join();
+            if (service->joinable()) service->join();
+            delete service;
+            service = 0;
         }
 };
 

@@ -72,11 +72,12 @@ VRNetworkNodePtr VRNetworkNode::ptr() { return static_pointer_cast<VRNetworkNode
 
 void VRNetworkNode::setup(VRStorageContextPtr context) {
     cout << "       ----------------------- VRNetworkNode::setup ------------------------" << endl;
-    initThread = ::Thread("Network_init", [&](){ update(); initSlaves();} );
+    initThread = new ::Thread("Network_init", [&](){ update(); initSlaves();} );
 }
 
 void VRNetworkNode::joinInitThread() {
-    initThread.join();
+    initThread->join();
+    delete initThread;
 }
 
 string VRNetworkNode::getAddress() { return address; }

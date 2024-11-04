@@ -472,7 +472,7 @@ long readAvailableRAM() {
 void startMemoryDog() {
     return;// TODO: doesnt work..
 
-    static auto dog = Thread("memDog", [](){
+    static auto dog = new ::Thread("memDog", [](){
         cout << "start memory dog..";
         while (true) {
             long m = readAvailableRAM();
