@@ -28,7 +28,7 @@ class UDPServer {
         boost::asio::io_service io_service;
         boost::asio::io_service::work worker;
         udp::socket socket;
-        ::Thread service;
+        ::Thread* service = 0;
         //boost::array<char, 1024> recv_buffer;
         //boost::asio::streambuf buffer;
         boost::array<char, 1024> buffer;
@@ -79,10 +79,13 @@ class UDPServer {
 
     public:
         UDPServer(VRUDPServer* s) : parent(s), worker(io_service), socket(io_service) {
-            service = ::Thread("UDPServer_service", [this](){ run(); });
+            service = new ::Thread("UDPServer_service", [this](){ run(); });
         }
 
-        ~UDPServer() { close(); }
+        ~UDPServer() {
+            close();
+            delete service;
+        }
 
         void onMessage( function<string (string)> f, bool b ) { onMessageCb = f; deferredMessaging = b; }
 
@@ -99,7 +102,7 @@ class UDPServer {
             socket.cancel();
             boost::system::error_code _error_code;
             socket.shutdown(udp::socket::shutdown_both, _error_code);
-            if (service.joinable()) service.join();
+            if (service->joinable()) service->join();
         }
 };
 

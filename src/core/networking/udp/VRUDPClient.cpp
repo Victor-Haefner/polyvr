@@ -21,7 +21,7 @@ class UDPClient {
         udp::endpoint remote_endpoint;
         udp::socket socket;
         list<string> messages;
-        ::Thread service;
+        ::Thread* service = 0;
         string guard;
         VRMutex mtx;
         bool stop = false;
@@ -108,10 +108,13 @@ class UDPClient {
     public:
         UDPClient(VRUDPClient* c) : parent(c), worker(io_service), socket(io_service) {
             socket.open(udp::v4());
-            service = ::Thread("UDPClient_service", [this]() { runService(); });
+            service = new ::Thread("UDPClient_service", [this]() { runService(); });
         }
 
-        ~UDPClient() { close(); }
+        ~UDPClient() {
+            close();
+            delete service;
+        }
 
         void onMessage( function<string (string)> f ) { onMessageCb = f; }
 
@@ -129,7 +132,7 @@ class UDPClient {
             }
 
             cout << "join service thread" << endl;
-            if (service.joinable()) service.join();
+            if (service->joinable()) service->join();
         }
 
         void connect(string host, int port) {
