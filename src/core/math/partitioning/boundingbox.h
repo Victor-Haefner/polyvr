@@ -29,6 +29,8 @@ class Boundingbox {
         Vec3d max() const;
         Vec3d center() const;
         Vec3d size() const;
+        Vec3d top() const;
+        Vec3d bottom() const;
         float radius() const;
         float volume() const;
 
@@ -57,6 +59,8 @@ class Boundingbox {
         Vec3d py_max();
         Vec3d py_center();
         Vec3d py_size();
+        Vec3d py_top();
+        Vec3d py_bottom();
         float py_radius();
         float py_volume();
         void py_setCenter(Vec3d t);

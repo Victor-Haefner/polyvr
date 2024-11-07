@@ -63,6 +63,8 @@ Vec3d Boundingbox::min() const { return bb1; }
 Vec3d Boundingbox::max() const { return bb2; }
 Vec3d Boundingbox::center() const { return cleared ? Vec3d() : (bb2+bb1)*0.5; }
 Vec3d Boundingbox::size() const { return cleared ? Vec3d() : bb2-bb1; }
+Vec3d Boundingbox::top() const { Vec3d c = center(); c[1] = bb2[1]; return c; }
+Vec3d Boundingbox::bottom() const { Vec3d c = center(); c[1] = bb1[1]; return c; }
 float Boundingbox::radius() const { return cleared ? 0 : (size()*0.5).length(); }
 float Boundingbox::volume() const { auto s = size(); return s[0]*s[1]*s[2]; };
 
@@ -202,6 +204,8 @@ Vec3d Boundingbox::py_min() { return min(); }
 Vec3d Boundingbox::py_max() { return max(); }
 Vec3d Boundingbox::py_center() { return center(); }
 Vec3d Boundingbox::py_size() { return size(); }
+Vec3d Boundingbox::py_top() { return top(); }
+Vec3d Boundingbox::py_bottom() { return bottom(); }
 float Boundingbox::py_radius() { return radius(); }
 float Boundingbox::py_volume() { return volume(); }
 void Boundingbox::py_setCenter(Vec3d t) { setCenter(t); }

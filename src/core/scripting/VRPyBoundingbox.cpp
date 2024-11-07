@@ -16,6 +16,8 @@ PyMethodDef VRPyBoundingbox::methods[] = {
     {"update", PyWrap(Boundingbox, py_update, "Update the bounding box", void, Vec3d) },
     {"center", PyWrap(Boundingbox, py_center, "Get the center", Vec3d) },
     {"size", PyWrap(Boundingbox, py_size, "Get the size", Vec3d) },
+    {"top", PyWrap(Boundingbox, py_top, "Get the top center", Vec3d) },
+    {"bottom", PyWrap(Boundingbox, py_bottom, "Get the bottom center", Vec3d) },
     {"radius", PyWrap(Boundingbox, py_radius, "Get the size", float) },
     {"volume", PyWrap(Boundingbox, py_volume, "Get the size", float) },
     {"setCenter", PyWrap(Boundingbox, py_setCenter, "Get the size", void, Vec3d) },
