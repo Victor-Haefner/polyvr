@@ -58,6 +58,10 @@ class ImScenegraph {
         Im_Vector lodCenter;
         vector<double> lodDistances;
 
+        string geoOrigin;
+        vector<string> geoParams;
+        vector<pair<string, int>> geoData;
+
     public:
         ImScenegraph();
         void render();

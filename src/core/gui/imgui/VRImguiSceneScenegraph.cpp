@@ -76,6 +76,9 @@ void ImScenegraph::render() {
             ImGui::Separator();
             ImGui::Text("Geometry:");
             ImGui::Indent(10);
+            ImGui::Text(("Origin: " + geoOrigin).c_str());
+            for (auto& p : geoParams) ImGui::Text((" param " + p).c_str());
+            for (auto& p : geoData) ImGui::Text((" data " + p.first + " : " + toString(p.second)).c_str());
             ImGui::Unindent(10);
         }
 
@@ -275,7 +278,16 @@ void ImScenegraph::setupLod(OSG::VRGuiSignals::Options o) {
 }
 
 void ImScenegraph::setupGeometry(OSG::VRGuiSignals::Options o) {
-    ;
+    geoOrigin = o["origin"];
+    toValue(o["originParams"], geoParams);
+
+    geoData.clear();
+    vector<string> tmp = splitString(o["geoData"], '$');
+    for (auto&t : tmp) {
+        auto v = splitString(t, '|');
+        if (v.size() != 2) continue;
+        geoData.push_back(make_pair(v[0], toInt(v[1])));
+    }
 }
 
 void ImScenegraph::treeClear() { tree.clear(); }

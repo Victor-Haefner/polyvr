@@ -168,56 +168,45 @@ void VRGuiScene::on_geo_menu_print() {
 }
 
 void VRGuiScene::setGeometry(VRGeometryPtr g) {
-    /*setWidgetVisibility("expander11", true, true);
-    setWidgetVisibility("expander14", true, true);
-    setWidgetVisibility("expander16", true, true);
     VRMaterialPtr mat = g->getMaterial();
     setMaterial(mat);
 
-    setToggleButton("checkbutton28", false);
-    setCombobox("combobox21", -1);
+    map<string, string> params;
 
-    auto store = (GtkListStore*)VRGuiBuilder::get()->get_object("primitive_opts");
-    gtk_list_store_clear(store);
-
-    stringstream params;
-    params << g->getReference().parameter;
+    string origin;
+    vector<string> primparams;
+    toValue(g->getReference().parameter, primparams);
 
     switch (g->getReference().type) {
         case VRGeometry::FILE:
+            origin = "file";
             break;
         case VRGeometry::CODE:
+            origin = "code";
             break;
         case VRGeometry::PRIMITIVE:
-            setToggleButton("checkbutton28", true);
-            string ptype; params >> ptype;
-            setCombobox("combobox21", getListStorePos("prim_list", ptype));
+            origin = "primitive";
+            string ptype = primparams[0];
             vector<string> param_names = VRPrimitive::getTypeParameter(ptype);
-            for (uint i=0; i<param_names.size(); i++) {
-                string val; params >> val;
-                GtkTreeIter row;
-                gtk_list_store_append(store, &row);
-                gtk_list_store_set(store, &row, 0, param_names[i].c_str(), -1);
-                gtk_list_store_set(store, &row, 1, val.c_str(), -1);
-            }
+            params["paramNames"] = toString(param_names);
             break;
     }
 
-    auto appendGeoData = [](GtkListStore* store, string name, int N, int I) {
-        GtkTreeIter row;
-        gtk_list_store_append(store, &row);
-        gtk_list_store_set(store, &row, 0, name.c_str(), -1);
-        gtk_list_store_set(store, &row, 1, N, -1);
-        gtk_list_store_set(store, &row, 2, I, -1);
-    };
+    params["origin"] = origin;
+    params["originParams"] = g->getReference().parameter;
 
+    string geoData;
     VRGeoData data(g);
-    store = (GtkListStore*)VRGuiBuilder::get()->get_object("geodata");
-    gtk_list_store_clear(store);
     for (int i=0; i<=8; i++) {
         int N = data.getDataSize(i);
-        if (N) appendGeoData(store, data.getDataName(i), N, i);
-    }*/
+        string name = data.getDataName(i);
+        if (geoData.size()) geoData += "$";
+        geoData += name + "|" + toString(N);
+    }
+
+    params["geoData"] = geoData;
+
+    uiSignal( "on_sg_setup_geo", params );
 }
 
 void VRGuiScene::setLight(VRLightPtr l) {
