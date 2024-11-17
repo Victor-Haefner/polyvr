@@ -126,31 +126,25 @@ void VRGuiScene::setTransform(VRTransformPtr e) {
 }
 
 void VRGuiScene::setMaterial(VRMaterialPtr mat) {
-    bool lit = false;
-    Color3f _cd, _cs, _ca;
-    VRTexturePtr tex;
+    map<string, string> params;
 
     if (mat) {
-        //setLabel("label60", mat->getName());
-        _cd = mat->getDiffuse();
-        _cs = mat->getSpecular();
-        _ca = mat->getAmbient();
-        lit = mat->isLit();
-        tex = mat->getTexture();
-    } //else setLabel("label60", "NONE");
+        params["name"] = mat->getName();
+        params["diffuse"] = toString(mat->getDiffuse());
+        params["specular"] = toString(mat->getSpecular());
+        params["ambient"] = toString(mat->getAmbient());
+        params["isLit"] = toString(mat->isLit());
+        params["ignoreMeshCols"] = toString(mat->doesIgnoreMeshColors());
 
-    /*setColorChooserColor("mat_diffuse", _cd);
-    setColorChooserColor("mat_specular", _cs);
-    setColorChooserColor("mat_ambient", _ca);
+        VRTexturePtr tex = mat->getTexture();
+        if (tex) {
+            params["texDims"] = toString(tex->getSize());
+            params["texSize"] = toString(tex->getByteSize()/1048576.0);
+            params["texChannels"] = toString(tex->getChannels());
+        }
+    }
 
-    setToggleButton("checkbutton3", lit);
-    setToggleButton("checkbutton5", bool(tex));
-    setWidgetSensitivity("table44", bool(tex));
-
-    if (tex) {
-        setLabel("label168", toString(tex->getSize()) + " (" + toString(tex->getByteSize()/1048576.0) + " mb)");
-        setLabel("label167", toString(tex->getChannels()));
-    }*/
+    uiSignal( "on_sg_setup_mat", params );
 }
 
 void VRGuiScene::on_geo_menu_print() {

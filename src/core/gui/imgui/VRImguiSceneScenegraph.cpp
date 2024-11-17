@@ -38,6 +38,7 @@ ImScenegraph::ImScenegraph() :  tree("scenegraph"),
     mgr->addCallback("on_sg_setup_cam", [&](OSG::VRGuiSignals::Options o){ setupCamera(o); return true; } );
     mgr->addCallback("on_sg_setup_light", [&](OSG::VRGuiSignals::Options o){ setupLight(o); return true; } );
     mgr->addCallback("on_sg_setup_geo", [&](OSG::VRGuiSignals::Options o){ setupGeometry(o); return true; } );
+    mgr->addCallback("on_sg_setup_mat", [&](OSG::VRGuiSignals::Options o){ setupMaterial(o); return true; } );
 
     camProjections = {"perspective", "orthographic"};
     lightTypes = {"point", "directional", "spot", "photometric"};
@@ -90,8 +91,23 @@ void ImScenegraph::render() {
         // material
         if (objType == "Geometry" || objType == "Sprite" || objType == "Material") {
             ImGui::Separator();
-            ImGui::Text("Material:");
+            ImGui::Text(("Material: " + matName).c_str());
             ImGui::Indent(10);
+
+            if (matName != "") {
+                ImGui::Text(("Diffuse: " + matDiffuse).c_str());
+                ImGui::Text(("Specular: " + matSpecular).c_str());
+                ImGui::Text(("Ambient: " + matAmbient).c_str());
+                ImGui::Text(("Lit: " + toString(matLit)).c_str());
+                ImGui::Text(("MeshColors: " + toString(matMeshColors)).c_str());
+            }
+
+            if (texDims != "") {
+                ImGui::Text(("Tex dimensions: " + texDims).c_str());
+                ImGui::Text(("Tex size (mb): " + texSize).c_str());
+                ImGui::Text(("Tex N channels: " + texChannels).c_str());
+            }
+
             ImGui::Unindent(10);
         }
 
@@ -293,6 +309,24 @@ void ImScenegraph::setupGeometry(OSG::VRGuiSignals::Options o) {
         auto v = splitString(t, '|');
         if (v.size() != 2) continue;
         geoData.push_back(make_pair(v[0], toInt(v[1])));
+    }
+}
+
+void ImScenegraph::setupMaterial(OSG::VRGuiSignals::Options o) {
+    if (!o.count("name")) matName = "";
+    else {
+        matName = o["name"];
+        matDiffuse = o["diffuse"];
+        matSpecular = o["specular"];
+        matAmbient = o["ambient"];
+        matLit = toBool(o["isLit"]);
+        matMeshColors = !toBool(o["ignoreMeshCols"]);
+
+        if (o.count("texDims")) {
+            texDims = o["texDims"];
+            texSize = o["texSize"];
+            texChannels = o["texChannels"];
+        } else texDims = "";
     }
 }
 

@@ -63,6 +63,17 @@ class ImScenegraph {
         vector<string> geoParamNames;
         vector<pair<string, int>> geoData;
 
+        string matName;
+        string matDiffuse;
+        string matSpecular;
+        string matAmbient;
+        bool matLit;
+        bool matMeshColors;
+
+        string texDims;
+        string texSize;
+        string texChannels;
+
     public:
         ImScenegraph();
         void render();
@@ -76,6 +87,7 @@ class ImScenegraph {
         void setupLight(OSG::VRGuiSignals::Options o);
         void setupLod(OSG::VRGuiSignals::Options o);
         void setupGeometry(OSG::VRGuiSignals::Options o);
+        void setupMaterial(OSG::VRGuiSignals::Options o);
 };
 
 #endif // VRIMGUISCENESCENEGRAPH_H_INCLUDED

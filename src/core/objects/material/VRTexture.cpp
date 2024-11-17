@@ -237,9 +237,11 @@ int VRTexture::getChannels() {
     if (f == Image::OSG_LA_PF) return 2;
     if (f == Image::OSG_LUMINANCE_ALPHA_INTEGER_PF) return 2;
     if (f == Image::OSG_RGB_PF) return 3;
+    if (f == Image::OSG_BGR_PF) return 3;
     if (f == Image::OSG_RGB_INTEGER_PF) return 3;
     if (f == Image::OSG_BGR_INTEGER_PF) return 3;
     if (f == Image::OSG_RGBA_PF) return 4;
+    if (f == Image::OSG_BGRA_PF) return 4;
     if (f == Image::OSG_RGBA_INTEGER_PF) return 4;
     if (f == Image::OSG_BGRA_INTEGER_PF) return 4;
     cout << "Warning: VRTexture::getChannels, unknown pixel format " << f << endl;
