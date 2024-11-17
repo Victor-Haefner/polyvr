@@ -77,7 +77,12 @@ void ImScenegraph::render() {
             ImGui::Text("Geometry:");
             ImGui::Indent(10);
             ImGui::Text(("Origin: " + geoOrigin).c_str());
-            for (auto& p : geoParams) ImGui::Text((" param " + p).c_str());
+            if (geoOrigin == "primitive") {
+                ImGui::Text(("Primitive: " + geoParams[0]).c_str());
+                for (int i=1; i<geoParams.size(); i++) {
+                    ImGui::Text((" param " + geoParamNames[i-1] + ": " + geoParams[i]).c_str());
+                }
+            }
             for (auto& p : geoData) ImGui::Text((" data " + p.first + " : " + toString(p.second)).c_str());
             ImGui::Unindent(10);
         }
@@ -279,7 +284,8 @@ void ImScenegraph::setupLod(OSG::VRGuiSignals::Options o) {
 
 void ImScenegraph::setupGeometry(OSG::VRGuiSignals::Options o) {
     geoOrigin = o["origin"];
-    toValue(o["originParams"], geoParams);
+    geoParams = splitString(o["originParams"]);
+    toValue(o["paramNames"], geoParamNames);
 
     geoData.clear();
     vector<string> tmp = splitString(o["geoData"], '$');

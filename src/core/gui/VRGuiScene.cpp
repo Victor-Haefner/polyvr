@@ -174,8 +174,7 @@ void VRGuiScene::setGeometry(VRGeometryPtr g) {
     map<string, string> params;
 
     string origin;
-    vector<string> primparams;
-    toValue(g->getReference().parameter, primparams);
+    vector<string> primparams = splitString( g->getReference().parameter );
 
     switch (g->getReference().type) {
         case VRGeometry::FILE:

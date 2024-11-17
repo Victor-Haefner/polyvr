@@ -60,6 +60,7 @@ class ImScenegraph {
 
         string geoOrigin;
         vector<string> geoParams;
+        vector<string> geoParamNames;
         vector<pair<string, int>> geoData;
 
     public:
