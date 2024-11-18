@@ -6,6 +6,56 @@
 
 #./pack_app3.sh Lernfabrik futurefactory.pvr /Users/victorhafner/Projects/lernfabrik
 
+strip_absolute_paths() {
+    local executable=$1
+    local libs=$(otool -L "$executable" | grep -oE '/[^ ]+\.dylib' | sort -u)
+
+    # Loop through each library and strip the absolute path
+    for lib in $libs; do
+        # TODO: check if boost or boost@1.76 in path and if present prepend to lib_name!
+
+				local lib_name=$(basename "$lib")
+
+				if [[ "$lib" == *"libSystem"* ]]; then
+						continue
+				fi
+
+				if [[ "$lib" == *"libc++"* ]]; then
+						continue
+				fi
+
+				if [[ "$lib" == *"libgfortran"* ]]; then
+						continue
+				fi
+
+				if [[ ! -f $2/$lib_name ]]; then
+						continue # ignore libs not in folder
+				fi
+
+				if [[ "$lib" == *"boost@1.76"* ]]; then
+            lib_name="@executable_path/../Frameworks/boost@1.76/$lib_name"
+						#continue
+				elif [[ "$lib" == *"boost"* ]]; then
+            lib_name="@executable_path/../Frameworks/boost/$lib_name"
+						#continue
+        fi
+
+        install_name_tool -change "$lib" "$lib_name" "$executable"
+    done
+
+		codesign --force --sign - --timestamp=none $executable
+}
+
+check_libs_paths() {
+		echo "check_libs_paths"
+		for file in $1/*.dylib; do
+        if [[ -f $file ]]; then
+            echo "Processing file: $file"
+            strip_absolute_paths "$file" "$1"
+        fi
+    done
+}
+
 function addDir {
 	if [ ! -e $1 ]; then
 		mkdir -p $1
@@ -72,6 +122,9 @@ if true; then
 	cp -r shader $res/
 	#cp -r examples $res/
 
+  # TODO: maybe avoid stripping all basic system paths?
+	strip_absolute_paths $bin/polyvr "$libs"
+
 	mkdir -p "$libs/polyvr Helper.app/Contents/MacOS"
 	mkdir -p "$libs/polyvr Helper (GPU).app/Contents/MacOS"
 	mkdir -p "$libs/polyvr Helper (Renderer).app/Contents/MacOS"
@@ -87,8 +140,41 @@ if true; then
 	echo " copy libs"
 	#cp -r $pyPath $pckFolder/engine/pyLibs
 	cp -r /usr/local/lib64/* $libs/
+	rm $libs/libOSGWindowGLUT*
 	cp -r /usr/local/lib/cef/* $libs/
 	cp -r /usr/local/lib/libcollada* $libs/
+	cp -r /opt/homebrew/opt/freetype/lib/* $libs
+	cp -r $HOME/.pyenv/versions/2.7.18/lib/* $libs/
+	cp -r /opt/homebrew/opt/bullet/lib/* $libs/
+	cp -r /opt/homebrew/opt/icu4c/lib/* $libs/
+	cp -r /opt/homebrew/opt/lapack/lib/* $libs/
+	cp -r /opt/homebrew/opt/openal-soft/lib/* $libs/
+	cp -r /opt/homebrew/opt/ffmpeg/lib/* $libs/
+	cp -r /opt/homebrew/opt/fftw/lib/* $libs/
+	cp -r /opt/homebrew/opt/jsoncpp/lib/* $libs/
+	cp -r /opt/homebrew/opt/libssh/lib/* $libs/
+	cp -r /opt/homebrew/opt/libpng/lib/* $libs/
+	cp -r /opt/homebrew/opt/jpeg-turbo/lib/* $libs/
+	cp -r /opt/homebrew/opt/krb5/lib/* $libs/
+
+	#cp /usr/lib/libcurl.4.dylib $libs/
+
+	while IFS= read -r line; do
+    cp -r "$line" $libs/
+	done < "macLibs.txt"
+
+	rm -f $libs/*.a
+
+	# TODO
+	#cp /opt/homebrew/lib/*.dylib $libs/
+	#rm -f $libs/libboost*.dylib
+
+	mkdir -p "$libs/boost"
+	mkdir -p "$libs/boost@1.76"
+  cp -r /opt/homebrew/opt/boost/lib/* $libs/boost/
+	cp -r /opt/homebrew/opt/boost@1.76/lib/* $libs/boost@1.76/
+
+	check_libs_paths $libs
 
 	echo " cleanup"
 	rm -rf $bin/ressources/cef
