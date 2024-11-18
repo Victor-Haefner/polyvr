@@ -347,7 +347,7 @@ void CEF::shutdown() {
 		auto host = cef->internals->browser->GetHost();
 		host->CloseBrowser(true);
 
-#ifdef _WIN32
+#if defined(_WIN32) || defined(__APPLE__)
 		cef->internals->browser.reset();
 		cef->internals->client.reset();
 #else
