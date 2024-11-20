@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Scene base_name="Sound" name_space="Scene" name_suffix="2" persistency="666">
+<Scene base_name="Sound" name_space="Scene" name_suffix="3" persistency="666">
   <Objects>
-    <Object base_name="Root" name_space="__global__" name_suffix="2" persistency="666" pickable="0" type="Object" visible="1">
+    <Object base_name="Root" name_space="__global__" name_suffix="3" persistency="666" pickable="0" type="Object" visible="1">
       <Object ambient="0.3 0.3 0.3 1" base_name="light" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" name_space="__global__" name_suffix="0" on="1" persistency="666" photometricMap="" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" shadowVolume="1.79769e+308 1.79769e+308 1.79769e+308 -1.79769e+308 -1.79769e+308 -1.79769e+308 1" specular="0.1 0.1 0.1 1" type="Light" visible="1">
         <Object accept_root="1" aspect="1" at="0 0 2" at_dir="0" base_name="Default" camType="perspective" far="512" fov="1.0472" from="0 0 3" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
           <attachments>
@@ -34,13 +34,14 @@
 	
 	if m == 'synth': VR.synth()
 </core>
-      <trig type="on_device" dev="server1" state="Released" param="0" key="-1" base_name="trigger" name_space="__global__" name_suffix="3" persistency="666"/>
+      <trig type="on_device" dev="server1" state="Released" param="0" key="-1" base_name="trigger" name_space="__global__" name_suffix="5" persistency="666"/>
     </Script>
     <Script base_name="hudInit" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
       <core>
 	import VR
 
  	def addHud(site,w,h,x,y,parent):
+ 		print 'add hud', site
  		s = VR.Sprite('site')
  		s.setSize(w,h)
  		port = VR.find('server1').getPort()
@@ -54,7 +55,7 @@
 
  	addHud( 'hudSite', 0.5,0.2, 0,0, VR.hud )
 </core>
-      <trig type="on_scene_import" dev="" state="Pressed" param="" key="0" base_name="trigger" name_space="__global__" name_suffix="2" persistency="666"/>
+      <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" base_name="trigger" name_space="__global__" name_suffix="7" persistency="666"/>
     </Script>
     <Script base_name="hudSite" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="HTML">
       <core>
