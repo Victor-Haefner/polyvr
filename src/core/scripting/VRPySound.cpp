@@ -40,7 +40,7 @@ PyMethodDef VRPySound::methods[] = {
 };
 
 PyMethodDef VRPySoundManager::methods[] = {
-    {"setupSound", PyWrapOpt(SoundManager, setupSound, "Play sound, lopping and playing are optional", "0|0", VRSoundPtr, string, bool, bool) },
+    {"setupSound", PyWrapOpt(SoundManager, setupSound, "Play sound, (path, doLoop = False, doPlay = False), lopping and playing are optional", "0|0", VRSoundPtr, string, bool, bool) },
     {"stopAllSounds", PyWrap(SoundManager, stopAllSounds, "Stops all currently playing sounds.", void) },
     {"setVolume", PyWrap(SoundManager, setVolume, "Set sound volume from 0 to 1", void, float) },
     {"queueSounds", PyWrap(SoundManager, queueSounds, "Queue a list of sounds", void, vector<VRSoundPtr>) },
