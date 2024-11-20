@@ -481,7 +481,7 @@ void VRSound::update3DSound() {
     if (!lastPose) lastPose = Pose::create(*pose);
     velocity = float(pose->pos().dist(lastPose->pos()));
     lastPose->setPos(pose->pos());
-    interface->updatePose(pose, velocity);
+    if (interface) interface->updatePose(pose, velocity);
 }
 
 
