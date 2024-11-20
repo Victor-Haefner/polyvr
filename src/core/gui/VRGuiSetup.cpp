@@ -1218,10 +1218,12 @@ VRGuiSetup::VRGuiSetup() {
     mgr->addCallback("setup_set_calibration_overlay", [&](OSG::VRGuiSignals::Options o) { on_displays_set_calib_overlay(toBool(o["active"])); return true; }, true );
     mgr->addCallback("setup_set_displays_offset", [&](OSG::VRGuiSignals::Options o) { on_displays_edit_offset(Vec3d(toFloat(o["x"]), toFloat(o["y"]), toFloat(o["z"]))); return true; }, true );
 
+#ifndef WITHOUT_ART
     mgr->addCallback("setup_set_art_active", [&](OSG::VRGuiSignals::Options o) { on_toggle_art(toBool(o["active"])); return true; }, true );
     mgr->addCallback("setup_set_art_port", [&](OSG::VRGuiSignals::Options o) { on_art_edit_port(toInt(o["port"])); return true; }, true );
     mgr->addCallback("setup_set_art_offset", [&](OSG::VRGuiSignals::Options o) { on_art_edit_offset(Vec3d(toFloat(o["x"]), toFloat(o["y"]), toFloat(o["z"]))); return true; }, true );
     mgr->addCallback("setup_set_art_axis", [&](OSG::VRGuiSignals::Options o) { on_art_edit_axis(Vec3i(toInt(o["x"]), toInt(o["y"]), toInt(o["z"]))); return true; }, true );
+#endif
 
     mgr->addCallback("setup_set_view_position", [&](OSG::VRGuiSignals::Options o) { on_pos_edit(Vec4d(toFloat(o["x"]), toFloat(o["y"]), toFloat(o["z"]), toFloat(o["w"]))); return true; }, true );
     mgr->addCallback("setup_set_view_size", [&](OSG::VRGuiSignals::Options o) { on_view_size_edit(Vec2d(toFloat(o["x"]), toFloat(o["y"]))); return true; }, true );
