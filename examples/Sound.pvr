@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Scene base_name="Sound" name_space="Scene" name_suffix="0" persistency="666">
+<Scene base_name="Sound" name_space="Scene" name_suffix="2" persistency="666">
   <Objects>
-    <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" visible="1">
-      <Object ambient="0.3 0.3 0.3 1" base_name="light" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" name_space="__global__" name_suffix="0" on="1" persistency="666" photometricMap="" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" shadowVolume="1e+06 1e+06 1e+06 -1e+06 -1e+06 -1e+06 1" specular="0.1 0.1 0.1 1" type="Light" visible="1">
-        <Object accept_root="1" aspect="1" at="0 0 2" at_dir="0" base_name="Default" far="512" fov="1.0472" from="0 0 3" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
+    <Object base_name="Root" name_space="__global__" name_suffix="2" persistency="666" pickable="0" type="Object" visible="1">
+      <Object ambient="0.3 0.3 0.3 1" base_name="light" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" name_space="__global__" name_suffix="0" on="1" persistency="666" photometricMap="" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" shadowVolume="1.79769e+308 1.79769e+308 1.79769e+308 -1.79769e+308 -1.79769e+308 -1.79769e+308 1" specular="0.1 0.1 0.1 1" type="Light" visible="1">
+        <Object accept_root="1" aspect="1" at="0 0 2" at_dir="0" base_name="Default" camType="perspective" far="512" fov="1.0472" from="0 0 3" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
           <attachments>
             <Node base_name="transform" name_space="VRAttachment" name_suffix="0" persistency="666" value=""/>
           </attachments>
@@ -21,6 +21,75 @@
   <Cameras activeCam="Default" persistency="666"/>
   <Rendering deferred_rendering="0" fogColor="0.5 0.5 0.5 1" fogParams="0 0 100 0.1" frustum_culling="1" fxaa="0" hmdd="0" marker="0" occlusion_culling="0" persistency="666" ssao="0" ssao_kernel="4" ssao_noise="4" ssao_radius="0.02" two_sided="1"/>
   <Scripts persistency="666">
+    <Script base_name="hudHandler" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+      <core>
+	import VR
+
+ 	m = dev.getMessage()
+ 	print m
+
+
+
+	if m == 'playMp3': VR.play()
+	
+	if m == 'synth': VR.synth()
+</core>
+      <trig type="on_device" dev="server1" state="Released" param="0" key="-1" base_name="trigger" name_space="__global__" name_suffix="3" persistency="666"/>
+    </Script>
+    <Script base_name="hudInit" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+      <core>
+	import VR
+
+ 	def addHud(site,w,h,x,y,parent):
+ 		s = VR.Sprite('site')
+ 		s.setSize(w,h)
+ 		port = VR.find('server1').getPort()
+ 		s.webOpen('http://localhost:'+str(port)+'/'+site, 400, w/h)
+ 		s.setFrom([x,y,-2])
+ 		parent.addChild(s)
+
+ 	if hasattr(VR, 'hud'): VR.hud.destroy()
+ 	VR.hud = VR.Object('hud')
+ 	VR.find('Default').addChild(VR.hud)
+
+ 	addHud( 'hudSite', 0.5,0.2, 0,0, VR.hud )
+</core>
+      <trig type="on_scene_import" dev="" state="Pressed" param="" key="0" base_name="trigger" name_space="__global__" name_suffix="2" persistency="666"/>
+    </Script>
+    <Script base_name="hudSite" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="HTML">
+      <core>
+&lt;!DOCTYPE html&gt;
+ &lt;html&gt;
+
+ &lt;head&gt;
+ 	&lt;style type="text/css"&gt;
+ 		body {
+ 			margin:0;		}
+ 		button {
+ 			font-size:30vh;
+ 			width:100vw;
+ 			height:50vh;
+ 		}
+ 	&lt;/style&gt;
+ 	&lt;script&gt;
+ 		var websocket = new WebSocket('ws://localhost:$PORT_server1$');
+ 		websocket.onopen = function() { send('register|hud'); };
+ 		websocket.onerror = function(e) {};
+ 		websocket.onmessage = function(m) { if(m.data) handle(m.data); };
+ 		websocket.onclose = function(e) {};
+
+ 		function send(m) { websocket.send(m); };
+ 		function handle(m) { console.log(m); };
+ 	&lt;/script&gt;
+ &lt;/head&gt;
+
+ &lt;body&gt;
+ 	&lt;button onclick="send('playMp3')"&gt;test mp3&lt;/button&gt;
+ 	&lt;button onclick="send('synth')"&gt;synth sound&lt;/button&gt;
+ &lt;/body&gt;
+ &lt;/html&gt;
+</core>
+    </Script>
     <Script base_name="play" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
       <core>
 	import VR
@@ -66,12 +135,15 @@
 	anim.setDuration(5)
 	anim.start()
 </core>
-      <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" base_name="trigger" name_space="__global__" name_suffix="0" persistency="666"/>
     </Script>
   </Scripts>
   <Sockets persistency="666"/>
-  <Background color="0.6 0.6 0.6" format=".png" path="" persistency="666" type="0"/>
-  <Navigation active="Orbit" persistency="666"/>
+  <Background color="0.6 0.6 0.6" format=".png" path="" persistency="666" showSplash="0" splashPath="" type="0"/>
+  <Navigation persistency="666">
+    <presetStates>
+      <Orbit>1</Orbit>
+    </presetStates>
+  </Navigation>
   <Materials persistency="666"/>
   <Semantics persistency="666"/>
 </Scene>
