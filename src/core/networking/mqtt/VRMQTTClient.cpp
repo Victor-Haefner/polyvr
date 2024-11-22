@@ -27,6 +27,10 @@ struct VRMQTTClient::Data {
     string name;
     string pass;
 
+    string cert_ca;
+    string cert_pub;
+    string cert_priv;
+
     vector<vector<string>> jobQueue;
     vector<vector<string>> messages;
 
@@ -102,6 +106,12 @@ VRMQTTClientPtr VRMQTTClient::create() { return VRMQTTClientPtr( new VRMQTTClien
 VRMQTTClientPtr VRMQTTClient::ptr() { return dynamic_pointer_cast<VRMQTTClient>(shared_from_this()); }
 
 void VRMQTTClient::onMessage( function<string(string)> f ) { data->cb = f; };
+
+void VRMQTTClient::setCertificates(string ca, string pub, string priv) {
+    data->cert_ca = ca;
+    data->cert_pub = pub;
+    data->cert_priv = priv;
+}
 
 void fn(struct mg_connection *c, int ev, void *ev_data, void *fn_data) {
     if (ev == MG_EV_POLL) {
@@ -190,6 +200,13 @@ void VRMQTTClient::connect(string host, int port) { // connect("broker.hivemq.co
     opts.clean = true;
     opts.version = 4;
     data->s_conn = mg_mqtt_connect(&data->mgr, data->s_url.c_str(), &opts, fn, data.get());
+
+    struct mg_tls_opts tlsOpts = {
+        .ca = data->cert_ca.c_str(),           // Path to CA certificate, ca.pem
+        .cert = data->cert_pub.c_str(), // Path to client certificate, client-cert.pem
+        .key = data->cert_priv.c_str(),   // Path to private key, client-key.pem
+    };
+    mg_tls_init(data->s_conn, &tlsOpts);
 
     //cout << "start mqtt thread" << endl;
     data->doPoll = true;

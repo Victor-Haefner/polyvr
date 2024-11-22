@@ -37,6 +37,7 @@ class VRMQTTClient : public VRNetworkClient {
         bool connected();
 
         void setAuthentication(string name, string password, string clientID = "pvr");
+        void setCertificates(string ca, string pub, string priv);
         void subscribe(string topic, bool retain = false);
         void publish(string topic, string message, bool retain = true);
 };
