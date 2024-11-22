@@ -423,6 +423,8 @@ void VRSound::initWithCodec(AVCodecContext* codec) {
 void VRSound::playBuffer(VRSoundBufferPtr frame) { if (interface) interface->queueFrame(frame); }
 void VRSound::addBuffer(VRSoundBufferPtr frame) { ownedBuffer.push_back(frame); }
 
+vector<VRSoundBufferPtr> buffers;
+
 void VRSound::queuePacket(AVPacket* packet) {
     if (doUpdate) {
         interface->updateSource(pitch, gain, hpass, lpass);
@@ -432,7 +434,17 @@ void VRSound::queuePacket(AVPacket* packet) {
     for (auto frame : extractPacket(packet)) {
         if (interrupt) { cout << "interrupt sound\n"; break; }
         interface->queueFrame(frame);
+        //buffers.push_back(frame); // for debugging
     }
+}
+
+vector<float> VRSound::getBuffer() {
+    vector<float> buffer;
+    for (auto& b : buffers) {
+        float* d = (float*)b->data;
+        for (int i=0; i<b->size/4; i++) buffer.push_back( d[i] );
+    }
+    return buffer;
 }
 
 int avcodec_decode_audio4(AVCodecContext* avctx, AVFrame* frame, int* got_frame, AVPacket* avpkt) {
@@ -494,7 +506,7 @@ vector<VRSoundBufferPtr> VRSound::extractPacket(AVPacket* packet) {
 }
 
 void VRSound::playFrame() {
-    //cout << "VRSound::playFrame " << interrupt << " " << this << " playing: " << (al->state == AL_PLAYING) << " N buffer: " << getQueuedBuffer() << endl;
+    //if (interface) cout << "VRSound::playFrame " << interrupt << " " << this << " playing: " << (al->state == AL_PLAYING) << " N buffer: " << interface->getQueuedBuffer() << endl;
 
     bool internal = (ownedBuffer.size() > 0);
 
@@ -529,6 +541,7 @@ void VRSound::playFrame() {
                 endReached = true;
             } else {
                 if (al->packet.stream_index != stream_id) { cout << "skip non audio\n"; return; } // Skip non audio packets
+                if (al->packet.side_data_elems != 0) { cout << "skip non audio\n"; return; } // Skip non audio packets
                 queuePacket(&al->packet);
             }
         } else {
