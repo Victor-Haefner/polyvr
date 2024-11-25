@@ -58,6 +58,10 @@ void ImScenegraph::render() {
 
     ImGui::SameLine();
 
+    bool isGeometry = (objType == "Geometry" || objType == "Sprite");
+    bool isTransform = (isGeometry || objType == "Transform" || objType == "Camera" || objType == "LightBeacon");
+    bool isMaterial = (isGeometry || objType == "Material");
+
     ImGui::BeginChild("scProps", region2, false, flags);
         // object
         ImGui::Text(("Object: " + selected).c_str());
@@ -73,7 +77,7 @@ void ImScenegraph::render() {
         ImGui::Unindent(10);
 
         // geometry
-        if (objType == "Geometry" || objType == "Sprite") {
+        if (isGeometry) {
             ImGui::Separator();
             ImGui::Text("Geometry:");
             ImGui::Indent(10);
@@ -89,7 +93,7 @@ void ImScenegraph::render() {
         }
 
         // material
-        if (objType == "Geometry" || objType == "Sprite" || objType == "Material") {
+        if (isMaterial) {
             ImGui::Separator();
             ImGui::Text(("Material: " + matName).c_str());
             ImGui::Indent(10);
@@ -168,7 +172,7 @@ void ImScenegraph::render() {
         }
 
         // transform
-        if (objType == "Transform" || objType == "Geometry" || objType == "Camera" || objType == "LightBeacon") {
+        if (isTransform) {
             ImGui::Separator();
             ImGui::Text("Transformation:");
             ImGui::Indent(10);
