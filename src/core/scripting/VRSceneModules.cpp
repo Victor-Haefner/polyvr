@@ -154,6 +154,7 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPySpatialCollisionManager>("SpatialCollisionManager", pModVR, VRPyGeometry::typeRef);
 #endif
     sm->registerModule<VRPyMaterial>("Material", pModVR, VRPyObject::typeRef);
+    sm->registerModule<VRPyTexGenLayer>("TexGenLayer", pModVR);
     sm->registerModule<VRPyTextureGenerator>("TextureGenerator", pModVR);
     sm->registerModule<VRPyTexture>("Image", pModVR);
     sm->registerModule<VRPyLight>("Light", pModVR, VRPyObject::typeRef);

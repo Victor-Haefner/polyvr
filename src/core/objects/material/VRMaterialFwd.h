@@ -15,6 +15,7 @@ ptrFwd(VRShader);
 ptrFwd(VRShaderFactory);
 ptrFwd(VRTexture);
 ptrFwd(VRTextureGenerator);
+ptrFwd(VRTexGenLayer);
 ptrFwd(VRTextureMosaic);
 ptrFwd(VRVideo);
 
