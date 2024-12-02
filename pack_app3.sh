@@ -206,6 +206,7 @@ if true; then
 	rm -f $libs/lib/python27/config/libpython2.7.a
 	rm -f $libs/boost176/*.a
 	rm -rf $libs/boost176/cmake
+	rm -rf $libs/icu
 
 	if [ -e $pckPVRFolder/deploy/cleanup.sh ]; then
 		/bin/bash $pckPVRFolder/deploy/cleanup.sh
