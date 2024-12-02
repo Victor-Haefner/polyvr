@@ -421,10 +421,23 @@ void CEF::global_initiate() {
 		settings.external_message_pump = true;
     settings.persist_session_cookies = false;
     settings.persist_user_preferences = false;
-    string cdp = VRSceneManager::get()->getOriginalWorkdir() + path + "/cache";
-    CefString(&settings.root_cache_path).FromASCII(cdp.c_str());
+
+    char buf[PATH_MAX];
+    size_t len = PATH_MAX;
+		size_t n = confstr(_CS_DARWIN_USER_CACHE_DIR, buf, len);
+		string macCache = string( buf, n );
+    string rcp = macCache + "cache";
+		makedir(rcp);
+    //string rcp = VRSceneManager::get()->getOriginalWorkdir() + path + "/cache";
+		string fdp = "/usr/local/lib/cef/Chromium Embedded Framework.framework";
+		string fdp2 = VRSceneManager::get()->getOriginalWorkdir() + "/../Frameworks/Chromium Embedded Framework.framework";
+		checkPath("framework_dir_path", fdp2);
+		if (exists(fdp2)) fdp = fdp2;
+		checkPath("root_cache_path", rcp);
+		checkPath("framework_dir_path", fdp);
+    CefString(&settings.root_cache_path).FromASCII(rcp.c_str());
+    CefString(&settings.framework_dir_path).FromASCII(fdp.c_str());
     //CefString(&settings.cache_path).FromASCII("");
-    CefString(&settings.framework_dir_path).FromASCII("/usr/local/lib/cef/Chromium Embedded Framework.framework");
 #endif
 
 #ifdef __APPLE__

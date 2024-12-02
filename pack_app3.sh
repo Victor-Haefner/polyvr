@@ -165,14 +165,17 @@ if true; then
 
 	rm -f $libs/*.a
 
-	# TODO
-	#cp /opt/homebrew/lib/*.dylib $libs/
-	#rm -f $libs/libboost*.dylib
+	mkdir $libs/lib
+	mv $libs/python2.7 $libs/lib/python2.7
 
 	mkdir -p "$libs/boost"
 	mkdir -p "$libs/boost@1.76"
   cp -r /opt/homebrew/opt/boost/lib/* $libs/boost/
 	cp -r /opt/homebrew/opt/boost@1.76/lib/* $libs/boost@1.76/
+	cp $libs/boost/libboost_system.dylib $libs/
+	cp $libs/boost/libboost_serialization.dylib $libs/
+	cp $libs/boost/libboost_filesystem.dylib $libs/
+	cp $libs/boost/libboost_program_options.dylib $libs/
 
 	check_libs_paths $libs
 
@@ -244,7 +247,7 @@ EOT
 echo "write startApp.sh file"
 if [ -n "$appProject" ]; then # check is appProject given
 cat <<EOT >> $bin/startApp.sh
-#!/bin/bash
+#!/bin/zsh
 DIR="\$(cd "\$(dirname "\$0")" && pwd)"
 osascript <<EOF
 tell application "Terminal"
@@ -257,13 +260,14 @@ fi
 echo "write startApp2.sh file"
 if [ -n "$appProject" ]; then # check is appProject given
 cat <<EOT >> $bin/startApp2.sh
-#!/bin/bash
+#!/bin/zsh
 #xclock
 DIR="\$(cd "\$(dirname "\$0")" && pwd)"
 LIBS="\${DIR}/../Frameworks"
 libs="\$LIBS:\$LIBS/Chromium Embedded Framework.framework/Libraries"
 export DYLD_LIBRARY_PATH="\$libs"
 export DYLD_FRAMEWORK_PATH="\$libs"
+export PYTHONHOME="\$LIBS"
 cd \$DIR/../Resources
 ../MacOS/polyvr --setup="macOS" --application $appProject
 EOT
