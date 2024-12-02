@@ -166,7 +166,16 @@ if true; then
 	rm -f $libs/*.a
 
 	mkdir $libs/lib
-	mv $libs/python2.7 $libs/lib/python2.7
+	mv $libs/python2.7 $libs/lib/python27
+	ln -s python27 python2.7 ; mv ./python2.7 $libs/lib/python2.7
+
+	mv $libs/python3.11 $libs/python311
+	mv $libs/bullet/single/python3.11 $libs/bullet/single/python311
+	ln -s python311 python3.11 ; mv ./python3.11 $libs/python3.11
+	ln -s python311 python3.11 ; mv ./python3.11 $libs/bullet/single/python3.11
+
+	mv $libs/boost@1.76 $libs/boost176
+	ln -s boost176 boost@1.76 ; mv ./boost@1.76 $libs/boost@1.76
 
 	mkdir -p "$libs/boost"
 	mkdir -p "$libs/boost@1.76"
@@ -183,6 +192,20 @@ if true; then
 	rm -rf $bin/ressources/cef
 	rm -rf $bin/ressources/cef18
 	rm -rf $bin/ressources/cefWin
+	rm -rf $libs/pkgconfig
+	rm -rf $libs/cmake
+	rm -f $libs/boost/*.a
+	rm -rf $libs/boost/cmake
+	rm -rf $libs/bullet/single/pkgconfig
+	rm -rf $libs/bullet/single/cmake
+	rm -f $libs/bullet/single/*.a
+	rm -rf $libs/bullet/double/pkgconfig
+	rm -rf $libs/bullet/double/cmake
+	rm -f $libs/bullet/double/*.a
+	rm -rf $libs/lib/python27/site-packages/*.dist-info
+	rm -f $libs/lib/python27/config/libpython2.7.a
+	rm -f $libs/boost176/*.a
+	rm -rf $libs/boost176/cmake
 
 	if [ -e $pckPVRFolder/deploy/cleanup.sh ]; then
 		/bin/bash $pckPVRFolder/deploy/cleanup.sh
@@ -249,11 +272,12 @@ if [ -n "$appProject" ]; then # check is appProject given
 cat <<EOT >> $bin/startApp.sh
 #!/bin/zsh
 DIR="\$(cd "\$(dirname "\$0")" && pwd)"
-osascript <<EOF
-tell application "Terminal"
-    do script "cd \${DIR} && ./startApp2.sh"
-end tell
-EOF
+#osascript <<EOF
+#tell application "Terminal"
+#    do script "cd \${DIR} && ./startApp2.sh"
+#end tell
+#EOF
+cd \${DIR} && ./startApp2.sh
 EOT
 fi
 
@@ -277,7 +301,8 @@ chmod +x $bin/startApp.sh
 chmod +x $bin/startApp2.sh
 
 echo "execute code signing"
-codesign --force --deep --sign - $pckFolder
+#codesign --force --deep --sign - $pckFolder
+codesign --force --sign "Developer ID Application: Victor Haefner" --deep --verbose $pckFolder
 
 
 echo "create disk image"
