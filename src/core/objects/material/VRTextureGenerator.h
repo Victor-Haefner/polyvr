@@ -20,7 +20,26 @@ enum GEN_TYPE {
     PATH,
     POLYGON,
     PIXEL,
-    TEXTURE
+    TEXTURE,
+    CRACKS
+};
+
+class VRTexGenLayer {
+    public:
+        GEN_TYPE type;
+        float amount = 0;
+        Color3f c31,c32;
+        Color4f c41,c42;
+        Vec3i p1;
+        PathPtr p;
+        VRPolygonPtr pgon;
+        VRTexturePtr tex;
+        int Nchannels = 3;
+
+    public:
+        VRTexGenLayer();
+        ~VRTexGenLayer();
+        static VRTexGenLayerPtr create();
 };
 
 class VRTextureGenerator {
@@ -30,19 +49,7 @@ class VRTextureGenerator {
         int depth = 1;
         bool hasAlpha = false;
 
-        struct Layer {
-            GEN_TYPE type;
-            float amount = 0;
-            Color3f c31,c32;
-            Color4f c41,c42;
-            Vec3i p1;
-            PathPtr p;
-            VRPolygonPtr pgon;
-            VRTexturePtr tex;
-            int Nchannels = 3;
-        };
-
-        vector<Layer> layers;
+        vector<VRTexGenLayerPtr> layers;
         VRTexturePtr img;
 
         void applyPixel(Color3f* data, Vec3i p, Color4f c);
@@ -63,7 +70,7 @@ class VRTextureGenerator {
     public:
         VRTextureGenerator();
         ~VRTextureGenerator();
-        static shared_ptr<VRTextureGenerator> create();
+        static VRTextureGeneratorPtr create();
 
         void set(VRTexturePtr t);
         void setSize(Vec3i dim, bool doAlpha = 0);
@@ -72,6 +79,7 @@ class VRTextureGenerator {
 
         void add(GEN_TYPE type, float amount, Color4f c1, Color4f c2);
         void add(string type, float amount, Color4f c1, Color4f c2);
+        VRTexGenLayerPtr addLayer(GEN_TYPE type);
 
         void drawFill(Color4f c);
         void drawPixel(Vec3i p, Color4f c);

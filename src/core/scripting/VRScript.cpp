@@ -403,6 +403,7 @@ void print_error_text(int offset, char *text) {
     auto print = [&]( string m, string style = "", shared_ptr< VRFunction<string> > link = 0 ) {
 #ifndef WITHOUT_IMGUI
         VRConsoleWidget::get( "Syntax" )->write( m, style, link );
+        cout << m;
 #else
         cout << m;
 #endif
@@ -439,6 +440,7 @@ void VRScript::printSyntaxError(PyObject *exception, PyObject *value, PyObject *
     auto print = [&]( string m, string style = "", shared_ptr< VRFunction<string> > link = 0 ) {
 #ifndef WITHOUT_IMGUI
         VRConsoleWidget::get( "Syntax" )->write( m, style, link );
+        cout << m;
 #else
         cout << m;
 #endif
@@ -482,6 +484,7 @@ void VRScript::pyErrPrint(string channel) {
     auto print = [&]( string m, string style = "", shared_ptr< VRFunction<string> > link = 0 ) {
 #ifndef WITHOUT_IMGUI
         VRConsoleWidget::get( channel )->write( m, style, link );
+        cout << m;
 #else
         cout << m;
 #endif
@@ -591,8 +594,9 @@ void VRScript::execute() {
         }
 
         auto res = PyObject_CallObject(fkt, pArgs);
+        if (!res) cout << "Warning in VRScript::execute: PyObject_CallObject failed! in script " << name << endl;
         pyErrPrint("Errors");
-        if (!res) { cout << "Warning in VRScript::execute: PyObject_CallObject failed! in script " << name << endl; return; }
+        if (!res) return;
 
         execution_time = timer.stop();
 

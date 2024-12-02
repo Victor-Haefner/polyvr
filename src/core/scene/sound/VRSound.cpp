@@ -152,6 +152,81 @@ void VRSound::close() {
 void VRSound::reset() { al->state = AL_STOPPED; }
 void VRSound::play() { al->state = AL_INITIAL; }
 
+string sampleToStr(int s) {
+    switch(s) {
+        case AL_UNSIGNED_BYTE_SOFT: return "AL_UNSIGNED_BYTE_SOFT";
+        case AL_UNSIGNED_SHORT_SOFT: return "AL_UNSIGNED_SHORT_SOFT";
+        case AL_UNSIGNED_INT_SOFT: return "AL_UNSIGNED_INT_SOFT";
+        case AL_UNSIGNED_BYTE3_SOFT: return "AL_UNSIGNED_BYTE3_SOFT";
+        case AL_SHORT_SOFT: return "AL_SHORT_SOFT";
+        case AL_INT_SOFT: return "AL_INT_SOFT";
+        case AL_FLOAT_SOFT: return "AL_FLOAT_SOFT";
+        case AL_DOUBLE_SOFT: return "AL_DOUBLE_SOFT";
+        case AL_BYTE_SOFT: return "AL_BYTE_SOFT";
+        case AL_BYTE3_SOFT: return "AL_BYTE3_SOFT";
+    }
+
+    return "UNKNOWN";
+}
+
+string formatToStr(int s) {
+    switch(s) {
+        case AL_MONO8_SOFT: return "AL_MONO8_SOFT";
+        case AL_MONO16_SOFT: return "AL_MONO16_SOFT";
+        case AL_MONO32F_SOFT: return "AL_MONO32F_SOFT";
+        case AL_STEREO8_SOFT: return "AL_STEREO8_SOFT";
+        case AL_STEREO16_SOFT: return "AL_STEREO16_SOFT";
+        case AL_STEREO32F_SOFT: return "AL_STEREO32F_SOFT";
+        case AL_QUAD8_SOFT: return "AL_QUAD8_SOFT";
+        case AL_QUAD16_SOFT: return "AL_QUAD16_SOFT";
+        case AL_QUAD32F_SOFT: return "AL_QUAD32F_SOFT";
+        case AL_5POINT1_8_SOFT: return "AL_5POINT1_8_SOFT";
+        case AL_5POINT1_16_SOFT: return "AL_5POINT1_16_SOFT";
+        case AL_5POINT1_32F_SOFT: return "AL_5POINT1_32F_SOFT";
+        case AL_6POINT1_8_SOFT: return "AL_6POINT1_8_SOFT";
+        case AL_6POINT1_16_SOFT: return "AL_6POINT1_16_SOFT";
+        case AL_6POINT1_32F_SOFT: return "AL_6POINT1_32F_SOFT";
+        case AL_7POINT1_8_SOFT: return "AL_7POINT1_8_SOFT";
+        case AL_7POINT1_16_SOFT: return "AL_7POINT1_16_SOFT";
+        case AL_7POINT1_32F_SOFT: return "AL_7POINT1_32F_SOFT";
+    }
+
+    return "UNKNOWN";
+}
+
+string layoutToStr(int s) {
+    switch(s) {
+        case AL_MONO_SOFT: return "AL_MONO_SOFT";
+        case AL_STEREO_SOFT: return "AL_STEREO_SOFT";
+        case AL_REAR_SOFT: return "AL_REAR_SOFT";
+        case AL_QUAD_SOFT: return "AL_QUAD_SOFT";
+        case AL_5POINT1_SOFT: return "AL_5POINT1_SOFT";
+        case AL_6POINT1_SOFT: return "AL_6POINT1_SOFT";
+        case AL_7POINT1_SOFT: return "AL_7POINT1_SOFT";
+    }
+
+    return "UNKNOWN";
+}
+
+string avFormatToStr(int s) {
+    switch(s) {
+        case AV_SAMPLE_FMT_NONE: return "AV_SAMPLE_FMT_NONE";
+        case AV_SAMPLE_FMT_U8: return "AV_SAMPLE_FMT_U8";
+        case AV_SAMPLE_FMT_S16: return "AV_SAMPLE_FMT_S16";
+        case AV_SAMPLE_FMT_S32: return "AV_SAMPLE_FMT_S32";
+        case AV_SAMPLE_FMT_FLT: return "AV_SAMPLE_FMT_FLT";
+        case AV_SAMPLE_FMT_DBL: return "AV_SAMPLE_FMT_DBL";
+        case AV_SAMPLE_FMT_U8P: return "AV_SAMPLE_FMT_U8P";
+        case AV_SAMPLE_FMT_S16P: return "AV_SAMPLE_FMT_S16P";
+        case AV_SAMPLE_FMT_S32P: return "AV_SAMPLE_FMT_S32P";
+        case AV_SAMPLE_FMT_FLTP: return "AV_SAMPLE_FMT_FLTP";
+        case AV_SAMPLE_FMT_DBLP: return "AV_SAMPLE_FMT_DBLP";
+        case AV_SAMPLE_FMT_S64: return "AV_SAMPLE_FMT_S64";
+        case AV_SAMPLE_FMT_S64P: return "AV_SAMPLE_FMT_S64P";
+    }
+
+    return "UNKNOWN";
+}
 
 void VRSound::updateSampleAndFormat() {
 #ifdef __APPLE__
@@ -235,6 +310,8 @@ void VRSound::updateSampleAndFormat() {
         default: cout << "OpenAL unsupported format";
     }
 
+    cout << "updateSampleAndFormat, sample: " << sampleToStr(al->sample) << ", layout: " << layoutToStr(al->layout) << ", format: " << formatToStr(al->format) << " ( " << al->format << " )" << endl;
+
     if (av_sample_fmt_is_planar(al->codec->sample_fmt)) {
         AVSampleFormat out_sample_fmt;
         switch(al->codec->sample_fmt) {
@@ -262,27 +339,31 @@ void VRSound::updateSampleAndFormat() {
         av_opt_set_sample_fmt    (al->resampler, "out_sample_fmt",     out_sample_fmt,            0);
         av_opt_set_int           (al->resampler, "out_sample_rate",    al->codec->sample_rate,    0);
 #endif
+
+        cout << " format is planar, in-format: " << avFormatToStr(al->codec->sample_fmt) << ", out-format: " << avFormatToStr(out_sample_fmt) << endl;
+
         int r = swr_init(al->resampler);
-				if (r < 0) {
+		if (r < 0) {
+            cout << "swr_init failed in VRSound::updateSampleAndFormat, returned " << r << endl;
+
 #ifdef __APPLE__
             auto toStr = [](AVChannelOrder o) {
-								if (o == AV_CHANNEL_ORDER_NATIVE) return "AV_CHANNEL_ORDER_NATIVE";
-								if (o == AV_CHANNEL_ORDER_AMBISONIC) return "AV_CHANNEL_ORDER_AMBISONIC";
-								if (o == AV_CHANNEL_ORDER_CUSTOM) return "AV_CHANNEL_ORDER_CUSTOM";
-								return "AV_CHANNEL_ORDER_UNKNOWN";
-						};
+                if (o == AV_CHANNEL_ORDER_NATIVE) return "AV_CHANNEL_ORDER_NATIVE";
+                if (o == AV_CHANNEL_ORDER_AMBISONIC) return "AV_CHANNEL_ORDER_AMBISONIC";
+                if (o == AV_CHANNEL_ORDER_CUSTOM) return "AV_CHANNEL_ORDER_CUSTOM";
+                return "AV_CHANNEL_ORDER_UNKNOWN";
+            };
 
-						cout << "swr_init failed in VRSound::updateSampleAndFormat, returned " << r << endl;
-						cout << " channel layout"
-						  << ", order: " << toStr(al->codec->ch_layout.order)
-							<< ", N channels: " << al->codec->ch_layout.nb_channels
-							<< ", u.mask: " << al->codec->ch_layout.u.mask
-							<< endl;
+            cout << " channel layout"
+                << ", order: " << toStr(al->codec->ch_layout.order)
+                << ", N channels: " << al->codec->ch_layout.nb_channels
+                << ", u.mask: " << al->codec->ch_layout.u.mask
+                << endl;
 #endif
 
-						swr_free(&al->resampler);
-						al->resampler = 0;
-    		}
+            swr_free(&al->resampler);
+            al->resampler = 0;
+    	}
     }
 }
 
@@ -342,6 +423,8 @@ void VRSound::initWithCodec(AVCodecContext* codec) {
 void VRSound::playBuffer(VRSoundBufferPtr frame) { if (interface) interface->queueFrame(frame); }
 void VRSound::addBuffer(VRSoundBufferPtr frame) { ownedBuffer.push_back(frame); }
 
+vector<VRSoundBufferPtr> buffers;
+
 void VRSound::queuePacket(AVPacket* packet) {
     if (doUpdate) {
         interface->updateSource(pitch, gain, hpass, lpass);
@@ -351,7 +434,17 @@ void VRSound::queuePacket(AVPacket* packet) {
     for (auto frame : extractPacket(packet)) {
         if (interrupt) { cout << "interrupt sound\n"; break; }
         interface->queueFrame(frame);
+        //buffers.push_back(frame); // for debugging
     }
+}
+
+vector<float> VRSound::getBuffer() {
+    vector<float> buffer;
+    for (auto& b : buffers) {
+        float* d = (float*)b->data;
+        for (int i=0; i<b->size/4; i++) buffer.push_back( d[i] );
+    }
+    return buffer;
 }
 
 int avcodec_decode_audio4(AVCodecContext* avctx, AVFrame* frame, int* got_frame, AVPacket* avpkt) {
@@ -390,22 +483,19 @@ vector<VRSoundBufferPtr> VRSound::extractPacket(AVPacket* packet) {
             ALbyte* frameData = 0;
             if (al->resampler != 0) {
                 frameData = (ALbyte *)av_malloc(data_size*sizeof(uint8_t));
-                int r = swr_convert( al->resampler,
-                            (uint8_t **)&frameData,
-                            al->frame->nb_samples,
-                            (const uint8_t **)al->frame->data,
-                            al->frame->nb_samples);
-								if (r < 0) {
-										cout << "resampling failed!, returned " << r << endl;
-										av_free(frameData);
-										frameData = 0;
-								}
+                int r = swr_convert( al->resampler, (uint8_t **)&frameData, al->frame->nb_samples, (const uint8_t **)al->frame->data, al->frame->nb_samples);
+                if (r < 0) {
+                    cout << "resampling failed!, returned " << r << endl;
+                    av_free(frameData);
+                    frameData = 0;
+                }
             } else frameData = (ALbyte*)al->frame->data[0];
 
-						if (frameData) {
-		            auto frame = VRSoundBuffer::wrap(frameData, data_size, frequency, al->format);
-		            res.push_back(frame);
-						}
+			if (frameData) {
+                //cout << " frame: " << al->format << endl;
+                auto frame = VRSoundBuffer::wrap(frameData, data_size, frequency, al->format);
+                res.push_back(frame);
+			}
         }
 
         //There may be more than one frame of audio data inside the packet.
@@ -416,7 +506,7 @@ vector<VRSoundBufferPtr> VRSound::extractPacket(AVPacket* packet) {
 }
 
 void VRSound::playFrame() {
-    //cout << "VRSound::playFrame " << interrupt << " " << this << " playing: " << (al->state == AL_PLAYING) << " N buffer: " << getQueuedBuffer() << endl;
+    //if (interface) cout << "VRSound::playFrame " << interrupt << " " << this << " playing: " << (al->state == AL_PLAYING) << " N buffer: " << interface->getQueuedBuffer() << endl;
 
     bool internal = (ownedBuffer.size() > 0);
 
@@ -451,6 +541,7 @@ void VRSound::playFrame() {
                 endReached = true;
             } else {
                 if (al->packet.stream_index != stream_id) { cout << "skip non audio\n"; return; } // Skip non audio packets
+                if (al->packet.side_data_elems != 0) { cout << "skip non audio\n"; return; } // Skip non audio packets
                 queuePacket(&al->packet);
             }
         } else {
@@ -481,7 +572,7 @@ void VRSound::update3DSound() {
     if (!lastPose) lastPose = Pose::create(*pose);
     velocity = float(pose->pos().dist(lastPose->pos()));
     lastPose->setPos(pose->pos());
-    interface->updatePose(pose, velocity);
+    if (interface) interface->updatePose(pose, velocity);
 }
 
 

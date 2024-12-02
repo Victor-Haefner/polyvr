@@ -3,7 +3,13 @@
 
 using namespace OSG;
 
+simpleVRPyType(TexGenLayer, 0);
 simpleVRPyType(TextureGenerator, New_ptr);
+
+PyMethodDef VRPyTexGenLayer::methods[] = {
+    //{"add", PyWrap( TextureGenerator, add, "Add a layer\n\ttype can be: 'Perlin', 'Bricks'", void, string, float, Color4f, Color4f ) },
+    {NULL}  /* Sentinel */
+};
 
 PyMethodDef VRPyTextureGenerator::methods[] = {
     {"add", PyWrap( TextureGenerator, add, "Add a layer\n\ttype can be: 'Perlin', 'Bricks'", void, string, float, Color4f, Color4f ) },

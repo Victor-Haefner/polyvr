@@ -17,9 +17,16 @@
 using namespace OSG;
 
 
+
+VRTexGenLayer::VRTexGenLayer() {}
+VRTexGenLayer::~VRTexGenLayer() {}
+VRTexGenLayerPtr VRTexGenLayer::create() { return VRTexGenLayerPtr(new VRTexGenLayer()); }
+
+
+
 VRTextureGenerator::VRTextureGenerator() {}
 VRTextureGenerator::~VRTextureGenerator() {}
-shared_ptr<VRTextureGenerator> VRTextureGenerator::create() { return shared_ptr<VRTextureGenerator>(new VRTextureGenerator()); }
+VRTextureGeneratorPtr VRTextureGenerator::create() { return VRTextureGeneratorPtr(new VRTextureGenerator()); }
 
 void VRTextureGenerator::setSize(Vec3i dim, bool a) { width = dim[0]; height = dim[1]; depth = dim[2]; hasAlpha = a; }
 void VRTextureGenerator::setSize(int w, int h, int d) { width = w; height = h; depth = d; }
@@ -27,9 +34,9 @@ Vec3i VRTextureGenerator::getSize() { return Vec3i(width, height, depth); };
 
 void VRTextureGenerator::set(VRTexturePtr t) {
     setSize(t->getSize(), 0);
-    Layer l;
-    l.type = TEXTURE;
-    l.tex = t;
+    auto l = VRTexGenLayer::create();
+    l->type = TEXTURE;
+    l->tex = t;
     layers.push_back(l);
 }
 
@@ -47,69 +54,76 @@ void VRTextureGenerator::add(string type, float amount, Color4f c1, Color4f c2) 
 }
 
 void VRTextureGenerator::add(GEN_TYPE type, float amount, Color4f c1, Color4f c2) {
-    Layer l;
-    l.amount = amount;
-    l.type = type;
+    auto l = VRTexGenLayer::create();
+    l->amount = amount;
+    l->type = type;
     if (hasAlpha) {
-        l.c41 = c1;
-        l.c42 = c2;
+        l->c41 = c1;
+        l->c42 = c2;
     } else {
-        l.c31 = Color3f(c1[0], c1[1], c1[2]);
-        l.c32 = Color3f(c2[0], c2[1], c2[2]);
+        l->c31 = Color3f(c1[0], c1[1], c1[2]);
+        l->c32 = Color3f(c2[0], c2[1], c2[2]);
     }
-    l.Nchannels = 4;
+    l->Nchannels = 4;
     layers.push_back(l);
 }
 
+VRTexGenLayerPtr VRTextureGenerator::addLayer(GEN_TYPE type) {
+    auto l = VRTexGenLayer::create();
+    l->type = type;
+    layers.push_back(l);
+    return l;
+}
+
 void VRTextureGenerator::drawFill(Color4f c) {
-    Layer l;
-    l.type = FILL;
-    l.c41 = c;
+    auto l = VRTexGenLayer::create();
+    l->type = FILL;
+    l->c41 = c;
     layers.push_back(l);
 }
 
 void VRTextureGenerator::drawPixel(Vec3i p, Color4f c) {
-    Layer l;
-    l.type = PIXEL;
-    l.p1 = p;
-    l.c41 = c;
+    auto l = VRTexGenLayer::create();
+    l->type = PIXEL;
+    l->p1 = p;
+    l->c41 = c;
     layers.push_back(l);
 }
 
 void VRTextureGenerator::drawBox(Vec3d p1, Vec3d p2, Color4f c) {
-    Layer l;
-    l.type = BOX;
-    l.c31 = Vec3f(p1);
-    l.c32 = Vec3f(p2);
-    l.c41 = c;
+    auto l = VRTexGenLayer::create();
+    l->type = BOX;
+    l->c31 = Vec3f(p1);
+    l->c32 = Vec3f(p2);
+    l->c41 = c;
     layers.push_back(l);
 }
 
 void VRTextureGenerator::drawLine(Vec3d p1, Vec3d p2, Color4f c, float w) {
-    Layer l;
-    l.type = LINE;
-    l.c31 = Vec3f(p1);
-    l.c32 = Vec3f(p2);
-    l.c41 = c;
-    l.amount = w;
+    auto l = VRTexGenLayer::create();
+    l->type = LINE;
+    l->c31 = Vec3f(p1);
+    l->c32 = Vec3f(p2);
+    l->c41 = c;
+    l->amount = w;
     layers.push_back(l);
 }
 
 void VRTextureGenerator::drawPath(PathPtr p, Color4f c, float w) {
-    Layer l;
-    l.type = PATH;
-    l.p = p;
-    l.c41 = c;
-    l.amount = w;
+    auto l = VRTexGenLayer::create();
+    l->type = PATH;
+    l->p = p;
+    l->c41 = c;
+    l->amount = w;
     layers.push_back(l);
 }
 
 void VRTextureGenerator::drawPolygon(VRPolygonPtr p, Color4f c, float h) {
-    Layer l;
-    l.type = POLYGON;
-    l.pgon = p;
-    l.c41 = c;
-    l.amount = h;
+    auto l = VRTexGenLayer::create();
+    l->type = POLYGON;
+    l->pgon = p;
+    l->c41 = c;
+    l->amount = h;
     layers.push_back(l);
 }
 
@@ -347,34 +361,34 @@ VRTexturePtr VRTextureGenerator::compose(int seed) { // TODO: optimise!
     size_t N = width*height*depth;
     if (hasAlpha)   data4 = new Color4f[N];
     else            data3 = new Color3f[N];
-    if (layers.size() == 0 || layers[0].type != FILL) {
+    if (layers.size() == 0 || layers[0]->type != FILL) {
         if (hasAlpha)   fill(data4, data4+N, Color4f(1,1,1,1));
         else            fill(data3, data3+N, Color3f(1,1,1));
     }
     for (auto l : layers) {
         if (!hasAlpha) {
-            if (l.type == BRICKS) VRBricks::apply(data3, dims, l.amount, l.c31, l.c32);
-            if (l.type == PERLIN) VRPerlin::apply(data3, dims, l.amount, l.c31, l.c32);
-            if (l.type == NORMALMAP) VRNormalmap::apply(data3, dims, l.amount);
-            if (l.type == LINE) applyLine(data3, Vec3d(l.c31), Vec3d(l.c32), l.c41, l.amount);
-            if (l.type == BOX) applyBox(data3, Vec3d(l.c31), Vec3d(l.c32), l.c41);
-            if (l.type == FILL) applyFill(data3, l.c41);
-            if (l.type == PIXEL) applyPixel(data3, l.p1, l.c41);
-            if (l.type == PATH) applyPath(data3, l.p, l.c41, l.amount);
-            if (l.type == POLYGON) applyPolygon(data3, l.pgon, l.c41, l.amount);
-            if (l.type == TEXTURE) applyTexture(data3, l.tex, l.amount);
+            if (l->type == BRICKS) VRBricks::apply(data3, dims, l->amount, l->c31, l->c32);
+            if (l->type == PERLIN) VRPerlin::apply(data3, dims, l->amount, l->c31, l->c32);
+            if (l->type == NORMALMAP) VRNormalmap::apply(data3, dims, l->amount);
+            if (l->type == LINE) applyLine(data3, Vec3d(l->c31), Vec3d(l->c32), l->c41, l->amount);
+            if (l->type == BOX) applyBox(data3, Vec3d(l->c31), Vec3d(l->c32), l->c41);
+            if (l->type == FILL) applyFill(data3, l->c41);
+            if (l->type == PIXEL) applyPixel(data3, l->p1, l->c41);
+            if (l->type == PATH) applyPath(data3, l->p, l->c41, l->amount);
+            if (l->type == POLYGON) applyPolygon(data3, l->pgon, l->c41, l->amount);
+            if (l->type == TEXTURE) applyTexture(data3, l->tex, l->amount);
         }
         if (hasAlpha) {
-            if (l.type == BRICKS) VRBricks::apply(data4, dims, l.amount, l.c41, l.c42);
-            if (l.type == PERLIN) VRPerlin::apply(data4, dims, l.amount, l.c41, l.c42);
-            if (l.type == NORMALMAP) VRNormalmap::apply(data4, dims, l.amount);
-            if (l.type == LINE) applyLine(data4, Vec3d(l.c31), Vec3d(l.c32), l.c41, l.amount);
-            if (l.type == BOX) applyBox(data4, Vec3d(l.c31), Vec3d(l.c32), l.c41);
-            if (l.type == FILL) applyFill(data4, l.c41);
-            if (l.type == PIXEL) applyPixel(data4, l.p1, l.c41);
-            if (l.type == PATH) applyPath(data4, l.p, l.c41, l.amount);
-            if (l.type == POLYGON) applyPolygon(data4, l.pgon, l.c41, l.amount);
-            if (l.type == TEXTURE) applyTexture(data4, l.tex, l.amount);
+            if (l->type == BRICKS) VRBricks::apply(data4, dims, l->amount, l->c41, l->c42);
+            if (l->type == PERLIN) VRPerlin::apply(data4, dims, l->amount, l->c41, l->c42);
+            if (l->type == NORMALMAP) VRNormalmap::apply(data4, dims, l->amount);
+            if (l->type == LINE) applyLine(data4, Vec3d(l->c31), Vec3d(l->c32), l->c41, l->amount);
+            if (l->type == BOX) applyBox(data4, Vec3d(l->c31), Vec3d(l->c32), l->c41);
+            if (l->type == FILL) applyFill(data4, l->c41);
+            if (l->type == PIXEL) applyPixel(data4, l->p1, l->c41);
+            if (l->type == PATH) applyPath(data4, l->p, l->c41, l->amount);
+            if (l->type == POLYGON) applyPolygon(data4, l->pgon, l->c41, l->amount);
+            if (l->type == TEXTURE) applyTexture(data4, l->tex, l->amount);
         }
     }
 
