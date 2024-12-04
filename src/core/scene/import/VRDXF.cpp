@@ -807,8 +807,60 @@ Object* objectify(Object* obj) {
 }
 
 // DXF PARSER-----------
+struct dxf_parser2 {
+    bool inObject = false;
+    int objLineN = 0;
+    Object* current = 0;
+
+    int paramMod = 0;
+    string paramID;
+    string paramValue;
+
+    void handleParam() {
+        // TODO: handle paramID and paramValue
+    }
+
+    void handleLine(string line) {
+        if (paramMod == 0) paramID = line;
+        else {
+            paramValue = line;
+            handleParam();
+        }
+
+        paramMod++;
+        paramMod = paramMod%2;
+
+
+        /*if (line == "0" && !inObject) {
+            objLineN = 0;
+            inObject = true;
+            current = 0;
+            continue;
+        }
+
+        if (inObject) {
+            if (!current) current = new Object(line);
+            if ;
+            objLineN++;
+        }*/
+    }
+
+    void parse(string path) {
+        ifstream infile(path);
+        string line;
+        while (getline(infile,line)) {
+            toLower(line);
+            handleLine( stripString(line) );
+        }
+    }
+};
 
 void loadDXF(string path, VRTransformPtr res) { // TODO
+    dxf_parser2 parser2;
+    parser2.parse(path);
+    return;
+
+
     dxf_parser parser;
     auto drawing = parser.parse(path);
     if (!drawing) return;
