@@ -758,7 +758,11 @@ void loadDWG(string path, VRTransformPtr res, map<string, string> options) {
     DWGContext data;
     data.filePath = path;
     Dwg_Data dwg;
-    int r = dwg_read_file(path.c_str(), &dwg); // dxf_read_file(); // ---------------- !!!
+
+    int r = 0;
+    string lpath = path; toLower(lpath);
+    if (endsWith(lpath, "dwg")) r = dwg_read_file(path.c_str(), &dwg);
+    if (endsWith(lpath, "dxf")) r = dxf_read_file(path.c_str(), &dwg);
     if (r != 0) { cout << "\n\nloadDWG failed!\n" << endl; } //return; }
     data.dwg = &dwg;
 
