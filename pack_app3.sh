@@ -31,7 +31,8 @@ function signBundle {
 
 strip_absolute_paths() {
     local executable=$1
-    local libs=$(otool -L "$executable" | grep -oE '/[^ ]+\.dylib' | sort -u)
+    #local libs=$(otool -L "$executable" | grep -oE '/[^ ]+\.dylib' | sort -u)
+    local libs=$(otool -L "$executable" | grep -oE '[^ ]+\.dylib' | sort -u)
 
     # Loop through each library and strip the absolute path
     for lib in $libs; do
@@ -51,9 +52,9 @@ strip_absolute_paths() {
 						continue
 				fi
 
-				if [[ "$lib" == *"libgfortran"* ]]; then
-						continue
-				fi
+				#if [[ "$lib" == *"libgfortran"* ]]; then
+				#		continue
+				#fi
 
 				if [[ ! -f $2/$lib_name ]]; then
 					  echo "strip $executable, ignore lib $lib, $lib_name is not in folder $2!"
