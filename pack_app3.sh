@@ -6,14 +6,6 @@
 
 #./pack_app3.sh Lernfabrik futurefactory.pvr /Users/victorhafner/Projects/lernfabrik
 
-signFile() {
-	codesign --force --options runtime --sign "Developer ID Application: Victor Haefner" --deep --verbose "$1"
-}
-
-signBundle() {
-	codesign --force --options runtime --sign "Developer ID Application: Victor Haefner" --deep --verbose "$1"
-}
-
 strip_absolute_paths() {
     local executable=$1
     local libs=$(otool -L "$executable" | grep -oE '/[^ ]+\.dylib' | sort -u)
@@ -84,6 +76,15 @@ pckPVRFolder="$pckFolder/Contents/Resources" # copy directly in Resources becaus
 bin="$pckFolder/Contents/MacOS/"
 res="$pckFolder/Contents/Resources/"
 libs="$pckFolder/Contents/Frameworks"
+
+function signFile {
+	codesign --force --options runtime --sign "Developer ID Application: Victor Haefner" --deep "$1"
+}
+
+function signBundle {
+	echo "sign whole bundle, $pckFolder"
+	codesign --force --options runtime --sign "Developer ID Application: Victor Haefner" --deep "$pckFolder"
+}
 
 function checkAppFolder {
 	echo "check for $appFolder/$appProject"
@@ -341,40 +342,27 @@ EOT
 	chmod +x $bin/startApp2.sh
 }
 
-checkAppFolder
-getDeployConfig
-setupFolders
-setupAppRessources
-copyAppData
-copyPolyVR
-copyDependencies
-#signPolyVR
-#stripPaths
+function verifyApp {
+	echo "zip app"
+	/usr/bin/ditto -c -k --keepParent "packages/$deployExeName.app" "packages/$deployExeName.zip"
 
+	echo "submit packages/$deployExeName.zip for verification"
+	xcrun notarytool submit "packages/$deployExeName.zip" --keychain-profile "notarizeLernfabrik" --wait
+	xcrun stapler staple "packages/$deployExeName.app"
+	xcrun notarytool history --keychain-profile "notarizeLernfabrik"
+}
 
-exit 0
+function createDiskImage {
+	echo "create disk image"
+	hdiutil create -volname $deployExeName -srcfolder $pckFolder -ov -format UDRW "packages/$deployExeName.dmg"
 
-echo "execute code signing"
-signBundle $pckFolder
+	echo "configure dmg"
+	MOUNT_POINT=/Volumes/$deployExeName
+	hdiutil detach $MOUNT_POINT
+	hdiutil attach "packages/$deployExeName.dmg"
+	ln -s /Applications $MOUNT_POINT/Applications
 
-echo "zip app"
-/usr/bin/ditto -c -k --keepParent "packages/$deployExeName.app" "packages/$deployExeName.zip"
-
-echo "submit packages/$deployExeName.zip for verification"
-xcrun notarytool submit "packages/$deployExeName.zip" --keychain-profile "notarizeLernfabrik" --wait
-xcrun stapler staple "packages/$deployExeName.app"
-xcrun notarytool history --keychain-profile "notarizeLernfabrik"
-
-echo "create disk image"
-hdiutil create -volname $deployExeName -srcfolder $pckFolder -ov -format UDRW "packages/$deployExeName.dmg"
-
-echo "configure dmg"
-MOUNT_POINT=/Volumes/$deployExeName
-hdiutil detach $MOUNT_POINT
-hdiutil attach "packages/$deployExeName.dmg"
-ln -s /Applications $MOUNT_POINT/Applications
-
-osascript <<EOF
+	osascript <<EOF
 tell application "Finder"
     tell disk "$deployExeName"
         open
@@ -393,10 +381,22 @@ tell application "Finder"
 end tell
 EOF
 
-hdiutil detach $MOUNT_POINT
-echo "create read only disk image"
-hdiutil convert "packages/$deployExeName.dmg" -format UDZO -o "packages/${deployExeName}_ro.dmg"
+	hdiutil detach $MOUNT_POINT
+	echo "create read only disk image"
+	hdiutil convert "packages/$deployExeName.dmg" -format UDZO -o "packages/${deployExeName}_ro.dmg"
+}
 
-
+checkAppFolder
+getDeployConfig
+setupFolders
+setupAppRessources
+copyAppData
+copyPolyVR
+copyDependencies
+signPolyVR
+#stripPaths
+#signBundle
+#verifyApp
+#createDiskImage
 
 echo " done"
