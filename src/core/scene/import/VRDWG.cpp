@@ -115,6 +115,8 @@ struct DWGLayer {
 
 size_t aCount = 0;
 struct DWGContext {
+    string filePath;
+
     Dwg_Data* dwg = 0;
     map<Dwg_Object_LAYER*, DWGLayer> layers;
     Vec3d offset;
@@ -423,8 +425,17 @@ void process_POLYLINE_2D(Dwg_Object* obj, DWGContext& data) {
     Dwg_Object_LAYER* layer = getEntityLayer(obj, data, false);
     Color3f col = asColor3f(obj->tio.entity->color);
 
+    bool closed = line->flag & 1;
+    bool curve_fit = line->flag & 2;
+    bool spline_fit = line->flag & 4;
+    bool is3d = line->flag & 8;
+    bool is3dmesh = line->flag & 16;
+    bool mesh_closed_in_n = line->flag & 32;
+    bool polyface_mesh = line->flag & 64;
+    bool ltype_continuous = line->flag & 128;
+
     int N = line->num_owned-1;
-    if (line->flag & 512) N++; // closed
+    if (closed) N++;
 
     for (int i=0; i<N; i++) {
         auto v1_2D = line->vertex[i]->obj->tio.entity->tio.VERTEX_2D;
@@ -454,7 +465,7 @@ void process_LWPOLYLINE(Dwg_Object* obj, DWGContext& data) {
     if (!vis) return;
 
     size_t N = line->num_points-1;
-    if (line->flag & 512) N++; // closed
+    if (line->flag & 1) N++; // closed
 
     for (size_t i=0; i<N; i++) {
         auto p1_2D = line->points[i];
@@ -517,21 +528,58 @@ void process_TEXT(Dwg_Object* obj, DWGContext& data) {
     //cout << " ---t1- " << p << " '" << txt << "' " << text->height << endl;
 }
 
+
+void extract_binary_chunk(string dwg_filename, string output_filename, long address, size_t size) {
+    FILE *dwg_file = fopen(dwg_filename.c_str(), "rb");
+    FILE *output_file = fopen(output_filename.c_str(), "wb");
+    fseek(dwg_file, address, SEEK_SET);
+
+    char *buffer = (char *)malloc(size);
+    size_t bytes_read = fread(buffer, 1, size, dwg_file);
+    size_t bytes_written = fwrite(buffer, 1, bytes_read, output_file);
+
+    // Cleanup
+    free(buffer);
+    fclose(dwg_file);
+    fclose(output_file);
+
+    printf("Binary chunk extracted successfully to %s\n", output_filename.c_str());
+}
+
 void process_MTEXT(Dwg_Object* obj, DWGContext& data) {
     Dwg_Entity_MTEXT* text = obj->tio.entity->tio.MTEXT;
     Dwg_Object_LAYER* layer = getEntityLayer(obj, data);
+    Vec3d tp, td;
 #if LIBREDWG_VERSION_MINOR >= 11
-    double x = text->ins_pt.x;
-    double y = text->ins_pt.y;
+    tp = asVec3d( text->ins_pt );
+    //td = asVec3d( text->x_axis_dir );
 #else
-    double x = text->insertion_pt.x;
-    double y = text->insertion_pt.y;
+    tp = asVec3d( text->insertion_pt );
+    //td = asVec3d( text->x_axis_dir );
 #endif
     char* t = text->text;
     string txt = t ? t : "";
-    Vec3d p = transform_OCS( Vec3d(x,y,0), asVec3d(text->extrusion), data );
+    Vec3d p = transform_OCS( tp, asVec3d(text->extrusion), data );
     data.addText(p, txt, text->text_height, layer);
-    //cout << " ---t2- " << p << " '" << txt << "' " << text->text_height << endl;
+
+    /*if ( abs(tp[0]-3458135.236093999) < 1e-3 && abs(tp[1]-5439668.847597805) < 1e-3 ) {
+        cout << " MTEXT " << p << " '" << txt << "' " << endl;
+        cout << "  ins_pt: " << asVec3d(text->ins_pt) << endl;
+        cout << "  extrusion: " << asVec3d(text->extrusion) << endl;
+        cout << "  x_axis_dir: " << asVec3d(text->x_axis_dir) << endl;
+        cout << "  rect_height: " << text->rect_height << endl;
+        cout << "  rect_width: " << text->rect_width << endl;
+        cout << "  text_height: " << text->text_height << endl;
+        cout << "  attachment: " << text->attachment << endl;
+        cout << "  flow_dir: " << text->flow_dir << endl;
+        cout << "  extents_width: " << text->extents_width << endl;
+        cout << "  extents_height: " << text->extents_height << endl;
+
+        size_t a = obj->address;
+        size_t s = obj->size*10;
+
+        extract_binary_chunk(data.filePath, "dwgChunkMTEXT.bin", a, s);
+    }*/
 }
 
 void process_INSERT(Dwg_Object* obj, DWGContext& data) {
@@ -708,8 +756,13 @@ void process_BLOCK_HEADER(Dwg_Object_Ref* ref, DWGContext& data, bool onlyRoot) 
 
 void loadDWG(string path, VRTransformPtr res, map<string, string> options) {
     DWGContext data;
+    data.filePath = path;
     Dwg_Data dwg;
-    int r = dwg_read_file(path.c_str(), &dwg); // dxf_read_file(); // ---------------- !!!
+
+    int r = 0;
+    string lpath = path; toLower(lpath);
+    if (endsWith(lpath, "dwg")) r = dwg_read_file(path.c_str(), &dwg);
+    if (endsWith(lpath, "dxf")) r = dxf_read_file(path.c_str(), &dwg);
     if (r != 0) { cout << "\n\nloadDWG failed!\n" << endl; } //return; }
     data.dwg = &dwg;
 

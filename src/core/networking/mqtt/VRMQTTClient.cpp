@@ -202,11 +202,10 @@ void VRMQTTClient::connect(string host, int port) { // connect("broker.hivemq.co
     data->s_conn = mg_mqtt_connect(&data->mgr, data->s_url.c_str(), &opts, fn, data.get());
 
     if (data->cert_ca != "") {
-        struct mg_tls_opts tlsOpts = {
-            .ca = data->cert_ca.c_str(),           // Path to CA certificate, ca.pem
-            .cert = data->cert_pub.c_str(), // Path to client certificate, client-cert.pem
-            .key = data->cert_priv.c_str(),   // Path to private key, client-key.pem
-        };
+        struct mg_tls_opts tlsOpts;
+        tlsOpts.ca = mg_str( data->cert_ca.c_str() );    // Path to CA certificate, ca.pem
+        tlsOpts.cert = mg_str( data->cert_pub.c_str() ); // Path to client certificate, client-cert.pem
+        tlsOpts.key = mg_str( data->cert_priv.c_str() ); // Path to private key, client-key.pem
         mg_tls_init(data->s_conn, &tlsOpts);
     }
 

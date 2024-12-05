@@ -18,18 +18,6 @@
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-string lower(string s) {
-    std::transform(s.begin(), s.end(), s.begin(), ::tolower);
-    return s;
-}
-
-string strip(const string& str) {
-    auto strBegin = str.find_first_not_of(" \t");
-    if (strBegin == string::npos) return "";
-    auto strEnd = str.find_last_not_of(" \t");
-    return str.substr(strBegin, strEnd - strBegin + 1);
-}
-
 struct Object;
 struct DXFLayer;
 
@@ -49,9 +37,21 @@ struct Object {
 	    this->type = type;
 	}
 
-	vector<Object*> get_type(string kind="") {
-	    if (data.count(kind) == 0) return vector<Object*>();
-		return data[kind];
+	vector<Object*> get_type(string kind="", bool recursive = false) {
+	    if (!recursive) {
+            if (data.count(kind) == 0) return vector<Object*>();
+            return data[kind];
+	    } else {
+            vector<Object*> res = get_type(kind, false);
+            for (auto& cv : data) {
+                for (auto& c : cv.second) {
+                    for (auto& ct : c->get_type(kind, recursive)) {
+                        res.push_back(ct);
+                    }
+                }
+            }
+            return res;
+	    }
 	}
 
 	vector<Object*> get_type(int kind = -1) {
@@ -467,14 +467,16 @@ struct Face : public Primitive {
 
 Object* findObject(ifstream& infile, string kind="") {
 	Object* obj = 0;
+	int state = 0;
 	string line;
 	while(getline(infile,line)) {
-		string data = strip(lower(line));
-		if (obj == 0 && data == "0") obj = (Object*)1; // We"re still looking for our object code
-		if (obj == (Object*)1) { // we are in an object definition
+        toLower(line);
+		string data = stripString(line);
+		if (state == 0 && data == "0") state = 1; // next looking for object code
+		else if (state == 1) { // we are in an object definition
 			if (data == kind) { obj = new Object(data); break; }
 			if (!regex_match(data, regex(".*\\d.*"))) { obj = new Object(data); break; }
-			obj = 0;
+			state = 0;
 		}
 	}
 
@@ -485,7 +487,8 @@ Object* handleObject(ifstream& infile) {
 	// Add data to an object until end of object is found.
 	string line;
 	getline(infile,line);
-	string stripped = strip(lower(line));
+    toLower(line);
+	string stripped = stripString(line);
 	if (stripped == "section") return new Object("section"); // this would be a problem
 	else if (stripped == "endsec") return new Object("endsec"); // this means we are done with a section
 	else { // add data to the object until we find a new object
@@ -495,7 +498,8 @@ Object* handleObject(ifstream& infile) {
 		vector<Object*> data;
 		while (!done) {
 			getline(infile, line);
-			stripped = strip(lower(line));
+            toLower(line);
+			stripped = stripString(line);
 			if (data.size() == 0) {
 				if (stripped == "0") return obj; //we"ve found an object, time to return
 				else data.push_back(new Object(stripped)); // first part is always an int
@@ -514,7 +518,8 @@ Object* handleTable(Object* table, ifstream& infile) {
 	auto item = get_name(table->data);
 	if (item) { // We should always find a name
 		table->rem(item);
-		table->name = lower(item->name);
+		table->name = item->name;
+		toLower(table->name);
 	}
 	// This next bit is from handleObject
 	// handleObject should be generalized to work with any section like object
@@ -535,7 +540,8 @@ Object* handleBlock(Object* block, ifstream& infile) {
 	auto item = get_name(block->data);
 	if (item) { // We should always find a name
 		block->rem(item);
-		block->name = lower(item->name);
+		block->name = item->name;
+		toLower(block->name);
 	}
 	// This next bit is from handleObject
 	// handleObject should be generalized to work with any section like object
@@ -559,6 +565,7 @@ struct StateMachine {
 	    drawing = new Object("drawing");
         section = findObject(infile, "section");
         if (section) start_section();
+        else cout << "Warning: no section found!" << endl;
     }
 
     ~StateMachine() { infile.close(); }
@@ -574,7 +581,8 @@ struct StateMachine {
         while (!done) {
             string line;
             getline(infile,line);
-            string stripped = strip(lower(line));
+            toLower(line);
+            string stripped = stripString(line);
 
             if (data.size() == 0) { // if we haven"t found a dxf code yet
                 if (stripped == "0") { // we've found an object
@@ -741,7 +749,8 @@ struct dxf_parser : public base_parser {
                 auto item = get_name(obj->data);
                 if (!item) continue;
                 obj->rem(item);
-                obj->name = lower(item->name);
+                obj->name = item->name;
+                toLower(obj->name);
                 drawing->add(obj);
                 obj = objectify(obj);
             }
@@ -798,15 +807,67 @@ Object* objectify(Object* obj) {
 }
 
 // DXF PARSER-----------
+struct dxf_parser2 {
+    bool inObject = false;
+    int objLineN = 0;
+    Object* current = 0;
+
+    int paramMod = 0;
+    string paramID;
+    string paramValue;
+
+    void handleParam() {
+        // TODO: handle paramID and paramValue
+    }
+
+    void handleLine(string line) {
+        if (paramMod == 0) paramID = line;
+        else {
+            paramValue = line;
+            handleParam();
+        }
+
+        paramMod++;
+        paramMod = paramMod%2;
+
+
+        /*if (line == "0" && !inObject) {
+            objLineN = 0;
+            inObject = true;
+            current = 0;
+            continue;
+        }
+
+        if (inObject) {
+            if (!current) current = new Object(line);
+            if ;
+            objLineN++;
+        }*/
+    }
+
+    void parse(string path) {
+        ifstream infile(path);
+        string line;
+        while (getline(infile,line)) {
+            toLower(line);
+            handleLine( stripString(line) );
+        }
+    }
+};
 
 void loadDXF(string path, VRTransformPtr res) { // TODO
+    dxf_parser2 parser2;
+    parser2.parse(path);
+    return;
+
+
     dxf_parser parser;
     auto drawing = parser.parse(path);
     if (!drawing) return;
 
     cout << "loadDXF results:\n";
-    for (auto dMap : drawing->data) {
-        cout << " type: " << dMap.first << endl;
+    for (auto layer : drawing->get_type("layer", true)) {
+        cout << " layer: " << layer->name << endl;
     }
 
     //res->addChild( geo->asGeometry(path) );

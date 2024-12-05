@@ -13,13 +13,16 @@
 
 OSG_BEGIN_NAMESPACE;
 
-void loadTS(string filename, VRTransformPtr res) {
+void loadTS(string filename, VRTransformPtr res, map<string, string> options) {
     VRGeoData geo;
     auto mat = VRMaterial::create("tsMat");
     mat->setLit(false);
     mat->setDiffuse(Color3f(0.8,0.8,0.6));
     mat->setAmbient(Color3f(0.4, 0.4, 0.2));
     mat->setSpecular(Color3f(0.1, 0.1, 0.1));
+
+    Vec3d offset;
+    if (options.count("offset")) toValue(options["offset"], offset);
 
     ifstream file(filename.c_str());
     string line;
@@ -28,7 +31,7 @@ void loadTS(string filename, VRTransformPtr res) {
         auto data = splitString(line);
         if (data[0] == "VRTX") {
             Vec3d p(toDouble(data[2]), toDouble(data[3]), toDouble(data[4]));
-            geo.pushVert(p, n);
+            geo.pushVert(p + offset, n);
         }
 
         if (data[0] == "TRGL") {

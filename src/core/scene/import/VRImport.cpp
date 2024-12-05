@@ -252,7 +252,7 @@ void VRImport::LoadJob::load(VRThreadWeakPtr tw) {
         if (ext == ".xyz") { loadXYZ(path, res, options); return; }
 #endif // TODO: move loadPCB and loadXYZ from E57 include
         if (ext == ".ply") { loadPly(path, res); return; }
-        if (ext == ".ts") { loadTS(path, res); return; }
+        if (ext == ".ts") { loadTS(path, res, options); return; }
         if (ext == ".step" || ext == ".stp" || ext == ".STEP" || ext == ".STP") {
             if (preset == "PVR") {
 #ifndef WITHOUT_STEPCODE
