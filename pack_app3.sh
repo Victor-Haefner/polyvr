@@ -72,15 +72,31 @@ strip_absolute_paths() {
     done
 }
 
-check_libs_paths() {
+function check_libs_paths {
 		echo "check_libs_paths"
 		for file in $1/*.dylib; do
         if [[ -f $file ]]; then
-            echo "Processing file: $file"
+            #echo "Processing file: $file"
             strip_absolute_paths "$file" "$1"
 						signFile $file
         fi
     done
+
+		for file in $1/boost176/*.dylib; do
+				if [[ -f $file ]]; then
+						#echo "Processing file: $file"
+						#strip_absolute_paths "$file" "$1"
+						signFile $file
+				fi
+		done
+
+		#for file in $1/lib/python27/python2.7/lib-dynload/*.dylib; do
+		#		if [[ -f $file ]]; then
+						#echo "Processing file: $file"
+		#				strip_absolute_paths "$file" "$1"
+		#				signFile $file
+		#		fi
+		#done
 }
 
 function addDir {
@@ -197,9 +213,11 @@ function copyDependencies {
 		cp -r /opt/homebrew/opt/jpeg-turbo/lib/* $libs/
 		cp -r /opt/homebrew/opt/krb5/lib/* $libs/
 
-	  # TODO: why are those commented out??
+	  # TODO: those should be present on mac by default, but maybe the version might not fit someday?
 		#cp /usr/lib/libcurl.4.dylib $libs/
 		#cp /usr/lib/libz.1.dylib $libs/
+		#cp /usr/lib/libbz2.1.0.dylib $libs/
+		#cp /usr/lib/libiconv.2.dylib $libs/
 
 		while IFS= read -r line; do
 	    cp -r "$line" $libs/
@@ -229,9 +247,9 @@ function copyDependencies {
 		ln -s boost176 boost@1.76 ; mv ./boost@1.76 $libs/boost@1.76
 
 		echo " cleanup"
-		rm -rf $bin/ressources/cef
-		rm -rf $bin/ressources/cef18
-		rm -rf $bin/ressources/cefWin
+		rm -rf $res/ressources/cef
+		rm -rf $res/ressources/cef18
+		rm -rf $res/ressources/cefWin
 		rm -rf $libs/pkgconfig
 		rm -rf $libs/cmake
 		rm -f $libs/boost/*.a
@@ -397,8 +415,8 @@ setupAppRessources
 copyAppData
 copyPolyVR
 copyDependencies
-signPolyVR
 stripPaths
+signPolyVR
 signBundle
 verifyApp
 createDiskImage
