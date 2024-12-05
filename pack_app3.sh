@@ -61,14 +61,16 @@ strip_absolute_paths() {
 				fi
 
 				if [[ "$lib" == *"boost@1.76"* ]]; then
-            lib_name="@executable_path/../Frameworks/boost@1.76/$lib_name"
+            lib_name="boost@1.76/$lib_name"
 						#continue
 				elif [[ "$lib" == *"boost"* ]]; then
-            lib_name="@executable_path/../Frameworks/boost/$lib_name"
+            lib_name="boost/$lib_name"
 						#continue
         fi
 
-        install_name_tool -change "$lib" "$lib_name" "$executable" 2>/dev/null
+				rPath="@executable_path/../Frameworks"
+
+        install_name_tool -change "$lib" "$rPath/$lib_name" "$executable" 2>/dev/null
     done
 }
 
@@ -89,14 +91,6 @@ function check_libs_paths {
 						signFile $file
 				fi
 		done
-
-		#for file in $1/lib/python27/python2.7/lib-dynload/*.dylib; do
-		#		if [[ -f $file ]]; then
-						#echo "Processing file: $file"
-		#				strip_absolute_paths "$file" "$1"
-		#				signFile $file
-		#		fi
-		#done
 }
 
 function addDir {
@@ -335,12 +329,12 @@ EOT
 	cat <<EOT >> $bin/startApp.sh
 #!/bin/zsh
 DIR="\$(cd "\$(dirname "\$0")" && pwd)"
-#osascript <<EOF
-#tell application "Terminal"
-#    do script "cd \${DIR} && ./startApp2.sh"
-#end tell
-#EOF
-cd \${DIR} && ./startApp2.sh
+osascript <<EOF
+tell application "Terminal"
+    do script "cd \${DIR} && ./startApp2.sh"
+end tell
+EOF
+#cd \${DIR} && ./startApp2.sh
 EOT
 	fi
 
