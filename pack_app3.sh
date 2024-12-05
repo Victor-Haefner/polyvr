@@ -28,6 +28,10 @@ strip_absolute_paths() {
 						continue
 				fi
 
+				if [[ "$lib" == *"libobjc"* ]]; then
+						continue
+				fi
+
 				if [[ "$lib" == *"libc++"* ]]; then
 						continue
 				fi
@@ -37,6 +41,7 @@ strip_absolute_paths() {
 				fi
 
 				if [[ ! -f $2/$lib_name ]]; then
+					  echo "strip $executable, ignore lib $lib, $lib_name is not in folder $2!"
 						continue # ignore libs not in folder
 				fi
 
@@ -72,64 +77,68 @@ function addDir {
 appName=$1
 appProject=$2
 appFolder=$3
-
-if [ ! -d "$appFolder" ]; then
-	echo "Error: app folder not found, $appFolder"
-	exit 1
-fi
-
-if [ ! -e "$appFolder/$appProject" ]; then
-	echo "Error: project file not found, $appFolder/$appProject"
-	exit 1
-fi
-
-echo "get deploy config"
 deployName="$appName"
 deployExeName="$appName"
-
-if [ -e "$appFolder/deploy/config" ]; then
-	while IFS=: read -r key value; do
-		echo $key $value
-	  eval "${key}='${value}'"
-	done < "$appFolder/deploy/config"
-fi
-echo "$deployName" "$deployExeName"
-
-if [ -e "packages/$deployExeName.dmg" ]; then
-	rm "packages/$deployExeName.dmg"
-fi
-if [ -e "packages/${deployExeName}_ro.dmg" ]; then
-	rm "packages/${deployExeName}_ro.dmg"
-fi
-
 pckFolder="packages/$deployExeName.app"
-
-addDir $pckFolder
-rm -rf $pckFolder/*
-addDir $pckFolder/Contents
-addDir $pckFolder/Contents/MacOS
-addDir $pckFolder/Contents/Resources
-addDir $pckFolder/Contents/Frameworks
-
 pckPVRFolder="$pckFolder/Contents/Resources" # copy directly in Resources because of CEF.. (relative path to helpers!)
 bin="$pckFolder/Contents/MacOS/"
 res="$pckFolder/Contents/Resources/"
 libs="$pckFolder/Contents/Frameworks"
 
-if true; then
+function checkAppFolder {
+	echo "check for $appFolder/$appProject"
+
+	if [ ! -d "$appFolder" ]; then
+		echo "Error: app folder not found, $appFolder"
+		exit 1
+	fi
+
+	if [ ! -e "$appFolder/$appProject" ]; then
+		echo "Error: project file not found, $appFolder/$appProject"
+		exit 1
+	fi
+}
+
+function getDeployConfig {
+	echo "get deploy config"
+
+	if [ -e "$appFolder/deploy/config" ]; then
+		while IFS=: read -r key value; do
+			echo $key $value
+		  eval "${key}='${value}'"
+		done < "$appFolder/deploy/config"
+	fi
+	echo "$deployName" "$deployExeName"
+
+	if [ -e "packages/$deployExeName.dmg" ]; then
+		rm "packages/$deployExeName.dmg"
+	fi
+	if [ -e "packages/${deployExeName}_ro.dmg" ]; then
+		rm "packages/${deployExeName}_ro.dmg"
+	fi
+}
+
+function setupFolders {
+	addDir $pckFolder
+	rm -rf $pckFolder/*
+	addDir $pckFolder/Contents
+	addDir $pckFolder/Contents/MacOS
+	addDir $pckFolder/Contents/Resources
+	addDir $pckFolder/Contents/Frameworks
+}
+
+function copyAppData {
 	echo " copy app data"
 	cp -r $appFolder/* $pckPVRFolder/
-fi
+}
 
-if true; then
+function copyPolyVR {
 	echo " copy polyvr"
 	cp -r build/polyvr $bin/
 	cp -r ressources $res/
 	cp -r setup $res/
 	cp -r shader $res/
 	#cp -r examples $res/
-
-	strip_absolute_paths $bin/polyvr "$libs"
 
 	mkdir -p "$libs/polyvr Helper.app/Contents/MacOS"
 	mkdir -p "$libs/polyvr Helper (GPU).app/Contents/MacOS"
@@ -141,8 +150,9 @@ if true; then
 	cp "ressources/cefMac/helper/CefSubProcessMac (GPU)" "$libs/polyvr Helper (GPU).app/Contents/MacOS/polyvr Helper (GPU)"
 	cp "ressources/cefMac/helper/CefSubProcessMac (Plugin)" "$libs/polyvr Helper (Plugin).app/Contents/MacOS/polyvr Helper (Plugin)"
 	cp "ressources/cefMac/helper/CefSubProcessMac (Renderer)" "$libs/polyvr Helper (Renderer).app/Contents/MacOS/polyvr Helper (Renderer)"
+}
 
-
+function signPolyVR {
 	signFile $bin/polyvr
 	signFile "$res/ressources/cefMac/helper/CefSubProcessMac"
 	signFile "$res/ressources/cefMac/helper/CefSubProcessMac (Alerts)"
@@ -156,111 +166,117 @@ if true; then
 	signFile "$libs/polyvr Helper (Plugin).app/Contents/MacOS/polyvr Helper (Plugin)"
 	signFile "$libs/polyvr Helper (Renderer).app/Contents/MacOS/polyvr Helper (Renderer)"
 
-	echo " copy libs"
-	#cp -r $pyPath $pckFolder/engine/pyLibs
-	cp -r /usr/local/lib64/* $libs/
-	rm $libs/libOSGWindowGLUT*
-	cp -r /usr/local/lib/cef/* $libs/
-	cp -r /usr/local/lib/libcollada* $libs/
-	cp -r /opt/homebrew/opt/freetype/lib/* $libs
-	cp -r $HOME/.pyenv/versions/2.7.18/lib/* $libs/
-	cp -r /opt/homebrew/opt/bullet/lib/* $libs/
-	cp -r /opt/homebrew/opt/icu4c/lib/* $libs/
-	cp -r /opt/homebrew/opt/lapack/lib/* $libs/
-	cp -r /opt/homebrew/opt/openal-soft/lib/* $libs/
-	cp -r /opt/homebrew/opt/ffmpeg/lib/* $libs/
-	cp -r /opt/homebrew/opt/fftw/lib/* $libs/
-	cp -r /opt/homebrew/opt/jsoncpp/lib/* $libs/
-	cp -r /opt/homebrew/opt/libssh/lib/* $libs/
-	cp -r /opt/homebrew/opt/libpng/lib/* $libs/
-	cp -r /opt/homebrew/opt/jpeg-turbo/lib/* $libs/
-	cp -r /opt/homebrew/opt/krb5/lib/* $libs/
-
-	#cp /usr/lib/libcurl.4.dylib $libs/
-
-	while IFS= read -r line; do
-    cp -r "$line" $libs/
-	done < "macLibs.txt"
-
-	rm -f $libs/*.a
-
-	mkdir $libs/lib
-	mv $libs/python2.7 $libs/lib/python27
-	ln -s python27 python2.7 ; mv ./python2.7 $libs/lib/python2.7
-
-	mv $libs/python3.11 $libs/python311
-	mv $libs/bullet/single/python3.11 $libs/bullet/single/python311
-	ln -s python311 python3.11 ; mv ./python3.11 $libs/python3.11
-	ln -s python311 python3.11 ; mv ./python3.11 $libs/bullet/single/python3.11
-
-	mkdir -p "$libs/boost"
-	mkdir -p "$libs/boost@1.76"
-  cp -r /opt/homebrew/opt/boost/lib/* $libs/boost/
-	cp -r /opt/homebrew/opt/boost@1.76/lib/* $libs/boost@1.76/
-	cp $libs/boost/libboost_system.dylib $libs/
-	cp $libs/boost/libboost_serialization.dylib $libs/
-	cp $libs/boost/libboost_filesystem.dylib $libs/
-	cp $libs/boost/libboost_program_options.dylib $libs/
-
-	mv $libs/boost@1.76 $libs/boost176
-	ln -s boost176 boost@1.76 ; mv ./boost@1.76 $libs/boost@1.76
-
 	signFile "$libs/Chromium Embedded Framework.framework/Libraries/libEGL.dylib"
 	signFile "$libs/Chromium Embedded Framework.framework/Libraries/libvk_swiftshader.dylib"
 	signFile "$libs/Chromium Embedded Framework.framework/Libraries/libGLESv2.dylib"
+}
 
-	check_libs_paths $libs
+function copyDependencies {
+		echo " copy libs"
+		#cp -r $pyPath $pckFolder/engine/pyLibs
+		cp -r /usr/local/lib64/* $libs/
+		rm $libs/libOSGWindowGLUT*
+		cp -r /usr/local/lib/cef/* $libs/
+		cp -r /usr/local/lib/libcollada* $libs/
+		cp -r /opt/homebrew/opt/freetype/lib/* $libs
+		cp -r $HOME/.pyenv/versions/2.7.18/lib/* $libs/
+		cp -r /opt/homebrew/opt/bullet/lib/* $libs/
+		cp -r /opt/homebrew/opt/icu4c/lib/* $libs/
+		cp -r /opt/homebrew/opt/lapack/lib/* $libs/
+		cp -r /opt/homebrew/opt/openal-soft/lib/* $libs/
+		cp -r /opt/homebrew/opt/ffmpeg/lib/* $libs/
+		cp -r /opt/homebrew/opt/fftw/lib/* $libs/
+		cp -r /opt/homebrew/opt/jsoncpp/lib/* $libs/
+		cp -r /opt/homebrew/opt/libssh/lib/* $libs/
+		cp -r /opt/homebrew/opt/libpng/lib/* $libs/
+		cp -r /opt/homebrew/opt/jpeg-turbo/lib/* $libs/
+		cp -r /opt/homebrew/opt/krb5/lib/* $libs/
 
-	echo " cleanup"
-	rm -rf $bin/ressources/cef
-	rm -rf $bin/ressources/cef18
-	rm -rf $bin/ressources/cefWin
-	rm -rf $libs/pkgconfig
-	rm -rf $libs/cmake
-	rm -f $libs/boost/*.a
-	rm -rf $libs/boost/cmake
-	rm -rf $libs/bullet/single/pkgconfig
-	rm -rf $libs/bullet/single/cmake
-	rm -f $libs/bullet/single/*.a
-	rm -rf $libs/bullet/double/pkgconfig
-	rm -rf $libs/bullet/double/cmake
-	rm -f $libs/bullet/double/*.a
-	rm -rf $libs/lib/python27/site-packages/*.dist-info
-	rm -f $libs/lib/python27/config/libpython2.7.a
-	rm -f $libs/boost176/*.a
-	rm -rf $libs/boost176/cmake
-	rm -rf $libs/icu
+	  # TODO: why are those commented out??
+		#cp /usr/lib/libcurl.4.dylib $libs/
+		#cp /usr/lib/libz.1.dylib $libs/
 
-	if [ -e $pckPVRFolder/deploy/cleanup.sh ]; then
-		/bin/bash $pckPVRFolder/deploy/cleanup.sh
+		while IFS= read -r line; do
+	    cp -r "$line" $libs/
+		done < "macLibs.txt"
+
+		rm -f $libs/*.a
+
+		mkdir $libs/lib
+		mv $libs/python2.7 $libs/lib/python27
+		ln -s python27 python2.7 ; mv ./python2.7 $libs/lib/python2.7
+
+		mv $libs/python3.11 $libs/python311
+		mv $libs/bullet/single/python3.11 $libs/bullet/single/python311
+		ln -s python311 python3.11 ; mv ./python3.11 $libs/python3.11
+		ln -s python311 python3.11 ; mv ./python3.11 $libs/bullet/single/python3.11
+
+		mkdir -p "$libs/boost"
+		mkdir -p "$libs/boost@1.76"
+	  cp -r /opt/homebrew/opt/boost/lib/* $libs/boost/
+		cp -r /opt/homebrew/opt/boost@1.76/lib/* $libs/boost@1.76/
+		cp $libs/boost/libboost_system.dylib $libs/
+		cp $libs/boost/libboost_serialization.dylib $libs/
+		cp $libs/boost/libboost_filesystem.dylib $libs/
+		cp $libs/boost/libboost_program_options.dylib $libs/
+
+		mv $libs/boost@1.76 $libs/boost176
+		ln -s boost176 boost@1.76 ; mv ./boost@1.76 $libs/boost@1.76
+
+		echo " cleanup"
+		rm -rf $bin/ressources/cef
+		rm -rf $bin/ressources/cef18
+		rm -rf $bin/ressources/cefWin
+		rm -rf $libs/pkgconfig
+		rm -rf $libs/cmake
+		rm -f $libs/boost/*.a
+		rm -rf $libs/boost/cmake
+		rm -rf $libs/bullet/single/pkgconfig
+		rm -rf $libs/bullet/single/cmake
+		rm -f $libs/bullet/single/*.a
+		rm -rf $libs/bullet/double/pkgconfig
+		rm -rf $libs/bullet/double/cmake
+		rm -f $libs/bullet/double/*.a
+		rm -rf $libs/lib/python27/site-packages/*.dist-info
+		rm -f $libs/lib/python27/config/libpython2.7.a
+		rm -f $libs/boost176/*.a
+		rm -rf $libs/boost176/cmake
+		rm -rf $libs/icu
+
+		if [ -e $pckPVRFolder/deploy/cleanup.sh ]; then
+			/bin/bash $pckPVRFolder/deploy/cleanup.sh
+		fi
+}
+
+function stripPaths {
+		check_libs_paths $libs
+		strip_absolute_paths $bin/polyvr "$libs"
+}
+
+function setupAppRessources {
+	echo "create icon"
+	icon="ressources/gui/logo_icon.png"
+	if [ -e "$pckPVRFolder/deploy/icon.png" ]; then
+		icon="$pckPVRFolder/deploy/icon.png"
 	fi
-fi
 
-#exit 0
+	addDir $res/$deployExeName.iconset
+	cp $icon $res/$deployExeName.iconset/icon_16x16.png
+	cp $icon $res/$deployExeName.iconset/icon_16x16@2x.png
+	cp $icon $res/$deployExeName.iconset/icon_32x32.png
+	cp $icon $res/$deployExeName.iconset/icon_32x32@2x.png
+	cp $icon $res/$deployExeName.iconset/icon_128x128.png
+	cp $icon $res/$deployExeName.iconset/icon_128x128@2x.png
+	cp $icon $res/$deployExeName.iconset/icon_256x256.png
+	cp $icon $res/$deployExeName.iconset/icon_256x256@2x.png
+	cp $icon $res/$deployExeName.iconset/icon_512x512.png
+	cp $icon $res/$deployExeName.iconset/icon_512x512@2x.png
+	iconutil -c icns -o $res/$deployExeName.icns $res/$deployExeName.iconset
 
-echo "create icon"
-icon="ressources/gui/logo_icon.png"
-if [ -e "$pckPVRFolder/deploy/icon.png" ]; then
-	icon="$pckPVRFolder/deploy/icon.png"
-fi
-
-addDir $res/$deployExeName.iconset
-cp $icon $res/$deployExeName.iconset/icon_16x16.png
-cp $icon $res/$deployExeName.iconset/icon_16x16@2x.png
-cp $icon $res/$deployExeName.iconset/icon_32x32.png
-cp $icon $res/$deployExeName.iconset/icon_32x32@2x.png
-cp $icon $res/$deployExeName.iconset/icon_128x128.png
-cp $icon $res/$deployExeName.iconset/icon_128x128@2x.png
-cp $icon $res/$deployExeName.iconset/icon_256x256.png
-cp $icon $res/$deployExeName.iconset/icon_256x256@2x.png
-cp $icon $res/$deployExeName.iconset/icon_512x512.png
-cp $icon $res/$deployExeName.iconset/icon_512x512@2x.png
-iconutil -c icns -o $res/$deployExeName.icns $res/$deployExeName.iconset
-
-echo "write Info.plist file"
-# check plist file with
-#  plutil -lint Lernfabrik.app/Contents/Info.plist
-cat <<EOT >> $pckFolder/Contents/Info.plist
+	echo "write Info.plist file"
+	# check plist file with
+	#  plutil -lint Lernfabrik.app/Contents/Info.plist
+	cat <<EOT >> $pckFolder/Contents/Info.plist
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
@@ -291,9 +307,9 @@ cat <<EOT >> $pckFolder/Contents/Info.plist
 </plist>
 EOT
 
-echo "write startApp.sh file"
-if [ -n "$appProject" ]; then # check is appProject given
-cat <<EOT >> $bin/startApp.sh
+	echo "write startApp.sh file"
+	if [ -n "$appProject" ]; then # check is appProject given
+	cat <<EOT >> $bin/startApp.sh
 #!/bin/zsh
 DIR="\$(cd "\$(dirname "\$0")" && pwd)"
 #osascript <<EOF
@@ -303,11 +319,11 @@ DIR="\$(cd "\$(dirname "\$0")" && pwd)"
 #EOF
 cd \${DIR} && ./startApp2.sh
 EOT
-fi
+	fi
 
-echo "write startApp2.sh file"
-if [ -n "$appProject" ]; then # check is appProject given
-cat <<EOT >> $bin/startApp2.sh
+	echo "write startApp2.sh file"
+	if [ -n "$appProject" ]; then # check is appProject given
+	cat <<EOT >> $bin/startApp2.sh
 #!/bin/zsh
 #xclock
 DIR="\$(cd "\$(dirname "\$0")" && pwd)"
@@ -319,14 +335,35 @@ export PYTHONHOME="\$LIBS"
 cd \$DIR/../Resources
 ../MacOS/polyvr --setup="macOS" --application $appProject
 EOT
-fi
+	fi
 
-chmod +x $bin/startApp.sh
-chmod +x $bin/startApp2.sh
+	chmod +x $bin/startApp.sh
+	chmod +x $bin/startApp2.sh
+}
+
+checkAppFolder
+getDeployConfig
+setupFolders
+setupAppRessources
+copyAppData
+copyPolyVR
+copyDependencies
+#signPolyVR
+#stripPaths
+
+
+exit 0
 
 echo "execute code signing"
 signBundle $pckFolder
 
+echo "zip app"
+/usr/bin/ditto -c -k --keepParent "packages/$deployExeName.app" "packages/$deployExeName.zip"
+
+echo "submit packages/$deployExeName.zip for verification"
+xcrun notarytool submit "packages/$deployExeName.zip" --keychain-profile "notarizeLernfabrik" --wait
+xcrun stapler staple "packages/$deployExeName.app"
+xcrun notarytool history --keychain-profile "notarizeLernfabrik"
 
 echo "create disk image"
 hdiutil create -volname $deployExeName -srcfolder $pckFolder -ov -format UDRW "packages/$deployExeName.dmg"
@@ -360,12 +397,6 @@ hdiutil detach $MOUNT_POINT
 echo "create read only disk image"
 hdiutil convert "packages/$deployExeName.dmg" -format UDZO -o "packages/${deployExeName}_ro.dmg"
 
-echo "zip app"
-/usr/bin/ditto -c -k --keepParent ftDigitalLearningPlatform.app ftDigitalLearningPlatform.zip
 
-echo "submit app for verification"
-xcrun notarytool submit "ftDigitalLearningPlatform.zip" --keychain-profile "notarizeLernfabrik" --wait
-
-xcrun notarytool history --keychain-profile "notarizeLernfabrik"
 
 echo " done"
