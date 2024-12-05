@@ -6,6 +6,14 @@
 
 #./pack_app3.sh Lernfabrik futurefactory.pvr /Users/victorhafner/Projects/lernfabrik
 
+signFile() {
+	codesign --force --options runtime --sign "Developer ID Application: Victor Haefner" --deep --verbose "$1"
+}
+
+signBundle() {
+	codesign --force --options runtime --sign "Developer ID Application: Victor Haefner" --deep --verbose "$1"
+}
+
 strip_absolute_paths() {
     local executable=$1
     local libs=$(otool -L "$executable" | grep -oE '/[^ ]+\.dylib' | sort -u)
@@ -42,8 +50,6 @@ strip_absolute_paths() {
 
         install_name_tool -change "$lib" "$lib_name" "$executable"
     done
-
-		codesign --force --sign - --timestamp=none $executable
 }
 
 check_libs_paths() {
@@ -52,6 +58,7 @@ check_libs_paths() {
         if [[ -f $file ]]; then
             echo "Processing file: $file"
             strip_absolute_paths "$file" "$1"
+						signFile $file
         fi
     done
 }
@@ -122,7 +129,6 @@ if true; then
 	cp -r shader $res/
 	#cp -r examples $res/
 
-  # TODO: maybe avoid stripping all basic system paths?
 	strip_absolute_paths $bin/polyvr "$libs"
 
 	mkdir -p "$libs/polyvr Helper.app/Contents/MacOS"
@@ -136,6 +142,19 @@ if true; then
 	cp "ressources/cefMac/helper/CefSubProcessMac (Plugin)" "$libs/polyvr Helper (Plugin).app/Contents/MacOS/polyvr Helper (Plugin)"
 	cp "ressources/cefMac/helper/CefSubProcessMac (Renderer)" "$libs/polyvr Helper (Renderer).app/Contents/MacOS/polyvr Helper (Renderer)"
 
+
+	signFile $bin/polyvr
+	signFile "$res/ressources/cefMac/helper/CefSubProcessMac"
+	signFile "$res/ressources/cefMac/helper/CefSubProcessMac (Alerts)"
+	signFile "$res/ressources/cefMac/helper/CefSubProcessMac (GPU)"
+	signFile "$res/ressources/cefMac/helper/CefSubProcessMac (Plugin)"
+	signFile "$res/ressources/cefMac/helper/CefSubProcessMac (Renderer)"
+
+	signFile "$libs/polyvr Helper.app/Contents/MacOS/polyvr Helper"
+	signFile "$libs/polyvr Helper (Alerts).app/Contents/MacOS/polyvr Helper (Alerts)"
+	signFile "$libs/polyvr Helper (GPU).app/Contents/MacOS/polyvr Helper (GPU)"
+	signFile "$libs/polyvr Helper (Plugin).app/Contents/MacOS/polyvr Helper (Plugin)"
+	signFile "$libs/polyvr Helper (Renderer).app/Contents/MacOS/polyvr Helper (Renderer)"
 
 	echo " copy libs"
 	#cp -r $pyPath $pckFolder/engine/pyLibs
@@ -174,9 +193,6 @@ if true; then
 	ln -s python311 python3.11 ; mv ./python3.11 $libs/python3.11
 	ln -s python311 python3.11 ; mv ./python3.11 $libs/bullet/single/python3.11
 
-	mv $libs/boost@1.76 $libs/boost176
-	ln -s boost176 boost@1.76 ; mv ./boost@1.76 $libs/boost@1.76
-
 	mkdir -p "$libs/boost"
 	mkdir -p "$libs/boost@1.76"
   cp -r /opt/homebrew/opt/boost/lib/* $libs/boost/
@@ -185,6 +201,13 @@ if true; then
 	cp $libs/boost/libboost_serialization.dylib $libs/
 	cp $libs/boost/libboost_filesystem.dylib $libs/
 	cp $libs/boost/libboost_program_options.dylib $libs/
+
+	mv $libs/boost@1.76 $libs/boost176
+	ln -s boost176 boost@1.76 ; mv ./boost@1.76 $libs/boost@1.76
+
+	signFile "$libs/Chromium Embedded Framework.framework/Libraries/libEGL.dylib"
+	signFile "$libs/Chromium Embedded Framework.framework/Libraries/libvk_swiftshader.dylib"
+	signFile "$libs/Chromium Embedded Framework.framework/Libraries/libGLESv2.dylib"
 
 	check_libs_paths $libs
 
@@ -302,8 +325,7 @@ chmod +x $bin/startApp.sh
 chmod +x $bin/startApp2.sh
 
 echo "execute code signing"
-#codesign --force --deep --sign - $pckFolder
-codesign --force --sign "Developer ID Application: Victor Haefner" --deep --verbose $pckFolder
+signBundle $pckFolder
 
 
 echo "create disk image"
@@ -338,5 +360,12 @@ hdiutil detach $MOUNT_POINT
 echo "create read only disk image"
 hdiutil convert "packages/$deployExeName.dmg" -format UDZO -o "packages/${deployExeName}_ro.dmg"
 
+echo "zip app"
+/usr/bin/ditto -c -k --keepParent ftDigitalLearningPlatform.app ftDigitalLearningPlatform.zip
+
+echo "submit app for verification"
+xcrun notarytool submit "ftDigitalLearningPlatform.zip" --keychain-profile "notarizeLernfabrik" --wait
+
+xcrun notarytool history --keychain-profile "notarizeLernfabrik"
 
 echo " done"
