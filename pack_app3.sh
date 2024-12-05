@@ -6,6 +6,29 @@
 
 #./pack_app3.sh Lernfabrik futurefactory.pvr /Users/victorhafner/Projects/lernfabrik
 
+appName=$1
+appProject=$2
+appFolder=$3
+deployName="$appName"
+deployExeName="$appName"
+pckFolder="packages/$deployExeName.app"
+pckPVRFolder="$pckFolder/Contents/Resources" # copy directly in Resources because of CEF.. (relative path to helpers!)
+bin="$pckFolder/Contents/MacOS/"
+res="$pckFolder/Contents/Resources/"
+libs="$pckFolder/Contents/Frameworks"
+
+function signFile {
+	# Warning, using --options runtime makes apple apply strikt security rules, this may make the app not to start at all
+	codesign --force --options runtime --sign "Developer ID Application: Victor Haefner" --deep "$1"
+	#codesign --force --sign - --deep "$1" # for testing
+}
+
+function signBundle {
+	echo "sign whole bundle, $pckFolder"
+	codesign --force --options runtime --sign "Developer ID Application: Victor Haefner" --deep "$pckFolder"
+	#codesign --force --sign - --deep "$pckFolder" # for testing, see above
+}
+
 strip_absolute_paths() {
     local executable=$1
     local libs=$(otool -L "$executable" | grep -oE '/[^ ]+\.dylib' | sort -u)
@@ -45,7 +68,7 @@ strip_absolute_paths() {
 						#continue
         fi
 
-        install_name_tool -change "$lib" "$lib_name" "$executable"
+        install_name_tool -change "$lib" "$lib_name" "$executable" 2>/dev/null
     done
 }
 
@@ -64,26 +87,6 @@ function addDir {
 	if [ ! -e $1 ]; then
 		mkdir -p $1
 	fi
-}
-
-appName=$1
-appProject=$2
-appFolder=$3
-deployName="$appName"
-deployExeName="$appName"
-pckFolder="packages/$deployExeName.app"
-pckPVRFolder="$pckFolder/Contents/Resources" # copy directly in Resources because of CEF.. (relative path to helpers!)
-bin="$pckFolder/Contents/MacOS/"
-res="$pckFolder/Contents/Resources/"
-libs="$pckFolder/Contents/Frameworks"
-
-function signFile {
-	codesign --force --options runtime --sign "Developer ID Application: Victor Haefner" --deep "$1"
-}
-
-function signBundle {
-	echo "sign whole bundle, $pckFolder"
-	codesign --force --options runtime --sign "Developer ID Application: Victor Haefner" --deep "$pckFolder"
 }
 
 function checkAppFolder {
@@ -155,6 +158,7 @@ function copyPolyVR {
 
 function signPolyVR {
 	signFile $bin/polyvr
+
 	signFile "$res/ressources/cefMac/helper/CefSubProcessMac"
 	signFile "$res/ressources/cefMac/helper/CefSubProcessMac (Alerts)"
 	signFile "$res/ressources/cefMac/helper/CefSubProcessMac (GPU)"
@@ -394,9 +398,9 @@ copyAppData
 copyPolyVR
 copyDependencies
 signPolyVR
-#stripPaths
-#signBundle
-#verifyApp
-#createDiskImage
+stripPaths
+signBundle
+verifyApp
+createDiskImage
 
 echo " done"
