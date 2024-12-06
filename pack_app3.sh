@@ -17,15 +17,34 @@ bin="$pckFolder/Contents/MacOS/"
 res="$pckFolder/Contents/Resources/"
 libs="$pckFolder/Contents/Frameworks"
 
+function createPListFile() {
+	if [[ ! -f entitlements.plist ]]; then
+		cat <<EOT >> entitlements.plist
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+ <key>com.apple.security.cs.allow-unsigned-executable-memory</key>
+ <true/>
+ <key>com.apple.security.cs.disable-library-validation</key>
+ <true/>
+ <key>com.apple.security.cs.allow-jit</key>
+ <true/>
+</dict>
+</plist>
+EOT
+	fi
+}
+
 function signFile {
 	# Warning, using --options runtime makes apple apply strikt security rules, this may make the app not to start at all
-	codesign --force --options runtime --sign "Developer ID Application: Victor Haefner" --deep "$1"
+	codesign --force --options runtime --entitlements "entitlements.plist" --sign "Developer ID Application: Victor Haefner" --deep "$1"
 	#codesign --force --sign - --deep "$1" # for testing
 }
 
 function signBundle {
 	echo "sign whole bundle, $pckFolder"
-	codesign --force --options runtime --sign "Developer ID Application: Victor Haefner" --deep "$pckFolder"
+	codesign --force --options runtime --entitlements "entitlements.plist" --sign "Developer ID Application: Victor Haefner" --deep "$pckFolder"
 	#codesign --force --sign - --deep "$pckFolder" # for testing, see above
 }
 
@@ -359,6 +378,7 @@ EOT
 	chmod +x $bin/startApp2.sh
 }
 
+
 function verifyApp {
 	echo "zip app"
 	/usr/bin/ditto -c -k --keepParent "packages/$deployExeName.app" "packages/$deployExeName.zip"
@@ -410,6 +430,7 @@ setupAppRessources
 copyAppData
 copyPolyVR
 copyDependencies
+#exit 0
 stripPaths
 signPolyVR
 signBundle
