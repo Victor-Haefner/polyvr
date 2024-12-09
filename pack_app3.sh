@@ -16,10 +16,12 @@ pckPVRFolder="$pckFolder/Contents/Resources" # copy directly in Resources becaus
 bin="$pckFolder/Contents/MacOS/"
 res="$pckFolder/Contents/Resources/"
 libs="$pckFolder/Contents/Frameworks"
+entitlementsPath="$appFolder/entitlements.plist"
 
 function createPListFile() {
-	if [[ ! -f entitlements.plist ]]; then
-		cat <<EOT >> entitlements.plist
+	if [[ ! -f $entitlementsPath ]]; then
+		echo "create entitlements file, $entitlementsPath"
+		cat <<EOT >> $entitlementsPath
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
@@ -37,15 +39,26 @@ EOT
 }
 
 function signFile {
+	createPListFile
 	# Warning, using --options runtime makes apple apply strikt security rules, this may make the app not to start at all
-	codesign --force --options runtime --entitlements "entitlements.plist" --sign "Developer ID Application: Victor Haefner" --deep "$1"
+	codesign --force --options runtime --entitlements "$entitlementsPath" --sign "Developer ID Application: Victor Haefner" "$1"
 	#codesign --force --sign - --deep "$1" # for testing
 }
 
 function signBundle {
+	createPListFile
 	echo "sign whole bundle, $pckFolder"
-	codesign --force --options runtime --entitlements "entitlements.plist" --sign "Developer ID Application: Victor Haefner" --deep "$pckFolder"
+	codesign --force --options runtime --entitlements "$entitlementsPath" --sign "Developer ID Application: Victor Haefner" --deep "$pckFolder"
 	#codesign --force --sign - --deep "$pckFolder" # for testing, see above
+
+	find "$libs/lib/python27" -type f -name "*.pyc" | while read -r pyc_file; do
+		if codesign --verify --verbose=2 "$pyc_file" &>/dev/null; then
+			:
+		else
+		  echo "Signing $pyc_file"
+		  signFile "$pyc_file"
+		fi
+	done
 }
 
 strip_absolute_paths() {
@@ -351,7 +364,7 @@ EOT
 DIR="\$(cd "\$(dirname "\$0")" && pwd)"
 osascript <<EOF
 tell application "Terminal"
-    do script "cd \${DIR} && ./startApp2.sh"
+    do script "cd \"\${DIR}\" && ./startApp2.sh"
 end tell
 EOF
 #cd \${DIR} && ./startApp2.sh
@@ -369,7 +382,7 @@ libs="\$LIBS:\$LIBS/Chromium Embedded Framework.framework/Libraries"
 export DYLD_LIBRARY_PATH="\$libs"
 export DYLD_FRAMEWORK_PATH="\$libs"
 export PYTHONHOME="\$LIBS"
-cd \$DIR/../Resources
+cd "\$DIR/../Resources"
 ../MacOS/polyvr --setup="macOS" --application $appProject
 EOT
 	fi
@@ -421,6 +434,12 @@ EOF
 	hdiutil detach $MOUNT_POINT
 	echo "create read only disk image"
 	hdiutil convert "packages/$deployExeName.dmg" -format UDZO -o "packages/${deployExeName}_ro.dmg"
+
+	echo "submit packages/${deployExeName}_ro.dmg for verification"
+	signFile "packages/${deployExeName}_ro.dmg"
+	xcrun notarytool submit "packages/${deployExeName}_ro.dmg" --keychain-profile "notarizeLernfabrik" --wait
+	xcrun stapler staple "packages/${deployExeName}_ro.dmg"
+	xcrun notarytool history --keychain-profile "notarizeLernfabrik"
 }
 
 checkAppFolder
@@ -434,6 +453,7 @@ copyDependencies
 stripPaths
 signPolyVR
 signBundle
+#exit 0
 verifyApp
 createDiskImage
 
