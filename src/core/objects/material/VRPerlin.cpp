@@ -52,7 +52,12 @@ float VRPerlin::perlin(Vec3d* grid, const Vec3i& dim, const Vec3d& v) {
     return lerp(ix2[0], ix2[1], fw);
 }
 
-void VRPerlin::apply(Color3f* data, Vec3i dims, float amount, Color3f c1, Color3f c2) {
+template< class T >
+T mix(const T& c1, const T& c2, double t) {
+    return c1*(1.0-t) + c2*t;
+}
+
+void VRPerlin::apply(Color3f* data, Vec3i dims, float amount, Color3f c1, Color3f c2, float mixAmount) {
     float a = 0.5*amount;
     Vec3i dim(dims[0]*a, dims[1]*a, dims[2]*a);
     for (int i=0; i<3; i++) dim[i] = max(1,dim[i]);
@@ -74,13 +79,13 @@ void VRPerlin::apply(Color3f* data, Vec3i dims, float amount, Color3f c1, Color3
     for (int z=0; z<dims[2]; z++) {
         for (int y=0; y<dims[1]; y++) {
             for (int x=0; x<dims[0]; x++) {
-                float p = perl.perlin(grid, dim, Vec3d(x,y,z)*a );
-                Color3f c = c1*p + c2*(1-p);
+                float p = perl.perlin(grid, dim, Vec3d(x,y,z)*a ) + 0.5;
+                Color3f c = mix(c1,c2,1.0-p);
 
                 int i = z*dims[1]*dims[0] + y*dims[0] + x;
-                data[i][0] *= c[0];
-                data[i][1] *= c[1];
-                data[i][2] *= c[2];
+                Color3f b = data[i];
+
+                data[i] = mix(b,c,mixAmount);
             }
         }
     }
@@ -88,7 +93,7 @@ void VRPerlin::apply(Color3f* data, Vec3i dims, float amount, Color3f c1, Color3
     delete[] grid;
 }
 
-void VRPerlin::apply(Color4f* data, Vec3i dims, float amount, Color4f c1, Color4f c2) {
+void VRPerlin::apply(Color4f* data, Vec3i dims, float amount, Color4f c1, Color4f c2, float mixAmount) {
     float a = 0.5*amount;
     Vec3i dim(dims[0]*a, dims[1]*a, dims[2]*a);
     for (int i=0; i<3; i++) dim[i] = max(1,dim[i]);
@@ -110,14 +115,13 @@ void VRPerlin::apply(Color4f* data, Vec3i dims, float amount, Color4f c1, Color4
     for (int z=0; z<dims[2]; z++) {
         for (int y=0; y<dims[1]; y++) {
             for (int x=0; x<dims[0]; x++) {
-                float p = perl.perlin(grid, dim, Vec3d(x,y,z)*a );
-                Color4f c = c1*p + c2*(1-p);
+                float p = perl.perlin(grid, dim, Vec3d(x,y,z)*a ) + 0.5;
+                Color4f c = mix(c1,c2,1.0-p);
 
                 int i = z*dims[1]*dims[0] + y*dims[0] + x;
-                data[i][0] *= c[0];
-                data[i][1] *= c[1];
-                data[i][2] *= c[2];
-                data[i][3] *= c[3];
+                Color4f b = data[i];
+
+                data[i] = mix(b,c,mixAmount);
             }
         }
     }

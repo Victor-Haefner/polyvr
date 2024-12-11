@@ -365,10 +365,13 @@ VRTexturePtr VRTextureGenerator::compose(int seed) { // TODO: optimise!
         if (hasAlpha)   fill(data4, data4+N, Color4f(1,1,1,1));
         else            fill(data3, data3+N, Color3f(1,1,1));
     }
-    for (auto l : layers) {
+    for (int i=0; i<layers.size(); i++) {
+        auto& l = layers[i];
+        float ma = (i == 0) ? 1.0 : 0.5;
+
         if (!hasAlpha) {
             if (l->type == BRICKS) VRBricks::apply(data3, dims, l->amount, l->c31, l->c32);
-            if (l->type == PERLIN) VRPerlin::apply(data3, dims, l->amount, l->c31, l->c32);
+            if (l->type == PERLIN) VRPerlin::apply(data3, dims, l->amount, l->c31, l->c32, ma);
             if (l->type == NORMALMAP) VRNormalmap::apply(data3, dims, l->amount);
             if (l->type == LINE) applyLine(data3, Vec3d(l->c31), Vec3d(l->c32), l->c41, l->amount);
             if (l->type == BOX) applyBox(data3, Vec3d(l->c31), Vec3d(l->c32), l->c41);
@@ -380,7 +383,7 @@ VRTexturePtr VRTextureGenerator::compose(int seed) { // TODO: optimise!
         }
         if (hasAlpha) {
             if (l->type == BRICKS) VRBricks::apply(data4, dims, l->amount, l->c41, l->c42);
-            if (l->type == PERLIN) VRPerlin::apply(data4, dims, l->amount, l->c41, l->c42);
+            if (l->type == PERLIN) VRPerlin::apply(data4, dims, l->amount, l->c41, l->c42, ma);
             if (l->type == NORMALMAP) VRNormalmap::apply(data4, dims, l->amount);
             if (l->type == LINE) applyLine(data4, Vec3d(l->c31), Vec3d(l->c32), l->c41, l->amount);
             if (l->type == BOX) applyBox(data4, Vec3d(l->c31), Vec3d(l->c32), l->c41);

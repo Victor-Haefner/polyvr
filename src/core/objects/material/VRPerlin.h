@@ -19,9 +19,8 @@ class VRPerlin {
 
     public:
         VRPerlin();
-
-        static void apply(Color3f* data, Vec3i dim, float amount, Color3f c1, Color3f c2);
-        static void apply(Color4f* data, Vec3i dim, float amount, Color4f c1, Color4f c2);
+        static void apply(Color3f* data, Vec3i dim, float amount, Color3f c1, Color3f c2, float mixAmount);
+        static void apply(Color4f* data, Vec3i dim, float amount, Color4f c1, Color4f c2, float mixAmount);
 };
 
 OSG_END_NAMESPACE;
