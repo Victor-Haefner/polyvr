@@ -363,12 +363,12 @@ EOT
 	cat <<EOT >> $bin/startApp.sh
 #!/bin/zsh
 DIR="\$(cd "\$(dirname "\$0")" && pwd)"
-osascript <<EOF
-tell application "Terminal"
-    do script "cd \"\${DIR}\" && ./startApp2.sh"
-end tell
-EOF
-#cd \${DIR} && ./startApp2.sh
+#osascript <<EOF
+#tell application "Terminal"
+#    do script "cd \"\${DIR}\" && ./startApp2.sh"
+#end tell
+#EOF
+cd \${DIR} && ./startApp2.sh
 EOT
 	fi
 
