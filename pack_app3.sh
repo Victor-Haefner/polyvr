@@ -304,11 +304,12 @@ function stripPaths {
 }
 
 function setupAppRessources {
-	echo "create icon"
 	icon="ressources/gui/logo_icon.png"
-	if [ -e "$pckPVRFolder/deploy/icon.png" ]; then
-		icon="$pckPVRFolder/deploy/icon.png"
+	if [ -e "$appFolder/deploy/icon.png" ]; then
+		icon="$appFolder/deploy/icon.png"
 	fi
+
+	echo "create icon from $icon"
 
 	addDir $res/$deployExeName.iconset
 	cp $icon $res/$deployExeName.iconset/icon_16x16.png
@@ -446,6 +447,7 @@ checkAppFolder
 getDeployConfig
 setupFolders
 setupAppRessources
+#exit 0
 copyAppData
 copyPolyVR
 copyDependencies
