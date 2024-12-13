@@ -170,4 +170,25 @@ struct VRGear : public VRPrimitive {
     float radius();
 };
 
+struct VRDisk : public VRPrimitive {
+    float radius = 0.5;
+    int Nsegments = 16;
+
+    VRDisk();
+    void fromStream(stringstream& ss) override;
+    void toStream(stringstream& ss) override;
+    OSG::GeometryMTRecPtr make() override;
+};
+
+struct VRAnnulus : public VRPrimitive {
+    float outerRadius = 0.5;
+    float innerRadius = 0.3;
+    int Nsegments = 16;
+
+    VRAnnulus();
+    void fromStream(stringstream& ss) override;
+    void toStream(stringstream& ss) override;
+    OSG::GeometryMTRecPtr make() override;
+};
+
 #endif // VRPRIMITIVE_H_INCLUDED
