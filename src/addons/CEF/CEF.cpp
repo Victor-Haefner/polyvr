@@ -441,7 +441,9 @@ void CEF::global_initiate() {
 #endif
 
 #ifdef __APPLE__
-		string appBundleHelper = "../Frameworks/polyvr Helper.app"; // only set the subproces path if no default is present!
+		// only set the subproces path if no default is present!
+		string appBundleHelper = VRSceneManager::get()->getOriginalWorkdir() + "/../Frameworks/polyvr Helper.app";
+		checkPath("appBundleHelper", appBundleHelper);
 		if (!exists(appBundleHelper))
 #endif
     	CefString(&settings.browser_subprocess_path).FromASCII(bsp.c_str());
