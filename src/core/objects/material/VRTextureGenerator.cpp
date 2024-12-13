@@ -34,6 +34,10 @@ Vec3i VRTextureGenerator::getSize() { return Vec3i(width, height, depth); };
 
 void VRTextureGenerator::set(VRTexturePtr t) {
     setSize(t->getSize(), 0);
+    addTexture(t);
+}
+
+void VRTextureGenerator::addTexture(VRTexturePtr t) {
     auto l = VRTexGenLayer::create();
     l->type = TEXTURE;
     l->tex = t;
@@ -331,12 +335,15 @@ void VRTextureGenerator::applyPolygon(T* data, VRPolygonPtr p, Color4f c, float 
     Vec3d b = bb.max(); swap(b[1], b[2]);
     Vec3i A = Vec3i( upscale( a ) ) - Vec3i(1,1,1);
     Vec3i B = Vec3i( upscale( b ) ) + Vec3i(1,1,1);
+    //cout << "applyPolygon " << A << " -> " << B << endl;
     //float texelSize = 1.0/width; // TODO: non square textures?
     for (int j=A[1]; j<B[1]; j++) {
         for (int i=A[0]; i<B[0]; i++) {
             Vec2d pos = Vec2d(float(i)/width, float(j)/height);
             double d;
+            //cout << "AA " << clamp(Vec3i(i,j,0)) << " " << pos << " " << d << endl;
             if (p->isInside(pos, d)) {
+                //cout << " AA " << clamp(Vec3i(i,j,0)) << " " << c << endl;
                 for (int k=0; k<depth; k++) applyPixel(data, clamp(Vec3i(i,j,k)), c);
             } /*else if (d < texelSize) { // TODO: finish antialiasing feature
                 float a = 1.0 - d*width;
