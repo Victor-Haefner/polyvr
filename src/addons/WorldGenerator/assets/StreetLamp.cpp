@@ -30,18 +30,18 @@ void StreetLamp::make() {
 	};
 
 	auto p1 = Path::create();
-	p1->addPoint( Pose(Vec3d(0,0,0)));
-	p1->addPoint( Pose(Vec3d(0,0,-2)));
+	p1->addPoint( Pose::create(Vec3d(0,0,0)));
+	p1->addPoint( Pose::create(Vec3d(0,0,-2)));
 	p1->compute(2);
 
 	auto p2 = Path::create();
-	p2->addPoint( Pose(Vec3d(0,0,-2)));
-	p2->addPoint( Pose(Vec3d(0,0,-4)));
+	p2->addPoint( Pose::create(Vec3d(0,0,-2)));
+	p2->addPoint( Pose::create(Vec3d(0,0,-4)));
 	p2->compute(2);
 
 	auto p3 = Path::create();
-	p3->addPoint( Pose(Vec3d(0,0,-4)));
-	p3->addPoint( Pose(Vec3d(1,0,-5), Vec3d(2,0,-1)));
+	p3->addPoint( Pose::create(Vec3d(0,0,-4)));
+	p3->addPoint( Pose::create(Vec3d(1,0,-5), Vec3d(2,0,-1)));
 	p3->compute(5);
 
 	addPart(0.1, p1);

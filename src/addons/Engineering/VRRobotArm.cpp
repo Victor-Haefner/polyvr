@@ -1020,8 +1020,8 @@ void VRRobotArm::moveTo(PosePtr p2, bool local) {
     //cout << "VRRobotArm::moveTo " << p1->toString() << "   ->   " << p2->toString() << endl;
 
     animPath->clear();
-    animPath->addPoint( *p1 );
-    animPath->addPoint( *p2 );
+    animPath->addPoint( p1 );
+    animPath->addPoint( p2 );
     animPath->compute(2);
 
     /*cout << "moveTo, p1: " << p1->toString() << endl;

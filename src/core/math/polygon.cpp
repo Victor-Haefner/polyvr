@@ -810,7 +810,7 @@ PathPtr VRPolygon::toPath() {
         Vec2d d1 = p2-p1; d1.normalize();
         Vec2d d2 = p3-p2; d2.normalize();
         Vec2d n = d1+d2; n.normalize();
-        res->addPoint( Pose( Vec3d(p2[0], 0, p2[1]), Vec3d(n[0], 0, n[1]), Vec3d(0,1,0) ) );
+        res->addPoint( Pose::create( Vec3d(p2[0], 0, p2[1]), Vec3d(n[0], 0, n[1]), Vec3d(0,1,0) ) );
     }
     res->close();
     res->compute(2);

@@ -106,9 +106,9 @@ void VRAsphalt::addPath(PathPtr path, int rID, float width, float dashL, float o
     }
 
     for (int j = 0; j<N; j++) {// p1,p2,p3
-        Vec3d P0 = pnts[2*j].pos();
-        Vec3d P1 = pnts[2*j+1].pos();
-        Vec3d P2 = pnts[2*j+2].pos();
+        Vec3d P0 = pnts[2*j]->pos();
+        Vec3d P1 = pnts[2*j+1]->pos();
+        Vec3d P2 = pnts[2*j+2]->pos();
 
         Vec3d A = P2 + P0 - P1*2;
         Vec3d B = (P1 - P0) * 2;

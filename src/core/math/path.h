@@ -12,7 +12,7 @@ using namespace std;
 
 class Path : public VRStorage {
     private:
-        vector<Pose> points;
+        vector<PosePtr> points;
         vector<Color3f> point_colors;
 
         vector<Vec3d> controlPoints;
@@ -41,13 +41,13 @@ class Path : public VRStorage {
         static PathPtr create();
 
         void set(PosePtr p1, PosePtr p2, int res);
-        int addPoint( Pose p, Color3f c = Color3f() );
+        int addPoint( PosePtr p, Color3f c = Color3f() );
         int addPoint2( Vec3d p, Vec3d d, Color3f c, Vec3d u );
-        void setPoint(int i, const Pose& p, Color3f c = Color3f() );
-        Pose& getPoint(int i);
+        void setPoint(int i, PosePtr p, Color3f c = Color3f() );
+        PosePtr getPoint(int i);
         Color3f getPointColor(int i);
         void setPointColor(int i, Color3f c);
-        vector<Pose> getPoints();
+        vector<PosePtr> getPoints();
         vector<Vec3d> getControlPoints();
 
         void invert();
@@ -58,7 +58,7 @@ class Path : public VRStorage {
         vector<Vec3d> getDirections();
         vector<Vec3d> getUpVectors();
         vector<Vec3d> getColors();
-        vector<Pose> getPoses();
+        vector<PosePtr> getPoses();
         Vec3d getPosition(float t, int i = 0, int j = 0, bool fast = true);
         void getOrientation(float t, Vec3d& dir, Vec3d& up, int i = 0, int j = 0, bool fast = true);
         Color3f getColor(float t, int i = 0, int j = 0);

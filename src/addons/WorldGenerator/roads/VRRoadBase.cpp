@@ -43,7 +43,7 @@ PathPtr VRRoadBase::toPath( VREntityPtr pathEntity, int resolution ) {
 	}
 
 	PathPtr Path = Path::create();
-	for (unsigned int i=0; i<pos.size(); i++) Path->addPoint(Pose(pos[i], norms[i]));
+	for (unsigned int i=0; i<pos.size(); i++) Path->addPoint(Pose::create(pos[i], norms[i]));
 	Path->compute(resolution);
 	return Path;
 }
@@ -154,14 +154,14 @@ VRGeometryPtr VRRoadBase::addPole( Vec3d P1, Vec3d P4, float radius ) {
         P3 += D*0.5;
     }
 
-    p->addPoint(Pose(P1, Y, pN), gray);
+    p->addPoint(Pose::create(P1, Y, pN), gray);
     if (curved) {
-        p->addPoint(Pose(P2, Y*2, pN), gray);
-        p->addPoint(Pose(P3, D*2, pN), gray);
-        p->addPoint(Pose(P4, D, pN), gray);
+        p->addPoint(Pose::create(P2, Y*2, pN), gray);
+        p->addPoint(Pose::create(P3, D*2, pN), gray);
+        p->addPoint(Pose::create(P4, D, pN), gray);
         p->compute(8);
     } else {
-        p->addPoint(Pose(P4, Y, pN), gray);
+        p->addPoint(Pose::create(P4, Y, pN), gray);
         p->compute(2);
     }
 

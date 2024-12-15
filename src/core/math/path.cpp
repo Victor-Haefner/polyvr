@@ -115,8 +115,8 @@ vector<double> Path::computeInflectionPoints(int i, int j, float threshold, floa
     if (j <= i) j = size()-1;
     vector<double> res;
     for (auto k=i+1; k<=j; k++) {
-        auto& P1 = points[k-1];
-        auto& P2 = points[k];
+        auto& P1 = *points[k-1];
+        auto& P2 = *points[k];
 
         // help points
         double L = (P1.pos() - P2.pos()).length();
@@ -181,7 +181,7 @@ void Path::approximate(int d) {
 	};
 
     if (d == 2) {
-        vector<Pose> res;
+        vector<PosePtr> res;
 
 		for (unsigned int j=1; j<points.size(); j++) { // p1,p2,pm,p3,p4
 			auto p1 = points[j-1];
@@ -220,29 +220,29 @@ void Path::approximate(int d) {
             //auto Tvec = computeInflectionPoints(j-1,j,1e-6,1e-6);
             auto Tvec = computeInflectionPoints(j-1,j,0.1,0.1);
             if (Tvec.size() == 0) Tvec = {0.5};
-            vector<Pose> poses;
+            vector<PosePtr> poses;
             poses.push_back(p1);
             for (auto t : Tvec) {
                 PosePtr pm = getPose(t, j-1, j, false);
-                if (isLinear(p1,*pm)) pm->setDir( p1.dir() );
+                if (isLinear(*p1,*pm)) pm->setDir( p1->dir() );
                 Vec3d n = pm->dir();
                 n.normalize();
                 pm->setDir( n );
                 //pm->setDir( p1.dir() );
-                poses.push_back( *pm );
+                poses.push_back( pm );
             }
             poses.push_back(p4);
 
             for (unsigned int i=1; i<poses.size()-1; i++) {
-                auto& p0 = poses[i-1];
-                auto& pm = poses[i];
-                if (isLinear(p0,pm)) res.push_back( Pose( (p0.pos()+pm.pos())*0.5, p0.dir(), pm.up() ) );
-                else res.push_back( Pose( intersect(p0,pm) ) );
+                auto p0 = poses[i-1];
+                auto pm = poses[i];
+                if (isLinear(*p0,*pm)) res.push_back( Pose::create( (p0->pos()+pm->pos())*0.5, p0->dir(), pm->up() ) );
+                else res.push_back( Pose::create( intersect(*p0,*pm) ) );
                 res.push_back(pm);
                 if (i == poses.size()-2) {
                     auto& p2 = poses[i+1];
-                    if (isLinear(pm,p2)) res.push_back( Pose( (pm.pos()+p2.pos())*0.5, p2.dir(), pm.up() ) );
-                    else res.push_back( Pose( intersect(pm,p2) ) );
+                    if (isLinear(*pm,*p2)) res.push_back( Pose::create( (pm->pos()+p2->pos())*0.5, p2->dir(), pm->up() ) );
+                    else res.push_back( Pose::create( intersect(*pm,*p2) ) );
                 }
             }
 
@@ -258,10 +258,10 @@ void Path::approximate(int d) {
 }
 
 int Path::addPoint2( Vec3d p, Vec3d d, Color3f c, Vec3d u ) {
-    return addPoint(Pose(p,d,u), c);
+    return addPoint(Pose::create(p,d,u), c);
 }
 
-int Path::addPoint( Pose p, Color3f c ) {
+int Path::addPoint( PosePtr p, Color3f c ) {
     points.push_back(p);
     point_colors.push_back(c);
     return size() - 1;
@@ -272,31 +272,38 @@ float Path::getLength(int i, int j) {
     if (j <= i) j = size()-1;
     if (degree == 3) {
         for (int k=i; k<j; k++) {
-            auto p1 = points[k].pos();
-            auto p2 = points[k+1].pos();
+            auto p1 = points[k]->pos();
+            auto p2 = points[k+1]->pos();
             l += (p2-p1).length();
         }
     }
     if (degree == 2) {
         for (int k=i; k<j; k+=2) {
-            auto p1 = points[k].pos();
-            auto p2 = points[k+2].pos();
+            auto p1 = points[k]->pos();
+            auto p2 = points[k+2]->pos();
             l += (p2-p1).length();
         }
     }
     return l;
 }
 
-void Path::setPoint(int i, const Pose& p, Color3f c ) {
+void Path::setPoint(int i, PosePtr p, Color3f c ) {
     if (i < 0 || i >= size()) return;
     points[i] = p;
     point_colors[i] = c;
 }
 
-vector<Pose> Path::getPoints() { return points; }
+vector<PosePtr> Path::getPoints() { return points; }
 vector<Vec3d> Path::getControlPoints() { return controlPoints; }
-Pose& Path::getPoint(int i) { return points[i]; }
 int Path::size() { return points.size(); }
+
+PosePtr Path::getPoint(int i) {
+    size_t N = size();
+    if (N == 0) return 0;
+    while (i < 0) i += N;
+    if (i >= N) return 0;
+    return points[i];
+}
 
 Color3f Path::getPointColor(int i) { return point_colors[i]; }
 void Path::setPointColor(int i, Color3f c) { point_colors[i] = c; }
@@ -329,9 +336,9 @@ void Path::compute(int N) {
             auto& p3 = points[2*i+2];
             auto& c1 = point_colors[i];
             auto& c2 = point_colors[i+1];
-            quadraticBezier(_pts+(N-1)*i, N, p1.pos(), p2.pos(), p3.pos());
-            linearBezier   (_drs+(N-1)*i, N, p1.dir(), p3.dir());
-            linearBezier   (_ups+(N-1)*i, N, p1.up() , p3.up());
+            quadraticBezier(_pts+(N-1)*i, N, p1->pos(), p2->pos(), p3->pos());
+            linearBezier   (_drs+(N-1)*i, N, p1->dir(), p3->dir());
+            linearBezier   (_ups+(N-1)*i, N, p1->up() , p3->up());
             linearBezier   (_cls+(N-1)*i, N, Vec3d(c1), Vec3d(c2));
         }
     }
@@ -343,10 +350,10 @@ void Path::compute(int N) {
             auto& p2 = points[i+1];
             auto& c1 = point_colors[i];
             auto& c2 = point_colors[i+1];
-            Vec3d r = p2.pos() - p1.pos();
+            Vec3d r = p2->pos() - p1->pos();
             float L = r.length();
-            Vec3d h1 = p1.pos() + p1.dir()*L/3.0;
-            Vec3d h2 = p2.pos() - p2.dir()*L/3.0;
+            Vec3d h1 = p1->pos() + p1->dir()*L/3.0;
+            Vec3d h2 = p2->pos() - p2->dir()*L/3.0;
             controlPoints.push_back(h1);
             controlPoints.push_back(h2);
 
@@ -365,15 +372,15 @@ void Path::compute(int N) {
 
             // TODO: use the above for the up vector
             Vec3d dMid = (h2-h1)*3;
-            Vec3d uMid = (p1.up() + p2.up())*0.5;
+            Vec3d uMid = (p1->up() + p2->up())*0.5;
             Vec3d xMid = uMid.cross(dMid);
             uMid = dMid.cross(xMid);
             uMid.normalize();
 
-            cubicBezier    (_pts+(N-1)*i, N, p1.pos(), p2.pos(), h1, h2);
-            if (L > 1e-3) quadraticBezier(_drs+(N-1)*i, N, (h1-p1.pos())*3, (h2-h1)*3, (p2.pos()-h2)*3);
-            else linearBezier(_drs+(N-1)*i, N, p1.dir(), p2.dir());
-            computeUpVectors(_ups+(N-1)*i, _drs+(N-1)*i, N, p1.up(), p2.up());
+            cubicBezier    (_pts+(N-1)*i, N, p1->pos(), p2->pos(), h1, h2);
+            if (L > 1e-3) quadraticBezier(_drs+(N-1)*i, N, (h1-p1->pos())*3, (h2-h1)*3, (p2->pos()-h2)*3);
+            else linearBezier(_drs+(N-1)*i, N, p1->dir(), p2->dir());
+            computeUpVectors(_ups+(N-1)*i, _drs+(N-1)*i, N, p1->up(), p2->up());
             //quadraticBezier(_ups+(N-1)*i, N, p1.up(), uMid, p2.up());
             linearBezier   (_cls+(N-1)*i, N, Vec3d(c1), Vec3d(c2));
         }
@@ -414,10 +421,10 @@ vector<Vec3d> Path::getDirections() { return directions; }
 vector<Vec3d> Path::getUpVectors() { return up_vectors; }
 vector<Vec3d> Path::getColors() { return colors; }
 
-vector<Pose> Path::getPoses() {
-    vector<Pose> res;
+vector<PosePtr> Path::getPoses() {
+    vector<PosePtr> res;
     for (unsigned int i=0; i<positions.size(); i++) {
-        res.push_back( Pose(positions[i], directions[i], up_vectors[i]) );
+        res.push_back( Pose::create(positions[i], directions[i], up_vectors[i]) );
     }
     return res;
 }
@@ -461,15 +468,15 @@ Vec3d Path::getPosition(float t, int i, int j, bool fast) {
     if (fast) return interp(positions, t, i, j);
 
     if (degree == 2) {
-        auto& p1 = points[2*i];
-        auto& p2 = points[2*i+1];
-        auto& p3 = points[2*i+2];
+        auto& p1 = *points[2*i];
+        auto& p2 = *points[2*i+1];
+        auto& p3 = *points[2*i+2];
         return p1.pos()*(1-t)*(1-t) + p2.pos()*2*t*(1-t) + p3.pos()*t*t;
     }
 
     if (degree == 3) {
-        auto& p1 = points[i];
-        auto& p2 = points[j];
+        auto& p1 = *points[i];
+        auto& p2 = *points[j];
 
         Vec3d r = p2.pos() - p1.pos();
         float L = r.length();
@@ -493,15 +500,15 @@ void Path::getOrientation(float t, Vec3d& dir, Vec3d& up, int i, int j, bool fas
         up.normalize();
     } else {
         if (degree == 2) { // TODO: stretch t over i-j segment!
-            auto& p1 = points[2*i];
-            auto& p2 = points[2*i+2];
+            auto& p1 = *points[2*i];
+            auto& p2 = *points[2*i+2];
             dir = p1.dir()*(1-t) + p2.dir()*t;
             up  = p1.up() *(1-t) + p2.up() *t;
         }
 
         if (degree == 3) { // TODO: stretch t over i-j segment!
-            auto& p1 = points[i];
-            auto& p2 = points[j];
+            auto& p1 = *points[i];
+            auto& p2 = *points[j];
 
             Vec3d r = p2.pos() - p1.pos();
             float L = r.length();
@@ -523,8 +530,8 @@ PosePtr Path::getPose(float t, int i, int j, bool fast) {
 
 void Path::set(PosePtr p1, PosePtr p2, int res) {
     clear();
-    addPoint(*p1);
-    addPoint(*p2);
+    addPoint(p1);
+    addPoint(p2);
     compute(res);
 }
 
@@ -556,8 +563,8 @@ float Path::getDistanceToHull(Vec3d p) {
     float dist2 = 1.0e20;
 
     for (unsigned int i=1; i<points.size(); i++){
-        Vec3d p1 = points[i-1].pos();
-        Vec3d p2 = points[i].pos();
+        Vec3d p1 = points[i-1]->pos();
+        Vec3d p2 = points[i]->pos();
         auto d = p2-p1;
         auto L2 = d.squareLength();
         auto t = -(p1-p).dot(d)/L2;
@@ -605,10 +612,10 @@ void clampSegment(int& i, int& j, int N) {
 
 bool Path::isStraight(int i, int j) {
     clampSegment(i, j, points.size());
-    Vec3d p1 = points[i].pos();
-    Vec3d d1 = points[i].dir();
-    Vec3d p2 = points[j].pos();
-    Vec3d d2 = points[j].dir();
+    Vec3d p1 = points[i]->pos();
+    Vec3d d1 = points[i]->dir();
+    Vec3d p2 = points[j]->pos();
+    Vec3d d2 = points[j]->dir();
     Vec3d d = p2-p1;
     d.normalize();
     d1.normalize();
@@ -633,7 +640,7 @@ bool Path::isSinuous(int i, int j) { // TODO
 }
 
 void Path::translate(Vec3d t) {
-    for (auto& p : points) p.setPos( p.pos()+t );
+    for (auto& p : points) p->setPos( p->pos()+t );
     compute(iterations);
 }
 

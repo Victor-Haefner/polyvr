@@ -114,7 +114,7 @@ void FPath::updatePath(GraphPtr graph) {
     path = Path::create();
     for (auto n : nodes) {
         auto p = graph->getPosition(n);
-        path->addPoint(*p, Color3f());
+        path->addPoint(p, Color3f());
     }
     path->compute(32);
 }
@@ -323,8 +323,8 @@ VRStrokePtr FNetwork::stroke(Color3f c, float k) {
         PosePtr p1 = graph->getPosition(edge.from);
         PosePtr p2 = graph->getPosition(edge.to);
         PathPtr p = Path::create();
-        p->addPoint( *p1, c );
-        p->addPoint( *p2, c );
+        p->addPoint( p1, c );
+        p->addPoint( p2, c );
         p->compute(8);
         paths.push_back(p);
     }

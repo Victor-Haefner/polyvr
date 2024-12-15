@@ -232,8 +232,8 @@ VRRoadPtr VRRoadNetwork::addLongRoad( string name, string type, vector<VREntityP
         Vec3d p2 = nodesIn[i  ]->getVec3("position");
 
         Path p;
-        p.addPoint( Pose(p1, normalsIn[i-1]) );
-        p.addPoint( Pose(p2, normalsIn[i  ]) );
+        p.addPoint( Pose::create(p1, normalsIn[i-1]) );
+        p.addPoint( Pose::create(p2, normalsIn[i  ]) );
         p.compute(16);
 
         for (auto t : p.computeInflectionPoints(0, 0, 0.2, 0.1, Vec3i(1,0,1))) { // add inflection points
@@ -465,9 +465,9 @@ void VRRoadNetwork::addKirb( VRPolygonPtr perimeter, float h ) {
             p22 = t->elevatePoint(p22);
             p23 = t->elevatePoint(p23);
         }
-        path->addPoint( Pose(p21, d1) );
-        path->addPoint( Pose(p22, n ) );
-        path->addPoint( Pose(p23, d2) );
+        path->addPoint( Pose::create(p21, d1) );
+        path->addPoint( Pose::create(p22, n ) );
+        path->addPoint( Pose::create(p23, d2) );
     }
     path->close();
     path->compute(2);
@@ -663,23 +663,23 @@ void VRRoadNetwork::createArrow(Vec4i dirs, int N, const Pose& p, int type) {
 
             if (type == 0) {
                 auto apath = Path::create();
-                apath->addPoint( Pose(Vec3d(0.5,1.0,0), Vec3d(0,-1,0), Vec3d(0,0,1)) );
-                apath->addPoint( Pose(Vec3d(0.5,0.8,0), Vec3d(0,-1,0), Vec3d(0,0,1)) );
-                apath->addPoint( Pose(d03+dir*0.31, dir, Vec3d(0,0,1)) );
+                apath->addPoint( Pose::create(Vec3d(0.5,1.0,0), Vec3d(0,-1,0), Vec3d(0,0,1)) );
+                apath->addPoint( Pose::create(Vec3d(0.5,0.8,0), Vec3d(0,-1,0), Vec3d(0,0,1)) );
+                apath->addPoint( Pose::create(d03+dir*0.31, dir, Vec3d(0,0,1)) );
                 apath->compute(12);
                 tg.drawPath(apath, Color4f(1,1,1,1), 0.1);
             }
 
             if (type == 1) {
                 auto apath = Path::create();
-                apath->addPoint( Pose(Vec3d(0.5,1.0,0), Vec3d(0,-1,0), Vec3d(0,0,1)) );
-                apath->addPoint( Pose(Vec3d(0.5,0.5,0), Vec3d(0,-1,0), Vec3d(0,0,1)) );
+                apath->addPoint( Pose::create(Vec3d(0.5,1.0,0), Vec3d(0,-1,0), Vec3d(0,0,1)) );
+                apath->addPoint( Pose::create(Vec3d(0.5,0.5,0), Vec3d(0,-1,0), Vec3d(0,0,1)) );
                 apath->compute(2);
                 tg.drawPath(apath, Color4f(1,1,1,1), 0.1);
 
                 apath = Path::create();
-                apath->addPoint( Pose(Vec3d(0.5,0.5,0), dir, Vec3d(0,0,1)) );
-                apath->addPoint( Pose(d03+dir*0.31, dir, Vec3d(0,0,1)) );
+                apath->addPoint( Pose::create(Vec3d(0.5,0.5,0), dir, Vec3d(0,0,1)) );
+                apath->addPoint( Pose::create(d03+dir*0.31, dir, Vec3d(0,0,1)) );
                 apath->compute(2);
                 float w = 0.15;
                 if (a == 0) w = 0.1;
@@ -781,14 +781,14 @@ VRTunnelPtr VRRoadNetwork::addTunnel(VRRoadPtr road) { auto t = VRTunnel::create
 VRBridgePtr VRRoadNetwork::addBridge(VRRoadPtr road) { auto b = VRBridge::create(road); addChild(b); bridges.push_back(b); return b; }
 
 void VRRoadNetwork::computeTracksLanes(VREntityPtr way) {
-    auto getBulge = [&](vector<Pose>& points, unsigned int i, Vec3d& x) -> float {
+    auto getBulge = [&](vector<PosePtr>& points, unsigned int i, Vec3d& x) -> float {
         if (points.size() < 2) return 0;
         if (i == 0) return 0;
         if (i == points.size()-1) return 0;
 
-        Vec3d t1 = points[i-1].pos() - points[i].pos();
+        Vec3d t1 = points[i-1]->pos() - points[i]->pos();
         t1.normalize();
-        Vec3d t2 = points[i+1].pos() - points[i].pos();
+        Vec3d t2 = points[i+1]->pos() - points[i]->pos();
         t2.normalize();
 
         float b1 = -x.dot(t1);
@@ -806,7 +806,7 @@ void VRRoadNetwork::computeTracksLanes(VREntityPtr way) {
             vector<Vec3d> normals;
             auto points = path->getPoints();
             for (unsigned int i=0; i < points.size(); i++) {
-                auto& point = points[i];
+                auto& point = *points[i];
                 Vec3d p = point.pos();
                 Vec3d n = point.dir();
                 float nL = n.length();
@@ -904,9 +904,9 @@ vector<VRPolygonPtr> VRRoadNetwork::computeGreenBelts() {
             float width = toFloat( belt->get("width")->value ) * 0.3;
             vector<Vec3d> rightPoints;
             for (auto& point : toPath(pathEnt, 16)->getPoses()) {
-                Vec3d p = point.pos();
-                Vec3d n = point.dir();
-                Vec3d x = point.x();
+                Vec3d p = point->pos();
+                Vec3d n = point->dir();
+                Vec3d x = point->x();
                 Vec3d pL = p - x*width;
                 Vec3d pR = p + x*width;
                 area->addPoint( Vec2d(pL[0],pL[2]) );
@@ -1100,8 +1100,8 @@ PosePtr VRRoadNetwork::getPosition(Graph::position p) {
     }
 
     Path path;
-    path.addPoint( Pose(node1, eNorms[0]) );
-    path.addPoint( Pose(node2, eNorms[1]) );
+    path.addPoint( Pose::create(node1, eNorms[0]) );
+    path.addPoint( Pose::create(node2, eNorms[1]) );
     return path.getPose(p.pos, 0, 1, false);
 }
 

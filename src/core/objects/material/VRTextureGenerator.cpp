@@ -311,8 +311,8 @@ template<typename T>
 void VRTextureGenerator::applyPath(T* data, PathPtr p, Color4f c, float w) {
     auto poses = p->getPoses();
     for (unsigned int i=1; i<poses.size(); i++) {
-        Pose& p1 = poses[i-1];
-        Pose& p2 = poses[i];
+        Pose& p1 = *poses[i-1];
+        Pose& p2 = *poses[i];
 
         Vec2d A1 = Vec2d(p1.pos()-p1.x()*w*0.5);
         Vec2d B1 = Vec2d(p1.pos()+p1.x()*w*0.5);

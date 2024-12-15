@@ -1469,7 +1469,7 @@ void VRPointCloud::externalColorize(string path, string imgTable, PosePtr pcPose
                     vpPath = Path::create();
                 } else {
                     //cout << "  add point: " << vp.pose.pos() << "   " << vp.pose.dir() << "   " << vp.pose.dir().dot(D) << endl;
-                    vpPath->addPoint(vp.pose);
+                    vpPath->addPoint( Pose::create(vp.pose) );
                 }
             }
         }

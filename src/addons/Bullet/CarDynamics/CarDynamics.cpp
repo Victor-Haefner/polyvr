@@ -487,8 +487,8 @@ void VRCarDynamics::setParameter(float mass, float enginePower, float breakPower
     //TODO: pass it
     if (!engine->clutchTransmissionCurve) engine->clutchTransmissionCurve = Path::create();
     engine->clutchTransmissionCurve->clear();
-    engine->clutchTransmissionCurve->addPoint( Pose(Vec3d(0,1,0), Vec3d(1,0,0)));
-    engine->clutchTransmissionCurve->addPoint( Pose(Vec3d(1,0,0), Vec3d(1,0,0)));
+    engine->clutchTransmissionCurve->addPoint( Pose::create(Vec3d(0,1,0), Vec3d(1,0,0)));
+    engine->clutchTransmissionCurve->addPoint( Pose::create(Vec3d(1,0,0), Vec3d(1,0,0)));
     engine->clutchTransmissionCurve->compute(32);
 
 	engine->gearRatios.clear();
@@ -507,17 +507,17 @@ void VRCarDynamics::setParameter(float mass, float enginePower, float breakPower
     //float maxTorqueRPM = engine->minRpm+(engine->maxRpm-engine->minRpm)*0.70;
     if (!engine->torqueCurve) engine->torqueCurve = Path::create();
     engine->torqueCurve->clear();
-    engine->torqueCurve->addPoint( Pose(Vec3d(engine->stallRpm,0.8,0), Vec3d(1,0,0)));
-    engine->torqueCurve->addPoint( Pose(Vec3d(engine->minRpm,0.92,0), Vec3d(1,0,0)));
-    engine->torqueCurve->addPoint( Pose(Vec3d(engine->maxTorqueRPM,1,0), Vec3d(1,0,0)));
-    engine->torqueCurve->addPoint( Pose(Vec3d(engine->maxRpm,0.8,0), Vec3d(1,0,0)));
+    engine->torqueCurve->addPoint( Pose::create(Vec3d(engine->stallRpm,0.8,0), Vec3d(1,0,0)));
+    engine->torqueCurve->addPoint( Pose::create(Vec3d(engine->minRpm,0.92,0), Vec3d(1,0,0)));
+    engine->torqueCurve->addPoint( Pose::create(Vec3d(engine->maxTorqueRPM,1,0), Vec3d(1,0,0)));
+    engine->torqueCurve->addPoint( Pose::create(Vec3d(engine->maxRpm,0.8,0), Vec3d(1,0,0)));
     engine->torqueCurve->compute(32);
 
     if (!engine->breakCurve) engine->breakCurve = Path::create();
     engine->breakCurve->clear();
-    engine->breakCurve->addPoint( Pose(Vec3d(0,0,0), Vec3d(1,0,0)));
-    engine->breakCurve->addPoint( Pose(Vec3d(0.6,0.3,0), Vec3d(1,1,0)));
-    engine->breakCurve->addPoint( Pose(Vec3d(1,1,0), Vec3d(0,1,0)));
+    engine->breakCurve->addPoint( Pose::create(Vec3d(0,0,0), Vec3d(1,0,0)));
+    engine->breakCurve->addPoint( Pose::create(Vec3d(0.6,0.3,0), Vec3d(1,1,0)));
+    engine->breakCurve->addPoint( Pose::create(Vec3d(1,1,0), Vec3d(0,1,0)));
     engine->breakCurve->compute(32);
 
 	// update physics
