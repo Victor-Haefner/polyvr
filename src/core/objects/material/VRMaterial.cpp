@@ -555,7 +555,7 @@ void VRMaterial::remPass(int i) {
     passes->mat->subAttachment(passes->mat->getMaterials(i));
     passes->mat->subMaterial(i);
     mats.erase(remove(mats.begin(), mats.end(), mats[i]), mats.end());
-    if (activePass == i) activePass = 0;
+    if (activePass == i || activePass >= getNPasses()) activePass = 0;
 }
 
 void VRMaterial::setActivePass(int i) {
