@@ -41,6 +41,8 @@
 #include <OpenSG/OSGGroup.h>
 #include <OpenSG/OSGTransform.h>
 
+#include "core/math/partitioning/OctreeT.h"
+
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
@@ -994,8 +996,34 @@ void VRGeometry::decimate(float f) {
     createSharedIndex(mesh->geo);
 }
 
-void VRGeometry::removeDoubles(float minAngle) {// TODO: use angle
+void VRGeometry::removeDoubles(float rMin) {
     createSharedIndex(mesh->geo);
+
+    VRGeoData data(ptr());
+
+    auto tree = Octree<int>::create(rMin, rMin*1e3);
+    for (size_t i=0; i<data.size(); i++) tree->add( Vec3d(data.getPosition(i)), i );
+
+    map< int, int > toReplace;
+
+    for (size_t i=0; i<data.size(); i++) {
+        int j = data.size()-i-1;
+        auto neighbors = tree->radiusSearch( Vec3d(data.getPosition(j)), rMin );
+        if (neighbors.size() <= 1) continue;
+        if (toReplace.count(j)) continue;
+
+        sort(neighbors.begin(), neighbors.end());
+
+        for (size_t k=1; k<neighbors.size(); k++) {
+            toReplace[neighbors[k]] = neighbors[0];
+        }
+    }
+
+    for (size_t i=0; i<data.getNIndices(); i++) {
+        size_t j = data.getIndex(i);
+        if (toReplace.count(j) == 0) continue;
+        data.setIndex(i, toReplace[j]);
+    }
 }
 
 void VRGeometry::setRandomColors() {
