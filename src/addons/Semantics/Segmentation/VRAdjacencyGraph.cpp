@@ -195,15 +195,53 @@ vector< vector<int> > VRAdjacencyGraph::getBorderLoops() {
 
     map<int, bool> processed;
 
-    auto getNextBVert = [&](int a, int b) {
+    auto getNextBVerts = [&](int a, int b) {
+        vector<int> res;
         auto& edges = edge_triangle_loockup[b];
         for (auto& e : edges) {
             auto& triangles = e.second;
             if (e.first == a) continue;
             if (triangles.size() != 1) continue; // not a boundary edge
-            return e.first;
+            res.push_back( e.first );
+            if (a == -1) return res;
         }
-        return -1;
+        return res;
+    };
+
+    auto finishLoop = [&](const vector<int>& loop) {
+        cout << " finishLoop " << loop.size() << endl;
+        for (auto l : loop) processed[l] = true;
+        loops.push_back(loop);
+    };
+
+    auto continueLooping = [&](vector<int>& loop, int v, int v0) {
+        if (v == v0) { finishLoop(loop); return false; }
+        if (find(loop.begin(), loop.end(), v) != loop.end()) return false;
+        loop.push_back(v);
+        return true;
+    };
+
+    function<void(vector<int>&, int, int)> gatherLoop = [&](vector<int>& loop, int v, int v0) {
+        do {
+            int n = loop.size();
+            auto vs = getNextBVerts( n>1 ? loop[n-2] : -1, loop[n-1] );
+
+            if (vs.size() == 0) break;
+
+            if (vs.size() == 1) {
+                if (!continueLooping(loop, vs[0], v0)) break;
+            } else {
+                cout << "detected subloops: " << vs.size() << endl;
+                for (auto& v2 : vs) {
+                    cout << " continue subloop v2: " << v2 << ", v0 " << v0 << endl;
+                    vector<int> subloop = loop;
+                    subloop.push_back(v2);
+                    gatherLoop(subloop, v2, v0);
+                }
+                cout << "subloops processed" << endl;
+                break;
+            }
+        } while (true);
     };
 
     for (size_t i=0; i<bverts.size(); i++) {
@@ -212,18 +250,7 @@ vector< vector<int> > VRAdjacencyGraph::getBorderLoops() {
 
         vector<int> loop;
         loop.push_back(j);
-
-        do {
-            int n = loop.size();
-            int v = getNextBVert(n>1 ? loop[n-2] : -1, loop[n-1]);
-            if (v == -1) break;
-            if (v == loop[0]) break;
-            if (find(loop.begin(), loop.end(), v) != loop.end()) break;
-            loop.push_back(v);
-        } while (true);
-
-        for (auto l : loop) processed[l] = true;
-        loops.push_back(loop);
+        gatherLoop(loop, j, j);
     }
 
     return loops;
