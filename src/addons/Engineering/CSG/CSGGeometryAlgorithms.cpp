@@ -28,10 +28,12 @@ float calcArea(Vec3d p1, Vec3d p2, Vec3d p3) {
     ;
 }*/
 
+#include <CGAL/Polygon_mesh_processing/repair.h>
 
  // Converts geometry to a polyhedron && applies the geometry node's world transform to the polyhedron.
 // OpenSG geometry data isn't transformed itself but has an associated transform core. Both are unified for CGAL.
 CGALPolyhedron* CSGGeometry::toPolyhedron(VRGeometryPtr geo, PosePtr worldTransform, bool& success) {
+    cout << "CSGGeometry::toPolyhedron " << geo->getName() << endl;
 	TriangleIterator it;
 	auto gpos = geo->getMesh()->geo->getPositions();
 
@@ -64,7 +66,7 @@ CGALPolyhedron* CSGGeometry::toPolyhedron(VRGeometryPtr geo, PosePtr worldTransf
                 for (int i=1; i<3; i++) if (v[i].squareLength() > v[imax2].squareLength() && i != imax) imax2 = i;
 
                 int j = imax2;//(im+1)%3;
-                cout << "set p[" << j << "] = " << p[j] << " with index i[" << imax << "] = " << vi[imax] << endl;
+                //cout << "set p[" << j << "] = " << p[j] << " with index i[" << imax << "] = " << vi[imax] << endl;
                 gpos->setValue(p[j], vi[imax]);
                 NA++;
                 for (int i=0; i<3; i++) p[i] = it.getPosition(i);
@@ -106,8 +108,8 @@ CGALPolyhedron* CSGGeometry::toPolyhedron(VRGeometryPtr geo, PosePtr worldTransf
 
 		bool verbose = false;
 		vector<size_t> debIDs;
-		debIDs.push_back(754);
-		debIDs.push_back(755);
+		//debIDs.push_back(754);
+		//debIDs.push_back(755);
 		for (int i : IDs) for (int j : debIDs) if (i == j) verbose = true;
 		if (verbose) {
             cout << "IDs " << IDs[0] << " " << IDs[1] << " " << IDs[2] << endl;
@@ -125,9 +127,12 @@ CGALPolyhedron* CSGGeometry::toPolyhedron(VRGeometryPtr geo, PosePtr worldTransf
 
 	// Construct the polyhedron from raw data
     success = true;
-	CGALPolyhedron *result = new CGALPolyhedron();
+	CGALPolyhedron* result = new CGALPolyhedron();
 	PolyhedronBuilder<CGAL::HalfedgeDS> builder(positions, indices);
 	result->polyhedron->delegate(builder);
+
+	//CGAL::Polygon_mesh_processing::remove_degenerate_faces(*(result->polyhedron)); // crashes :(
+
 	if (!result->polyhedron->is_closed()) {
         success = false;
         cout << "Error: The polyhedron is not a closed mesh!" << endl;

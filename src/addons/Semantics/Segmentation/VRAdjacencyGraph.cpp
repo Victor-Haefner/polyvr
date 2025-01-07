@@ -185,7 +185,6 @@ vector<int> VRAdjacencyGraph::getBorderVertices() {
         auto it = unique(borders.begin(), borders.end());
         borders.erase(it, borders.end());
     }
-    cout << "getBorderVertices " << borders.size() << endl;
     return borders;
 }
 
@@ -209,19 +208,11 @@ vector< vector<int> > VRAdjacencyGraph::getBorderLoops() {
     };
 
     auto finishLoop = [&](const vector<int>& loop) {
-        cout << " finishLoop " << loop.size() << endl;
         for (auto l : loop) processed[l] = true;
         loops.push_back(loop);
     };
 
-    auto continueLooping = [&](vector<int>& loop, int v, int v0) {
-        if (v == v0) { finishLoop(loop); return false; }
-        if (find(loop.begin(), loop.end(), v) != loop.end()) return false;
-        loop.push_back(v);
-        return true;
-    };
-
-    function<void(vector<int>&, int, int)> gatherLoop = [&](vector<int>& loop, int v, int v0) {
+    function<bool(vector<int>&, int, int)> gatherLoop = [&](vector<int>& loop, int v, int v0) {
         do {
             int n = loop.size();
             auto vs = getNextBVerts( n>1 ? loop[n-2] : -1, loop[n-1] );
@@ -229,19 +220,21 @@ vector< vector<int> > VRAdjacencyGraph::getBorderLoops() {
             if (vs.size() == 0) break;
 
             if (vs.size() == 1) {
-                if (!continueLooping(loop, vs[0], v0)) break;
+                int v = vs[0];
+                if (v == v0) { finishLoop(loop); return true; }
+                if (find(loop.begin(), loop.end(), v) != loop.end()) return false;
+                loop.push_back(v);
             } else {
-                cout << "detected subloops: " << vs.size() << endl;
                 for (auto& v2 : vs) {
-                    cout << " continue subloop v2: " << v2 << ", v0 " << v0 << endl;
                     vector<int> subloop = loop;
                     subloop.push_back(v2);
-                    gatherLoop(subloop, v2, v0);
+                    if (gatherLoop(subloop, v2, v0)) return true;
                 }
-                cout << "subloops processed" << endl;
                 break;
             }
         } while (true);
+
+        return false;
     };
 
     for (size_t i=0; i<bverts.size(); i++) {
