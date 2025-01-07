@@ -180,7 +180,53 @@ vector<int> VRAdjacencyGraph::getBorderVertices() {
         }
     }
 
+    if (borders.size() > 1) {
+        sort(borders.begin(), borders.end());
+        auto it = unique(borders.begin(), borders.end());
+        borders.erase(it, borders.end());
+    }
+    cout << "getBorderVertices " << borders.size() << endl;
     return borders;
+}
+
+vector< vector<int> > VRAdjacencyGraph::getBorderLoops() {
+    auto bverts = getBorderVertices();
+    vector< vector<int> > loops;
+
+    map<int, bool> processed;
+
+    auto getNextBVert = [&](int a, int b) {
+        auto& edges = edge_triangle_loockup[b];
+        for (auto& e : edges) {
+            auto& triangles = e.second;
+            if (e.first == a) continue;
+            if (triangles.size() != 1) continue; // not a boundary edge
+            return e.first;
+        }
+        return -1;
+    };
+
+    for (size_t i=0; i<bverts.size(); i++) {
+        int j = bverts[i];
+        if (processed[j]) continue;
+
+        vector<int> loop;
+        loop.push_back(j);
+
+        do {
+            int n = loop.size();
+            int v = getNextBVert(n>1 ? loop[n-2] : -1, loop[n-1]);
+            if (v == -1) break;
+            if (v == loop[0]) break;
+            if (find(loop.begin(), loop.end(), v) != loop.end()) break;
+            loop.push_back(v);
+        } while (true);
+
+        for (auto l : loop) processed[l] = true;
+        loops.push_back(loop);
+    }
+
+    return loops;
 }
 
 float VRAdjacencyGraph::getCurvature(int i) {

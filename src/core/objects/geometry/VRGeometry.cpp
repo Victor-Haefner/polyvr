@@ -41,6 +41,7 @@
 #include <OpenSG/OSGGroup.h>
 #include <OpenSG/OSGTransform.h>
 
+#include "addons/Semantics/Segmentation/VRAdjacencyGraph.h"
 #include "core/math/partitioning/OctreeT.h"
 
 OSG_BEGIN_NAMESPACE;
@@ -1023,6 +1024,53 @@ void VRGeometry::removeDoubles(float rMin) {
         size_t j = data.getIndex(i);
         if (toReplace.count(j) == 0) continue;
         data.setIndex(i, toReplace[j]);
+    }
+}
+
+void VRGeometry::closeHoles() {
+    cout << "closeHoles" << endl;
+
+    // find boundary loops
+    auto ag = VRAdjacencyGraph::create();
+    ag->setGeometry(ptr());
+    ag->compNeighbors();
+    ag->compTriLoockup();
+
+    auto loops = ag->getBorderLoops();
+
+    auto closeLoop1 = [&](vector<int>& loop, VRGeoData& data) { // TODO: properly handle collapsing triangles!
+        map< int, int > toReplace;
+        for (size_t i=1; i<loop[i]; i++) {
+            toReplace[loop[i]] = loop[0];
+        }
+
+        for (size_t i=0; i<data.getNIndices(); i++) {
+            size_t j = data.getIndex(i);
+            if (toReplace.count(j) == 0) continue;
+            data.setIndex(i, toReplace[j]);
+        }
+    };
+
+    auto closeLoop2 = [&](vector<int>& loop, VRGeoData& data) {
+        // triangulate loop
+        for (size_t i=2; i<loop.size(); i++) {
+            data.pushTri(loop[0], loop[i-1], loop[i]);
+        }
+    };
+
+    auto closeLoop3 = [&](vector<int>& loop, VRGeoData& data) {
+        // triangulate loop
+        for (size_t i=2; i<loop.size(); i++) {
+            data.pushTri(loop[0], loop[i], loop[i-1]);
+        }
+    };
+
+    // close loops
+    VRGeoData data(ptr());
+    for (auto& loop : loops) {
+        //closeLoop1(loop, data);
+        //closeLoop2(loop, data);
+        closeLoop3(loop, data);
     }
 }
 

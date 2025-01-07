@@ -37,6 +37,7 @@ class VRAdjacencyGraph {
 
         vector<int> getNeighbors(int i, int range = 1);
         vector<int> getBorderVertices();
+        vector< vector<int> > getBorderLoops();
         float getCurvature(int i);
 };
 

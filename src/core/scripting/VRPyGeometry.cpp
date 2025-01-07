@@ -123,6 +123,7 @@ PyMethodDef VRPyGeometry::methods[] = {
     {"remColors", PyWrapOpt( Geometry, remColors, "Removes color data", "0", void, bool ) },
     {"makeSingleIndex", PyWrap( Geometry, makeSingleIndex, "Make geometry single index", void ) },
     {"intersectEdges", PyWrap( Geometry, intersectEdges, "Intersect the geometry with a ray to get edges", vector<int>, Line, double ) },
+    {"closeHoles", PyWrap( Geometry, closeHoles, "Try to close holes in the geometry - best after removeDoubles", void ) },
     {NULL}  /* Sentinel */
 };
 
