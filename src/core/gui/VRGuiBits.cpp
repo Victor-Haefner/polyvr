@@ -397,13 +397,7 @@ VRGuiBits::VRGuiBits() {
     f.close();
     uiSignal("setAboutVersion", {{"version",getVersionString()}});
 
-    // window fullscreen
-    /*GtkWidget* win = VRGuiBuilder::get()->get_widget("window1");
-    connect_signal<bool,GdkEventKey*>(win, bind(&VRGuiBits::pressFKey, this, placeholders::_1), "key_press_event");
-    connect_signal<void>(win, bind(&VRGuiBits::on_quit_clicked, this), "destroy");*/
-
     // TERMINAL
-    //terminal = (GtkNotebook*)gtk_notebook_new();
     auto addTermTab = [&](string name) {
         auto c = VRConsoleWidgetPtr( new VRConsoleWidget() );
         c->setLabel( name );
@@ -423,10 +417,6 @@ VRGuiBits::VRGuiBits() {
 
     colTab->addStyle( "red", "#ff3311", "#ffffff", false, false, false, true );
     colTab->addStyle( "green", "#00cc11", "#ffffff", false, false, false, true );
-
-    /*GtkWidget* box = VRGuiBuilder::get()->get_widget("hbox15");
-    gtk_box_pack_start((GtkBox*)box, (GtkWidget*)terminal, true, true, 0);
-    gtk_widget_show_all(box);*/
 
     updatePtr = VRUpdateCb::create( "IntMonitor_guiUpdate", VRGuiBits_on_internal_update );
     VRSceneManager::get()->addUpdateFkt(updatePtr);
