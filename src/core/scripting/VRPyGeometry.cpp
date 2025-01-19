@@ -124,6 +124,7 @@ PyMethodDef VRPyGeometry::methods[] = {
     {"makeSingleIndex", PyWrap( Geometry, makeSingleIndex, "Make geometry single index", void ) },
     {"intersectEdges", PyWrap( Geometry, intersectEdges, "Intersect the geometry with a ray to get edges", vector<int>, Line, double ) },
     {"closeHoles", PyWrap( Geometry, closeHoles, "Try to close holes in the geometry - best after removeDoubles", void ) },
+    {"fixFaceOrientations", PyWrapOpt( Geometry, fixFaceOrientations, "Try to homogenize face orientations - best after removeDoubles and closeHoles", "0", void, int ) },
     {NULL}  /* Sentinel */
 };
 

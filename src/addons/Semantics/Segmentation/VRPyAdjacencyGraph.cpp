@@ -48,7 +48,7 @@ template<> PyTypeObject VRPyBaseT<OSG::VRAdjacencyGraph>::type = {
 PyMethodDef VRPyAdjacencyGraph::methods[] = {
     {"setGeometry", (PyCFunction)VRPyAdjacencyGraph::setGeometry, METH_VARARGS, "Set the geometry to set up the graph - setGeometry( geo )" },
     {"computeNeighbors", (PyCFunction)VRPyAdjacencyGraph::computeNeighbors, METH_NOARGS, "Compute the vertex neighbors list - computeNeighbors()" },
-    {"computeTriLoockup", (PyCFunction)VRPyAdjacencyGraph::computeTriLoockup, METH_NOARGS, "Compute the triangle loockup table - computeTriLoockup()" },
+    {"computeTriLoockup", (PyCFunction)VRPyAdjacencyGraph::computeTriLookup, METH_NOARGS, "Compute the triangle loockup table - computeTriLoockup()" },
     {"computeCurvatures", (PyCFunction)VRPyAdjacencyGraph::computeCurvatures, METH_VARARGS, "Compute the vertex curvatures list - computeCurvatures( int range )" },
     {"getNeighbors", (PyCFunction)VRPyAdjacencyGraph::getNeighbors, METH_VARARGS, "Return the neighbor indices to index i - [int] getNeighbors(int i, int range)" },
     {"getCurvature", (PyCFunction)VRPyAdjacencyGraph::getCurvature, METH_VARARGS, "Return the mesh curvature at index i - float getCurvature(int i)" },
@@ -67,8 +67,8 @@ PyObject* VRPyAdjacencyGraph::computeNeighbors(VRPyAdjacencyGraph* self) {
     Py_RETURN_TRUE;
 }
 
-PyObject* VRPyAdjacencyGraph::computeTriLoockup(VRPyAdjacencyGraph* self) {
-    self->objPtr->compTriLoockup();
+PyObject* VRPyAdjacencyGraph::computeTriLookup(VRPyAdjacencyGraph* self) {
+    self->objPtr->compTriLookup();
     Py_RETURN_TRUE;
 }
 

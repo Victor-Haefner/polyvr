@@ -113,6 +113,7 @@ class VRGeometry : public VRTransform {
         void setRandomColors();
         void removeDoubles(float minAngle);
         void closeHoles();
+        void fixFaceOrientations(int face0);
         void decimate(float f);
         void merge(VRGeometryPtr geo, PosePtr pose = 0);
         void removeSelection(VRSelectionPtr sel);

@@ -1034,7 +1034,7 @@ void VRGeometry::closeHoles() {
     auto ag = VRAdjacencyGraph::create();
     ag->setGeometry(ptr());
     ag->compNeighbors();
-    ag->compTriLoockup();
+    ag->compTriLookup();
 
     auto loops = ag->getBorderLoops();
 
@@ -1071,6 +1071,120 @@ void VRGeometry::closeHoles() {
         //closeLoop1(loop, data);
         //closeLoop2(loop, data);
         closeLoop3(loop, data);
+    }
+}
+
+void VRGeometry::fixFaceOrientations(int face0) {
+    struct Triangle {
+        size_t ID;
+        int v1, v2, v3;
+        vector<int> neighbors;
+        bool checked = false;
+    };
+
+    vector<Triangle> faces;
+    map<int, vector<int>> vertexFaces;
+
+    for (TriangleIterator it = TriangleIterator(getMesh()->geo); !it.isAtEnd(); ++it) {
+        Triangle t;
+        t.ID = faces.size();
+        t.v1 = it.getPositionIndex(0);
+        t.v2 = it.getPositionIndex(1);
+        t.v3 = it.getPositionIndex(2);
+        faces.push_back( t );
+        for (int v : {t.v1, t.v2, t.v3}) {
+            vertexFaces[t.v1].push_back(t.ID);
+        }
+    }
+
+    auto hasCommonEdge = [](const Triangle& t1, const Triangle& t2) {
+        bool v1 = (t1.v1 == t2.v1 || t1.v1 == t2.v2 || t1.v1 == t2.v3);
+        bool v2 = (t1.v2 == t2.v1 || t1.v2 == t2.v2 || t1.v2 == t2.v3);
+        bool v3 = (t1.v3 == t2.v1 || t1.v3 == t2.v2 || t1.v3 == t2.v3);
+        return (v1 && v2 || v1 && v3 || v2 && v3);
+    };
+
+    for (auto& t : faces) {
+        for (int v : {t.v1, t.v2, t.v3}) {
+            for (auto& t2ID : vertexFaces[v]) {
+                if (t2ID == t.ID) continue;
+                if (::find(t.neighbors.begin(), t.neighbors.end(),t2ID) != t.neighbors.end()) continue;
+
+                auto& t2 = faces[t2ID];
+                if (hasCommonEdge(t, t2)) t.neighbors.push_back(t2ID);
+            }
+        }
+    }
+
+    struct Check {
+        int t1;
+        int t2;
+    };
+
+    auto queueNeighbors = [&](int f, vector<Check>& checks) {
+        for ( auto n : faces[f].neighbors ) {
+            if (faces[n].checked) continue;
+            faces[n].checked = true;
+            Check c = {f, n};
+            checks.push_back(c);
+        }
+    };
+
+    auto orientationMismatch = [&](int f1, int f2) {
+        Triangle& t1 = faces[f1];
+        Triangle& t2 = faces[f2];
+
+        // check t1.v1 -> t1.v2 edge
+        if (t1.v1 == t2.v1 && t1.v2 == t2.v2) return true;
+        if (t1.v1 == t2.v2 && t1.v2 == t2.v3) return true;
+        if (t1.v1 == t2.v3 && t1.v2 == t2.v1) return true;
+
+        // check t1.v2 -> t1.v3 edge
+        if (t1.v2 == t2.v1 && t1.v3 == t2.v2) return true;
+        if (t1.v2 == t2.v2 && t1.v3 == t2.v3) return true;
+        if (t1.v2 == t2.v3 && t1.v3 == t2.v1) return true;
+
+        // check t1.v3 -> t1.v1 edge
+        if (t1.v3 == t2.v1 && t1.v1 == t2.v2) return true;
+        if (t1.v3 == t2.v2 && t1.v1 == t2.v3) return true;
+        if (t1.v3 == t2.v3 && t1.v1 == t2.v1) return true;
+
+        return false;
+    };
+
+    VRGeoData data(ptr());
+
+    auto flipOrientation = [&](int f) {
+        Triangle& t = faces[f];
+        swap(t.v1, t.v3);
+        data.setIndex(f*3+0, t.v1);
+        data.setIndex(f*3+2, t.v3);
+    };
+
+
+    vector<Check> checks;
+    size_t processed = 0;
+
+    faces[face0].checked = true;
+    queueNeighbors(face0, checks);
+
+    while (processed < checks.size()) {
+        size_t N = checks.size();
+        for (; processed<N; processed++) {
+            auto c = checks[processed];
+            if ( orientationMismatch(c.t1, c.t2) ) flipOrientation(c.t2);
+            queueNeighbors(c.t2, checks);
+
+            /*if (processed < 10) {
+                auto& t1 = faces[c.t1];
+                auto& t2 = faces[c.t2];
+                Vec3d p1 = (1.0/3.0)*(Vec3d(data.getPosition(t1.v1)) + Vec3d(data.getPosition(t1.v2)) + Vec3d(data.getPosition(t1.v3)));
+                Vec3d p2 = (1.0/3.0)*(Vec3d(data.getPosition(t2.v1)) + Vec3d(data.getPosition(t2.v2)) + Vec3d(data.getPosition(t2.v3)));
+                data.pushVert(p1, Vec3d(0,1,0));
+                data.pushVert(p2, Vec3d(0,1,0));
+                data.pushLine();
+            }*/
+        }
     }
 }
 
