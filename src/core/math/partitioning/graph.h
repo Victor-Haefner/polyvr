@@ -77,6 +77,7 @@ class Graph : public VRStorage {
         vector< node > getNextNodes(int i);
         vector< node > getPreviousNodes(int i);
         vector< node > getNeighbors(int i);
+        vector< node > getRootNodes();
 
         map< int, edge>& getEdges();
         vector< edge > getEdgesCopy();

@@ -34,6 +34,7 @@ PyMethodDef VRPyGraph::methods[] = {
     {"connected", PyWrap2(Graph, connected, "Check if n1 and n2 are connected (directed)", bool, int, int ) },
     {"disconnect", PyWrap2(Graph, disconnect, "Disconnect nodes n1 and n2", void, int, int ) },
     {"getNodes", PyWrap2( Graph, getNodesCopy, "Get all node IDs", vector<Graph::node> ) },
+    {"getRootNodes", PyWrap2( Graph, getRootNodes, "Get all nodes without incoming edges", vector<Graph::node> ) },
     {"hasNode", PyWrap2( Graph, hasNode, "Check if graph has node ID", bool, int ) },
     {"hasEdge", PyWrap2( Graph, hasEdge, "Check if graph has edge ID", bool, int ) },
     {"remNode", PyWrap2( Graph, remNode, "Remove node", void, int ) },

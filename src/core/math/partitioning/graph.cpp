@@ -128,6 +128,16 @@ bool Graph::connected(int i, int j) {
     return false;
 }
 
+vector< Graph::node > Graph::getRootNodes() {
+    vector< node > r;
+    for (auto& n : nodes) {
+        if ( n.second.inEdges.size() == 0 ) {
+            r.push_back(n.second);
+        }
+    }
+    return r;
+}
+
 int Graph::size() { return nodes.size(); }
 bool Graph::hasNode(int i) { return nodes.count(i); }
 bool Graph::hasEdge(int i) { return edges.count(i); }
