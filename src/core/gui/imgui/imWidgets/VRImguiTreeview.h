@@ -23,6 +23,7 @@ class ImTreeview {
             ImInput* input = 0;
             int options;
             bool isSelected = false;
+            bool isDragged = false;
             vector<Node*> children;
             vector<pair<string, string>> menu;
             ImGuiTreeNodeFlags nodeFlags = 0;

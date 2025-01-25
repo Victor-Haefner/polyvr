@@ -126,9 +126,7 @@ class VRGuiScene {
         // ----------------------------------------------
 
         // ------------- scenegraph drag && drop -------
-        void on_drag_beg();
-        void on_drag_end();
-        void on_drag_data_receive(/*_GdkDragContext* dc , int i1, int i2, _GtkSelectionData* sd, unsigned int i3, unsigned int i4*/);
+        void on_treeview_drop(string sID, string tID);
         void on_edit_object_name(const char* path_string, const char* new_text);
         // ----------------------------------------------
 

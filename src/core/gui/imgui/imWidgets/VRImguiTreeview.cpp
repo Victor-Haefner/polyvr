@@ -73,6 +73,21 @@ bool ImTreeview::Node::render(int lvl) {
     if (options & IM_TV_NODE_EDITABLE) renderEditable();
     else renderButton();
 
+    if (ImGui::BeginDragDropSource()) {
+        isDragged = true;
+        ImGui::SetDragDropPayload(tvID.c_str(), ID.c_str(), ID.size() + 1);
+        renderButton();
+        ImGui::EndDragDropSource();
+    } else isDragged = false;
+
+    if (ImGui::BeginDragDropTarget()) {
+        if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload( tvID.c_str() )) {
+            string sID = string( static_cast<const char*>(payload->Data) );
+            uiSignal("treeview_drop", {{"treeview",tvID}, {"source",sID}, {"target",ID}});
+        }
+        ImGui::EndDragDropTarget();
+    }
+
     bool open = false;
     if (children.size() > 0) {
         ImGui::SameLine();

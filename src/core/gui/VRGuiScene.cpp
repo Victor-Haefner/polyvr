@@ -812,51 +812,16 @@ void VRGuiScene::on_collada_import_clicked() {
     parseSGTree(tmp, selected_itr);*/
 }
 
-void VRGuiScene::on_drag_end() {
-    /*auto act = gdk_drag_context_get_selected_action(dc);
-    auto dest = dragDest.lock();
-    if (dest == 0) return;
-    if (act == 0) return;
-    VRObjectPtr obj = dragObj.lock();
-    if (obj == 0) return;
-    obj->switchParent(dest, dragPos);
-
-    GtkTreeIter iter;
-    GtkTreeModel* model = gtk_tree_view_get_model(tree_view);
-    gtk_tree_model_get_iter_from_string(model, &iter, obj->getPath().c_str());
-    setSGRow(&iter, obj);*/
-}
-
-void VRGuiScene::on_drag_beg() {
-    //cout << "\nDRAG BEGIN " << dc->get_selection() << endl;
-}
-
-void VRGuiScene::on_drag_data_receive(/*GdkDragContext* dc, int x, int y, GtkSelectionData* sd, guint info, guint time*/) {
-    /*GtkTreePath* path = 0;
-    GtkTreeViewDropPosition pos; // enum
-    gtk_tree_view_get_drag_dest_row(tree_view, &path, &pos);
-    if (path == 0) return;
-
-    dragDest.reset();
-    dragObj.reset();
-    VRObjectPtr obj = getSelected();
-    if (obj == 0) return;
-    dragObj = obj;
-
-    dragPath = gtk_tree_path_to_string(path);
-    dragPos = 0;
-    if (pos <= 1) { // between two rows
-        int d = dragPath.rfind(':');
-        dragPos = toInt( dragPath.substr(d+1) );
-        dragPath = dragPath.substr(0,d);
-    }
-    //cout << "drag dest " << dragPath << " " << pos << endl;
-
-    if (obj->hasTag("treeviewNotDragable")) { gdk_drag_status(dc, GdkDragAction(0),0); return; } // object is not dragable
-    if (dragPath == "0" && pos <= 1) { gdk_drag_status(dc, GdkDragAction(0),0); return; } // drag out of root
-
+void VRGuiScene::on_treeview_drop(string sID, string tID) {
     auto scene = VRScene::getCurrent();
-    if (scene) dragDest = scene->getRoot()->getAtPath(dragPath);*/
+    if (!scene) return;
+
+    VRObjectPtr source = scene->get( toInt(sID) );
+    VRObjectPtr target = scene->get( toInt(tID) );
+    if ( !source || !target ) return;
+
+    source->switchParent(target, 0);
+    updateTreeView();
 }
 
 
@@ -1266,6 +1231,7 @@ VRGuiScene::VRGuiScene() { // TODO: reduce callbacks with templated functions
     mgr->addCallback("ui_change_scene_tab", [&](OSG::VRGuiSignals::Options o) { if (o["tab"] == "Scenegraph") updateTreeView(); return true; }, true );
     mgr->addCallback("treeview_select", [&](OSG::VRGuiSignals::Options o) { if (o["treeview"] == "scenegraph") on_treeview_select( o["node"] ); return true; }, true );
     mgr->addCallback("treeview_rename", [&](OSG::VRGuiSignals::Options o) { if (o["treeview"] == "scenegraph") on_treeview_rename( o["node"], o["name"] ); return true; }, true );
+    mgr->addCallback("treeview_drop", [&](OSG::VRGuiSignals::Options o) { if (o["treeview"] == "scenegraph") on_treeview_drop( o["source"], o["target"] ); return true; }, true );
 
     mgr->addCallback("sg_toggle_visible", [&](OSG::VRGuiSignals::Options o) { on_toggle_visible(toBool(o["visible"])); return true; }, true );
     mgr->addCallback("sg_toggle_pickable", [&](OSG::VRGuiSignals::Options o) { on_toggle_pickable(toBool(o["pickable"])); return true; }, true );
