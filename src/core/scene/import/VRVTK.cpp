@@ -10,6 +10,9 @@
 #include <vtkQuad.h>
 #include <vtkLine.h>
 
+#include "core/utils/zipper/unzipper.h"
+#include "core/utils/system/VRSystem.h"
+
 /* NOT COMPILING?
 sudo apt-get install libvtk9-dev
 */
@@ -25,6 +28,13 @@ OSG_BEGIN_NAMESPACE;
 
 void loadVtk(string path, VRTransformPtr res) {
     cout << "load VTK file " << path << endl;
+    if (endsWith(path, ".gz")) {
+        Unzipper uzip(path);
+        path = subString(path, 0, -4);
+        uzip.extract( path );
+        cout << " VTK file unzipped to " << path << endl;
+    }
+
     VRGeoData geo;
 
     vtkDataSetReader* reader = vtkDataSetReader::New();

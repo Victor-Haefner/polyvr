@@ -57,7 +57,7 @@ vector<string> splitString(const string& s, const string& d) {
 }
 
 string subString(const string& s, int beg, int len) {
-    if (len < 0) len = s.size()-beg;
+    if (len < 0) len = s.size()-beg +len+1;
     if (len < 0) return "";
     if (beg >= s.length()) return "";
     if (beg+len > s.length()) return "";

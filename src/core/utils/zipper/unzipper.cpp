@@ -2,6 +2,7 @@
 #include "defs.h"
 #include "tools.h"
 #include "filesystem.h"
+#include "core/utils/system/VRSystem.h"
 
 #include <functional>
 #include <exception>
@@ -11,9 +12,10 @@
 
 struct Unzipper::Impl {
     Unzipper& m_outer;
-    zipFile m_zf;
+    zipFile m_zf = NULL;
     ourmemory_t m_zipmem;
     zlib_filefunc_def m_filefunc;
+    string fExt = ".zip";
 
   private:
 
@@ -79,7 +81,7 @@ struct Unzipper::Impl {
     bool extractCurrentEntryToStream(ZipEntry& entryinfo, ostream& stream) {
       int err = UNZ_OK;
       if (!entryinfo.valid()) return false;
-      err = extractToStream(stream, entryinfo);
+      err = extractToStream(stream, entryinfo.name);
       if (UNZ_OK == err) {
         err = unzCloseCurrentFile(m_zf);
         if (UNZ_OK != err) {
@@ -95,7 +97,7 @@ struct Unzipper::Impl {
     bool extractCurrentEntryToMemory(ZipEntry& entryinfo, vector<unsigned char>& outvec) {
       int err = UNZ_OK;
       if (!entryinfo.valid()) return false;
-      err = extractToMemory(outvec, entryinfo);
+      err = extractToMemory(outvec, entryinfo.name, entryinfo.uncompressedSize);
       if (UNZ_OK == err) {
         err = unzCloseCurrentFile(m_zf);
         if (UNZ_OK != err) {
@@ -143,8 +145,7 @@ struct Unzipper::Impl {
 
       if (output_file.good())
       {
-        if (extractToStream(output_file, info))
-          err = UNZ_OK;
+        if (extractToStream(output_file, info.name)) err = UNZ_OK;
 
         output_file.close();
 
@@ -160,100 +161,89 @@ struct Unzipper::Impl {
       return err;
     }
 
-    int extractToStream(ostream& stream, ZipEntry& info)
-    {
-      size_t err = UNZ_ERRNO;
-
-      err = unzOpenCurrentFilePassword(m_zf, m_outer.password.c_str());
-      if (UNZ_OK != err)
-      {
-        stringstream str;
-        str << "Error " << err << " opening internal file '"
-            << info.name << "' in zip";
-
-        throw EXCEPTION_CLASS(str.str().c_str());
-      }
-
-      vector<char> buffer;
-      buffer.resize(WRITEBUFFERSIZE);
-
-      do
-      {
-        err = unzReadCurrentFile(m_zf, buffer.data(), (unsigned int)buffer.size());
-        if (err < 0 || err == 0)
-          break;
-
-        stream.write(buffer.data(), err);
-        if (!stream.good())
-        {
-          err = UNZ_ERRNO;
-          break;
+    int extractToStream(ostream& stream, string name) {
+        if (fExt == ".zip") {
+            size_t err = unzOpenCurrentFilePassword(m_zf, m_outer.password.c_str());
+            if (err != UNZ_OK) { cout << "Unzipper Error " << err << " opening internal file '" << name << "' in zip"; return (int)err; }
         }
 
-      } while (err > 0);
+        vector<char> buffer;
+        buffer.resize(WRITEBUFFERSIZE);
 
-      stream.flush();
+        if (fExt == ".zip") {
+            size_t err = 0;
+            do {
+                err = unzReadCurrentFile(m_zf, buffer.data(), (unsigned int)buffer.size());
+                if (err < 0 || err == 0) break;
+                stream.write(buffer.data(), err);
+                if (!stream.good()) {
+                    err = UNZ_ERRNO;
+                    break;
+                }
+            } while (err > 0);
+        }
 
-      return (int)err;
+        if (fExt == ".gz") {
+            int bytesRead = 0;
+            while ((bytesRead = gzread((gzFile)m_zf, &buffer[0], WRITEBUFFERSIZE)) > 0) {
+                stream.write(&buffer[0], bytesRead);
+            }
+        }
+
+        stream.flush();
+        return UNZ_OK;
     }
 
-    int extractToMemory(vector<unsigned char>& outvec, ZipEntry& info)
-    {
-      size_t err = UNZ_ERRNO;
+    int extractToMemory(vector<unsigned char>& outvec, string name, size_t uncompressedSize) {
+        if (fExt == ".zip") {
+            size_t err = unzOpenCurrentFilePassword(m_zf, m_outer.password.c_str());
+            if (err != UNZ_OK) { cout << "Unzipper Error " << err << " opening internal file '" << name << "' in zip"; return (int)err; }
+        }
 
-      err = unzOpenCurrentFilePassword(m_zf, m_outer.password.c_str());
-      if (UNZ_OK != err)
-      {
-        stringstream str;
-        str << "Error " << err << " opening internal file '"
-            << info.name << "' in zip";
+        vector<unsigned char> buffer;
+        buffer.resize(WRITEBUFFERSIZE);
 
-        throw EXCEPTION_CLASS(str.str().c_str());
-      }
+        if (fExt == ".zip") {
+            size_t err = 0;
+            outvec.reserve((size_t)uncompressedSize);
+            do {
+                err = unzReadCurrentFile(m_zf, buffer.data(), (unsigned int)buffer.size());
+                if (err < 0 || err == 0) break;
+                outvec.insert(outvec.end(), buffer.data(), buffer.data() + err);
+            } while (err > 0);
+        }
 
-      vector<unsigned char> buffer;
-      buffer.resize(WRITEBUFFERSIZE);
+        if (fExt == ".gz") {
+            int bytesRead = 0;
+            while ((bytesRead = gzread((gzFile)m_zf, &buffer[0], WRITEBUFFERSIZE)) > 0) {
+                ; // TODO
+            }
+        }
 
-      outvec.reserve((size_t)info.uncompressedSize);
-
-      do
-      {
-        err = unzReadCurrentFile(m_zf, buffer.data(), (unsigned int)buffer.size());
-        if (err < 0 || err == 0)
-          break;
-
-        outvec.insert(outvec.end(), buffer.data(), buffer.data() + err);
-
-      } while (err > 0);
-
-      return (int)err;
+        return UNZ_OK;
     }
 
   public:
 
-    Impl(Unzipper& outer) : m_outer(outer), m_zipmem(), m_filefunc()
-    {
-      m_zf = NULL;
+    Impl(Unzipper& outer) : m_outer(outer), m_zipmem(), m_filefunc() {}
+    ~Impl() {}
+
+    void close() {
+        if (m_zf) {
+            if (fExt == ".zip") unzClose(m_zf);
+            if (fExt == ".gz")  gzclose((gzFile)m_zf);
+        }
     }
 
-    ~Impl()
-    {
-    }
-
-    void close()
-    {
-      if (m_zf)
-        unzClose(m_zf);
-    }
-
-    bool initFile(const string& filename)
-    {
+    bool initFile(const string& filename) {
+        fExt = getFileExtension(filename);
 #ifdef USEWIN32IOAPI
-      zlib_filefunc64_def ffunc;
-      fill_win32_filefunc64A(&ffunc);
-      m_zf = unzOpen2_64(filename.c_str(), &ffunc);
+        zlib_filefunc64_def ffunc;
+        fill_win32_filefunc64A(&ffunc);
+        m_zf = unzOpen2_64(filename.c_str(), &ffunc);
 #else
-      m_zf = unzOpen64(filename.c_str());
+        if (fExt == ".zip") m_zf = unzOpen64(filename.c_str());
+        if (fExt == ".gz")  m_zf = gzopen(filename.c_str(), "rb");
 #endif
       return m_zf != NULL;
     }
@@ -297,8 +287,16 @@ struct Unzipper::Impl {
 
 
 
-    bool extractAll(const string& destination, const map<string, string>& alternativeNames)
-    {
+    bool extractAll(const string& destination, const map<string, string>& alternativeNames) {
+        if (fExt == ".gz") { // gz is always a single file
+            ofstream output_file(destination.c_str(), ofstream::binary);
+            if (output_file.good()) {
+                extractToStream(output_file, "");
+                output_file.close();
+            } else output_file.close();
+            return true;
+        }
+
       vector<ZipEntry> entries;
       getEntries(entries);
       vector<ZipEntry>::iterator it = entries.begin();
