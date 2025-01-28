@@ -32,6 +32,7 @@ class VRTexture : public std::enable_shared_from_this<VRTexture> {
 
         bool read(string path);
         void readGIS(string path);
+        void readBuffer(string path, string format, Vec3i layout, int chanels, int Nmipmaps, int internalpf);
         void setImage(ImageMTRecPtr img);
         void setInternalFormat(int ipf);
         void setPixel(Vec3i p, Color4f c);

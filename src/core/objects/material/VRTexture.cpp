@@ -31,6 +31,38 @@ void VRTexture::setInternalFormat(int ipf) { internal_format = ipf; }
 int VRTexture::getInternalFormat() { return internal_format; }
 ImageMTRecPtr VRTexture::getImage() { return img; }
 
+void VRTexture::readBuffer(string path, string format, Vec3i layout, int chanels, int Nmipmaps, int ipf) {
+    int frmt = -1;
+    if (format == "UINT8") frmt = Image::OSG_UINT8_IMAGEDATA;
+    if (format == "FLOAT32") frmt = Image::OSG_FLOAT32_IMAGEDATA;
+    if (frmt < 0) { cout << "ERROR: format conversion failed!" << endl; return; }
+
+    ifstream file(path, std::ios::binary);
+    if (!file) { cout << "Error opening " << path << endl; return; }
+
+    file.seekg(0, std::ios::end);
+    size_t N = file.tellg();
+
+    file.seekg(0, std::ios::beg);
+    vector<char> data(N);
+    file.read(data.data(), N);
+    if (file.fail()) { cout << "Error reading " << path << endl; return;}
+
+    for (int i=0; i<200; i++) cout << " " << (int)(uint8_t)data[i];
+    cout << endl;
+
+    file.close();
+
+    int chEnum = 0;
+    if (chanels == 1) chEnum = Image::OSG_I_PF;
+    if (chanels == 2) chEnum = Image::OSG_LA_PF;
+    if (chanels == 3) chEnum = Image::OSG_RGB_PF;
+    if (chanels == 4) chEnum = Image::OSG_RGBA_PF;
+
+    img->set( chEnum, layout[0], layout[1], layout[2], Nmipmaps, 1, 0, (const uint8_t*)&data[0], frmt, true, 1);
+    internal_format = ipf;
+}
+
 void VRTexture::setByteData(vector<char> data, Vec3i layout, int chanels, int Nmipmaps, int ipf) {
     img->set( chanels, layout[0], layout[1], layout[2], Nmipmaps, 1, 0, (const uint8_t*)&data[0], Image::OSG_UINT8_IMAGEDATA, true, 1);
     internal_format = ipf;
