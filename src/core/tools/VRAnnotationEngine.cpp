@@ -198,14 +198,14 @@ void VRAnnotationEngine::resize(Label& l, Vec3d p, int N) {
 
 #ifndef OSG_OGL_ES2
     if (hasGS) {
-        for (int i=0; i<eN; i++) data->setVert(l.entries[i], Vec3d(), Vec3d()); // clear old buffer
+        for (int i=0; i<eN; i++) data->setVert(l.entries[i], Vec3d(), Vec3d(), Vec2d()); // clear old buffer
 
         if (N <= eN) return;
         l.entries.resize(N, 0);
         int pN = data->size();
 
         for (int i=0; i<N-eN; i++) {
-            data->pushVert(p, Vec3d());
+            data->pushVert(p, Vec3d(), Vec2d());
             data->pushPoint();
             l.entries[eN+i] = pN+i;
         }
@@ -240,6 +240,24 @@ int VRAnnotationEngine::add(Vec3d p, string s) {
 }
 
 VRAnnotationEngine::Label::Label(int id) : ID(id) {}
+
+void VRAnnotationEngine::setMask(int i, float a, float b) {
+    if (i < 0 || i >= labels.size()) return;
+    Label& label = labels[i];
+    int Ng = label.Ngraphemes;
+    label.maskA = round(a*Ng);
+    label.maskB = round(b*Ng);
+
+    int Nc = 2; // number of points, 2 chars per vertex
+    int Nv = ceil(Ng/double(Nc));
+    for (int j=0; j<Nv; j++) {
+        int k = label.entries[j];
+        Vec2d mask(1,1);
+        if (label.maskA != -1 && j*2   < label.maskA || label.maskB != -1 && j*2   >= label.maskB) mask[0] = 0;
+        if (label.maskA != -1 && j*2+1 < label.maskA || label.maskB != -1 && j*2+1 >= label.maskB) mask[1] = 0;
+        data->setTexCoord(k, mask);
+    }
+}
 
 void VRAnnotationEngine::setLine(int i, Vec3d p, string str, bool ascii, bool force) {
     //cout << "VRAnnotationEngine::setLine i: " << i << ", p: " << p << ", str: '" << str << "', ascii: " << ascii << endl;
@@ -277,14 +295,17 @@ void VRAnnotationEngine::setLine(int i, Vec3d p, string str, bool ascii, bool fo
             }
 
             int k = l.entries[j];
-            data->setVert(k, p, Vec3d(c[0],c[1],j));
+            Vec2d mask(1,1);
+            if (l.maskA != -1 && j*2   < l.maskA || l.maskB != -1 && j*2   >= l.maskB) mask[0] = 0;
+            if (l.maskA != -1 && j*2+1 < l.maskA || l.maskB != -1 && j*2+1 >= l.maskB) mask[1] = 0;
+            data->setVert(k, p, Vec3d(c[0],c[1],j), mask);
         }
 
         // bounding points to avoid word clipping
-        data->setVert(l.entries[N], p+Vec3d(-0.25*size, -0.5*size, 0), Vec3d(0,0,-1));
-        data->setVert(l.entries[N+1], p+Vec3d(-0.25*size,  0.5*size, 0), Vec3d(0,0,-1));
-        data->setVert(l.entries[N+2], p+Vec3d((l.Ngraphemes-0.25)*size, -0.5*size, 0), Vec3d(0,0,-1));
-        data->setVert(l.entries[N+3], p+Vec3d((l.Ngraphemes-0.25)*size,  0.5*size, 0), Vec3d(0,0,-1));
+        data->setVert(l.entries[N], p+Vec3d(-0.25*size, -0.5*size, 0), Vec3d(0,0,-1), Vec2d(1,1));
+        data->setVert(l.entries[N+1], p+Vec3d(-0.25*size,  0.5*size, 0), Vec3d(0,0,-1), Vec2d(1,1));
+        data->setVert(l.entries[N+2], p+Vec3d((l.Ngraphemes-0.25)*size, -0.5*size, 0), Vec3d(0,0,-1), Vec2d(1,1));
+        data->setVert(l.entries[N+3], p+Vec3d((l.Ngraphemes-0.25)*size,  0.5*size, 0), Vec3d(0,0,-1), Vec2d(1,1));
     }
     else {
 #endif
@@ -405,10 +426,11 @@ varying vec4 vertex;
 varying vec3 normal;
 varying mat4 MVP;
 varying mat4 P;
-varying vec2 texCoord;
+varying vec2 vTexCoord;
 
 attribute vec4 osg_Vertex;
 attribute vec4 osg_Normal;
+attribute vec2 osg_MultiTexCoord0;
 
 void main( void ) {
     vertex = osg_Vertex;
@@ -416,7 +438,7 @@ void main( void ) {
     normal = osg_Normal.xyz;
     MVP = gl_ModelViewProjectionMatrix;
     P = gl_ProjectionMatrix;
-    texCoord = vec2(0,0);
+    vTexCoord = osg_MultiTexCoord0;
 }
 );
 
@@ -468,6 +490,7 @@ uniform float charTexSize;
 uniform vec2 OSGViewportSize;
 in vec4 vertex[];
 in vec3 normal[];
+in vec2 vTexCoord[];
 in mat4 MVP[];
 in mat4 P[];
 out vec2 texCoord;
@@ -548,8 +571,8 @@ void emitChar(in int d, in float p) {
 }
 
 void emitString(in int c0, in int c1, in float offset) {
-    if (c0 > 0) emitChar(c0, 2*offset);
-    if (c1 > 0) emitChar(c1, 2*offset + 1);
+    if (c0 > 0 && int(vTexCoord[0][0]) > 0) emitChar(c0, 2*offset);
+    if (c1 > 0 && int(vTexCoord[0][1]) > 0) emitChar(c1, 2*offset + 1);
 }
 
 void main() {
