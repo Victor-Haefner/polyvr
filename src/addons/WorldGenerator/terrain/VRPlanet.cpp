@@ -347,7 +347,7 @@ void VRPlanet::setParameters( double r, string t, bool l, double s ) {
     radius = r;
     sectorSize = s;
     rebuild();
-    setupMaterial(t, l);
+    if (t != "") setupMaterial(t, l);
 }
 
 void VRPlanet::setLayermode( string mode ) {

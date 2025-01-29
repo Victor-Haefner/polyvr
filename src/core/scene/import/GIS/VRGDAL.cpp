@@ -72,6 +72,7 @@ void loadSHP(string path, VRTransformPtr res, map<string, string> opts) {
 
     double pointSize = opts.count("pointSize") ? toValue<double>(opts["pointSize"]) : -1;
     double lineSize = opts.count("lineSize") ? toValue<double>(opts["lineSize"]) : -1;
+    Vec3d offset = opts.count("offset") ? toValue<Vec3d>(opts["offset"]) : Vec3d();
 
     Layer->addProperty("type", "int");
     Layer->addProperty("features", "Shape");
@@ -80,7 +81,7 @@ void loadSHP(string path, VRTransformPtr res, map<string, string> opts) {
 
     auto handlePoint = [&](OGRGeometry* geo, VRGeoDataPtr data, size_t fI) {
         OGRPoint* pnt = (OGRPoint*)geo;
-        Vec3d p = toVec3d(*pnt);
+        Vec3d p = toVec3d(*pnt) - offset;
         Vec3d n = Vec3d(0,1,0);
         Vec2d tc1 = Vec2d(fI, geoCoords.size());
         geoCoords.push_back(p); // keep original coordinates
@@ -117,10 +118,10 @@ void loadSHP(string path, VRTransformPtr res, map<string, string> opts) {
             float W = lineSize; //0.000004;
             for (int i=1; i<line->getNumPoints(); i++) {
                 line->getPoint(i-1, &pnt);
-                p1 = toVec3d(pnt);
+                p1 = toVec3d(pnt) - offset;
 
                 line->getPoint(i, &pnt);
-                p2 = toVec3d(pnt);
+                p2 = toVec3d(pnt) - offset;
 
                 Vec2d tc1 = Vec2d(fI, geoCoords.size());
                 Vec2d tc2 = Vec2d(fI, geoCoords.size()+1);
@@ -146,7 +147,7 @@ void loadSHP(string path, VRTransformPtr res, map<string, string> opts) {
             if (verbose) cout << " line " << line->getNumPoints() << endl;
             for (int i=0; i<line->getNumPoints(); i++) {
                 line->getPoint(i, &pnt);
-                p = toVec3d(pnt);
+                p = toVec3d(pnt) - offset;
                 Vec2d tc = Vec2d(fI, geoCoords.size());
                 geoCoords.push_back(p); // keep original coordinates
                 data->pushVert(p, n, tc);
@@ -166,7 +167,7 @@ void loadSHP(string path, VRTransformPtr res, map<string, string> opts) {
         OGRPoint pnt;
         for (int i=0; i<ex->getNumPoints(); i++) {
             ex->getPoint(i, &pnt);
-            outer.addPoint(toVec3d(pnt));
+            outer.addPoint(toVec3d(pnt) - offset);
         }
 
         Triangulator t;
@@ -178,7 +179,7 @@ void loadSHP(string path, VRTransformPtr res, map<string, string> opts) {
             VRPolygon inner;
             for (int i=0; i<in->getNumPoints(); i++) {
                 in->getPoint(i, &pnt);
-                inner.addPoint(toVec3d(pnt));
+                inner.addPoint(toVec3d(pnt) - offset);
             }
             t.add(inner, false);
         }
@@ -192,9 +193,17 @@ void loadSHP(string path, VRTransformPtr res, map<string, string> opts) {
         cout << "loadSHP::handleGeometry WARNING: it's a multipolygon, not handled" << endl;
     };
 
+    auto shpTypeName = [](int t) -> string {
+        if (t == wkbPoint) return "Point";
+        if (t == wkbLineString) return "LineString";
+        if (t == wkbPolygon) return "Polygon";
+        if (t == wkbMultiPolygon) return "MultiPolygon";
+        return "UNKNOWN";
+    };
+
     auto handleFeature = [&](OGRGeometry* geo, VRGeoDataPtr data, size_t fI, bool verbose) {
-        if (verbose) cout << "handle feature" << endl;
         auto type = wkbFlatten(geo->getGeometryType());
+        if (verbose) cout << "handle feature " << shpTypeName(type) << endl;
         if (type == wkbPoint) handlePoint(geo, data, fI);
         else if (type == wkbLineString) handleLine(geo, data, fI, verbose);
         else if (type == wkbPolygon) handlePolygon(geo, data, fI);
@@ -207,14 +216,14 @@ void loadSHP(string path, VRTransformPtr res, map<string, string> opts) {
     for (int i=0; i<poDS->GetLayerCount(); i++) {
         OGRLayer* poLayer = poDS->GetLayer(i);
         if (!poLayer) continue;
-        cout << " " << i << " " << poLayer->GetName() << ", geom type: " << (int)poLayer->GetGeomType() << endl;
+        cout << " " << i << " " << poLayer->GetName() << ", geom type: " << shpTypeName(poLayer->GetGeomType()) << endl;
         string layer_name = poLayer->GetName();
 
         VRGeoDataPtr data = VRGeoData::create();
         poLayer->ResetReading();
         int gi = 0;
         auto entLayer = ontology->addEntity("layer", "Layer");
-        entLayer->set("type", toString( (int)poLayer->GetGeomType() ));
+        entLayer->set("type", shpTypeName( (int)poLayer->GetGeomType() ));
         OGRFeatureDefn* poFDefn = poLayer->GetLayerDefn();
         size_t Nfields = poFDefn->GetFieldCount();
         vector<pair<string, OGRFieldType>> fields;
