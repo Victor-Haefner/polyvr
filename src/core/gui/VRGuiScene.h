@@ -23,6 +23,8 @@ class VRGuiScene {
         bool liveUpdate = false;
         bool trigger_cbs = false;
 
+        string toBeDeleted;
+
         VRGuiVectorEntry posEntry;
         VRGuiVectorEntry atEntry;
         VRGuiVectorEntry dirEntry;
@@ -133,16 +135,15 @@ class VRGuiScene {
         // ------------- context menu -------------------
         void initMenu();
         bool on_treeview_rightclick();
-        void on_menu_delete();
-        void on_menu_copy();
-        void on_menu_paste();
+        void on_menu_delete(string node);
+        void on_menu_copy(string node);
+        void on_menu_paste(string node);
         template<class T>
-        void on_menu_add();
-        void on_menu_add_file();
-        void on_menu_add_light();
-        void on_menu_add_camera();
-        void on_menu_add_animation();
-        void on_menu_add_primitive(string s);
+        void on_menu_add(string node);
+        void on_menu_add_file(string node);
+        void on_menu_add_light(string node);
+        void on_menu_add_camera(string node);
+        void on_menu_add_animation(string node);
 
         void on_geo_menu_print();
         //void on_menu_add_csg();

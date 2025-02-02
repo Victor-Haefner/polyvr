@@ -426,10 +426,7 @@ void VRGuiScene::syncSGTree(VRObjectPtr o) {
 }
 
 void VRGuiScene::on_treeview_select(string sID) {
-    //setWidgetSensitivity("table11", true);
-    //updateObjectForms(true);
     selected = toInt(sID);
-    //selected = VRScene::getCurrent()->find();
     updateObjectForms();
 
     selected_geometry.reset();
@@ -703,21 +700,23 @@ void VRGuiScene::on_toggle_camera_accept_realroot(bool b) {
 // --------------------------
 
 template <class T>
-void VRGuiScene::on_menu_add() {
-    /*if(!selected_itr) return;
-    auto obj = T::create("None");
-    getSelected()->addChild(obj);
-    parseSGTree(obj, selected_itr);*/
+void VRGuiScene::on_menu_add(string sID) {
+    selected = toInt(sID);
+    VRObjectPtr obj = getSelected();
+    if (obj == 0) return;
+    auto child = T::create("NEW");
+    getSelected()->addChild(child);
+    updateTreeView();
 }
 
-void VRGuiScene::on_menu_add_animation() {
+void VRGuiScene::on_menu_add_animation(string sID) {
     //if(!selected_itr) return;
     //VRAnimation* obj = new VRAnimation("None");
     //getSelected()->addChild(obj);
     //parseSGTree(obj, selected_itr);
 }
 
-void VRGuiScene::on_menu_add_file() {
+void VRGuiScene::on_menu_add_file(string sID) {
     /*if(!selected_itr) return;
     auto scene = VRScene::getCurrent();
     if (scene == 0) return;
@@ -733,56 +732,45 @@ void VRGuiScene::on_menu_add_file() {
     VRGuiFile::open( "Load", "open", "Load geometric data" );*/
 }
 
-void VRGuiScene::on_menu_add_light() {
-    /*if(!selected_itr) return;
-    auto scene = VRScene::getCurrent();
-    if (scene == 0) return;
-    VRLightPtr light = VRLight::create("light");
-    VRLightBeaconPtr lb = VRLightBeacon::create("light_beacon");
+void VRGuiScene::on_menu_add_light(string sID) {
+    selected = toInt(sID);
+    VRObjectPtr obj = getSelected();
+    if (obj == 0) return;
+    auto light = VRLight::create("NEW-light");
+    VRLightBeaconPtr lb = VRLightBeacon::create("NEW-light-beacon");
     light->addChild(lb);
     light->setBeacon(lb);
     getSelected()->addChild(light);
-    parseSGTree(light, selected_itr);*/
+    updateTreeView();
 }
 
-void VRGuiScene::on_menu_add_camera() {
-    /*if(!selected_itr) return;
-    auto scene = VRScene::getCurrent();
-    if (scene == 0) return;
-    VRTransformPtr cam = VRCamera::create("camera");
+void VRGuiScene::on_menu_add_camera(string sID) {
+    selected = toInt(sID);
+    VRObjectPtr obj = getSelected();
+    if (obj == 0) return;
+    auto cam = VRCamera::create("NEW-camera");
     getSelected()->addChild(cam);
-    parseSGTree(cam, selected_itr);
-    VRGuiSignals::get()->getSignal("camera_added")->triggerAll<VRDevice>();*/
+    updateTreeView();
+    VRGuiSignals::get()->getSignal("camera_added")->triggerAll<VRDevice>();
 }
 
-void VRGuiScene::on_menu_add_primitive(string s) {
-    /*if(!selected_itr) return;
+void VRGuiScene::on_menu_delete(string sID) {
+    selected = toInt(sID);
+    VRObjectPtr obj = getSelected();
+    if (obj == 0) return;
 
-    VRGeometryPtr geo = VRGeometry::create(s);
-    geo->setPrimitive(s);
-
-    getSelected()->addChild(geo);
-    parseSGTree(geo, selected_itr);*/
-}
-
-void VRGuiScene::on_menu_delete() {
-    /*if(!selected_itr) return;
-    //if (getSelected()->getPersistency() == 0) return; // if this behavior is intended, explain why..
     // todo: check for camera!!
-
-    string msg1 = "Delete object " + getSelected()->getName();
-    if (!askUser(msg1, "Are you sure you want to delete this object?")) return;
-    getSelected()->destroy();
+    obj->destroy();
     selected = -1;
-    removeTreeStoreBranch(selected_itr);*/
+    updateTreeView();
 }
 
-void VRGuiScene::on_menu_copy() {
+void VRGuiScene::on_menu_copy(string sID) {
     //if(!selected_itr) return;
     //VRGuiScene_copied = getSelected();
 }
 
-void VRGuiScene::on_menu_paste() {
+void VRGuiScene::on_menu_paste(string sID) {
     /*if(!selected_itr) return;
     auto obj = VRGuiScene_copied.lock();
     if (obj == 0) return;
@@ -1232,6 +1220,23 @@ VRGuiScene::VRGuiScene() { // TODO: reduce callbacks with templated functions
     mgr->addCallback("treeview_select", [&](OSG::VRGuiSignals::Options o) { if (o["treeview"] == "scenegraph") on_treeview_select( o["node"] ); return true; }, true );
     mgr->addCallback("treeview_rename", [&](OSG::VRGuiSignals::Options o) { if (o["treeview"] == "scenegraph") on_treeview_rename( o["node"], o["name"] ); return true; }, true );
     mgr->addCallback("treeview_drop", [&](OSG::VRGuiSignals::Options o) { if (o["treeview"] == "scenegraph") on_treeview_drop( o["source"], o["target"] ); return true; }, true );
+
+    mgr->addCallback("sg_menu_delete",
+            [&](OSG::VRGuiSignals::Options o) {
+                if (o["treeview"] == "scenegraph") {
+                    toBeDeleted = o["ID"];
+                    uiSignal("askUser", {{"msg1","This will remove the selected object!"}, {"msg2","Are you sure?"}, {"sig","sg_menu_delete_confirmed"}});
+                }
+                return true;
+            }, true
+        );
+
+    mgr->addCallback("sg_menu_delete_confirmed", [&](OSG::VRGuiSignals::Options o) { on_menu_delete( toBeDeleted ); return true; }, true );
+    mgr->addCallback("sg_menu_newObject", [&](OSG::VRGuiSignals::Options o) { on_menu_add<VRObject>( o["ID"] ); return true; }, true );
+    mgr->addCallback("sg_menu_newTransform", [&](OSG::VRGuiSignals::Options o) { on_menu_add<VRTransform>( o["ID"] ); return true; }, true );
+    mgr->addCallback("sg_menu_newCamera", [&](OSG::VRGuiSignals::Options o) { on_menu_add_camera( o["ID"] ); return true; }, true );
+    mgr->addCallback("sg_menu_newLight", [&](OSG::VRGuiSignals::Options o) { on_menu_add_light( o["ID"] ); return true; }, true );
+    mgr->addCallback("sg_menu_newGeometry", [&](OSG::VRGuiSignals::Options o) { on_menu_add<VRGeometry>( o["ID"] ); return true; }, true );
 
     mgr->addCallback("sg_toggle_visible", [&](OSG::VRGuiSignals::Options o) { on_toggle_visible(toBool(o["visible"])); return true; }, true );
     mgr->addCallback("sg_toggle_pickable", [&](OSG::VRGuiSignals::Options o) { on_toggle_pickable(toBool(o["pickable"])); return true; }, true );

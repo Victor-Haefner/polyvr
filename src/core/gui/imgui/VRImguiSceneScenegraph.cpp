@@ -337,7 +337,13 @@ void ImScenegraph::setupMaterial(OSG::VRGuiSignals::Options o) {
 void ImScenegraph::treeClear() { tree.clear(); }
 
 void ImScenegraph::treeAppend(string ID, string label, string parent, string type, string cla, string mod, string col) {
-    //cout << "treeAppend, ID: " << ID << ", parent: " << parent << endl;
-    //tree.add([parent].push_back({label, type, cla, mod, col});
-    tree.add(ID, label, IM_TV_NODE_EDITABLE, parent);
+    auto node = tree.add(ID, label, IM_TV_NODE_EDITABLE, parent);
+    vector<pair<string, string>> menu;
+    menu.push_back( make_pair("delete", "sg_menu_delete") );
+    menu.push_back( make_pair("new Object", "sg_menu_newObject") );
+    menu.push_back( make_pair("new Transform", "sg_menu_newTransform") );
+    menu.push_back( make_pair("new Camera", "sg_menu_newCamera") );
+    menu.push_back( make_pair("new Light", "sg_menu_newLight") );
+    menu.push_back( make_pair("new Geometry", "sg_menu_newGeometry") );
+    node->setMenu(menu);
 }
