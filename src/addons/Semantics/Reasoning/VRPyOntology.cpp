@@ -70,6 +70,8 @@ PyMethodDef VRPyEntity::methods[] = {
     {"getConcept", PyWrap(Entity, getConcept, "Return the concept", VRConceptPtr ) },
     {"getConcepts", PyWrap(Entity, getConcepts, "Return all concepts", vector<VRConceptPtr> ) },
     {"getProperties", PyWrapOpt(Entity, getAll, "Return all properties or the properties of a certain type", "", vector<VRPropertyPtr>, string ) },
+    {"hasProperty", PyWrap(Entity, hasProperty, "Return if entity has property by name", bool, string ) },
+    {"getOntology", PyWrap(Entity, getOntology, "Return ontology the entity belongs to", VROntologyPtr ) },
     {"set", PyWrapOpt(Entity, set, "Set a property, prop, value, pos = 0", "0", void, string, string, int ) },
     {"add", PyWrap(Entity, add, "Add a property, prop, value", void, string, string ) },
     {"clear", PyWrap(Entity, clear, "Clear property", void, string ) },

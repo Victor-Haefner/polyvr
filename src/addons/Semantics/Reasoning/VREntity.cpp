@@ -66,6 +66,8 @@ string VREntity::getConceptList() {
     return data;
 }
 
+VROntologyPtr VREntity::getOntology() { return ontology.lock(); }
+
 VRPropertyPtr VREntity::getProperty(string name, bool warn) {
     for (auto c : getConcepts()) if (auto p = c->getProperty(name, 0)) return p;
     if (warn) WARN("Warning in VREntity::getProperty: property " + name + " of " + toString() + " not found!");
@@ -76,6 +78,11 @@ vector<VRPropertyPtr> VREntity::getProperties() {
     vector<VRPropertyPtr> res;
     for (auto c : getConcepts()) for (auto p : c->properties) res.push_back(p.second);
     return res;
+}
+
+bool VREntity::hasProperty(string name) {
+    for (auto c : getConcepts()) if (auto p = c->getProperty(name, 0)) return true;
+    return false;
 }
 
 void VREntity::addProperty(VRPropertyPtr prop, string name, string value, int pos) {

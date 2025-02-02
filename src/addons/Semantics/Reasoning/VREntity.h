@@ -29,10 +29,14 @@ struct VREntity : public VROntoID, public VRName {
 
     static VREntityPtr create(string name = "none", VROntologyPtr o = 0, VRConceptPtr c = 0);
     VREntityPtr copy();
+
+    VROntologyPtr getOntology();
+
     void addConcept(VRConceptPtr c);
     VRConceptPtr getConcept();
     vector<VRConceptPtr> getConcepts();
     vector<string> getConceptNames();
+    bool hasProperty(string p);
     VRPropertyPtr getProperty(string p, bool warn = true);
     vector<VRPropertyPtr> getProperties();
     void rem(VRPropertyPtr);
