@@ -36,7 +36,7 @@ Vec2d VRIntersect_computeTexel(VRIntersectionPtr ins, NodeMTRecPtr node) {
     auto texcoords = geo->getTexCoords();
     if (texcoords == 0) return Vec2d(0,0);
     TriangleIterator iter = geo->beginTriangles(); iter.seek( ins->triangle );
-
+    if ( iter.isAtEnd() ) return Vec2d(0,0);
 
     Matrix4f m = node->getToWorld();
     m.invert();
