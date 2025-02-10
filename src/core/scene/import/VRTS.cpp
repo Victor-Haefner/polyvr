@@ -66,7 +66,7 @@ void loadTS(string filename, VRTransformPtr res, map<string, string> options) {
 
         if (cmd == "VRTX" || cmd == "PVRTX") {
             size_t idx = toLong(data[1]);
-            Vec3d p(toDouble(data[2]), toDouble(data[3]), toDouble(data[4]));
+            Vec3d p(toDouble(data[2]), toDouble(data[4]), toDouble(data[3]));
             pushVert(idx, p + offset);
         }
 
