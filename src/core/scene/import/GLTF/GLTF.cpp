@@ -1730,7 +1730,29 @@ class GLTFLoader : public GLTFUtils {
                         }
                         else { cout << "GLTF-LOADER: data type of POINT INDICES unknwon: " << accessorIndices.componentType << endl; }
                     }
-                    if (primitive.mode == 1) { /*LINE*/ cout << "GLTF-LOADER: not implemented LINE" << endl; }
+                    if (primitive.mode == 1) { /*LINE*/
+                        if (accessorIndices.componentType == GL_UNSIGNED_BYTE) {
+                            const unsigned char* indices   = reinterpret_cast<const unsigned char*>(&bufferInd.data[bufferViewIndices.byteOffset + accessorIndices.byteOffset]);
+                            for (size_t i = 0; i < accessorIndices.count; ++i) gdata.pushPoint(nUpTo+indices[i]);
+                            for (size_t i = 0; i < accessorIndices.count/2; ++i) gdata.pushLine(nUpTo+indices[i*2],nUpTo+indices[i*2+1]);
+                        }
+                        else if (accessorIndices.componentType == GL_SHORT) {
+                            const short* indices   = reinterpret_cast<const short*>(&bufferInd.data[bufferViewIndices.byteOffset + accessorIndices.byteOffset]);
+                            for (size_t i = 0; i < accessorIndices.count; ++i) gdata.pushPoint(nUpTo+indices[i]);
+                            for (size_t i = 0; i < accessorIndices.count/2; ++i) gdata.pushLine(nUpTo+indices[i*2],nUpTo+indices[i*2+1]);
+                        }
+                        else if (accessorIndices.componentType == GL_UNSIGNED_SHORT) {
+                            const unsigned short* indices   = reinterpret_cast<const unsigned short*>(&bufferInd.data[bufferViewIndices.byteOffset + accessorIndices.byteOffset]);
+                            for (size_t i = 0; i < accessorIndices.count; ++i) gdata.pushPoint(nUpTo+indices[i]);
+                            for (size_t i = 0; i < accessorIndices.count/2; ++i) gdata.pushLine(nUpTo+indices[i*2],nUpTo+indices[i*2+1]);
+                        }
+                        else if (accessorIndices.componentType == GL_UNSIGNED_INT) {
+                            const unsigned int* indices   = reinterpret_cast<const unsigned int*>(&bufferInd.data[bufferViewIndices.byteOffset + accessorIndices.byteOffset]);
+                            for (size_t i = 0; i < accessorIndices.count; ++i) gdata.pushPoint(nUpTo+indices[i]);
+                            for (size_t i = 0; i < accessorIndices.count/2; ++i) gdata.pushLine(nUpTo+indices[i*2],nUpTo+indices[i*2+1]);
+                        }
+                        else { cout << "GLTF-LOADER: data type of LINE INDICES unknwon: " << accessorIndices.componentType << endl; }
+                    }
                     if (primitive.mode == 2) { /*LINE LOOP*/ cout << "GLTF-LOADER: not implemented LINE LOOP" << endl; }
                     if (primitive.mode == 3) { /*LINE STRIP*/ cout << "GLTF-LOADER: not implemented LINE STRIP" << endl; }
                     if (primitive.mode == 4) { /*TRIANGLES*/
@@ -1801,7 +1823,10 @@ class GLTFLoader : public GLTFUtils {
                         pointsOnly = true;
                         for (long i = nUpTo; i < nPos; i++) gdata.pushPoint(i);
                     }
-                    if (primitive.mode == 1) { /*LINE*/ cout << "GLTF-LOADER: not implemented LINE" << endl; }
+                    if (primitive.mode == 1) { /*LINE*/
+                        for (long i = nUpTo; i < nPos; i++) gdata.pushPoint(i);
+                        for (long i = nUpTo; i < nPos/2; ++i) gdata.pushLine(i*2,i*2+1);
+                    }
                     if (primitive.mode == 2) { /*LINE LOOP*/ cout << "GLTF-LOADER: not implemented LINE LOOP" << endl; }
                     if (primitive.mode == 3) { /*LINE STRIP*/ cout << "GLTF-LOADER: not implemented LINE STRIP" << endl; }
                     if (primitive.mode == 4) { /*TRIANGLES*/
