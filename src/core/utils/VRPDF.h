@@ -39,6 +39,9 @@ class VRPDF {
 
         void project(VRObjectPtr obj, PosePtr plane);
         void slice(VRObjectPtr obj, PosePtr plane);
+
+        // file handling
+        VRTransformPtr extract3DModels(string path);
 };
 
 OSG_END_NAMESPACE;

@@ -691,8 +691,12 @@ void VRGeometry::setPositionalTexCoords(float scale, int i, Vec3i format) {
     for (unsigned int i=0; i<pos->size(); i++) {
         Pnt3f P = pos->getValue<Pnt3f>(i);
         M.mult(P,P);
-        auto p = Vec3d(P)*scale;
-        tex->addValue(Vec3d(p[format[0]], p[format[1]], p[format[2]]));
+        Vec3d p = Vec3d(P)*scale;
+        Vec3d uv = Vec3d(p[abs(format[0])], p[abs(format[1])], p[abs(format[2])]);
+        if (format[0] < 0) uv[0] *= -1;
+        if (format[1] < 0) uv[1] *= -1;
+        if (format[2] < 0) uv[2] *= -1;
+        tex->addValue(uv);
     }
     setTexCoords(tex, i, 1);
 }
@@ -703,8 +707,11 @@ void VRGeometry::setPositionalTexCoords2D(float scale, int i, Vec2i format) {
     if (!pos) return;
     GeoVec2fPropertyRefPtr tex = GeoVec2fProperty::create();
     for (unsigned int i=0; i<pos->size(); i++) {
-        auto p = Vec3d(pos->getValue<Pnt3f>(i))*scale;
-        tex->addValue(Vec2d(p[format[0]], p[format[1]]));
+        Vec3d p = Vec3d( pos->getValue<Pnt3f>(i) )*scale;
+        Vec2d uv = Vec2d(p[abs(format[0])], p[abs(format[1])]);
+        if (format[0] < 0) uv[0] *= -1;
+        if (format[1] < 0) uv[1] *= -1;
+        tex->addValue(uv);
     }
     setTexCoords(tex, i, 1);
 }
