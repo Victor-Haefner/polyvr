@@ -384,6 +384,7 @@ bool VRSound::initiate() {
 
     if (auto e = avformat_find_stream_info(al->context, NULL)) if (e < 0) { cout << "ERROR! avformat_find_stream_info failed: " << avErrToStr(e) << endl; return 0; }
     av_dump_format(al->context, 0, path.c_str(), 0);
+    duration = al->context->duration / (double)AV_TIME_BASE;
 
     stream_id = av_find_best_stream(al->context, AVMEDIA_TYPE_AUDIO, -1, -1, NULL, 0);
     if (stream_id == -1) return 0;
@@ -575,6 +576,19 @@ void VRSound::update3DSound() {
     if (interface) interface->updatePose(pose, velocity);
 }
 
+double VRSound::getDuration() {
+    if (ownedBuffer.size() > 0) {
+        double T = 0;
+        for (size_t i=0; i<ownedBuffer.size(); i++) {
+            auto& b = ownedBuffer[i];
+            T += double(b->size)/b->sample_rate;
+        }
+        return T;
+    }
+
+    if (!initiated) initiate();
+    return duration;
+}
 
 struct OutputStream {
     int64_t next_pts = 0;

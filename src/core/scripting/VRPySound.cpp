@@ -30,6 +30,7 @@ PyMethodDef VRPySound::methods[] = {
     {"synthSpectrum", PyWrap(Sound, synthSpectrum, "synthSpectrum( [A], int S, float T, float F, bool retBuffer )\t\n A amplitude, S sample rate, T packet duration in seconds, F fade in/out duration in s , specify if you want to return the generated buffer, maxQueued", vector<short>, vector<double>, uint, float, float, bool, int) },
     {"streamTo", PyWrap(Sound, streamTo, "Stream sound to a target URL and port", void, string, int, bool) },
     {"getBuffer", PyWrap(Sound, getBuffer, "Get queued packets in single buffer", vector<float>) },
+    {"getDuration", PyWrap(Sound, getDuration, "Get sound duration in seconds", double) },
 #ifdef _WIN32
     {"listenStream", PyWrapOpt(Sound, listenStream, "Listen on port for incoming stream packets, set stereo for streams from a windows machine, false for linux streams, (port, stereo)", "1", bool, int, bool) },
     {"playPeerStream", PyWrapOpt(Sound, playPeerStream, "Play incoming stream packets, set stereo for streams from a windows machine, false for linux streams, (client, stereo)", "1", bool, VRNetworkClientPtr, bool) },
