@@ -10,6 +10,7 @@
 #include "core/scene/sound/VRSound.h"
 #include "core/scene/sound/VRSoundManager.h"
 #include "core/scene/sound/VRSoundUtils.h"
+#include "core/scene/VRSceneManager.h"
 
 extern "C" {
     #include <libavcodec/avcodec.h>
@@ -33,6 +34,9 @@ VRVideo::VRVideo(VRMaterialPtr mat) {
     av_register_all(); // Register all formats && codecs
 #endif
 #endif
+
+    mainLoopCb = VRUpdateCb::create("Video main update", bind(&VRVideo::mainThreadUpdate, this));
+    VRSceneManager::get()->addUpdateFkt(mainLoopCb);
 }
 
 VRVideo::~VRVideo() {
@@ -124,8 +128,15 @@ int avcodec_decode_video2(AVCodecContext* video_ctx, AVFrame* frame, int* got_fr
 }
 #endif
 
-VRTexturePtr VRVideo::convertFrame(int stream, AVPacket* packet) {
-    if (!vStreams.count(stream)) { cout << " unknown stream " << stream << endl; return 0; }
+VRTexturePtr VRVideo::setupTexture(int width, int height, int Ncols, uint8_t* data) {
+    VRTexturePtr img = VRTexture::create();
+    if (Ncols == 1) img->getImage()->set(Image::OSG_L_PF, width, height, 1, 1, 1, 0.0, data, Image::OSG_UINT8_IMAGEDATA, true, 1);
+    if (Ncols == 3) img->getImage()->set(Image::OSG_RGB_PF, width, height, 1, 1, 1, 0.0, data, Image::OSG_UINT8_IMAGEDATA, true, 1);
+    return img;
+}
+
+void VRVideo::convertFrame(int stream, AVPacket* packet) {
+    if (!vStreams.count(stream)) { cout << " unknown stream " << stream << endl; return; }
     int valid = 0;
     auto vCodec = vStreams[stream].vCodec;
     int r = avcodec_decode_video2(vCodec, vFrame, &valid, packet); // Decode video frame
@@ -133,7 +144,7 @@ VRTexturePtr VRVideo::convertFrame(int stream, AVPacket* packet) {
     if (valid == 0 || r < 0) {
         cout << " avcodec_decode_video2 failed with " << r << endl;
         // TODO: print packet data
-        return 0;
+        return;
     }
 
     FlipFrame(vFrame);
@@ -142,7 +153,7 @@ VRTexturePtr VRVideo::convertFrame(int stream, AVPacket* packet) {
     AVPixelFormat pf = AVPixelFormat(vFrame->format);
 
     int Ncols = getNColors(pf);
-    if (Ncols == 0) { cout << "ERROR: stream has no colors!" << endl; return 0; }
+    if (Ncols == 0) { cout << "ERROR: stream has no colors!" << endl; return; }
 
     if (swsContext == 0) {
         if (Ncols == 1) nFrame->format = AV_PIX_FMT_GRAY8;
@@ -151,11 +162,11 @@ VRTexturePtr VRVideo::convertFrame(int stream, AVPacket* packet) {
         swsContext = sws_getContext(width, height, pf, width, height, AVPixelFormat(nFrame->format), SWS_BILINEAR, NULL, NULL, NULL);
         nFrame->width = width;
         nFrame->height = height;
-        if (av_frame_get_buffer(nFrame, 0) < 0) { cout << "  Error in VRVideo, av_frame_get_buffer failed!" << endl; return 0; }
+        if (av_frame_get_buffer(nFrame, 0) < 0) { cout << "  Error in VRVideo, av_frame_get_buffer failed!" << endl; return; }
     }
 
     int rgbH = sws_scale(swsContext, vFrame->data, vFrame->linesize, 0, height, nFrame->data, nFrame->linesize);
-    if (rgbH < 0) { cout << "  Error in VRVideo, sws_scale failed!" << endl; return 0; }
+    if (rgbH < 0) { cout << "  Error in VRVideo, sws_scale failed!" << endl; return; }
     int rgbW = nFrame->linesize[0]/Ncols;
 
     osgFrame.resize(width*height*3, 0);
@@ -168,10 +179,11 @@ VRTexturePtr VRVideo::convertFrame(int stream, AVPacket* packet) {
         memcpy(&data2[k1], &data1[k2], width*Ncols);
     }
 
-    VRTexturePtr img = VRTexture::create();
-    if (Ncols == 1) img->getImage()->set(Image::OSG_L_PF, width, height, 1, 1, 1, 0.0, data2, Image::OSG_UINT8_IMAGEDATA, true, 1);
-    if (Ncols == 3) img->getImage()->set(Image::OSG_RGB_PF, width, height, 1, 1, 1, 0.0, data2, Image::OSG_UINT8_IMAGEDATA, true, 1);
-    return img;
+    auto img = setupTexture(width, height, Ncols, data2);
+    if (!img) return;
+    VRLock lock(osgMutex);
+    vStreams[stream].frames[vStreams[stream].cachedFrameMax] = img;
+    vStreams[stream].cachedFrameMax++;
 }
 
 void VRVideo::open(string f) {
@@ -256,15 +268,7 @@ void VRVideo::loadSomeFrames() {
             aStreams[stream].cachedFrameMax++;
         }
 
-        if (vStreams.count(stream)) {
-            //cout << " v frame0: " << currentF << " N: " << vStreams[stream].cachedFrameMax << endl;
-            auto img = convertFrame(stream, &packet);
-            if (!img) continue;
-            //cout << "  converted the frame!" << endl;
-            VRLock lock(osgMutex);
-            vStreams[stream].frames[vStreams[stream].cachedFrameMax] = img;
-            vStreams[stream].cachedFrameMax++;
-        }
+        if (vStreams.count(stream)) convertFrame(stream, &packet);
 
         // break if all streams are sufficiently cached
         bool doBreak = true;
@@ -337,8 +341,18 @@ bool VRVideo::isPaused() {
     return false;
 }
 
+void VRVideo::mainThreadUpdate() {
+    if (needsMainUpdate) {
+        if (auto m = material.lock()) {
+            VRLock lock(osgMutex);
+            m->setTexture(currentTexture);
+            m->setMagMinFilter(GL_LINEAR, GL_LINEAR);
+            needsMainUpdate = false;
+        }
+    }
+}
+
 void VRVideo::showFrame(int stream, int frame) {
-    VRLock lock(osgMutex);
     currentFrame = frame;
 
     // video, just jump to frame
@@ -346,10 +360,8 @@ void VRVideo::showFrame(int stream, int frame) {
 
     if (f) {
         //cout << " showFrame " << frame << " " << f->getSize() << " threadID: " << this_thread::get_id() << endl;
-        if (auto m = material.lock()) {
-            m->setTexture(f);
-            m->setMagMinFilter(GL_LINEAR, GL_LINEAR);
-        }
+        currentTexture = f;
+        needsMainUpdate = true;
     } //else cout << " showFrame, none found " << frame << endl;
 
     // audio, queue until current frame

@@ -53,8 +53,12 @@ class VRVideo : public VRStorage {
         bool interruptCaching = false;
 
         VRMaterialWeakPtr material;
+        VRTexturePtr currentTexture;
         VRAnimationPtr anim;
         VRAnimCbPtr animCb;
+
+        bool needsMainUpdate = false;
+        VRUpdateCbPtr mainLoopCb;
 
         AVFormatContext* vFile = 0;
         AVFrame* vFrame = 0;
@@ -70,10 +74,13 @@ class VRVideo : public VRStorage {
 
         int getNStreams();
         int getStream(int j);
-        VRTexturePtr convertFrame(int stream, AVPacket* packet);
+        VRTexturePtr setupTexture(int width, int height, int Ncols, uint8_t* data);
+        void convertFrame(int stream, AVPacket* packet);
         void frameUpdate(float t, int stream);
         void loadSomeFrames();
         void cacheFrames(VRThreadWeakPtr t);
+
+        void mainThreadUpdate();
 
     public:
         VRVideo(VRMaterialPtr mat);
