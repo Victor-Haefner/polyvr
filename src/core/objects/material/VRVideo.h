@@ -38,6 +38,15 @@ class VRVideo : public VRStorage {
             ~AStream();
         };
 
+        struct texData {
+            int stream;
+            int frameI;
+            int width;
+            int height;
+            int Ncols;
+            uint8_t* data = 0;
+        };
+
         map<int, VStream> vStreams;
         map<int, AStream> aStreams;
         int width = 0;
@@ -51,6 +60,9 @@ class VRVideo : public VRStorage {
         int audioQueue = 40;
         int currentFrame = 0;
         bool interruptCaching = false;
+
+        bool texDataQueued = false;
+        vector<texData> texDataPool;
 
         VRMaterialWeakPtr material;
         VRTexturePtr currentTexture;
@@ -74,7 +86,7 @@ class VRVideo : public VRStorage {
 
         int getNStreams();
         int getStream(int j);
-        VRTexturePtr setupTexture(int width, int height, int Ncols, uint8_t* data);
+        void setupTexture(int stream, int frameI, int width, int height, int Ncols, uint8_t* data);
         void convertFrame(int stream, AVPacket* packet);
         void frameUpdate(float t, int stream);
         void loadSomeFrames();

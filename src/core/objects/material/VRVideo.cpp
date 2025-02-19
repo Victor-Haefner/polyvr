@@ -128,11 +128,14 @@ int avcodec_decode_video2(AVCodecContext* video_ctx, AVFrame* frame, int* got_fr
 }
 #endif
 
-VRTexturePtr VRVideo::setupTexture(int width, int height, int Ncols, uint8_t* data) {
+void VRVideo::setupTexture(int stream, int frameI, int width, int height, int Ncols, uint8_t* data) {
     VRTexturePtr img = VRTexture::create();
     if (Ncols == 1) img->getImage()->set(Image::OSG_L_PF, width, height, 1, 1, 1, 0.0, data, Image::OSG_UINT8_IMAGEDATA, true, 1);
     if (Ncols == 3) img->getImage()->set(Image::OSG_RGB_PF, width, height, 1, 1, 1, 0.0, data, Image::OSG_UINT8_IMAGEDATA, true, 1);
-    return img;
+
+    if (!img) return;
+    VRLock lock(osgMutex);
+    vStreams[stream].frames[frameI] = img;
 }
 
 void VRVideo::convertFrame(int stream, AVPacket* packet) {
@@ -179,10 +182,8 @@ void VRVideo::convertFrame(int stream, AVPacket* packet) {
         memcpy(&data2[k1], &data1[k2], width*Ncols);
     }
 
-    auto img = setupTexture(width, height, Ncols, data2);
-    if (!img) return;
-    VRLock lock(osgMutex);
-    vStreams[stream].frames[vStreams[stream].cachedFrameMax] = img;
+    texDataPool.push_back( {stream, vStreams[stream].cachedFrameMax, width, height, Ncols, data2} );
+    setupTexture(stream, vStreams[stream].cachedFrameMax, width, height, Ncols, data2);
     vStreams[stream].cachedFrameMax++;
 }
 
