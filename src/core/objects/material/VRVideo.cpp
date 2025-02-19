@@ -356,10 +356,13 @@ void VRVideo::mainThreadUpdate() {
 
     if (texDataQueued) {
         VRLock lock(osgMutex);
-        for (auto& td : texDataPool) {
-            setupTexture(td.stream, td.frameI, td.width, td.height, td.Ncols, td.data);
+        auto& td = texDataPool[texPoolPointer];
+        setupTexture(td.stream, td.frameI, td.width, td.height, td.Ncols, td.data);
+        texPoolPointer++;
+        if (texPoolPointer == texDataPool.size()) {
+            texPoolPointer = 0;
+            texDataPool.clear();
         }
-        texDataPool.clear();
         texDataQueued = false;
     }
 }

@@ -63,6 +63,7 @@ class VRVideo : public VRStorage {
 
         bool texDataQueued = false;
         vector<texData> texDataPool;
+        int texPoolPointer = 0;
 
         VRMaterialWeakPtr material;
         VRTexturePtr currentTexture;
