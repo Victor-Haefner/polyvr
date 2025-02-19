@@ -182,8 +182,10 @@ void VRVideo::convertFrame(int stream, AVPacket* packet) {
         memcpy(&data2[k1], &data1[k2], width*Ncols);
     }
 
+    VRLock lock(osgMutex);
     texDataPool.push_back( {stream, vStreams[stream].cachedFrameMax, width, height, Ncols, data2} );
-    setupTexture(stream, vStreams[stream].cachedFrameMax, width, height, Ncols, data2);
+    texDataQueued = true;
+    //setupTexture(stream, vStreams[stream].cachedFrameMax, width, height, Ncols, data2);
     vStreams[stream].cachedFrameMax++;
 }
 
@@ -350,6 +352,15 @@ void VRVideo::mainThreadUpdate() {
             m->setMagMinFilter(GL_LINEAR, GL_LINEAR);
             needsMainUpdate = false;
         }
+    }
+
+    if (texDataQueued) {
+        VRLock lock(osgMutex);
+        for (auto& td : texDataPool) {
+            setupTexture(td.stream, td.frameI, td.width, td.height, td.Ncols, td.data);
+        }
+        texDataPool.clear();
+        texDataQueued = false;
     }
 }
 
