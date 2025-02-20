@@ -73,6 +73,8 @@ PyMethodDef VRPyGeometry::methods[] = {
                         "\n\t   Box is the primitive type, followed by the geometric parameters"
                         "\n\tavailable primitives are:"
                         "\n\t\tPlane size_x size_y segments_x segments_y"
+                        "\n\t\tDisk radius N_segments"
+                        "\n\t\tAnnulus outerRadius innerRadius N_segments"
                         "\n\t\tBox size_x size_y size_z segments_x segments_y segments_z"
                         "\n\t\tSphere radius iterations"
                         "\n\t\tCylinder height radius N_sides do_bottom do_top do_sides"
