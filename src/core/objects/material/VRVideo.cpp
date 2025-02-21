@@ -344,6 +344,12 @@ bool VRVideo::isPaused() {
     return false;
 }
 
+bool VRVideo::isRunning() {
+    if (!anim) return false;
+    if (anim->isActive()) return true;
+    return false;
+}
+
 void VRVideo::mainThreadUpdate() {
     if (needsMainUpdate) {
         if (auto m = material.lock()) {
@@ -372,9 +378,10 @@ void VRVideo::showFrame(int stream, int frame) {
 
     // video, just jump to frame
     auto f = getFrame(stream, frame);
+    //cout << " showFrame " << stream << " " << frame << endl;
 
     if (f) {
-        //cout << " showFrame " << frame << " " << f->getSize() << " threadID: " << this_thread::get_id() << endl;
+        //cout << "  showFrame " << frame << " " << f->getSize() << " threadID: " << this_thread::get_id() << endl;
         currentTexture = f;
         needsMainUpdate = true;
     } //else cout << " showFrame, none found " << frame << endl;
@@ -420,3 +427,5 @@ VRTexturePtr VRVideo::getFrame(int stream, float t) {
     int i = vStreams[stream].fps * duration * t;
     return vStreams[stream].frames[i];
 }
+
+

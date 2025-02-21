@@ -108,6 +108,7 @@ class VRVideo : public VRStorage {
         void pause();
         void resume();
         bool isPaused();
+        bool isRunning();
         void goTo(float t);
         void setVolume(float v);
 
