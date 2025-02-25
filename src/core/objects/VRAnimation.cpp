@@ -93,10 +93,12 @@ bool VRAnimation::update(float current_time) {
     return true;
 }
 
-void VRAnimation::goTo(float f) {
+void VRAnimation::goTo(float f) { // TODO: meh, not realy working
     if (run) {
         start_time -= (f-t) * duration;
     } else { // TODOt dt = (f-t) * duration;
+        run = true;
+        start_time = getTime()*1e-6;
     }
 }
 

@@ -31,6 +31,7 @@ class VRVideo : public VRStorage {
             AVCodecContext* vCodec = 0;
             map< int, VFrame > frames;
             double fps = 0;
+            int cachedFrameMin = 0;
             int cachedFrameMax = 0;
             ~VStream();
         };
@@ -63,7 +64,7 @@ class VRVideo : public VRStorage {
 
         int cacheSize = 100;
         int audioQueue = 40;
-        int currentFrame = 0;
+        int currentFrame = -1;
         int currentStream = 0;
         bool interruptCaching = false;
 
@@ -99,7 +100,7 @@ class VRVideo : public VRStorage {
         void frameUpdate(float t, int stream);
         void loadSomeFrames();
         void cacheFrames(VRThreadWeakPtr t);
-
+        void prepareJump();
         void mainThreadUpdate();
 
     public:
