@@ -22,9 +22,14 @@ OSG_BEGIN_NAMESPACE;
 
 class VRVideo : public VRStorage {
     private:
+        struct VFrame {
+            VRTexturePtr tex;
+            bool removalQueued = false;
+        };
+
         struct VStream {
             AVCodecContext* vCodec = 0;
-            map< int, VRTexturePtr > frames;
+            map< int, VFrame > frames;
             double fps = 0;
             int cachedFrameMax = 0;
             ~VStream();
@@ -59,14 +64,17 @@ class VRVideo : public VRStorage {
         int cacheSize = 100;
         int audioQueue = 40;
         int currentFrame = 0;
+        int currentStream = 0;
         bool interruptCaching = false;
+
+        bool needsCleanup = false;
+        vector<pair<int,int>> toRemove;
 
         bool texDataQueued = false;
         vector<texData> texDataPool;
         int texPoolPointer = 0;
 
         VRMaterialWeakPtr material;
-        VRTexturePtr currentTexture;
         VRAnimationPtr anim;
         VRAnimCbPtr animCb;
 
