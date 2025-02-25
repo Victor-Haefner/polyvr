@@ -49,7 +49,7 @@ class VRVideo : public VRStorage {
             int width;
             int height;
             int Ncols;
-            uint8_t* data = 0;
+            vector<uint8_t> data;
         };
 
         map<int, VStream> vStreams;
@@ -71,8 +71,7 @@ class VRVideo : public VRStorage {
         vector<pair<int,int>> toRemove;
 
         bool texDataQueued = false;
-        vector<texData> texDataPool;
-        int texPoolPointer = 0;
+        map<int, texData> texDataPool;
 
         VRMaterialWeakPtr material;
         VRAnimationPtr anim;
@@ -95,7 +94,7 @@ class VRVideo : public VRStorage {
 
         int getNStreams();
         int getStream(int j);
-        void setupTexture(int stream, int frameI, int width, int height, int Ncols, uint8_t* data);
+        void setupTexture(int stream, int frameI, int width, int height, int Ncols, vector<uint8_t>& data);
         void convertFrame(int stream, AVPacket* packet);
         void frameUpdate(float t, int stream);
         void loadSomeFrames();

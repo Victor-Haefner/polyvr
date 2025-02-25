@@ -26,6 +26,8 @@ extern "C" {
 using namespace OSG;
 
 VRVideo::VRVideo(VRMaterialPtr mat) {
+    cacheSize = 400;
+
     //avMutex = new boost::mutex();
     material = mat;
 #ifndef _WIN32
@@ -128,17 +130,22 @@ int avcodec_decode_video2(AVCodecContext* video_ctx, AVFrame* frame, int* got_fr
 #endif
 
 void VRVideo::mainThreadUpdate() {
+    VRTimer timer;
+
+    //bool hasWork = bool(needsMainUpdate || texDataQueued || needsCleanup);
+    //double t = 0;
+
+
     if (needsMainUpdate) {
         if (auto m = material.lock()) {
             VRLock lock(osgMutex);
-
             auto tex = getFrame(currentStream, currentFrame);
             if (tex) {
                 //cout << " set frame " << currentFrame << endl;
                 m->setTexture(tex);
                 m->setMagMinFilter(GL_LINEAR, GL_LINEAR);
             } else {
-                //cout << " no frame " << currentFrame << endl;
+                //cout << "   no frame " << currentFrame << endl;
             }
 
             needsMainUpdate = false;
@@ -147,15 +154,19 @@ void VRVideo::mainThreadUpdate() {
 
     if (texDataQueued) {
         VRLock lock(osgMutex);
-        auto& td = texDataPool[texPoolPointer];
-        //cout << " setup frame " << td.frameI << endl;
-        setupTexture(td.stream, td.frameI, td.width, td.height, td.Ncols, td.data);
-        texPoolPointer++;
-        if (texPoolPointer == texDataPool.size()) {
-            texPoolPointer = 0;
-            texDataPool.clear();
-            texDataQueued = false;
+        //VRTimer T;
+        vector<int> processed;
+        for (auto& tdi : texDataPool) {
+            auto& td = tdi.second;
+            //cout << " setup frame " << td.frameI << ", Npool: " << texDataPool.size() << endl;
+            setupTexture(td.stream, td.frameI, td.width, td.height, td.Ncols, td.data);
+            //texDataPool.erase(tdi.first);
+            processed.push_back( tdi.first );
+            break;
         }
+        for (auto i : processed) texDataPool.erase(i);
+        if (texDataPool.size() == 0) texDataQueued = false;
+        //t = T.stop();
     }
 
     if (needsCleanup) {
@@ -165,16 +176,20 @@ void VRVideo::mainThreadUpdate() {
             vStreams[r.first].frames.erase(r.second);
         }
         toRemove.clear();
+        needsCleanup = false;
     }
+
+    //double T = timer.stop();
+    //if (hasWork) cout << "update loop " << ceil(T) << " ms" << endl;
+    //if (hasWork) cout << "update loop " << int(1000.0/T) << endl;
 }
 
-void VRVideo::setupTexture(int stream, int frameI, int width, int height, int Ncols, uint8_t* data) {
+void VRVideo::setupTexture(int stream, int frameI, int width, int height, int Ncols, vector<uint8_t>& data) {
     VRTexturePtr img = VRTexture::create();
-    if (Ncols == 1) img->getImage()->set(Image::OSG_L_PF, width, height, 1, 1, 1, 0.0, data, Image::OSG_UINT8_IMAGEDATA, true, 1);
-    if (Ncols == 3) img->getImage()->set(Image::OSG_RGB_PF, width, height, 1, 1, 1, 0.0, data, Image::OSG_UINT8_IMAGEDATA, true, 1);
+    if (Ncols == 1) img->getImage()->set(Image::OSG_L_PF, width, height, 1, 1, 1, 0.0, &data[0], Image::OSG_UINT8_IMAGEDATA, true, 1);
+    if (Ncols == 3) img->getImage()->set(Image::OSG_RGB_PF, width, height, 1, 1, 1, 0.0, &data[0], Image::OSG_UINT8_IMAGEDATA, true, 1);
 
     if (!img) return;
-    VRLock lock(osgMutex);
     vStreams[stream].frames[frameI].tex = img;
 }
 
@@ -247,7 +262,8 @@ void VRVideo::convertFrame(int stream, AVPacket* packet) {
     }
 
     VRLock lock(osgMutex);
-    texDataPool.push_back( {stream, vStreams[stream].cachedFrameMax, width, height, Ncols, data2} );
+    int frameI = vStreams[stream].cachedFrameMax;
+    texDataPool[frameI] = {stream, frameI, width, height, Ncols, osgFrame};
     texDataQueued = true;
     //setupTexture(stream, vStreams[stream].cachedFrameMax, width, height, Ncols, data2);
     vStreams[stream].cachedFrameMax++;
@@ -330,7 +346,6 @@ void VRVideo::loadSomeFrames() {
         if (aStreams.count(stream)) {
             auto a = aStreams[stream].audio;
             auto data = a->extractPacket(&packet);
-            VRLock lock(osgMutex);
             aStreams[stream].frames[aStreams[stream].cachedFrameMax] = data;
             aStreams[stream].cachedFrameMax++;
         }
@@ -419,9 +434,9 @@ bool VRVideo::isRunning() {
 }
 
 void VRVideo::frameUpdate(float t, int stream) {
-    VRLock lock(osgMutex);
     int i = vStreams[stream].fps * duration * t;
-    //cout << "frameUpdate " << t << ", " << i << ", " << vStreams[stream].frames.size() << endl;
+    if (currentFrame == i) return;
+    cout << "frameUpdate " << t << ", " << i << ", " << vStreams[stream].frames.size() << endl;
     showFrame(stream, i);
 }
 
