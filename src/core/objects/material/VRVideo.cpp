@@ -178,6 +178,66 @@ void VRVideoStream::checkOldFrames(int currentF, VRMutex& osgMutex) {
     cachedFrameMin = currentF;
 }
 
+bool VRVideoStream::decode(AVPacket* packet, VRMutex& osgMutex) {
+    cout << "decode " << vCodec << ", " << vFrame << endl;
+    int valid = 0;
+    int r = avcodec_decode_video2(vCodec, vFrame, &valid, packet); // Decode video frame
+
+    if (valid == 0 || r < 0) {
+        cout << " avcodec_decode_video2 failed with " << r << endl;
+        // TODO: print packet data
+        return false;
+    }
+
+    auto flipFrame = [](AVFrame* pFrame) {
+        for (int i = 0; i < 4; i++) {
+            if (i) pFrame->data[i] += pFrame->linesize[i] * ((pFrame->height >> 1)-1);
+            else   pFrame->data[i] += pFrame->linesize[i] *  (pFrame->height-1);
+            pFrame->linesize[i] = -pFrame->linesize[i];
+        }
+    };
+
+    flipFrame(vFrame);
+    int width = vFrame->width;
+    int height = vFrame->height;
+    AVPixelFormat pf = AVPixelFormat(vFrame->format);
+
+    int Ncols = getNColors(pf);
+    if (Ncols == 0) { cout << "ERROR: stream has no colors!" << endl; return false; }
+
+    if (swsContext == 0) {
+        if (Ncols == 1) nFrame->format = AV_PIX_FMT_GRAY8;
+        if (Ncols == 3) nFrame->format = AV_PIX_FMT_RGB24;
+
+        swsContext = sws_getContext(width, height, pf, width, height, AVPixelFormat(nFrame->format), SWS_BILINEAR, NULL, NULL, NULL);
+        nFrame->width = width;
+        nFrame->height = height;
+        if (av_frame_get_buffer(nFrame, 0) < 0) { cout << "  Error in VRVideo, av_frame_get_buffer failed!" << endl; return false; }
+    }
+
+    int rgbH = sws_scale(swsContext, vFrame->data, vFrame->linesize, 0, height, nFrame->data, nFrame->linesize);
+    if (rgbH < 0) { cout << "  Error in VRVideo, sws_scale failed!" << endl; return false; }
+    int rgbW = nFrame->linesize[0]/Ncols;
+
+    osgFrame.resize(width*height*3, 0);
+
+    auto data1 = (uint8_t*)nFrame->data[0];
+    auto data2 = (uint8_t*)&osgFrame[0];
+    for (int y = 0; y<height; y++) {
+        int k1 = y*width*Ncols;
+        int k2 = y*rgbW*Ncols;
+        memcpy(&data2[k1], &data1[k2], width*Ncols);
+    }
+
+    VRLock lock(osgMutex);
+    int frameI = cachedFrameMax;
+    texDataPool[frameI] = { frameI, width, height, Ncols, osgFrame };
+    texDataQueued = true;
+    cachedFrameMax++;
+
+    return true;
+}
+
 VRVideo::VRVideo(VRMaterialPtr mat) {
     //avMutex = new boost::mutex();
     material = mat;
