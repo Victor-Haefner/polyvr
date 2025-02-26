@@ -118,7 +118,6 @@ class VRVideo : public VRStorage {
         double duration = 0;
 
         int audioQueue = 40;
-        int currentFrame = -1;
         int currentStream = 0;
         bool interruptCaching = false;
 
