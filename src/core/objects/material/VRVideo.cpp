@@ -155,7 +155,7 @@ void VRVideoStream::setupTexture(int frameI, int width, int height, int Ncols, v
     frames[frameI].setTexture(img);
 }
 
-bool VRVideoStream::needsData(int currentF) { return bool(cachedFrameMax-currentF < cacheSize); }
+bool VRVideoStream::needsData() { return bool(cachedFrameMax-currentFrame < cacheSize); }
 int VRVideoStream::getFPS() { return fps; }
 
 void VRVideoStream::reset() {
@@ -164,18 +164,18 @@ void VRVideoStream::reset() {
     cachedFrameMax = 0;
 }
 
-void VRVideoStream::checkOldFrames(int currentF, VRMutex& osgMutex) {
+void VRVideoStream::checkOldFrames(VRMutex& osgMutex) {
     VRLock lock(osgMutex);
     for (auto& f : frames) { // read stream
         if (f.second.isQueuedForRemoval()) continue;
-        if (f.first < currentF) {
+        if (f.first < currentFrame) {
             //cout << " queue removal " << f.first << ", " << currentF << ", " << &f << endl;
             toRemove.push_back( f.first );
             needsCleanup = true;
             f.second.queueRemoval();
         }
     }
-    cachedFrameMin = currentF;
+    cachedFrameMin = currentFrame;
 }
 
 bool VRVideoStream::decode(AVPacket* packet, VRMutex& osgMutex) {
@@ -418,15 +418,14 @@ void VRVideo::loadSomeFrames() {
     VRLock lock(avMutex);
 
     bool doReturn = true;
-    for (auto& s : vStreams) if (s.second.cachedFrameMax-s.second.currentFrame < s.second.cacheSize) doReturn = false;
-    //for (auto& s : aStreams) if (s.second.cachedFrameMax-currentF < cacheSize) doReturn = false;
-    //for (auto& s : vStreams) cout << " cachedFrameMax " << s.second.cachedFrameMax << " cacheSize " << cacheSize << " currentF " << currentF << ", return? " << doReturn << endl;
+    for (auto& s : vStreams) if ( s.second.needsData() ) doReturn = false;
     if (doReturn) return;
 
     for (AVPacket packet; av_read_frame(vFile, &packet)>=0; av_packet_unref(&packet)) { // read packets
         if (interruptCaching) break;
 
         int stream = packet.stream_index;
+        cout << " data from stream " << stream << endl;
 
         if (aStreams.count(stream)) {
             auto a = aStreams[stream].audio;
@@ -435,28 +434,19 @@ void VRVideo::loadSomeFrames() {
             aStreams[stream].cachedFrameMax++;
         }
 
-        if (vStreams.count(stream)) convertFrame(stream, &packet);
+        if (vStreams.count(stream))
+            if (!vStreams[stream].decode(&packet, osgMutex)) return;
 
         // break if all streams are sufficiently cached
         bool doBreak = true;
-        for (auto& s : vStreams) if (s.second.cachedFrameMax-s.second.currentFrame < s.second.cacheSize) doBreak = false;
+        for (auto& s : vStreams) if ( s.second.needsData() ) doBreak = false;
         //for (auto& s : aStreams) if (s.second.cachedFrameMax-currentF < cacheSize) doBreak = false;
         if (doBreak) { av_packet_unref(&packet); break; }
     }
 
     for (auto& s : vStreams) { // cleanup cache
         if (interruptCaching) break;
-        VRLock lock(osgMutex);
-        for (auto& f : s.second.frames) { // read stream
-            if (f.second.isQueuedForRemoval()) continue;
-            if (f.first < s.second.currentFrame) {
-                //cout << " queue removal " << f.first << ", " << currentF << ", " << &f << endl;
-                s.second.toRemove.push_back( f.first );
-                s.second.needsCleanup = true;
-                f.second.queueRemoval();
-            }
-        }
-        s.second.cachedFrameMin = s.second.currentFrame;
+        s.second.checkOldFrames(osgMutex);
     }
 
     interruptCaching = false;

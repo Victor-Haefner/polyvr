@@ -85,8 +85,8 @@ class VRVideoStream {
 
         void queueFrameUpdate(int frame, VRMutex& osgMutex);
         bool decode(AVPacket* packet, VRMutex& osgMutex);
-        bool needsData(int currentF);
-        void checkOldFrames(int currentF, VRMutex& osgMutex);
+        bool needsData();
+        void checkOldFrames(VRMutex& osgMutex);
 
         /** -= call from main thread =- **/
 
