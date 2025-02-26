@@ -21,75 +21,6 @@ extern "C" {
 #include "core/utils/Thread.h"
 #include "core/utils/VRMutex.h"
 
-
-
-using namespace OSG;
-
-VRVideo::VRVideo(VRMaterialPtr mat) {
-    cacheSize = 400;
-
-    //avMutex = new boost::mutex();
-    material = mat;
-#ifndef _WIN32
-#ifndef __APPLE__
-    av_register_all(); // Register all formats && codecs
-#endif
-#endif
-
-    mainLoopCb = VRUpdateCb::create("Video main update", bind(&VRVideo::mainThreadUpdate, this));
-    VRScene::getCurrent()->addUpdateFkt(mainLoopCb);
-}
-
-VRVideo::~VRVideo() {
-    cout << "VRVideo::~VRVideo " << endl;
-    if (anim) anim->stop();
-    if (wThreadID >= 0) VRScene::getCurrent()->stopThread(wThreadID, 1000);
-    if (vFrame) av_frame_free(&vFrame);
-    if (nFrame) av_frame_free(&nFrame);
-    if (vFile) avformat_close_input(&vFile); // Close the video file
-    //if (avMutex) delete avMutex;
-    cout << " VRVideo::~VRVideo done" << endl;
-
-    vFrame = 0;
-    vFile = 0;
-}
-
-VRVideo::VStream::~VStream() {
-    cout << " VRVideo::VStream::~VStream " << endl;
-    if (vCodec) avcodec_close(vCodec); // Close the codec
-    vCodec = 0;
-}
-
-VRVideo::AStream::~AStream() {
-    cout << " VRVideo::AStream::~AStream " << endl;
-    if (audio) audio->close(); // Close the codec
-    audio = 0;
-}
-
-VRVideoPtr VRVideo::create(VRMaterialPtr mat) { return VRVideoPtr( new VRVideo(mat) ); }
-
-int VRVideo::getStream(int j) {
-    if (vFile == 0) return -1;
-    int k = 0;
-    for(int i=0; i<(int)vFile->nb_streams; i++) if(vFile->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_VIDEO) {
-        if (k != j) continue;
-        return i;
-    }
-
-    return -1;
-}
-
-void FlipFrame(AVFrame* pFrame) {
-    for (int i = 0; i < 4; i++) {
-        if (i) {
-            pFrame->data[i] += pFrame->linesize[i] * ((pFrame->height >> 1)-1);
-        } else {
-            pFrame->data[i] += pFrame->linesize[i] * (pFrame->height-1);
-        }
-        pFrame->linesize[i] = -pFrame->linesize[i];
-    }
-}
-
 int getNColors(AVPixelFormat pfmt) {
     if (pfmt == AV_PIX_FMT_NONE) return 0;
     if (pfmt == AV_PIX_FMT_YUV420P) return 3;
@@ -128,6 +59,88 @@ int avcodec_decode_video2(AVCodecContext* video_ctx, AVFrame* frame, int* got_fr
     return used;
 }
 #endif
+
+using namespace OSG;
+
+VRVideoFrame::VRVideoFrame() {}
+VRVideoFrame::~VRVideoFrame() {}
+
+VRTexturePtr VRVideoFrame::getTexture() { return tex; }
+void VRVideoFrame::setTexture(VRTexturePtr t) { tex = t; }
+
+bool VRVideoFrame::isQueuedForRemoval() { return removalQueued; }
+void VRVideoFrame::queueRemoval() { removalQueued = true; }
+
+VRVideoStream::VRVideoStream() {}
+
+VRVideoStream::~VRVideoStream() {
+    cout << " VRVideoStream::~VRVideoStream " << endl;
+    if (vCodec) avcodec_close(vCodec); // Close the codec
+    if (vFrame) av_frame_free(&vFrame);
+    if (nFrame) av_frame_free(&nFrame);
+    vCodec = 0;
+    vFrame = 0;
+    nFrame = 0;
+}
+
+VRVideo::VRVideo(VRMaterialPtr mat) {
+    cacheSize = 400;
+
+    //avMutex = new boost::mutex();
+    material = mat;
+#ifndef _WIN32
+#ifndef __APPLE__
+    av_register_all(); // Register all formats && codecs
+#endif
+#endif
+
+    mainLoopCb = VRUpdateCb::create("Video main update", bind(&VRVideo::mainThreadUpdate, this));
+    VRScene::getCurrent()->addUpdateFkt(mainLoopCb);
+}
+
+VRVideo::~VRVideo() {
+    cout << "VRVideo::~VRVideo " << endl;
+    if (anim) anim->stop();
+    if (wThreadID >= 0) VRScene::getCurrent()->stopThread(wThreadID, 1000);
+    if (vFrame) av_frame_free(&vFrame);
+    if (nFrame) av_frame_free(&nFrame);
+    if (vFile) avformat_close_input(&vFile); // Close the video file
+    //if (avMutex) delete avMutex;
+    cout << " VRVideo::~VRVideo done" << endl;
+
+    vFrame = 0;
+    vFile = 0;
+}
+
+VRVideo::AStream::~AStream() {
+    cout << " VRVideo::AStream::~AStream " << endl;
+    if (audio) audio->close(); // Close the codec
+    audio = 0;
+}
+
+VRVideoPtr VRVideo::create(VRMaterialPtr mat) { return VRVideoPtr( new VRVideo(mat) ); }
+
+int VRVideo::getStream(int j) {
+    if (vFile == 0) return -1;
+    int k = 0;
+    for(int i=0; i<(int)vFile->nb_streams; i++) if(vFile->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_VIDEO) {
+        if (k != j) continue;
+        return i;
+    }
+
+    return -1;
+}
+
+void FlipFrame(AVFrame* pFrame) {
+    for (int i = 0; i < 4; i++) {
+        if (i) {
+            pFrame->data[i] += pFrame->linesize[i] * ((pFrame->height >> 1)-1);
+        } else {
+            pFrame->data[i] += pFrame->linesize[i] * (pFrame->height-1);
+        }
+        pFrame->linesize[i] = -pFrame->linesize[i];
+    }
+}
 
 void VRVideo::mainThreadUpdate() {
     VRTimer timer;
@@ -190,7 +203,7 @@ void VRVideo::setupTexture(int stream, int frameI, int width, int height, int Nc
     if (Ncols == 3) img->getImage()->set(Image::OSG_RGB_PF, width, height, 1, 1, 1, 0.0, &data[0], Image::OSG_UINT8_IMAGEDATA, true, 1);
 
     if (!img) return;
-    vStreams[stream].frames[frameI].tex = img;
+    vStreams[stream].frames[frameI].setTexture(img);
 }
 
 void VRVideo::showFrame(int stream, int frame) {
@@ -297,7 +310,7 @@ void VRVideo::open(string f) {
         bool isAudio = (avCodec->codec_type == AVMEDIA_TYPE_AUDIO);
 
         if (isVideo) {
-            vStreams[i] = VStream();
+            vStreams[i] = VRVideoStream();
             vStreams[i].vCodec = avContext;
             vStreams[i].fps = av_q2d(avStream->avg_frame_rate);
 
@@ -363,12 +376,12 @@ void VRVideo::loadSomeFrames() {
         if (interruptCaching) break;
         VRLock lock(osgMutex);
         for (auto& f : s.second.frames) { // read stream
-            if (f.second.removalQueued) continue;
+            if (f.second.isQueuedForRemoval()) continue;
             if (f.first < currentF) {
                 //cout << " queue removal " << f.first << ", " << currentF << ", " << &f << endl;
                 toRemove.push_back( make_pair(s.first,f.first) );
                 needsCleanup = true;
-                f.second.removalQueued = true;
+                f.second.queueRemoval();
             }
         }
         s.second.cachedFrameMin = currentF;
@@ -498,7 +511,7 @@ void VRVideo::play(int stream, float t0, float t1, float v) {
 VRTexturePtr VRVideo::getFrame(int stream, int i) {
     if (vStreams.count(stream) == 0) return 0;
     if (vStreams[stream].frames.count(i) == 0) return 0;
-    return vStreams[stream].frames[i].tex;
+    return vStreams[stream].frames[i].getTexture();
 }
 
 VRTexturePtr VRVideo::getFrame(int stream, float t) {

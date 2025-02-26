@@ -14,28 +14,91 @@ class AVFormatContext;
 class AVCodecContext;
 class AVPacket;
 class AVFrame;
+class AVCodec;
+class AVStream;
 class SwsContext;
 
 typedef signed char ALbyte;
 
 OSG_BEGIN_NAMESPACE;
 
+class VRVideoFrame {
+    private:
+        VRTexturePtr tex;
+        bool removalQueued = false;
+
+    public:
+        VRVideoFrame();
+        ~VRVideoFrame();
+
+        VRTexturePtr getTexture();
+        void setTexture(VRTexturePtr t);
+
+        bool isQueuedForRemoval();
+        void queueRemoval();
+};
+
+class VRVideoStream {
+    public:
+        struct texData {
+            int frameI;
+            int width;
+            int height;
+            int Ncols;
+            vector<uint8_t> data;
+        };
+
+    public:
+        AVCodecContext* vCodec = 0;
+        double fps = 0;
+
+        AVFrame* vFrame = 0;
+        SwsContext* swsContext = 0;
+        //AVPacket* packet = 0;
+        AVFrame* nFrame = 0;
+        vector<UInt8> osgFrame;
+
+        int cacheSize = 100;
+        map< int, VRVideoFrame > frames;
+        int currentFrame = -1;
+        int cachedFrameMin = 0;
+        int cachedFrameMax = 0;
+        VRMutex osgMutex;
+
+        bool needsFrameUpdate = false;
+        bool texDataQueued = false;
+        bool needsCleanup = false;
+        map<int, texData> texDataPool;
+        vector<int> toRemove;
+
+        void setupTexture(int frameI, int width, int height, int Ncols, vector<uint8_t>& data);
+
+    public:
+        VRVideoStream();
+        VRVideoStream(AVStream* avStream, AVCodecContext* avContext);
+        ~VRVideoStream();
+
+        int getFPS();
+        void reset();
+
+        /** -= call from video thread =- **/
+
+        void queueFrameUpdate(int frame);
+        bool decode(AVPacket* packet);
+        bool needsData(int currentF);
+        void checkOldFrames(int currentF);
+
+        /** -= call from main thread =- **/
+
+        void updateFrame(VRMaterialPtr material);
+        void processFrames();
+        void doCleanup();
+
+        VRTexturePtr getTexture(int i);
+};
+
 class VRVideo : public VRStorage {
     private:
-        struct VFrame {
-            VRTexturePtr tex;
-            bool removalQueued = false;
-        };
-
-        struct VStream {
-            AVCodecContext* vCodec = 0;
-            map< int, VFrame > frames;
-            double fps = 0;
-            int cachedFrameMin = 0;
-            int cachedFrameMax = 0;
-            ~VStream();
-        };
-
         struct AStream {
             VRSoundPtr audio;
             map< int, vector<VRSoundBufferPtr> > frames;
@@ -53,7 +116,7 @@ class VRVideo : public VRStorage {
             vector<uint8_t> data;
         };
 
-        map<int, VStream> vStreams;
+        map<int, VRVideoStream> vStreams;
         map<int, AStream> aStreams;
         int width = 0;
         int height = 0;
