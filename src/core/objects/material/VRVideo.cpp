@@ -179,14 +179,10 @@ void VRVideoStream::checkOldFrames(int currentF) {
 }
 
 VRVideo::VRVideo(VRMaterialPtr mat) {
-    cacheSize = 400;
-
     //avMutex = new boost::mutex();
     material = mat;
-#ifndef _WIN32
-#ifndef __APPLE__
+#if defined(_WIN32) || defined(__APPLE__)
     av_register_all(); // Register all formats && codecs
-#endif
 #endif
 
     mainLoopCb = VRUpdateCb::create("Video main update", bind(&VRVideo::mainThreadUpdate, this));
@@ -590,14 +586,12 @@ void VRVideo::play(int stream, float t0, float t1, float v) {
 
 VRTexturePtr VRVideo::getFrame(int stream, int i) {
     if (vStreams.count(stream) == 0) return 0;
-    if (vStreams[stream].frames.count(i) == 0) return 0;
-    return vStreams[stream].frames[i].getTexture();
+    return vStreams[stream].getTexture(i);
 }
 
 VRTexturePtr VRVideo::getFrame(int stream, float t) {
     if (vStreams.count(stream) == 0) return 0;
-    int i = vStreams[stream].fps * duration * t;
+    int i = vStreams[stream].getFPS() * duration * t;
     return getFrame(stream, i);
 }
-
 
