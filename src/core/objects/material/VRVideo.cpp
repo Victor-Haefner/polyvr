@@ -473,7 +473,7 @@ void VRVideo::setVolume(float v) {
 
 size_t VRVideo::getNFrames(int stream) {
     auto& s = vStreams[stream];
-    return s.fps * duration;
+    return s.getFPS() * duration;
 }
 
 float VRVideo::getDuration() { return duration; }
@@ -564,9 +564,10 @@ bool VRVideo::isRunning() {
 }
 
 void VRVideo::frameUpdate(float t, int stream) {
-    int i = vStreams[stream].fps * duration * t;
+    auto& vStream = vStreams[stream];
+    int i = vStream.getFPS() * duration * t;
     if (currentFrame == i) return;
-    cout << "frameUpdate " << t << ", " << i << ", " << vStreams[stream].frames.size() << endl;
+    //cout << "frameUpdate " << t << ", " << i << ", " << vStream.frames.size() << endl;
     showFrame(stream, i);
 }
 
