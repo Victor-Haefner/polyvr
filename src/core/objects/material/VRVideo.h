@@ -63,7 +63,6 @@ class VRVideoStream {
         int currentFrame = -1;
         int cachedFrameMin = 0;
         int cachedFrameMax = 0;
-        VRMutex osgMutex;
 
         bool needsFrameUpdate = false;
         bool texDataQueued = false;
@@ -107,59 +106,36 @@ class VRVideo : public VRStorage {
             ~AStream();
         };
 
-        struct texData {
-            int stream;
-            int frameI;
-            int width;
-            int height;
-            int Ncols;
-            vector<uint8_t> data;
-        };
-
         map<int, VRVideoStream> vStreams;
         map<int, AStream> aStreams;
         int width = 0;
         int height = 0;
         float volume = 1.0;
+        VRMutex osgMutex;
 
         double start_time = 0;
         double duration = 0;
 
-        int cacheSize = 100;
         int audioQueue = 40;
         int currentFrame = -1;
         int currentStream = 0;
         bool interruptCaching = false;
 
-        bool needsCleanup = false;
-        vector<pair<int,int>> toRemove;
-
-        bool texDataQueued = false;
-        map<int, texData> texDataPool;
-
         VRMaterialWeakPtr material;
         VRAnimationPtr anim;
         VRAnimCbPtr animCb;
 
-        bool needsMainUpdate = false;
         VRUpdateCbPtr mainLoopCb;
 
         AVFormatContext* vFile = 0;
-        AVFrame* vFrame = 0;
-        AVFrame* nFrame = 0;
-        vector<UInt8> osgFrame;
-        SwsContext* swsContext = 0;
-        AVPacket* packet = 0;
 
         VRMutex avMutex;
-        VRMutex osgMutex;
         VRThreadCbPtr worker;
         int wThreadID = -1;
 
         int getNStreams();
         int getStream(int j);
         void setupTexture(int stream, int frameI, int width, int height, int Ncols, vector<uint8_t>& data);
-        void convertFrame(int stream, AVPacket* packet);
         void frameUpdate(float t, int stream);
         void loadSomeFrames();
         void cacheFrames(VRThreadWeakPtr t);
@@ -187,6 +163,9 @@ class VRVideo : public VRStorage {
         size_t getNFrames(int stream);
         VRTexturePtr getFrame(int stream, int i);
         VRTexturePtr getFrame(int stream, float t);
+
+
+        void convertFrame(int stream, AVPacket* packet); // TODEL
 };
 
 OSG_END_NAMESPACE;
