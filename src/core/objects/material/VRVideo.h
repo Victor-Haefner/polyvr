@@ -49,6 +49,7 @@ class VRVideoStream {
         };
 
     public:
+        VRMutex osgMutex;
         AVCodecContext* vCodec = 0;
         double fps = 0;
 
