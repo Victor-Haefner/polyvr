@@ -435,9 +435,10 @@ void VRVideo::prepareJump() {
 void VRVideo::goTo(float t) { // TODO, handle t and audio
     VRLock lock(avMutex);
 
-    for (auto& s : vStreams) {
+    for (auto& s : vStreams) s.second.reset();
+    /*for (auto& s : vStreams) {
         int frame = s.second.fps * duration * t;
-    }
+    }*/
 
     //if (anim) anim->goTo(t);
     if (anim) anim->start();
@@ -459,13 +460,6 @@ void VRVideo::goTo(float t) { // TODO, handle t and audio
 
         int r = av_seek_frame(vFile, i, timestamp, AVSEEK_FLAG_BACKWARD);
         if (r < 0) cout << "AAAAAAAA, av_seek_frame failed!!" << endl;
-
-        if (isVideo) {
-            vStreams[i].frames.clear();
-            vStreams[i].texDataPool.clear();
-            vStreams[i].cachedFrameMax = 0; // TODO
-            vStreams[i].currentFrame = -1;
-        }
 
         if (isAudio) {
             /*aStreams[i].frames.clear();
