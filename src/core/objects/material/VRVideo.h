@@ -49,7 +49,7 @@ class VRVideoStream {
         };
 
     public:
-        //VRMutex osgMutex;
+        VRMutex osgMutex;
         AVCodecContext* vCodec = 0;
         double fps = 0;
 
@@ -83,16 +83,16 @@ class VRVideoStream {
 
         /** -= call from video thread =- **/
 
-        void queueFrameUpdate(int frame, VRMutex& osgMutex);
-        bool decode(AVPacket* packet, VRMutex& osgMutex);
+        void queueFrameUpdate(int frame);
+        bool decode(AVPacket* packet);
         bool needsData();
-        void checkOldFrames(VRMutex& osgMutex);
+        void checkOldFrames();
 
         /** -= call from main thread =- **/
 
-        void updateFrame(VRMaterialPtr material, VRMutex& osgMutex);
-        void processFrames(VRMutex& osgMutex);
-        void doCleanup(VRMutex& osgMutex);
+        void updateFrame(VRMaterialPtr material);
+        void processFrames();
+        void doCleanup();
 
         VRTexturePtr getTexture(int i);
 };
@@ -112,7 +112,6 @@ class VRVideo : public VRStorage {
         int width = 0;
         int height = 0;
         float volume = 1.0;
-        VRMutex osgMutex;
 
         double start_time = 0;
         double duration = 0;
@@ -162,9 +161,6 @@ class VRVideo : public VRStorage {
         size_t getNFrames(int stream);
         VRTexturePtr getFrame(int stream, int i);
         VRTexturePtr getFrame(int stream, float t);
-
-
-        void convertFrame(int stream, AVPacket* packet); // TODEL
 };
 
 OSG_END_NAMESPACE;
