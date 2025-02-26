@@ -100,6 +100,7 @@ void VRVideoStream::queueFrameUpdate(int frame, VRMutex& osgMutex) {
 void VRVideoStream::updateFrame(VRMaterialPtr material, VRMutex& osgMutex) {
     if (!needsFrameUpdate) return;
     if (!material) return;
+    needsFrameUpdate = false;
 
     int frame = 0;
     {
@@ -113,7 +114,6 @@ void VRVideoStream::updateFrame(VRMaterialPtr material, VRMutex& osgMutex) {
     //cout << " set frame " << frame << endl;
     material->setTexture(tex);
     material->setMagMinFilter(GL_LINEAR, GL_LINEAR);
-    needsFrameUpdate = false;
 }
 
 void VRVideoStream::doCleanup(VRMutex& osgMutex) {
@@ -232,21 +232,7 @@ void VRVideo::mainThreadUpdate() {
     if (!vStreams.count(currentStream)) return;
 
     auto& stream = vStreams[ currentStream ];
-    //stream.updateFrame( material.lock(), osgMutex );
-
-    if (stream.needsFrameUpdate) {
-        if (auto m = material.lock()) {
-            VRLock lock(osgMutex);
-            auto tex = getFrame(currentStream, currentFrame);
-            if (tex) {
-                m->setTexture(tex);
-                m->setMagMinFilter(GL_LINEAR, GL_LINEAR);
-            }
-
-            stream.needsFrameUpdate = false;
-        }
-    }
-
+    stream.updateFrame( material.lock(), osgMutex );
     stream.processFrames(osgMutex);
     stream.doCleanup(osgMutex);
 }
@@ -257,6 +243,7 @@ void VRVideo::showFrame(int streamI, int frame) {
         VRLock lock(osgMutex);
         //cout << " set current frame to " << frame << endl;
         currentFrame = frame;
+        stream.currentFrame = frame;
         currentStream = streamI;
         stream.needsFrameUpdate = true;
     }
