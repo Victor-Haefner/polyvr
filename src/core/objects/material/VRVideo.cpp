@@ -91,13 +91,13 @@ VRVideoStream::~VRVideoStream() {
     nFrame = 0;
 }
 
-void VRVideoStream::queueFrameUpdate(int frame) {
+void VRVideoStream::queueFrameUpdate(int frame, VRMutex& osgMutex) {
     VRLock lock(osgMutex);
     currentFrame = frame;
     needsFrameUpdate = true;
 }
 
-void VRVideoStream::updateFrame(VRMaterialPtr material) {
+void VRVideoStream::updateFrame(VRMaterialPtr material, VRMutex& osgMutex) {
     if (!needsFrameUpdate) return;
     if (!material) return;
 
@@ -116,7 +116,7 @@ void VRVideoStream::updateFrame(VRMaterialPtr material) {
     needsFrameUpdate = false;
 }
 
-void VRVideoStream::doCleanup() {
+void VRVideoStream::doCleanup(VRMutex& osgMutex) {
     if (!needsCleanup) return;
     VRLock lock(osgMutex);
     for (auto r : toRemove) frames.erase(r);
@@ -124,7 +124,7 @@ void VRVideoStream::doCleanup() {
     needsCleanup = false;
 }
 
-void VRVideoStream::processFrames() {
+void VRVideoStream::processFrames(VRMutex& osgMutex) {
     if (!texDataQueued) return;
     VRLock lock(osgMutex);
     //VRTimer T;
@@ -164,7 +164,7 @@ void VRVideoStream::reset() {
     cachedFrameMax = 0;
 }
 
-void VRVideoStream::checkOldFrames(int currentF) {
+void VRVideoStream::checkOldFrames(int currentF, VRMutex& osgMutex) {
     VRLock lock(osgMutex);
     for (auto& f : frames) { // read stream
         if (f.second.isQueuedForRemoval()) continue;
@@ -194,11 +194,8 @@ VRVideo::~VRVideo() {
     if (anim) anim->stop();
     if (wThreadID >= 0) VRScene::getCurrent()->stopThread(wThreadID, 1000);
     if (vFile) avformat_close_input(&vFile); // Close the video file
-    //if (avMutex) delete avMutex;
-    cout << " VRVideo::~VRVideo done" << endl;
-
-    //vFrame = 0;
     vFile = 0;
+    cout << " VRVideo::~VRVideo done" << endl;
 }
 
 VRVideo::AStream::~AStream() {
@@ -235,9 +232,7 @@ void VRVideo::mainThreadUpdate() {
     if (!vStreams.count(currentStream)) return;
 
     auto& stream = vStreams[ currentStream ];
-    /*stream.updateFrame( material.lock() );
-    stream.processFrames();
-    stream.doCleanup();*/
+    //stream.updateFrame( material.lock(), osgMutex );
 
     if (stream.needsFrameUpdate) {
         if (auto m = material.lock()) {
@@ -252,34 +247,8 @@ void VRVideo::mainThreadUpdate() {
         }
     }
 
-    if (stream.texDataQueued) {
-        VRLock lock(osgMutex);
-        vector<int> processed;
-        for (auto& tdi : stream.texDataPool) {
-            auto& td = tdi.second;
-            setupTexture(currentStream, td.frameI, td.width, td.height, td.Ncols, td.data);
-            processed.push_back( tdi.first );
-            break;
-        }
-        for (auto i : processed) stream.texDataPool.erase(i);
-        if (stream.texDataPool.size() == 0) stream.texDataQueued = false;
-    }
-
-    if (stream.needsCleanup) {
-        VRLock lock(osgMutex);
-        for (auto r : stream.toRemove) stream.frames.erase(r);
-        stream.toRemove.clear();
-        stream.needsCleanup = false;
-    }
-}
-
-void VRVideo::setupTexture(int stream, int frameI, int width, int height, int Ncols, vector<uint8_t>& data) {
-    VRTexturePtr img = VRTexture::create();
-    if (Ncols == 1) img->getImage()->set(Image::OSG_L_PF, width, height, 1, 1, 1, 0.0, &data[0], Image::OSG_UINT8_IMAGEDATA, true, 1);
-    if (Ncols == 3) img->getImage()->set(Image::OSG_RGB_PF, width, height, 1, 1, 1, 0.0, &data[0], Image::OSG_UINT8_IMAGEDATA, true, 1);
-
-    if (!img) return;
-    vStreams[stream].frames[frameI].setTexture(img);
+    stream.processFrames(osgMutex);
+    stream.doCleanup(osgMutex);
 }
 
 void VRVideo::showFrame(int streamI, int frame) {
