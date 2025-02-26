@@ -381,43 +381,29 @@ void VRVideo::open(string f) {
 
     cout << " VRVideo::open " << f << endl;
 
-
     vStreams.clear();
     aStreams.clear();
+
     for (int i=0; i<(int)vFile->nb_streams; i++) {
         AVStream* avStream = vFile->streams[i];
         AVCodecParameters* avCodec = avStream->codecpar;
-        const AVCodec* c = avcodec_find_decoder(avCodec->codec_id);
-        AVCodecContext* avContext = avcodec_alloc_context3(c);
+        AVCodec* codec = avcodec_find_decoder(avCodec->codec_id);
+        if (codec == 0) { fprintf(stderr, "Unsupported codec!\n"); continue; } // Codec not found
+        AVCodecContext* avContext = avcodec_alloc_context3(codec);
         if (avcodec_parameters_to_context(avContext, avCodec) < 0) continue;
         if (avCodec == 0) continue;
+        AVDictionary* optionsDict = 0;
+        if (avcodec_open2(avContext, codec, &optionsDict)<0) continue; // Could not open codec
 
         bool isVideo = (avCodec->codec_type == AVMEDIA_TYPE_VIDEO);
         bool isAudio = (avCodec->codec_type == AVMEDIA_TYPE_AUDIO);
 
-        if (isVideo) {
-            vStreams[i] = VRVideoStream();
-            vStreams[i].vCodec = avContext;
-            vStreams[i].fps = av_q2d(avStream->avg_frame_rate);
-            if (!vStreams[i].vFrame) vStreams[i].vFrame = av_frame_alloc(); // Allocate video frame
-            if (!vStreams[i].nFrame) vStreams[i].nFrame = av_frame_alloc(); // Allocate video frame
-
-            // Find the decoder for the video stream
-            AVDictionary* optionsDict = 0;
-
-            if (c == 0) { fprintf(stderr, "Unsupported codec!\n"); return; } // Codec not found
-            if (avcodec_open2(avContext, c, &optionsDict)<0) return; // Could not open codec
-        }
+        if (isVideo) vStreams.emplace(piecewise_construct, forward_as_tuple(i), forward_as_tuple(avStream, avContext));
 
         if (isAudio) {
             aStreams[i] = AStream();
             aStreams[i].audio = VRSound::create();
             aStreams[i].audio->setVolume(volume);
-
-            // Find the decoder for the audio stream
-            AVDictionary* optionsDict = 0;
-            if (c == 0) { fprintf(stderr, "Unsupported codec!\n"); continue; } // Codec not found
-            if (avcodec_open2(avContext, c, &optionsDict)<0) continue; // Could not open codec
             aStreams[i].audio->initWithCodec(avContext);
         }
     }
