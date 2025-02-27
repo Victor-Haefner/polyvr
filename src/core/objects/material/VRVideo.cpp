@@ -237,6 +237,7 @@ bool VRVideoStream::decode(AVPacket* packet) {
     return true;
 }
 
+
 VRVideo::VRVideo(VRMaterialPtr mat) {
     //avMutex = new boost::mutex();
     material = mat;
@@ -274,17 +275,6 @@ int VRVideo::getStream(int j) {
     }
 
     return -1;
-}
-
-void FlipFrame(AVFrame* pFrame) {
-    for (int i = 0; i < 4; i++) {
-        if (i) {
-            pFrame->data[i] += pFrame->linesize[i] * ((pFrame->height >> 1)-1);
-        } else {
-            pFrame->data[i] += pFrame->linesize[i] * (pFrame->height-1);
-        }
-        pFrame->linesize[i] = -pFrame->linesize[i];
-    }
 }
 
 void VRVideo::mainThreadUpdate() {
