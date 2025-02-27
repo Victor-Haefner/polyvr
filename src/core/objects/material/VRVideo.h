@@ -32,7 +32,8 @@ class VRVideoFrame {
         ~VRVideoFrame();
 
         VRTexturePtr getTexture();
-        void setTexture(VRTexturePtr t);
+        void setupTexture(int width, int height, int Ncols, vector<uint8_t>& data);
+        void applyToMaterial(VRMaterialPtr material);
 
         bool isQueuedForRemoval();
         void queueRemoval();
@@ -71,8 +72,6 @@ class VRVideoStream {
         map<int, texData> texDataPool;
         vector<int> toRemove;
 
-        void setupTexture(int frameI, int width, int height, int Ncols, vector<uint8_t>& data);
-
     public:
         VRVideoStream();
         VRVideoStream(AVStream* avStream, AVCodecContext* avContext);
@@ -80,6 +79,9 @@ class VRVideoStream {
 
         int getFPS();
         void reset();
+
+        int getCurrentFrame();
+        void setCurrentFrame(int f);
 
         /** -= call from video thread =- **/
 

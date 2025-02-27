@@ -66,17 +66,27 @@ VRVideoFrame::VRVideoFrame() {}
 VRVideoFrame::~VRVideoFrame() {}
 
 VRTexturePtr VRVideoFrame::getTexture() { return tex; }
-void VRVideoFrame::setTexture(VRTexturePtr t) { tex = t; }
-
 bool VRVideoFrame::isQueuedForRemoval() { return removalQueued; }
 void VRVideoFrame::queueRemoval() { removalQueued = true; }
+
+void VRVideoFrame::applyToMaterial(VRMaterialPtr material) {
+    if (!tex || !material) return;
+    material->setTexture(tex);
+    material->setMagMinFilter(GL_LINEAR, GL_LINEAR);
+}
+
+void VRVideoFrame::setupTexture(int width, int height, int Ncols, vector<uint8_t>& data) {
+    tex = VRTexture::create();
+    if (Ncols == 1) tex->getImage()->set(Image::OSG_L_PF, width, height, 1, 1, 1, 0.0, &data[0], Image::OSG_UINT8_IMAGEDATA, true, 1);
+    if (Ncols == 3) tex->getImage()->set(Image::OSG_RGB_PF, width, height, 1, 1, 1, 0.0, &data[0], Image::OSG_UINT8_IMAGEDATA, true, 1);
+}
+
 
 VRVideoStream::VRVideoStream() {}
 
 VRVideoStream::VRVideoStream(AVStream* avStream, AVCodecContext* avContext) {
     vFrame = av_frame_alloc();
     nFrame = av_frame_alloc();
-
     vCodec = avContext;
     fps = av_q2d(avStream->avg_frame_rate);
 }
@@ -91,6 +101,16 @@ VRVideoStream::~VRVideoStream() {
     nFrame = 0;
 }
 
+int VRVideoStream::getCurrentFrame() {
+    VRLock lock(osgMutex);
+    return currentFrame;
+}
+
+void VRVideoStream::setCurrentFrame(int f) {
+    VRLock lock(osgMutex);
+    currentFrame = f;
+}
+
 void VRVideoStream::queueFrameUpdate(int frame) {
     VRLock lock(osgMutex);
     currentFrame = frame;
@@ -99,21 +119,10 @@ void VRVideoStream::queueFrameUpdate(int frame) {
 
 void VRVideoStream::updateFrame(VRMaterialPtr material) {
     if (!needsFrameUpdate) return;
-    if (!material) return;
     needsFrameUpdate = false;
-
-    int frame = 0;
-    {
-        VRLock lock(osgMutex);
-        frame = currentFrame;
-    }
-
-    auto tex = getTexture(frame);
-    if (!tex) return;
-
-    //cout << " set frame " << frame << endl;
-    material->setTexture(tex);
-    material->setMagMinFilter(GL_LINEAR, GL_LINEAR);
+    int frame = getCurrentFrame();
+    if (!frames.count(frame)) return;
+    frames[frame].applyToMaterial(material);
 }
 
 void VRVideoStream::doCleanup() {
@@ -127,32 +136,17 @@ void VRVideoStream::doCleanup() {
 void VRVideoStream::processFrames() {
     if (!texDataQueued) return;
     VRLock lock(osgMutex);
-    //VRTimer T;
-    vector<int> processed;
     for (auto& tdi : texDataPool) {
         auto& td = tdi.second;
-        //cout << " setup frame " << td.frameI << ", Npool: " << texDataPool.size() << endl;
-        setupTexture(td.frameI, td.width, td.height, td.Ncols, td.data);
-        //texDataPool.erase(tdi.first);
-        processed.push_back( tdi.first );
-        break;
+        frames[td.frameI].setupTexture(td.width, td.height, td.Ncols, td.data);
     }
-    for (auto i : processed) texDataPool.erase(i);
-    if (texDataPool.size() == 0) texDataQueued = false;
+    texDataPool.clear();
+    texDataQueued = false;
 }
 
 VRTexturePtr VRVideoStream::getTexture(int i) {
     if (frames.count(i) == 0) return 0;
     return frames[i].getTexture();
-}
-
-void VRVideoStream::setupTexture(int frameI, int width, int height, int Ncols, vector<uint8_t>& data) {
-    VRTexturePtr img = VRTexture::create();
-    if (Ncols == 1) img->getImage()->set(Image::OSG_L_PF, width, height, 1, 1, 1, 0.0, &data[0], Image::OSG_UINT8_IMAGEDATA, true, 1);
-    if (Ncols == 3) img->getImage()->set(Image::OSG_RGB_PF, width, height, 1, 1, 1, 0.0, &data[0], Image::OSG_UINT8_IMAGEDATA, true, 1);
-
-    if (!img) return;
-    frames[frameI].setTexture(img);
 }
 
 bool VRVideoStream::needsData() { return bool(cachedFrameMax-currentFrame < cacheSize); }
