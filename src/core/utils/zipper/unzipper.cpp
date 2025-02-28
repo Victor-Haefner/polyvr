@@ -235,8 +235,9 @@ struct Unzipper::Impl {
         }
     }
 
-    bool initFile(const string& filename) {
-        fExt = getFileExtension(filename);
+    bool initFile(const string& filename, string type) {
+        fExt = type;
+        if (fExt == "") fExt = getFileExtension(filename);
 #ifdef USEWIN32IOAPI
         zlib_filefunc64_def ffunc;
         fill_win32_filefunc64A(&ffunc);
@@ -386,21 +387,7 @@ struct Unzipper::Impl {
     m_open = true;
   }
 
-  Unzipper::Unzipper(const string& zipname)
-    : m_ibuffer(*(new stringstream())) //not used but using local variable throws exception
-    , m_vecbuffer(*(new vector<unsigned char>())) //not used but using local variable throws exception
-    , zipname(zipname)
-    , m_usingMemoryVector(false)
-    , m_usingStream(false)
-    , m_impl(new Impl(*this))
-  {
-    if (!m_impl->initFile(zipname))
-      throw EXCEPTION_CLASS("Error loading zip file!");
-
-    m_open = true;
-  }
-
-  Unzipper::Unzipper(const string& zipname, const string& password)
+  Unzipper::Unzipper(const string& zipname, const string& type, const string& password)
     : m_ibuffer(*(new stringstream())) //not used but using local variable throws exception
     , m_vecbuffer(*(new vector<unsigned char>())) //not used but using local variable throws exception
     , zipname(zipname)
@@ -409,7 +396,7 @@ struct Unzipper::Impl {
     , password(password)
     , m_impl(new Impl(*this))
   {
-    if (!m_impl->initFile(zipname))
+    if (!m_impl->initFile(zipname, type))
       throw EXCEPTION_CLASS("Error loading zip file!");
 
     m_open = true;
