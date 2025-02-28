@@ -20,6 +20,7 @@ namespace OSG {
     ptrFwd(XMLElement);
     ptrFwd(XML);
     ptrFwd(VRSpreadsheet);
+    ptrFwd(Table);
     ptrFwd(VRMutex);
     ptrFwd(VRLock);
     ptrFwd(VRScheduler);

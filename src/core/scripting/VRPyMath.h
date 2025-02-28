@@ -202,6 +202,10 @@ struct VRPyXMLElement : VRPyBaseT<OSG::XMLElement> {
     static PyMethodDef methods[];
 };
 
+struct VRPyTable : VRPyBaseT<OSG::Table> {
+    static PyMethodDef methods[];
+};
+
 struct VRPySpreadsheet : VRPyBaseT<OSG::VRSpreadsheet> {
     static PyMethodDef methods[];
 };

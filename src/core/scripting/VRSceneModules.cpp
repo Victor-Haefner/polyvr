@@ -318,6 +318,7 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPyXML>("XML", pModVR);
     sm->registerModule<VRPyXMLElement>("XMLElement", pModVR);
     sm->registerModule<VRPySpreadsheet>("Spreadsheet", pModVR);
+    sm->registerModule<VRPyTable>("Table", pModVR);
 
 	sm->registerModule<VRPyBRepSurface>("BRepSurface", pModVR);
 	sm->registerModule<VRPyBRepEdge>("BRepEdge", pModVR);

@@ -609,6 +609,7 @@ simplePyType(Patch, New_ptr);
 simplePyType(PID, New_ptr);
 simplePyType(XML, New_ptr);
 simplePyType(XMLElement, 0);
+simplePyType(Table, New_ptr);
 simpleVRPyType(Spreadsheet, New_ptr);
 
 template<> string typeName(const Datarow* p) { return "Datarow"; }
@@ -937,7 +938,22 @@ PyMethodDef VRPyXMLElement::methods[] = {
     {NULL}  /* Sentinel */
 };
 
+PyMethodDef VRPyTable::methods[] = {
+    {"getCol", PyWrap2(Table, getCol, "Get column data by name", vector<string>, string) },
+    {"getRow", PyWrap2(Table, getRow, "Get row data by row index", vector<string>, size_t) },
+    {"get", PyWrap2(Table, get, "Get value by column name and row index", string, string, size_t) },
+    {"getColumns", PyWrap2(Table, getColumns, "Get column names", vector<string>) },
+    {"getRows", PyWrap2(Table, getRows, "Get data rows", vector< vector<string> >) },
+    {"getNCols", PyWrap2(Table, getNCols, "Get number of columns", size_t) },
+    {"getNRows", PyWrap2(Table, getNRows, "Get number of rows", size_t) },
+    {"addCol", PyWrap2(Table, addCol, "Add column by name", void, string) },
+    {"add", PyWrap2(Table, add, "Append value to column (column, value)", void, string, string) },
+    {"set", PyWrap2(Table, set, "Set value (column, row, value)", void, string, size_t, string) },
+    {NULL}  /* Sentinel */
+};
+
 PyMethodDef VRPySpreadsheet::methods[] = {
+    {"asTable", PyWrap(Spreadsheet, asTable, "Return sheet as table", TablePtr, string) },
     {"read", PyWrap(Spreadsheet, read, "Read file, .xlsx, .mdb, .eap", void, string) },
     {"write", PyWrap(Spreadsheet, write, "Write to folder, (folder, extention)", void, string, string) },
     {"writeSheet", PyWrap(Spreadsheet, writeSheet, "Write to sheet to file (.csv), (sheet, path)", void, string, string) },
