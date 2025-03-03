@@ -670,8 +670,8 @@ void exportToFile(string data, string path) {
 }
 
 // TODO: convert writebits to readbits !!
-void WriteBits( unsigned uValue, int iBitsCount ) {
-	static unsigned uRemainder = 0;
+void WriteBits( unsigned int uValue, int iBitsCount ) {
+	static unsigned int uRemainder = 0;
 	static int iRemainderBits = 0;
 	while (iBitsCount > 0) {
 		int iBitsDelta = iBitsCount + iRemainderBits - 8 ;
@@ -696,6 +696,71 @@ void WriteBits( unsigned uValue, int iBitsCount ) {
 		}
 	}
 }
+
+struct BitStreamParser {
+    size_t beg;
+    size_t end;
+    unsigned char* data = 0;
+
+    size_t currentBytePtr = 0;
+    unsigned char currentByte = 0;
+
+    unsigned char currentBitPtr = 0;
+    bool currentBit = 0;
+
+    BitStreamParser(size_t b, size_t e, unsigned char* d) : beg(b), end(e), data(d) {
+        currentBytePtr = b;
+        currentByte = data[currentBytePtr];
+        currentBitPtr = 0;
+        currentBit = (currentByte >> currentBitPtr) & 1;
+        cout << " init bit stream, first bit: " << currentBit << ", first byte " << (int)currentByte << endl;
+    }
+
+    unsigned char inc(int N = 1) {
+        unsigned char res = 0;
+
+        for (int i=0; i<N; i++) {
+            currentBitPtr++;
+            if (currentBitPtr >= 8) {
+                currentBitPtr = 0;
+                currentBytePtr++;
+                if (currentBytePtr >= end) currentByte = 0;
+                else currentByte = data[currentBytePtr];
+                //cout << "      new byte " << (int)currentByte << endl;
+            }
+
+            currentBit = (currentByte >> currentBitPtr) & 1;
+            if (currentBit) res |= (1 << i);
+            //cout << " " << currentBytePtr << "." << (int)currentBitPtr << " " << currentBit << endl;
+        }
+
+        return res;
+    }
+
+    unsigned int readUInt32() {
+        if (currentBytePtr >= end) { cout << "Warning in readUInt32, no more data! " << endl; return 0; }
+        //cout << "readUInt32" << endl;
+        unsigned int I = 0;
+        int shift = 0;
+
+        if (!currentBit) {
+            //cout << " -- skip zero " << endl;
+            inc();
+        } else {
+            while(currentBit) {
+                //cout << " -- skip one " << endl;
+                inc();
+                //cout << " ----- byte " << endl;
+                unsigned int byte = inc(8);
+                //cout << "      --> " << byte << endl;
+                I |= (byte << shift);   // Store in the correct position
+                shift += 8;
+            }
+        }
+
+        return I;
+    }
+};
 
 void parsePRCStructure(string& data, PRC::FileStructureDescription& description) {
     if (description.Nsections.i != 6) return;
@@ -754,7 +819,7 @@ void parsePRCStructure(string& data, PRC::FileStructureDescription& description)
     string dataGeometries = extractSection(current, sizeGeometries);
     string dataExtraGeometries = extractSection(current, sizeExtraGeometries);
 
-    //exportToFile(dataGlobals, "globals.bin");
+    exportToFile(dataGlobals, "globals.bin");
     //exportToFile(dataTree, "tree.bin");
     //exportToFile(dataTessellations, "tessellations.bin");
     //exportToFile(dataGeometries, "geometries.bin");
@@ -763,12 +828,12 @@ void parsePRCStructure(string& data, PRC::FileStructureDescription& description)
     //return;
 
     for (auto d : {dataGlobals, dataTree, dataTessellations, dataGeometries, dataExtraGeometries}) {
-        PRC::UInt tmp;
-        size_t cu = 0;
-        cout << "k" << endl;
-        for (int j=0; j<1; j++) {
-            tmp.parse(d, cu);
-            cout << " " << j << ": " << tmp.i << endl;
+        BitStreamParser bs(0, d.size(), (unsigned char*)&d[0]);
+
+        cout << "k " << d.size() << endl;
+        for (int j=0; j<32; j++) {
+            unsigned int k = bs.readUInt32();
+            cout << " " << j << ": " << k << endl;
         }
     }
 
