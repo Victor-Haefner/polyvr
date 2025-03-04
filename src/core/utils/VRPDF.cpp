@@ -236,6 +236,51 @@ void printBin(const string& data, size_t p, size_t n) {
     cout << endl;
 }
 
+struct BitStreamParser {
+    size_t beg;
+    size_t end;
+    unsigned char* data = 0;
+
+    size_t currentBytePtr = 0;
+    unsigned char currentByte = 0;
+
+    unsigned char currentBitPtr = 0;
+    bool currentBit = 0;
+
+    BitStreamParser(size_t b, size_t e, unsigned char* d) : beg(b), end(e), data(d) {
+        currentBytePtr = b;
+        currentByte = data[currentBytePtr];
+        currentBitPtr = 0;
+        currentBit = (currentByte >> currentBitPtr) & 1;
+        //cout << " init bit stream, first bit: " << currentBit << ", first byte " << (int)currentByte << endl;
+    }
+
+    bool empty() {
+        return bool(currentBytePtr >= end);
+    }
+
+    unsigned char read(int N = 1) {
+        unsigned char res = 0;
+
+        for (int i=0; i<N; i++) {
+            currentBitPtr++;
+            if (currentBitPtr >= 8) {
+                currentBitPtr = 0;
+                currentBytePtr++;
+                if ( empty() ) currentByte = 0;
+                else currentByte = data[currentBytePtr];
+                //cout << "      new byte " << (int)currentByte << endl;
+            }
+
+            currentBit = (currentByte >> currentBitPtr) & 1;
+            if (currentBit) res |= (1 << i);
+            //cout << " " << currentBytePtr << "." << (int)currentBitPtr << " " << currentBit << endl;
+        }
+
+        return res;
+    }
+};
+
 namespace PRC {
     string currentName;
 
@@ -249,37 +294,82 @@ namespace PRC {
     struct Bool {
         bool b;
 
-        void parse(const string& data, size_t& p) {
-            cout << "Bool parse, p: " << p << endl;
-            unsigned char c;
-            memcpy(&c, &data[p], 1); p += 1;
-            b = c & 0x80;
-            cout << "  bool byte: " << (size_t)(unsigned char)c << " -> " << b << endl;
+        void parse(BitStreamParser& bs) {
+            b = bs.read(1);
         }
     };
 
     struct Char {
         char c;
 
-        void parse(const string& data, size_t& p) {
-            cout << "Char parse, p: " << p << endl;
-            memcpy(&c, &data[p], 1); p += 1;
+        void parse(BitStreamParser& bs) {
+            c = (char)bs.read(8);
         }
     };
 
     struct Int {
         int i;
-        void parse(const string& data, size_t& p) { memcpy(&i, &data[p], 4); p += 4; }
+
+        void parse(BitStreamParser& bs) { // TODO
+            if ( bs.empty() ) { cout << "Warning in Int::parse, no more data! " << endl; return; }
+            i = 0;
+            int shift = 0;
+
+            if (!bs.currentBit) {
+                bs.read();
+            } else {
+                cout << "Warning in Int::parse, not implemented! " << endl;
+                /*while(bs.currentBit) {
+                    bs.read();
+                    unsigned int byte = bs.read(8);
+                    i |= (byte << shift);   // Store in the correct position
+                    shift += 8;
+                }*/
+            }
+        }
     };
 
     struct UInt {
         unsigned int i;
-        void parse(const string& data, size_t& p) { memcpy(&i, &data[p], 4); p += 4; }
+
+        void parse(BitStreamParser& bs) {
+            if ( bs.empty() ) { cout << "Warning in UInt::parse, no more data! " << endl; return; }
+            i = 0;
+            int shift = 0;
+
+            if (!bs.currentBit) {
+                bs.read();
+            } else {
+                while(bs.currentBit) {
+                    bs.read();
+                    unsigned int byte = bs.read(8);
+                    i |= (byte << shift);   // Store in the correct position
+                    shift += 8;
+                }
+            }
+        }
     };
 
     struct Double {
         double d;
-        void parse(const string& data, size_t& p) { memcpy(&d, &data[p], 8); p += 8; }
+
+        void parse(BitStreamParser& bs) {
+            if ( bs.empty() ) { cout << "Warning in Double::parse, no more data! " << endl; return; }
+            d = 0;
+            int shift = 0;
+
+            if (!bs.currentBit) {
+                bs.read();
+            } else {
+                cout << "Warning in Double::parse, not implemented! " << endl;
+                /*while(bs.currentBit) {
+                    bs.read();
+                    unsigned int byte = bs.read(8);
+                    i |= (byte << shift);   // Store in the correct position
+                    shift += 8;
+                }*/
+            }
+        }
     };
 
     struct String {
@@ -287,14 +377,12 @@ namespace PRC {
         UInt size;
         string str;
 
-        void parse(const string& data, size_t& p) {
-            cout << "String parse, p: " << p << endl;
-            notNull.parse(data, p);
+        void parse(BitStreamParser& bs) {
+            notNull.parse(bs);
             if (notNull.b) {
-                size.parse(data, p);
-                str = string(data[p], size.i);
-                p += size.i;
-                cout << " str: " << str << endl;
+                size.parse(bs);
+                str = string(bs.read(size.i), size.i);
+                cout << " String::parse: " << str << endl;
             }
         }
     };
@@ -312,11 +400,11 @@ namespace PRC {
         Bool reuseCurrentName;
         String name;
 
-        void parse(const string& data, size_t& p) {
-            reuseCurrentName.parse(data, p);
+        void parse(BitStreamParser& bs) {
+            reuseCurrentName.parse(bs);
 
             if (!reuseCurrentName.b) {
-                name.parse(data, p);
+                name.parse(bs);
                 currentName = name.str;
             }
             else name.str = currentName;
@@ -426,13 +514,13 @@ namespace PRC {
         UInt Ntokens;
         vector<UInt> tokens;
 
-        void parse(const string& data, size_t& p) {
-            type.parse(data, p);
-            Ntokens.parse(data, p);
+        void parse(BitStreamParser& bs) {
+            type.parse(bs);
+            Ntokens.parse(bs);
 
             for (int i=0; i<Ntokens.i; i++) {
                 UInt t;
-                t.parse(data, p);
+                t.parse(bs);
                 tokens.push_back(t);
             }
         }
@@ -443,11 +531,10 @@ namespace PRC {
         UInt intTitle;
         String strTitle;
 
-        void parse(const string& data, size_t& p) {
-            cout << "AttributeEntry parse, p: " << p << endl;
-            isInteger.parse(data, p);
-            if (isInteger.b) intTitle.parse(data, p);
-            else strTitle.parse(data, p);
+        void parse(BitStreamParser& bs) {
+            isInteger.parse(bs);
+            if (isInteger.b) intTitle.parse(bs);
+            else strTitle.parse(bs);
         }
     };
 
@@ -459,14 +546,13 @@ namespace PRC {
         Int value3; // time_t
         String value4;
 
-        void parse(const string& data, size_t& p) {
-            cout << "KeyValue parse, p: " << p << endl;
-            title.parse(data, p);
-            key.parse(data, p);
-            if (key.i == 1) value1.parse(data, p);
-            else if (key.i == 2) value2.parse(data, p);
-            else if (key.i == 3) value3.parse(data, p);
-            else if (key.i == 4) value4.parse(data, p);
+        void parse(BitStreamParser& bs) {
+            title.parse(bs);
+            key.parse(bs);
+            if (key.i == 1) value1.parse(bs);
+            else if (key.i == 2) value2.parse(bs);
+            else if (key.i == 3) value3.parse(bs);
+            else if (key.i == 4) value4.parse(bs);
             else {
                 cout << "Warning! invalid key " << key.i << endl;
             }
@@ -479,15 +565,14 @@ namespace PRC {
         UInt Npairs;
         vector<KeyValue> pairs;
 
-        void parse(const string& data, size_t& p) {
-            cout << "PRC_TYPE_MISC_Attribute parse, p: " << p << endl;
-            attribute.parse(data, p);
-            title.parse(data, p);
-            Npairs.parse(data, p);
+        void parse(BitStreamParser& bs) {
+            attribute.parse(bs);
+            title.parse(bs);
+            Npairs.parse(bs);
 
             for (int i=0; i<Npairs.i; i++) {
                 KeyValue k;
-                k.parse(data, p);
+                k.parse(bs);
                 pairs.push_back(k);
             }
         }
@@ -497,14 +582,13 @@ namespace PRC {
         UInt Nattributes;
         vector<PRC_TYPE_MISC_Attribute> attributes;
 
-        void parse(const string& data, size_t& p) {
-            cout << "AttributeData parse, p: " << p << endl;
-            Nattributes.parse(data, p);
+        void parse(BitStreamParser& bs) {
+            Nattributes.parse(bs);
             cout << " Nattributes " << Nattributes << endl;
 
             for (int i=0; i<Nattributes.i; i++) {
                 PRC_TYPE_MISC_Attribute a;
-                a.parse(data, p);
+                a.parse(bs);
                 attributes.push_back(a);
                 break; // ------------------------- TOTEST
             }
@@ -518,14 +602,13 @@ namespace PRC {
         UInt CADID2;
         UInt structureID;
 
-        void parse(const string& data, size_t& p) {
-            cout << "ContentPRCBase parse, p: " << p << endl;
-            attribute.parse(data, p);
+        void parse(BitStreamParser& bs) {
+            attribute.parse(bs);
+            name.parse(bs);
+            CADID1.parse(bs);
+            CADID2.parse(bs);
+            structureID.parse(bs);
             //cout << "ContentPRCBase attribute " << ID << endl;
-            name.parse(data, p);
-            //CADID1.parse(data, p);
-            //CADID2.parse(data, p);
-            //structureID.parse(data, p);
         }
     };
 
@@ -539,13 +622,13 @@ namespace PRC {
         UInt Ntessellations;
         vector<PRC_TYPE_TESS> tessellations;
 
-        void parse(const string& data, size_t p) {
-            cout << "PRC_TYPE_ASM_FileStructureTessellation parse, p: " << p << endl;
-            printBin(data, p, 48);
-            ID.parse(data, p);
+        void parse(BitStreamParser& bs) {
+            ID.parse(bs);
+            info.parse(bs);
+            Ntessellations.parse(bs);
+
             cout << " tessellation ID: " << ID << endl;
-            info.parse(data, p);
-            Ntessellations.parse(data, p);
+            cout << " N tessellation: " << Ntessellations << endl;
         }
     };
 
@@ -562,17 +645,17 @@ namespace PRC {
         UInt Nbodies;
         //vector<PRC_TYPE_TOPO_Body> bodies;
 
-        void parse(const string& data, size_t p) {
-            ID.parse(data, p);
-            info.parse(data, p);
-            behaviour.parse(data, p);
-            grandularity.parse(data, p);
-            tolerance.parse(data, p);
-            hasMinFaceThickness.parse(data, p);
-            if (hasMinFaceThickness.b) minFaceThickness.parse(data, p);
-            hasScaleFactor.parse(data, p);
-            if (hasScaleFactor.b) scale.parse(data, p);
-            Nbodies.parse(data, p);
+        void parse(BitStreamParser& bs) {
+            ID.parse(bs);
+            info.parse(bs);
+            behaviour.parse(bs);
+            grandularity.parse(bs);
+            tolerance.parse(bs);
+            hasMinFaceThickness.parse(bs);
+            if (hasMinFaceThickness.b) minFaceThickness.parse(bs);
+            hasScaleFactor.parse(bs);
+            if (hasScaleFactor.b) scale.parse(bs);
+            Nbodies.parse(bs);
         }
     };
 
@@ -580,29 +663,24 @@ namespace PRC {
         UInt Ncontexts;
         vector<TopologicalContext> contexts;
 
-        void parse(const string& data, size_t p) {
-            cout << "FileStructureExactGeometry parse, p: " << p << endl;
-            Ncontexts.parse(data, p);
+        void parse(BitStreamParser& bs) {
+            Ncontexts.parse(bs);
             cout << " Ncontexts: " << Ncontexts << endl;
         }
     };
 
     struct PRC_TYPE_ASM_FileStructureGeometry {
-        UniqueID ID;
+        UInt ID;
         ContentPRCBase info;
         FileStructureExactGeometry geometry;
         //UserData data;
 
-        void parse(const string& data, size_t p) {
-            cout << "PRC_TYPE_ASM_FileStructureGeometry parse, p: " << p << endl;
-             printBin(data, 0, 32);
-            ID.parse(data, p);
+        void parse(BitStreamParser& bs) {
+            ID.parse(bs);
             cout << " geometry ID: " << ID << endl;
-             printBin(data, 0, 32);
-            info.parse(data, p);
-             printBin(data, 0, 32);
-            geometry.parse(data, p);
-            //data.parse(data, p);
+            info.parse(bs);
+            geometry.parse(bs);
+            //data.parse(bs);
         }
     };
 
@@ -636,9 +714,8 @@ namespace PRC {
         UInt Ntypes;
         vector<Entity_Schema_definition> definitions;
 
-        void parse(const string& data, size_t& p) {
-            cout << "FileStructureSchema parse, p: " << p << endl;
-            Ntypes.parse(data, p);
+        void parse(BitStreamParser& bs) {
+            Ntypes.parse(bs);
             cout << " Ntypes: " << Ntypes << endl;
 
             /*for (int i=0; i<Ntypes.i; i++) {
@@ -669,107 +746,11 @@ void exportToFile(string data, string path) {
     out.close();
 }
 
-// TODO: convert writebits to readbits !!
-void WriteBits( unsigned int uValue, int iBitsCount ) {
-	static unsigned int uRemainder = 0;
-	static int iRemainderBits = 0;
-	while (iBitsCount > 0) {
-		int iBitsDelta = iBitsCount + iRemainderBits - 8 ;
-		if (iBitsDelta == 0) {
-			uRemainder |= uValue;
-			iRemainderBits = 0 ;
-			iBitsCount = 0 ;
-		} else if (iBitsDelta < 0) {
-			uRemainder |= uValue << (-iBitsDelta);
-			iRemainderBits += iBitsCount;
-			iBitsCount = 0 ;
-		} else {
-			int loc = uValue >> iBitsDelta;
-			uRemainder |= loc ;
-			uValue -= loc << iBitsDelta;
-			iBitsCount -= (8 - iRemainderBits) ;
-			iRemainderBits = 0 ;
-		}
-
-		if (iRemainderBits == 0) {
-		// writing 1 byte (uRemainder) to the device
-		}
-	}
-}
-
-struct BitStreamParser {
-    size_t beg;
-    size_t end;
-    unsigned char* data = 0;
-
-    size_t currentBytePtr = 0;
-    unsigned char currentByte = 0;
-
-    unsigned char currentBitPtr = 0;
-    bool currentBit = 0;
-
-    BitStreamParser(size_t b, size_t e, unsigned char* d) : beg(b), end(e), data(d) {
-        currentBytePtr = b;
-        currentByte = data[currentBytePtr];
-        currentBitPtr = 0;
-        currentBit = (currentByte >> currentBitPtr) & 1;
-        cout << " init bit stream, first bit: " << currentBit << ", first byte " << (int)currentByte << endl;
-    }
-
-    unsigned char inc(int N = 1) {
-        unsigned char res = 0;
-
-        for (int i=0; i<N; i++) {
-            currentBitPtr++;
-            if (currentBitPtr >= 8) {
-                currentBitPtr = 0;
-                currentBytePtr++;
-                if (currentBytePtr >= end) currentByte = 0;
-                else currentByte = data[currentBytePtr];
-                //cout << "      new byte " << (int)currentByte << endl;
-            }
-
-            currentBit = (currentByte >> currentBitPtr) & 1;
-            if (currentBit) res |= (1 << i);
-            //cout << " " << currentBytePtr << "." << (int)currentBitPtr << " " << currentBit << endl;
-        }
-
-        return res;
-    }
-
-    unsigned int readUInt32() {
-        if (currentBytePtr >= end) { cout << "Warning in readUInt32, no more data! " << endl; return 0; }
-        //cout << "readUInt32" << endl;
-        unsigned int I = 0;
-        int shift = 0;
-
-        if (!currentBit) {
-            //cout << " -- skip zero " << endl;
-            inc();
-        } else {
-            while(currentBit) {
-                //cout << " -- skip one " << endl;
-                inc();
-                //cout << " ----- byte " << endl;
-                unsigned int byte = inc(8);
-                //cout << "      --> " << byte << endl;
-                I |= (byte << shift);   // Store in the correct position
-                shift += 8;
-            }
-        }
-
-        return I;
-    }
-};
-
 void parsePRCStructure(string& data, PRC::FileStructureDescription& description) {
     if (description.Nsections.i != 6) return;
     if (description.sectionOffsets.size() != 7) return;
 
     PRC::FileStructure structure;
-    auto& h = structure.header;
-    auto& t = structure.tessellation;
-    auto& g = structure.geometry;
 
     size_t startHeader = description.sectionOffsets[0].i;
     size_t startGlobals = description.sectionOffsets[1].i;
@@ -794,6 +775,7 @@ void parsePRCStructure(string& data, PRC::FileStructureDescription& description)
     cout << "ExtraGeometries start: " << startExtraGeometries << ", size: " << sizeExtraGeometries << endl;
 
     size_t current = startHeader;
+    auto& h = structure.header;
     h.parse(data, current);
 
     cout << "  structure head " << string(h.PRC, 3) << endl;
@@ -819,7 +801,13 @@ void parsePRCStructure(string& data, PRC::FileStructureDescription& description)
     string dataGeometries = extractSection(current, sizeGeometries);
     string dataExtraGeometries = extractSection(current, sizeExtraGeometries);
 
-    exportToFile(dataGlobals, "globals.bin");
+    BitStreamParser bst(0, dataTessellations.size(), (unsigned char*)&dataTessellations[0]);
+    BitStreamParser bsg(0, dataGeometries.size(), (unsigned char*)&dataGeometries[0]);
+
+    structure.tessellation.parse(bst);
+    //structure.geometry.parse(bsg);
+
+    //exportToFile(dataGlobals, "globals.bin");
     //exportToFile(dataTree, "tree.bin");
     //exportToFile(dataTessellations, "tessellations.bin");
     //exportToFile(dataGeometries, "geometries.bin");
@@ -827,7 +815,7 @@ void parsePRCStructure(string& data, PRC::FileStructureDescription& description)
 
     //return;
 
-    for (auto d : {dataGlobals, dataTree, dataTessellations, dataGeometries, dataExtraGeometries}) {
+    /*for (auto d : {dataGlobals, dataTree, dataTessellations, dataGeometries, dataExtraGeometries}) {
         BitStreamParser bs(0, d.size(), (unsigned char*)&d[0]);
 
         cout << "k " << d.size() << endl;
@@ -835,7 +823,7 @@ void parsePRCStructure(string& data, PRC::FileStructureDescription& description)
             unsigned int k = bs.readUInt32();
             cout << " " << j << ": " << k << endl;
         }
-    }
+    }*/
 
 
 
