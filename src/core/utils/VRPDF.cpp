@@ -202,6 +202,55 @@ vector<PDF::Object> filter3DObjects(vector<PDF::Object>& objects) {
 }
 
 
+void printBits(const string& s, size_t a, size_t n) {
+    for (int i=0; i<n; i++) {
+        unsigned char c = s[a+i];
+        for (int j=0; j<8; j++) {
+            int b = ((c >> (7-j)) & 1);
+            cout << b;
+        }
+        cout << " ";
+    }
+    cout << endl;
+}
+
+void printBits(unsigned int c) {
+    for (int j=0; j<32; j++) {
+        int b = ((c >> (31-j)) & 1);
+        cout << b;
+        if (j%8 == 7) cout << " ";
+    }
+}
+
+void printBits(double c) {
+    union DI {
+        double d;
+        uint64_t i;
+    };
+
+    DI di;
+    di.d = c;
+
+    for (int j=0; j<64; j++) {
+        int b = ((di.i >> (63-j)) & 1);
+        cout << b;
+        if (j == 31 || j == 51 || j == 62) cout << " ";
+    }
+}
+
+void printBits(unsigned char c) {
+    for (int j=0; j<8; j++) {
+        int b = ((c >> (7-j)) & 1);
+        cout << b;
+    }
+}
+
+void printBits(string s) {
+    for (auto c : s) {
+        printBits((unsigned char)c);
+        cout << " ";
+    }
+}
 
 std::string decompressZlib(const std::string& compressedData) {
     uLong decompressedSize = compressedData.size() * 4; // A rough guess
@@ -248,11 +297,15 @@ struct BitStreamParser {
     bool currentBit = 0;
 
     BitStreamParser(size_t b, size_t e, unsigned char* d) : beg(b), end(e), data(d) {
-        currentBytePtr = b;
+        reset();
+    }
+
+    void reset() {
+        currentBytePtr = beg;
         currentByte = data[currentBytePtr];
         currentBitPtr = 0;
-        currentBit = (currentByte >> currentBitPtr) & 1;
-        //cout << " init bit stream, first bit: " << currentBit << ", first byte " << (int)currentByte << endl;
+        currentBit = (currentByte >> (7-currentBitPtr)) & 1;
+        cout << " R " << (unsigned int) currentByte << ", bit: " << (int)currentBit << endl;
     }
 
     bool empty() {
@@ -263,6 +316,31 @@ struct BitStreamParser {
         unsigned char res = 0;
 
         for (int i=0; i<N; i++) {
+            if (currentBit) res |= (1 << (7-i));
+
+            currentBitPtr++;
+            if (currentBitPtr >= 8) {
+                currentBitPtr = 0;
+                currentBytePtr++;
+                if ( empty() ) currentByte = 0;
+                else currentByte = data[currentBytePtr];
+                cout << "      new byte " << (int)currentByte << endl;
+            }
+
+            currentBit = (currentByte >> (7-currentBitPtr)) & 1;
+            cout << " cu" << currentBytePtr << "." << (int)currentBitPtr << " " << currentBit << endl;
+        }
+
+        cout << " -= read =- "; printBits(res); cout << endl;
+        return res;
+    }
+
+    uint32_t read4(int N = 1) {
+        uint32_t res = 0;
+
+        for (int i=0; i<N; i++) {
+            if (currentBit) res |= (1 << (31-i));
+
             currentBitPtr++;
             if (currentBitPtr >= 8) {
                 currentBitPtr = 0;
@@ -272,14 +350,255 @@ struct BitStreamParser {
                 //cout << "      new byte " << (int)currentByte << endl;
             }
 
-            currentBit = (currentByte >> currentBitPtr) & 1;
-            if (currentBit) res |= (1 << i);
+            currentBit = (currentByte >> (7-currentBitPtr)) & 1;
             //cout << " " << currentBytePtr << "." << (int)currentBitPtr << " " << currentBit << endl;
         }
 
         return res;
     }
 };
+
+
+
+#include "RPCUtils.h"
+
+sCodageOfFrequentDoubleOrExponent* searchFrequentDouble( double value ) {
+	sCodageOfFrequentDoubleOrExponent cofdoe;
+	cofdoe.u2uod.Value = value;
+
+	// bin search
+	sCodageOfFrequentDoubleOrExponent* pcofdoe = (sCodageOfFrequentDoubleOrExponent *) bsearch(&cofdoe,acofdoe,sizeof(acofdoe)/sizeof(pcofdoe[0]),sizeof(pcofdoe[0]),stCOFDOECompare);
+
+	// move to first matching exponent
+	while ( pcofdoe>acofdoe && EXPONENT(pcofdoe->u2uod.Value) == EXPONENT((pcofdoe-1)->u2uod.Value) )
+        pcofdoe--;
+
+    // check if value matches
+	while (pcofdoe->Type == VT_double) {
+		if (fabs(value) == pcofdoe->u2uod.Value) break;
+		pcofdoe++;
+	}
+
+    return pcofdoe;
+}
+
+
+
+// TODO: optimize!
+bool compareBits(const sCodageOfFrequentDoubleOrExponent& e, const unsigned int& bits, bool verb) {
+    for (int i=0; i<e.NumberOfBits; i++) {
+        int j = (e.NumberOfBits - 1 - i);
+        int b1 = ((bits >> i) & 1);
+        int b2 = ((e.Bits >> j) & 1);
+        if (verb) cout << " comp " << i << ", " << j << "  bb " << b1 << ", " << b2 << endl;
+        if (b1 != b2) return false;
+    }
+    return true;
+}
+
+double readDouble(BitStreamParser& bs) {
+    ieee754_double value;
+    memset(&value, 0, sizeof(value));
+    cout << endl << "read double " << endl;
+
+    // get entry and reset bs
+    sCodageOfFrequentDoubleOrExponent entry;
+    uint32_t bits = bs.read4(22);
+    size_t i = 0;
+    for (const auto& e : acofdoe) {
+        if (compareBits(e, bits, 0)) { entry = e; break; }
+        i++;
+    }
+    cout << "Found entry #" << i << ", N bits: " << entry.NumberOfBits << endl;
+
+    bs.reset();
+    bs.read4(entry.NumberOfBits);
+
+    // check for zero
+    if ( entry.Bits == 0x1 ) {
+        cout << " -- value is zero" << endl;
+        return 0;
+	}
+
+    // read the sign bit
+    value.ieee.negative = bs.read(1);
+    cout << "  negative? " << value.ieee.negative << endl;
+
+    // if value return it (needs to be after sign bit read)
+    if (entry.Type == VT_double) return entry.u2uod.Value;
+
+    unsigned int exp = entry.u2uod.ul[1];
+    value.ieee.exponent = (exp >> 20) & 0x7FF;
+    cout << "  exponent? "; printBits(entry.u2uod.ul[1]); cout << endl;
+
+    // check for mantissa
+    bool hasMantissa = bs.read(1);
+    if (!hasMantissa) return value.d;
+
+    unsigned long long mantissa = 0;
+
+    // read last 4 bits of mantissa
+    unsigned char B1 = bs.read(4);
+    cout << " last4: "; printBits(B1); cout << endl;
+    for (int i = 0; i < 4; i++) {
+        int b = ((B1 >> (3-i)) & 1);
+        value.ieee.mantissa0 |= ((unsigned int)b << (19 - i));
+    }
+
+    // read remaining bits using compression rules
+    vector<uint8_t> mantissaBytes;
+    while (mantissaBytes.size() < 6) {
+        if (bs.read(1)) {
+            // Read a full 8-bit byte
+            uint8_t byte = bs.read(8);
+            mantissaBytes.push_back(byte);
+        } else {
+            // Read a 3-bit index and copy an earlier byte
+            uint8_t index = bs.read(3);
+            mantissaBytes.push_back(mantissaBytes[index]);
+        }
+    }
+
+    value.ieee.mantissa1 |= ( mantissaBytes[5] << 8*0 );
+    value.ieee.mantissa1 |= ( mantissaBytes[4] << 8*1 );
+    value.ieee.mantissa1 |= ( mantissaBytes[3] << 8*2 );
+    value.ieee.mantissa1 |= ( mantissaBytes[2] << 8*3 );
+    value.ieee.mantissa0 |= ( mantissaBytes[1] << 8*0 );
+    value.ieee.mantissa0 |= ( mantissaBytes[0] << 8*1 );
+
+    return value.d;
+}
+
+
+struct BitWriter {
+    string buffer; // 9 bytes
+    int currentByte = 0;
+    int currentBit = 0;
+
+    BitWriter(int s) : buffer(s,0) {}
+
+    void add_bits(unsigned int v, int Nbits) {
+        cout << "add_bits " << v << ", N " << Nbits << " -> ";
+        for (int i=0; i<Nbits; i++) {
+            int b = ((v >> (Nbits - 1 - i)) & 1);
+            //int b = ((v >> i) & 1);
+            cout << b;
+            buffer[currentByte] |= (b << (7-currentBit));
+            currentBit++;
+            if (currentBit >= 8) {
+                currentBit = 0;
+                currentByte++;
+            }
+        }
+        cout << endl;
+    };
+};
+
+string writeUnsignedInteger(unsigned uValue) {
+    cout << "writeUnsignedInteger " << uValue << endl;
+    BitWriter bWriter(4); // 4 bytes
+    for(;;) {
+        if (uValue == 0) {
+            cout << " write 0 at " << bWriter.currentByte << "." << bWriter.currentBit << endl;
+            bWriter.add_bits(0, 1);
+            break;
+        }
+
+        cout << " write 1 at " << bWriter.currentByte << "." << bWriter.currentBit << endl;
+        bWriter.add_bits(1, 1);
+        cout << " write 8 bits at "; printBits((unsigned char)(uValue & 0xFF)); cout << endl;
+        bWriter.add_bits(uValue & 0xFF, 8);
+        uValue >>= 8;
+    }
+    cout << " bWriter " << bWriter.currentByte << "." << bWriter.currentBit << endl;
+    return bWriter.buffer;
+}
+
+string writeDouble( double value ) {
+    BitWriter bWriter(9); // 9 bytes
+
+    //cout << endl << "write double: " << value << endl;
+    sCodageOfFrequentDoubleOrExponent* pcofdoe = searchFrequentDouble( value );
+
+    // write bits from map
+    //cout << " -- value map key of entry " << (int)(pcofdoe - acofdoe) << endl;
+    for(int i=1<<(pcofdoe->NumberOfBits-1);i>=1;i>>=1)
+        bWriter.add_bits( (pcofdoe->Bits&i)!=0,1);
+
+    // if value 0, return
+	if ( !memcmp(&value,stadwZero,sizeof(value)) || !memcmp(&value,stadwNegativeZero,sizeof(value)) ) {
+        //cout << " -- value is zero" << endl;
+        return bWriter.buffer;
+	}
+
+	// write sign
+	union ieee754_double* pid = (union ieee754_double *)&value;
+    //cout << " -- write sign" << endl;
+	bWriter.add_bits( pid->ieee.negative, 1);
+
+	// if value in entry stop here
+	if (pcofdoe->Type == VT_double) {
+        //cout << " -- pcofdoe->Type is VT_double" << endl;
+        return bWriter.buffer;
+	}
+
+	// empty mantissa
+	if (pid->ieee.mantissa0==0 && pid->ieee.mantissa1==0) {
+        //cout << " -- mantissa is zero" << endl;
+        bWriter.add_bits( 0,1);
+        return bWriter.buffer;
+    }
+
+    //cout << " -- add one" << endl;
+	bWriter.add_bits( 1,1);
+
+	// encode mantissa
+	PRCbyte* pb = ((PRCbyte *)&value)+6;
+	bWriter.add_bits( (*pb)&0x0f,4  );
+	NEXTBYTE(pb);
+	PRCbyte* pbStart = pb;
+	PRCbyte* pbEnd  = ((PRCbyte *)&value);
+	PRCbyte* pbStop = ((PRCbyte *)&value);
+
+	PRCbyte *pbResult, bSaveAtEnd;
+	int fSaveAtEnd;
+	if ((fSaveAtEnd=(*pbStop!=*BEFOREBYTE(pbStop)))!=0) bSaveAtEnd = *pbEnd;
+	PREVIOUSBYTE(pbStop);
+	while ( *pbStop == *BEFOREBYTE(pbStop) ) PREVIOUSBYTE(pbStop);
+
+	for(;MOREBYTE(pb,pbStop);NEXTBYTE(pb)) {
+		if(pb!=pbStart && (pbResult=SEARCHBYTE(BEFOREBYTE(pb),*pb,DIFFPOINTERS(pb,pbStart)))!=NULL) {
+			bWriter.add_bits( 0,1  );
+			bWriter.add_bits( DIFFPOINTERS(pb,pbResult),3  );
+		} else {
+			bWriter.add_bits( 1,1  );
+			bWriter.add_bits( *pb,8  );
+		}
+	}
+
+	if ( !MOREBYTE(BEFOREBYTE(pbEnd), pbStop) ) {
+		if(fSaveAtEnd) {
+			bWriter.add_bits( 0,1  );
+			bWriter.add_bits( 6,3  );
+			bWriter.add_bits( bSaveAtEnd,8  );
+		} else {
+			bWriter.add_bits( 0,1  );
+			bWriter.add_bits( 0,3  );
+		}
+	} else {
+		if((pbResult=SEARCHBYTE(BEFOREBYTE(pb),*pb,DIFFPOINTERS(pb,pbStart)))!=NULL) {
+			bWriter.add_bits( 0,1  );
+			bWriter.add_bits( DIFFPOINTERS(pb,pbResult),3  );
+		} else {
+			bWriter.add_bits(1,1  );
+			bWriter.add_bits(*pb,8  );
+		}
+	}
+
+	return bWriter.buffer;
+}
+
+
 
 namespace PRC {
     string currentName;
@@ -343,6 +662,7 @@ namespace PRC {
                 while(bs.currentBit) {
                     bs.read();
                     unsigned int byte = bs.read(8);
+                    cout << "  UInt byte: "; printBits(byte); cout << endl;
                     i |= (byte << shift);   // Store in the correct position
                     shift += 8;
                 }
@@ -361,13 +681,7 @@ namespace PRC {
             if (!bs.currentBit) {
                 bs.read();
             } else {
-                cout << "Warning in Double::parse, not implemented! " << endl;
-                /*while(bs.currentBit) {
-                    bs.read();
-                    unsigned int byte = bs.read(8);
-                    i |= (byte << shift);   // Store in the correct position
-                    shift += 8;
-                }*/
+                d = readDouble(bs);
             }
         }
     };
@@ -427,6 +741,20 @@ std::ostream& operator<<(std::ostream& os, const PRC::Name& n) { os << n.name; r
 std::ostream& operator<<(std::ostream& os, const PRC::UniqueID& id) { os << id.a << "." << id.b << "." << id.c << "." << id.d; return os; }
 
 namespace PRC {
+    enum PRC_TYPE {
+        TYPE_ASM = 300,
+        TYPE_ASM_ModelFile = TYPE_ASM+1,
+        TYPE_ASM_FileStructure = TYPE_ASM+2,
+        TYPE_ASM_FileStructureGlobals = TYPE_ASM+3,
+        TYPE_ASM_FileStructureTree = TYPE_ASM+4,
+        TYPE_ASM_FileStructureTessellation = TYPE_ASM+5,
+        TYPE_ASM_FileStructureGeometry = TYPE_ASM+6,
+        TYPE_ASM_FileStructureExtraGeometry = TYPE_ASM+7,
+        TYPE_ASM_ProductOccurrence = TYPE_ASM+8,
+        TYPE_ASM_PartDefinition = TYPE_ASM+9,
+        TYPE_ASM_Filter = TYPE_ASM+10,
+    };
+
     struct FileStructureDescription { // done
         UniqueID fileID;
         UUInt reserved;
@@ -608,12 +936,31 @@ namespace PRC {
             CADID1.parse(bs);
             CADID2.parse(bs);
             structureID.parse(bs);
-            //cout << "ContentPRCBase attribute " << ID << endl;
+            cout << "ContentPRCBase attribute ID: " << CADID1 << ", " << CADID2 << ", name: " << name << endl;
         }
     };
 
     struct PRC_TYPE_TESS {
-        ;
+        UInt tessType;
+        Bool isCalculated;
+        UInt Ncoords;
+        vector<Double> coordinates;
+
+        void parse(BitStreamParser& bs) {
+            tessType.parse(bs);
+            isCalculated.parse(bs);
+            Ncoords.parse(bs);
+
+            cout << "   tess N coords: " << Ncoords << endl;
+
+
+            for (size_t i=0; i<Ncoords.i; i++) {
+                Double d;
+                d.parse(bs);
+                coordinates.push_back(d);
+                cout << " d " << d << endl;
+            }
+        }
     };
 
     struct PRC_TYPE_ASM_FileStructureTessellation {
@@ -623,12 +970,26 @@ namespace PRC {
         vector<PRC_TYPE_TESS> tessellations;
 
         void parse(BitStreamParser& bs) {
+
+                for (int i=0; i<128; i++) {
+                    UInt I;
+                    I.parse(bs);
+                    cout << " ---- i " << I << endl;
+                }
+                bs.reset();
+
             ID.parse(bs);
             info.parse(bs);
             Ntessellations.parse(bs);
 
             cout << " tessellation ID: " << ID << endl;
-            cout << " N tessellation: " << Ntessellations << endl;
+            cout << "  N tessellation: " << Ntessellations << endl;
+
+            for (size_t i=0; i<Ntessellations.i; i++) {
+                PRC_TYPE_TESS t;
+                t.parse(bs);
+                tessellations.push_back(t);
+            }
         }
     };
 
@@ -884,7 +1245,36 @@ void processPRC(PDF::Object& object) {
     }
 }
 
+
+bool testDouble(double d) {
+    string s = writeDouble(d);
+    printBits(s, 0, s.size());
+    BitStreamParser bs(0, s.size(), (unsigned char*)&s[0]);
+    double r = readDouble(bs);
+    cout << endl << "testDouble result: " << d << " -> " << r << endl;
+    cout << " bits1 : "; printBits(d); cout << endl;
+    cout << " bits2 : "; printBits(r); cout << endl;
+    cout << endl << endl;
+    return (abs(d - r) < 1e-3);
+}
+
+bool testUInt(unsigned int i) {
+    string s = writeUnsignedInteger(i);
+    BitStreamParser bs(0, s.size(), (unsigned char*)&s[0]);
+    PRC::UInt I;
+    I.parse(bs);
+    cout << " test UInt read/write " << i << " -> " << I.i << endl;
+    ::printBits(s);
+    return (i == I.i);
+}
+
 VRTransformPtr VRPDF::extract3DModels(string path) {
+
+    testDouble(123.123);
+    //testUInt(305);
+
+    return 0;
+
     ifstream file(path, std::ios::binary);
     vector<char> buffer((istreambuf_iterator<char>(file)), istreambuf_iterator<char>());
 
