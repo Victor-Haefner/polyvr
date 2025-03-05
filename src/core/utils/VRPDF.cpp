@@ -234,7 +234,6 @@ void printBits(double c) {
     for (int j=0; j<64; j++) {
         int b = ((di.i >> (63-j)) & 1);
         cout << b;
-        //if (j == 31 || j == 51 || j == 62) cout << " ";
         if (j == 0 || j == 11 || j == 31) cout << " ";
     }
 }
@@ -387,9 +386,11 @@ sCodageOfFrequentDoubleOrExponent* searchFrequentDouble( double value ) {
 
 // TODO: optimize!
 bool compareBits(const sCodageOfFrequentDoubleOrExponent& e, const unsigned int& bits, bool verb) {
+    if (verb)  { printBits(bits); cout << endl; }
+    if (verb)  { printBits(e.Bits); cout << endl; }
     for (int i=0; i<e.NumberOfBits; i++) {
         int j = (e.NumberOfBits - 1 - i);
-        int b1 = ((bits >> i) & 1);
+        int b1 = ((bits >> (31 - i)) & 1);
         int b2 = ((e.Bits >> j) & 1);
         if (verb) cout << " comp " << i << ", " << j << "  bb " << b1 << ", " << b2 << endl;
         if (b1 != b2) return false;
@@ -442,7 +443,8 @@ double readDouble(BitStreamParser& bs) {
     unsigned char B1 = bs.read(4);
     cout << " last4: "; printBits(B1); cout << endl;
     for (int i = 0; i < 4; i++) {
-        int b = ((B1 >> (3-i)) & 1);
+        int b = ((B1 >> (7-i)) & 1);
+        cout << "  bit: " << b << endl;
         value.ieee.mantissa0 |= ((unsigned int)b << (19 - i));
     }
 
@@ -523,6 +525,7 @@ string writeDouble( double value ) {
 
     // write bits from map
     cout << " -- value map key of entry " << (int)(pcofdoe - acofdoe) << endl;
+    cout << "  exponent: "; printBits(pcofdoe->Bits); cout << endl;
     for(int i=1<<(pcofdoe->NumberOfBits-1);i>=1;i>>=1)
         bWriter.add_bits( (pcofdoe->Bits&i)!=0,1);
 
@@ -554,6 +557,7 @@ string writeDouble( double value ) {
 	bWriter.add_bits( 1,1);
 
 	// encode mantissa
+    cout << " -- add first 4 mantissa bits" << endl;
 	PRCbyte* pb = ((PRCbyte *)&value)+6;
 	bWriter.add_bits( (*pb)&0x0f,4  );
 	NEXTBYTE(pb);
@@ -568,6 +572,7 @@ string writeDouble( double value ) {
 	while ( *pbStop == *BEFOREBYTE(pbStop) ) PREVIOUSBYTE(pbStop);
 
 	for(;MOREBYTE(pb,pbStop);NEXTBYTE(pb)) {
+        cout << " -- add double byte" << endl;
 		if(pb!=pbStart && (pbResult=SEARCHBYTE(BEFOREBYTE(pb),*pb,DIFFPOINTERS(pb,pbStart)))!=NULL) {
 			bWriter.add_bits( 0,1  );
 			bWriter.add_bits( DIFFPOINTERS(pb,pbResult),3  );
