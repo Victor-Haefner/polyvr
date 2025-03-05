@@ -234,7 +234,8 @@ void printBits(double c) {
     for (int j=0; j<64; j++) {
         int b = ((di.i >> (63-j)) & 1);
         cout << b;
-        if (j == 31 || j == 51 || j == 62) cout << " ";
+        //if (j == 31 || j == 51 || j == 62) cout << " ";
+        if (j == 0 || j == 11 || j == 31) cout << " ";
     }
 }
 
@@ -517,39 +518,39 @@ string writeUnsignedInteger(unsigned uValue) {
 string writeDouble( double value ) {
     BitWriter bWriter(9); // 9 bytes
 
-    //cout << endl << "write double: " << value << endl;
+    cout << endl << "write double: " << value << endl;
     sCodageOfFrequentDoubleOrExponent* pcofdoe = searchFrequentDouble( value );
 
     // write bits from map
-    //cout << " -- value map key of entry " << (int)(pcofdoe - acofdoe) << endl;
+    cout << " -- value map key of entry " << (int)(pcofdoe - acofdoe) << endl;
     for(int i=1<<(pcofdoe->NumberOfBits-1);i>=1;i>>=1)
         bWriter.add_bits( (pcofdoe->Bits&i)!=0,1);
 
     // if value 0, return
 	if ( !memcmp(&value,stadwZero,sizeof(value)) || !memcmp(&value,stadwNegativeZero,sizeof(value)) ) {
-        //cout << " -- value is zero" << endl;
+        cout << " -- value is zero" << endl;
         return bWriter.buffer;
 	}
 
 	// write sign
 	union ieee754_double* pid = (union ieee754_double *)&value;
-    //cout << " -- write sign" << endl;
+    cout << " -- write sign" << endl;
 	bWriter.add_bits( pid->ieee.negative, 1);
 
 	// if value in entry stop here
 	if (pcofdoe->Type == VT_double) {
-        //cout << " -- pcofdoe->Type is VT_double" << endl;
+        cout << " -- pcofdoe->Type is VT_double" << endl;
         return bWriter.buffer;
 	}
 
 	// empty mantissa
 	if (pid->ieee.mantissa0==0 && pid->ieee.mantissa1==0) {
-        //cout << " -- mantissa is zero" << endl;
+        cout << " -- mantissa is zero" << endl;
         bWriter.add_bits( 0,1);
         return bWriter.buffer;
     }
 
-    //cout << " -- add one" << endl;
+    cout << " -- add one" << endl;
 	bWriter.add_bits( 1,1);
 
 	// encode mantissa
