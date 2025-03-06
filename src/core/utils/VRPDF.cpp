@@ -301,11 +301,14 @@ struct BitStreamParser {
     }
 
     void reset() {
-        currentBytePtr = beg;
+        set(beg, 0);
+    }
+
+    void set(size_t byte, size_t bit) {
+        currentBytePtr = byte;
         currentByte = data[currentBytePtr];
-        currentBitPtr = 0;
+        currentBitPtr = bit;
         currentBit = (currentByte >> (7-currentBitPtr)) & 1;
-        //cout << " R " << (unsigned int) currentByte << ", bit: " << (int)currentBit << endl;
     }
 
     bool empty() {
@@ -401,37 +404,51 @@ bool compareBits(const sCodageOfFrequentDoubleOrExponent& e, const unsigned int&
 double readDouble(BitStreamParser& bs) {
     ieee754_double value;
     memset(&value, 0, sizeof(value));
-    //cout << endl << "read double " << endl;
+    cout << endl << "read double " << endl;
+
+
+    size_t byte1Ptr = bs.currentBytePtr;
+    size_t bit1Ptr = bs.currentBitPtr;
+    for (int i=0; i<16; i++) {
+        bool b = bs.read(1);
+        cout << b;
+    }
+    cout << endl;
+    bs.set(byte1Ptr, bit1Ptr);
 
     // get entry and reset bs
-    sCodageOfFrequentDoubleOrExponent entry;
+    size_t bytePtr = bs.currentBytePtr;
+    size_t bitPtr = bs.currentBitPtr;
+
     uint32_t bits = bs.read4(22);
     size_t i = 0;
+    sCodageOfFrequentDoubleOrExponent entry;
     for (const auto& e : acofdoe) {
         if (compareBits(e, bits, 0)) { entry = e; break; }
         i++;
     }
-    //cout << "Found entry #" << i << ", N bits: " << entry.NumberOfBits << endl;
+    cout << "Found entry #" << i << ", N bits: " << entry.NumberOfBits << endl;
 
-    bs.reset();
+    bs.set(bytePtr, bitPtr);
     bs.read4(entry.NumberOfBits);
 
     // check for zero
     if ( entry.Bits == 0x1 ) {
-        //cout << " -- value is zero" << endl;
+        cout << " -- value is zero" << endl;
         return 0;
 	}
 
     // read the sign bit
-    value.ieee.negative = bs.read(1);
-    //cout << "  negative? " << value.ieee.negative << endl;
+    bool b = bs.read(1);
+    value.ieee.negative = b;
+    cout << "  negative? " << value.ieee.negative << endl;
 
     // if value return it (needs to be after sign bit read)
     if (entry.Type == VT_double) return entry.u2uod.Value;
 
     unsigned int exp = entry.u2uod.ul[1];
     value.ieee.exponent = (exp >> 20) & 0x7FF;
-    //cout << "  exponent? "; printBits(entry.u2uod.ul[1]); cout << endl;
+    cout << "  exponent? "; printBits(entry.u2uod.ul[1]); cout << endl;
 
     // check for mantissa
     bool hasMantissa = bs.read(1);
@@ -441,10 +458,10 @@ double readDouble(BitStreamParser& bs) {
 
     // read last 4 bits of mantissa
     unsigned char B1 = bs.read(4);
-    //cout << " last4: "; printBits(B1); cout << endl;
+    cout << " last4: "; printBits(B1); cout << endl;
     for (int i = 0; i < 4; i++) {
         int b = ((B1 >> (7-i)) & 1);
-        //cout << "  bit: " << b << endl;
+        cout << "  bit: " << b << endl;
         value.ieee.mantissa0 |= ((unsigned int)b << (19 - i));
     }
 
@@ -453,11 +470,17 @@ double readDouble(BitStreamParser& bs) {
     while (mantissaBytes.size() < 6) {
         if (bs.read(1)) {
             // Read a full 8-bit byte
+            cout << "  read next byte: ";
             uint8_t byte = bs.read(8);
+            printBits(byte); cout << endl;
             mantissaBytes.push_back(byte);
         } else {
             // Read a 3-bit index and copy an earlier byte
-            uint8_t index = bs.read(3);
+            cout << "  read byte index: ";
+            uint8_t B = bs.read(3);
+            unsigned int index = ((B >> 5) & 0b111);;
+
+            printBits(B); cout << " -> " << (int)index << endl;
             mantissaBytes.push_back(mantissaBytes[index]);
         }
     }
@@ -649,13 +672,21 @@ namespace PRC {
                     unsigned int byte = bs.read(8);
                     i |= (byte << shift);   // Store in the correct position
                     shift += 8;
-                }*/
+                }
+                bs.read();*/
             }
         }
     };
 
     struct UInt {
         unsigned int i;
+
+        void peek(BitStreamParser& bs) {
+            size_t byte = bs.currentBytePtr;
+            size_t bit = bs.currentBitPtr;
+            parse(bs);
+            bs.set(byte, bit);
+        }
 
         void parse(BitStreamParser& bs) {
             if ( bs.empty() ) { cout << "Warning in UInt::parse, no more data! " << endl; return; }
@@ -682,14 +713,7 @@ namespace PRC {
 
         void parse(BitStreamParser& bs) {
             if ( bs.empty() ) { cout << "Warning in Double::parse, no more data! " << endl; return; }
-            d = 0;
-            int shift = 0;
-
-            if (!bs.currentBit) {
-                bs.read();
-            } else {
-                d = readDouble(bs);
-            }
+            d = readDouble(bs);
         }
     };
 
@@ -714,6 +738,7 @@ namespace PRC {
 
 std::ostream& operator<<(std::ostream& os, const PRC::Bool& i) { os << i.b; return os; }
 std::ostream& operator<<(std::ostream& os, const PRC::Int& i) { os << i.i; return os; }
+std::ostream& operator<<(std::ostream& os, const PRC::Char& i) { os << i.c; return os; }
 std::ostream& operator<<(std::ostream& os, const PRC::UInt& i) { os << i.i; return os; }
 std::ostream& operator<<(std::ostream& os, const PRC::UUInt& i) { os << i.i; return os; }
 std::ostream& operator<<(std::ostream& os, const PRC::Double& d) { os << d.d; return os; }
@@ -753,6 +778,8 @@ std::ostream& operator<<(std::ostream& os, const PRC::Name& n) { os << n.name; r
 std::ostream& operator<<(std::ostream& os, const PRC::UniqueID& id) { os << id.a << "." << id.b << "." << id.c << "." << id.d; return os; }
 
 namespace PRC {
+    // https://ftp.linux.cz/pub/tex/CTAN/graphics/asymptote/prc/include/prc/PRC.h
+
     enum PRC_TYPE {
         TYPE_TOPO = 140,
         TYPE_TOPO_Context = TYPE_TOPO + 1,
@@ -773,7 +800,7 @@ namespace PRC {
         TYPE_TOPO_BrepDataCompress = TYPE_TOPO + 16,
         TYPE_TOPO_WIreBody = TYPE_TOPO + 17,
 
-        TYPE_TESS = 230,
+        TYPE_TESS = 170,
         TYPE_TESS_Base = TYPE_TESS + 1,
         TYPE_TESS_3D = TYPE_TESS + 2,
         TYPE_TESS_3D_Compressed = TYPE_TESS + 3,
@@ -969,30 +996,90 @@ namespace PRC {
         UInt CADID2;
         UInt structureID;
 
-        void parse(BitStreamParser& bs) {
+        void parseNoRef(BitStreamParser& bs) {
             attribute.parse(bs);
             name.parse(bs);
+            cout << "ContentPRCBase name: " << name << endl;
+        }
+
+        void parseRef(BitStreamParser& bs) {
+            parseNoRef(bs);
             CADID1.parse(bs);
             CADID2.parse(bs);
             structureID.parse(bs);
-            cout << "ContentPRCBase attribute ID: " << CADID1 << ", " << CADID2 << ", " << structureID << ", name: " << name << endl;
+            cout << " ContentPRCBase IDs: " << CADID1 << ", " << CADID2 << ", " << structureID << endl;
         }
     };
 
-    struct PRC_TYPE_TESS {
-        UInt tessType;
+    struct ContentBaseTessData {
         Bool isCalculated;
         UInt Ncoords;
         vector<Double> coordinates;
 
         void parse(BitStreamParser& bs) {
-            tessType.parse(bs);
             isCalculated.parse(bs);
             Ncoords.parse(bs);
 
-            cout << "   tess type: " << tessType << endl;
             cout << "   tess isCalculated: " << isCalculated << endl;
             cout << "   tess N coords: " << Ncoords << endl;
+
+            for (size_t i=0; i<Ncoords.i; i++) {
+                Double d;
+                d.parse(bs);
+                coordinates.push_back(d);
+                cout << " d " << d.d << endl;
+                printBits(d.d);
+                if (i > 3) break; // TOTEST
+            }
+        }
+    };
+
+    struct PRC_TYPE_TESS_3D {
+        UInt tessType;
+        ContentBaseTessData base;
+
+        void parse(BitStreamParser& bs) {
+            tessType.parse(bs);
+            cout << "   tess type: " << tessType << endl;
+
+            base.parse(bs);
+        }
+    };
+
+    struct PRC_TYPE_TOPO_Context {
+        UInt topoType;
+        ContentPRCBase base;
+        Char behavior;
+        Double grandularity;
+        Double tolerance;
+        Bool hasFaceThickness;
+        Double minFaceThickness;
+        Bool hasScale;
+        Double scale;
+        UInt Nbodies;
+        //vector<PRC_TYPE_TOPO_Body> bodies;
+
+        void parse(BitStreamParser& bs) {
+            topoType.parse(bs);
+            base.parseRef(bs);
+            behavior.parse(bs);
+            grandularity.parse(bs);
+            tolerance.parse(bs);
+            hasFaceThickness.parse(bs);
+            if (hasFaceThickness.b) minFaceThickness.parse(bs);
+            hasScale.parse(bs);
+            if (hasScale.b) scale.parse(bs);
+            Nbodies.parse(bs);
+
+            cout << "   topo type: " << topoType << endl;
+            cout << "   topo behavor: " << behavior << endl;
+            cout << "   topo grandularity: " << grandularity << endl;
+            cout << "   topo tolerance: " << tolerance << endl;
+            cout << "   topo hasFaceThickness: " << hasFaceThickness << endl;
+            if (hasFaceThickness.b) cout << "   topo  minFaceThickness: " << minFaceThickness << endl;
+            cout << "   topo  hasScale: " << hasScale << endl;
+            if (hasScale.b) cout << "   topo  scale: " << scale << endl;
+            cout << "   topo  Nbodies: " << Nbodies << endl;
 
 
             /*for (size_t i=0; i<Ncoords.i; i++) {
@@ -1006,23 +1093,26 @@ namespace PRC {
 
     struct PRC_TYPE_ASM_FileStructureTessellation {
         UInt ID;
-        ContentPRCBase info;
+        ContentPRCBase base;
         UInt Ntessellations;
-        vector<PRC_TYPE_TESS> tessellations;
+        //vector<PRC_TYPE_TESS> tessellations;
 
         void parse(BitStreamParser& bs) {
+            cout << endl << "parse FileStructureTessellation" << endl;
 
-                /*for (int i=0; i<16; i++) {
-                    UInt I;
-                    I.parse(bs);
-                    cout << " ---- i " << I << endl;
+
+                cout << " bits: ";
+                for (int i=0; i<256; i++) {
+                    bool b = bs.read();
+                    cout << b;
                 }
-                bs.reset();*/
+                cout << endl;
+                bs.reset();
 
             ID.parse(bs);
             cout << " tessellation ID: " << ID << endl;
 
-            info.parse(bs);
+            base.parseNoRef(bs); // checked :)
 
             Ntessellations.parse(bs);
             cout << "  N tessellation: " << Ntessellations << endl;
@@ -1040,10 +1130,13 @@ namespace PRC {
                 cout << endl;*/
 
             for (size_t i=0; i<Ntessellations.i; i++) {
-                PRC_TYPE_TESS t;
-                t.parse(bs);
-                tessellations.push_back(t);
-                break; // TOTEST
+                UInt objType; objType.peek(bs);
+                cout << " tessellation " << i << ", type: " << objType.i << endl;
+                if (objType.i == TYPE_TESS_3D) {
+                    PRC_TYPE_TESS_3D t;
+                    t.parse(bs);
+                    //tessellations.push_back(t);
+                }
             }
 
 
@@ -1065,7 +1158,7 @@ namespace PRC {
 
         void parse(BitStreamParser& bs) {
             ID.parse(bs);
-            info.parse(bs);
+            info.parseRef(bs);
             behaviour.parse(bs);
             grandularity.parse(bs);
             tolerance.parse(bs);
@@ -1096,7 +1189,7 @@ namespace PRC {
         void parse(BitStreamParser& bs) {
             ID.parse(bs);
             cout << " geometry ID: " << ID << endl;
-            info.parse(bs);
+            info.parseRef(bs);
             geometry.parse(bs);
             //data.parse(bs);
         }
@@ -1305,13 +1398,13 @@ void processPRC(PDF::Object& object) {
 
 bool testDouble(double d) {
     string s = writeDouble(d);
-    //printBits(s, 0, s.size());
+    printBits(s, 0, s.size());
     BitStreamParser bs(0, s.size(), (unsigned char*)&s[0]);
     double r = readDouble(bs);
     cout << endl << " test double: " << d << " -> " << r << endl;
-    //cout << " bits1 : "; printBits(d); cout << endl;
-    //cout << " bits2 : "; printBits(r); cout << endl;
-    //cout << endl << endl;
+    cout << " bits1 : "; printBits(d); cout << endl;
+    cout << " bits2 : "; printBits(r); cout << endl;
+    cout << endl << endl;
     return (abs(d - r) < 1e-3);
 }
 
@@ -1329,7 +1422,7 @@ VRTransformPtr VRPDF::extract3DModels(string path) {
     //string s = writeUnsignedInteger(232);
     //::printBits(s);
 
-    //testDouble(123.123);
+    //testDouble(-85);
     //testUInt(305);
 
     //return 0;
