@@ -499,7 +499,7 @@ struct BitWriter {
 
 string writeUnsignedInteger(unsigned uValue) {
     //cout << "writeUnsignedInteger " << uValue << endl;
-    BitWriter bWriter(4); // 4 bytes
+    BitWriter bWriter(5); // 5 bytes
     for(;;) {
         if (uValue == 0) {
             //cout << " write 0 at " << bWriter.currentByte << "." << bWriter.currentBit << endl;
@@ -672,6 +672,7 @@ namespace PRC {
                     i |= (byte << shift);   // Store in the correct position
                     shift += 8;
                 }
+                bs.read();
             }
         }
     };
@@ -698,11 +699,14 @@ namespace PRC {
         string str;
 
         void parse(BitStreamParser& bs) {
+            cout << "String::parse" << endl;
             notNull.parse(bs);
             if (notNull.b) {
                 size.parse(bs);
-                str = string(bs.read(size.i), size.i);
-                cout << " String::parse: " << str << endl;
+                cout << " size: " << size.i << endl;
+                str = string(size.i, 0);
+                for (int i=0; i<size.i; i++) str[i] = bs.read(8);
+                cout << " str: '" << str << "'" << endl;
             }
         }
     };
@@ -721,7 +725,9 @@ namespace PRC {
         String name;
 
         void parse(BitStreamParser& bs) {
+            cout << "Name::parse" << endl;
             reuseCurrentName.parse(bs);
+            cout << " reuseCurrentName? " << reuseCurrentName.b << endl;
 
             if (!reuseCurrentName.b) {
                 name.parse(bs);
@@ -748,6 +754,33 @@ std::ostream& operator<<(std::ostream& os, const PRC::UniqueID& id) { os << id.a
 
 namespace PRC {
     enum PRC_TYPE {
+        TYPE_TOPO = 140,
+        TYPE_TOPO_Context = TYPE_TOPO + 1,
+        TYPE_TOPO_Item = TYPE_TOPO + 2,
+        TYPE_TOPO_MultipleVertex = TYPE_TOPO + 3,
+        TYPE_TOPO_UniqueVertex = TYPE_TOPO + 4,
+        TYPE_TOPO_WireEdge = TYPE_TOPO + 5,
+        TYPE_TOPO_Edge = TYPE_TOPO + 6,
+        TYPE_TOPO_CoEdge = TYPE_TOPO + 7,
+        TYPE_TOPO_Loop = TYPE_TOPO + 8,
+        TYPE_TOPO_Face = TYPE_TOPO + 9,
+        TYPE_TOPO_Shell = TYPE_TOPO + 10,
+        TYPE_TOPO_Connex = TYPE_TOPO + 11,
+        TYPE_TOPO_Body = TYPE_TOPO + 12,
+        TYPE_TOPO_SingelWireBody = TYPE_TOPO + 13,
+        TYPE_TOPO_BrepData = TYPE_TOPO + 14,
+        TYPE_TOPO_SingleWireBodyCompress = TYPE_TOPO + 15,
+        TYPE_TOPO_BrepDataCompress = TYPE_TOPO + 16,
+        TYPE_TOPO_WIreBody = TYPE_TOPO + 17,
+
+        TYPE_TESS = 230,
+        TYPE_TESS_Base = TYPE_TESS + 1,
+        TYPE_TESS_3D = TYPE_TESS + 2,
+        TYPE_TESS_3D_Compressed = TYPE_TESS + 3,
+        TYPE_TESS_Face = TYPE_TESS + 4,
+        TYPE_TESS_3D_Wire = TYPE_TESS + 5,
+        TYPE_TESS_Markup = TYPE_TESS + 6,
+
         TYPE_ASM = 300,
         TYPE_ASM_ModelFile = TYPE_ASM+1,
         TYPE_ASM_FileStructure = TYPE_ASM+2,
@@ -942,7 +975,7 @@ namespace PRC {
             CADID1.parse(bs);
             CADID2.parse(bs);
             structureID.parse(bs);
-            cout << "ContentPRCBase attribute ID: " << CADID1 << ", " << CADID2 << ", name: " << name << endl;
+            cout << "ContentPRCBase attribute ID: " << CADID1 << ", " << CADID2 << ", " << structureID << ", name: " << name << endl;
         }
     };
 
@@ -957,15 +990,17 @@ namespace PRC {
             isCalculated.parse(bs);
             Ncoords.parse(bs);
 
+            cout << "   tess type: " << tessType << endl;
+            cout << "   tess isCalculated: " << isCalculated << endl;
             cout << "   tess N coords: " << Ncoords << endl;
 
 
-            for (size_t i=0; i<Ncoords.i; i++) {
+            /*for (size_t i=0; i<Ncoords.i; i++) {
                 Double d;
                 d.parse(bs);
                 coordinates.push_back(d);
                 cout << " d " << d << endl;
-            }
+            }*/
         }
     };
 
@@ -977,25 +1012,41 @@ namespace PRC {
 
         void parse(BitStreamParser& bs) {
 
-                for (int i=0; i<128; i++) {
+                /*for (int i=0; i<16; i++) {
                     UInt I;
                     I.parse(bs);
                     cout << " ---- i " << I << endl;
                 }
-                bs.reset();
+                bs.reset();*/
 
             ID.parse(bs);
-            info.parse(bs);
-            Ntessellations.parse(bs);
-
             cout << " tessellation ID: " << ID << endl;
+
+            info.parse(bs);
+
+            Ntessellations.parse(bs);
             cout << "  N tessellation: " << Ntessellations << endl;
+
+
+
+                /*cout << endl;
+                for (int i=0; i<64; i++) {
+                    UInt I;
+                    I.parse(bs);
+                    cout << " ---- i " << I << endl;
+                    //unsigned int I = bs.read4(32);
+                    //printBits(I);
+                }
+                cout << endl;*/
 
             for (size_t i=0; i<Ntessellations.i; i++) {
                 PRC_TYPE_TESS t;
                 t.parse(bs);
                 tessellations.push_back(t);
+                break; // TOTEST
             }
+
+
         }
     };
 
@@ -1275,6 +1326,8 @@ bool testUInt(unsigned int i) {
 }
 
 VRTransformPtr VRPDF::extract3DModels(string path) {
+    //string s = writeUnsignedInteger(232);
+    //::printBits(s);
 
     //testDouble(123.123);
     //testUInt(305);
