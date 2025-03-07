@@ -943,6 +943,20 @@ namespace PRC {
             }
         }
     };
+
+    template<class T>
+    struct ArrayOf {
+        vector<T> v;
+
+        template<typename... Args>
+        void parse(BitStreamParser& bs, UInt N, Args&&... args) {
+            for (size_t i=0; i<N.i; i++) {
+                T t;
+                t.parse(bs, std::forward<Args>(args)...);
+                v.push_back(t);
+            }
+        }
+    };
 }
 
 std::ostream& operator<<(std::ostream& os, const PRC::Bool& i) { os << i.b; return os; }
@@ -1223,7 +1237,7 @@ namespace PRC {
     struct ContentBaseTessData {
         Bool isCalculated;
         UInt Ncoords;
-        vector<Double> coordinates;
+        ArrayOf<Double> coordinates;
 
         void parse(BitStreamParser& bs) {
             isCalculated.parse(bs);
@@ -1232,7 +1246,9 @@ namespace PRC {
             cout << "   tess isCalculated: " << isCalculated << endl;
             cout << "   tess N coords: " << Ncoords << endl;
 
-            for (size_t i=0; i<Ncoords.i; i++) {
+            coordinates.parse(bs, Ncoords);
+
+            /*for (size_t i=0; i<Ncoords.i; i++) {
                 size_t Bi = bs.currentBytePtr;
                 size_t bi = bs.currentBitPtr;
                 //bs.printNextBits(32);
@@ -1246,11 +1262,112 @@ namespace PRC {
                     break;
                 }
                 coordinates.push_back(d);
+
                 //cout <<  i << " double: " << d.d << ", at: " << Bi << "." << bi << endl;
                 //printBits(d.d);
                 //if (i > 35) break; // TOTEST
                 //break;
+            }*/
+        }
+    };
+
+    struct Color {
+        Char R,G,B,A;
+
+        void parse(BitStreamParser& bs, bool rgba) {
+            R.parse(bs);
+            G.parse(bs);
+            B.parse(bs);
+            if (rgba) A.parse(bs);
+        }
+    };
+
+    struct ColorDataRemainder {
+        Bool sameAsPrevious;
+        Color color;
+
+        void parse(BitStreamParser& bs, bool rgba) {
+            sameAsPrevious.parse(bs);
+            if (!sameAsPrevious.b) color.parse(bs, rgba);
+        }
+    };
+
+    struct ColorData {
+        Color firstColor;
+        ArrayOf<ColorDataRemainder> remainingColors;
+
+        void parse(BitStreamParser& bs, UInt Nverts, bool rgba) {
+            firstColor.parse(bs, rgba);
+            UInt Nvert_1;
+            Nvert_1.i = Nverts.i-1;
+            remainingColors.parse(bs, Nvert_1, rgba);
+        }
+    };
+
+    struct VertexColors {
+        Bool isRGBA;
+        Bool isSegmentColor;
+        Bool bOptimized;
+        ArrayOf<ColorData> colorData;
+
+        void parse(BitStreamParser& bs, UInt N) {
+            isRGBA.parse(bs);
+            isSegmentColor.parse(bs);
+            bOptimized.parse(bs);
+
+            if (!bOptimized.b) {
+                if (isSegmentColor.b) N.i /= 2;
+                colorData.parse(bs, N, N, isRGBA.b);
             }
+        }
+    };
+
+    struct PRC_TYPE_TESS_Face {
+        UInt faceType;
+        UInt NlineAttributes;
+        ArrayOf<UInt> lineAttibutes;
+        UInt startWireData;
+        UInt sizesWireSize;
+        ArrayOf<UInt> sizesWire;
+        UInt usedEntitiesFlag;
+        UInt startTriangulated;
+        UInt NtriangulatedData;
+        ArrayOf<UInt> triangulatedData;
+        UInt NtexCoordIndices;
+        Bool hasVertexColors;
+        VertexColors vertexColors;
+        UInt behavior;
+
+        void parse(BitStreamParser& bs, UInt Ncoords) {
+            faceType.parse(bs);
+            if (faceType.i != TYPE_TESS_Face) cout << "Warning in PRC_TYPE_TESS_Face::parse, wrong type " << faceType.i << endl;
+
+            NlineAttributes.parse(bs);
+            lineAttibutes.parse(bs, NlineAttributes);
+            startWireData.parse(bs);
+            sizesWireSize.parse(bs);
+            sizesWire.parse(bs, sizesWireSize);
+            usedEntitiesFlag.parse(bs);
+            startTriangulated.parse(bs);
+            NtriangulatedData.parse(bs);
+            triangulatedData.parse(bs, NtriangulatedData);
+            NtexCoordIndices.parse(bs);
+            hasVertexColors.parse(bs);
+            if (hasVertexColors.b) vertexColors.parse(bs, NtriangulatedData);
+            if (NlineAttributes.i > 0) behavior.parse(bs);
+
+            cout << " parse PRC_TYPE_TESS_Face " << faceType << endl;
+            cout << "  NlineAttributes: " << NlineAttributes << endl;
+            cout << "  startWireData: " << startWireData << endl;
+            cout << "  sizesWireSize: " << sizesWireSize << endl;
+            cout << "  usedEntitiesFlag: " << usedEntitiesFlag << endl;
+            cout << "  startTriangulated: " << startTriangulated << endl;
+            cout << "  NtriangulatedData: " << NtriangulatedData << endl;
+            cout << "  NtexCoordIndices: " << NtexCoordIndices << endl;
+            cout << "  hasVertexColors: " << hasVertexColors << endl;
+            cout << "  behavior: " << behavior << endl;
+
+            for (UInt& i : triangulatedData.v) cout << "   triN: " << i << endl;
         }
     };
 
@@ -1263,16 +1380,15 @@ namespace PRC {
         Char normalCalcFlag; // should be 0
         Double creaseAngle;
         UInt NnormalCoords;
-        vector<Double> normalCoords;
+        ArrayOf<Double> normalCoords;
         UInt NwireIndices;
-        vector<UInt> wireIndices;
+        ArrayOf<UInt> wireIndices;
         UInt NtriangleIndices; // always a multiple of 3
-        vector<UInt> triangleIndices;
+        ArrayOf<UInt> triangleIndices;
         UInt NfaceTesselation;
-        // TODO
-        /*vector<PRC_TYPE_TESS_Face> faceTesselationData;
+        vector<PRC_TYPE_TESS_Face> faceTesselationData;
         UInt NtexCoords;
-        vector<Double> texCoords;*/
+        ArrayOf<Double> texCoords;
 
         void parse(BitStreamParser& bs) {
             tessType.parse(bs);
@@ -1297,35 +1413,98 @@ namespace PRC {
             cout << "   creaseAngle " << creaseAngle << endl;
 
             NnormalCoords.parse(bs);
-            for (size_t i=0; i<NnormalCoords.i; i++) {
-                Double d;
-                bool r = d.parse(bs);
-                normalCoords.push_back(d);
-            }
-
+            normalCoords.parse(bs, NnormalCoords);
             NwireIndices.parse(bs);
-            for (size_t i=0; i<NwireIndices.i; i++) {
-                UInt d;
-                d.parse(bs);
-                wireIndices.push_back(d);
-            }
-
+            wireIndices.parse(bs, NwireIndices);
             NtriangleIndices.parse(bs);  // always a multiple of 3
-            for (size_t i=0; i<NtriangleIndices.i; i++) {
-                UInt d;
-                d.parse(bs);
-                triangleIndices.push_back(d);
-            }
-
+            triangleIndices.parse(bs, NtriangleIndices);
             NfaceTesselation.parse(bs);
-
 
             cout << "   NnormalCoords " << NnormalCoords << endl;
             cout << "   NwireIndices " << NwireIndices << endl;
             cout << "   NtriangleIndices " << NtriangleIndices << endl;
             cout << "   NfaceTesselation " << NfaceTesselation << endl;
 
-            // TODO ...
+            for (size_t i=0; i<NfaceTesselation.i; i++) {
+                PRC_TYPE_TESS_Face face;
+                face.parse(bs, base.Ncoords);
+                faceTesselationData.push_back(face);
+                //if (i > 0) break;
+                //break;
+            }
+
+            //NtexCoords.parse(bs);
+            //texCoords.parse(bs, NtexCoords);
+        }
+
+        VRGeometryPtr asGeometry() {
+            VRGeoData data;
+
+            size_t Ncoords = base.Ncoords.i / 3;
+            for (size_t i = 0; i<Ncoords; i++) {
+                double x = base.coordinates.v[i*3 + 0].d;
+                double y = base.coordinates.v[i*3 + 1].d;
+                double z = base.coordinates.v[i*3 + 2].d;
+                data.pushVert(Pnt3d(x,y,z));
+            }
+
+            size_t Nnorms = NnormalCoords.i / 3;
+            for (size_t i = 0; i<Nnorms; i++) {
+                double x = normalCoords.v[i*3 + 0].d;
+                double y = normalCoords.v[i*3 + 1].d;
+                double z = normalCoords.v[i*3 + 2].d;
+                data.pushNorm(Vec3d(x,y,z));
+            }
+
+            int stride = 1;
+            if (!mustCalcNormals.b) stride = 2;
+
+            for (PRC_TYPE_TESS_Face& face : faceTesselationData) {
+                UInt offset = face.startTriangulated;
+                UInt pTypes = face.usedEntitiesFlag;
+
+                UInt Nfan, Nstrip, Ntri;
+                if (pTypes.i & FACETESSDATA_Triangle) Ntri = face.triangulatedData.v[0];
+                if (pTypes.i & FACETESSDATA_TriangleFan) Nfan = face.triangulatedData.v[1];
+                if (pTypes.i & FACETESSDATA_TriangleStripe) Nstrip = face.triangulatedData.v[ Nfan.i + 2 ];
+                // TODO: check for more types!
+
+                cout << " N triangles: " << Ntri.i << endl;
+                cout << " N fans: " << Nfan.i << endl;
+                cout << " N strips: " << Nstrip.i << endl;
+
+                // PRC_FACETESSDATA_Triangle (normal,point,normal,point,normal,point).
+                for (size_t i = 0; i<Ntri.i; i++) {
+                    size_t kN = offset.i + i*3*stride + 0;
+                    size_t kP = offset.i + i*3*stride + 1;
+
+                    size_t i1 = triangleIndices.v[kP + 0*stride].i /3;
+                    size_t i2 = triangleIndices.v[kP + 1*stride].i /3;
+                    size_t i3 = triangleIndices.v[kP + 2*stride].i /3;
+                    if (i1 >= data.size() || i2 >= data.size() || i3 >= data.size()) {
+                        cout << "  AAAAA?? " << i1 << ", " << i2 << ", " << i3 << endl;
+                        continue;
+                    }
+
+                    size_t n1 = triangleIndices.v[kN + 0*stride].i /3;
+                    size_t n2 = triangleIndices.v[kN + 1*stride].i /3;
+                    size_t n3 = triangleIndices.v[kN + 2*stride].i /3;
+
+                    data.pushNormalIndex(n1);
+                    data.pushNormalIndex(n2);
+                    data.pushNormalIndex(n3);
+
+                    data.pushTri(i1,i2,i3);
+                    //cout << "  pushTriangle " << i1 << " " << i2 << " " << i3 << ", " << n1 << " " << n2 << " " << n3 << endl;
+                    /*cout << " tri " << i << ": " << endl;
+                    for (int j = 0; j<stride*3; j++) {
+                         cout << "  " << triangleIndices.v[i*stride*3 + j] << endl;
+                    }*/
+                    //if (i > 12) break;
+                }
+            }
+
+            return data.asGeometry("PRC_Part");
         }
     };
 
@@ -1378,26 +1557,26 @@ namespace PRC {
         UInt ID;
         ContentPRCBase base;
         UInt Ntessellations;
-        //vector<PRC_TYPE_TESS> tessellations;
+        vector<PRC_TYPE_TESS_3D> tessellations;
 
         void parse(BitStreamParser& bs) {
             cout << endl << "parse FileStructureTessellation" << endl;
 
 
-                cout << " bits: ";
+                /*cout << " bits: ";
                 for (int i=0; i<256; i++) {
                     bool b = bs.read();
                     cout << b;
                 }
                 cout << endl;
-                bs.reset();
+                bs.reset();*/
 
             ID.parse(bs);
             cout << " tessellation ID: " << ID << endl;
 
             base.parseNoRef(bs); // checked :)
 
-            bs.printNextBits(32*32*32);
+            //bs.printNextBits(32*32*32);
             Ntessellations.parse(bs);
             cout << "  N tessellation: " << Ntessellations << endl;
 
@@ -1419,11 +1598,9 @@ namespace PRC {
                 if (objType.i == TYPE_TESS_3D) {
                     PRC_TYPE_TESS_3D t;
                     t.parse(bs);
-                    //tessellations.push_back(t);
+                    tessellations.push_back(t);
                 }
             }
-
-
         }
     };
 
@@ -1541,9 +1718,9 @@ void exportToFile(string data, string path) {
     out.close();
 }
 
-void parsePRCStructure(string& data, PRC::FileStructureDescription& description) {
-    if (description.Nsections.i != 6) return;
-    if (description.sectionOffsets.size() != 7) return;
+VRTransformPtr parsePRCStructure(string& data, PRC::FileStructureDescription& description) {
+    if (description.Nsections.i != 6) return 0;
+    if (description.sectionOffsets.size() != 7) return 0;
 
     PRC::FileStructure structure;
 
@@ -1602,6 +1779,13 @@ void parsePRCStructure(string& data, PRC::FileStructureDescription& description)
     structure.tessellation.parse(bst);
     //structure.geometry.parse(bsg);
 
+
+    auto root = VRTransform::create("Object");
+
+    for (PRC::PRC_TYPE_TESS_3D& t : structure.tessellation.tessellations) {
+        root->addChild( t.asGeometry() );
+    }
+
     //exportToFile(dataGlobals, "globals.bin");
     //exportToFile(dataTree, "tree.bin");
     //exportToFile(dataTessellations, "tessellations.bin");
@@ -1638,12 +1822,17 @@ void parsePRCStructure(string& data, PRC::FileStructureDescription& description)
     //cout << "  attribute " << t.info.attribute << endl;
     //cout << "  tesselation name " << t.info.name << endl;
     //cout << "  tesselation, N tessellations: " << t.Ntessellations << endl;
+
+    return root;
 }
 
-void processPRC(PDF::Object& object) {
-    if (object.streams.size() == 0) return;
+VRTransformPtr processPRC(PDF::Object& object) {
+    if (object.streams.size() == 0) return 0;
     PDF::Stream& stream = object.streams[0];
-    if (stream.unpacked == "") return;
+    if (stream.unpacked == "") return 0;
+
+
+    auto root = VRTransform::create("PRC");
 
     string& data = stream.unpacked;
 
@@ -1674,9 +1863,12 @@ void processPRC(PDF::Object& object) {
     cout << " --== header end ==--" << endl << endl;
 
     for (PRC::FileStructureDescription& description : header.structureDescriptions) {
-        parsePRCStructure(stream.unpacked, description);
-        break;
+        auto t = parsePRCStructure(stream.unpacked, description);
+        root->addChild(t);
+        //break; // TOTEST
     }
+
+    return root;
 }
 
 
@@ -1720,6 +1912,8 @@ VRTransformPtr VRPDF::extract3DModels(string path) {
 
     //return 0;
 
+    auto root = VRTransform::create("PDF");
+
     ifstream file(path, std::ios::binary);
     vector<char> buffer((istreambuf_iterator<char>(file)), istreambuf_iterator<char>());
 
@@ -1728,14 +1922,17 @@ VRTransformPtr VRPDF::extract3DModels(string path) {
     extractStreams(buffer, objects);
     vector<PDF::Object> geometries = filter3DObjects(objects);
     for (auto& obj : geometries) unpack3DObject(buffer, obj);
-    for (auto& obj : geometries) processPRC(obj);
+    for (auto& obj : geometries) {
+        auto model = processPRC(obj);
+        root->addChild(model);
+    }
 
     // TODO: convert PRC to geometry
 
     //printObjects(objects);
     //printObjects(geometries);
 
-    return 0;
+    return root;
 }
 
 
