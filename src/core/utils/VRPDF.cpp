@@ -426,7 +426,7 @@ bool compareBits(const sCodageOfFrequentDoubleOrExponent& e, const unsigned int&
 }
 
 double readDouble(BitStreamParser& bs, bool& success) {
-    bool verbose = true;
+    bool verbose = false;
     success = true;
 
     ieee754_double value;
@@ -522,14 +522,16 @@ double readDouble(BitStreamParser& bs, bool& success) {
                 break;
             }
 
-            if (index >= mantissaBytes.size() ) {
+            if (index > mantissaBytes.size() ) {
                 cout << "Warning! readDouble failed, tried to access index " << index << " but only have " << mantissaBytes.size() << endl;
                 //cout << " bits: " << ; // TODO
                 success = false;
                 break;
             }
 
-            mantissaBytes.push_back( mantissaBytes[index] );
+            // 'index' is the distance from the current byte to the previous byte to be copied
+            uint8_t byte = mantissaBytes[ mantissaBytes.size() - index ];
+            mantissaBytes.push_back( byte );
         }
     }
     while (mantissaBytes.size() < 6) mantissaBytes.push_back(0);
@@ -839,13 +841,13 @@ namespace PRC {
 
     // uncompressed unsinged int
     struct UUInt {
-        unsigned int i;
+        unsigned int i = 0;
         void parse(const string& data, size_t& p) { memcpy(&i, &data[p], 4); p += 4; }
     };
 
     // compressed types
     struct Bool {
-        bool b;
+        bool b = 0;
 
         void parse(BitStreamParser& bs) {
             b = bs.read(1);
@@ -853,7 +855,7 @@ namespace PRC {
     };
 
     struct Char {
-        char c;
+        char c = 0;
 
         void parse(BitStreamParser& bs) {
             c = (char)bs.read(8);
@@ -861,7 +863,7 @@ namespace PRC {
     };
 
     struct Int {
-        int i;
+        int i = 0;
 
         void parse(BitStreamParser& bs) { // TODO
             if ( bs.empty() ) { cout << "Warning in Int::parse, no more data! " << endl; return; }
@@ -884,7 +886,7 @@ namespace PRC {
     };
 
     struct UInt {
-        unsigned int i;
+        unsigned int i = 0;
 
         void peek(BitStreamParser& bs) {
             size_t byte = bs.currentBytePtr;
@@ -914,7 +916,7 @@ namespace PRC {
     };
 
     struct Double {
-        double d;
+        double d = 0;
 
         bool parse(BitStreamParser& bs) {
             if ( bs.empty() ) { cout << "Warning in Double::parse, no more data! " << endl; return false; }
@@ -1233,7 +1235,7 @@ namespace PRC {
             for (size_t i=0; i<Ncoords.i; i++) {
                 size_t Bi = bs.currentBytePtr;
                 size_t bi = bs.currentBitPtr;
-                bs.printNextBits(32);
+                //bs.printNextBits(32);
 
                 Double d;
                 bool r = d.parse(bs);
@@ -1244,9 +1246,9 @@ namespace PRC {
                     break;
                 }
                 coordinates.push_back(d);
-                cout <<  i << " double: " << d.d << ", at: " << Bi << "." << bi << endl;
+                //cout <<  i << " double: " << d.d << ", at: " << Bi << "." << bi << endl;
                 //printBits(d.d);
-                //if (i > 32) break; // TOTEST
+                //if (i > 35) break; // TOTEST
                 //break;
             }
         }
@@ -1255,12 +1257,75 @@ namespace PRC {
     struct PRC_TYPE_TESS_3D {
         UInt tessType;
         ContentBaseTessData base;
+        Bool hasFaces;
+        Bool hasLoops;
+        Bool mustCalcNormals;
+        Char normalCalcFlag; // should be 0
+        Double creaseAngle;
+        UInt NnormalCoords;
+        vector<Double> normalCoords;
+        UInt NwireIndices;
+        vector<UInt> wireIndices;
+        UInt NtriangleIndices; // always a multiple of 3
+        vector<UInt> triangleIndices;
+        UInt NfaceTesselation;
+        // TODO
+        /*vector<PRC_TYPE_TESS_Face> faceTesselationData;
+        UInt NtexCoords;
+        vector<Double> texCoords;*/
 
         void parse(BitStreamParser& bs) {
             tessType.parse(bs);
             cout << "   tess type: " << tessType << endl;
 
             base.parse(bs);
+
+            bs.printNextBits(64);
+
+            hasFaces.parse(bs);
+            hasLoops.parse(bs);
+            mustCalcNormals.parse(bs);
+            if (mustCalcNormals.b) {
+                normalCalcFlag.parse(bs); // should be 0
+                creaseAngle.parse(bs);
+            }
+
+            cout << "   hasFaces " << hasFaces << endl;
+            cout << "   hasLoops " << hasLoops << endl;
+            cout << "   mustCalcNormals " << mustCalcNormals << endl;
+            cout << "   normalCalcFlag " << (unsigned char)normalCalcFlag.c << endl;
+            cout << "   creaseAngle " << creaseAngle << endl;
+
+            NnormalCoords.parse(bs);
+            for (size_t i=0; i<NnormalCoords.i; i++) {
+                Double d;
+                bool r = d.parse(bs);
+                normalCoords.push_back(d);
+            }
+
+            NwireIndices.parse(bs);
+            for (size_t i=0; i<NwireIndices.i; i++) {
+                UInt d;
+                d.parse(bs);
+                wireIndices.push_back(d);
+            }
+
+            NtriangleIndices.parse(bs);  // always a multiple of 3
+            for (size_t i=0; i<NtriangleIndices.i; i++) {
+                UInt d;
+                d.parse(bs);
+                triangleIndices.push_back(d);
+            }
+
+            NfaceTesselation.parse(bs);
+
+
+            cout << "   NnormalCoords " << NnormalCoords << endl;
+            cout << "   NwireIndices " << NwireIndices << endl;
+            cout << "   NtriangleIndices " << NtriangleIndices << endl;
+            cout << "   NfaceTesselation " << NfaceTesselation << endl;
+
+            // TODO ...
         }
     };
 
@@ -1650,6 +1715,7 @@ VRTransformPtr VRPDF::extract3DModels(string path) {
     //testDouble(-62.5); return 0;
     //testDouble(-61.9527); return 0;
     //testDouble(134.248); return 0;
+    //testDouble(3.5); return 0;
     //testUInt(305);
 
     //return 0;
