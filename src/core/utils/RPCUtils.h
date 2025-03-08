@@ -24,6 +24,14 @@
 #define FACETESSDATA_WIRE_IsClosing			0x8000		// Indicates that this is the last edge of a loop.
 
 
+#define PRC_TRANSFORMATION_Identity     0x00
+#define PRC_TRANSFORMATION_Translate    0x01
+#define PRC_TRANSFORMATION_Rotate       0x02
+#define PRC_TRANSFORMATION_Mirror       0x04
+#define PRC_TRANSFORMATION_Scale        0x08
+#define PRC_TRANSFORMATION_NonUniformScale 0x10
+#define PRC_TRANSFORMATION_NonOrtho     0x20
+#define PRC_TRANSFORMATION_Homogeneous  0x40
 
 // Double stuff
 

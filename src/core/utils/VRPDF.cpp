@@ -874,13 +874,13 @@ namespace PRC {
                 bs.read();
             } else {
                 cout << "Warning in Int::parse, not implemented! " << endl;
-                /*while(bs.currentBit) {
+                while(bs.currentBit) {
                     bs.read();
                     unsigned int byte = bs.read(8);
                     i |= (byte << shift);   // Store in the correct position
                     shift += 8;
                 }
-                bs.read();*/
+                bs.read();
             }
         }
     };
@@ -923,6 +923,17 @@ namespace PRC {
             bool success = true;
             d = readDouble(bs, success);
             return success;
+        }
+    };
+
+    struct BITS {
+        vector<bool> bits;
+
+        void parse(BitStreamParser& bs, UInt N) {
+            for (size_t i=0; i<N.i; i++) {
+                bool b = bs.read(1);
+                bits.push_back(b);
+            }
         }
     };
 
@@ -1039,9 +1050,29 @@ namespace PRC {
         TYPE_ASM_FileStructureTessellation = TYPE_ASM+5,
         TYPE_ASM_FileStructureGeometry = TYPE_ASM+6,
         TYPE_ASM_FileStructureExtraGeometry = TYPE_ASM+7,
-        TYPE_ASM_ProductOccurrence = TYPE_ASM+8,
-        TYPE_ASM_PartDefinition = TYPE_ASM+9,
-        TYPE_ASM_Filter = TYPE_ASM+10,
+        TYPE_ASM_ProductOccurrence = TYPE_ASM+10,
+        TYPE_ASM_PartDefinition = TYPE_ASM+11,
+        TYPE_ASM_Filter = TYPE_ASM+20,
+
+        TYPE_GRAPH = 700,
+        TYPE_GRAPH_Style = TYPE_GRAPH + 1,	// Display style.
+        TYPE_GRAPH_Material = TYPE_GRAPH + 2,	// Display material properties.
+        TYPE_GRAPH_Picture = TYPE_GRAPH + 3,	// Picture.
+        TYPE_GRAPH_TextureApplication = TYPE_GRAPH + 11,	// Texture application.
+        TYPE_GRAPH_TextureDefinition = TYPE_GRAPH + 12,	// Texture definition.
+        TYPE_GRAPH_TextureTransformation = TYPE_GRAPH + 13,	// Texture transformation.
+        TYPE_GRAPH_LinePattern = TYPE_GRAPH + 21,	// One dimensional display style.
+        TYPE_GRAPH_FillPattern = TYPE_GRAPH + 22,	// Abstract class for two-dimensional display style.
+        TYPE_GRAPH_DottingPattern = TYPE_GRAPH + 23,	// Two-dimensional filling with dots.
+        TYPE_GRAPH_HatchingPattern = TYPE_GRAPH + 24,	// Two-dimensional filling with hatches.
+        TYPE_GRAPH_SolidPattern = TYPE_GRAPH + 25,	// Two-dimensional filling with particular style (color, material, texture).
+        TYPE_GRAPH_VPicturePattern = TYPE_GRAPH + 26,	// Two-dimensional filling with vectorised picture.
+        TYPE_GRAPH_AmbientLight = TYPE_GRAPH + 31,	// Scene ambient illumination.
+        TYPE_GRAPH_PointLight = TYPE_GRAPH + 32,	// Scene point illumination.
+        TYPE_GRAPH_DirectionalLight = TYPE_GRAPH + 33,	// Scene directional illumination.
+        TYPE_GRAPH_SpotLight = TYPE_GRAPH + 34,	// Scene spot illumination.
+        TYPE_GRAPH_SceneDisplayParameters = TYPE_GRAPH + 41,	// Parameters for scene visualisation.
+        TYPE_GRAPH_Camera = TYPE_GRAPH + 42,	//
     };
 
     struct FileStructureDescription { // done
@@ -1219,18 +1250,16 @@ namespace PRC {
         UInt CADID2;
         UInt structureID;
 
-        void parseNoRef(BitStreamParser& bs) {
+        void parse(BitStreamParser& bs, bool referencable) {
             attribute.parse(bs);
             name.parse(bs);
             cout << "ContentPRCBase name: " << name << endl;
-        }
-
-        void parseRef(BitStreamParser& bs) {
-            parseNoRef(bs);
-            CADID1.parse(bs);
-            CADID2.parse(bs);
-            structureID.parse(bs);
-            cout << " ContentPRCBase IDs: " << CADID1 << ", " << CADID2 << ", " << structureID << endl;
+            if (referencable) {
+                CADID1.parse(bs);
+                CADID2.parse(bs);
+                structureID.parse(bs);
+                cout << " ContentPRCBase IDs: " << CADID1 << ", " << CADID2 << ", " << structureID << endl;
+            }
         }
     };
 
@@ -1508,52 +1537,7 @@ namespace PRC {
         }
     };
 
-    struct PRC_TYPE_TOPO_Context {
-        UInt topoType;
-        ContentPRCBase base;
-        Char behavior;
-        Double grandularity;
-        Double tolerance;
-        Bool hasFaceThickness;
-        Double minFaceThickness;
-        Bool hasScale;
-        Double scale;
-        UInt Nbodies;
-        //vector<PRC_TYPE_TOPO_Body> bodies;
-
-        void parse(BitStreamParser& bs) {
-            topoType.parse(bs);
-            base.parseRef(bs);
-            behavior.parse(bs);
-            grandularity.parse(bs);
-            tolerance.parse(bs);
-            hasFaceThickness.parse(bs);
-            if (hasFaceThickness.b) minFaceThickness.parse(bs);
-            hasScale.parse(bs);
-            if (hasScale.b) scale.parse(bs);
-            Nbodies.parse(bs);
-
-            cout << "   topo type: " << topoType << endl;
-            cout << "   topo behavor: " << behavior << endl;
-            cout << "   topo grandularity: " << grandularity << endl;
-            cout << "   topo tolerance: " << tolerance << endl;
-            cout << "   topo hasFaceThickness: " << hasFaceThickness << endl;
-            if (hasFaceThickness.b) cout << "   topo  minFaceThickness: " << minFaceThickness << endl;
-            cout << "   topo  hasScale: " << hasScale << endl;
-            if (hasScale.b) cout << "   topo  scale: " << scale << endl;
-            cout << "   topo  Nbodies: " << Nbodies << endl;
-
-
-            /*for (size_t i=0; i<Ncoords.i; i++) {
-                Double d;
-                d.parse(bs);
-                coordinates.push_back(d);
-                cout << " d " << d << endl;
-            }*/
-        }
-    };
-
-    struct PRC_TYPE_ASM_FileStructureTessellation {
+    struct FileStructureTessellation {
         UInt ID;
         ContentPRCBase base;
         UInt Ntessellations;
@@ -1574,7 +1558,7 @@ namespace PRC {
             ID.parse(bs);
             cout << " tessellation ID: " << ID << endl;
 
-            base.parseNoRef(bs); // checked :)
+            base.parse(bs, false); // checked :)
 
             //bs.printNextBits(32*32*32);
             Ntessellations.parse(bs);
@@ -1619,7 +1603,7 @@ namespace PRC {
 
         void parse(BitStreamParser& bs) {
             ID.parse(bs);
-            info.parseRef(bs);
+            info.parse(bs, true);
             behaviour.parse(bs);
             grandularity.parse(bs);
             tolerance.parse(bs);
@@ -1641,7 +1625,7 @@ namespace PRC {
         }
     };
 
-    struct PRC_TYPE_ASM_FileStructureGeometry {
+    struct FileStructureGeometry {
         UInt ID;
         ContentPRCBase info;
         FileStructureExactGeometry geometry;
@@ -1650,7 +1634,7 @@ namespace PRC {
         void parse(BitStreamParser& bs) {
             ID.parse(bs);
             cout << " geometry ID: " << ID << endl;
-            info.parseRef(bs);
+            info.parse(bs, true);
             geometry.parse(bs);
             //data.parse(bs);
         }
@@ -1698,12 +1682,826 @@ namespace PRC {
         }
     };
 
+    struct GraphicsContent {
+        UInt layer;
+        UInt lineStyle;
+        Char behaviorField1;
+        Char behaviorField2;
+
+        void parse(BitStreamParser& bs) {
+            layer.parse(bs);
+            lineStyle.parse(bs);
+            behaviorField1.parse(bs);
+            behaviorField2.parse(bs);
+        }
+    };
+
+    struct PRCBaseWithGraphics {
+        ContentPRCBase base;
+        Bool sameAsCurrent;
+        GraphicsContent graphicalData;
+
+        void parse(BitStreamParser& bs, bool referencable) {
+            base.parse(bs, referencable);
+            sameAsCurrent.parse(bs);
+            if (!sameAsCurrent.b) graphicalData.parse(bs);
+        }
+    };
+
+    struct Vector3d {
+        Double x,y,z;
+        bool is3D = true;
+
+        void parse(BitStreamParser& bs, bool is3D) {
+            this->is3D = is3D;
+            x.parse(bs);
+            y.parse(bs);
+            if (is3D) z.parse(bs);
+        }
+    };
+
+    struct BoundingBox {
+        Vector3d vMin, vMax;
+
+        void parse(BitStreamParser& bs) {
+            vMin.parse(bs, true);
+            vMax.parse(bs, true);
+        }
+    };
+
+    struct RepresentationItemContent {
+        PRCBaseWithGraphics base;
+        UInt coordSystemID;
+        UInt tessellationID;
+
+        void parse(BitStreamParser& bs, bool referencable) {
+            base.parse(bs, referencable);
+            coordSystemID.parse(bs);
+            tessellationID.parse(bs);
+        }
+    };
+
+    struct Item {
+        UInt typeID;
+        RepresentationItemContent content;
+
+        void parse(BitStreamParser& bs) {
+            typeID.parse(bs);
+            content.parse(bs, true);
+
+            cout << " ---- Item: " << typeID.i << endl;
+        }
+    };
+
+    struct CompressedUniqueID {
+        UInt i1,i2,i3,i4;
+
+        void parse(BitStreamParser& bs) {
+            i1.parse(bs);
+            i2.parse(bs);
+            i3.parse(bs);
+            i4.parse(bs);
+        }
+    };
+
+    struct AdditionalTargetData {
+        Bool inSameStructure;
+        CompressedUniqueID fileStructureID;
+        UInt topologicalContext;
+        UInt body;
+        UInt Nindices;
+        ArrayOf<UInt> indices;
+
+        void parse(BitStreamParser& bs) {
+            inSameStructure.parse(bs);
+            if (!inSameStructure.b) fileStructureID.parse(bs);
+            topologicalContext.parse(bs);
+            body.parse(bs);
+            Nindices.parse(bs);
+            indices.parse(bs, Nindices);
+        }
+    };
+
+    struct ReferenceOnTopology {
+        UInt typeID;
+        UInt entityType;
+        Bool hasExactGeometry;
+        AdditionalTargetData data;
+
+        void parse(BitStreamParser& bs) {
+            typeID.parse(bs); // PRC_TYPE_MISC_ReferenceOnTopology
+            entityType.parse(bs);
+            hasExactGeometry.parse(bs);
+            if (hasExactGeometry.b) data.parse(bs);
+        }
+    };
+
+    struct ReferenceOnPRCBase {
+        UInt typeID;
+        UInt entityType;
+        Bool inSameFileStrucure;
+        CompressedUniqueID fileStructureID;
+        UInt ID;
+
+        void parse(BitStreamParser& bs) {
+            typeID.parse(bs); // PRC_TYPE_MISC_ReferenceOnPRCBase
+            entityType.parse(bs);
+            inSameFileStrucure.parse(bs);
+            if (!inSameFileStrucure.b) fileStructureID.parse(bs);
+            ID.parse(bs);
+        }
+    };
+
+    struct ReferenceData {
+        ReferenceOnTopology refTopology;
+        ReferenceOnPRCBase refBase;
+
+        void parse(BitStreamParser& bs) { // TODO: options
+            refTopology.parse(bs);
+            refBase.parse(bs);
+        }
+    };
+
+    struct ContentEntityReference {
+        PRCBaseWithGraphics base;
+        UInt coordSystem;
+        Bool refExists;
+        ReferenceData entityID;
+
+        void parse(BitStreamParser& bs, bool referencabe) {
+            base.parse(bs, referencabe);
+            coordSystem.parse(bs);
+            refExists.parse(bs);
+            if (refExists.b) entityID.parse(bs);
+        }
+    };
+
+    struct ContentExtendedEntityReference {
+        UInt MarkupLinkedItem;
+        ContentEntityReference refOccurence;
+        ReferenceData refData;
+
+        void parse(BitStreamParser& bs, bool referencabe) {
+            MarkupLinkedItem.parse(bs);
+            refOccurence.parse(bs, referencabe);
+            refData.parse(bs);
+        }
+    };
+
+    struct UserDataSubSection {
+        Bool sameUUID;
+        CompressedUniqueID uniqueID;
+        UInt Nbits;
+        BITS bits;
+
+        void parse(BitStreamParser& bs) {
+            sameUUID.parse(bs);
+            if (!sameUUID.b) uniqueID.parse(bs);
+            Nbits.parse(bs);
+            if (Nbits.i > 0) bits.parse(bs, Nbits);
+        }
+    };
+
+    struct UserDataStream {
+        UInt Nsubs;
+        ArrayOf<UserDataSubSection> sections;
+
+        void parse(BitStreamParser& bs) {
+            Nsubs.parse(bs);
+            sections.parse(bs, Nsubs);
+        }
+    };
+
+    struct UserData {
+        UInt Nbits;
+        UserDataStream data;
+
+        void parse(BitStreamParser& bs) {
+            Nbits.parse(bs);
+            if (Nbits.i > 0) data.parse(bs);
+        }
+    };
+
+    struct MarkupLinkedItem {
+        UInt typeID;
+        ContentExtendedEntityReference entityRef;
+        Bool showMarkup;
+        Bool deleteMarkup;
+        Bool showLeader;
+        Bool deleteLeader;
+        UserData userData;
+
+        void parse(BitStreamParser& bs) {
+            typeID.parse(bs); // PRC_TYPE_MISC_MarkupLinkedItem
+            entityRef.parse(bs, false);
+            showMarkup.parse(bs);
+            deleteMarkup.parse(bs);
+            showLeader.parse(bs);
+            deleteLeader.parse(bs);
+            userData.parse(bs);
+        }
+    };
+
+    struct ReferenceUniqueIdentifier {
+        UInt typeID;
+        UInt refType;
+        Bool inSameFileStructure;
+        CompressedUniqueID fileStructureID;
+        UInt entityID;
+
+        void parse(BitStreamParser& bs) {
+            typeID.parse(bs); // PRC_TYPE_MISC_ReferenceOnPRCBase
+            refType.parse(bs);
+            inSameFileStructure.parse(bs);
+            if (!inSameFileStructure.b) fileStructureID.parse(bs);
+            entityID.parse(bs);
+        }
+    };
+
+    struct MarkupLeader {
+        UInt typeID;
+        PRCBaseWithGraphics base;
+        ArrayOf<ReferenceUniqueIdentifier> itemIDs;
+        //ArrayOf<ReferenceUniqueIdentifier> leaderIDs;
+        UInt tessellationID;
+        UserData userData;
+
+        void parse(BitStreamParser& bs, UInt N1) {
+            typeID.parse(bs); // PRC_TYPE_MKP_Leader
+            base.parse(bs, true);
+            itemIDs.parse(bs, N1);
+            //leaderIDs.parse(bs, N2); // ????
+            tessellationID.parse(bs);
+            userData.parse(bs);
+        }
+    };
+
+    struct Markup {
+        UInt typeID;
+        PRCBaseWithGraphics base;
+        UInt type;
+        UInt subType;
+        UInt Nitems;
+        ArrayOf<ReferenceUniqueIdentifier> items;
+        UInt Nleaders;
+        ArrayOf<ReferenceUniqueIdentifier> leaders;
+        UInt tessellationID;
+        UserData data;
+
+        void parse(BitStreamParser& bs) {
+            typeID.parse(bs); // PRC_TYPE_MKP_Markup
+            base.parse(bs, true);
+            type.parse(bs);
+            subType.parse(bs);
+            Nitems.parse(bs);
+            items.parse(bs, Nitems);
+            Nleaders.parse(bs);
+            leaders.parse(bs, Nleaders);
+            tessellationID.parse(bs);
+            data.parse(bs);
+        }
+    };
+
+    struct AnnotationItem {
+        UInt typeID;
+        PRCBaseWithGraphics base;
+        ReferenceUniqueIdentifier refID;
+        UserData data;
+
+        void parse(BitStreamParser& bs) {
+            typeID.parse(bs); // PRC_TYPE_MKP_AnnotationItem
+            base.parse(bs, true);
+            refID.parse(bs);
+            data.parse(bs);
+        }
+    };
+
+    struct AnnotationSet {
+        UInt typeID;
+        PRCBaseWithGraphics base;
+        UInt Nannotations;
+        ArrayOf<AnnotationItem> items; // TODO: should be any of AnnotationEntities
+        UserData data;
+
+        void parse(BitStreamParser& bs) {
+            typeID.parse(bs); // PRC_TYPE_MKP_AnnotationSet
+            base.parse(bs, true);
+            Nannotations.parse(bs);
+            items.parse(bs, Nannotations);
+            data.parse(bs);
+        }
+    };
+
+    struct AnnotationReference {
+        UInt typeID;
+        PRCBaseWithGraphics base;
+        UInt Nitems;
+        ArrayOf<ReferenceUniqueIdentifier> uniqueIdentifiers;
+
+        void parse(BitStreamParser& bs) {
+            typeID.parse(bs); // PRC_TYPE_MKP_AnnotationReference
+            base.parse(bs, true);
+            Nitems.parse(bs);
+            uniqueIdentifiers.parse(bs, Nitems);
+        }
+    };
+
+    struct MarkupData {
+        UInt Nitems;
+        ArrayOf<MarkupLinkedItem> items;
+        UInt Nleaders;
+        ArrayOf<MarkupLeader> leaders;
+        UInt Nmarkups;
+        ArrayOf<Markup> markups;
+        UInt NannotationEntities;
+        ArrayOf<AnnotationItem> annotationEntities; // TODO: should be any of AnnotationEntities
+
+        void parse(BitStreamParser& bs) {
+            Nitems.parse(bs);
+            items.parse(bs, Nitems);
+            Nleaders.parse(bs);
+            leaders.parse(bs, Nleaders, Nitems);
+            Nmarkups.parse(bs);
+            markups.parse(bs, Nmarkups);
+            NannotationEntities.parse(bs);
+            annotationEntities.parse(bs, NannotationEntities);
+        }
+    };
+
+    struct Transformation {
+        Char behavior;
+
+        bool isIdentity = true;
+        bool hasTranslation = false;
+        bool hasRotation = false;
+        bool hasMirror = false;
+        bool hasUniformScale = false;
+        bool hasNonUniformScale = false;
+        bool isNonOrthogonal = false;
+        bool isHomogenous = false;
+
+        Vector3d translation;
+        Vector3d rotationX;
+        Vector3d rotationY;
+        Vector3d rotationZ;
+        Double scale;
+        Vector3d scale3;
+        Vector3d homogenousXYZ;
+        Double homogenousW;
+
+        void parse(BitStreamParser& bs, bool is3D) {
+            behavior.parse(bs);
+            isIdentity = bool(behavior.c & PRC_TRANSFORMATION_Identity);
+            hasTranslation = bool(behavior.c & PRC_TRANSFORMATION_Translate);
+            hasRotation = bool(behavior.c & PRC_TRANSFORMATION_Rotate);
+            hasMirror = bool(behavior.c & PRC_TRANSFORMATION_Mirror);
+            hasUniformScale = bool(behavior.c & PRC_TRANSFORMATION_Scale);
+            hasNonUniformScale = bool(behavior.c & PRC_TRANSFORMATION_NonUniformScale);
+            isNonOrthogonal = bool(behavior.c & PRC_TRANSFORMATION_NonOrtho);
+            isHomogenous = bool(behavior.c & PRC_TRANSFORMATION_Homogeneous);
+
+            if (hasTranslation) translation.parse(bs, is3D);
+
+            if (isNonOrthogonal) {
+                rotationX.parse(bs, is3D);
+                rotationY.parse(bs, is3D);
+                if (is3D) rotationZ.parse(bs, true);
+            } else if (hasRotation) {
+                rotationX.parse(bs, is3D);
+                rotationY.parse(bs, is3D);
+            }
+
+            if (hasNonUniformScale) scale3.parse(bs, is3D);
+            else if (hasUniformScale) scale.parse(bs);
+
+            if (isHomogenous) {
+                homogenousXYZ.parse(bs, is3D);
+                homogenousW.parse(bs);
+            }
+        }
+    };
+
+    struct Domain {
+        Vector3d vMin, vMax;
+
+        void parse(BitStreamParser& bs) {
+            vMin.parse(bs, false);
+            vMax.parse(bs, false);
+        }
+    };
+
+    struct BaseGeometry {
+        Bool hasBase;
+        AttributeData attribute;
+        Name name;
+        UInt cadID;
+
+        void parse(BitStreamParser& bs) {
+            hasBase.parse(bs);
+            if (hasBase.b) {
+                attribute.parse(bs);
+                name.parse(bs);
+                cadID.parse(bs);
+            }
+        }
+    };
+
+    struct ContentSurface {
+        BaseGeometry geometry;
+        UInt extention;
+
+        void parse(BitStreamParser& bs) {
+            geometry.parse(bs);
+            extention.parse(bs);
+        }
+    };
+
+    struct SurfPlane {
+        UInt typeID;
+        ContentSurface surface;
+        Transformation transformation;
+        Domain domain;
+        Double coeffAU;
+        Double coeffAV;
+        Double coeffBU;
+        Double coeffBV;
+
+        void parse(BitStreamParser& bs) {
+            typeID.parse(bs); // PRC_TYPE_SURF_Plane
+            surface.parse(bs);
+            transformation.parse(bs, true);
+            domain.parse(bs);
+            coeffAU.parse(bs);
+            coeffAV.parse(bs);
+            coeffBU.parse(bs);
+            coeffBV.parse(bs);
+        }
+    };
+
+    struct LightObject {
+        UInt typeID;
+        ContentPRCBase base;
+        UInt ambientID;
+        UInt diffuseID;
+        UInt emissiveID;
+        UInt specularID;
+
+        Vector3d location;
+        Vector3d direction;
+        Vector3d attenuation;
+        Double intensity;
+        Double fallOffAngle;
+        Double fallOffExponent;
+
+        void parse(BitStreamParser& bs) {
+            typeID.parse(bs); // TYPE_GRAPH_AmbientLight, TYPE_GRAPH_PointLight, TYPE_GRAPH_DirectionalLight, TYPE_GRAPH_SpotLight
+            base.parse(bs, true);
+            ambientID.parse(bs);
+            diffuseID.parse(bs);
+            emissiveID.parse(bs);
+            specularID.parse(bs);
+
+            if (typeID.i == TYPE_GRAPH_PointLight) {
+                location.parse(bs, true);
+                attenuation.parse(bs, true);
+            }
+
+            if (typeID.i == TYPE_GRAPH_DirectionalLight) {
+                direction.parse(bs, true);
+                intensity.parse(bs);
+            }
+
+            if (typeID.i == TYPE_GRAPH_SpotLight) {
+                location.parse(bs, true);
+                attenuation.parse(bs, true);
+                direction.parse(bs, true);
+                fallOffAngle.parse(bs);
+                fallOffExponent.parse(bs);
+            }
+        }
+    };
+
+    struct Camera {
+        UInt typeID;
+        ContentPRCBase base;
+        Bool orthographic;
+        Vector3d position;
+        Vector3d lookAt;
+        Vector3d upVector;
+        Double fovX;
+        Double fovY;
+        Double aspectRation;
+        Double near;
+        Double far;
+        Double zoom;
+
+        void parse(BitStreamParser& bs) {
+            typeID.parse(bs); // PRC_TYPE_GRAPH_Camera
+            base.parse(bs, true);
+            orthographic.parse(bs);
+            position.parse(bs, true);
+            lookAt.parse(bs, true);
+            upVector.parse(bs, true);
+            fovX.parse(bs);
+            fovY.parse(bs);
+            aspectRation.parse(bs);
+            near.parse(bs);
+            far.parse(bs);
+            zoom.parse(bs);
+        }
+    };
+
+    struct SceneDisplayParameters {
+        UInt typeID;
+        ContentPRCBase base;
+        Bool isActive;
+        UInt Nlights;
+        ArrayOf<LightObject> lights;
+        Bool hasCamera;
+        Camera camera;
+        Bool hasRotationCenter;
+        Vector3d rotationCenter;
+        UInt NclippingPlanes;
+        ArrayOf<SurfPlane> clippingPlanes;
+        UInt backgroundLineStyle;
+        UInt defaultLineStyle;
+        UInt Nstyles;
+        ArrayOf<UInt> typeStyles;
+        Bool absolutePositions;
+
+        void parse(BitStreamParser& bs) {
+            typeID.parse(bs); // PRC_TYPE_GRAPH_SceneDisplayParameters
+            base.parse(bs, true);
+            isActive.parse(bs);
+            Nlights.parse(bs);
+            lights.parse(bs, Nlights);
+            hasCamera.parse(bs);
+            if (hasCamera.b) camera.parse(bs);
+            hasRotationCenter.parse(bs);
+            if (hasRotationCenter.b) rotationCenter.parse(bs, true);
+            NclippingPlanes.parse(bs);
+            clippingPlanes.parse(bs, NclippingPlanes);
+            backgroundLineStyle.parse(bs);
+            defaultLineStyle.parse(bs);
+            Nstyles.parse(bs);
+            Nstyles.i *= 2; // next array has UInt pairs
+            typeStyles.parse(bs, Nstyles);
+            absolutePositions.parse(bs);
+        }
+    };
+
+    struct ContentLayerFilterItems {
+        Bool isInclusive;
+        UInt Nlayers;
+        ArrayOf<UInt> layers;
+
+        void parse(BitStreamParser& bs) {
+            isInclusive.parse(bs);
+            Nlayers.parse(bs);
+            layers.parse(bs, Nlayers);
+        }
+    };
+
+    struct EntityReference {
+        UInt typeID;
+        ContentEntityReference entityRef;
+        UserData data;
+
+        void parse(BitStreamParser& bs) {
+            typeID.parse(bs); // PRC_TYPE_MISC_EntityReference
+            entityRef.parse(bs, true);
+            data.parse(bs);
+        }
+    };
+
+    struct ContentEntityFilterItems {
+        Bool isInclusive;
+        UInt Nentities;
+        ArrayOf<EntityReference> entities;
+
+        void parse(BitStreamParser& bs) {
+            isInclusive.parse(bs);
+            Nentities.parse(bs);
+            entities.parse(bs, Nentities);
+        }
+    };
+
+    struct Filter {
+        UInt typeID;
+        ContentPRCBase base;
+        ContentLayerFilterItems layerFilter;
+        ContentEntityFilterItems entityFilter;
+        UserData userData;
+
+        void parse(BitStreamParser& bs) {
+            typeID.parse(bs); // PRC_TYPE_ASM_Filter
+            base.parse(bs, true);
+            layerFilter.parse(bs);
+            entityFilter.parse(bs);
+            userData.parse(bs);
+        }
+    };
+
+    struct View {
+        UInt typeID;
+        PRCBaseWithGraphics base;
+        UInt Nannotations;
+        ArrayOf<ReferenceUniqueIdentifier> annotationIDs;
+        SurfPlane annotationPlane;
+        Bool hasParameters;
+        SceneDisplayParameters displayParameters;
+        Bool isAnnotationView;
+        Bool isDefaultView;
+        Bool isDirection;
+        UInt Nitems;
+        ArrayOf<ReferenceUniqueIdentifier> linkedItems;
+        UInt Nfilters;
+        ArrayOf<Filter> filters;
+        UserData userData;
+
+        void parse(BitStreamParser& bs) {
+            typeID.parse(bs); // PRC_TYPE_MKP_View
+            base.parse(bs, true);
+            Nannotations.parse(bs);
+            annotationIDs.parse(bs, Nannotations);
+            annotationPlane.parse(bs);
+            hasParameters.parse(bs);
+            displayParameters.parse(bs);
+            isAnnotationView.parse(bs);
+            isDefaultView.parse(bs);
+            isDirection.parse(bs);
+            Nitems.parse(bs);
+            linkedItems.parse(bs, Nitems);
+            Nfilters.parse(bs);
+            filters.parse(bs, Nfilters);
+            userData.parse(bs);
+        }
+    };
+
+    struct PartDefinition {
+        UInt typeID;
+        PRCBaseWithGraphics base;
+        BoundingBox bbox;
+        UInt Nitems;
+        ArrayOf<Item> items;
+        MarkupData markup;
+        UInt Nviews;
+        ArrayOf<View> views;
+        UserData userData;
+
+        void parse(BitStreamParser& bs) {
+            typeID.parse(bs); // PRC_TYPE_ASM_PartDefinition
+            base.parse(bs, true);
+            bbox.parse(bs);
+            Nitems.parse(bs);
+
+            cout << "PartDefinition - typeID: " << typeID.i << "/" << TYPE_ASM_PartDefinition << endl;
+            cout << "Nitems " << Nitems << endl;
+
+            items.parse(bs, Nitems);
+            /*markup.parse(bs);
+            Nviews.parse(bs);
+            views.parse(bs, Nviews);
+            userData.parse(bs);*/
+
+        }
+    };
+
+    struct SaveFileIdentifier {
+        Bool inSameFilestructure;
+        CompressedUniqueID fileStructureID;
+
+        void parse(BitStreamParser& bs) {
+            inSameFilestructure.parse(bs);
+            if (!inSameFilestructure.b) fileStructureID.parse(bs);
+        }
+    };
+
+    struct ReferencesOfProductOcurrence {
+        UInt partID;
+        UInt prototypeID;
+        SaveFileIdentifier prototypeSave;
+        UInt externalID;
+        SaveFileIdentifier externalSave;
+        UInt Nchildren;
+        ArrayOf<UInt> childOccurences;
+
+        void parse(BitStreamParser& bs) {
+            partID.parse(bs);
+            prototypeID.parse(bs);
+            prototypeSave.parse(bs);
+            externalID.parse(bs);
+            externalSave.parse(bs);
+            Nchildren.parse(bs);
+            childOccurences.parse(bs, Nchildren);
+        }
+    };
+
+    struct ProductInformation {
+        Bool fromCADFile;
+        Double Units;
+        Char flags;
+        Int loadStatus;
+
+        void parse(BitStreamParser& bs) {
+            fromCADFile.parse(bs);
+            Units.parse(bs);
+            flags.parse(bs);
+            loadStatus.parse(bs);
+        }
+    };
+
+    struct ProductOccurence {
+        UInt typeID;
+        PRCBaseWithGraphics base;
+        ReferencesOfProductOcurrence references;
+        Char behavior;
+        ProductInformation information;
+        Bool hasTransformation;
+        Transformation transformation;
+        UInt Nreferences;
+        ArrayOf<EntityReference> entityReferences;
+        MarkupData markup;
+        UInt Nviews;
+        ArrayOf<View> views;
+        Bool hasFilter;
+        Filter filter;
+        UInt Nfilters;
+        ArrayOf<Filter> filters;
+        UInt NdisplayParameters;
+        ArrayOf<SceneDisplayParameters> displayParameters;
+        UserData useData;
+
+        void parse(BitStreamParser& bs) {
+            typeID.parse(bs); // PRC_TYPE_ASM_ProductOccurrence
+            base.parse(bs, true);
+            references.parse(bs);
+            behavior.parse(bs);
+            information.parse(bs);
+            hasTransformation.parse(bs);
+            if (hasTransformation.b) transformation.parse(bs, true);
+            Nreferences.parse(bs);
+            entityReferences.parse(bs, Nreferences);
+            markup.parse(bs);
+            Nviews.parse(bs);
+            views.parse(bs, Nviews);
+            hasFilter.parse(bs);
+            if (hasFilter.b) filter.parse(bs);
+            Nfilters.parse(bs);
+            filters.parse(bs, Nfilters);
+            NdisplayParameters.parse(bs);
+            displayParameters.parse(bs, NdisplayParameters);
+            useData.parse(bs);
+        }
+    };
+
+    struct ASMFileStructure {
+        UInt typeID;
+        ContentPRCBase base;
+        UInt nextIndex;
+        UInt productOccurenceID;
+
+        void parse(BitStreamParser& bs) {
+            typeID.parse(bs); // PRC_TYPE_ASM_FileStructure
+            base.parse(bs, false);
+            nextIndex.parse(bs);
+            productOccurenceID.parse(bs);
+        }
+    };
+
+    struct FileStructureTree {
+        UInt typeID;
+        ContentPRCBase base;
+        UInt Nparts;
+        ArrayOf<PartDefinition> partDefintions;
+        UInt Noccurences;
+        ArrayOf<ProductOccurence> productOccurences;
+        ASMFileStructure fileStructureData;
+        UserData useData;
+
+        void parse(BitStreamParser& bs) {
+            typeID.parse(bs); // PRC_TYPE_ASM_FileStructureTree
+            base.parse(bs, false);
+            Nparts.parse(bs);
+
+            cout << "FileStructureTree - typeID: " << typeID.i << "/" << TYPE_ASM_FileStructureTree << endl;
+            cout << "Nparts " << Nparts << endl;
+
+            partDefintions.parse(bs, Nparts);
+            /*Noccurences.parse(bs);
+            productOccurences.parse(bs, Noccurences);
+            fileStructureData.parse(bs);
+            useData.parse(bs);*/
+
+        }
+    };
+
     struct FileStructure {
         FileStructureHeader header;
         //PRC_TYPE_ASM_FileStructureGlobals globals;
-        //PRC_TYPE_ASM_FileStructureTree tree;
-        PRC_TYPE_ASM_FileStructureTessellation tessellation;
-        PRC_TYPE_ASM_FileStructureGeometry geometry;
+        FileStructureTree tree;
+        FileStructureTessellation tessellation;
+        FileStructureGeometry geometry;
         //PRC_TYPE_ASM_FileStructureExtraGeometry geometryInfo;
     };
 }
@@ -1773,10 +2571,12 @@ VRTransformPtr parsePRCStructure(string& data, PRC::FileStructureDescription& de
     string dataGeometries = extractSection(current, sizeGeometries);
     string dataExtraGeometries = extractSection(current, sizeExtraGeometries);
 
+    BitStreamParser bstr(0, dataTree.size(), (unsigned char*)&dataTree[0]);
     BitStreamParser bst(0, dataTessellations.size(), (unsigned char*)&dataTessellations[0]);
     BitStreamParser bsg(0, dataGeometries.size(), (unsigned char*)&dataGeometries[0]);
 
-    structure.tessellation.parse(bst);
+    structure.tree.parse(bstr);
+    //structure.tessellation.parse(bst);
     //structure.geometry.parse(bsg);
 
 
