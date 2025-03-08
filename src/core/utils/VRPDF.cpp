@@ -943,14 +943,14 @@ namespace PRC {
         string str;
 
         void parse(BitStreamParser& bs) {
-            cout << "String::parse" << endl;
+            //cout << "String::parse" << endl;
             notNull.parse(bs);
             if (notNull.b) {
                 size.parse(bs);
-                cout << " size: " << size.i << endl;
+                //cout << " size: " << size.i << endl;
                 str = string(size.i, 0);
                 for (int i=0; i<size.i; i++) str[i] = bs.read(8);
-                cout << " str: '" << str << "'" << endl;
+                //cout << " str: '" << str << "'" << endl;
             }
         }
     };
@@ -984,9 +984,9 @@ namespace PRC {
         String name;
 
         void parse(BitStreamParser& bs) {
-            cout << "Name::parse" << endl;
+            //cout << "Name::parse" << endl;
             reuseCurrentName.parse(bs);
-            cout << " reuseCurrentName? " << reuseCurrentName.b << endl;
+            //cout << " reuseCurrentName? " << reuseCurrentName.b << endl;
 
             if (!reuseCurrentName.b) {
                 name.parse(bs);
@@ -1232,7 +1232,7 @@ namespace PRC {
 
         void parse(BitStreamParser& bs) {
             Nattributes.parse(bs);
-            cout << " Nattributes " << Nattributes << endl;
+            //cout << " Nattributes " << Nattributes << endl;
 
             for (int i=0; i<Nattributes.i; i++) {
                 PRC_TYPE_MISC_Attribute a;
@@ -1253,12 +1253,12 @@ namespace PRC {
         void parse(BitStreamParser& bs, bool referencable) {
             attribute.parse(bs);
             name.parse(bs);
-            cout << "ContentPRCBase name: " << name << endl;
+            //cout << "ContentPRCBase name: " << name << endl;
             if (referencable) {
                 CADID1.parse(bs);
                 CADID2.parse(bs);
                 structureID.parse(bs);
-                cout << " ContentPRCBase IDs: " << CADID1 << ", " << CADID2 << ", " << structureID << endl;
+                //cout << " ContentPRCBase IDs: " << CADID1 << ", " << CADID2 << ", " << structureID << endl;
             }
         }
     };
@@ -1272,8 +1272,8 @@ namespace PRC {
             isCalculated.parse(bs);
             Ncoords.parse(bs);
 
-            cout << "   tess isCalculated: " << isCalculated << endl;
-            cout << "   tess N coords: " << Ncoords << endl;
+            //cout << "   tess isCalculated: " << isCalculated << endl;
+            //cout << "   tess N coords: " << Ncoords << endl;
 
             coordinates.parse(bs, Ncoords);
 
@@ -1385,7 +1385,7 @@ namespace PRC {
             if (hasVertexColors.b) vertexColors.parse(bs, NtriangulatedData);
             if (NlineAttributes.i > 0) behavior.parse(bs);
 
-            cout << " parse PRC_TYPE_TESS_Face " << faceType << endl;
+            /*cout << " parse PRC_TYPE_TESS_Face " << faceType << endl;
             cout << "  NlineAttributes: " << NlineAttributes << endl;
             cout << "  startWireData: " << startWireData << endl;
             cout << "  sizesWireSize: " << sizesWireSize << endl;
@@ -1396,7 +1396,7 @@ namespace PRC {
             cout << "  hasVertexColors: " << hasVertexColors << endl;
             cout << "  behavior: " << behavior << endl;
 
-            for (UInt& i : triangulatedData.v) cout << "   triN: " << i << endl;
+            for (UInt& i : triangulatedData.v) cout << "   triN: " << i << endl;*/
         }
     };
 
@@ -1421,7 +1421,7 @@ namespace PRC {
 
         void parse(BitStreamParser& bs) {
             tessType.parse(bs);
-            cout << "   tess type: " << tessType << endl;
+            //cout << "   tess type: " << tessType << endl;
 
             base.parse(bs);
 
@@ -1435,11 +1435,11 @@ namespace PRC {
                 creaseAngle.parse(bs);
             }
 
-            cout << "   hasFaces " << hasFaces << endl;
-            cout << "   hasLoops " << hasLoops << endl;
-            cout << "   mustCalcNormals " << mustCalcNormals << endl;
-            cout << "   normalCalcFlag " << (unsigned char)normalCalcFlag.c << endl;
-            cout << "   creaseAngle " << creaseAngle << endl;
+            //cout << "   hasFaces " << hasFaces << endl;
+            //cout << "   hasLoops " << hasLoops << endl;
+            //cout << "   mustCalcNormals " << mustCalcNormals << endl;
+            //cout << "   normalCalcFlag " << (unsigned char)normalCalcFlag.c << endl;
+            //cout << "   creaseAngle " << creaseAngle << endl;
 
             NnormalCoords.parse(bs);
             normalCoords.parse(bs, NnormalCoords);
@@ -1449,10 +1449,10 @@ namespace PRC {
             triangleIndices.parse(bs, NtriangleIndices);
             NfaceTesselation.parse(bs);
 
-            cout << "   NnormalCoords " << NnormalCoords << endl;
-            cout << "   NwireIndices " << NwireIndices << endl;
-            cout << "   NtriangleIndices " << NtriangleIndices << endl;
-            cout << "   NfaceTesselation " << NfaceTesselation << endl;
+            //cout << "   NnormalCoords " << NnormalCoords << endl;
+            //cout << "   NwireIndices " << NwireIndices << endl;
+            //cout << "   NtriangleIndices " << NtriangleIndices << endl;
+            //cout << "   NfaceTesselation " << NfaceTesselation << endl;
 
             for (size_t i=0; i<NfaceTesselation.i; i++) {
                 PRC_TYPE_TESS_Face face;
@@ -1498,9 +1498,9 @@ namespace PRC {
                 if (pTypes.i & FACETESSDATA_TriangleStripe) Nstrip = face.triangulatedData.v[ Nfan.i + 2 ];
                 // TODO: check for more types!
 
-                cout << " N triangles: " << Ntri.i << endl;
-                cout << " N fans: " << Nfan.i << endl;
-                cout << " N strips: " << Nstrip.i << endl;
+                //cout << " N triangles: " << Ntri.i << endl;
+                //cout << " N fans: " << Nfan.i << endl;
+                //cout << " N strips: " << Nstrip.i << endl;
 
                 // PRC_FACETESSDATA_Triangle (normal,point,normal,point,normal,point).
                 for (size_t i = 0; i<Ntri.i; i++) {
@@ -1544,7 +1544,7 @@ namespace PRC {
         vector<PRC_TYPE_TESS_3D> tessellations;
 
         void parse(BitStreamParser& bs) {
-            cout << endl << "parse FileStructureTessellation" << endl;
+            //cout << endl << "parse FileStructureTessellation" << endl;
 
 
                 /*cout << " bits: ";
@@ -1556,13 +1556,13 @@ namespace PRC {
                 bs.reset();*/
 
             ID.parse(bs);
-            cout << " tessellation ID: " << ID << endl;
+            //cout << " tessellation ID: " << ID << endl;
 
             base.parse(bs, false); // checked :)
 
             //bs.printNextBits(32*32*32);
             Ntessellations.parse(bs);
-            cout << "  N tessellation: " << Ntessellations << endl;
+            //cout << "  N tessellation: " << Ntessellations << endl;
 
 
 
@@ -1578,7 +1578,7 @@ namespace PRC {
 
             for (size_t i=0; i<Ntessellations.i; i++) {
                 UInt objType; objType.peek(bs);
-                cout << " tessellation " << i << ", type: " << objType.i << endl;
+                //cout << " tessellation " << i << ", type: " << objType.i << endl;
                 if (objType.i == TYPE_TESS_3D) {
                     PRC_TYPE_TESS_3D t;
                     t.parse(bs);
@@ -1621,7 +1621,7 @@ namespace PRC {
 
         void parse(BitStreamParser& bs) {
             Ncontexts.parse(bs);
-            cout << " Ncontexts: " << Ncontexts << endl;
+            //cout << " Ncontexts: " << Ncontexts << endl;
         }
     };
 
@@ -1633,7 +1633,7 @@ namespace PRC {
 
         void parse(BitStreamParser& bs) {
             ID.parse(bs);
-            cout << " geometry ID: " << ID << endl;
+            //cout << " geometry ID: " << ID << endl;
             info.parse(bs, true);
             geometry.parse(bs);
             //data.parse(bs);
@@ -1650,7 +1650,7 @@ namespace PRC {
         vector<UncompressedFile> files;
 
         void parse(const string& data, size_t& p) {
-            cout << "FileStructureHeader parse, p: " << p << endl;
+            //cout << "FileStructureHeader parse, p: " << p << endl;
             memcpy(PRC, &data[p], 3); p += 3;
             minVersion.parse(data, p);
             authVersion.parse(data, p);
@@ -1672,7 +1672,7 @@ namespace PRC {
 
         void parse(BitStreamParser& bs) {
             Ntypes.parse(bs);
-            cout << " Ntypes: " << Ntypes << endl;
+            //cout << " Ntypes: " << Ntypes << endl;
 
             /*for (int i=0; i<Ntypes.i; i++) {
                 Entity_Schema_definition d;
@@ -1693,6 +1693,9 @@ namespace PRC {
             lineStyle.parse(bs);
             behaviorField1.parse(bs);
             behaviorField2.parse(bs);
+
+            cout << "GraphicsContent " << layer << ", " << lineStyle << ", " << (int)behaviorField1.c << ", " << (int)behaviorField2.c << endl;
+            ;
         }
     };
 
@@ -1704,6 +1707,7 @@ namespace PRC {
         void parse(BitStreamParser& bs, bool referencable) {
             base.parse(bs, referencable);
             sameAsCurrent.parse(bs);
+            cout << "PRCBaseWithGraphics, sameAsCurrent " << sameAsCurrent << endl;
             if (!sameAsCurrent.b) graphicalData.parse(bs);
         }
     };
@@ -1714,18 +1718,25 @@ namespace PRC {
 
         void parse(BitStreamParser& bs, bool is3D) {
             this->is3D = is3D;
+            cout << "parseX" << endl;
             x.parse(bs);
+            cout << "parseY" << endl;
             y.parse(bs);
-            if (is3D) z.parse(bs);
+            if (is3D) {
+                cout << "parseZ" << endl;
+                z.parse(bs);
+            }
         }
     };
 
     struct BoundingBox {
         Vector3d vMin, vMax;
 
-        void parse(BitStreamParser& bs) {
-            vMin.parse(bs, true);
-            vMax.parse(bs, true);
+        void parse(BitStreamParser& bs, bool is3D) {
+            vMin.parse(bs, is3D);
+            vMax.parse(bs, is3D);
+
+            cout << "Boundingbox " << vMin.x << "/" << vMax.x << "   " << vMin.y << "/" << vMax.y << "   " << vMin.z << "/" << vMax.z << endl;
         }
     };
 
@@ -1746,8 +1757,8 @@ namespace PRC {
         RepresentationItemContent content;
 
         void parse(BitStreamParser& bs) {
-            typeID.parse(bs);
-            content.parse(bs, true);
+            //typeID.parse(bs);
+            //content.parse(bs, true);
 
             cout << " ---- Item: " << typeID.i << endl;
         }
@@ -2352,13 +2363,21 @@ namespace PRC {
         void parse(BitStreamParser& bs) {
             typeID.parse(bs); // PRC_TYPE_ASM_PartDefinition
             base.parse(bs, true);
-            bbox.parse(bs);
+            bbox.parse(bs, true);
             Nitems.parse(bs);
 
             cout << "PartDefinition - typeID: " << typeID.i << "/" << TYPE_ASM_PartDefinition << endl;
-            cout << "Nitems " << Nitems << endl;
+            cout << "Nitems " << Nitems.i << endl;
 
-            items.parse(bs, Nitems);
+
+            vector<Item> v;
+            for (size_t i=0; i<Nitems.i; i++) {
+                Item t;
+                //t.parse(bs);
+                v.push_back(t);
+            }
+
+            //items.parse(bs, Nitems);
             /*markup.parse(bs);
             Nviews.parse(bs);
             views.parse(bs, Nviews);
@@ -2537,30 +2556,30 @@ VRTransformPtr parsePRCStructure(string& data, PRC::FileStructureDescription& de
     size_t sizeGeometries = startExtraGeometries - startGeometries;
     size_t sizeExtraGeometries = startNextHeader - startExtraGeometries;
 
-    cout << "Header start: " << startHeader << ", size: " << sizeHeader << endl;
-    cout << "Globals start: " << startGlobals << ", size: " << sizeGlobals << endl;
-    cout << "Tree start: " << startTree << ", size: " << sizeTree << endl;
-    cout << "Tessellations start: " << startTessellations << ", size: " << sizeTessellations << endl;
-    cout << "Geometries start: " << startGeometries << ", size: " << sizeGeometries << endl;
-    cout << "ExtraGeometries start: " << startExtraGeometries << ", size: " << sizeExtraGeometries << endl;
+    //cout << "Header start: " << startHeader << ", size: " << sizeHeader << endl;
+    //cout << "Globals start: " << startGlobals << ", size: " << sizeGlobals << endl;
+    //cout << "Tree start: " << startTree << ", size: " << sizeTree << endl;
+    //cout << "Tessellations start: " << startTessellations << ", size: " << sizeTessellations << endl;
+    //cout << "Geometries start: " << startGeometries << ", size: " << sizeGeometries << endl;
+    //cout << "ExtraGeometries start: " << startExtraGeometries << ", size: " << sizeExtraGeometries << endl;
 
     size_t current = startHeader;
     auto& h = structure.header;
     h.parse(data, current);
 
-    cout << "  structure head " << string(h.PRC, 3) << endl;
-    cout << "  structure minVersion: " << h.minVersion << endl;
-    cout << "  structure authVersion: " << h.authVersion << endl;
-    cout << "  structure fileID: " << h.fileID << endl;
-    cout << "  structure appID: " << h.appID << endl;
-    cout << "  structure Nfiles: " << h.Nfiles << endl;
+    //cout << "  structure head " << string(h.PRC, 3) << endl;
+    //cout << "  structure minVersion: " << h.minVersion << endl;
+    //cout << "  structure authVersion: " << h.authVersion << endl;
+    //cout << "  structure fileID: " << h.fileID << endl;
+    //cout << "  structure appID: " << h.appID << endl;
+    //cout << "  structure Nfiles: " << h.Nfiles << endl;
 
 
     auto extractSection = [&](size_t& a, size_t N) -> string {
-        cout << "try to uncompress section, from " << a << " -> " << a+N << " ( " << N << " )";
+        //cout << "try to uncompress section, from " << a << " -> " << a+N << " ( " << N << " )";
         string udata(data.begin()+a, data.begin()+a+N);
         udata = decompressZlib(udata);
-        cout << " uncompressed data size: " << udata.size() << endl;
+        //cout << " uncompressed data size: " << udata.size() << endl;
         a += N;
         return udata;
     };
@@ -2662,10 +2681,14 @@ VRTransformPtr processPRC(PDF::Object& object) {
     cout << " N files " << header.Nfiles << endl;
     cout << " --== header end ==--" << endl << endl;
 
+    size_t i=0;
     for (PRC::FileStructureDescription& description : header.structureDescriptions) {
-        auto t = parsePRCStructure(stream.unpacked, description);
-        root->addChild(t);
-        //break; // TOTEST
+        if (i == 16) { // TOTEST
+            cout << "Process Part " << i << endl;
+            auto t = parsePRCStructure(stream.unpacked, description);
+            root->addChild(t);
+        }
+        i += 1;
     }
 
     return root;
