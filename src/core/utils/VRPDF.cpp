@@ -1979,11 +1979,11 @@ namespace PRC {
 
         void parse(BitStreamParser& bs, UInt N1) {
             typeID.parse(bs, TYPE_MKP_Leader);
-            base.parse(bs, true);
+            /*base.parse(bs, true);
             itemIDs.parse(bs, N1);
             //leaderIDs.parse(bs, N2); // ????
             tessellationID.parse(bs);
-            userData.parse(bs);
+            userData.parse(bs);*/
         }
     };
 
@@ -2069,13 +2069,16 @@ namespace PRC {
 
         void parse(BitStreamParser& bs) {
             Nitems.parse(bs);
+            cout << "MarkupData Nitems " << Nitems << endl;
             items.parse(bs, Nitems);
             Nleaders.parse(bs);
+            cout << "MarkupData Nleaders " << Nleaders << endl;
+            Nleaders.i = 1; // TOTEST
             leaders.parse(bs, Nleaders, Nitems);
-            Nmarkups.parse(bs);
+            /*Nmarkups.parse(bs);
             markups.parse(bs, Nmarkups);
             NannotationEntities.parse(bs);
-            annotationEntities.parse(bs, NannotationEntities);
+            annotationEntities.parse(bs, NannotationEntities);*/
         }
     };
 
@@ -2402,18 +2405,18 @@ namespace PRC {
         UserData userData;
 
         void parse(BitStreamParser& bs) {
-            bs.printNextBits(128);
-
             typeID.parse(bs, TYPE_ASM_PartDefinition);
+            cout << "PartDefinition - typeID: " << typeID.i << "/" << TYPE_ASM_PartDefinition << endl;
+
             base.parse(bs, true);
+            bs.printNextBits(1024);
             bbox.parse(bs);
             Nitems.parse(bs);
 
-            cout << "PartDefinition - typeID: " << typeID.i << "/" << TYPE_ASM_PartDefinition << endl;
             cout << "Nitems " << Nitems.i << endl;
 
             items.parse(bs, Nitems);
-            //markup.parse(bs);
+            markup.parse(bs);
             /*Nviews.parse(bs);
             views.parse(bs, Nviews);
             userData.parse(bs);*/
