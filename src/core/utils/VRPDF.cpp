@@ -873,7 +873,6 @@ namespace PRC {
             if (!bs.currentBit) {
                 bs.read();
             } else {
-                cout << "Warning in Int::parse, not implemented! " << endl;
                 while(bs.currentBit) {
                     bs.read();
                     unsigned int byte = bs.read(8);
@@ -955,6 +954,26 @@ namespace PRC {
         }
     };
 
+    struct TypeID : UInt {
+        void parse(BitStreamParser& bs, unsigned int type) {
+            UInt::parse(bs);
+            if (i != type) cout << "Warning in TypeID, expected " << type << ", got: " << i << endl;
+        }
+
+        void parse(BitStreamParser& bs, vector<unsigned int> types) {
+            UInt::parse(bs);
+            bool typeOK = false;
+            for (auto& t : types)
+                if (t == i) { typeOK = true; break; }
+            if (!typeOK) {
+                cout << "Warning in TypeID, got wrong type: " << i << endl;
+                cout << " expected one of: ";
+                for (auto& t : types) cout << t << " ";
+                cout << endl;
+            }
+        }
+    };
+
     template<class T>
     struct ArrayOf {
         vector<T> v;
@@ -1015,6 +1034,28 @@ namespace PRC {
     // https://ftp.linux.cz/pub/tex/CTAN/graphics/asymptote/prc/include/prc/PRC.h
 
     enum PRC_TYPE {
+
+        TYPE_SURF = 75,
+        TYPE_SURF_Base = TYPE_SURF + 1,	// Abstract type for all geometric surfaces.
+        TYPE_SURF_Blend01 = TYPE_SURF + 2,	// Blend surface.
+        TYPE_SURF_Blend02 = TYPE_SURF + 3,	// Blend Surface.
+        TYPE_SURF_Blend03 = TYPE_SURF + 4,	// Blend Surface.
+        TYPE_SURF_NURBS = TYPE_SURF + 5,	// Non Uniform BSpline surface.
+        TYPE_SURF_Cone = TYPE_SURF + 6,	// Cone.
+        TYPE_SURF_Cylinder = TYPE_SURF + 7,	// Cylinder.
+        TYPE_SURF_Cylindrical = TYPE_SURF + 8,	// Surface who is defined in cylindrical space.
+        TYPE_SURF_Offset = TYPE_SURF + 9,	// Offset surface.
+        TYPE_SURF_Pipe = TYPE_SURF + 10,	// Pipe.
+        TYPE_SURF_Plane = TYPE_SURF + 11,	// Plane.
+        TYPE_SURF_Ruled = TYPE_SURF + 12,	// Ruled surface.
+        TYPE_SURF_Sphere = TYPE_SURF + 13,	// Sphere.
+        TYPE_SURF_Revolution = TYPE_SURF + 14,	// Surface of revolution.
+        TYPE_SURF_Extrusion = TYPE_SURF + 15,	// Surface of extrusion.
+        TYPE_SURF_FromCurves = TYPE_SURF + 16,	// Surface from two curves.
+        TYPE_SURF_Torus = TYPE_SURF + 17,	// Torus.
+        TYPE_SURF_Transform = TYPE_SURF + 18,	// Transformed surface.
+        TYPE_SURF_Blend04 = TYPE_SURF + 19,	// defined for future use.
+
         TYPE_TOPO = 140,
         TYPE_TOPO_Context = TYPE_TOPO + 1,
         TYPE_TOPO_Item = TYPE_TOPO + 2,
@@ -1034,6 +1075,7 @@ namespace PRC {
         TYPE_TOPO_BrepDataCompress = TYPE_TOPO + 16,
         TYPE_TOPO_WIreBody = TYPE_TOPO + 17,
 
+
         TYPE_TESS = 170,
         TYPE_TESS_Base = TYPE_TESS + 1,
         TYPE_TESS_3D = TYPE_TESS + 2,
@@ -1041,6 +1083,27 @@ namespace PRC {
         TYPE_TESS_Face = TYPE_TESS + 4,
         TYPE_TESS_3D_Wire = TYPE_TESS + 5,
         TYPE_TESS_Markup = TYPE_TESS + 6,
+
+        TYPE_MISC = 200,
+        TYPE_MISC_Attribute = TYPE_MISC + 1,	// Entity attribute.
+        TYPE_MISC_CartesianTransformation = TYPE_MISC + 2,	// Cartesian transformation.
+        TYPE_MISC_EntityReference = TYPE_MISC + 3,	// Entity reference.
+        TYPE_MISC_MarkupLinkedItem = TYPE_MISC + 4,	// Link between a markup and an entity.
+        TYPE_MISC_ReferenceOnPRCBase = TYPE_MISC + 5,	// Reference pointing on a regular entity (not topological).
+        TYPE_MISC_ReferenceOnTopology = TYPE_MISC + 6,	// Reference pointing on a topological entity.
+        TYPE_MISC_GeneralTransformation = TYPE_MISC + 7,	// General transformation.
+
+        TYPE_RI = 230,
+        TYPE_RI_RepresentationItem = TYPE_RI + 1,	// Basic abstract type for representation items.
+        TYPE_RI_BrepModel = TYPE_RI + 2,	// Basic type for surfaces and solids.
+        TYPE_RI_Curve = TYPE_RI + 3,	// Basic type for curves.
+        TYPE_RI_Direction = TYPE_RI + 4,	// Optional point + vector.
+        TYPE_RI_Plane = TYPE_RI + 5,	// Construction plane, as opposed to planar surface.
+        TYPE_RI_PointSet = TYPE_RI + 6,	// Set of points.
+        TYPE_RI_PolyBrepModel = TYPE_RI + 7,	// Basic type to polyhedral surfaces and solids.
+        TYPE_RI_PolyWire = TYPE_RI + 8,	// Polyedric wireframe entity.
+        TYPE_RI_Set = TYPE_RI + 9,// Logical grouping of arbitrary number of representation items.
+        TYPE_RI_CoordinateSystem = TYPE_RI + 10,	// Coordinate system.
 
         TYPE_ASM = 300,
         TYPE_ASM_ModelFile = TYPE_ASM+1,
@@ -1053,6 +1116,15 @@ namespace PRC {
         TYPE_ASM_ProductOccurrence = TYPE_ASM+10,
         TYPE_ASM_PartDefinition = TYPE_ASM+11,
         TYPE_ASM_Filter = TYPE_ASM+20,
+
+
+        TYPE_MKP = 500,
+        TYPE_MKP_View = TYPE_MKP + 1,	// Grouping of markup by views.
+        TYPE_MKP_Markup = TYPE_MKP + 2,	// Basic type for simple markups.
+        TYPE_MKP_Leader = TYPE_MKP + 3,	// basic type for markup leader
+        TYPE_MKP_AnnotationItem = TYPE_MKP + 4,	// Usage of a markup.
+        TYPE_MKP_AnnotationSet = TYPE_MKP + 5,	// Group of annotations.
+        TYPE_MKP_AnnotationReference = TYPE_MKP + 6,	// Logical grouping of annotations for reference.
 
         TYPE_GRAPH = 700,
         TYPE_GRAPH_Style = TYPE_GRAPH + 1,	// Display style.
@@ -1158,12 +1230,12 @@ namespace PRC {
     };
 
     struct Entity_Schema_definition {
-        UInt type;
+        UInt entityType;
         UInt Ntokens;
         vector<UInt> tokens;
 
         void parse(BitStreamParser& bs) {
-            type.parse(bs);
+            entityType.parse(bs);
             Ntokens.parse(bs);
 
             for (int i=0; i<Ntokens.i; i++) {
@@ -1207,14 +1279,14 @@ namespace PRC {
         }
     };
 
-    struct PRC_TYPE_MISC_Attribute {
-        UInt attribute;
+    struct Attribute {
+        TypeID typeID;
         AttributeEntry title;
         UInt Npairs;
         vector<KeyValue> pairs;
 
         void parse(BitStreamParser& bs) {
-            attribute.parse(bs);
+            typeID.parse(bs, TYPE_MISC_Attribute);
             title.parse(bs);
             Npairs.parse(bs);
 
@@ -1228,17 +1300,16 @@ namespace PRC {
 
     struct AttributeData {
         UInt Nattributes;
-        vector<PRC_TYPE_MISC_Attribute> attributes;
+        vector<Attribute> attributes;
 
         void parse(BitStreamParser& bs) {
             Nattributes.parse(bs);
             //cout << " Nattributes " << Nattributes << endl;
 
             for (int i=0; i<Nattributes.i; i++) {
-                PRC_TYPE_MISC_Attribute a;
+                Attribute a;
                 a.parse(bs);
                 attributes.push_back(a);
-                break; // ------------------------- TOTEST
             }
         }
     };
@@ -1253,12 +1324,12 @@ namespace PRC {
         void parse(BitStreamParser& bs, bool referencable) {
             attribute.parse(bs);
             name.parse(bs);
-            //cout << "ContentPRCBase name: " << name << endl;
+            cout << "ContentPRCBase name: " << name << endl;
             if (referencable) {
                 CADID1.parse(bs);
                 CADID2.parse(bs);
                 structureID.parse(bs);
-                //cout << " ContentPRCBase IDs: " << CADID1 << ", " << CADID2 << ", " << structureID << endl;
+                cout << " ContentPRCBase IDs: " << CADID1 << ", " << CADID2 << ", " << structureID << endl;
             }
         }
     };
@@ -1351,8 +1422,8 @@ namespace PRC {
         }
     };
 
-    struct PRC_TYPE_TESS_Face {
-        UInt faceType;
+    struct TessFace {
+        TypeID typeID;
         UInt NlineAttributes;
         ArrayOf<UInt> lineAttibutes;
         UInt startWireData;
@@ -1368,8 +1439,7 @@ namespace PRC {
         UInt behavior;
 
         void parse(BitStreamParser& bs, UInt Ncoords) {
-            faceType.parse(bs);
-            if (faceType.i != TYPE_TESS_Face) cout << "Warning in PRC_TYPE_TESS_Face::parse, wrong type " << faceType.i << endl;
+            typeID.parse(bs, TYPE_TESS_Face);
 
             NlineAttributes.parse(bs);
             lineAttibutes.parse(bs, NlineAttributes);
@@ -1385,7 +1455,7 @@ namespace PRC {
             if (hasVertexColors.b) vertexColors.parse(bs, NtriangulatedData);
             if (NlineAttributes.i > 0) behavior.parse(bs);
 
-            /*cout << " parse PRC_TYPE_TESS_Face " << faceType << endl;
+            /*cout << " parse PRC_TYPE_TESS_Face " << typeID << endl;
             cout << "  NlineAttributes: " << NlineAttributes << endl;
             cout << "  startWireData: " << startWireData << endl;
             cout << "  sizesWireSize: " << sizesWireSize << endl;
@@ -1400,8 +1470,8 @@ namespace PRC {
         }
     };
 
-    struct PRC_TYPE_TESS_3D {
-        UInt tessType;
+    struct Tess3D {
+        TypeID typeID;
         ContentBaseTessData base;
         Bool hasFaces;
         Bool hasLoops;
@@ -1415,18 +1485,13 @@ namespace PRC {
         UInt NtriangleIndices; // always a multiple of 3
         ArrayOf<UInt> triangleIndices;
         UInt NfaceTesselation;
-        vector<PRC_TYPE_TESS_Face> faceTesselationData;
+        vector<TessFace> faceTesselationData;
         UInt NtexCoords;
         ArrayOf<Double> texCoords;
 
         void parse(BitStreamParser& bs) {
-            tessType.parse(bs);
-            //cout << "   tess type: " << tessType << endl;
-
+            typeID.parse(bs, TYPE_TESS_3D);
             base.parse(bs);
-
-            bs.printNextBits(64);
-
             hasFaces.parse(bs);
             hasLoops.parse(bs);
             mustCalcNormals.parse(bs);
@@ -1455,7 +1520,7 @@ namespace PRC {
             //cout << "   NfaceTesselation " << NfaceTesselation << endl;
 
             for (size_t i=0; i<NfaceTesselation.i; i++) {
-                PRC_TYPE_TESS_Face face;
+                TessFace face;
                 face.parse(bs, base.Ncoords);
                 faceTesselationData.push_back(face);
                 //if (i > 0) break;
@@ -1488,7 +1553,7 @@ namespace PRC {
             int stride = 1;
             if (!mustCalcNormals.b) stride = 2;
 
-            for (PRC_TYPE_TESS_Face& face : faceTesselationData) {
+            for (TessFace& face : faceTesselationData) {
                 UInt offset = face.startTriangulated;
                 UInt pTypes = face.usedEntitiesFlag;
 
@@ -1538,49 +1603,22 @@ namespace PRC {
     };
 
     struct FileStructureTessellation {
-        UInt ID;
+        TypeID typeID;
         ContentPRCBase base;
         UInt Ntessellations;
-        vector<PRC_TYPE_TESS_3D> tessellations;
+        vector<Tess3D> tessellations;
 
         void parse(BitStreamParser& bs) {
-            //cout << endl << "parse FileStructureTessellation" << endl;
+            typeID.parse(bs, TYPE_ASM_FileStructureTessellation);
 
-
-                /*cout << " bits: ";
-                for (int i=0; i<256; i++) {
-                    bool b = bs.read();
-                    cout << b;
-                }
-                cout << endl;
-                bs.reset();*/
-
-            ID.parse(bs);
-            //cout << " tessellation ID: " << ID << endl;
-
-            base.parse(bs, false); // checked :)
-
-            //bs.printNextBits(32*32*32);
+            base.parse(bs, false);
             Ntessellations.parse(bs);
-            //cout << "  N tessellation: " << Ntessellations << endl;
-
-
-
-                /*cout << endl;
-                for (int i=0; i<64; i++) {
-                    UInt I;
-                    I.parse(bs);
-                    cout << " ---- i " << I << endl;
-                    //unsigned int I = bs.read4(32);
-                    //printBits(I);
-                }
-                cout << endl;*/
 
             for (size_t i=0; i<Ntessellations.i; i++) {
                 UInt objType; objType.peek(bs);
                 //cout << " tessellation " << i << ", type: " << objType.i << endl;
                 if (objType.i == TYPE_TESS_3D) {
-                    PRC_TYPE_TESS_3D t;
+                    Tess3D t;
                     t.parse(bs);
                     tessellations.push_back(t);
                 }
@@ -1589,7 +1627,7 @@ namespace PRC {
     };
 
     struct TopologicalContext {
-        UInt ID;
+        TypeID typeID;
         ContentPRCBase info;
         Char behaviour;
         Double grandularity;
@@ -1602,7 +1640,7 @@ namespace PRC {
         //vector<PRC_TYPE_TOPO_Body> bodies;
 
         void parse(BitStreamParser& bs) {
-            ID.parse(bs);
+            typeID.parse(bs, TYPE_TOPO_Context);
             info.parse(bs, true);
             behaviour.parse(bs);
             grandularity.parse(bs);
@@ -1626,13 +1664,13 @@ namespace PRC {
     };
 
     struct FileStructureGeometry {
-        UInt ID;
+        TypeID typeID;
         ContentPRCBase info;
         FileStructureExactGeometry geometry;
         //UserData data;
 
         void parse(BitStreamParser& bs) {
-            ID.parse(bs);
+            typeID.parse(bs, TYPE_ASM_FileStructureGeometry);
             //cout << " geometry ID: " << ID << endl;
             info.parse(bs, true);
             geometry.parse(bs);
@@ -1732,9 +1770,9 @@ namespace PRC {
     struct BoundingBox {
         Vector3d vMin, vMax;
 
-        void parse(BitStreamParser& bs, bool is3D) {
-            vMin.parse(bs, is3D);
-            vMax.parse(bs, is3D);
+        void parse(BitStreamParser& bs) {
+            vMin.parse(bs, true);
+            vMax.parse(bs, true);
 
             cout << "Boundingbox " << vMin.x << "/" << vMax.x << "   " << vMin.y << "/" << vMax.y << "   " << vMin.z << "/" << vMax.z << endl;
         }
@@ -1752,15 +1790,17 @@ namespace PRC {
         }
     };
 
-    struct Item {
-        UInt typeID;
+
+
+    struct RepresentationItem {
+        TypeID typeID;
         RepresentationItemContent content;
 
         void parse(BitStreamParser& bs) {
-            //typeID.parse(bs);
-            //content.parse(bs, true);
+            typeID.parse(bs, {TYPE_RI_RepresentationItem, TYPE_RI_BrepModel, TYPE_RI_Curve, TYPE_RI_Direction, TYPE_RI_Plane, TYPE_RI_PointSet, TYPE_RI_PolyBrepModel, TYPE_RI_PolyWire, TYPE_RI_Set, TYPE_RI_CoordinateSystem });
+            content.parse(bs, true);
 
-            cout << " ---- Item: " << typeID.i << endl;
+            cout << " ---- RepresentationItem: " << typeID.i << endl;
         }
     };
 
@@ -1794,13 +1834,13 @@ namespace PRC {
     };
 
     struct ReferenceOnTopology {
-        UInt typeID;
+        TypeID typeID;
         UInt entityType;
         Bool hasExactGeometry;
         AdditionalTargetData data;
 
         void parse(BitStreamParser& bs) {
-            typeID.parse(bs); // PRC_TYPE_MISC_ReferenceOnTopology
+            typeID.parse(bs, TYPE_MISC_ReferenceOnTopology);
             entityType.parse(bs);
             hasExactGeometry.parse(bs);
             if (hasExactGeometry.b) data.parse(bs);
@@ -1808,14 +1848,14 @@ namespace PRC {
     };
 
     struct ReferenceOnPRCBase {
-        UInt typeID;
+        TypeID typeID;
         UInt entityType;
         Bool inSameFileStrucure;
         CompressedUniqueID fileStructureID;
         UInt ID;
 
         void parse(BitStreamParser& bs) {
-            typeID.parse(bs); // PRC_TYPE_MISC_ReferenceOnPRCBase
+            typeID.parse(bs, TYPE_MISC_ReferenceOnPRCBase);
             entityType.parse(bs);
             inSameFileStrucure.parse(bs);
             if (!inSameFileStrucure.b) fileStructureID.parse(bs);
@@ -1848,12 +1888,12 @@ namespace PRC {
     };
 
     struct ContentExtendedEntityReference {
-        UInt MarkupLinkedItem;
+        TypeID typeID;
         ContentEntityReference refOccurence;
         ReferenceData refData;
 
         void parse(BitStreamParser& bs, bool referencabe) {
-            MarkupLinkedItem.parse(bs);
+            typeID.parse(bs, TYPE_MISC_MarkupLinkedItem);
             refOccurence.parse(bs, referencabe);
             refData.parse(bs);
         }
@@ -1894,7 +1934,7 @@ namespace PRC {
     };
 
     struct MarkupLinkedItem {
-        UInt typeID;
+        TypeID typeID;
         ContentExtendedEntityReference entityRef;
         Bool showMarkup;
         Bool deleteMarkup;
@@ -1903,7 +1943,7 @@ namespace PRC {
         UserData userData;
 
         void parse(BitStreamParser& bs) {
-            typeID.parse(bs); // PRC_TYPE_MISC_MarkupLinkedItem
+            typeID.parse(bs, TYPE_MISC_MarkupLinkedItem);
             entityRef.parse(bs, false);
             showMarkup.parse(bs);
             deleteMarkup.parse(bs);
@@ -1914,14 +1954,14 @@ namespace PRC {
     };
 
     struct ReferenceUniqueIdentifier {
-        UInt typeID;
+        TypeID typeID;
         UInt refType;
         Bool inSameFileStructure;
         CompressedUniqueID fileStructureID;
         UInt entityID;
 
         void parse(BitStreamParser& bs) {
-            typeID.parse(bs); // PRC_TYPE_MISC_ReferenceOnPRCBase
+            typeID.parse(bs, TYPE_MISC_ReferenceOnPRCBase);
             refType.parse(bs);
             inSameFileStructure.parse(bs);
             if (!inSameFileStructure.b) fileStructureID.parse(bs);
@@ -1930,7 +1970,7 @@ namespace PRC {
     };
 
     struct MarkupLeader {
-        UInt typeID;
+        TypeID typeID;
         PRCBaseWithGraphics base;
         ArrayOf<ReferenceUniqueIdentifier> itemIDs;
         //ArrayOf<ReferenceUniqueIdentifier> leaderIDs;
@@ -1938,7 +1978,7 @@ namespace PRC {
         UserData userData;
 
         void parse(BitStreamParser& bs, UInt N1) {
-            typeID.parse(bs); // PRC_TYPE_MKP_Leader
+            typeID.parse(bs, TYPE_MKP_Leader);
             base.parse(bs, true);
             itemIDs.parse(bs, N1);
             //leaderIDs.parse(bs, N2); // ????
@@ -1948,7 +1988,7 @@ namespace PRC {
     };
 
     struct Markup {
-        UInt typeID;
+        TypeID typeID;
         PRCBaseWithGraphics base;
         UInt type;
         UInt subType;
@@ -1960,7 +2000,7 @@ namespace PRC {
         UserData data;
 
         void parse(BitStreamParser& bs) {
-            typeID.parse(bs); // PRC_TYPE_MKP_Markup
+            typeID.parse(bs, TYPE_MKP_Markup);
             base.parse(bs, true);
             type.parse(bs);
             subType.parse(bs);
@@ -1974,13 +2014,13 @@ namespace PRC {
     };
 
     struct AnnotationItem {
-        UInt typeID;
+        TypeID typeID;
         PRCBaseWithGraphics base;
         ReferenceUniqueIdentifier refID;
         UserData data;
 
         void parse(BitStreamParser& bs) {
-            typeID.parse(bs); // PRC_TYPE_MKP_AnnotationItem
+            typeID.parse(bs, TYPE_MKP_AnnotationItem);
             base.parse(bs, true);
             refID.parse(bs);
             data.parse(bs);
@@ -1988,14 +2028,14 @@ namespace PRC {
     };
 
     struct AnnotationSet {
-        UInt typeID;
+        TypeID typeID;
         PRCBaseWithGraphics base;
         UInt Nannotations;
         ArrayOf<AnnotationItem> items; // TODO: should be any of AnnotationEntities
         UserData data;
 
         void parse(BitStreamParser& bs) {
-            typeID.parse(bs); // PRC_TYPE_MKP_AnnotationSet
+            typeID.parse(bs, TYPE_MKP_AnnotationSet);
             base.parse(bs, true);
             Nannotations.parse(bs);
             items.parse(bs, Nannotations);
@@ -2004,13 +2044,13 @@ namespace PRC {
     };
 
     struct AnnotationReference {
-        UInt typeID;
+        TypeID typeID;
         PRCBaseWithGraphics base;
         UInt Nitems;
         ArrayOf<ReferenceUniqueIdentifier> uniqueIdentifiers;
 
         void parse(BitStreamParser& bs) {
-            typeID.parse(bs); // PRC_TYPE_MKP_AnnotationReference
+            typeID.parse(bs, TYPE_MKP_AnnotationReference);
             base.parse(bs, true);
             Nitems.parse(bs);
             uniqueIdentifiers.parse(bs, Nitems);
@@ -2128,7 +2168,7 @@ namespace PRC {
     };
 
     struct SurfPlane {
-        UInt typeID;
+        TypeID typeID;
         ContentSurface surface;
         Transformation transformation;
         Domain domain;
@@ -2138,7 +2178,7 @@ namespace PRC {
         Double coeffBV;
 
         void parse(BitStreamParser& bs) {
-            typeID.parse(bs); // PRC_TYPE_SURF_Plane
+            typeID.parse(bs, TYPE_SURF_Plane);
             surface.parse(bs);
             transformation.parse(bs, true);
             domain.parse(bs);
@@ -2150,7 +2190,7 @@ namespace PRC {
     };
 
     struct LightObject {
-        UInt typeID;
+        TypeID typeID;
         ContentPRCBase base;
         UInt ambientID;
         UInt diffuseID;
@@ -2165,7 +2205,8 @@ namespace PRC {
         Double fallOffExponent;
 
         void parse(BitStreamParser& bs) {
-            typeID.parse(bs); // TYPE_GRAPH_AmbientLight, TYPE_GRAPH_PointLight, TYPE_GRAPH_DirectionalLight, TYPE_GRAPH_SpotLight
+            typeID.parse(bs, { TYPE_GRAPH_AmbientLight, TYPE_GRAPH_PointLight, TYPE_GRAPH_DirectionalLight, TYPE_GRAPH_SpotLight } );
+
             base.parse(bs, true);
             ambientID.parse(bs);
             diffuseID.parse(bs);
@@ -2193,7 +2234,7 @@ namespace PRC {
     };
 
     struct Camera {
-        UInt typeID;
+        TypeID typeID;
         ContentPRCBase base;
         Bool orthographic;
         Vector3d position;
@@ -2207,7 +2248,7 @@ namespace PRC {
         Double zoom;
 
         void parse(BitStreamParser& bs) {
-            typeID.parse(bs); // PRC_TYPE_GRAPH_Camera
+            typeID.parse(bs, TYPE_GRAPH_Camera);
             base.parse(bs, true);
             orthographic.parse(bs);
             position.parse(bs, true);
@@ -2223,7 +2264,7 @@ namespace PRC {
     };
 
     struct SceneDisplayParameters {
-        UInt typeID;
+        TypeID typeID;
         ContentPRCBase base;
         Bool isActive;
         UInt Nlights;
@@ -2241,7 +2282,7 @@ namespace PRC {
         Bool absolutePositions;
 
         void parse(BitStreamParser& bs) {
-            typeID.parse(bs); // PRC_TYPE_GRAPH_SceneDisplayParameters
+            typeID.parse(bs, TYPE_GRAPH_SceneDisplayParameters);
             base.parse(bs, true);
             isActive.parse(bs);
             Nlights.parse(bs);
@@ -2274,12 +2315,12 @@ namespace PRC {
     };
 
     struct EntityReference {
-        UInt typeID;
+        TypeID typeID;
         ContentEntityReference entityRef;
         UserData data;
 
         void parse(BitStreamParser& bs) {
-            typeID.parse(bs); // PRC_TYPE_MISC_EntityReference
+            typeID.parse(bs, TYPE_MISC_EntityReference);
             entityRef.parse(bs, true);
             data.parse(bs);
         }
@@ -2298,14 +2339,14 @@ namespace PRC {
     };
 
     struct Filter {
-        UInt typeID;
+        TypeID typeID;
         ContentPRCBase base;
         ContentLayerFilterItems layerFilter;
         ContentEntityFilterItems entityFilter;
         UserData userData;
 
         void parse(BitStreamParser& bs) {
-            typeID.parse(bs); // PRC_TYPE_ASM_Filter
+            typeID.parse(bs, TYPE_ASM_Filter);
             base.parse(bs, true);
             layerFilter.parse(bs);
             entityFilter.parse(bs);
@@ -2314,7 +2355,7 @@ namespace PRC {
     };
 
     struct View {
-        UInt typeID;
+        TypeID typeID;
         PRCBaseWithGraphics base;
         UInt Nannotations;
         ArrayOf<ReferenceUniqueIdentifier> annotationIDs;
@@ -2331,7 +2372,7 @@ namespace PRC {
         UserData userData;
 
         void parse(BitStreamParser& bs) {
-            typeID.parse(bs); // PRC_TYPE_MKP_View
+            typeID.parse(bs, TYPE_MKP_View);
             base.parse(bs, true);
             Nannotations.parse(bs);
             annotationIDs.parse(bs, Nannotations);
@@ -2350,36 +2391,30 @@ namespace PRC {
     };
 
     struct PartDefinition {
-        UInt typeID;
+        TypeID typeID;
         PRCBaseWithGraphics base;
         BoundingBox bbox;
         UInt Nitems;
-        ArrayOf<Item> items;
+        ArrayOf<RepresentationItem> items;
         MarkupData markup;
         UInt Nviews;
         ArrayOf<View> views;
         UserData userData;
 
         void parse(BitStreamParser& bs) {
-            typeID.parse(bs); // PRC_TYPE_ASM_PartDefinition
+            bs.printNextBits(128);
+
+            typeID.parse(bs, TYPE_ASM_PartDefinition);
             base.parse(bs, true);
-            bbox.parse(bs, true);
+            bbox.parse(bs);
             Nitems.parse(bs);
 
             cout << "PartDefinition - typeID: " << typeID.i << "/" << TYPE_ASM_PartDefinition << endl;
             cout << "Nitems " << Nitems.i << endl;
 
-
-            vector<Item> v;
-            for (size_t i=0; i<Nitems.i; i++) {
-                Item t;
-                //t.parse(bs);
-                v.push_back(t);
-            }
-
-            //items.parse(bs, Nitems);
-            /*markup.parse(bs);
-            Nviews.parse(bs);
+            items.parse(bs, Nitems);
+            //markup.parse(bs);
+            /*Nviews.parse(bs);
             views.parse(bs, Nviews);
             userData.parse(bs);*/
 
@@ -2431,7 +2466,7 @@ namespace PRC {
     };
 
     struct ProductOccurence {
-        UInt typeID;
+        TypeID typeID;
         PRCBaseWithGraphics base;
         ReferencesOfProductOcurrence references;
         Char behavior;
@@ -2452,7 +2487,7 @@ namespace PRC {
         UserData useData;
 
         void parse(BitStreamParser& bs) {
-            typeID.parse(bs); // PRC_TYPE_ASM_ProductOccurrence
+            typeID.parse(bs, TYPE_ASM_ProductOccurrence);
             base.parse(bs, true);
             references.parse(bs);
             behavior.parse(bs);
@@ -2475,13 +2510,13 @@ namespace PRC {
     };
 
     struct ASMFileStructure {
-        UInt typeID;
+        TypeID typeID;
         ContentPRCBase base;
         UInt nextIndex;
         UInt productOccurenceID;
 
         void parse(BitStreamParser& bs) {
-            typeID.parse(bs); // PRC_TYPE_ASM_FileStructure
+            typeID.parse(bs, TYPE_ASM_FileStructure);
             base.parse(bs, false);
             nextIndex.parse(bs);
             productOccurenceID.parse(bs);
@@ -2489,7 +2524,7 @@ namespace PRC {
     };
 
     struct FileStructureTree {
-        UInt typeID;
+        TypeID typeID;
         ContentPRCBase base;
         UInt Nparts;
         ArrayOf<PartDefinition> partDefintions;
@@ -2499,7 +2534,7 @@ namespace PRC {
         UserData useData;
 
         void parse(BitStreamParser& bs) {
-            typeID.parse(bs); // PRC_TYPE_ASM_FileStructureTree
+            typeID.parse(bs, TYPE_ASM_FileStructureTree);
             base.parse(bs, false);
             Nparts.parse(bs);
 
@@ -2594,14 +2629,14 @@ VRTransformPtr parsePRCStructure(string& data, PRC::FileStructureDescription& de
     BitStreamParser bst(0, dataTessellations.size(), (unsigned char*)&dataTessellations[0]);
     BitStreamParser bsg(0, dataGeometries.size(), (unsigned char*)&dataGeometries[0]);
 
-    structure.tree.parse(bstr);
-    //structure.tessellation.parse(bst);
+    //structure.tree.parse(bstr);
+    structure.tessellation.parse(bst);
     //structure.geometry.parse(bsg);
 
 
     auto root = VRTransform::create("Object");
 
-    for (PRC::PRC_TYPE_TESS_3D& t : structure.tessellation.tessellations) {
+    for (PRC::Tess3D& t : structure.tessellation.tessellations) {
         root->addChild( t.asGeometry() );
     }
 
@@ -2683,11 +2718,11 @@ VRTransformPtr processPRC(PDF::Object& object) {
 
     size_t i=0;
     for (PRC::FileStructureDescription& description : header.structureDescriptions) {
-        if (i == 16) { // TOTEST
+        //if (i == 16) { // TOTEST
             cout << "Process Part " << i << endl;
             auto t = parsePRCStructure(stream.unpacked, description);
             root->addChild(t);
-        }
+        //}
         i += 1;
     }
 
