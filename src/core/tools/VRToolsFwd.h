@@ -26,6 +26,9 @@ ptrFwd(VRRecorder);
 ptrFwd(VRPathtool);
 ptrFwd(VRSnappingEngine);
 ptrFwd(VRConstructionKit);
+ptrFwd(VRGizmo);
+ptrFwd(VRTimeline);
+ptrFwd(VRPlayer);
 
 }
 

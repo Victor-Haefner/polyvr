@@ -4801,6 +4801,12 @@
 			<Option target="Release" />
 			<Option target="PVR-Tools-d" />
 		</Unit>
+		<Unit filename="src/core/tools/VRGizmo.cpp">
+			<Option target="PVR-Tools-d" />
+		</Unit>
+		<Unit filename="src/core/tools/VRGizmo.h">
+			<Option target="PVR-Tools-d" />
+		</Unit>
 		<Unit filename="src/core/tools/VRKinematictool.cpp">
 			<Option target="Release" />
 			<Option target="PVR-Tools-d" />
@@ -4833,6 +4839,12 @@
 			<Option target="Release" />
 			<Option target="PVR-Tools-d" />
 		</Unit>
+		<Unit filename="src/core/tools/VRPlayer.cpp">
+			<Option target="PVR-Tools-d" />
+		</Unit>
+		<Unit filename="src/core/tools/VRPlayer.h">
+			<Option target="PVR-Tools-d" />
+		</Unit>
 		<Unit filename="src/core/tools/VRProjectManager.cpp">
 			<Option target="Release" />
 			<Option target="PVR-Tools-d" />
@@ -4840,6 +4852,12 @@
 		<Unit filename="src/core/tools/VRProjectManager.h">
 			<Option target="Release" />
 			<Option target="PVR-Tools-d" />
+		</Unit>
+		<Unit filename="src/core/tools/VRPyTools.cpp">
+			<Option target="PVR-Scripting-d" />
+		</Unit>
+		<Unit filename="src/core/tools/VRPyTools.h">
+			<Option target="PVR-Scripting-d" />
 		</Unit>
 		<Unit filename="src/core/tools/VRQRCode.cpp">
 			<Option target="Release" />
@@ -4879,6 +4897,12 @@
 		</Unit>
 		<Unit filename="src/core/tools/VRTextureRenderer.h">
 			<Option target="Release" />
+			<Option target="PVR-Tools-d" />
+		</Unit>
+		<Unit filename="src/core/tools/VRTimeline.cpp">
+			<Option target="PVR-Tools-d" />
+		</Unit>
+		<Unit filename="src/core/tools/VRTimeline.h">
 			<Option target="PVR-Tools-d" />
 		</Unit>
 		<Unit filename="src/core/tools/VRToolsFwd.h">
@@ -4936,6 +4960,9 @@
 		<Unit filename="src/core/tools/selection/VRSelector.h">
 			<Option target="Release" />
 			<Option target="PVR-Tools-d" />
+		</Unit>
+		<Unit filename="src/core/utils/RPCUtils.h">
+			<Option target="PVR-Utils-d" />
 		</Unit>
 		<Unit filename="src/core/utils/Thread.cpp">
 			<Option target="PVR-Utils-d" />

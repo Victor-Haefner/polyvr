@@ -82,6 +82,8 @@
 #include "VRPyCodeCompletion.h"
 #include "VRPyPointCloud.h"
 
+#include "core/tools/VRPyTools.h"
+
 #include "addons/Character/VRPyCharacter.h"
 #include "addons/Algorithms/VRPyGraphLayout.h"
 #include "addons/Algorithms/VRPyPathFinding.h"
@@ -319,6 +321,10 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPyXMLElement>("XMLElement", pModVR);
     sm->registerModule<VRPySpreadsheet>("Spreadsheet", pModVR);
     sm->registerModule<VRPyTable>("Table", pModVR);
+
+    sm->registerModule<VRPyPlayer>("Player", pModVR);
+    sm->registerModule<VRPyTimeline>("Timeline", pModVR);
+    sm->registerModule<VRPyGizmo>("Gizmo", pModVR, VRPyTransform::typeRef);
 
 	sm->registerModule<VRPyBRepSurface>("BRepSurface", pModVR);
 	sm->registerModule<VRPyBRepEdge>("BRepEdge", pModVR);
