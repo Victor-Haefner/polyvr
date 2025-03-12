@@ -12,8 +12,9 @@ class VRPlayer : public std::enable_shared_from_this<VRPlayer> {
 	private:
 	    VRAnimCbPtr callback;
 	    VRUpdateCbPtr updateCb;
-	    double progress;
-	    double speed;
+	    double progress = 0;
+	    double speed = 0;
+	    bool loop = false;
 
 	    double lastUpdateTime = 0;
 
@@ -27,6 +28,7 @@ class VRPlayer : public std::enable_shared_from_this<VRPlayer> {
 		VRPlayerPtr ptr();
 
 		void setCallback(VRAnimCbPtr cb);
+		void setLoop(bool b);
 
 		void reset();
 		void pause();
