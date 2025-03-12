@@ -10,12 +10,31 @@ OSG_BEGIN_NAMESPACE;
 
 class VRGizmo : public VRTransform {
 	private:
+	    VRTransformPtr target;
+	    VRUpdateCbPtr updateCb;
+
+	    VRGeometryPtr cRot;
+	    VRGeometryPtr cRotX;
+	    VRGeometryPtr cRotY;
+	    VRGeometryPtr cRotZ;
+	    VRGeometryPtr aTransX;
+	    VRGeometryPtr aTransY;
+	    VRGeometryPtr aTransZ;
+	    VRGeometryPtr aScaleX;
+	    VRGeometryPtr aScaleY;
+	    VRGeometryPtr aScaleZ;
+
+	    void setup();
+	    void update();
+
 	public:
 		VRGizmo(string name);
 		~VRGizmo();
 
 		static VRGizmoPtr create(string name = "gizmo");
 		VRGizmoPtr ptr();
+
+        void setTarget(VRTransformPtr t);
 };
 
 OSG_END_NAMESPACE;
