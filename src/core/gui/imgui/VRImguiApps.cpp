@@ -14,31 +14,40 @@ ImAppLauncher::ImAppLauncher(string ID, string pnl, string ts) : ID(ID), name(ID
 
 ImAppLauncher::~ImAppLauncher() {}
 
-void ImAppLauncher::render(string filter, ImImage& preview) {
+void ImAppLauncher::render(string filter, ImImage& preview, int fullWidth, int colWidth1, int pathLabelN) {
     if (filter != "") {
         if (!contains(name, filter, false)) return;
     }
 
-    string label = name;
+    auto ellipsize = [&](const string& s) {
+        int N = pathLabelN;
+        string lbl = s;
+        if (s.length() > N) lbl = ".." + subString(lbl, lbl.length()-(N-2), (N-2));
+        return lbl;
+    };
+
+    float availWidth = 0;
     bool doHover = false;
-    float w = 0;
-    if (label.length() > 25) label = ".." + subString(label, label.length()-23, 23);
     ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_CollapsingHeader;
 
     if (!sensitive) ImGui::BeginDisabled();
 
     ImVec2 cursorBeg = ImGui::GetCursorScreenPos();
     ImGui::BeginGroup();
-        w = ImGui::GetContentRegionAvail().x;
         ImGui::Spacing();
         ImGui::Indent(5.0);
         ImGui::Columns(2);
-            ImGui::SetColumnWidth(-1, w*0.4);
+            float width2 = fullWidth - colWidth1;
+
+            ImGui::SetColumnWidth(-1, colWidth1);
             if (ImGui::CollapsingHeader(("advanced##"+ID).c_str(), flags) && sensitive) {
                 if (ImGui::Button(("Run without scripts##"+ID).c_str())) uiSignal("on_toggle_app_no_scripts", {{"ID",ID}});
             }
+
             ImGui::NextColumn();
+            string label = ellipsize(name);
             ImGui::Text(label.c_str());
+
             ImGui::SameLine();
             if (!running) {
                 if (ImGui::Button(("Run##"+ID).c_str())) uiSignal("on_toggle_app", {{"ID",ID}});
@@ -51,7 +60,7 @@ void ImAppLauncher::render(string filter, ImImage& preview) {
     ImVec2 cursorEnd = ImGui::GetCursorScreenPos();
 
     ImVec2 min_pos = ImVec2(ImMin(cursorBeg.x, cursorEnd.x), ImMin(cursorBeg.y, cursorEnd.y));
-    ImVec2 max_pos = ImVec2(ImMax(cursorBeg.x+w, cursorEnd.x+w), ImMax(cursorBeg.y, cursorEnd.y));
+    ImVec2 max_pos = ImVec2(ImMax(cursorBeg.x+fullWidth, cursorEnd.x+fullWidth), ImMax(cursorBeg.y, cursorEnd.y));
     ImRect rect(min_pos, max_pos);
 
     ImGuiID id = ImGui::GetCurrentWindow()->GetID(string("appLauncher"+ID).c_str());
@@ -66,13 +75,13 @@ void ImAppLauncher::render(string filter, ImImage& preview) {
     if (!sensitive) ImGui::EndDisabled();
 
     if (doHover && false) { // TODO: load actual screenshot!
-        int h = w * 9.0/16.0;
+        int h = fullWidth * 9.0/16.0;
         auto p = ImGui::GetCursorScreenPos();
         ImGui::SetNextWindowPos(ImVec2(p.x, p.y+5));
-        ImGui::SetNextWindowSize(ImVec2(w,h));
+        ImGui::SetNextWindowSize(ImVec2(fullWidth,h));
         ImGui::Begin("OpenGL Texture Text", 0, ImGuiWindowFlags_NoNav | ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoInputs);
         preview.read("test.png");
-        preview.render(w, h);
+        preview.render(fullWidth, h);
         ImGui::End();
     }
 }
@@ -99,9 +108,16 @@ void ImAppPanel::render(string filter, map<string, ImAppLauncher>& launcherPool,
         ImGui::Spacing();
     }
 
+    float scale = uiStrScale();
+    float colWidth1 = ImGui::CalcTextSize("Run without scripts").x + 40.0f; // Add padding
+    float fullWidth = ImGui::GetContentRegionAvail().x - 20.0*scale;
+    float labelWidth = fullWidth - colWidth1 - 40*scale;
+    float charWidth = 7.1*scale;
+    int N = labelWidth / charWidth;
+
     for (auto& lID : launchers) {
         auto& l = launcherPool[lID];
-        l.render(filter, preview);
+        l.render(filter, preview, fullWidth, colWidth1, N);
     }
 }
 

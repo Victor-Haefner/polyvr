@@ -125,13 +125,18 @@ string uiGetParameter(string name, string def) {
     else return def;
 }
 
-float strWidth(const string& s) { // TODO
+float uiStrWidth(const string& s) { // TODO
     ImGuiStyle& style = ImGui::GetStyle();
     ImGuiIO& io = ImGui::GetIO();
 
     float p = style.FramePadding.x * 2.0f;
     //return ImGui::CalcTextSize(s.c_str()).x + p; // CalcTextSize may crash when starting maximized
     return s.size()*6.5*io.FontGlobalScale + p;
+}
+
+float uiStrScale() {
+    ImGuiIO& io = ImGui::GetIO();
+    return io.FontGlobalScale;
 }
 
 static bool borderGlowActive = false;

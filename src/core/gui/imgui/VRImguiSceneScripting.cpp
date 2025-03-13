@@ -121,7 +121,7 @@ void ImScriptList::computeMinWidth() {
     width = max(width, float(Rinput+padding));
     for (auto& g : groups) {
         for (auto& s : g.second.scripts) {
-            auto R = strWidth( s.name );
+            auto R = uiStrWidth( s.name );
             width = max(width, R*fs+padding);
         }
     }
@@ -153,7 +153,7 @@ void ImScriptList::renderScriptEntry(ImScriptEntry& scriptEntry) {
 		ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 2);
 
         if (input) {
-            Rinput = strWidth( input->value ) + 5;
+            Rinput = uiStrWidth( input->value ) + 5;
             if (input->render(Rinput)) {
                 script = input->value;
                 selected = bID;

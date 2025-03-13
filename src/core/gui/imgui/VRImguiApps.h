@@ -17,7 +17,7 @@ class ImAppLauncher {
         ImAppLauncher() {}
         ImAppLauncher(string ID, string panel, string timestamp);
         ~ImAppLauncher();
-        void render(string filter, ImImage& preview);
+        void render(string filter, ImImage& preview, int fullWidth, int colWidth1, int pathLabelN);
 };
 
 class ImAppPanel {

@@ -603,7 +603,7 @@ ImAboutDialog::ImAboutDialog() : ImDialog("about") {
 
 void centeredText(string txt) {
     ImGuiStyle& style = ImGui::GetStyle();
-    float size = strWidth(txt);
+    float size = uiStrWidth(txt);
     float avail = ImGui::GetContentRegionAvail().x;
     float off = (avail - size) * 0.5;
     if (off > 0.0f) ImGui::SetCursorPosX(ImGui::GetCursorPosX() + off);
