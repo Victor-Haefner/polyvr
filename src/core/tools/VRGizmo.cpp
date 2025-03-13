@@ -167,7 +167,6 @@ void VRGizmo::update() {
 
         auto tP = t->getWorldPose();
         double x = tP->pos()[dof] - mBase->pos()[dof];
-        cout << " -- " << x << endl;
 
         auto P = Pose::create( *tBase );
         Vec3d p;
@@ -185,11 +184,29 @@ void VRGizmo::update() {
 
         auto tP = t->getWorldPose();
         double x = tP->pos()[dof] - mBase->pos()[dof];
-        cout << " -- " << x << endl;
 
         Vec3d s = sBase;
         s[dof] += x;
         target->setWorldScale(s);
+    };
+
+    auto processRotation = [&](VRGeometryPtr t, int dof) {
+        if (!mBase) {
+            mBase = t->getWorldPose();
+            rBase1 = t->getEuler();
+            tBase = target->getWorldPose();
+            rBase2 = target->getEuler();
+        }
+
+        auto r = t->getEuler();
+        double x = r[dof] - rBase1[dof];
+        cout << " -- " << x << endl;
+
+        auto P = Pose::create( *tBase );
+        Vec3d s = rBase2;
+        s[dof] += x;
+        P->setEuler(s[0], s[1], s[2]);
+        target->setWorldPose(P);
     };
 
     // check for dragging part
@@ -199,6 +216,9 @@ void VRGizmo::update() {
     else if (aScaleX->isDragged()) processScale(aScaleX, 0);
     else if (aScaleY->isDragged()) processScale(aScaleY, 1);
     else if (aScaleZ->isDragged()) processScale(aScaleZ, 2);
+    else if (cRotX->isDragged()) processRotation(cRotX, 0);
+    else if (cRotY->isDragged()) processRotation(cRotY, 1);
+    else if (cRotZ->isDragged()) processRotation(cRotZ, 2);
     else mBase = 0;
 }
 

@@ -15,6 +15,8 @@ class VRGizmo : public VRTransform {
 	    PosePtr tBase;
 	    PosePtr mBase;
 	    Vec3d sBase;
+	    Vec3d rBase1;
+	    Vec3d rBase2;
 
 	    VRGeometryPtr cRot;
 	    VRGeometryPtr cRotX;
