@@ -153,6 +153,12 @@ PosePtr Pose::inverse() {
     return p;
 }
 
+Pose Pose::operator * (const Pose& other) const {
+    auto m1 = asMatrix();
+    m1.mult( other.asMatrix() );
+    return Pose(m1);
+}
+
 bool Pose::operator == (const Pose& other) const {
     return asMatrix() == other.asMatrix();
 }

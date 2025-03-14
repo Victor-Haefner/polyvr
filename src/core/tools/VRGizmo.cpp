@@ -20,7 +20,11 @@ VRGizmo::~VRGizmo() {}
 VRGizmoPtr VRGizmo::create(string name) { auto g = VRGizmoPtr( new VRGizmo(name) ); g->setup(); return g; }
 VRGizmoPtr VRGizmo::ptr() { return static_pointer_cast<VRGizmo>(shared_from_this()); }
 
-void VRGizmo::setTarget(VRTransformPtr t) { target = t; }
+void VRGizmo::setTarget(VRTransformPtr t) {
+    target = t;
+    auto bb = target->getBoundingbox();
+    tOffset = bb->center();
+}
 
 void VRGizmo::setup() {
     auto setupMaterial = [&](string name, Color3f c) {
@@ -86,12 +90,19 @@ void VRGizmo::update() {
     if (!isVisible()) return;
     if (!target) return;
 
-    auto bb = target->getWorldBoundingbox();
-    setFrom( bb->center() );
-
     auto cam = VRScene::getCurrent()->getActiveCamera();
     auto cP = cam->getWorldPose();
-    Vec3d cD  = cP->pos() - bb->center();
+
+    Pose T ( tOffset);
+    Pose tP = (*target->getWorldPose()) * T;
+    Vec3d cD  = cP->pos() - tP.pos();
+
+    bool anyRotDragged = cRot->isDragged() || cRotX->isDragged() || cRotY->isDragged() || cRotZ->isDragged();
+    bool anyTransDragged = aTransX->isDragged() || aTransY->isDragged() || aTransZ->isDragged();
+    bool anyScaleDragged = aScaleX->isDragged() || aScaleY->isDragged() || aScaleZ->isDragged();
+    bool anyDragged = anyRotDragged || anyTransDragged || anyScaleDragged;
+
+    if (!(anyRotDragged || anyScaleDragged)) setFrom(tP.pos());
 
     auto P = Pose::create(Vec3d(), cP->x(), cD);
     P->makeDirOrthogonal();
@@ -116,8 +127,8 @@ void VRGizmo::update() {
             u[dof] *= -1;
         }
 
-        Vec3d _u = t->getUp();
-        if (_u[dof]*u[dof] > 0) return;
+        Vec3d _f = t->getFrom();
+        if (abs(_f[dof]-f[dof]) < 1e-3) return;
 
         t->setFrom(f);
         t->setUp(u);
@@ -131,7 +142,7 @@ void VRGizmo::update() {
         if (cD[dof] < 0) f[dof] *= -1;
 
         Vec3d _f = t->getFrom();
-        if (_f[dof]*f[dof] > 0) return;
+        if (abs(_f[dof]-f[dof]) < 1e-3) return;
         t->setFrom(f);
     };
 
@@ -170,28 +181,48 @@ void VRGizmo::update() {
         auto tP = t->getWorldPose();
         double x = tP->pos()[dof] - mBase->pos()[dof];
 
-        Vec3d s = sBase;
+        Pose T ( tOffset);
+        Pose Ti(-tOffset);
+
+        Pose B = (*tBase);
+        Pose Br(Vec3d(), B.dir(), B.up());
+        Pose Bt( B.pos() );
+
+        Pose S;
+        Vec3d s = Vec3d(1,1,1);
         s[dof] += x;
-        target->setWorldScale(s);
+        S.setScale( s );
+
+        Pose Bs;
+        Bs.setScale( B.scale() );
+
+        target->setWorldPose( Pose::create( Bt * S * Br * Bs ) );
     };
 
     auto processRotation = [&](VRGeometryPtr t, int dof) {
         if (!mBase) {
-            mBase = t->getWorldPose();
-            rBase1 = t->getEuler();
-            tBase = target->getWorldPose();
-            rBase2 = target->getEuler();
+            mBase = target->getWorldPose();
+            rBase = t->getEuler();
         }
 
         auto r = t->getEuler();
-        double x = r[dof] - rBase1[dof];
-        cout << " -- " << x << endl;
+        double x = (r[dof] - rBase[dof])*8.0;
 
-        auto P = Pose::create( *tBase );
-        Vec3d s = rBase2;
-        s[dof] += x;
-        P->setEuler(s[0], s[1], s[2]);
-        target->setWorldPose(P);
+        Pose T ( tOffset);
+        Pose Ti(-tOffset);
+
+        Pose R;
+        Vec3d D; D[dof] = 1;
+        R.rotate(x, D);
+
+        Pose B = (*mBase) * T;
+        Pose Br(Vec3d(), B.dir(), B.up());
+        Pose Bt( B.pos() );
+
+        Pose S;
+        S.setScale( B.scale() );
+
+        target->setWorldPose( Pose::create( Bt * R * Br * S * Ti ) );
     };
 
     // check for dragging part

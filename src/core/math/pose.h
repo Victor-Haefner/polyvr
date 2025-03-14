@@ -55,6 +55,7 @@ class Pose {
 
         string toString();
 
+        Pose operator * (const Pose& other) const;
         bool operator == (const Pose& other) const;
         bool operator != (const Pose& other) const;
 };

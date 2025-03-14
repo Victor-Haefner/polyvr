@@ -140,7 +140,7 @@ class VRObject : public std::enable_shared_from_this<VRObject>, public VRName, p
         void setEntity(VREntityPtr e);
         VREntityPtr getEntity();
 
-        BoundingboxPtr getBoundingbox(bool commitSG = false);
+        BoundingboxPtr getBoundingbox();
         BoundingboxPtr getWorldBoundingbox();
 
         void flattenHiarchy();

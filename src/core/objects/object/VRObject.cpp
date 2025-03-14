@@ -553,19 +553,27 @@ bool VRObject::hasGraphChanged() {
     return getParent()->hasGraphChanged();
 }
 
-BoundingboxPtr VRObject::getBoundingbox(bool commitSG) {
-    Pnt3f p1, p2;
-    if (commitSG) commitChanges(); // crashes in cave, but why??
-    osg->node->updateVolume();
-    osg->node->getVolume().getBounds(p1, p2);
-    auto b = Boundingbox::create();
-    b->update(Vec3d(p1));
-    b->update(Vec3d(p2));
-    return b;
-}
-
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/geometry/OSGGeometry.h"
+
+BoundingboxPtr VRObject::getBoundingbox() {
+    auto b = Boundingbox::create();
+    auto self = ptr();
+    for (auto obj : getChildren(true, "", true)) {
+        auto geo = dynamic_pointer_cast<VRGeometry>(obj);
+        if (!geo) continue;
+        Matrix4d M = geo->getMatrixTo(self);
+        if (!geo->getMesh() || !geo->getMesh()->geo) continue;
+        auto pos = geo->getMesh()->geo->getPositions();
+        if (!pos) continue;
+        for (unsigned int i=0; i<pos->size(); i++) {
+            Pnt3d p = Pnt3d( pos->getValue<Pnt3f>(i) );
+            M.mult(p,p);
+            b->update(Vec3d(p));
+        }
+    }
+    return b;
+}
 
 BoundingboxPtr VRObject::getWorldBoundingbox() {
     auto b = Boundingbox::create();

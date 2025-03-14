@@ -11,12 +11,12 @@ OSG_BEGIN_NAMESPACE;
 class VRGizmo : public VRTransform {
 	private:
 	    VRTransformPtr target;
+	    Vec3d tOffset;
 	    VRUpdateCbPtr updateCb;
 	    PosePtr tBase;
 	    PosePtr mBase;
 	    Vec3d sBase;
-	    Vec3d rBase1;
-	    Vec3d rBase2;
+	    Vec3d rBase;
 
 	    VRGeometryPtr cRot;
 	    VRGeometryPtr cRotX;
