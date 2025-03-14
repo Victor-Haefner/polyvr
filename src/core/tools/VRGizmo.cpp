@@ -91,73 +91,58 @@ void VRGizmo::update() {
 
     auto cam = VRScene::getCurrent()->getActiveCamera();
     auto cP = cam->getWorldPose();
-    Vec3d d  = cP->pos() - bb->center();
+    Vec3d cD  = cP->pos() - bb->center();
 
-    auto P = Pose::create(Vec3d(), cP->x(), d);
+    auto P = Pose::create(Vec3d(), cP->x(), cD);
     P->makeDirOrthogonal();
 
     if (!cRot->isDragged()) cRot->setPose(P);
     else {
         auto wP = cRot->getWorldPose();
-        wP->setUp( d );
+        wP->setUp( cD );
         wP->makeDirOrthogonal();
         cRot->setWorldPose(wP);
     }
     //cRot->getConstraint()->setReferenceA( cRot->getPose() );
 
-    if (!aTransX->isDragged()) {
-        if (d[0] < 0) {
-            aTransX->setFrom( Vec3d(-1.6,0,0) );
-            aTransX->setUp(   Vec3d(-1,0,0)   );
-        } else {
-            aTransX->setFrom( Vec3d( 1.6,0,0) );
-            aTransX->setUp(   Vec3d( 1,0,0)   );
-        }
-    }
+    auto checkTransHandle = [&](VRTransformPtr t, int dof) {
+        if (t->isDragged()) return;
 
-    if (!aScaleX->isDragged()) {
-        if (d[0] < 0) {
-            aScaleX->setFrom( Vec3d(-1.3,0,0) );
-        } else {
-            aScaleX->setFrom( Vec3d( 1.3,0,0) );
+        Vec3d f,u;
+        f[dof] = 1.6;
+        u[dof] = 1.0;
+        if (cD[dof] < 0) {
+            f[dof] *= -1;
+            u[dof] *= -1;
         }
-    }
 
-    if (!aTransY->isDragged()) {
-        if (d[1] < 0) {
-            aTransY->setFrom( Vec3d(0,-1.6,0) );
-            aTransY->setUp(   Vec3d(0,-1,0)   );
-        } else {
-            aTransY->setFrom( Vec3d( 0,1.6,0) );
-            aTransY->setUp(   Vec3d( 0,1,0)   );
-        }
-    }
+        Vec3d _u = t->getUp();
+        if (_u[dof]*u[dof] > 0) return;
 
-    if (!aScaleY->isDragged()) {
-        if (d[1] < 0) {
-            aScaleY->setFrom( Vec3d(0,-1.3,0) );
-        } else {
-            aScaleY->setFrom( Vec3d( 0,1.3,0) );
-        }
-    }
+        t->setFrom(f);
+        t->setUp(u);
+        t->getConstraint()->setReferenceA(t->getPose());
+    };
 
-    if (!aScaleZ->isDragged()) {
-        if (d[2] < 0) {
-            aScaleZ->setFrom( Vec3d(0,0,-1.3) );
-        } else {
-            aScaleZ->setFrom( Vec3d(0,0,1.3) );
-        }
-    }
+    auto checkScaleHandle = [&](VRTransformPtr t, int dof) {
+        if (t->isDragged()) return;
+        Vec3d f;
+        f[dof] = 1.3;
+        if (cD[dof] < 0) f[dof] *= -1;
 
-    if (!aTransZ->isDragged()) {
-        if (d[2] < 0) {
-            aTransZ->setFrom( Vec3d(0,0,-1.6) );
-            aTransZ->setUp(   Vec3d(0,0,-1)   );
-        } else {
-            aTransZ->setFrom( Vec3d(0,0,1.6) );
-            aTransZ->setUp(   Vec3d(0,0,1)   );
-        }
-    }
+        Vec3d _f = t->getFrom();
+        if (_f[dof]*f[dof] > 0) return;
+        t->setFrom(f);
+    };
+
+    checkTransHandle(aTransX, 0);
+    checkTransHandle(aTransY, 1);
+    checkTransHandle(aTransZ, 2);
+
+    checkScaleHandle(aScaleX, 0);
+    checkScaleHandle(aScaleY, 1);
+    checkScaleHandle(aScaleZ, 2);
+
 
     auto processTranslate = [&](VRGeometryPtr t, int dof) {
         if (!mBase) {
