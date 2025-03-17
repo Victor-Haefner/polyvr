@@ -780,7 +780,7 @@ void VRPipeSystem::updateVisual() {
                 for (int i=0; i<4; i++) data.pushColor(white);
                 for (int i=0; i<4; i++) data.pushColor(blue);
             } else {
-                data.pushVert(p->pos(), norm, white);
+                data.pushVert(p->pos(), norm, white, Vec2d());
                 data.pushPoint();
             }
         }
