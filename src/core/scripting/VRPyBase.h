@@ -77,6 +77,7 @@ struct VRPyBase {
     static PyObject* toPyTuple(const OSG::Vec2i& v);
     static PyObject* toPyTuple(const OSG::Vec3i& v);
     static PyObject* toPyTuple(const OSG::Vec4i& v);
+    static PyObject* toPyTuple(const OSG::Matrix4d& v);
     static PyObject* toPyTuple(const vector<string>& v);
     static PyObject* toPyTuple(const vector<PyObject*>& v);
 

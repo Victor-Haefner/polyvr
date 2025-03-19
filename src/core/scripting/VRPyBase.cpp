@@ -292,6 +292,16 @@ PyObject* VRPyBase::toPyTuple(const OSG::Vec4i& v) {
     return res;
 }
 
+PyObject* VRPyBase::toPyTuple(const OSG::Matrix4d& v) {
+    PyObject* res = PyList_New(16);
+    for (int i=0; i<4; i++) {
+        for (int j=0; j<4; j++) {
+            PyList_SetItem(res, i*4+j, PyFloat_FromDouble(v[i][j]));
+        }
+    }
+    return res;
+}
+
 PyObject* VRPyBase::toPyTuple( const vector<string>& v ) {
     PyObject* res = PyList_New(v.size());
     for (unsigned int i=0; i<v.size(); i++) PyList_SetItem(res, i, PyString_FromString(v[i].c_str()));

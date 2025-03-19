@@ -1031,11 +1031,11 @@ void VRScenegraphInterface::handle(string msg) {
 
 	examples:
 	'clear'
-	'new|type|obj|parent'
-	'set|transform|obj|1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1'
-	'set|positions|obj|x y z x y z x y z x y z ...'
-	'set|normals|obj|x y z x y z x y z x y z ...'
-	'set|indices|obj|x y z x y z x y z x y z ...'
+	'new|type|objName|objID|parentID'
+	'set|transform|objID|r r r r r r r r r x y z'
+	'set|positions|objName|x y z x y z x y z x y z ...'
+	'set|normals|objName|x y z x y z x y z x y z ...'
+	'set|indices|objName|x y z x y z x y z x y z ...'
 
 	"*/
 
@@ -1045,7 +1045,10 @@ void VRScenegraphInterface::handle(string msg) {
 	auto toMatrix = [](const vector<double>& d, int offset = 0) {
 		Matrix4d m;
 		int o = offset;
-		if (d.size() > 11) m = Matrix4d(d[o+0], d[o+3], d[o+6], d[o+9], d[o+1], d[o+4], d[o+7], d[o+10], d[o+2], d[o+5], d[o+8], d[o+11], 0,0,0,1);
+		if (d.size() > 11) m = Matrix4d(d[o+0], d[o+3], d[o+6], d[o+9],
+                                        d[o+1], d[o+4], d[o+7], d[o+10],
+                                        d[o+2], d[o+5], d[o+8], d[o+11],
+                                        0,0,0,1);
 		return m;
 	};
 
