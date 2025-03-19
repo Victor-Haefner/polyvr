@@ -137,6 +137,7 @@ bool MPart::propagateMovement() { // recursion
 }
 
 bool MPart::propagateMovement(MChange c, MRelation* r) { // change
+    if (!r) return false;
     r->translateChange(c);
     if (change.time == c.time && change.substep == c.substep) { // either it is the same change OR another change in the same timestep
         if (change.origin == c.origin) return change.same(c); // the same change
@@ -668,7 +669,10 @@ VRMechanism::VRMechanism() : VRObject("mechanism") {
 
 VRMechanism::~VRMechanism() {
     if (doThread) {
-        doRun = false;
+        {
+            VRLock lock(mechMtx);
+            doRun = false;
+        }
         simThread->join();
         delete simThread;
     }
@@ -678,11 +682,13 @@ VRMechanism::~VRMechanism() {
 shared_ptr<VRMechanism> VRMechanism::create() { return shared_ptr<VRMechanism>(new VRMechanism()); }
 
 void VRMechanism::clear() {
+    VRLock lock(mechMtx);
     for (auto part : parts) delete part;
     for (auto motor : motors) delete motor.second;
     parts.clear();
     cache.clear();
     motors.clear();
+    changed_parts.clear();
 }
 
 void VRMechanism::addMotor(string name, VRTransformPtr driven, float speed, int dof) {
@@ -810,6 +816,7 @@ void VRMechanism::update(bool fromThread) {
     //cout << "\nVRMechanism::update" << endl;
 
     VRLock lock(mechMtx);
+    if (!doRun) return;
 
 #ifndef WITHOUT_BULLET
     if (doSG) {
@@ -857,6 +864,7 @@ void VRMechanism::update(bool fromThread) {
         auto dt = 0.001 * simTime->stop(); simTime->reset();
         substep += 1;
         for (auto& motor : motors) {
+            if (!motor.second) continue;
             if (abs(motor.second->speed) < 1e-6) continue; // TODO: motorbremse?
             if (!cache.count(motor.second->driven)) continue;
             auto mCache = cache[motor.second->driven];
@@ -869,6 +877,7 @@ void VRMechanism::update(bool fromThread) {
         }
 
         for (auto& part : changed_parts) {
+            if (!part) continue;
             if (part->getChange().isNull()) continue;
             bool block = !part->propagateMovement();
 
