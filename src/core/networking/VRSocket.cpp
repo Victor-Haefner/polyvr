@@ -99,6 +99,7 @@ class HTTPServer {
         }
 
         bool initServer(VRHTTP_cb* fkt, int p) {
+            cout << "HTTPServer, listen on port " << p << endl;
             port = p;
             data->cb = fkt;
             server = new mg_mgr();
@@ -222,13 +223,11 @@ static void server_answer_to_connection_m(struct mg_connection *conn, int ev, vo
     if (v) {
         if (ev == MG_EV_ERROR) { VRLog::log("net", "MG_EV_ERROR\n"); return; }
         if (ev == MG_EV_OPEN) { VRLog::log("net", "MG_EV_OPEN\n"); return; }
-        if (ev == MG_EV_POLL) { return; }
         if (ev == MG_EV_RESOLVE) { VRLog::log("net", "MG_EV_RESOLVE\n"); return; }
         if (ev == MG_EV_CONNECT) { VRLog::log("net", "MG_EV_CONNECT\n"); return; }
         if (ev == MG_EV_ACCEPT) { VRLog::log("net", "MG_EV_ACCEPT\n"); return; }
         if (ev == MG_EV_TLS_HS) { VRLog::log("net", "MG_EV_TLS_HS\n"); return; }
         if (ev == MG_EV_READ) { VRLog::log("net", "MG_EV_READ\n"); return; }
-        if (ev == MG_EV_WRITE) { return; }
         if (ev == MG_EV_WS_OPEN) { VRLog::log("net", "MG_EV_WS_OPEN\n"); return; }
         if (ev == MG_EV_WS_CTL) { VRLog::log("net", "MG_EV_WS_CTL\n"); return; }
         if (ev == MG_EV_MQTT_CMD) { VRLog::log("net", "MG_EV_MQTT_CMD\n"); return; }
@@ -236,8 +235,11 @@ static void server_answer_to_connection_m(struct mg_connection *conn, int ev, vo
         if (ev == MG_EV_MQTT_OPEN) { VRLog::log("net", "MG_EV_MQTT_OPEN\n"); return; }
         if (ev == MG_EV_SNTP_TIME) { VRLog::log("net", "MG_EV_SNTP_TIME\n"); return; }
         if (ev == MG_EV_USER) { VRLog::log("net", "MG_EV_USER\n"); return; }
+        if (ev == MG_EV_POLL) { return; }
+        if (ev == MG_EV_WRITE) { return; }
     }
 
+    if (ev == MG_EV_POLL) return;
     HTTP_args* sad = (HTTP_args*)user_data;
 
     if (ev == MG_EV_CLOSE) {
@@ -251,6 +253,10 @@ static void server_answer_to_connection_m(struct mg_connection *conn, int ev, vo
             if (sad->serv->ws_groups.count(wsid)) sad->serv->ws_groups.erase(wsid);
         }
         return;
+    }
+
+    if (ev == MG_EV_ACCEPT) {
+        ;
     }
 
     if (ev == MG_EV_WS_MSG) {
@@ -390,6 +396,7 @@ static void server_answer_to_connection_m(struct mg_connection *conn, int ev, vo
 
 
 VRSocket::VRSocket(string name) {
+    cout << "VRSocket, open socket " << name << endl;
     http_fkt = 0;
     socketID = 0;
     run = false;

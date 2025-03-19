@@ -27,7 +27,7 @@ class VRWebSocket : public VRName {
         bool close();
         bool isConnected();
 
-        bool sendMessage(string message);
+        bool send(string message);
         void registerStringCallback(std::function<void(string)> func);
 #ifndef WITHOUT_JSONCPP
         void registerJsonCallback(std::function<void(Json::Value)> func);

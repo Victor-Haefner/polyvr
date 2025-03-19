@@ -11,6 +11,7 @@ simpleVRPyType(Ping, New_ptr);
 simpleVRPyType(RestResponse, 0);
 simpleVRPyType(RestClient, New_optNamed_ptr);
 simpleVRPyType(RestServer, New_optNamed_ptr);
+simpleVRPyType(WebSocket, New_optNamed_ptr);
 
 simpleVRPyType(MQTTClient, New_ptr);
 simpleVRPyType(MQTTServer, New_ptr);
@@ -137,6 +138,15 @@ PyMethodDef VRPyRestClient::methods[] = {
 
 PyMethodDef VRPyRestServer::methods[] = {
     {"listen", PyWrap(RestServer, listen, "Listen on port, (port, callback)", void, int, VRRestCbPtr) },
+    {NULL}  /* Sentinel */
+};
+
+PyMethodDef VRPyWebSocket::methods[] = {
+    {"open", PyWrap(WebSocket, open, "Open URL, open(ws://localhost:1234)", bool, string) },
+    {"close", PyWrap(WebSocket, close, "Close connection", bool) },
+    {"isConnected", PyWrap(WebSocket, isConnected, "Return if connected", bool) },
+    {"send", PyWrap(WebSocket, send, "Return if connected", bool, string) },
+    {"registerStringCallback", PyWrap(WebSocket, registerStringCallback, "Return if connected", void, std::function<void(string)>) },
     {NULL}  /* Sentinel */
 };
 

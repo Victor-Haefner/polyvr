@@ -217,6 +217,7 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPyRestResponse>("RestResponse", pModVR);
     sm->registerModule<VRPyRestClient>("RestClient", pModVR);
     sm->registerModule<VRPyRestServer>("RestServer", pModVR);
+    sm->registerModule<VRPyWebSocket>("WebSocket", pModVR);
     sm->registerModule<VRPyState>("State", pModVR);
     sm->registerModule<VRPyGraphLayout>("GraphLayout", pModVR);
     sm->registerModule<VRPyPathFinding>("PathFinding", pModVR);
