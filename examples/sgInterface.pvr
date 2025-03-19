@@ -31,6 +31,8 @@
 
 	VR.setupInterface()
 	VR.setupGears()
+	
+	VR.stackCall( VR.sendSG, 2 )
 </core>
       <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" base_name="trigger" name_space="__global__" name_suffix="13" persistency="666"/>
     </Script>
@@ -45,7 +47,7 @@
 	if not VR.sgCli.isConnected(): VR.sgCli.open('ws://localhost:6543')
 	VR.sgCli.send('clear')
 	
-	#return
+	print 'send SG to interface'
 	
 	for g in VR.scene.findAll('Gear'):
 		name = g.getName()
