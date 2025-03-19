@@ -1468,7 +1468,7 @@ void VRGeometry::readSharedMemory(string segment, string object) {
 
 void VRGeometry::clear() {
     VRGeoData geo(ptr());
-    geo.reset();
+    geo.clear();
 }
 
 void VRGeometry::addPoint(int i) {

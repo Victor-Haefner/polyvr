@@ -51,6 +51,7 @@ class VRGeoData {
         int getFaceSize(int fID) const;
         int getNTypes() const;
 
+        void clear();
         void reset();
         bool valid() const;
         bool validIndices() const;

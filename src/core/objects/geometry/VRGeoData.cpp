@@ -142,6 +142,26 @@ VRGeoData::VRGeoData(VRGeometryPtr geo) : pend(this, 0) {
 
 VRGeoDataPtr VRGeoData::create() { return VRGeoDataPtr( new VRGeoData() ); }
 
+void VRGeoData::clear() {
+    if (data->types) data->types->clear();
+    if (data->lengths) data->lengths->clear();
+    if (data->indices) data->indices->clear();
+    if (data->pos) data->pos->clear();
+    if (data->norms) data->norms->clear();
+    if (data->cols3) data->cols3->clear();
+    if (data->cols4) data->cols4->clear();
+    if (data->cols3ub) data->cols3ub->clear();
+    if (data->cols4ub) data->cols4ub->clear();
+
+    for (int i=0; i<data->texs.size(); i++)  data->texs[i]->clear();
+    for (int i=0; i<data->texs3.size(); i++) data->texs3[i]->clear();
+    if (data->indicesNormals) data->indicesNormals->clear();
+    if (data->indicesColors) data->indicesColors->clear();
+    if (data->indicesTexCoords) data->indicesTexCoords->clear();
+
+    data->lastPrim = -1;
+}
+
 void VRGeoData::reset() {
     if (data->types) data->types->clear();
     else data->types = GeoUInt8Property::create();
