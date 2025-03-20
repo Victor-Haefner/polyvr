@@ -2246,8 +2246,8 @@ namespace PRC {
         Double fovX;
         Double fovY;
         Double aspectRation;
-        Double near;
-        Double far;
+        Double nearPlane;
+        Double farPlane;
         Double zoom;
 
         void parse(BitStreamParser& bs) {
@@ -2260,8 +2260,8 @@ namespace PRC {
             fovX.parse(bs);
             fovY.parse(bs);
             aspectRation.parse(bs);
-            near.parse(bs);
-            far.parse(bs);
+            nearPlane.parse(bs);
+            farPlane.parse(bs);
             zoom.parse(bs);
         }
     };

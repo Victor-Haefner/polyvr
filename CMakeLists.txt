@@ -1359,6 +1359,10 @@ target_sources(polyvr PRIVATE src/core/tools/selection/VRPatchSelection.cpp)
 target_sources(polyvr PRIVATE src/core/tools/selection/VRSelector.cpp)
 target_sources(polyvr PRIVATE src/core/tools/VRUndoManager.cpp)
 target_sources(polyvr PRIVATE src/core/tools/VRAnalyticGeometry.cpp)
+target_sources(polyvr PRIVATE src/core/tools/VRGizmo.cpp)
+target_sources(polyvr PRIVATE src/core/tools/VRPlayer.cpp)
+target_sources(polyvr PRIVATE src/core/tools/VRPyTools.cpp)
+target_sources(polyvr PRIVATE src/core/tools/VRTimeline.cpp)
 endif()
 
 if(TRUE) # ok

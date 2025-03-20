@@ -235,7 +235,7 @@ bool VRVideoStream::decode(AVPacket* packet) {
 VRVideo::VRVideo(VRMaterialPtr mat) {
     //avMutex = new boost::mutex();
     material = mat;
-#if defined(_WIN32) || defined(__APPLE__)
+#if !defined(_WIN32) && !defined(__APPLE__)
     av_register_all(); // Register all formats && codecs
 #endif
 
@@ -317,7 +317,7 @@ void VRVideo::open(string f) {
     for (int i=0; i<(int)vFile->nb_streams; i++) {
         AVStream* avStream = vFile->streams[i];
         AVCodecParameters* avCodec = avStream->codecpar;
-        AVCodec* codec = avcodec_find_decoder(avCodec->codec_id);
+        const AVCodec* codec = avcodec_find_decoder(avCodec->codec_id);
         if (codec == 0) { fprintf(stderr, "Unsupported codec!\n"); continue; } // Codec not found
         AVCodecContext* avContext = avcodec_alloc_context3(codec);
         if (avcodec_parameters_to_context(avContext, avCodec) < 0) continue;
