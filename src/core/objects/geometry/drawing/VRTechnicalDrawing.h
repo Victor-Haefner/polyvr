@@ -18,8 +18,8 @@ class VRTechnicalDrawing : public VRTransform {
             LINE,
             QUAD,
             RECTANGLE,
-            CIRCLE,
             ARC,
+            CIRCLE,
             ELLIPSE,
             POLYLINE,
             LABEL
@@ -30,8 +30,9 @@ class VRTechnicalDrawing : public VRTransform {
             POSITIONS,
             CENTER,
             RADIUS,
-            SEMIMAJORAXIS,
-            SEMIMINORAXIS,
+            BEGIN,
+            END,
+            SCALE,
             TEXT
         };
 
@@ -97,8 +98,10 @@ class VRTechnicalDrawing : public VRTransform {
 
 	    template<typename T> Parameter packParam(ParameterType type, T data);
 	    template<typename T> Parameter packParam(ParameterType type, vector<T> data);
+	    template<typename T> Parameter packParam(ParameterType type, string data);
 	    template<typename T> void unpackParam(Parameter p, T& t);
 	    template<typename T> void unpackParam(Parameter p, vector<T>& t);
+	    template<typename T> void unpackParam(Parameter p, string& t);
 
 		void updateGeometry(Layer& l, Object& o);
 
@@ -127,10 +130,11 @@ class VRTechnicalDrawing : public VRTransform {
 		void addPoint(string name, Pnt2d p, string style);
 		void addLine(string name, Pnt2d p1, Pnt2d p2, string style);
 		void addQuad(string name, Pnt2d p1, Pnt2d p2, Pnt2d p3, Pnt2d p4, string style);
+		void addArc(string name, Pnt2d c, double r, double b, double e, Vec2d s, string style);
 		void addCircle(string name, Pnt2d cp, double r, string style);
 		void addEllipse(string name, Pnt2d cp, double a, double b, string style);
 		void addPolyLine(string name, vector<Pnt2d> v, string style);
-		void addLabel(string name, string text, string style);
+		void addLabel(string name, Pnt2d p, string text, string style);
 };
 
 OSG_END_NAMESPACE;

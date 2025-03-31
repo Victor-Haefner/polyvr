@@ -181,83 +181,25 @@ struct DWGContext {
     void addPoint(Pnt3d p, string style, Dwg_Object_LAYER* layer) {
         drawing->setActiveTransform( transformation );
         drawing->addPoint("", Pnt2d(p), style);
-
-        VRGeoData& geo = layers[layer].geo;
-		transformation.mult(p,p);
-        geo.pushVert(p);
-        geo.pushPoint();
 	}
 
 	void addLine(Pnt3d vec1, Pnt3d vec2, string style, Dwg_Object_LAYER* layer) {
         drawing->setActiveTransform( transformation );
         drawing->addLine("", Pnt2d(vec1), Pnt2d(vec2), style);
-
-	    Color3f col = drawing->getMaterial(style).color;
-        VRGeoData& geo = layers[layer].geo;
-		transformation.mult(vec1, vec1);
-		transformation.mult(vec2, vec2);
-        geo.pushVert(vec1);
-        geo.pushVert(vec2);
-        geo.pushColor(col);
-        geo.pushColor(col);
-        geo.pushLine();
 	}
 
 	void addQuad(Pnt3d vec1, Pnt3d vec2, Pnt3d vec3, Pnt3d vec4, string style, Dwg_Object_LAYER* layer) {
         drawing->setActiveTransform( transformation );
         drawing->addQuad("", Pnt2d(vec1), Pnt2d(vec2), Pnt2d(vec3), Pnt2d(vec4), style);
-
-	    Color3f col = drawing->getMaterial(style).color;
-        VRGeoData& geo = layers[layer].geo;
-		transformation.mult(vec1, vec1);
-		transformation.mult(vec2, vec2);
-		transformation.mult(vec3, vec3);
-		transformation.mult(vec4, vec4);
-        geo.pushVert(vec1);
-        geo.pushVert(vec2);
-        geo.pushVert(vec3);
-        geo.pushVert(vec4);
-        geo.pushColor(col);
-        geo.pushColor(col);
-        geo.pushColor(col);
-        geo.pushColor(col);
-        geo.pushQuad();
 	}
 
     /** DWG arcs always rotate counterclockwise! */
 	void addArc(Pnt3d c, double r, double a1, double a2, string style, Dwg_Object_LAYER* layer, Vec3d eBox = Vec3d(1,1,1)) {
-	    Color3f col = drawing->getMaterial(style).color;
-        //aCount++;
-        //if (aCount < 54 || aCount > 55) return;
-        //if (aCount != 54) return;
-        //cout << " addArc, c: " << c << ", r: " << r << ", a12: " << Vec2d(a1, a2) << ", i:" << aCount << endl;
-        VRGeoData& geo = layers[layer].geo;
-
-		/*Pnt3d sp = c + Vec3d(cos(a1),sin(a1),0)*r;
-		Pnt3d ep = c + Vec3d(cos(a2),sin(a2),0)*r;
-		transformation.mult(sp,sp);
-		transformation.mult(ep,ep);
-		a1 = atan2(sp[1] - c[1], sp[0] - c[0]) + Pi;
-		a2 = atan2(ep[1] - c[1], ep[0] - c[0]) + Pi;
-		if (transformation.det() < 0) swap(a1, a2);*/
-
 		if (a2 < a1) a2 += 2*Pi; // make sure to rotate counterclockwise!
-
-		transformation.mult(c, c);
-
 		if (r < 1e-6) r = 1; // elipse -> use box
         else r = scaleLength(r);
-        double da = 0.1;
-        int N = max(int(abs(a2-a1)/da),1);
-        da = (a2-a1)/N;
-        for (int i=0; i<=N; i++) {
-            double a = a1+da*i;
-            Pnt3d p = c + Vec3d(cos(a)*eBox[0], sin(a)*eBox[1], 0)*r;
-            geo.pushVert(p);
-            geo.pushColor(col);
-            if (i > 0) geo.pushLine();
-        }
-        //cout << "  computed params, da: " << da << ", N: " << N << ", sr: " << r << endl;
+        drawing->setActiveTransform( transformation );
+        drawing->addArc("", Pnt2d(c), r, a1, a2, Vec2d(eBox), style);
 	}
 
 	void addCircle(Vec3d c, double r, string style, Dwg_Object_LAYER* layer) {
@@ -272,15 +214,9 @@ struct DWGContext {
 	}
 
     void addText(Vec3d p, string t, double height, Dwg_Object_LAYER* layer) {
-        //return;
-
-        //cout << "addText " << p << " " << t << endl;
-        if (!layers[layer].ann) {
-            layers[layer].ann = VRAnnotationEngine::create("text");
-            layers[layer].ann->setSize(height);
-        }
-        auto ann = layers[layer].ann;
-        ann->add(p,t);
+        string style = "txt_"+toString(height);
+        drawing->setActiveTransform( transformation );
+        drawing->addLabel("", Pnt2d(p), t, style);
     }
 
 	/*void addDWGArc(Vec3d c, double r, double a1, double a2, Dwg_Object_LAYER* layer) { // TODO: maybe usefull, transforms start and end points!
@@ -438,8 +374,6 @@ void process_LINE(Dwg_Object* obj, DWGContext& data) {
     Dwg_Entity_LINE* line = obj->tio.entity->tio.LINE;
     Dwg_Object_LAYER* layer = getEntityLayer(obj, data);
 
-    string lName = getLayerName(layer, data.dwg);
-    data.drawing->setActiveLayer( lName );
 
 
     bool vis = !obj->tio.entity->invisible;
@@ -750,6 +684,10 @@ void process_object(Dwg_Object* obj, DWGContext& data) {
 
     //cout << "process_object " << obj->type << endl;
 
+    Dwg_Object_LAYER* layer = getEntityLayer(obj, data);
+    string lName = getLayerName(layer, data.dwg);
+    data.drawing->setActiveLayer( lName );
+
     switch (obj->type) {
         case DWG_TYPE_POINT: process_POINT(obj, data); break;
         case DWG_TYPE_LINE: process_LINE(obj, data); break;
@@ -837,11 +775,9 @@ void openDWGFile(string path, DWGContext& data) {
 
 void loadDWG(string path, VRTransformPtr res, map<string, string> options) {
     DWGContext data;
-    auto root = VRTransform::create(path);
     if (options.count("offset")) toValue(options["offset"], data.offset);
 
     openDWGFile(path, data);
-
 
     size_t nLayers = dwg_get_layer_count( &data.dwg );
     auto layers = dwg_get_layers( &data.dwg );
@@ -854,7 +790,6 @@ void loadDWG(string path, VRTransformPtr res, map<string, string> options) {
         data.drawing->addLayer(name);
     }
 
-
     Dwg_Object_BLOCK_CONTROL* block_control = &data.dwg.block_control;
     process_BLOCK_HEADER(data.dwg.header_vars.BLOCK_RECORD_MSPACE, data, true); // first all entities in the model space
     for (int i=0; i < block_control->num_entries; i++) { // then all entities in the blocks
@@ -863,39 +798,7 @@ void loadDWG(string path, VRTransformPtr res, map<string, string> options) {
     process_BLOCK_HEADER(data.dwg.header_vars.BLOCK_RECORD_PSPACE, data, true); // and last all entities in the paper space
 
     bool doSplitByColors = false;
-    if (options.count("doSplitByColors"))
-        toValue(options["doSplitByColors"], doSplitByColors);
-
-
-    for (auto& l : data.layers) {
-        Dwg_Object_LAYER* layer = l.first;
-        DWGLayer& context = l.second;
-        if (layer) if (!layer->on || layer->frozen) continue;
-        string lName = getLayerName(layer, data.dwg);
-
-        context.root = VRTransform::create( lName );
-        if (context.ann) context.root->addChild(context.ann);
-        root->addChild(context.root);
-
-        auto mat = VRMaterial::create("mat");
-        mat->setLineWidth(1);
-        mat->setLit(0);
-        mat->setDiffuse( getLayerColor(layer) );
-
-        if (!doSplitByColors) {
-            auto geo = context.geo.asGeometry( "primitives" );
-            geo->setMaterial(mat);
-            context.root->addChild(geo);
-        } else {
-            auto geos = context.geo.splitByVertexColors();
-            for (auto geo : geos) {
-                geo->setName("primitives");
-                geo->getMaterial()->setLit(false);
-                context.root->addChild(geo);
-            }
-        }
-    }
-    //dwg_free(&dwg); // writes a lot to console..
+    if (options.count("doSplitByColors")) toValue(options["doSplitByColors"], doSplitByColors);
 
     map<string, int> hist;
     for (unsigned int i=0; i < data.dwg.num_objects; i++) {
@@ -913,22 +816,8 @@ void loadDWG(string path, VRTransformPtr res, map<string, string> options) {
         string name = getLayerName(layer, data.dwg);
     }
 
-    res->addChild(root);
-
     data.drawing->updateGeometries();
-    data.drawing->translate(Vec3d(0,0,5));
     res->addChild( data.drawing );
-
-
-    /*cout << "layer / entity historgam" << endl;
-    for (auto h : hist) {
-        cout << " " << h.first << " " << h.second << endl;
-    }
-
-    cout << "DWG entity historgam" << endl;
-    for (auto e : data.entityHistogram) cout << " " << e.first << ": " << e.second << endl;
-    cout << "DWG object historgam" << endl;
-    for (auto e : data.objectHistogram) cout << " " << e.first << ": " << e.second << endl;*/
 }
 
 VRGeometryPtr dwgArcTest() {
