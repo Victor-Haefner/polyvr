@@ -9,6 +9,7 @@
 
 #include "VRDWG.h"
 
+#include "core/objects/geometry/drawing/VRTechnicalDrawing.h"
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/geometry/VRGeoData.h"
 #include "core/objects/material/VRMaterial.h"
@@ -117,7 +118,7 @@ size_t aCount = 0;
 struct DWGContext {
     string filePath;
 
-    Dwg_Data* dwg = 0;
+    Dwg_Data dwg;
     map<Dwg_Object_LAYER*, DWGLayer> layers;
     Vec3d offset;
 
@@ -133,6 +134,15 @@ struct DWGContext {
     bool inInsert = false;
     Matrix4d transformation;
     double rot_angle = 0;
+
+
+    // --- new structure
+    VRTechnicalDrawingPtr drawing;
+    // ---
+
+    DWGContext() {
+        drawing = VRTechnicalDrawing::create();
+    }
 
     void compute_current_transformation() {
 	    transformation.setIdentity();
@@ -168,14 +178,21 @@ struct DWGContext {
 		return l * s.length();
 	}
 
-    void addPoint(Pnt3d p, Dwg_Object_LAYER* layer) {
+    void addPoint(Pnt3d p, string style, Dwg_Object_LAYER* layer) {
+        drawing->setActiveTransform( transformation );
+        drawing->addPoint("", Pnt2d(p), style);
+
         VRGeoData& geo = layers[layer].geo;
 		transformation.mult(p,p);
         geo.pushVert(p);
         geo.pushPoint();
 	}
 
-	void addLine(Pnt3d vec1, Pnt3d vec2, Color3f col, Dwg_Object_LAYER* layer) {
+	void addLine(Pnt3d vec1, Pnt3d vec2, string style, Dwg_Object_LAYER* layer) {
+        drawing->setActiveTransform( transformation );
+        drawing->addLine("", Pnt2d(vec1), Pnt2d(vec2), style);
+
+	    Color3f col = drawing->getMaterial(style).color;
         VRGeoData& geo = layers[layer].geo;
 		transformation.mult(vec1, vec1);
 		transformation.mult(vec2, vec2);
@@ -186,7 +203,11 @@ struct DWGContext {
         geo.pushLine();
 	}
 
-	void addQuad(Pnt3d vec1, Pnt3d vec2, Pnt3d vec3, Pnt3d vec4, Color3f col, Dwg_Object_LAYER* layer) {
+	void addQuad(Pnt3d vec1, Pnt3d vec2, Pnt3d vec3, Pnt3d vec4, string style, Dwg_Object_LAYER* layer) {
+        drawing->setActiveTransform( transformation );
+        drawing->addQuad("", Pnt2d(vec1), Pnt2d(vec2), Pnt2d(vec3), Pnt2d(vec4), style);
+
+	    Color3f col = drawing->getMaterial(style).color;
         VRGeoData& geo = layers[layer].geo;
 		transformation.mult(vec1, vec1);
 		transformation.mult(vec2, vec2);
@@ -204,7 +225,8 @@ struct DWGContext {
 	}
 
     /** DWG arcs always rotate counterclockwise! */
-	void addArc(Pnt3d c, double r, double a1, double a2, Color3f col, Dwg_Object_LAYER* layer, Vec3d eBox = Vec3d(1,1,1)) {
+	void addArc(Pnt3d c, double r, double a1, double a2, string style, Dwg_Object_LAYER* layer, Vec3d eBox = Vec3d(1,1,1)) {
+	    Color3f col = drawing->getMaterial(style).color;
         //aCount++;
         //if (aCount < 54 || aCount > 55) return;
         //if (aCount != 54) return;
@@ -238,15 +260,15 @@ struct DWGContext {
         //cout << "  computed params, da: " << da << ", N: " << N << ", sr: " << r << endl;
 	}
 
-	void addCircle(Vec3d c, double r, Color3f col, Dwg_Object_LAYER* layer) {
-		addArc( c, r, 0, 2*Pi, col, layer );
+	void addCircle(Vec3d c, double r, string style, Dwg_Object_LAYER* layer) {
+		addArc( c, r, 0, 2*Pi, style, layer );
 	}
 
-	void addEllipse(Vec3d c, double a, double b, Color3f col, Dwg_Object_LAYER* layer) {
+	void addEllipse(Vec3d c, double a, double b, string style, Dwg_Object_LAYER* layer) {
 		Vec3d box = Vec3d(a, b,0);
 		transformation.mult(box, box);
 		for (int i=0; i<3; i++) box[i] = abs(box[i]);
-		addArc( c, 0, 0, 2*Pi, col, layer, box );
+		addArc( c, 0, 0, 2*Pi, style, layer, box );
 	}
 
     void addText(Vec3d p, string t, double height, Dwg_Object_LAYER* layer) {
@@ -329,6 +351,36 @@ Vec3d transform_OCS(Vec3d pt, Vec3d ext, DWGContext& data) {
     return Vec3d(pt.dot(ax), pt.dot(ay), pt.dot(az)) +offset;
 }
 
+Matrix4d setupTransform(Vec3d ext, DWGContext& data) {
+    Matrix4d m;
+
+    Vec3d offset;
+    if (!data.inInsert) offset = data.offset;
+
+    if (ext[0] == 0.0 && ext[1] == 0.0 && ext[2] == -1.0) m.setScale(-1,1,1);
+    else {
+        // This is called the "Arbitrary Axis Algorithm" to calculate the OCS x-axis from the extrusion z-vector
+        Vec3d ax, ay, az;
+        az = ext;
+        az.normalize();
+
+        if ((fabs (az[0]) < 1 / 64.0) && (fabs (az[1]) < 1 / 64.0)) {
+            ax = Vec3d(0.0, 1.0, 0.0).cross(az);
+        } else ax = Vec3d(0.0, 0.0, 1.0).cross(az);
+
+        ax.normalize();
+
+        ay = az.cross(ax);
+        ay.normalize();
+        m[0] = Vec4d(ax[0], ay[0], az[0], 0);
+        m[1] = Vec4d(ax[1], ay[1], az[1], 0);
+        m[2] = Vec4d(ax[2], ay[2], az[2], 0);
+    }
+
+    m.setTranslate( offset );
+    return m;
+}
+
 /*Dwg_Object_LAYER* dwg_get_entity_layer_safer (const Dwg_Object_Entity *ent) {
     if (!ent || !ent->layer || !ent->layer->obj || !ent->layer->obj->tio.object) return 0;
     return ent->layer->obj->tio.object->tio.LAYER;
@@ -337,20 +389,13 @@ Vec3d transform_OCS(Vec3d pt, Vec3d ext, DWGContext& data) {
 Dwg_Object_LAYER* getEntityLayer(Dwg_Object* obj, DWGContext& data, bool checkName = true) {
     Dwg_Object_LAYER* layer = dwg_get_entity_layer(obj->tio.entity);
     if (!checkName) return layer;
-    if (getLayerName(layer, *data.dwg) == "0") { // wrong layer
+    if (getLayerName(layer, data.dwg) == "0") { // wrong layer
         if (data.layer_stack.size() > 0) layer = data.layer_stack.back();
     }
     return layer;
 }
 
 void process_BLOCK_HEADER(Dwg_Object_Ref* ref, DWGContext& data, bool onlyRoot);
-
-void process_POINT(Dwg_Object* obj, DWGContext& data) {
-    Dwg_Entity_POINT* point = obj->tio.entity->tio.POINT;
-    Dwg_Object_LAYER* layer = getEntityLayer(obj, data);
-    Pnt3d P = transform_OCS( Vec3d(point->x, point->y, point->z), asVec3d(point->extrusion), data );
-    data.addPoint(P, layer);
-}
 
 Color3f getEntityColor(dwg_obj_ent* ent) {
     int err;
@@ -363,24 +408,49 @@ Color3f getEntityColor(dwg_obj_ent* ent) {
     return asColor3f(*dcol);
 }
 
-void process_LINE(Dwg_Object* obj, DWGContext& data) {
-    Dwg_Entity_LINE* line = obj->tio.entity->tio.LINE;
-    Dwg_Object_LAYER* layer = getEntityLayer(obj, data);
 
+string process_Material(Dwg_Object* obj, DWGContext& data) {
     Dwg_Object_MATERIAL* mat = 0;
     if (obj->tio.entity->material && obj->tio.entity->material->obj) mat = obj->tio.entity->material->obj->tio.object->tio.MATERIAL;
     bool hev = obj->tio.entity->has_edge_visualstyle;
     bool hfv = obj->tio.entity->has_face_visualstyle;
     bool huv = obj->tio.entity->has_full_visualstyle;
-    if (mat || hev || hfv || huv) cout << "process_LINE " << hev << " " << hfv << " " << huv << " mat: " << mat << endl;
+    //if (mat || hev || hfv || huv) cout << "process_LINE " << hev << " " << hfv << " " << huv << " mat: " << mat << endl;
+
+    Color3f col = getEntityColor(obj->tio.entity);
+    string mID = "col_"+toString(col);
+    if (!data.drawing->hasMaterial(mID)) {
+        data.drawing->addMaterial(mID);
+        data.drawing->setColor(mID, col);
+    }
+    return mID;
+}
+
+void process_POINT(Dwg_Object* obj, DWGContext& data) {
+    string matID = process_Material(obj, data);
+    Dwg_Entity_POINT* point = obj->tio.entity->tio.POINT;
+    Dwg_Object_LAYER* layer = getEntityLayer(obj, data);
+    Pnt3d P = transform_OCS( Vec3d(point->x, point->y, point->z), asVec3d(point->extrusion), data );
+    data.addPoint(P, matID, layer);
+}
+
+void process_LINE(Dwg_Object* obj, DWGContext& data) {
+    Dwg_Entity_LINE* line = obj->tio.entity->tio.LINE;
+    Dwg_Object_LAYER* layer = getEntityLayer(obj, data);
+
+    string lName = getLayerName(layer, data.dwg);
+    data.drawing->setActiveLayer( lName );
+
 
     bool vis = !obj->tio.entity->invisible;
     if (!vis) return;
 
+    string matID = process_Material(obj, data);
+
     Color3f col = getEntityColor(obj->tio.entity);
     Pnt3d P1 = transform_OCS( asVec3d(line->start), asVec3d(line->extrusion), data );
     Pnt3d P2 = transform_OCS( asVec3d(line->end  ), asVec3d(line->extrusion), data );
-    data.addLine(P1, P2, col, layer);
+    data.addLine(P1, P2, matID, layer);
 }
 
 //convert the bulge of lwpolylines to arcs
@@ -423,7 +493,7 @@ void bulgeToArc(double bulge, Vec3d s, Vec3d e, Vec3d& cen, Vec3d& arc) {
 void process_POLYLINE_2D(Dwg_Object* obj, DWGContext& data) {
     Dwg_Entity_POLYLINE_2D* line = obj->tio.entity->tio.POLYLINE_2D;
     Dwg_Object_LAYER* layer = getEntityLayer(obj, data, false);
-    Color3f col = asColor3f(obj->tio.entity->color);
+    string matID = process_Material(obj, data);
 
     bool closed = line->flag & 1;
     bool curve_fit = line->flag & 2;
@@ -446,12 +516,12 @@ void process_POLYLINE_2D(Dwg_Object* obj, DWGContext& data) {
         Pnt3d P2 = transform_OCS( asVec3d(p2), asVec3d(line->extrusion), data );
 
         double bulge = v1_2D->bulge;
-        if (abs(bulge) < 1e-3) data.addLine(P1, P2, col, layer);
+        if (abs(bulge) < 1e-3) data.addLine(P1, P2, matID, layer);
         else {
             //if (extr) bulge *= -1;
             Vec3d cen, arc;
             bulgeToArc(bulge, Vec3d(P1), Vec3d(P2), cen, arc);
-            data.addArc(Pnt3d(cen), arc[0], arc[1], arc[2], col, layer);
+            data.addArc(Pnt3d(cen), arc[0], arc[1], arc[2], matID, layer);
         }
     }
 }
@@ -459,7 +529,7 @@ void process_POLYLINE_2D(Dwg_Object* obj, DWGContext& data) {
 void process_LWPOLYLINE(Dwg_Object* obj, DWGContext& data) {
     Dwg_Entity_LWPOLYLINE* line = obj->tio.entity->tio.LWPOLYLINE;
     Dwg_Object_LAYER* layer = getEntityLayer(obj, data);
-    Color3f col = getEntityColor(obj->tio.entity);
+    string matID = process_Material(obj, data);
 
     bool vis = !obj->tio.entity->invisible;
     if (!vis) return;
@@ -477,14 +547,14 @@ void process_LWPOLYLINE(Dwg_Object* obj, DWGContext& data) {
 
         if (i < line->num_bulges) {
             double bulge = line->bulges[i];
-            if (abs(bulge) < 1e-3) data.addLine(P1, P2, col, layer);
+            if (abs(bulge) < 1e-3) data.addLine(P1, P2, matID, layer);
             else {
                 //if (extr) bulge *= -1;
                 Vec3d cen, arc;
                 bulgeToArc(bulge, Vec3d(P1), Vec3d(P2), cen, arc);
-                data.addArc(Pnt3d(cen), arc[0], arc[1], arc[2], col, layer);
+                data.addArc(Pnt3d(cen), arc[0], arc[1], arc[2], matID, layer);
             }
-        } else data.addLine(P1, P2, col, layer);
+        } else data.addLine(P1, P2, matID, layer);
     }
 
     //line->vertexids;
@@ -496,9 +566,10 @@ void process_CIRCLE(Dwg_Object* obj, DWGContext& data) {
     Dwg_Object_LAYER* layer = getEntityLayer(obj, data);
     bool vis = !obj->tio.entity->invisible;
     if (!vis) return;
-    Color3f col = getEntityColor(obj->tio.entity);
+
+    string matID = process_Material(obj, data);
     Vec3d center = transform_OCS( asVec3d(circle->center), asVec3d(circle->extrusion), data );
-    data.addCircle(center, circle->radius, col, layer);
+    data.addCircle(center, circle->radius, matID, layer);
 }
 
 void process_ARC(Dwg_Object* obj, DWGContext& data) {
@@ -506,9 +577,10 @@ void process_ARC(Dwg_Object* obj, DWGContext& data) {
     Dwg_Object_LAYER* layer = getEntityLayer(obj, data);
     bool vis = !obj->tio.entity->invisible;
     if (!vis) return;
-    Color3f col = getEntityColor(obj->tio.entity);
+
+    string matID = process_Material(obj, data);
     Pnt3d center = transform_OCS( asVec3d(arc->center), asVec3d(arc->extrusion), data );
-    data.addArc(center, arc->radius, arc->start_angle, arc->end_angle, col, layer);
+    data.addArc(center, arc->radius, arc->start_angle, arc->end_angle, matID, layer);
 }
 
 void process_TEXT(Dwg_Object* obj, DWGContext& data) {
@@ -639,12 +711,12 @@ void process_SOLID(Dwg_Object* obj, DWGContext& data) { // a filled quad
     bool vis = !obj->tio.entity->invisible;
     if (!vis) return;
 
-    Color3f col = getEntityColor(obj->tio.entity);
+    string matID = process_Material(obj, data);
     Pnt3d P1 = transform_OCS( asVec3d(solid->corner1), asVec3d(solid->extrusion), data );
     Pnt3d P2 = transform_OCS( asVec3d(solid->corner2), asVec3d(solid->extrusion), data );
     Pnt3d P3 = transform_OCS( asVec3d(solid->corner3), asVec3d(solid->extrusion), data );
     Pnt3d P4 = transform_OCS( asVec3d(solid->corner4), asVec3d(solid->extrusion), data );
-    data.addQuad(P1, P2, P3, P4, col, layer);
+    data.addQuad(P1, P2, P3, P4, matID, layer);
 }
 
 void process_HATCH(Dwg_Object* obj, DWGContext& data) { // TODO: this is a fill, like a pattern
@@ -654,7 +726,7 @@ void process_HATCH(Dwg_Object* obj, DWGContext& data) { // TODO: this is a fill,
     bool vis = !obj->tio.entity->invisible;
     if (!vis) return;
 
-    Color3f col = getEntityColor(obj->tio.entity);
+    string matID = process_Material(obj, data);
     // TODO
 }
 
@@ -754,58 +826,54 @@ void process_BLOCK_HEADER(Dwg_Object_Ref* ref, DWGContext& data, bool onlyRoot) 
 
 // block references (insert entities) are not yet exploded, UCS and paper space transformations per entity
 
-void loadDWG(string path, VRTransformPtr res, map<string, string> options) {
-    DWGContext data;
+void openDWGFile(string path, DWGContext& data) {
     data.filePath = path;
-    Dwg_Data dwg;
-
     int r = 0;
     string lpath = path; toLower(lpath);
-    if (endsWith(lpath, "dwg")) r = dwg_read_file(path.c_str(), &dwg);
-    if (endsWith(lpath, "dxf")) r = dxf_read_file(path.c_str(), &dwg);
-    if (r != 0) { cout << "\n\nloadDWG failed!\n" << endl; } //return; }
-    data.dwg = &dwg;
+    if (endsWith(lpath, "dwg")) r = dwg_read_file(path.c_str(), &data.dwg);
+    if (endsWith(lpath, "dxf")) r = dxf_read_file(path.c_str(), &data.dwg);
+    if (r != 0) { cout << "\n\nloadDWG failed!\n" << endl; }
+}
 
+void loadDWG(string path, VRTransformPtr res, map<string, string> options) {
+    DWGContext data;
     auto root = VRTransform::create(path);
-
     if (options.count("offset")) toValue(options["offset"], data.offset);
 
-    /*for (int i = 0; i < dwg.num_objects; i++) {
-        Dwg_Object& o = dwg.object[i];
-        string type = o.dxfname;
-        data.objectHistogram[type] += 1;
-    }*/
+    openDWGFile(path, data);
 
-    /*dwg.block_control;
-    dwg.layer_control;
-    dwg.style_control;
-    dwg.ltype_control;
-    dwg.view_control;
-    dwg.ucs_control;
-    dwg.vport_control;
-    dwg.appid_control;
-    dwg.dimstyle_control;
-    dwg.vport_entity_control;*/
 
-    Dwg_Object_BLOCK_CONTROL* block_control = &dwg.block_control;
-    process_BLOCK_HEADER(dwg.header_vars.BLOCK_RECORD_MSPACE, data, true); // first all entities in the model space
+    size_t nLayers = dwg_get_layer_count( &data.dwg );
+    auto layers = dwg_get_layers( &data.dwg );
+    cout << " got " << nLayers << " layers" << endl;
+
+    for (int i = 0; i < nLayers; i++) {
+        Dwg_Object_LAYER* layer = layers[i];
+        string name = getLayerName(layer, data.dwg);
+        data.layers[layer] = DWGLayer();
+        data.drawing->addLayer(name);
+    }
+
+
+    Dwg_Object_BLOCK_CONTROL* block_control = &data.dwg.block_control;
+    process_BLOCK_HEADER(data.dwg.header_vars.BLOCK_RECORD_MSPACE, data, true); // first all entities in the model space
     for (int i=0; i < block_control->num_entries; i++) { // then all entities in the blocks
         process_BLOCK_HEADER(block_control->entries[i], data, true);
     }
-    process_BLOCK_HEADER(dwg.header_vars.BLOCK_RECORD_PSPACE, data, true); // and last all entities in the paper space
+    process_BLOCK_HEADER(data.dwg.header_vars.BLOCK_RECORD_PSPACE, data, true); // and last all entities in the paper space
 
     bool doSplitByColors = false;
     if (options.count("doSplitByColors"))
         toValue(options["doSplitByColors"], doSplitByColors);
 
-    cout << " got " << data.layers.size() << " layers" << endl;
 
     for (auto& l : data.layers) {
         Dwg_Object_LAYER* layer = l.first;
         DWGLayer& context = l.second;
         if (layer) if (!layer->on || layer->frozen) continue;
+        string lName = getLayerName(layer, data.dwg);
 
-        context.root = VRTransform::create( getLayerName(layer, dwg) );
+        context.root = VRTransform::create( lName );
         if (context.ann) context.root->addChild(context.ann);
         root->addChild(context.root);
 
@@ -830,22 +898,27 @@ void loadDWG(string path, VRTransformPtr res, map<string, string> options) {
     //dwg_free(&dwg); // writes a lot to console..
 
     map<string, int> hist;
-    for (unsigned int i=0; i < dwg.num_objects; i++) {
-        Dwg_Object& obj = dwg.object[i];
+    for (unsigned int i=0; i < data.dwg.num_objects; i++) {
+        Dwg_Object& obj = data.dwg.object[i];
         if (obj.type == DWG_TYPE_LINE || obj.type == DWG_TYPE_INSERT) {
             Dwg_Object_LAYER* layer = dwg_get_entity_layer(obj.tio.entity);
-            string name = getLayerName(layer, dwg);
+            string name = getLayerName(layer, data.dwg);
         }
     }
 
-    for (int i=0; i < dwg.layer_control.num_entries; i++) {
-        Dwg_Object* obj = dwg.layer_control.entries[i]->obj;
+    for (int i=0; i < data.dwg.layer_control.num_entries; i++) {
+        Dwg_Object* obj = data.dwg.layer_control.entries[i]->obj;
         if (!obj || obj->type != DWG_TYPE_LAYER) continue;
-        Dwg_Object_LAYER* layer = dwg.layer_control.entries[i]->obj->tio.object->tio.LAYER;
-        string name = getLayerName(layer, dwg);
+        Dwg_Object_LAYER* layer = data.dwg.layer_control.entries[i]->obj->tio.object->tio.LAYER;
+        string name = getLayerName(layer, data.dwg);
     }
 
     res->addChild(root);
+
+    data.drawing->updateGeometries();
+    data.drawing->translate(Vec3d(0,0,5));
+    res->addChild( data.drawing );
+
 
     /*cout << "layer / entity historgam" << endl;
     for (auto h : hist) {
@@ -862,13 +935,13 @@ VRGeometryPtr dwgArcTest() {
     DWGContext data;
     double a = 6.28/10.0;
     data.layers[0] = DWGLayer();
-    Color3f col;
-    for (int i=-5; i<5; i++) data.addArc(Pnt3d(i, 0, 0), 0.4, 0, i*6.28/5.0, col, 0);
-    for (int i=-5; i<5; i++) data.addArc(Pnt3d(i, 1, 0), 0.4, i*6.28/5.0, 0, col, 0);
-    for (int i=-5; i<5; i++) data.addArc(Pnt3d(i, 2, 0), 0.4, i*6.28/5.0-a, i*6.28/5.0+a, col, 0);
-    for (int i=-5; i<5; i++) data.addArc(Pnt3d(i, 3, 0), 0.4, i*6.28/5.0+a, i*6.28/5.0-a, col, 0);
-    for (int i=-5; i<5; i++) data.addArc(Pnt3d(i, 4, 0), 0.4, i*6.28/5.0-a*3, i*6.28/5.0+a*3, col, 0);
-    for (int i=-5; i<5; i++) data.addArc(Pnt3d(i, 5, 0), 0.4, i*6.28/5.0+a*3, i*6.28/5.0-a*3, col, 0);
+    string mID;
+    for (int i=-5; i<5; i++) data.addArc(Pnt3d(i, 0, 0), 0.4, 0, i*6.28/5.0, mID, 0);
+    for (int i=-5; i<5; i++) data.addArc(Pnt3d(i, 1, 0), 0.4, i*6.28/5.0, 0, mID, 0);
+    for (int i=-5; i<5; i++) data.addArc(Pnt3d(i, 2, 0), 0.4, i*6.28/5.0-a, i*6.28/5.0+a, mID, 0);
+    for (int i=-5; i<5; i++) data.addArc(Pnt3d(i, 3, 0), 0.4, i*6.28/5.0+a, i*6.28/5.0-a, mID, 0);
+    for (int i=-5; i<5; i++) data.addArc(Pnt3d(i, 4, 0), 0.4, i*6.28/5.0-a*3, i*6.28/5.0+a*3, mID, 0);
+    for (int i=-5; i<5; i++) data.addArc(Pnt3d(i, 5, 0), 0.4, i*6.28/5.0+a*3, i*6.28/5.0-a*3, mID, 0);
     auto geo = data.layers[0].geo.asGeometry( "arcTest" );
     auto m = VRMaterial::create("arcMat");
     m->setLit(0);

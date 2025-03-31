@@ -2987,6 +2987,18 @@
 			<Option target="Release" />
 			<Option target="PVR-Objects-d" />
 		</Unit>
+		<Unit filename="src/core/objects/geometry/drawing/VRDrawing.h">
+			<Option target="PVR-Objects-d" />
+		</Unit>
+		<Unit filename="src/core/objects/geometry/drawing/VRDrawingFwd.h">
+			<Option target="PVR-Objects-d" />
+		</Unit>
+		<Unit filename="src/core/objects/geometry/drawing/VRTechnicalDrawing.cpp">
+			<Option target="PVR-Objects-d" />
+		</Unit>
+		<Unit filename="src/core/objects/geometry/drawing/VRTechnicalDrawing.h">
+			<Option target="PVR-Objects-d" />
+		</Unit>
 		<Unit filename="src/core/objects/geometry/sprite/VRSprite.cpp">
 			<Option target="Release" />
 			<Option target="PVR-Objects-d" />
