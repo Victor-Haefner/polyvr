@@ -108,7 +108,6 @@ void VRTechnicalDrawing::updateGeometries() {
     mat->setPointSize(6);
 
     for (auto& l : layers) {
-        cout << "handle layer '" << l.second.name << "'" << endl;
         if (!l.second.changed) continue;
         for (auto& o : l.second.objects) {
             if (!o.second.changed) continue;

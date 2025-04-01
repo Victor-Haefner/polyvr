@@ -257,7 +257,6 @@ struct DWGContext {
 
     void addText(Vec3d p, Vec3d x, Vec2d box, string t, double height, Dwg_Object_LAYER* layer) {
         auto strings = parseMarkupString(t);
-        cout << "   " << t << endl;
 
         float h = height*0.9;
         float w = h*0.6;
@@ -273,15 +272,8 @@ struct DWGContext {
         p += u * ( strings.size()-1 ) * (h+lD) * 0.5; // center vertically
         p -= x * Nmax * w * 0.5; // center horizontally
         p = Vec3d(x.dot(p),u.dot(p), 0);
-        //p[0] += box[0]*0.5;
-        //p[1] += box[1]*0.5;
-
-
-        //cout << "    --- --- " << t << endl;
-        //cout << "            " << box[0]*x + box[1]*u << endl;
 
         for (auto& ms : strings) {
-            cout << "      " << ms.txt << endl;
             drawing->addLabel("", Pnt2d(p), ms.txt, style);
             p[1] -= h+lD;
         }
@@ -643,7 +635,6 @@ void process_MTEXT(Dwg_Object* obj, DWGContext& data) {
     Vec3d p = transform_OCS( tp, asVec3d(text->extrusion), data );
     Vec3d d = transform_OCS( td, asVec3d(text->extrusion), data, true );
     Vec2d b = Vec2d( text->extents_width, text->extents_height );
-    cout << "  ---- " << b << ", h: " << text->text_height << endl;
     data.addText(p, d, b, txt, text->text_height, layer);
 
     /*if ( abs(tp[0]-3458135.236093999) < 1e-3 && abs(tp[1]-5439668.847597805) < 1e-3 ) {
@@ -750,7 +741,30 @@ void process_SPLINE(Dwg_Object* obj, DWGContext& data) {;} // TODO
 void process_3DFACE(Dwg_Object* obj, DWGContext& data) {;} // TODO
 void process_3DSOLID(Dwg_Object* obj, DWGContext& data) {;} // TODO
 void process_ELLIPSE(Dwg_Object* obj, DWGContext& data) {;} // TODO
-void process_DIMENSION_LINEAR(Dwg_Object* obj, DWGContext& data) {;} // TODO
+
+void process_DIMENSION_LINEAR(Dwg_Object* obj, DWGContext& data) { // TODO: not tested
+    Dwg_Entity_DIMENSION_LINEAR* dimLin = obj->tio.entity->tio.DIMENSION_LINEAR;
+    Dwg_Object_LAYER* layer = getEntityLayer(obj, data);
+    bool vis = !obj->tio.entity->invisible;
+    if (!vis) return;
+
+    string matID = process_Material(obj, data);
+
+    Vec3d p1 = asVec3d(dimLin->xline1_pt);
+    Vec3d p2 = asVec3d(dimLin->xline2_pt);
+
+    Color3f col = getEntityColor(obj->tio.entity);
+    Pnt3d P1 = transform_OCS( p1, asVec3d(dimLin->extrusion), data );
+    Pnt3d P2 = transform_OCS( p2, asVec3d(dimLin->extrusion), data );
+    data.addLine(P1, P2, matID, layer);
+
+    Vec3d tp = (p1+p2)*0.5;
+    Vec3d td = Vec3d(1,0,0);
+    string txt = convertText(dimLin, "DIMENSION_LINEAR", "blockname");
+    Vec3d p = transform_OCS( tp, asVec3d(dimLin->extrusion), data );
+    Vec3d d = transform_OCS( td, asVec3d(dimLin->extrusion), data, true );
+    data.addText(p, d, Vec2d(), txt, 0.5, layer);
+}
 
 int Nlines = 0;
 
@@ -783,8 +797,8 @@ void process_object(Dwg_Object* obj, DWGContext& data) {
         case DWG_TYPE_MLINE: process_MLINE(obj, data); break;
         case DWG_TYPE_SPLINE: process_SPLINE(obj, data); break;
         case DWG_TYPE__3DFACE: process_3DFACE(obj, data); break;
-        case DWG_TYPE__3DSOLID: process_3DSOLID(obj, data); break;
-        case DWG_TYPE_DIMENSION_LINEAR: process_DIMENSION_LINEAR(obj, data); break;*/
+        case DWG_TYPE__3DSOLID: process_3DSOLID(obj, data); break;*/
+        case DWG_TYPE_DIMENSION_LINEAR: process_DIMENSION_LINEAR(obj, data); break;
         case DWG_TYPE_TEXT: process_TEXT(obj, data); break;
         case DWG_TYPE_MTEXT: process_MTEXT(obj, data); break;
         case DWG_TYPE_INSERT: process_INSERT(obj, data); break;
