@@ -528,10 +528,12 @@ void process_TEXT(Dwg_Object* obj, DWGContext& data) {
     double y = text->insertion_pt.y;
 #endif
     char* t = text->text_value;
-    string txt = t ? t : "";
+    if (!t) return;
+    string txt;
+    txt = string(t, 2);
     Vec3d p = transform_OCS( Vec3d(x,y,0), asVec3d(text->extrusion), data );
-    data.addText(p, txt, text->height, layer);
-    //cout << " ---t1- " << p << " '" << txt << "' " << text->height << endl;
+    //data.addText(p, txt, text->height, layer);
+    cout << " ---t1- " << p << " '" << txt << "' " << text->height << endl;
 }
 
 
@@ -552,6 +554,24 @@ void extract_binary_chunk(string dwg_filename, string output_filename, long addr
     printf("Binary chunk extracted successfully to %s\n", output_filename.c_str());
 }
 
+
+
+void printBytes(char* data) {
+    for (int i = 0; i < 20; i++) {  // Print first 20 bytes
+        printf("%02X ", (unsigned char)data[i]);
+    }
+    printf("\n");
+}
+
+string narrow(const wstring& wide_string) {
+    wstring_convert <codecvt_utf8 <wchar_t>, wchar_t> convert;
+    try {
+        return convert.to_bytes (wide_string);
+    } catch(...) {
+        return "";
+    }
+}
+
 void process_MTEXT(Dwg_Object* obj, DWGContext& data) {
     Dwg_Entity_MTEXT* text = obj->tio.entity->tio.MTEXT;
     Dwg_Object_LAYER* layer = getEntityLayer(obj, data);
@@ -564,7 +584,12 @@ void process_MTEXT(Dwg_Object* obj, DWGContext& data) {
     //td = asVec3d( text->x_axis_dir );
 #endif
     char* t = text->text;
-    string txt = t ? t : "";
+    if (!t) return;
+
+    string txt = narrow( wstring((wchar_t*)t) );
+    //printf(" ------ Text: %s\n", text->text);
+    //cout << "     strrlen " << strlen(text->text) << endl;
+    //printBytes( text->text );
     Vec3d p = transform_OCS( tp, asVec3d(text->extrusion), data );
     data.addText(p, txt, text->text_height, layer);
 
