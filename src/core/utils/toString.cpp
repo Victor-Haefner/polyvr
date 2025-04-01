@@ -48,7 +48,7 @@ vector<string> splitString(const string& s, const string& d) {
     string token;
     do {
         pos = s.find(d, lpos);
-        token = s.substr(lpos, pos);
+        token = s.substr(lpos, (pos-lpos));
         res.push_back(token);
         lpos = pos+Nd;
         //s.erase(0, pos + d.length());

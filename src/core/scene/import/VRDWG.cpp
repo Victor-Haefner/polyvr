@@ -213,10 +213,78 @@ struct DWGContext {
 		addArc( c, 0, 0, 2*Pi, style, layer, box );
 	}
 
-    void addText(Vec3d p, string t, double height, Dwg_Object_LAYER* layer) {
-        string style = "txt_"+toString(height);
+	struct MString {
+        string txt;
+        string font;
+        string A; // ???
+        int line = 0;
+	};
+
+	vector<MString> parseMarkupString(string s) {
+        vector<string> lines = splitString(s, "\\P");
+        vector<MString> strings;
+        for (size_t i=0; i<lines.size(); i++) {
+            string& s = lines[i];
+            MString ms;
+            ms.line = i;
+
+            if (s.size() > 0)
+                if (s[0] == '{' && s[s.size()-1] == '}') s = subString(s, 1, s.size()-2);
+
+            for (size_t j=0; j<s.size(); j++) {
+                if (s[j] == '\\') {
+                    if (s[j+1] == 'f') {
+                        int scP = s.find(';', j);
+                        int n = scP-j-2;
+                        ms.font = s.substr(j+2, n);
+                        j += n+2; continue;
+                    }
+                    if (s[j+1] == 'A') {
+                        int scP = s.find(';', j);
+                        int n = scP-j-2;
+                        ms.A = s.substr(j+2, n);
+                        j += n+2; continue;
+                    }
+                }
+
+                ms.txt += s[j];
+            }
+
+            strings.push_back(ms);
+        }
+        return strings;
+	}
+
+    void addText(Vec3d p, Vec3d x, Vec2d box, string t, double height, Dwg_Object_LAYER* layer) {
+        auto strings = parseMarkupString(t);
+        cout << "   " << t << endl;
+
+        float h = height*0.9;
+        float w = h*0.6;
+        float lD = h*0.7;
+
+        string style = "txt_"+toString(h)+"_"+toString(x);
         drawing->setActiveTransform( transformation );
-        drawing->addLabel("", Pnt2d(p), t, style);
+
+        size_t Nmax = 0;
+        for (auto& ms : strings) Nmax = max(Nmax, ms.txt.size());
+
+        Vec3d u = x.cross(Vec3d(0,0,-1));
+        p += u * ( strings.size()-1 ) * (h+lD) * 0.5; // center vertically
+        p -= x * Nmax * w * 0.5; // center horizontally
+        p = Vec3d(x.dot(p),u.dot(p), 0);
+        //p[0] += box[0]*0.5;
+        //p[1] += box[1]*0.5;
+
+
+        //cout << "    --- --- " << t << endl;
+        //cout << "            " << box[0]*x + box[1]*u << endl;
+
+        for (auto& ms : strings) {
+            cout << "      " << ms.txt << endl;
+            drawing->addLabel("", Pnt2d(p), ms.txt, style);
+            p[1] -= h+lD;
+        }
     }
 
 	/*void addDWGArc(Vec3d c, double r, double a1, double a2, Dwg_Object_LAYER* layer) { // TODO: maybe usefull, transforms start and end points!
@@ -264,9 +332,9 @@ Color3f getLayerColor(Dwg_Object_LAYER* layer) {
 }
 
 // transform a 3D point via its OCS (extrusion) to 2D
-Vec3d transform_OCS(Vec3d pt, Vec3d ext, DWGContext& data) {
+Vec3d transform_OCS(Vec3d pt, Vec3d ext, DWGContext& data, bool isDir = false) {
     Vec3d offset;
-    if (!data.inInsert) offset = data.offset;
+    if (!data.inInsert && !isDir) offset = data.offset;
 
     if (ext[0] == 0.0 && ext[1] == 0.0 && ext[2] ==  1.0) return pt +offset;
     if (ext[0] == 0.0 && ext[1] == 0.0 && ext[2] == -1.0) return Vec3d(-pt[0], pt[1], pt[2]) +offset;
@@ -517,23 +585,29 @@ void process_ARC(Dwg_Object* obj, DWGContext& data) {
     data.addArc(center, arc->radius, arc->start_angle, arc->end_angle, matID, layer);
 }
 
+string convertText(void* ent, string entType, string fieldName) {
+    char* text_value = nullptr;
+    int isnew = 0;
+    dwg_dynapi_entity_utf8text(ent, entType.c_str(), fieldName.c_str(), &text_value, &isnew, NULL);
+    if (!text_value) return "";
+
+    string txt = string(text_value);
+    if (isnew) free(text_value);
+    return txt;
+}
+
 void process_TEXT(Dwg_Object* obj, DWGContext& data) {
     Dwg_Entity_TEXT* text = obj->tio.entity->tio.TEXT;
     Dwg_Object_LAYER* layer = getEntityLayer(obj, data);
+    Vec3d tp;
 #if LIBREDWG_VERSION_MINOR >= 11
-    double x = text->ins_pt.x;
-    double y = text->ins_pt.y;
+    tp = asVec3d( text->ins_pt );
 #else
-    double x = text->insertion_pt.x;
-    double y = text->insertion_pt.y;
+    tp = asVec3d( text->insertion_pt );
 #endif
-    char* t = text->text_value;
-    if (!t) return;
-    string txt;
-    txt = string(t, 2);
-    Vec3d p = transform_OCS( Vec3d(x,y,0), asVec3d(text->extrusion), data );
-    //data.addText(p, txt, text->height, layer);
-    cout << " ---t1- " << p << " '" << txt << "' " << text->height << endl;
+    string txt = convertText(text, "TEXT", "text_value");
+    Vec3d p = transform_OCS( tp, asVec3d(text->extrusion), data );
+    data.addText(p, Vec3d(1,0,0), Vec2d(0,0), txt, text->height, layer);
 }
 
 
@@ -554,44 +628,23 @@ void extract_binary_chunk(string dwg_filename, string output_filename, long addr
     printf("Binary chunk extracted successfully to %s\n", output_filename.c_str());
 }
 
-
-
-void printBytes(char* data) {
-    for (int i = 0; i < 20; i++) {  // Print first 20 bytes
-        printf("%02X ", (unsigned char)data[i]);
-    }
-    printf("\n");
-}
-
-string narrow(const wstring& wide_string) {
-    wstring_convert <codecvt_utf8 <wchar_t>, wchar_t> convert;
-    try {
-        return convert.to_bytes (wide_string);
-    } catch(...) {
-        return "";
-    }
-}
-
 void process_MTEXT(Dwg_Object* obj, DWGContext& data) {
     Dwg_Entity_MTEXT* text = obj->tio.entity->tio.MTEXT;
     Dwg_Object_LAYER* layer = getEntityLayer(obj, data);
     Vec3d tp, td;
 #if LIBREDWG_VERSION_MINOR >= 11
     tp = asVec3d( text->ins_pt );
-    //td = asVec3d( text->x_axis_dir );
+    td = asVec3d( text->x_axis_dir );
 #else
     tp = asVec3d( text->insertion_pt );
-    //td = asVec3d( text->x_axis_dir );
+    td = asVec3d( text->x_axis_dir );
 #endif
-    char* t = text->text;
-    if (!t) return;
-
-    string txt = narrow( wstring((wchar_t*)t) );
-    //printf(" ------ Text: %s\n", text->text);
-    //cout << "     strrlen " << strlen(text->text) << endl;
-    //printBytes( text->text );
+    string txt = convertText(text, "MTEXT", "text");
     Vec3d p = transform_OCS( tp, asVec3d(text->extrusion), data );
-    data.addText(p, txt, text->text_height, layer);
+    Vec3d d = transform_OCS( td, asVec3d(text->extrusion), data, true );
+    Vec2d b = Vec2d( text->extents_width, text->extents_height );
+    cout << "  ---- " << b << ", h: " << text->text_height << endl;
+    data.addText(p, d, b, txt, text->text_height, layer);
 
     /*if ( abs(tp[0]-3458135.236093999) < 1e-3 && abs(tp[1]-5439668.847597805) < 1e-3 ) {
         cout << " MTEXT " << p << " '" << txt << "' " << endl;

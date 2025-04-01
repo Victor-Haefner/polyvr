@@ -186,6 +186,7 @@ int VRPipeSystem::addNode(string name, PosePtr pos, string type, map<string, str
 }
 
 void VRPipeSystem::remNode(int nID) {
+    if (!nodes.count(nID)) return;
     rebuildMesh = true;
     auto& node = nodes[nID];
     ontology->remEntity(node->entity);
@@ -195,7 +196,7 @@ void VRPipeSystem::remNode(int nID) {
 }
 
 int VRPipeSystem::getNode(string name) { return nodesByName[name]; }
-string VRPipeSystem::getNodeName(int nID) { return nodes[nID]->name; }
+string VRPipeSystem::getNodeName(int nID) { if (nodes.count(nID)) return nodes[nID]->name; return ""; }
 int VRPipeSystem::getSegment(int n1, int n2) { return graph->getEdgeID(n1, n2); }
 
 int VRPipeSystem::addSegment(double radius, int n1, int n2) {

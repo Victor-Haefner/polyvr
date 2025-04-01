@@ -202,7 +202,10 @@ void VRTechnicalDrawing::updateGeometry(Layer& l, Object& o) {
             auto a = VRAnnotationEngine::create("labels");
             auto v = splitString(o.style, '_');
             double h = toDouble(v[1]);
+            Vec3d xDir;
+            toValue(v[2], xDir);
             a->setSize(h);
+            a->setUp( xDir.cross(Vec3d(0,0,-1)) );
             l.annotationStyles[o.style] = a;
             l.root->addChild( a );
         }
