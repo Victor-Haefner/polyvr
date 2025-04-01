@@ -195,9 +195,7 @@ struct DWGContext {
 
     /** DWG arcs always rotate counterclockwise! */
 	void addArc(Pnt3d c, double r, double a1, double a2, string style, Dwg_Object_LAYER* layer, Vec3d eBox = Vec3d(1,1,1)) {
-		if (a2 < a1) a2 += 2*Pi; // make sure to rotate counterclockwise!
 		if (r < 1e-6) r = 1; // elipse -> use box
-        else r = scaleLength(r);
         drawing->setActiveTransform( transformation );
         drawing->addArc("", Pnt2d(c), r, a1, a2, Vec2d(eBox), style);
 	}
@@ -573,8 +571,16 @@ void process_ARC(Dwg_Object* obj, DWGContext& data) {
     if (!vis) return;
 
     string matID = process_Material(obj, data);
-    Pnt3d center = transform_OCS( asVec3d(arc->center), asVec3d(arc->extrusion), data );
-    data.addArc(center, arc->radius, arc->start_angle, arc->end_angle, matID, layer);
+    float a1 = arc->start_angle;
+    float a2 = arc->end_angle;
+    Vec3d ext = asVec3d(arc->extrusion);
+    if (ext[2] < 0) {
+        a1 = Pi-a1;
+        a2 = Pi-a2;
+    }
+    Pnt3d center = transform_OCS( asVec3d(arc->center), ext, data );
+    data.addArc(center, arc->radius, a1, a2, matID, layer);
+    //cout << "process_ARC " << center << ", ar " << arc->radius << ", as " << a1 << ", ae " << a2 << endl;
 }
 
 string convertText(void* ent, string entType, string fieldName) {

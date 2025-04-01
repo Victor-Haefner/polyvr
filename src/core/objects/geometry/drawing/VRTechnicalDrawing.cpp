@@ -169,7 +169,7 @@ void VRTechnicalDrawing::updateGeometry(Layer& l, Object& o) {
         unpackParam( o.parameters[END],   a2);
         unpackParam( o.parameters[SCALE],  s);
 
-        Pnt3d C = o.transform * Pnt3d(c);
+        Pnt3d C = Pnt3d(c);
 
         double da = 0.1;
         int N = max(int(abs(a2-a1)/da),1);
@@ -177,6 +177,7 @@ void VRTechnicalDrawing::updateGeometry(Layer& l, Object& o) {
         for (int i=0; i<=N; i++) {
             double a = a1+da*i;
             Pnt3d p = C + Vec3d(cos(a)*s[0], sin(a)*s[1], 0)*r;
+            p = o.transform * p;
             geo->pushVert(p);
             geo->pushColor(col);
             if (i > 0) geo->pushLine();
