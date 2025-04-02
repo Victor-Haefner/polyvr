@@ -73,6 +73,7 @@
 #include "VRPyProjectManager.h"
 #include "VRPyGeoPrimitive.h"
 #include "core/objects/geometry/brep/VRPyBRep.h"
+#include "core/objects/geometry/drawing/VRPyDrawing.h"
 #include "VRPyProgress.h"
 #include "VRPyUndoManager.h"
 #include "VRPyObjectManager.h"
@@ -330,6 +331,8 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
 	sm->registerModule<VRPyBRepSurface>("BRepSurface", pModVR);
 	sm->registerModule<VRPyBRepEdge>("BRepEdge", pModVR);
 	sm->registerModule<VRPyBRepBound>("BRepBound", pModVR);
+
+	sm->registerModule<VRPyTechnicalDrawing>("TechnicalDrawing", pModVR);
 #ifndef WITHOUT_CGAL
 	sm->registerModule<VRPyCSGGeometry>("CSGGeometry", pModVR, VRPyGeometry::typeRef);
 #endif

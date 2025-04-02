@@ -23,6 +23,7 @@
 #include "addons/WorldGenerator/VRPyWorldGenerator.h"
 
 #include "core/objects/object/VRObject.h"
+#include "core/objects/geometry/drawing/VRPyDrawing.h"
 #include "core/setup/devices/VRDevice.h"
 #include "addons/Semantics/Reasoning/VRPyOntology.h"
 #include "addons/Semantics/VRSemanticsFwd.h"
@@ -61,6 +62,7 @@ template<> PyObject* VRPyTypeCaster::cast(const VRObjectPtr& obj) {
     else if (type == "GeoPrimitive") return VRPyGeoPrimitive::fromSharedPtr( static_pointer_cast<VRGeoPrimitive>(obj) );
     else if (type == "PointCloud") return VRPyPointCloud::fromSharedPtr( static_pointer_cast<VRPointCloud>(obj) );
     else if (type == "WorldGenerator") return VRPyWorldGenerator::fromSharedPtr( static_pointer_cast<VRWorldGenerator>(obj) );
+    else if (type == "TechnicalDrawing") return VRPyTechnicalDrawing::fromSharedPtr( static_pointer_cast<VRTechnicalDrawing>(obj) );
 #ifndef WITHOUT_TCP
     else if (type == "SyncNode") return VRPySyncNode::fromSharedPtr( static_pointer_cast<VRSyncNode>(obj) );
 #endif

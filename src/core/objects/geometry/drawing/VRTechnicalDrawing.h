@@ -106,10 +106,10 @@ class VRTechnicalDrawing : public VRTransform {
 		void updateGeometry(Layer& l, Object& o);
 
 	public:
-		VRTechnicalDrawing();
+		VRTechnicalDrawing(string name);
 		~VRTechnicalDrawing();
 
-		static VRTechnicalDrawingPtr create();
+		static VRTechnicalDrawingPtr create(string name = "drawing");
 		VRTechnicalDrawingPtr ptr();
 
 		void updateGeometries();
@@ -135,6 +135,8 @@ class VRTechnicalDrawing : public VRTransform {
 		void addEllipse(string name, Pnt2d cp, double a, double b, string style);
 		void addPolyLine(string name, vector<Pnt2d> v, string style);
 		void addLabel(string name, Pnt2d p, string text, string style);
+
+		vector<VRObjectPtr> getLayers();
 };
 
 OSG_END_NAMESPACE;

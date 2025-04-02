@@ -496,8 +496,8 @@ string hudSite = TEMPLATE(
 <head>\n
 \t<style type="text/css">\n
 \t\tbody {\n
-\t\t\tmargin:0;\
-\t\t}\n
+\t\t\tmargin:0;\n
+\t\t}\n\n
 \t\tbutton {\n
 \t\t\tfont-size:10vh;\n
 \t\t\twidth:100vw;\n

@@ -2987,11 +2987,14 @@
 			<Option target="Release" />
 			<Option target="PVR-Objects-d" />
 		</Unit>
-		<Unit filename="src/core/objects/geometry/drawing/VRDrawing.h">
-			<Option target="PVR-Objects-d" />
-		</Unit>
 		<Unit filename="src/core/objects/geometry/drawing/VRDrawingFwd.h">
 			<Option target="PVR-Objects-d" />
+		</Unit>
+		<Unit filename="src/core/objects/geometry/drawing/VRPyDrawing.cpp">
+			<Option target="PVR-Scripting-d" />
+		</Unit>
+		<Unit filename="src/core/objects/geometry/drawing/VRPyDrawing.h">
+			<Option target="PVR-Scripting-d" />
 		</Unit>
 		<Unit filename="src/core/objects/geometry/drawing/VRTechnicalDrawing.cpp">
 			<Option target="PVR-Objects-d" />

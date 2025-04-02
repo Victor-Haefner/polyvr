@@ -22,10 +22,10 @@ VRTechnicalDrawing::Layer::Layer(string name) : name(name) {
     root = VRTransform::create(name);
 }
 
-VRTechnicalDrawing::VRTechnicalDrawing() : VRTransform("drawing") {}
+VRTechnicalDrawing::VRTechnicalDrawing(string name) : VRTransform(name) { type = "TechnicalDrawing"; }
 VRTechnicalDrawing::~VRTechnicalDrawing() {}
 
-VRTechnicalDrawingPtr VRTechnicalDrawing::create() { return VRTechnicalDrawingPtr( new VRTechnicalDrawing() ); }
+VRTechnicalDrawingPtr VRTechnicalDrawing::create(string name) { return VRTechnicalDrawingPtr( new VRTechnicalDrawing(name) ); }
 VRTechnicalDrawingPtr VRTechnicalDrawing::ptr() { return static_pointer_cast<VRTechnicalDrawing>(shared_from_this()); }
 
 template<typename T> VRTechnicalDrawing::Parameter VRTechnicalDrawing::packParam(ParameterType type, T data) { return Parameter(type, &data, sizeof(data)); }
@@ -46,6 +46,12 @@ void VRTechnicalDrawing::setActiveTransform(Matrix4d transform) { context.transf
 void VRTechnicalDrawing::addLayer(string name) {
     layers[name] = Layer(name);
     addChild( layers[name].root );
+}
+
+vector<VRObjectPtr> VRTechnicalDrawing::getLayers() {
+    vector<VRObjectPtr> res;
+    for (auto& l : layers) res.push_back(l.second.root);
+    return res;
 }
 
 bool VRTechnicalDrawing::hasMaterial(string mID) { return materials.count(mID); }
