@@ -150,10 +150,20 @@ OSG::Vec4i VRPyBase::parseVec4iList(PyObject *li) {
 OSG::Line VRPyBase::PyToLine(PyObject *li) {
     if (li == 0) return OSG::Line();
     vector<PyObject*> lis = pyListToVector(li);
-    if (lis.size() != 6) return OSG::Line();
-    float r[6];
-    for (int i=0; i<6; i++) r[i] = PyFloat_AsDouble(lis[i]);
-    return OSG::Line(OSG::Pnt3f(r[3],r[4],r[5]), OSG::Vec3f(r[0],r[1],r[2]));
+
+    if (lis.size() == 2) {
+        OSG::Vec3d P = parseVec3dList( lis[0] );
+        OSG::Vec3d D = parseVec3dList( lis[1] );
+        return OSG::Line(OSG::Pnt3f(P), OSG::Vec3f(D));
+    }
+
+    if (lis.size() == 6) {
+        float r[6];
+        for (int i=0; i<6; i++) r[i] = PyFloat_AsDouble(lis[i]);
+        return OSG::Line(OSG::Pnt3f(r[3],r[4],r[5]), OSG::Vec3f(r[0],r[1],r[2]));
+    }
+
+    return OSG::Line();
 }
 
 OSG::Vec2d VRPyBase::parseVec2dList(PyObject *li) {

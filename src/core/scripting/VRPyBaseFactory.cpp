@@ -116,9 +116,24 @@ template<> bool toValue(PyObject* o, Line& l) {
         return 1;
     }
 
-    if (!PyVec_Check(o, 6, 'f')) return 0;
-    l = VRPyBase::PyToLine(o);
-    return 1;
+    if (PyVec_Check(o, 6, 'f')) {
+        l = VRPyBase::PyToLine(o);
+        return 1;
+    }
+
+    if (PyTuple_Check(o)) {
+        int N = PyTuple_GET_SIZE(o);
+        if (N == 2) {
+            PyObject* p = PyTuple_GetItem(o, 0);
+            PyObject* d = PyTuple_GetItem(o, 1);
+            if (VRPyVec3f::check(p) && VRPyVec3f::check(d)) {
+                l = VRPyBase::PyToLine(o);
+                return 1;
+            }
+        }
+    }
+
+    return 0;
 }
 
 template<> bool toValue(PyObject* o, Pose& m) {
