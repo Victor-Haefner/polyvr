@@ -913,7 +913,7 @@ PyMethodDef VRPyXML::methods[] = {
     {"write", PyWrap2(XML, write, "Write data to file", void, string) },
     {"toString", PyWrap2(XML, toString, "Return data as string", string) },
     {"getRoot", PyWrap2(XML, getRoot, "Return data root node", XMLElementPtr) },
-    {"newRoot", PyWrap2(XML, newRoot, "Create new root node (name, ns_uri, ns_prefix)", XMLElementPtr, string, string, string) },
+    {"newRoot", PyWrapOpt2(XML, newRoot, "Create new root node (name, ns_uri, ns_prefix)", "|", XMLElementPtr, string, string, string) },
     {"printTree", PyWrapOpt2(XML, printTree, "Print subtree to console", "", void, XMLElementPtr, string) },
     {NULL}  /* Sentinel */
 };
