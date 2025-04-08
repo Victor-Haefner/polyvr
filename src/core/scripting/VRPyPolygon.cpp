@@ -32,6 +32,8 @@ PyMethodDef VRPyPolygon::methods[] = {
     {"reverseOrder", PyWrap(Polygon, reverseOrder, "Reverse the order of the points", void) },
     {"translate", PyWrap(Polygon, translate, "Translate all points", void, Vec3d) },
     {"removeDoubles", PyWrapOpt(Polygon, removeDoubles, "Remove doubles", "0.001", void, float) },
+    {"shrink", PyWrap(Polygon, shrink, "Shrink polygon, move edges inwards", VRPolygonPtr, double) },
+    {"grow", PyWrap(Polygon, grow, "Grow polygon, move edges outwards", VRPolygonPtr, double) },
     {NULL}  /* Sentinel */
 };
 

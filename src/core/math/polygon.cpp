@@ -137,6 +137,10 @@ void VRPolygon::clear() {
     convex = false;
 }
 
+VRPolygonPtr VRPolygon::grow(double amount) {
+    return shrink(-amount);
+}
+
 VRPolygonPtr VRPolygon::shrink(double amount) {
     VRPolygonPtr area = VRPolygon::create();
     *area = *this;

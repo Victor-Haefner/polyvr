@@ -55,6 +55,7 @@ class VRPolygon {
         double computeArea();
         double getDistance(Vec3d p);
         VRPolygonPtr shrink(double amount);
+        VRPolygonPtr grow(double amount);
         Vec3d getRandomPoint();
         vector<Vec3d> getRandomPoints(double density = 10, double padding = 0, double spread = 0.5);
 
