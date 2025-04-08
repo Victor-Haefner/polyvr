@@ -279,8 +279,8 @@ class IFCLoader {
             }
 
             if (mat.hasTransparency()) {
-                cout << "mat with trans " << mat.transparency() << endl;
-                c[3] = mat.transparency();
+                //cout << "mat with trans " << mat.transparency() << endl;
+                c[3] = 1.0 - mat.transparency();
                 baseMat->enableTransparency();
             }
 
@@ -470,6 +470,11 @@ class IFCLoader {
             // hide openings
             for (auto o : ifcObjects) {
                 if (o.first->is(Type::IfcOpeningElement)) {
+                    auto g = dynamic_pointer_cast<VRGeometry>(o.second);
+                    if (g) g->setMeshVisibility(false);
+                }
+
+                if (o.first->is(Type::IfcSpace)) {
                     auto g = dynamic_pointer_cast<VRGeometry>(o.second);
                     if (g) g->setMeshVisibility(false);
                 }
