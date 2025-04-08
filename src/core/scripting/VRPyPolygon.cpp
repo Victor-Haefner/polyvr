@@ -34,6 +34,7 @@ PyMethodDef VRPyPolygon::methods[] = {
     {"removeDoubles", PyWrapOpt(Polygon, removeDoubles, "Remove doubles", "0.001", void, float) },
     {"shrink", PyWrap(Polygon, shrink, "Shrink polygon, move edges inwards", VRPolygonPtr, double) },
     {"grow", PyWrap(Polygon, grow, "Grow polygon, move edges outwards", VRPolygonPtr, double) },
+    {"getBoundingBox", PyWrap(Polygon, getBoundingBox, "Get a boundingbox of the polygon", Boundingbox) },
     {NULL}  /* Sentinel */
 };
 
