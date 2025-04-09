@@ -1377,6 +1377,8 @@ target_sources(polyvr PRIVATE src/core/objects/geometry/VRPrimitive.cpp)
 target_sources(polyvr PRIVATE src/core/objects/geometry/VRSky.cpp)
 target_sources(polyvr PRIVATE src/core/objects/geometry/VRStroke.cpp)
 target_sources(polyvr PRIVATE src/core/objects/geometry/VRMultiGrid.cpp)
+target_sources(polyvr PRIVATE src/core/objects/geometry/drawing/VRPyDrawing.cpp)
+target_sources(polyvr PRIVATE src/core/objects/geometry/drawing/VRTechnicalDrawing.cpp)
 endif()
 
 if(TRUE) # ok
