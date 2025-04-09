@@ -39,6 +39,7 @@ class VRPolygon {
         bool isConvex();
         bool isCCW();
         void reverseOrder();
+        void reorder(string dir);
         void translate(Vec3d v);
         void scale(Vec3d s);
 

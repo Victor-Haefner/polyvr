@@ -75,6 +75,18 @@ bool VRPolygon::isCCW() {
     return true;
 }
 
+void VRPolygon::reverseOrder() {
+    reverse(points.begin(), points.end());
+    reverse(points3.begin(), points3.end());
+}
+
+void VRPolygon::reorder(string dir) {
+    bool ccw = isCCW();
+    if (dir == "CCW" && ccw) return;
+    if (dir == "CW" && !ccw) return;
+    reverseOrder();
+}
+
 void VRPolygon::runTest() {
     VRPolygon poly;
 
@@ -755,11 +767,6 @@ bool VRPolygon::isConvex() {
     }
 
     return true;
-}
-
-void VRPolygon::reverseOrder() {
-    reverse(points.begin(), points.end());
-    reverse(points3.begin(), points3.end());
 }
 
 vector< VRPolygon > VRPolygon::getConvexDecomposition() {

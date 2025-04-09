@@ -35,6 +35,7 @@ PyMethodDef VRPyPolygon::methods[] = {
     {"shrink", PyWrap(Polygon, shrink, "Shrink polygon, move edges inwards", VRPolygonPtr, double) },
     {"grow", PyWrap(Polygon, grow, "Grow polygon, move edges outwards", VRPolygonPtr, double) },
     {"getBoundingBox", PyWrap(Polygon, getBoundingBox, "Get a boundingbox of the polygon", Boundingbox) },
+    {"reorder", PyWrap(Polygon, reorder, "Reorder the points to set the rotation direction around the bb center, 'CW' or 'CCW'", void, string) },
     {NULL}  /* Sentinel */
 };
 
