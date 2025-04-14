@@ -493,16 +493,19 @@ void VRScript::pyErrPrint(string channel) {
 #endif
     };
 
-    auto getTracebackFrame = [](PyTracebackObject* tb, vector<PyFrameObject*>& frames) {
-        while (tb->tb_next) tb = tb->tb_next;
-        if (tb->tb_frame) frames.push_back(tb->tb_frame);
-    };
+    auto getThreadStateFrames = [&]() {
+        PyObject *ptype = nullptr, *pvalue = nullptr, *ptraceback = nullptr;
+        PyErr_Fetch(&ptype, &pvalue, &ptraceback);
+        PyErr_NormalizeException(&ptype, &pvalue, &ptraceback);
 
-    auto getThreadStateFrames = [&](PyThreadState* tstate) {
         vector<PyFrameObject*> frames;
-        if (tstate->frame) frames.push_back(tstate->frame);
-        //if (auto tb = (PyTracebackObject*)tstate->exc_traceback) getTracebackFrame(tb, frames); // TODO: exc_traceback is in _PyErr_StackItem exc_state
-        if (auto tb = (PyTracebackObject*)tstate->curexc_traceback) getTracebackFrame(tb, frames);
+        if (ptraceback && PyTraceBack_Check(ptraceback)) {
+            PyTracebackObject* tb = (PyTracebackObject*)ptraceback;
+            while (tb) {
+                if (tb->tb_frame) frames.push_back(tb->tb_frame);
+                tb = tb->tb_next;
+            }
+        }
         return frames;
     };
 
@@ -516,9 +519,12 @@ void VRScript::pyErrPrint(string channel) {
     };
     list<Line> lines;
 
-    PyThreadState* tstate = PyThreadState_GET();
-    for (auto frame : getThreadStateFrames(tstate)) {
+    for (auto frame : getThreadStateFrames()) {
         while (frame) {
+            if (!frame->f_code) break;
+            cout << "pyErrPrint " << frame << endl;
+            cout << "  " << frame->f_code << ", " << frame->f_lasti << endl;
+            //int line = PyFrame_GetLineNumber(frame->f_code, frame->f_lasti);
             int line = PyCode_Addr2Line(frame->f_code, frame->f_lasti);
             string filename = PyUnicode_AsUTF8(frame->f_code->co_filename);
             string funcname = PyUnicode_AsUTF8(frame->f_code->co_name);
