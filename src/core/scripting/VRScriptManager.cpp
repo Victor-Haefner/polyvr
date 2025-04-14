@@ -320,6 +320,12 @@ static struct PyModuleDef VRModDef = {
     VRSceneGlobals::methods              // method table
 };
 
+PyObject* pModVRTmp = 0;
+PyMODINIT_FUNC PyInit_VR(void) {
+    pModVRTmp = PyModule_Create(&VRModDef);
+    return pModVRTmp;
+}
+
 void VRScriptManager::initPyModules() {
     cout << " initPyModules" << endl;
     modOut = 0;
@@ -327,7 +333,11 @@ void VRScriptManager::initPyModules() {
 #if defined(WASM) || defined(WIN32)
     Py_NoSiteFlag = 1;
 #endif
+    PyImport_AppendInittab("VR", PyInit_VR);
+
     Py_Initialize();
+    pModVR = pModVRTmp;
+
     cout << "  Py_Initialize done" << endl;
     wchar_t* wargv[1];
     wargv[0] = Py_DecodeLocale("PolyVR", NULL);
@@ -355,15 +365,20 @@ void VRScriptManager::initPyModules() {
     PyObject* sys_path = PySys_GetObject((char*)"path");
     PyList_Append(sys_path, PyUnicode_FromString(".") );
 
-    pModVR = PyModule_Create(&VRModDef);
+    //pModVR = PyModule_Create(&VRModDef); // TODO??
+    if (!pModVR) {
+        cout << "PyModule_Create of pModVR failed!" << endl;
+        return;
+    }
 
     VRSceneModules sceneModules;
     sceneModules.setup(this, pModVR);
     cout << "  Added scene modules" << endl;
 
+    // TODO: fix the error printing
 	if (!VROptions::get()->getOption<bool>("standalone") && !VROptions::get()->getOption<bool>("headless")) {
-        redirectPyOutput("stdout", "Console");
-        redirectPyOutput("stderr", "Errors");
+        //redirectPyOutput("stdout", "Console");
+        //redirectPyOutput("stderr", "Errors");
 	}
 
     PyRun_SimpleString( // add cython local path to python search path

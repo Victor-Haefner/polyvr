@@ -455,7 +455,7 @@ void VRScript::printSyntaxError(PyObject *exception, PyObject *value, PyObject *
     Py_INCREF(value);
 
     //if (Py_FlushLine()) PyErr_Clear(); // TODO: check if needed
-    PyErr_Clear();
+    //PyErr_Clear();
 
     fflush(stdout);
     if (err == 0 && PyObject_HasAttrString(value, "print_file_and_line")) {
@@ -483,6 +483,8 @@ void VRScript::printSyntaxError(PyObject *exception, PyObject *value, PyObject *
 
 void VRScript::pyErrPrint(string channel) {
     if (!PyErr_Occurred()) return;
+    PyErr_Print(); // TODO: fix the error printing
+    return;
 
     auto print = [&]( string m, string style = "", shared_ptr< VRFunction<string> > link = 0 ) {
 #ifndef WITHOUT_IMGUI

@@ -20,10 +20,10 @@ class VRScriptTemplate;
 
 class VRScriptManager : public VRStorage, public VRPyBase {
     protected:
-        PyObject* pGlobal;
-        PyObject* pLocal;
-        PyObject* pModBase;
-        PyObject* pModVR;
+        PyObject* pGlobal = 0;
+        PyObject* pLocal = 0;
+        PyObject* pModBase = 0;
+        PyObject* pModVR = 0;
         map<int, VRThreadCbPtr> pyThreads;
         map<string, PyObject*> modules;
         map<string, map<string, PyTypeObject*> > moduleTypes;
