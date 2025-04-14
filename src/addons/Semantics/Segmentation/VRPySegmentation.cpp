@@ -5,7 +5,6 @@
 
 template<> PyTypeObject VRPyBaseT<OSG::VRSegmentation>::type = {
     PyObject_HEAD_INIT(NULL)
-    0,                         /*ob_size*/
     "VR.Segmentation",             /*tp_name*/
     sizeof(VRPySegmentation),             /*tp_basicsize*/
     0,                         /*tp_itemsize*/

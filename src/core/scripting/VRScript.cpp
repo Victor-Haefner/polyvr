@@ -364,7 +364,7 @@ int parse_syntax_error(PyObject *err, PyObject **message, char **filename, int *
 
     if (!(v = PyObject_GetAttrString(err, "filename"))) goto finally;
     if (v == Py_None) *filename = NULL;
-    else if (! (*filename = PyUnicode_AsUTF8(v))) goto finally;
+    else if (! (*filename = (char*)PyUnicode_AsUTF8(v))) goto finally;
 
     Py_DECREF(v);
     if (!(v = PyObject_GetAttrString(err, "lineno"))) goto finally;
@@ -390,7 +390,7 @@ int parse_syntax_error(PyObject *err, PyObject **message, char **filename, int *
 
     if (!(v = PyObject_GetAttrString(err, "text"))) goto finally;
     if (v == Py_None) *text = NULL;
-    else if (! (*text = PyUnicode_AsUTF8(v))) goto finally;
+    else if (! (*text = (char*)PyUnicode_AsUTF8(v))) goto finally;
     Py_DECREF(v);
     return 1;
 
@@ -453,7 +453,10 @@ void VRScript::printSyntaxError(PyObject *exception, PyObject *value, PyObject *
 
     int err = 0;
     Py_INCREF(value);
-    if (Py_FlushLine()) PyErr_Clear();
+
+    //if (Py_FlushLine()) PyErr_Clear(); // TODO: check if needed
+    PyErr_Clear();
+
     fflush(stdout);
     if (err == 0 && PyObject_HasAttrString(value, "print_file_and_line")) {
         PyObject *message;
@@ -498,7 +501,7 @@ void VRScript::pyErrPrint(string channel) {
     auto getThreadStateFrames = [&](PyThreadState* tstate) {
         vector<PyFrameObject*> frames;
         if (tstate->frame) frames.push_back(tstate->frame);
-        if (auto tb = (PyTracebackObject*)tstate->exc_traceback) getTracebackFrame(tb, frames);
+        //if (auto tb = (PyTracebackObject*)tstate->exc_traceback) getTracebackFrame(tb, frames); // TODO: exc_traceback is in _PyErr_StackItem exc_state
         if (auto tb = (PyTracebackObject*)tstate->curexc_traceback) getTracebackFrame(tb, frames);
         return frames;
     };
@@ -562,7 +565,7 @@ void VRScript::compile( PyObject* pGlobal, PyObject* pModVR ) {
     setFunction( 0 );
     PyObject* pCode = Py_CompileString(getScript().c_str(), getName().c_str(), Py_file_input);
     if (!pCode) { pyErrPrint("Syntax"); return; }
-    PyObject* pValue = PyEval_EvalCode((PyCodeObject*)pCode, pGlobal, PyModule_GetDict(pModVR));
+    PyObject* pValue = PyEval_EvalCode(pCode, pGlobal, PyModule_GetDict(pModVR));
     pyErrPrint("Errors");
     if (!pValue) return;
     Py_DECREF(pCode);
