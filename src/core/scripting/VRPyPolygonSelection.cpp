@@ -6,7 +6,6 @@
 
 template<> PyTypeObject VRPyBaseT<OSG::VRPolygonSelection>::type = {
     PyObject_HEAD_INIT(NULL)
-    0,                         /*ob_size*/
     "VR.PolygonSelection",             /*tp_name*/
     sizeof(VRPyPolygonSelection),             /*tp_basicsize*/
     0,                         /*tp_itemsize*/

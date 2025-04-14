@@ -6,7 +6,7 @@
 using namespace OSG;
 
 template<> bool toValue(PyObject* obj, VRTextureRenderer::CHANNEL& e) {
-    string str = PyString_AsString(obj);
+    string str = PyUnicode_AsUTF8(obj);
     return toValue( str , e);
 }
 

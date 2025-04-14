@@ -10,13 +10,13 @@ simplePyType( Graph , New_ptr );
 
 template<> PyObject* VRPyTypeCaster::cast(const Graph::edge& e) {
     PyObject* epy = PyTuple_New(2);
-    PyTuple_SetItem(epy, 0, PyInt_FromLong(e.from));
-    PyTuple_SetItem(epy, 1, PyInt_FromLong(e.to));
+    PyTuple_SetItem(epy, 0, PyLong_FromLong(e.from));
+    PyTuple_SetItem(epy, 1, PyLong_FromLong(e.to));
     return epy;
 }
 
 template<> PyObject* VRPyTypeCaster::cast(const Graph::node& n) {
-    return PyInt_FromLong(n.ID);
+    return PyLong_FromLong(n.ID);
 }
 
 PyMethodDef VRPyGraph::methods[] = {

@@ -87,7 +87,7 @@ PyObject* VRPyPolygon::close(VRPyPolygon* self) {
 
 PyObject* VRPyPolygon::size(VRPyPolygon* self) {
     if (!self->valid()) return NULL;
-    return PyInt_FromLong( self->objPtr->size() );
+    return PyLong_FromLong( self->objPtr->size() );
 }
 
 PyObject* VRPyPolygon::set(VRPyPolygon* self, PyObject* args) {

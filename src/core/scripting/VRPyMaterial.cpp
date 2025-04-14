@@ -143,7 +143,7 @@ PyObject* VRPyMaterial::setDefaultVertexShader(VRPyMaterial* self) {
 
 PyObject* VRPyMaterial::setDepthTest(VRPyMaterial* self, PyObject* args) {
     if (!self->valid()) return NULL;
-	const char* s=0;
+	const char* s = 0;
     if (! PyArg_ParseTuple(args, "s", (char*)&s)) return NULL;
 	if (s) self->objPtr->setDepthTest( toGLConst(s) );
 	Py_RETURN_TRUE;
@@ -159,11 +159,12 @@ PyObject* VRPyMaterial::getTexture(VRPyMaterial* self, PyObject* args) {
 PyObject* VRPyMaterial::setShaderParameter(VRPyMaterial* self, PyObject* args) {
     auto mPtr = self->objPtr;
 	if (mPtr == 0) { PyErr_SetString(err, "VRPyMaterial::setShaderParameter, C obj is invalid"); return NULL; }
-	PyStringObject* name;
+	const char* name = 0;
 	PyObject* var;
-    if (! PyArg_ParseTuple(args, "OO", &name, &var)) return NULL;
-    string n = PyString_AsString((PyObject*)name);
-    if (PyInt_Check(var)) { int v; toValue(var,v); mPtr->setShaderParameter( n, v ); }
+    if (! PyArg_ParseTuple(args, "sO", &name, &var)) return NULL;
+    if (!name) return NULL;
+    string n = name ? name : "";
+    if (PyLong_Check(var)) { int v; toValue(var,v); mPtr->setShaderParameter( n, v ); }
     if (PyFloat_Check(var)) { float v; toValue(var,v); mPtr->setShaderParameter( n, v ); }
     if (PyVec_Check(var, 2, 'f')) { Vec2f v; toValue(var,v); mPtr->setShaderParameter( n, v ); }
     if (PyVec_Check(var, 3, 'f')) { Vec3f v; toValue(var,v); mPtr->setShaderParameter( n, v ); }
@@ -193,7 +194,7 @@ PyObject* VRPyMaterial::setTexture(VRPyMaterial* self, PyObject* args) {
 	if (aN <= 2) {
         PyObject* o = 0; int pos = 0;
         if (! PyArg_ParseTuple(args, "O|i", &o, &pos)) return NULL;
-        if (PyString_Check(o)) self->objPtr->setTexture( PyString_AsString(o), true, pos ); // load a file
+        if (PyUnicode_Check(o)) self->objPtr->setTexture( PyUnicode_AsUTF8(o), true, pos ); // load a file
         else if (VRPyTexture::check(o)) {
             VRPyTexture* img = (VRPyTexture*)o;
             self->objPtr->setTexture( img->objPtr, false, pos );
@@ -221,7 +222,7 @@ PyObject* VRPyMaterial::setTexture(VRPyMaterial* self, PyObject* args) {
             vector<char> buf(vN*dN, 0);
             for (int i=0; i<dN; i++) {
                 vector<PyObject*> vec = pyListToVector(_data[i]);
-                for (int j=0; j<vN; j++) buf[i*vN+j] = PyInt_AsLong(vec[j]);
+                for (int j=0; j<vN; j++) buf[i*vN+j] = PyLong_AsLong(vec[j]);
             }
             self->objPtr->setTexture( &buf[0], vN, parseVec3iList(dims), false );
         }
@@ -246,7 +247,7 @@ PyObject* VRPyMaterial::setLit(VRPyMaterial* self, PyObject* args) {
 
 PyObject* VRPyMaterial::addPass(VRPyMaterial* self) {
 	if (self->objPtr == 0) { PyErr_SetString(err, "VRPyMaterial::addPass, C obj is invalid"); return NULL; }
-	return PyInt_FromLong( self->objPtr->addPass() );
+	return PyLong_FromLong( self->objPtr->addPass() );
 }
 
 PyObject* VRPyMaterial::remPass(VRPyMaterial* self, PyObject* args) {
@@ -356,6 +357,6 @@ PyObject* VRPyMaterial::setQRCode(VRPyMaterial* self, PyObject* args) {
 	if (self->objPtr == 0) { PyErr_SetString(err, "VRPyMaterial::setQRCode, C obj is invalid"); return NULL; }
 	PyObject *data, *fg, *bg; int i;
     if (! PyArg_ParseTuple(args, "OOOi", &data, &fg, &bg, &i)) return NULL;
-	self->objPtr->setQRCode(PyString_AsString(data), parseVec3dList(fg), parseVec3dList(bg), i);
+	self->objPtr->setQRCode(PyUnicode_AsUTF8(data), parseVec3dList(fg), parseVec3dList(bg), i);
 	Py_RETURN_TRUE;
 }

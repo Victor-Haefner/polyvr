@@ -7,8 +7,8 @@ using namespace OSG;
 simpleVRPyType(Constraint, New_ptr);
 
 template<> bool toValue(PyObject* o, VRConstraint::TCMode& v) {
-    if (!PyString_Check(o)) return 0;
-    string s = PyString_AsString(o);
+    if (!PyUnicode_Check(o)) return 0;
+    string s = PyUnicode_AsUTF8(o);
     if (s == "POINT") { v = VRConstraint::POINT; return 1; }
     if (s == "LINE") { v = VRConstraint::LINE; return 1; }
     if (s == "PLANE") { v = VRConstraint::PLANE; return 1; }

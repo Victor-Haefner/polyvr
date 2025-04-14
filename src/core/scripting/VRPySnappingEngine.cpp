@@ -7,11 +7,11 @@
 using namespace OSG;
 
 template<> bool toValue(PyObject* obj, VRSnappingEngine::PRESET& e) {
-    return toValue( PyString_AsString(obj) , e);
+    return toValue( PyUnicode_AsUTF8(obj) , e);
 }
 
 template<> bool toValue(PyObject* obj, VRSnappingEngine::Type& e) {
-    return toValue( PyString_AsString(obj) , e);
+    return toValue( PyUnicode_AsUTF8(obj) , e);
 }
 
 template<> bool toValue(PyObject* o, VRSnappingEngine::VRSnapCbPtr& e) {
@@ -26,8 +26,8 @@ template<> PyObject* VRPyTypeCaster::cast(const VRSnappingEngine::EventSnapWeakP
     auto e = we.lock();
     auto res = PyTuple_New(8);
     if (!e) return res;
-    PyTuple_SetItem(res, 0, PyInt_FromLong(e->snap));
-    PyTuple_SetItem(res, 1, PyInt_FromLong(e->snapID));
+    PyTuple_SetItem(res, 0, PyLong_FromLong(e->snap));
+    PyTuple_SetItem(res, 1, PyLong_FromLong(e->snapID));
     PyTuple_SetItem(res, 2, VRPyTransform::fromSharedPtr(e->o1));
     PyTuple_SetItem(res, 3, VRPyTransform::fromSharedPtr(e->o2));
     PyTuple_SetItem(res, 4, VRPyPose::fromMatrix(e->m));

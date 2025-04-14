@@ -21,8 +21,8 @@ template<> string typeName(const PyObjectPtr* o) {
 }
 
 template<> bool toValue(PyObject* o, int& v) {
-    if (PyInt_Check(o)) { v = PyInt_AsLong(o); return 1; }
-    if (PyString_Check(o)) { // check for enumerator constant
+    if (PyLong_Check(o)) { v = PyLong_AsLong(o); return 1; }
+    if (PyUnicode_Check(o)) { // check for enumerator constant
         int iOSG = VRPyBase::toOSGConst(o);
         if (iOSG != -1) { v = iOSG; return 1; }
         int iGL = VRPyBase::toGLConst(o);
@@ -33,12 +33,12 @@ template<> bool toValue(PyObject* o, int& v) {
 
 template<> bool toValue(PyObject* o, void*& v) { v = o; Py_INCREF(o); return 1; }
 template<> bool toValue(PyObject* o, PyObject*& v) { v = o; Py_INCREF(o); return 1; }
-template<> bool toValue(PyObject* o, bool& v) { if (!PyNumber_Check(o)) return 0; v = PyInt_AsLong(o); return 1; }
-template<> bool toValue(PyObject* o, char& v) { if (!PyNumber_Check(o)) return 0; v = PyInt_AsLong(o); return 1; }
-template<> bool toValue(PyObject* o, unsigned char& v) { if (!PyNumber_Check(o)) return 0; v = PyInt_AsLong(o); return 1; }
-template<> bool toValue(PyObject* o, unsigned int& v) { if (!PyInt_Check(o)) return 0; v = PyInt_AsLong(o); return 1; }
-template<> bool toValue(PyObject* o, short& v) { if (!PyInt_Check(o)) return 0; v = PyInt_AsLong(o); return 1; }
-template<> bool toValue(PyObject* o, size_t& v) { if (!PyInt_Check(o)) return 0; v = PyInt_AsLong(o); return 1; }
+template<> bool toValue(PyObject* o, bool& v) { if (!PyNumber_Check(o)) return 0; v = PyLong_AsLong(o); return 1; }
+template<> bool toValue(PyObject* o, char& v) { if (!PyNumber_Check(o)) return 0; v = PyLong_AsLong(o); return 1; }
+template<> bool toValue(PyObject* o, unsigned char& v) { if (!PyNumber_Check(o)) return 0; v = PyLong_AsLong(o); return 1; }
+template<> bool toValue(PyObject* o, unsigned int& v) { if (!PyLong_Check(o)) return 0; v = PyLong_AsLong(o); return 1; }
+template<> bool toValue(PyObject* o, short& v) { if (!PyLong_Check(o)) return 0; v = PyLong_AsLong(o); return 1; }
+template<> bool toValue(PyObject* o, size_t& v) { if (!PyLong_Check(o)) return 0; v = PyLong_AsLong(o); return 1; }
 template<> bool toValue(PyObject* o, float& v) { if (!PyNumber_Check(o)) return 0; v = PyFloat_AsDouble(o); return 1; }
 template<> bool toValue(PyObject* o, double& v) { if (!PyNumber_Check(o)) return 0; v = PyFloat_AsDouble(o); return 1; }
 
@@ -52,15 +52,15 @@ template<> bool toValue(PyObject* o, string& v) {
         for (int i=0; i<PyTuple_GET_SIZE(o); i++) {
             auto c = PyTuple_GET_ITEM(o, i);
             if (i>0) v += ", ";
-            v += PyString_AsString(c);
+            v += PyUnicode_AsUTF8(c);
         }
         v += ")";
         return 1;
     }
 
     if (VRPyBase::isNone(o)) return 1;
-    if (!PyString_Check(o) && !PyUnicode_Check(o)) o = PyObject_Repr(o); // may segfault with tuple!
-    auto vc = PyString_AsString(o);
+    if (!PyUnicode_Check(o) && !PyUnicode_Check(o)) o = PyObject_Repr(o); // may segfault with tuple!
+    auto vc = PyUnicode_AsUTF8(o);
     v = vc?vc:"";
     return 1;
 }
@@ -75,7 +75,7 @@ bool PyVec_Check(PyObject* o, int N, char type) {
             for (int i=0; i<N; i++) if (!PyNumber_Check( PyList_GetItem(o,i) )) return false;
             break;
         case 'i':
-            for (int i=0; i<N; i++) if (!PyInt_Check( PyList_GetItem(o,i) )) return false;
+            for (int i=0; i<N; i++) if (!PyLong_Check( PyList_GetItem(o,i) )) return false;
             break;
     }
     return true;

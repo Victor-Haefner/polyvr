@@ -4,7 +4,7 @@
 
 using namespace OSG;
 
-template<> bool toValue(PyObject* o, VRStroke::CAP& v) { if (!PyString_Check(o)) return 0; toValue(PyString_AsString(o), v); return 1; }
+template<> bool toValue(PyObject* o, VRStroke::CAP& v) { if (!PyUnicode_Check(o)) return 0; toValue(PyUnicode_AsUTF8(o), v); return 1; }
 
 simpleVRPyType(Stroke, New_VRObjects_ptr);
 

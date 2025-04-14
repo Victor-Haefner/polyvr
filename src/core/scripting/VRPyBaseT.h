@@ -9,7 +9,6 @@
 #define newPyType( X, Y, NEWfkt ) \
 template<> PyTypeObject VRPyBaseT< X >::type = { \
     PyObject_HEAD_INIT(NULL) \
-    0, \
     "VR." #Y, \
     sizeof( VRPy ## Y ),0, \
     (destructor)dealloc, \
@@ -282,7 +281,7 @@ void VRPyBaseT<T>::dealloc(VRPyBaseT<T>* self) {
     //cout << "VRPyBaseT<T>::dealloc " << self << " " << self->obj << " " << self->objPtr << " " << typeRef->tp_name << endl;
     //if (self->owner && self->obj != 0) delete self->obj; // TOCHECK
     if (self->objPtr) self->objPtr = 0;
-    self->ob_type->tp_free((PyObject*)self);
+    Py_TYPE(self)->tp_free((PyObject*)self);
 }
 
 template<class T>

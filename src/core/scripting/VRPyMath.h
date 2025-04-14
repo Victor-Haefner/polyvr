@@ -58,7 +58,7 @@ struct VRPyVec2f : VRPyBaseT<OSG::Vec2d> {
     static Py_ssize_t len(PyObject* self);
     static PyObject* getItem(PyObject* self, Py_ssize_t i);
     static int setItem(PyObject* self, Py_ssize_t i, PyObject* val);
-    static PyObject* getSlice(PyObject* self, Py_ssize_t i0, Py_ssize_t i1);
+    //static PyObject* getSlice(PyObject* self, PyObject* slice);
 
     static PyObject* iter(PyObject *self) ;
     static PyObject* iternext(PyObject *self) ;
@@ -95,7 +95,7 @@ struct VRPyVec3f : VRPyBaseT<OSG::Vec3d> {
     static Py_ssize_t len(PyObject* self);
     static PyObject* getItem(PyObject* self, Py_ssize_t i);
     static int setItem(PyObject* self, Py_ssize_t i, PyObject* val);
-    static PyObject* getSlice(PyObject* self, Py_ssize_t i0, Py_ssize_t i1);
+    //static PyObject* getSlice(PyObject* self, PyObject* slice);
 
     static PyObject* iter(PyObject *self) ;
     static PyObject* iternext(PyObject *self) ;
@@ -188,7 +188,7 @@ struct VRPyDatarow : VRPyBaseT<OSG::Datarow> {
     static Py_ssize_t len(PyObject* self);
     static PyObject* getItem(PyObject* self, Py_ssize_t i);
     static int setItem(PyObject* self, Py_ssize_t i, PyObject* val);
-    static PyObject* getSlice(PyObject* self, Py_ssize_t i0, Py_ssize_t i1);
+    //static PyObject* getSlice(PyObject* self, PyObject* slice);
 
     static PyObject* iter(PyObject *self) ;
     static PyObject* iternext(PyObject *self) ;

@@ -7,7 +7,7 @@
 struct VRPyObject : VRPyBaseT<OSG::VRObject> {
     static PyMethodDef methods[];
 
-    static int compare(PyObject* o1, PyObject* o2);
+    static PyObject* compare(PyObject* o1, PyObject* o2, int op);
     static long hash(PyObject* o);
 
     static PyObject* destroy(VRPyObject* self);

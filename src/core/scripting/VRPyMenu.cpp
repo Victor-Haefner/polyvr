@@ -73,7 +73,7 @@ PyObject* VRPyMenu::setLeafType(VRPyMenu* self, PyObject* args) {
     if (self->objPtr == 0) { PyErr_SetString(err, "VRPyMenu::append - Object is invalid"); return NULL; }
     PyObject *t, *s;
     if (!PyArg_ParseTuple(args, "OO", &t, &s)) return NULL;
-    string ts = PyString_AsString(t);
+    string ts = PyUnicode_AsUTF8(t);
     OSG::VRMenu::TYPE type;
     if (ts == "SPRITE") type = OSG::VRMenu::SPRITE;
     self->objPtr->setLeafType( type, parseVec2dList(s));
@@ -84,7 +84,7 @@ PyObject* VRPyMenu::setLayout(VRPyMenu* self, PyObject* args) {
     if (self->objPtr == 0) { PyErr_SetString(err, "VRPyMenu::append - Object is invalid"); return NULL; }
     PyObject* l; float p;
     if (!PyArg_ParseTuple(args, "Of", &l, &p)) return NULL;
-    string ls = PyString_AsString(l);
+    string ls = PyUnicode_AsUTF8(l);
     OSG::VRMenu::LAYOUT layout;
     if (ls == "LINEAR") layout = OSG::VRMenu::LINEAR;
     if (ls == "CIRCULAR") layout = OSG::VRMenu::CIRCULAR;

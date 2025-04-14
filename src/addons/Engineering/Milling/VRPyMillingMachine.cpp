@@ -27,12 +27,12 @@ PyObject* VRPyMillingMachine::connected(VRPyMillingMachine* self) {
 
 PyObject* VRPyMillingMachine::state(VRPyMillingMachine* self) {
     if (!self->valid()) return NULL;
-    return PyInt_FromLong( self->objPtr->getState() );
+    return PyLong_FromLong( self->objPtr->getState() );
 }
 
 PyObject* VRPyMillingMachine::mode(VRPyMillingMachine* self) {
     if (!self->valid()) return NULL;
-    return PyInt_FromLong( self->objPtr->getMode() );
+    return PyLong_FromLong( self->objPtr->getMode() );
 }
 
 PyObject* VRPyMillingMachine::update(VRPyMillingMachine* self) {

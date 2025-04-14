@@ -51,7 +51,7 @@ PyObject* VRPyConstructionKit::addAnchorType(VRPyConstructionKit* self, PyObject
     if (!self->valid()) return NULL;
     float f; PyObject* o = 0;
     if (! PyArg_ParseTuple(args, "fO", &f, &o)) return NULL;
-    return PyInt_FromLong( self->objPtr->addAnchorType(f, Vec3f(parseVec3dList(o))) );
+    return PyLong_FromLong( self->objPtr->addAnchorType(f, Vec3f(parseVec3dList(o))) );
 }
 
 PyObject* VRPyConstructionKit::addObjectAnchor(VRPyConstructionKit* self, PyObject* args) {

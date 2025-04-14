@@ -19,7 +19,7 @@ PyMethodDef VRPyState::methods[] = {
 
 PyObject* VRPyState::getName(VRPyState* self) {
     if (!self->valid()) return NULL;
-    return PyString_FromString(self->objPtr->getName().c_str());
+    return PyUnicode_FromString(self->objPtr->getName().c_str());
 }
 
 PyMethodDef VRPyStateMachine::methods[] = {
@@ -38,7 +38,7 @@ string cbWrapper(PyObject* pyFkt, const PyObject* params) {
 
     /*PyObject* dict = PyDict_New();
     for (auto p : params) {
-        PyDict_SetItem(dict, PyString_FromString(p.first.c_str()), PyString_FromString(p.second.c_str()));
+        PyDict_SetItem(dict, PyUnicode_FromString(p.first.c_str()), PyUnicode_FromString(p.second.c_str()));
     }*/
 
     PyObject* args = PyTuple_New(1);
@@ -50,8 +50,8 @@ string cbWrapper(PyObject* pyFkt, const PyObject* params) {
     PyGILState_Release(gstate);
 
     if (!res) return "";
-    if (!PyString_Check(res)) return "";
-    return PyString_AsString(res);
+    if (!PyUnicode_Check(res)) return "";
+    return PyUnicode_AsUTF8(res);
 }
 
 PyObject* VRPyStateMachine::addState(VRPyStateMachine* self, PyObject *args) {
@@ -99,10 +99,10 @@ PyObject* VRPyStateMachine::process(VRPyStateMachine* self, PyObject *args) {
         auto key = PyTuple_GetItem(paramPair, 0);
         auto value = PyTuple_GetItem(paramPair, 1);
         if (!key || !value) continue;
-        if (!PyString_Check(key)) { cout << "VRPyStateMachine::process Warning: key is not a string!\n"; continue; }
-        if (!PyString_Check(value)) { cout << "VRPyStateMachine::process Warning: value is not a string!\n"; continue; }
-        string skey = PyString_AsString(key);
-        string svalue = PyString_AsString(value);
+        if (!PyUnicode_Check(key)) { cout << "VRPyStateMachine::process Warning: key is not a string!\n"; continue; }
+        if (!PyUnicode_Check(value)) { cout << "VRPyStateMachine::process Warning: value is not a string!\n"; continue; }
+        string skey = PyUnicode_AsUTF8(key);
+        string svalue = PyUnicode_AsUTF8(value);
         params[skey] = svalue;
     }*/
 

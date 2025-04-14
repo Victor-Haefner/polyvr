@@ -23,7 +23,6 @@ template<> bool toValue(PyObject* o, VRTexturePtr& v) {
 
 template<> PyTypeObject VRPyBaseT<VRTexture>::type = {
     PyObject_HEAD_INIT(NULL)
-    0,
     "VR.Image",
     sizeof(VRPyTexture),
     0,
@@ -101,16 +100,16 @@ PyObject* VRPyTexture::New(PyTypeObject *type, PyObject *args, PyObject *kwds) {
     if ((PyObject*)datatype == Py_None) Py_RETURN_NONE;
 
     unsigned char* cdata  = (unsigned char*)PyArray_DATA(data);
-    int pf = toOSGConst(PyString_AsString((PyObject*)channels));
-    int dt = toOSGConst(PyString_AsString((PyObject*)datatype));
+    int pf = toOSGConst(PyUnicode_AsUTF8((PyObject*)channels));
+    int dt = toOSGConst(PyUnicode_AsUTF8((PyObject*)datatype));
 
-    //bool b = CheckExtension(PyString_AsString((PyObject*)channels));
-    //cout << "check ext " << PyString_AsString((PyObject*)channels) << " " << b << endl;
+    //bool b = CheckExtension(PyUnicode_AsUTF8((PyObject*)channels));
+    //cout << "check ext " << PyUnicode_AsUTF8((PyObject*)channels) << " " << b << endl;
     //if (b)
     //for (int i=0; i<W*H; i++) cout << "cdata " <<
 
     img->getImage()->set(pf, W, H, 1, 1, 1, 0, cdata, dt, true);
-    if (channels2) img->setInternalFormat( toOSGConst(PyString_AsString((PyObject*)channels2)) );
+    if (channels2) img->setInternalFormat( toOSGConst(PyUnicode_AsUTF8((PyObject*)channels2)) );
     return allocPtr( type, img );
 #else
     VRTexturePtr img = VRTexture::create();

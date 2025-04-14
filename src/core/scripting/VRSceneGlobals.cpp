@@ -130,7 +130,7 @@ PyObject* VRSceneGlobals::getScript(VRSceneGlobals* self, PyObject* args) {
 }
 
 PyObject* VRSceneGlobals::getFrame(VRSceneGlobals* self) {
-    return PyInt_FromLong(VRGlobals::CURRENT_FRAME);
+    return PyLong_FromLong(VRGlobals::CURRENT_FRAME);
 }
 
 PyObject* VRSceneGlobals::getFPS(VRSceneGlobals* self) {
@@ -201,7 +201,7 @@ PyObject* VRSceneGlobals::getSystemDirectory(VRSceneGlobals* self, PyObject *arg
     if (dir == "EXAMPLES") path += "/examples";
     if (dir == "RESSOURCES") path += "/ressources";
     if (dir == "TRAFFIC") path += "/src/addons/RealWorld/traffic/simulation/bin";
-    return PyString_FromString(path.c_str());
+    return PyUnicode_FromString(path.c_str());
 }
 
 PyObject* VRSceneGlobals::loadScene(VRSceneGlobals* self, PyObject *args) {
@@ -226,11 +226,11 @@ PyObject* VRSceneGlobals::getRendering(VRSceneGlobals* self) {
 
 PyObject* VRSceneGlobals::getPlatform(VRSceneGlobals* self) {
 #ifdef _WIN32
-    return PyString_FromString("windows");
+    return PyUnicode_FromString("windows");
 #elif __linux__
-    return PyString_FromString("linux");
+    return PyUnicode_FromString("linux");
 #elif __APPLE__
-    return PyString_FromString("mac");
+    return PyUnicode_FromString("mac");
 #endif
 }
 
@@ -403,7 +403,7 @@ PyObject* VRSceneGlobals::startThread(VRSceneGlobals* self, PyObject *args) {
     int t = VRScene::getCurrent()->initThread(pyThread, "python thread");
     pyThreadsTmp[t] = pyThread; // need to keep a reference!
     //self->pyThreads[t] = pyThread; // TODO: self is 0 ???
-    return PyInt_FromLong(t);
+    return PyLong_FromLong(t);
 }
 
 PyObject* VRSceneGlobals::joinThread(VRSceneGlobals* self, PyObject *args) {
@@ -451,9 +451,9 @@ static PyFileOpenParams pyFileOpenParams;
 void callPyFileCb() {
     cout << "callPyFileCb " << pyFileOpenParams.fileName << endl;
     PyObject *pArgs = PyTuple_New(3);
-    PyTuple_SetItem( pArgs, 0, PyString_FromString( pyFileOpenParams.fileName.c_str()) );
+    PyTuple_SetItem( pArgs, 0, PyUnicode_FromString( pyFileOpenParams.fileName.c_str()) );
     PyTuple_SetItem( pArgs, 1, PyFloat_FromDouble( pyFileOpenParams.scale ) );
-    PyTuple_SetItem( pArgs, 2, PyString_FromString( pyFileOpenParams.preset.c_str() ) );
+    PyTuple_SetItem( pArgs, 2, PyUnicode_FromString( pyFileOpenParams.preset.c_str() ) );
     execCall( pyFileOpenParams.cb, pArgs, 0 );
 }
 
@@ -487,17 +487,17 @@ PyObject* VRSceneGlobals::openFileDialog(VRSceneGlobals* self, PyObject *args) {
         signalsConnected = true;
     }
 
-    string m = PyString_AsString(mode);
+    string m = PyUnicode_AsUTF8(mode);
     //string action = "on_script_open_file";
     //if (m == "Save" || m == "New" || m == "Create") action = "on_script_save_file";
     //else VRGuiFile::setGeoLoadWidget();
 
-    string openPath = PyString_AsString(default_path);
+    string openPath = PyUnicode_AsUTF8(default_path);
     if (!exists(openPath)) openPath = ".";
 
     uiSignal("set_file_dialog_signal", {{"signal","on_script_file_dialog_ok"}});
-    uiSignal("set_file_dialog_filter", {{"filter",PyString_AsString(filter)}});
-    uiSignal("set_file_dialog_setup", {{"title",PyString_AsString(title)}, {"dir",openPath}, {"file",""}});
+    uiSignal("set_file_dialog_filter", {{"filter",PyUnicode_AsUTF8(filter)}});
+    uiSignal("set_file_dialog_setup", {{"title",PyUnicode_AsUTF8(title)}, {"dir",openPath}, {"file",""}});
     uiSignal("set_file_dialog_options", {{"options","geoOpts"}});
     uiSignal("ui_toggle_popup", {{"name","file"}, {"width","600"}, {"height","500"}});
     Py_RETURN_TRUE;

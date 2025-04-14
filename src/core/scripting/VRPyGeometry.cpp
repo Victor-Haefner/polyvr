@@ -207,7 +207,7 @@ void feed1D(PyObject* o, T& vec) {
 
     for (Py_ssize_t i=0; i<N; i++) {
         pi = PyList_GetItem(o, i);
-        int j = PyInt_AsLong(pi);
+        int j = PyLong_AsLong(pi);
         vec->addValue(j);
     }
 }
@@ -266,7 +266,7 @@ PyObject* VRPyGeometry::addVertex(VRPyGeometry* self, PyObject *args) {
     else res = geo.pushVert(parseVec3dList(p));
 
     if (res == 0) geo.apply(self->objPtr, false);
-    return PyInt_FromLong(res);
+    return PyLong_FromLong(res);
 }
 
 PyObject* VRPyGeometry::setVertex(VRPyGeometry* self, PyObject *args) {
@@ -513,7 +513,7 @@ PyObject* VRPyGeometry::getTypes(VRPyGeometry* self) {
     for (unsigned int i=0; i<types->size(); i++) {
         int v;
         types->getValue(v,i);
-        PyList_SetItem(res, i, PyInt_FromLong(v));
+        PyList_SetItem(res, i, PyLong_FromLong(v));
     }
 
     return res;
@@ -530,7 +530,7 @@ PyObject* VRPyGeometry::getLengths(VRPyGeometry* self) {
     for (unsigned int i=0; i<lengths->size(); i++) {
         int v;
         lengths->getValue(v,i);
-        PyList_SetItem(res, i, PyInt_FromLong(v));
+        PyList_SetItem(res, i, PyLong_FromLong(v));
     }
 
     return res;
@@ -600,7 +600,7 @@ PyObject* VRPyGeometry::getIndices(VRPyGeometry* self, PyObject *args) {
     for (unsigned int i=0; i<idProp->size(); i++) {
         int v;
         idProp->getValue(v,i);
-        PyObject* pv = PyInt_FromLong(v);
+        PyObject* pv = PyLong_FromLong(v);
         PyList_SetItem(res, i, pv);
     }
 

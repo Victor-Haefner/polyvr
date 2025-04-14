@@ -5,7 +5,6 @@
 
 template<> PyTypeObject VRPyBaseT<OSG::VRPatchSelection>::type = {
     PyObject_HEAD_INIT(NULL)
-    0,                         /*ob_size*/
     "VR.PatchSelection",             /*tp_name*/
     sizeof(VRPyPatchSelection),             /*tp_basicsize*/
     0,                         /*tp_itemsize*/

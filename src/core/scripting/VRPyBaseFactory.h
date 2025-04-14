@@ -98,10 +98,11 @@ PyObject* proxyWrap<allowPacking, sT, R (T::*)(Args...), mf, O>::exec(sT* self, 
     }
 
     int offset = 0;
-    bool inherited = (self->ob_type != sT::typeRef);
+    auto pyType = Py_TYPE(self);
+    bool inherited = (pyType != sT::typeRef);
     if (inherited) {
-        if (sT::typeOffsets.count(self->ob_type)) {
-            offset = sT::typeOffsets[self->ob_type];
+        if (sT::typeOffsets.count(pyType)) {
+            offset = sT::typeOffsets[pyType];
         }
     }
 

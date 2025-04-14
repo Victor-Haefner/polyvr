@@ -46,7 +46,7 @@ PyObject* VRPySelection::add(VRPySelection* self, PyObject* args, PyObject* kwar
     self->objPtr->add(geo->objPtr);
     if (verts) {
         vector<int> vec( PyList_GET_SIZE(verts) );
-        for (int i=0; i<PyList_GET_SIZE(verts); i++) vec[i] = PyInt_AsLong( PyList_GetItem(verts,i) );
+        for (int i=0; i<PyList_GET_SIZE(verts); i++) vec[i] = PyLong_AsLong( PyList_GetItem(verts,i) );
         self->objPtr->add(geo->objPtr, vec);
     }
     Py_RETURN_TRUE;
@@ -81,7 +81,7 @@ PyObject* VRPySelection::getSubselection(VRPySelection* self, PyObject* args) {
 
     auto toPyArray = [](vector<int>& v) {
         PyObject* res = PyList_New(v.size());
-        for (unsigned int i=0; i<v.size(); i++) PyList_SetItem(res, i, PyInt_FromLong(v[i]));
+        for (unsigned int i=0; i<v.size(); i++) PyList_SetItem(res, i, PyLong_FromLong(v[i]));
         return res;
     };
 

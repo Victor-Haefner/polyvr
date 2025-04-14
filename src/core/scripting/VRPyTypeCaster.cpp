@@ -75,15 +75,15 @@ typedef void* voidPtr;
 typedef PyObject* objPtr;
 template<> PyObject* VRPyTypeCaster::cast(const voidPtr& v) { if (v) { PyObject* o = (PyObject*)v; Py_INCREF(o); return o; } else Py_RETURN_NONE; }
 template<> PyObject* VRPyTypeCaster::cast(const objPtr& o) { if (o) { Py_INCREF(o); return o; } else Py_RETURN_NONE; }
-template<> PyObject* VRPyTypeCaster::cast(const int& i) { return PyInt_FromLong(i); }
-template<> PyObject* VRPyTypeCaster::cast(const unsigned int& i) { return PyInt_FromLong(i); }
-template<> PyObject* VRPyTypeCaster::cast(const short& s) { return PyInt_FromLong(s); }
-template<> PyObject* VRPyTypeCaster::cast(const char& i) { return PyInt_FromLong(i); }
-template<> PyObject* VRPyTypeCaster::cast(const size_t& i) { return PyInt_FromLong(i); }
-template<> PyObject* VRPyTypeCaster::cast(const unsigned char& i) { return PyInt_FromLong(i); }
+template<> PyObject* VRPyTypeCaster::cast(const int& i) { return PyLong_FromLong(i); }
+template<> PyObject* VRPyTypeCaster::cast(const unsigned int& i) { return PyLong_FromLong(i); }
+template<> PyObject* VRPyTypeCaster::cast(const short& s) { return PyLong_FromLong(s); }
+template<> PyObject* VRPyTypeCaster::cast(const char& i) { return PyLong_FromLong(i); }
+template<> PyObject* VRPyTypeCaster::cast(const size_t& i) { return PyLong_FromLong(i); }
+template<> PyObject* VRPyTypeCaster::cast(const unsigned char& i) { return PyLong_FromLong(i); }
 template<> PyObject* VRPyTypeCaster::cast(const double& d) { return PyFloat_FromDouble(d); }
 template<> PyObject* VRPyTypeCaster::cast(const float& f) { return PyFloat_FromDouble(f); }
-template<> PyObject* VRPyTypeCaster::cast(const string& s) { return PyString_FromString(s.c_str()); }
+template<> PyObject* VRPyTypeCaster::cast(const string& s) { return PyUnicode_FromString(s.c_str()); }
 template<> PyObject* VRPyTypeCaster::cast(const bool& b) { if (b) Py_RETURN_TRUE; else Py_RETURN_FALSE; }
 template<> PyObject* VRPyTypeCaster::cast(const Vec2d& b) { return toPyObject(b); }
 template<> PyObject* VRPyTypeCaster::cast(const Vec3d& b) { return toPyObject(b); }

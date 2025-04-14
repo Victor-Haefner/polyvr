@@ -16,7 +16,6 @@ PyObject* VRPyMath::sin(VRPyMath* self, PyObject* args) { float v = VRPyBase::pa
 
 template<> PyTypeObject VRPyBaseT<Vec2d>::type = {
     PyObject_HEAD_INIT(NULL)
-    0,                         /*ob_size*/
     "VR.Math.Vec2",             /*tp_name*/
     sizeof(VRPyVec2f),             /*tp_basicsize*/
     0,                         /*tp_itemsize*/
@@ -35,7 +34,7 @@ template<> PyTypeObject VRPyBaseT<Vec2d>::type = {
     0,                         /*tp_getattro*/
     0,                         /*tp_setattro*/
     0,                         /*tp_as_buffer*/
-    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE | Py_TPFLAGS_CHECKTYPES, /*tp_flags*/
+    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE, /*tp_flags*/
     "Vec2 binding",           /* tp_doc */
     0,		               /* tp_traverse */
     0,		               /* tp_clear */
@@ -60,9 +59,8 @@ PyNumberMethods VRPyVec2f::nMethods = {
     (binaryfunc)VRPyVec2f::add,
     (binaryfunc)VRPyVec2f::sub,
     (binaryfunc)VRPyVec2f::mul,
-    (binaryfunc)VRPyVec2f::div,
     0,               /* binaryfunc nb_remainder;    __mod__ */
-    0,            /* binaryfunc nb_divmod;       __divmod__ */
+    (binaryfunc)VRPyVec2f::div,
     0,               /* ternaryfunc nb_power;       __pow__ */
     (unaryfunc)VRPyVec2f::neg,
     0,               /* unaryfunc nb_positive;      __pos__ */
@@ -116,7 +114,7 @@ PyObject* VRPyVec2f::New(PyTypeObject *type, PyObject *args, PyObject *kwds) {
 PyObject* VRPyVec2f::Print(PyObject* self) {
     string s = "[" + toString(((VRPyVec2f*)self)->v) + "]";
     std::replace( s.begin(), s.end(), ' ', ',');
-    return PyString_FromString( s.c_str() );
+    return PyUnicode_FromString( s.c_str() );
 }
 
 PyObject* VRPyVec2f::normalize(VRPyVec2f* self) {
@@ -196,10 +194,15 @@ PySequenceMethods VRPyVec2f::sMethods = {
     0,    /* binaryfunc sq_concat;           __add__ */
     0,    /* intargfunc sq_repeat;           __mul__ */
     VRPyVec2f::getItem,   /* intargfunc sq_item;             __getitem__ */
-    VRPyVec2f::getSlice,  /* intintargfunc sq_slice;         __getslice__ */
+    0, /* was_sq_slice */
     VRPyVec2f::setItem,   /* intobjargproc sq_ass_item;      __setitem__ */
-    0,  /* intintobjargproc sq_ass_slice;  __setslice__ */
+    0, /* was_sq_ass_slice */
+    0, /* objobjproc sq_contains; */
+    0, /* objobjproc sq_inplace_concat; */
+    0, /* objobjproc sq_inplace_repeat; */
 };
+
+ //VRPyVec2f::getSlice
 
 Py_ssize_t VRPyVec2f::len(PyObject* self) {
     return 3;
@@ -216,7 +219,7 @@ int VRPyVec2f::setItem(PyObject* self, Py_ssize_t i, PyObject* val) {
     return 0;
 }
 
-PyObject* VRPyVec2f::getSlice(PyObject* self, Py_ssize_t ilow, Py_ssize_t ihigh) {
+/*PyObject* VRPyVec2f::getSlice(PyObject* self, Py_ssize_t ilow, Py_ssize_t ihigh) {
     if (ilow < 0) ilow += 2;
     if (ihigh < 0) ihigh += 2;
     if (ilow >= 2) ilow = 2-1;
@@ -227,7 +230,7 @@ PyObject* VRPyVec2f::getSlice(PyObject* self, Py_ssize_t ilow, Py_ssize_t ihigh)
         for (int i=ilow; i < ihigh; i++) v2[i] = ((VRPyVec2f*)self)->v[i];
     } else v2 = ((VRPyVec2f*)self)->v;
     return toPyObject(v2);
-}
+}*/
 
 PyObject* VRPyVec2f::iter(PyObject *self) {
     Py_INCREF(self);
@@ -252,7 +255,6 @@ PyObject* VRPyVec2f::iternext(PyObject *self) {
 
 template<> PyTypeObject VRPyBaseT<Vec3d>::type = {
     PyObject_HEAD_INIT(NULL)
-    0,                         /*ob_size*/
     "VR.Math.Vec3",             /*tp_name*/
     sizeof(VRPyVec3f),             /*tp_basicsize*/
     0,                         /*tp_itemsize*/
@@ -271,7 +273,7 @@ template<> PyTypeObject VRPyBaseT<Vec3d>::type = {
     0,                         /*tp_getattro*/
     0,                         /*tp_setattro*/
     0,                         /*tp_as_buffer*/
-    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE | Py_TPFLAGS_CHECKTYPES, /*tp_flags*/
+    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE, /*tp_flags*/
     "Vec3 binding",           /* tp_doc */
     0,		               /* tp_traverse */
     0,		               /* tp_clear */
@@ -296,9 +298,8 @@ PyNumberMethods VRPyVec3f::nMethods = {
     (binaryfunc)VRPyVec3f::add,
     (binaryfunc)VRPyVec3f::sub,
     (binaryfunc)VRPyVec3f::mul,
-    (binaryfunc)VRPyVec3f::div,
     0,               /* binaryfunc nb_remainder;    __mod__ */
-    0,            /* binaryfunc nb_divmod;       __divmod__ */
+    (binaryfunc)VRPyVec3f::div,
     0,               /* ternaryfunc nb_power;       __pow__ */
     (unaryfunc)VRPyVec3f::neg,
     0,               /* unaryfunc nb_positive;      __pos__ */
@@ -355,7 +356,7 @@ PyObject* VRPyVec3f::New(PyTypeObject *type, PyObject *args, PyObject *kwds) {
 PyObject* VRPyVec3f::Print(PyObject* self) {
     string s = "[" + toString(((VRPyVec3f*)self)->v) + "]";
     std::replace( s.begin(), s.end(), ' ', ',');
-    return PyString_FromString( s.c_str() );
+    return PyUnicode_FromString( s.c_str() );
 }
 
 PyObject* VRPyVec3f::normalize(VRPyVec3f* self) {
@@ -435,9 +436,12 @@ PySequenceMethods VRPyVec3f::sMethods = {
     0,    /* binaryfunc sq_concat;           __add__ */
     0,    /* intargfunc sq_repeat;           __mul__ */
     VRPyVec3f::getItem,   /* intargfunc sq_item;             __getitem__ */
-    VRPyVec3f::getSlice,  /* intintargfunc sq_slice;         __getslice__ */
+    0, // VRPyVec3f::getSlice,  /* intintargfunc sq_slice;         __getslice__ */
     VRPyVec3f::setItem,   /* intobjargproc sq_ass_item;      __setitem__ */
     0,  /* intintobjargproc sq_ass_slice;  __setslice__ */
+    0, /* objobjproc sq_contains; */
+    0, /* objobjproc sq_inplace_concat; */
+    0, /* objobjproc sq_inplace_repeat; */
 };
 
 Py_ssize_t VRPyVec3f::len(PyObject* self) {
@@ -483,7 +487,7 @@ int VRPyVec3f::setItem(PyObject* self, Py_ssize_t i, PyObject* val) {
     return 0;
 }
 
-PyObject* VRPyVec3f::getSlice(PyObject* self, Py_ssize_t ilow, Py_ssize_t ihigh) {
+/*PyObject* VRPyVec3f::getSlice(PyObject* self, Py_ssize_t ilow, Py_ssize_t ihigh) {
     if (ilow < 0) ilow += 3;
     if (ihigh < 0) ihigh += 3;
     if (ilow >= 3) ilow = 3-1;
@@ -494,11 +498,10 @@ PyObject* VRPyVec3f::getSlice(PyObject* self, Py_ssize_t ilow, Py_ssize_t ihigh)
         for (int i=ilow; i < ihigh; i++) v2[i] = ((VRPyVec3f*)self)->v[i];
     } else v2 = ((VRPyVec3f*)self)->v;
     return toPyObject(v2);
-}
+}*/
 
 template<> PyTypeObject VRPyBaseT<Line>::type = {
     PyObject_HEAD_INIT(NULL)
-    0,                         /*ob_size*/
     "VR.Math.Line",             /*tp_name*/
     sizeof(VRPyLine),             /*tp_basicsize*/
     0,                         /*tp_itemsize*/
@@ -517,7 +520,7 @@ template<> PyTypeObject VRPyBaseT<Line>::type = {
     0,                         /*tp_getattro*/
     0,                         /*tp_setattro*/
     0,                         /*tp_as_buffer*/
-    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE | Py_TPFLAGS_CHECKTYPES, /*tp_flags*/
+    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE, /*tp_flags*/
     "Line binding",           /* tp_doc */
     0,		               /* tp_traverse */
     0,		               /* tp_clear */
@@ -558,7 +561,7 @@ PyObject* VRPyLine::Print(PyObject* self) {
     auto l = ((VRPyLine*)self)->l;
     string s = "[" + toString(l) + "]";
     std::replace( s.begin(), s.end(), ' ', ',');
-    return PyString_FromString( s.c_str() );
+    return PyUnicode_FromString( s.c_str() );
 }
 
 PyObject* VRPyLine::pos(VRPyLine* self) {
@@ -616,7 +619,6 @@ template<> string typeName(const Datarow* p) { return "Datarow"; }
 
 template<> PyTypeObject VRPyBaseT<Datarow>::type = {
     PyObject_HEAD_INIT(NULL)
-    0,                         /*ob_size*/
     "VR.Datarow",             /*tp_name*/
     sizeof(VRPyDatarow),             /*tp_basicsize*/
     0,                         /*tp_itemsize*/
@@ -697,9 +699,12 @@ PySequenceMethods VRPyDatarow::sMethods = {
     0,    /* binaryfunc sq_concat;           __add__ */
     0,    /* intargfunc sq_repeat;           __mul__ */
     VRPyDatarow::getItem,   /* intargfunc sq_item;             __getitem__ */
-    VRPyDatarow::getSlice,  /* intintargfunc sq_slice;         __getslice__ */
+    0, //VRPyDatarow::getSlice,  /* intintargfunc sq_slice;         __getslice__ */
     VRPyDatarow::setItem,   /* intobjargproc sq_ass_item;      __setitem__ */
     0,  /* intintobjargproc sq_ass_slice;  __setslice__ */
+    0, /* objobjproc sq_contains; */
+    0, /* objobjproc sq_inplace_concat; */
+    0, /* objobjproc sq_inplace_repeat; */
 };
 
 Py_ssize_t VRPyDatarow::len(PyObject* self) {
@@ -726,7 +731,7 @@ int VRPyDatarow::setItem(PyObject* self, Py_ssize_t i, PyObject* val) {
     return 0;
 }
 
-PyObject* VRPyDatarow::getSlice(PyObject* self, Py_ssize_t ilow, Py_ssize_t ihigh) {
+/*PyObject* VRPyDatarow::getSlice(PyObject* self, Py_ssize_t ilow, Py_ssize_t ihigh) {
     auto v = ((VRPyDatarow*)self)->objPtr;
     int N = v->length();
     if (ilow < 0) ilow += N;
@@ -739,7 +744,7 @@ PyObject* VRPyDatarow::getSlice(PyObject* self, Py_ssize_t ilow, Py_ssize_t ihig
         for (int i=ilow; i < ihigh; i++) v2->append( v->get(i) );
     } else return NULL;
     return VRPyDatarow::fromSharedPtr(v2);
-}
+}*/
 
 PyMethodDef VRPyDatarow::methods[] = {
     {"append", PyWrap2( Datarow, append, "Add value", void, double ) },

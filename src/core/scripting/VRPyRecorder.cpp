@@ -55,7 +55,7 @@ PyObject* VRPyRecorder::frameLimitReached(VRPyRecorder* self) {
 PyObject* VRPyRecorder::getRecordingSize(VRPyRecorder* self) {
     int size = 0;
     if (self->objPtr) size = self->objPtr->getRecordingSize();
-    return PyInt_FromLong(size);
+    return PyLong_FromLong(size);
 }
 
 PyObject* VRPyRecorder::getRecordingLength(VRPyRecorder* self) {
@@ -78,7 +78,7 @@ PyObject* VRPyRecorder::capture(VRPyRecorder* self) {
     if (self->objPtr) self->objPtr->capture();
     int size = 0;
     if (self->objPtr) size = self->objPtr->getRecordingSize();
-    return PyInt_FromLong(size-1);
+    return PyLong_FromLong(size-1);
 }
 
 PyObject* VRPyRecorder::compile(VRPyRecorder* self, PyObject* args) {

@@ -40,7 +40,7 @@ PyObject* VRPyCSGGeometry::markEdges(VRPyCSGGeometry* self, PyObject* args) {
 
 PyObject* VRPyCSGGeometry::getOperation(VRPyCSGGeometry* self) {
     if (self->objPtr == 0) { PyErr_SetString(err, "VRPyCSGGeometry::getOperation, Object is invalid"); return NULL; }
-    return PyString_FromString(self->objPtr->getOperation().c_str());
+    return PyUnicode_FromString(self->objPtr->getOperation().c_str());
 }
 
 PyObject* VRPyCSGGeometry::setOperation(VRPyCSGGeometry* self, PyObject* args) {

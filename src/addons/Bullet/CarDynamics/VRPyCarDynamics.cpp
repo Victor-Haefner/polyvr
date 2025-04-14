@@ -79,7 +79,7 @@ PyObject* VRPyCarDynamics::getCarSound(VRPyCarDynamics* self) {
 }
 
 PyObject* VRPyCarDynamics::carSoundIsLoaded(VRPyCarDynamics* self) {
-    return PyInt_FromLong(self->objPtr->getCarSound()->isLoaded());
+    return PyLong_FromLong(self->objPtr->getCarSound()->isLoaded());
 }
 
 PyObject* VRPyCarDynamics::setFade(VRPyCarDynamics* self, PyObject* args) {
@@ -107,7 +107,7 @@ PyObject* VRPyCarDynamics::getWheels(VRPyCarDynamics* self) {
 
 
 PyObject* VRPyCarDynamics::getRPM(VRPyCarDynamics* self) {
-    return PyInt_FromLong(self->objPtr->getRPM());
+    return PyLong_FromLong(self->objPtr->getRPM());
 }
 
 //----------------------------------------------------------------------------------------------
@@ -120,11 +120,11 @@ PyObject* VRPyCarDynamics::geteBreak(VRPyCarDynamics* self) {
 }
 
 PyObject* VRPyCarDynamics::isRunning(VRPyCarDynamics* self) {
-    return PyInt_FromLong(self->objPtr->isRunning());
+    return PyLong_FromLong(self->objPtr->isRunning());
 }
 
 PyObject* VRPyCarDynamics::getGear(VRPyCarDynamics* self) {
-    return PyInt_FromLong(self->objPtr->getGear());
+    return PyLong_FromLong(self->objPtr->getGear());
 }
 
 PyObject* VRPyCarDynamics::getClutch(VRPyCarDynamics* self) {

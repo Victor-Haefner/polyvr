@@ -34,7 +34,7 @@ PyObject* VRPyCodeCompletion::getObject(string name, PyObject* parent) {
         PyCodeObject* code = func->func_code;
         PyTupleObject* varnames = code->co_varnames; // local variable
         for (int i=0; i<PyTuple_Size(varnames); i++) {
-            string n = PyString_AsString(PyTuple_GetItem(varnames, i));
+            string n = PyUnicode_AsUTF8(PyTuple_GetItem(varnames, i));
             if (n == name) {
                 ;
             }
@@ -59,7 +59,7 @@ map<string, PyObject*> VRPyCodeCompletion::getMembers(PyObject* obj) {
     auto attribs = PyObject_Dir(obj);
     for (int i=0; i<PyList_Size(attribs); i++) {
         auto attrib = PyList_GetItem(attribs, i);
-        string name = PyString_AsString(attrib);
+        string name = PyUnicode_AsUTF8(attrib);
         if (startsWith(name, "__")) continue;
         res[name] = PyObject_GetAttr(obj, attrib);
     }
@@ -101,7 +101,7 @@ vector<string> VRPyCodeCompletion::getJediSuggestions(VRScriptPtr script, int li
         PyObject* pCode = Py_CompileString(jediScript.c_str(), "jediScript", Py_file_input);
         if (!pCode) { PyErr_Print(); return res; }
         auto pModVR = scene->getGlobalModule();
-        PyObject* pValue = PyEval_EvalCode((PyCodeObject*)pCode, scene->getGlobalDict(), PyModule_GetDict(pModVR));
+        PyObject* pValue = PyEval_EvalCode(pCode, scene->getGlobalDict(), PyModule_GetDict(pModVR));
         if (!pValue) { PyErr_Print(); return res; }
         Py_DECREF(pCode);
         Py_DECREF(pValue);
@@ -112,14 +112,14 @@ vector<string> VRPyCodeCompletion::getJediSuggestions(VRScriptPtr script, int li
         string data = script->getScript();
         PyGILState_STATE gstate = PyGILState_Ensure();
         auto args = PyTuple_New(3);
-        PyTuple_SetItem(args, 0, PyString_FromString(data.c_str()));
-        PyTuple_SetItem(args, 1, PyInt_FromLong(line));
-        PyTuple_SetItem(args, 2, PyInt_FromLong(column));
+        PyTuple_SetItem(args, 0, PyUnicode_FromString(data.c_str()));
+        PyTuple_SetItem(args, 1, PyLong_FromLong(line));
+        PyTuple_SetItem(args, 2, PyLong_FromLong(column));
         auto r = PyObject_CallObject(jediWrap, args);
         if (!r) { PyErr_Print(); return res; }
         for (int i=0; i<PyList_Size(r); i++) {
             auto c = PyList_GetItem(r,i);
-            res.push_back(PyString_AsString(c));
+            res.push_back(PyUnicode_AsUTF8(c));
         }
         PyGILState_Release(gstate);
     }

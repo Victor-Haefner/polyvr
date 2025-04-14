@@ -8,8 +8,8 @@ simpleVRPyType(Sky, New_toZero);
 simpleVRPyType(Background, New_toZero);
 
 template<> bool toValue(PyObject* o, VRBackground::TYPE& v) {
-    if (!PyString_Check(o)) return 0;
-    string s = PyString_AsString(o);
+    if (!PyUnicode_Check(o)) return 0;
+    string s = PyUnicode_AsUTF8(o);
     if (s == "SOLID") { v = VRBackground::SOLID; return 1; }
     if (s == "IMAGE") { v = VRBackground::IMAGE; return 1; }
     if (s == "SKYBOX") { v = VRBackground::SKYBOX; return 1; }

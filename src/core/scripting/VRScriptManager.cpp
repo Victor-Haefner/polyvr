@@ -72,7 +72,7 @@ void checkGarbageCollection() { // for diagnostic purposes
 
     map<string, PyObject*> gc_members;
     while (PyDict_Next(gc_dict, &pos, &key, &value)) {
-        string key_name = PyString_AsString(key);
+        string key_name = PyUnicode_AsUTF8(key);
         gc_members[key_name] = value;
         //cout << " " << key_name << "  " << value << endl;
     }
@@ -282,17 +282,20 @@ static PyMethodDef methErr[] = {
     {NULL, NULL, 0, NULL}
 };
 
+static struct PyModuleDef modOutDef = { PyModuleDef_HEAD_INIT, "pystdout", "Redirect output", -1, methOut };
+static struct PyModuleDef modErrDef = { PyModuleDef_HEAD_INIT, "pystderr", "Redirect output", -1, methErr };
+
 void VRScriptManager::redirectPyOutput(string pyOutput, string console) {
     if (pyOutput == "stdout") {
         if (!modOut) {
-            modOut = Py_InitModule(("py"+pyOutput).c_str(), methOut);
+            modOut = PyModule_Create(&modOutDef);
             if (modOut) PySys_SetObject((char *)pyOutput.c_str(), modOut);
         }
         pyOutConsole = console;
     }
     if (pyOutput == "stderr") {
         if (!modErr) {
-            modErr = Py_InitModule(("py"+pyOutput).c_str(), methErr);
+            modErr = PyModule_Create(&modErrDef);
             if (modErr) PySys_SetObject((char *)pyOutput.c_str(), modErr);
         }
         pyErrConsole = console;
@@ -309,6 +312,14 @@ void VRScriptManager::redirectPyOutput(string pyOutput, string console) {
 PyObject* VRScriptManager::getGlobalModule() { return pModVR; }
 PyObject* VRScriptManager::getGlobalDict() { return pGlobal; }
 
+static struct PyModuleDef VRModDef = {
+    PyModuleDef_HEAD_INIT,
+    "VR",                                // module name
+    "VR Module",                         // module docstring
+    -1,                                  // module state size (-1 if global vars)
+    VRSceneGlobals::methods              // method table
+};
+
 void VRScriptManager::initPyModules() {
     cout << " initPyModules" << endl;
     modOut = 0;
@@ -318,9 +329,11 @@ void VRScriptManager::initPyModules() {
 #endif
     Py_Initialize();
     cout << "  Py_Initialize done" << endl;
-    char* argv[1];
-    argv[0] = (char*)"PolyVR";
-    PySys_SetArgv(1, argv);
+    wchar_t* wargv[1];
+    wargv[0] = Py_DecodeLocale("PolyVR", NULL);
+    PySys_SetArgv(1, wargv);
+    PyMem_RawFree(wargv[0]);
+
 #ifndef WASM
     PyEval_InitThreads();
     cout << "  PyEval_InitThreads done" << endl;
@@ -340,9 +353,9 @@ void VRScriptManager::initPyModules() {
     cout << "  Added module PolyVR_base" << endl;
 
     PyObject* sys_path = PySys_GetObject((char*)"path");
-    PyList_Append(sys_path, PyString_FromString(".") );
+    PyList_Append(sys_path, PyUnicode_FromString(".") );
 
-    pModVR = Py_InitModule3("VR", VRSceneGlobals::methods, "VR Module");
+    pModVR = PyModule_Create(&VRModDef);
 
     VRSceneModules sceneModules;
     sceneModules.setup(this, pModVR);
@@ -361,7 +374,16 @@ void VRScriptManager::initPyModules() {
 
 PyObject* VRScriptManager::newModule(string name, PyMethodDef* methods, string doc) {
     string name2 = "VR."+name;
-    PyObject* m = Py_InitModule3(name2.c_str(), methods, doc.c_str());
+
+    PyModuleDef modDef = {
+        PyModuleDef_HEAD_INIT,
+        name2.c_str(),                                // module name
+        doc.c_str(),                         // module docstring
+        -1,                                  // module state size (-1 if global vars)
+        methods              // method table
+    };
+
+    PyObject* m = PyModule_Create(&modDef);
     modules[name] = m;
     PyModule_AddObject(pModVR, name.c_str(), m);
     return m;
@@ -408,7 +430,7 @@ vector<string> VRScriptManager::getPyVRMethods(string mod, string type) {
     if (type == "globals") {
         if (mod != "VR") return res;
         while (PyDict_Next(dict, &pos, &key, &value)) {
-            string name = PyString_AsString(key);
+            string name = PyUnicode_AsUTF8(key);
             if (name[0] == '_' && name[1] == '_') continue;
             if (PyCFunction_Check(value)) res.push_back(name);
         }
@@ -420,7 +442,7 @@ vector<string> VRScriptManager::getPyVRMethods(string mod, string type) {
     dict = moduleTypes[mod][type]->tp_dict;
     pos = 0;
     while (PyDict_Next(dict, &pos, &key, &value)) {
-        string name = PyString_AsString(key);
+        string name = PyUnicode_AsUTF8(key);
         if (name[0] == '_' && name[1] == '_') continue;
         res.push_back(name);
     }
@@ -441,7 +463,7 @@ string VRScriptManager::getPyVRMethodDoc(string mod, string type, string method)
     if (type == "globals") {
         if (mod != "VR") return res;
         while (PyDict_Next(dict, &pos, &key, &meth)) {
-            string name = PyString_AsString(key);
+            string name = PyUnicode_AsUTF8(key);
             if (method != name) continue;
             if (!PyCFunction_Check(meth)) continue;
             PyCFunctionObject* cfo =  (PyCFunctionObject*)meth;
@@ -452,7 +474,7 @@ string VRScriptManager::getPyVRMethodDoc(string mod, string type, string method)
     pos = 0;
     dict = moduleTypes[mod][type]->tp_dict;
     while (PyDict_Next(dict, &pos, &key, &meth)) {
-        string name = PyString_AsString(key);
+        string name = PyUnicode_AsUTF8(key);
         if (method != name) continue;
 
         string ty = meth->ob_type->tp_name;

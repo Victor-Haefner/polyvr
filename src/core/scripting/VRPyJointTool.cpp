@@ -19,7 +19,7 @@ PyObject* VRPyJointTool::append(VRPyJointTool* self, PyObject* args) {
     VRPyTransform* o; VRPyPose* p;
     if (! PyArg_ParseTuple(args, "OO", &o, &p)) return NULL;
     int i = self->objPtr->append( o->objPtr, p->objPtr );
-    return PyInt_FromLong(i);
+    return PyLong_FromLong(i);
 }
 
 PyObject* VRPyJointTool::select(VRPyJointTool* self, PyObject* args) {

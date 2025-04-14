@@ -21,7 +21,6 @@ template<> bool toValue(PyObject* o, VRObjectPtr& v) {
 
 template<> PyTypeObject VRPyBaseT<OSG::VRObject>::type = {
     PyObject_HEAD_INIT(NULL)
-    0,                         /*ob_size*/
     "VR.Object",             /*tp_name*/
     sizeof(VRPyObject),             /*tp_basicsize*/
     0,                         /*tp_itemsize*/
@@ -29,7 +28,7 @@ template<> PyTypeObject VRPyBaseT<OSG::VRObject>::type = {
     0,                         /*tp_print*/
     0,                         /*tp_getattr*/
     0,                         /*tp_setattr*/
-    VRPyObject::compare,                         /*tp_compare*/
+    0,                         /*tp_as_async*/
     0,                         /*tp_repr*/
     0,                         /*tp_as_number*/
     0,                         /*tp_as_sequence*/
@@ -44,7 +43,7 @@ template<> PyTypeObject VRPyBaseT<OSG::VRObject>::type = {
     "VRObject binding",           /* tp_doc */
     0,		               /* tp_traverse */
     0,		               /* tp_clear */
-    0,		               /* tp_richcompare */
+    VRPyObject::compare,		               /* tp_richcompare */
     0,		               /* tp_weaklistoffset */
     0,		               /* tp_iter */
     0,		               /* tp_iternext */
@@ -59,6 +58,17 @@ template<> PyTypeObject VRPyBaseT<OSG::VRObject>::type = {
     (initproc)init,      /* tp_init */
     0,                         /* tp_alloc */
     New_VRObjects_ptr,                 /* tp_new */
+    0, /* tp_free; */
+    0, /* tp_is_gc; */
+    0, /* tp_bases; */
+    0, /* tp_mro; */
+    0, /* tp_cache; */
+    0, /* tp_subclasses; */
+    0, /* tp_weaklist; */
+    0, /* tp_del; */
+    0, /* tp_version_tag; */
+    0, /* tp_finalize; */
+    0, /* tp_vectorcall; */
 };
 
 const char* exportToFileDoc = "Export subtree to file"
@@ -153,14 +163,19 @@ PyObject* VRPyObject::setPersistency(VRPyObject* self, PyObject* args) {
 
 PyObject* VRPyObject::getPersistency(VRPyObject* self) {
     if (self->objPtr == 0) { PyErr_SetString(err, "VRPyObject::getPersistency - C Object is invalid"); return NULL; }
-    return PyInt_FromLong( self->objPtr->getPersistency() );
+    return PyLong_FromLong( self->objPtr->getPersistency() );
 }
 
-int VRPyObject::compare(PyObject* p1, PyObject* p2) {
-    if (Py_TYPE(p1) != Py_TYPE(p2)) return -1;
+PyObject* VRPyObject::compare(PyObject* p1, PyObject* p2, int op) {
+    if (op != Py_EQ || op != Py_NE) Py_RETURN_NOTIMPLEMENTED;
+    bool same = true;
+    if (Py_TYPE(p1) != Py_TYPE(p2)) same == false;
     VRPyBaseT* o1 = (VRPyBaseT*)p1;
     VRPyBaseT* o2 = (VRPyBaseT*)p2;
-    return (o1->objPtr == o2->objPtr) ? 0 : -1;
+    if (o1->objPtr != o2->objPtr) same = false;
+    if (same && op == Py_EQ) Py_RETURN_TRUE;
+    if (!same && op == Py_NE) Py_RETURN_TRUE;
+    Py_RETURN_FALSE;
 }
 
 long VRPyObject::hash(PyObject* p) {
@@ -170,12 +185,12 @@ long VRPyObject::hash(PyObject* p) {
 
 PyObject* VRPyObject::getName(VRPyObject* self) {
     if (self->objPtr == 0) { PyErr_SetString(err, "C Object is invalid"); return NULL; }
-    return PyString_FromString(self->objPtr->getName().c_str());
+    return PyUnicode_FromString(self->objPtr->getName().c_str());
 }
 
 PyObject* VRPyObject::getBaseName(VRPyObject* self) {
     if (self->objPtr == 0) { PyErr_SetString(err, "C Object is invalid"); return NULL; }
-    return PyString_FromString(self->objPtr->getBaseName().c_str());
+    return PyUnicode_FromString(self->objPtr->getBaseName().c_str());
 }
 
 PyObject* VRPyObject::setName(VRPyObject* self, PyObject* args) {

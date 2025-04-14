@@ -223,7 +223,7 @@ PyObject* VRScript::getPyObj(argPtr a) {
     if (a->type == "int") return Py_BuildValue("i", toInt(a->val.c_str()));
     else if (a->type == "float") return Py_BuildValue("f", toFloat(a->val.c_str()));
     else if (a->type == "NoneType") return Py_None;
-    else if (a->type == "str") return PyString_FromString(a->val.c_str());
+    else if (a->type == "str") return PyUnicode_FromString(a->val.c_str());
     else if (a->ptr == 0) { /*cout << "\ngetPyObj ERROR: " << a->type << " ptr is 0\n";*/ Py_RETURN_NONE; }
     else if (a->type == "VRPyObjectType") return VRPyObject::fromSharedPtr(((VRObject*)a->ptr)->ptr());
     else if (a->type == "VRPyTransformType") return VRPyTransform::fromSharedPtr(((VRTransform*)a->ptr)->ptr());
@@ -364,11 +364,11 @@ int parse_syntax_error(PyObject *err, PyObject **message, char **filename, int *
 
     if (!(v = PyObject_GetAttrString(err, "filename"))) goto finally;
     if (v == Py_None) *filename = NULL;
-    else if (! (*filename = PyString_AsString(v))) goto finally;
+    else if (! (*filename = PyUnicode_AsUTF8(v))) goto finally;
 
     Py_DECREF(v);
     if (!(v = PyObject_GetAttrString(err, "lineno"))) goto finally;
-    hold = PyInt_AsLong(v);
+    hold = PyLong_AsLong(v);
     Py_DECREF(v);
     v = NULL;
     if (hold < 0 && PyErr_Occurred()) goto finally;
@@ -380,7 +380,7 @@ int parse_syntax_error(PyObject *err, PyObject **message, char **filename, int *
         Py_DECREF(v);
         v = NULL;
     } else {
-        hold = PyInt_AsLong(v);
+        hold = PyLong_AsLong(v);
         Py_DECREF(v);
         v = NULL;
         if (hold < 0 && PyErr_Occurred())
@@ -390,7 +390,7 @@ int parse_syntax_error(PyObject *err, PyObject **message, char **filename, int *
 
     if (!(v = PyObject_GetAttrString(err, "text"))) goto finally;
     if (v == Py_None) *text = NULL;
-    else if (! (*text = PyString_AsString(v))) goto finally;
+    else if (! (*text = PyUnicode_AsUTF8(v))) goto finally;
     Py_DECREF(v);
     return 1;
 
@@ -517,8 +517,8 @@ void VRScript::pyErrPrint(string channel) {
     for (auto frame : getThreadStateFrames(tstate)) {
         while (frame) {
             int line = PyCode_Addr2Line(frame->f_code, frame->f_lasti);
-            string filename = PyString_AsString(frame->f_code->co_filename);
-            string funcname = PyString_AsString(frame->f_code->co_name);
+            string filename = PyUnicode_AsUTF8(frame->f_code->co_filename);
+            string funcname = PyUnicode_AsUTF8(frame->f_code->co_name);
             errLink eLink(filename, line, 0);
             Line l;
             l.fkt = VRFunction<string>::create("search_link", bind(&VRScript::on_err_link_clicked, this, eLink, _1) );
@@ -548,7 +548,7 @@ void VRScript::pyErrPrint(string channel) {
 
     printSyntaxError(exception, v, tb);
 
-    if (v != NULL && v != Py_None) print( string(PyString_AsString( PyObject_Str(v) )) + "\n");
+    if (v != NULL && v != Py_None) print( string(PyUnicode_AsUTF8( PyObject_Str(v) )) + "\n");
     Py_XDECREF(exception);
     Py_XDECREF(v);
     Py_XDECREF(tb);

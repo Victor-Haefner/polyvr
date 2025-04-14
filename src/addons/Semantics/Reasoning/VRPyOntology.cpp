@@ -55,13 +55,13 @@ template<> PyObject* VRPyTypeCaster::cast(const VRPropertyValue& v) {
     VROntologyPtr o = v.o;
     if (!p) Py_RETURN_NONE;
     if (p->value == "") Py_RETURN_NONE;
-    if (p->type == "int") return PyInt_FromLong( toInt(p->value) );
+    if (p->type == "int") return PyLong_FromLong( toInt(p->value) );
     if (p->type == "float") return PyFloat_FromDouble( toFloat(p->value) );
-    if (p->type == "string") return PyString_FromString( p->value.c_str() );
+    if (p->type == "string") return PyUnicode_FromString( p->value.c_str() );
     if (o) {
         if (auto e = o->getEntity(p->value)) return VRPyEntity::fromSharedPtr(e);
     }
-    return PyString_FromString( p->value.c_str() );
+    return PyUnicode_FromString( p->value.c_str() );
 };
 
 PyMethodDef VRPyEntity::methods[] = {

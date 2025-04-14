@@ -7,7 +7,7 @@
 using namespace OSG;
 
 template<> bool toValue(PyObject* obj, VRSelector::VISUAL& e) {
-    return toValue( PyString_AsString(obj) , e);
+    return toValue( PyUnicode_AsUTF8(obj) , e);
 }
 
 simpleVRPyType(Selector, New_ptr);

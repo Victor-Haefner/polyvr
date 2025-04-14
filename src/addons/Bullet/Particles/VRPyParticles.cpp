@@ -75,7 +75,7 @@ PyObject* VRPyParticles::spawnCuboid(VRPyParticles* self, PyObject* args) {
     size.setValues(a, b, c);
 
     int num = self->objPtr->spawnCuboid(position, size, distance);
-    return PyInt_FromLong((long) num);
+    return PyLong_FromLong((long) num);
 }
 
 PyObject* VRPyParticles::spawnEmitter(VRPyParticles* self, PyObject* args) {
@@ -84,7 +84,7 @@ PyObject* VRPyParticles::spawnEmitter(VRPyParticles* self, PyObject* args) {
     int from=0, to=0, interval=0, loop=0;
     if (! PyArg_ParseTuple(args, "OOiii|i", &base, &dir, &from, &to, &interval, &loop)) { return NULL; }
     int id = self->objPtr->setEmitter(parseVec3dList(base), parseVec3dList(dir), from, to, interval, loop);
-    return PyInt_FromLong((long) id);
+    return PyLong_FromLong((long) id);
 }
 
 PyObject* VRPyParticles::stopEmitter(VRPyParticles* self, PyObject* args) {
