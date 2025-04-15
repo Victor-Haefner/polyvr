@@ -20,8 +20,26 @@ namespace xmlpp{ class Element; }
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
+struct VRPyException {
+    struct Frame {
+        int line = 0;
+        int offset = -1;
+        string message;
+        string text;
+        string filename;
+        string funcname;
+    };
+
+    bool occured = false;
+    string val;
+    vector<Frame> bt;
+
+    void get();
+};
+
 class VRScript : public std::enable_shared_from_this<VRScript>, public VRName {
     public:
+
         struct arg : public VRName {
             string type = "NoneType";
             string val = "None";
@@ -95,7 +113,6 @@ class VRScript : public std::enable_shared_from_this<VRScript>, public VRName {
         trigPtr getTrig(string name);
         void on_err_link_clicked(errLink link, string s);
         void pyErrPrint(string channel);
-        void printSyntaxError(PyObject* exception, PyObject* value, PyObject* tb);
         void update();
 
     public:

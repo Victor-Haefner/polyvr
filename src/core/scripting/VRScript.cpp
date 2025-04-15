@@ -350,141 +350,84 @@ void VRScript::on_err_link_clicked(errLink link, string s) {
 
 VRScript::errLink::errLink(string f, int l, int c) : filename(f), line(l), column(c) {}
 
+void VRPyException::get() {
+    occured = PyErr_Occurred();
+    if (!occured) return;
 
-int parse_syntax_error(PyObject *err, PyObject **message, char **filename, int *lineno, int *offset, char **text) {
-    long hold;
-    PyObject *v;
+    PyObject* exc = 0;
+    PyObject* eval = 0;
+    PyObject* tbk = 0;
 
-    /* old style errors */
-    if (PyTuple_Check(err)) return PyArg_ParseTuple(err, "O(ziiz)", message, filename, lineno, offset, text);
+    PyErr_Fetch(&exc, &eval, &tbk);
+    if (exc == NULL) return;
+    PyErr_NormalizeException(&exc, &eval, &tbk);
+    if (exc == NULL) return;
 
-    /* new style errors.  `err' is an instance */
-    if (! (v = PyObject_GetAttrString(err, "msg"))) goto finally;
-    *message = v;
+    if (eval) toValue( PyObject_Str(eval), val );
 
-    if (!(v = PyObject_GetAttrString(err, "filename"))) goto finally;
-    if (v == Py_None) *filename = NULL;
-    else if (! (*filename = (char*)PyUnicode_AsUTF8(v))) goto finally;
+    if (PyObject_HasAttrString(eval, "print_file_and_line")) { // syntax error
+        Frame f;
+        if (PyTuple_Check(eval)) { // old style tuple errors
+            PyObject* message = 0;
+            char* text = 0;
+            char* filename = 0;
+            PyArg_ParseTuple(eval, "O(ziiz)", message, filename, f.line, f.offset, text);
+            f.filename = filename ? filename : "<script>";
+            val = string( PyUnicode_AsUTF8( PyObject_Str(message) ) );
+        } else { // new style errors, error is an instance
+            PyObject* message = PyObject_GetAttrString(eval, "msg");
+            PyObject* filename = PyObject_GetAttrString(eval, "filename");
+            PyObject* lineno = PyObject_GetAttrString(eval, "lineno");
+            PyObject* offset = PyObject_GetAttrString(eval, "offset");
+            PyObject* text = PyObject_GetAttrString(eval, "text");
 
-    Py_DECREF(v);
-    if (!(v = PyObject_GetAttrString(err, "lineno"))) goto finally;
-    hold = PyLong_AsLong(v);
-    Py_DECREF(v);
-    v = NULL;
-    if (hold < 0 && PyErr_Occurred()) goto finally;
-    *lineno = (int)hold;
-
-    if (!(v = PyObject_GetAttrString(err, "offset"))) goto finally;
-    if (v == Py_None) {
-        *offset = -1;
-        Py_DECREF(v);
-        v = NULL;
-    } else {
-        hold = PyLong_AsLong(v);
-        Py_DECREF(v);
-        v = NULL;
-        if (hold < 0 && PyErr_Occurred())
-            goto finally;
-        *offset = (int)hold;
+            if (message) toValue( PyObject_Str(message) , f.message);
+            if (filename) toValue(filename, f.filename);
+            else f.filename = "<script>";
+            if (lineno) toValue(lineno, f.line);
+            if (offset) toValue(offset, f.offset);
+            if (text) toValue(text, f.text);
+        }
+        bt.push_back(f);
     }
 
-    if (!(v = PyObject_GetAttrString(err, "text"))) goto finally;
-    if (v == Py_None) *text = NULL;
-    else if (! (*text = (char*)PyUnicode_AsUTF8(v))) goto finally;
-    Py_DECREF(v);
-    return 1;
-
-finally:
-    Py_XDECREF(v);
-    return 0;
-}
-
-void print_error_text(int offset, char *text) {
-    auto print = [&]( string m, string style = "", shared_ptr< VRFunction<string> > link = 0 ) {
-#ifndef WITHOUT_IMGUI
-        VRConsoleWidget::get( "Syntax" )->write( m, style, link );
-        cout << m;
-#else
-        cout << m;
-#endif
+    auto getTracebackFrames = [](PyObject* tbo) {
+        vector<PyFrameObject*> frames;
+        if (!tbo || !PyTraceBack_Check(tbo)) return frames;
+        PyTracebackObject* tb = (PyTracebackObject*)tbo;
+        while (tb->tb_next) tb = tb->tb_next;
+        if (tb->tb_frame) frames.push_back(tb->tb_frame);
+        return frames;
     };
 
-    char *nl;
-    if (offset >= 0) {
-        if (offset > 0 && offset == (int)strlen(text) && text[offset - 1] == '\n') offset--;
-        for (;;) {
-            nl = strchr(text, '\n');
-            if (nl == NULL || nl-text >= offset) break;
-            offset -= (int)(nl+1-text);
-            text = nl+1;
-        }
-        while (*text == ' ' || *text == '\t') {
-            text++;
-            offset--;
-        }
-    }
-    print("    ");
-    print(text);
-    if (*text == '\0' || text[strlen(text)-1] != '\n') print("\n");
-    if (offset == -1) return;
-    print("    ");
-    offset--;
-    while (offset > 0) {
-        print(" ");
-        offset--;
-    }
-    print("^\n");
-}
-
-void VRScript::printSyntaxError(PyObject *exception, PyObject *value, PyObject *tb) {
-    auto print = [&]( string m, string style = "", shared_ptr< VRFunction<string> > link = 0 ) {
-#ifndef WITHOUT_IMGUI
-        VRConsoleWidget::get( "Syntax" )->write( m, style, link );
-        cout << m;
-#else
-        cout << m;
-#endif
-    };
-
-    if (!value) {
-        cout << "Warning in printSyntaxError! value is 0!" << endl;
-        return;
-    }
-
-    int err = 0;
-    Py_INCREF(value);
-
-    //if (Py_FlushLine()) PyErr_Clear(); // TODO: check if needed
-    //PyErr_Clear();
-
-    fflush(stdout);
-    if (err == 0 && PyObject_HasAttrString(value, "print_file_and_line")) {
-        PyObject *message;
-        char *filename, *text;
-        int lineno, offset;
-        if (!parse_syntax_error(value, &message, &filename, &lineno, &offset, &text)) PyErr_Clear();
-        else {
-            string fn = filename ? filename : "<string>";
-            errLink eLink(fn, lineno, 0);
-            auto fkt = VRFunction<string>::create("search_link", bind(&VRScript::on_err_link_clicked, this, eLink, _1) );
-            print("  ");
-            print("Script \"" + fn + "\", line " + toString(lineno), "redLink", fkt);
-            print("\n");
-            if (text != NULL) print_error_text(offset, text);
-            Py_DECREF(value);
-            value = message;
-            if (PyErr_Occurred()) err = -1;
+    vector<PyFrameObject*> frames = getTracebackFrames(tbk);
+    for (auto& frame : frames) {
+        if (frame) {
+            Frame f;
+            f.line = PyFrame_GetLineNumber(frame);
+            PyCodeObject* code = PyFrame_GetCode(frame);
+            if (code) {
+                const char* filename = PyUnicode_AsUTF8(code->co_filename);
+                const char* funcname = PyUnicode_AsUTF8(code->co_name);
+                if (funcname) f.funcname = string( funcname );
+                if (filename) f.filename = string( filename );
+                else f.filename = f.funcname;
+                Py_XDECREF(code);
+            }
+            bt.push_back(f);
         }
     }
 
-    Py_DECREF(value);
+    Py_XDECREF(exc);
+    Py_XDECREF(eval);
+    Py_XDECREF(tbk);
     PyErr_Clear();
 }
 
 void VRScript::pyErrPrint(string channel) {
-    if (!PyErr_Occurred()) return;
-    PyErr_Print(); // TODO: fix the error printing
-    return;
+    VRPyException exc;
+    exc.get();
+    if (!exc.occured) return;
 
     auto print = [&]( string m, string style = "", shared_ptr< VRFunction<string> > link = 0 ) {
 #ifndef WITHOUT_IMGUI
@@ -495,75 +438,28 @@ void VRScript::pyErrPrint(string channel) {
 #endif
     };
 
-    auto getThreadStateFrames = [&]() {
-        PyObject *ptype = nullptr, *pvalue = nullptr, *ptraceback = nullptr;
-        PyErr_Fetch(&ptype, &pvalue, &ptraceback);
-        PyErr_NormalizeException(&ptype, &pvalue, &ptraceback);
-
-        vector<PyFrameObject*> frames;
-        if (ptraceback && PyTraceBack_Check(ptraceback)) {
-            PyTracebackObject* tb = (PyTracebackObject*)ptraceback;
-            while (tb) {
-                if (tb->tb_frame) frames.push_back(tb->tb_frame);
-                tb = tb->tb_next;
-            }
-        }
-        return frames;
-    };
-
 #ifndef WITHOUT_IMGUI
     VRConsoleWidget::get( channel )->addStyle( "redLink", "#ff3311", "#ffffff", false, false, true, false );
 #endif
 
-    struct Line {
-        shared_ptr<VRFunction<string>> fkt;
-        string line;
-    };
-    list<Line> lines;
-
-    for (auto frame : getThreadStateFrames()) {
-        while (frame) {
-            if (!frame->f_code) break;
-            cout << "pyErrPrint " << frame << endl;
-            cout << "  " << frame->f_code << ", " << frame->f_lasti << endl;
-            //int line = PyFrame_GetLineNumber(frame->f_code, frame->f_lasti);
-            int line = PyCode_Addr2Line(frame->f_code, frame->f_lasti);
-            string filename = PyUnicode_AsUTF8(frame->f_code->co_filename);
-            string funcname = PyUnicode_AsUTF8(frame->f_code->co_name);
-            errLink eLink(filename, line, 0);
-            Line l;
-            l.fkt = VRFunction<string>::create("search_link", bind(&VRScript::on_err_link_clicked, this, eLink, _1) );
-            //l.line = "Line "+toString(line)+" in "+funcname+" in script "+filename;
-            l.line = "Script "+filename+", line "+toString(line);
-            if (filename != funcname) l.line += ", in "+funcname;
-            lines.push_front(l);
-            frame = frame->f_back;
-        }
-    }
-
-    if (lines.size() > 0) { // print trace back
+    if (exc.bt.size() > 0) { // print trace back
         print( "Traceback (most recent call last):\n" );
-        for (auto l : lines) {
+
+        for (auto& frame : exc.bt) {
+            errLink eLink(frame.filename, frame.line, 0);
+            auto fct = VRMessageCb::create("search_link", bind(&VRScript::on_err_link_clicked, this, eLink, _1) );
+
+            string line = "Script \""+frame.filename+"\", line "+toString(frame.line);
+            if (frame.offset >= 0) line += ", offset "+toString(frame.offset);
+            if (frame.funcname != "" && frame.filename != frame.funcname) line += ", in "+frame.funcname;
+
             print( "  " );
-            print( l.line, "redLink", l.fkt );
+            print( line, "redLink", fct );
             print( "\n" );
         }
     }
 
-    // print error
-    PyObject *exception, *v, *tb;
-    PyErr_Fetch(&exception, &v, &tb);
-    if (exception == NULL) return;
-    PyErr_NormalizeException(&exception, &v, &tb);
-    if (exception == NULL) return;
-
-    printSyntaxError(exception, v, tb);
-
-    if (v != NULL && v != Py_None) print( string(PyUnicode_AsUTF8( PyObject_Str(v) )) + "\n");
-    Py_XDECREF(exception);
-    Py_XDECREF(v);
-    Py_XDECREF(tb);
-    PyErr_Clear();
+    print( exc.val + "\n" );
 }
 
 PyObject* VRScript::getFunction() { return fkt; }
@@ -604,6 +500,7 @@ void VRScript::execute() {
             i++;
         }
 
+        cout << " -- call py fct " << getName() << endl;
         auto res = PyObject_CallObject(fkt, pArgs);
         if (!res) cout << "Warning in VRScript::execute: PyObject_CallObject failed! in script " << name << endl;
         pyErrPrint("Errors");
