@@ -363,6 +363,7 @@ void VRScriptManager::initPyModules() {
         cout << "PyModule_Create of pModVR failed!" << endl;
         return;
     }
+    PyObject_SetAttrString(pModVR, "__path__", PyList_New(0)); // module becomes a package
 
     VRSceneModules sceneModules;
     sceneModules.setup(this, pModVR);
@@ -391,6 +392,8 @@ PyObject* VRScriptManager::newModule(string name, PyMethodDef* methods, string d
     };
 
     PyObject* m = PyModule_Create(&modDef);
+    PyObject* sysModules = PyImport_GetModuleDict();
+    PyDict_SetItemString(sysModules, name2.c_str(), m);
     modules[name] = m;
     PyModule_AddObject(pModVR, name.c_str(), m);
     return m;

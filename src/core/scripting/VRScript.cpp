@@ -500,7 +500,6 @@ void VRScript::execute() {
             i++;
         }
 
-        cout << " -- call py fct " << getName() << endl;
         auto res = PyObject_CallObject(fkt, pArgs);
         if (!res) cout << "Warning in VRScript::execute: PyObject_CallObject failed! in script " << name << endl;
         pyErrPrint("Errors");
