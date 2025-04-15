@@ -304,11 +304,6 @@ void VRScriptManager::redirectPyOutput(string pyOutput, string console) {
 
 // ----------------------------
 
-// TODO:
-//  a script has parameters, they are some sort of default parameters with values defined in the gui
-//  such a script can be called from another script, but only by passing all the variables again
-//  it should be possible to call the script with any parameter, the gui parameter should be used as default ones!
-
 PyObject* VRScriptManager::getGlobalModule() { return pModVR; }
 PyObject* VRScriptManager::getGlobalDict() { return pGlobal; }
 
@@ -320,10 +315,9 @@ static struct PyModuleDef VRModDef = {
     VRSceneGlobals::methods              // method table
 };
 
-PyObject* pModVRTmp = 0;
 PyMODINIT_FUNC PyInit_VR(void) {
-    pModVRTmp = PyModule_Create(&VRModDef);
-    return pModVRTmp;
+    auto s = VRScene::getCurrent();
+    return s ? s->getGlobalModule() : 0;
 }
 
 void VRScriptManager::initPyModules() {
@@ -336,7 +330,6 @@ void VRScriptManager::initPyModules() {
     PyImport_AppendInittab("VR", PyInit_VR);
 
     Py_Initialize();
-    pModVR = pModVRTmp;
 
     cout << "  Py_Initialize done" << endl;
     wchar_t* wargv[1];
@@ -365,7 +358,7 @@ void VRScriptManager::initPyModules() {
     PyObject* sys_path = PySys_GetObject((char*)"path");
     PyList_Append(sys_path, PyUnicode_FromString(".") );
 
-    //pModVR = PyModule_Create(&VRModDef); // TODO??
+    pModVR = PyModule_Create(&VRModDef);
     if (!pModVR) {
         cout << "PyModule_Create of pModVR failed!" << endl;
         return;
@@ -375,10 +368,9 @@ void VRScriptManager::initPyModules() {
     sceneModules.setup(this, pModVR);
     cout << "  Added scene modules" << endl;
 
-    // TODO: fix the error printing
 	if (!VROptions::get()->getOption<bool>("standalone") && !VROptions::get()->getOption<bool>("headless")) {
-        //redirectPyOutput("stdout", "Console");
-        //redirectPyOutput("stderr", "Errors");
+        redirectPyOutput("stdout", "Console");
+        redirectPyOutput("stderr", "Errors");
 	}
 
     PyRun_SimpleString( // add cython local path to python search path
