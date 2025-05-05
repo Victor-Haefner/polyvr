@@ -19,5 +19,7 @@ PyMethodDef VRPyStroke::methods[] = {
     {"update", PyWrap( Stroke, update, "Update stroke", void ) },
     {"convertToRope", PyWrap( Stroke, convertToRope, "converts this Stroke  to a rope (softbody)", void ) },
     {"addPolygon", PyWrap( Stroke, addPolygon, "Add a polygon", void, VRPolygonPtr ) },
+    {"makeRectProfile", PyWrap( Stroke, makeRectProfile, "Create open rectangular profile (width, height)", vector<Vec3d>, double, double ) },
+    {"makeCircleProfile", PyWrap( Stroke, makeCircleProfile, "Create open circle profile (radius, Npoints)", vector<Vec3d>, double, int ) },
     {NULL}  /* Sentinel */
 };

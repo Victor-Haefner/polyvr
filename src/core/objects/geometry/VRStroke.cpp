@@ -42,6 +42,27 @@ vector<PathPtr> VRStroke::getPaths() { return paths; }
 
 void VRStroke::addPolygon(VRPolygonPtr p) { polygons.push_back(p); }
 
+vector<Vec3d> VRStroke::makeRectProfile(double width, double height) {
+    double w2 = width*0.5;
+    double h2 = height*0.5;
+    vector<Vec3d> p(4);
+    p[0] = Vec3d(-w2, -h2, 0);
+    p[1] = Vec3d( w2, -h2, 0);
+    p[2] = Vec3d( w2,  h2, 0);
+    p[3] = Vec3d(-w2,  h2, 0);
+    return p;
+}
+
+vector<Vec3d> VRStroke::makeCircleProfile(double radius, int Npoints) {
+    double a = 2*Pi/Npoints;
+    vector<Vec3d> p(Npoints);
+    for (int i=0; i<Npoints; i++) {
+        double b = a*i;
+        p[i] = Vec3d(radius*cos(b), radius*sin(b), 0);
+    }
+    return p;
+}
+
 void VRStroke::strokeProfile(vector<Vec3d> profile, bool closed, bool lit, bool doColor, CAP l, CAP r, bool doCaps) {
     mode = 0;
     this->profile = profile;

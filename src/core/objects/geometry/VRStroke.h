@@ -53,6 +53,8 @@ class VRStroke : public VRGeometry {
         void strokeStrew(VRGeometryPtr geo);
 
         vector<Vec3d> getProfile();
+        vector<Vec3d> makeRectProfile(double width, double height);
+        vector<Vec3d> makeCircleProfile(double radius, int Npoints);
 
         void setDoColor(bool b);
         void convertToRope();
