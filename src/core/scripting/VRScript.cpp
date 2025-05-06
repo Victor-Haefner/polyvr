@@ -31,6 +31,7 @@
 #include "core/objects/material/VRMaterial.h"
 #include <frameobject.h>
 #include <pyerrors.h>
+#include <regex>
 
 
 using namespace OSG;
@@ -464,9 +465,32 @@ void VRScript::pyErrPrint(string channel) {
 
 PyObject* VRScript::getFunction() { return fkt; }
 
+void VRScript::preprocess() {
+    stringstream input(core);
+    stringstream output;
+
+    regex printRegex(R"(^(\s*)print\s+([^(\n#][^\n#]*)?)"); // match old style print without parenthesis
+
+    string line;
+    while (getline(input, line)) {
+        smatch match;
+        if (regex_search(line, match, printRegex)) {
+            string indentation = match[1];
+            string printContent = match[2];
+            output << indentation << "print(" << printContent << ")";
+        } else {
+            output << line;
+        }
+        output << '\n';
+    }
+
+    core = output.str();
+}
+
 void VRScript::compile( PyObject* pGlobal, PyObject* pModVR ) {
     //cout << "VRScript::compile " << getName() << ", \"" << getScript() << "\"" << endl;
     setFunction( 0 );
+    preprocess();
     PyObject* pCode = Py_CompileString(getScript().c_str(), getName().c_str(), Py_file_input);
     if (!pCode) { pyErrPrint("Syntax"); return; }
     PyObject* pValue = PyEval_EvalCode(pCode, pGlobal, PyModule_GetDict(pModVR));
