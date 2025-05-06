@@ -5105,14 +5105,6 @@
 			<Option target="Release" />
 			<Option target="PVR-Utils-d" />
 		</Unit>
-		<Unit filename="src/core/utils/VRPDF.cpp">
-			<Option target="Release" />
-			<Option target="PVR-Utils-d" />
-		</Unit>
-		<Unit filename="src/core/utils/VRPDF.h">
-			<Option target="Release" />
-			<Option target="PVR-Utils-d" />
-		</Unit>
 		<Unit filename="src/core/utils/VRProfiler.cpp">
 			<Option target="Release" />
 			<Option target="PVR-Utils-d" />
@@ -5219,6 +5211,39 @@
 		</Unit>
 		<Unit filename="src/core/utils/isNan.h">
 			<Option target="Release" />
+			<Option target="PVR-Utils-d" />
+		</Unit>
+		<Unit filename="src/core/utils/pdf/RPCUtils.h">
+			<Option target="PVR-Utils-d" />
+		</Unit>
+		<Unit filename="src/core/utils/pdf/VRPDF.cpp">
+			<Option target="PVR-Utils-d" />
+		</Unit>
+		<Unit filename="src/core/utils/pdf/VRPDF.h">
+			<Option target="PVR-Utils-d" />
+		</Unit>
+		<Unit filename="src/core/utils/pdf/VRPDF2DModel.cpp">
+			<Option target="PVR-Utils-d" />
+		</Unit>
+		<Unit filename="src/core/utils/pdf/VRPDF2DModel.h">
+			<Option target="PVR-Utils-d" />
+		</Unit>
+		<Unit filename="src/core/utils/pdf/VRPDF3DModel.cpp">
+			<Option target="PVR-Utils-d" />
+		</Unit>
+		<Unit filename="src/core/utils/pdf/VRPDF3DModel.h">
+			<Option target="PVR-Utils-d" />
+		</Unit>
+		<Unit filename="src/core/utils/pdf/VRPDFData.cpp">
+			<Option target="PVR-Utils-d" />
+		</Unit>
+		<Unit filename="src/core/utils/pdf/VRPDFData.h">
+			<Option target="PVR-Utils-d" />
+		</Unit>
+		<Unit filename="src/core/utils/pdf/VRPDFPage.cpp">
+			<Option target="PVR-Utils-d" />
+		</Unit>
+		<Unit filename="src/core/utils/pdf/VRPDFPage.h">
 			<Option target="PVR-Utils-d" />
 		</Unit>
 		<Unit filename="src/core/utils/system/VRSystem.cpp">

@@ -169,7 +169,7 @@ PyObject* VRPyObject::getPersistency(VRPyObject* self) {
 PyObject* VRPyObject::compare(PyObject* p1, PyObject* p2, int op) {
     if (op != Py_EQ || op != Py_NE) Py_RETURN_NOTIMPLEMENTED;
     bool same = true;
-    if (Py_TYPE(p1) != Py_TYPE(p2)) same == false;
+    if (Py_TYPE(p1) != Py_TYPE(p2)) same = false;
     VRPyBaseT* o1 = (VRPyBaseT*)p1;
     VRPyBaseT* o2 = (VRPyBaseT*)p2;
     if (o1->objPtr != o2->objPtr) same = false;

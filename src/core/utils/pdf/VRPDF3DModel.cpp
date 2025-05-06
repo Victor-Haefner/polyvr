@@ -1,198 +1,26 @@
-#include "VRPDF.h"
+#include "VRPDF3DModel.h"
+#include "VRPDFData.h"
 #include "core/utils/toString.h"
-#include "core/math/pose.h"
-#include "core/math/partitioning/boundingbox.h"
-#include "core/math/Layer2D.h"
+
 #include "core/objects/object/VRObject.h"
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/geometry/VRGeoData.h"
 #include "core/objects/material/VRMaterial.h"
 
-#ifdef _WIN32
-#include <cairo/cairo-pdf.h>
-#else
-#include <cairo-pdf.h>
-#endif
-
 #include <zlib.h>
 
 using namespace OSG;
 
-VRPDF::VRPDF(string path) {
-    //cairo_surface_t* surface = cairo_pdf_surface_create(path.c_str(), W*res, H*res);
-    surface = cairo_pdf_surface_create(path.c_str(), 0, 0);
-    cr = cairo_create(surface);
-}
+VRPDF3DModel::VRPDF3DModel() {}
+VRPDF3DModel::~VRPDF3DModel() {}
 
-VRPDF::~VRPDF() {
-    if (surface) cairo_surface_destroy(surface);
-    if (cr) cairo_destroy(cr);
-}
+VRPDF3DModelPtr VRPDF3DModel::create() { return VRPDF3DModelPtr( new VRPDF3DModel() ); }
+VRPDF3DModelPtr VRPDF3DModel::ptr() { return static_pointer_cast<VRPDF3DModel>(shared_from_this()); }
 
-VRPDFPtr VRPDF::create(string path) { return VRPDFPtr( new VRPDF(path) ); }
 
-void VRPDF::drawLine(Pnt2d p1, Pnt2d p2, Color3f c1, Color3f c2) {
-    cairo_set_source_rgb(cr, c1[0], c1[1], c1[2]);
-    cairo_set_line_width(cr, 0.5);
-    cairo_move_to(cr, p1[0]*res, p1[1]*res);
-    cairo_set_source_rgb(cr, c2[0], c2[1], c2[2]);
-    cairo_line_to(cr, p2[0]*res, p2[1]*res);
-    cairo_stroke(cr);
-}
 
-void VRPDF::drawText() {
-    cairo_set_source_rgb(cr, 0, 0, 0);
-    cairo_select_font_face(cr, "Sans", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL);
-    cairo_set_font_size(cr, 40.0);
-    cairo_move_to(cr, 10.0, 50.0);
-    cairo_show_text(cr, "Disziplin ist Macht.");
-}
-
-void VRPDF::write(string path) {
-    cairo_show_page(cr);
-}
-
-void VRPDF::project(VRObjectPtr obj, PosePtr plane) {
-    BoundingboxPtr bb = obj->getBoundingbox();
-    W = abs( bb->size().dot(plane->x()) );
-    H = abs( bb->size().dot(plane->up()) );
-    Ox = min( bb->min().dot(plane->x()),  bb->max().dot(plane->x())  );
-    Oy = min( bb->min().dot(plane->up()), bb->max().dot(plane->up()) );
-
-    cout << "VRPDF::project, " << Vec4d(W,H,Ox,Oy) << endl;
-    Vec2d O = Vec2d(Ox,Oy);
-
-    cairo_pdf_surface_set_size(surface, W*res, H*res);
-    Layer2D projection;
-    projection.project(obj, plane);
-    for (auto l : projection.getLines()) drawLine(l.p1-O, l.p2-O, l.c1, l.c2);
-}
-
-void VRPDF::slice(VRObjectPtr obj, PosePtr plane) {
-    // TODO
-}
-
-namespace PDF {
-    struct Chunk {
-        size_t begin = 0;
-        size_t end = 0;
-        size_t size = 0;
-
-        string unpacked;
-
-        Chunk(size_t b, size_t e) : begin(b), end(e) { size = e-b; }
-    };
-
-    struct Stream : Chunk {
-        string name;
-
-        Stream(size_t b, size_t e, string n) : name(n), Chunk(b,e) {}
-    };
-
-    struct Object : Chunk {
-        string name;
-        vector<Stream> streams;
-
-        Object(size_t b, size_t e, string n) : name(n), Chunk(b,e) {}
-    };
-}
-
-std::vector<size_t> findOccurrences(const std::vector<char>& buffer, const std::string& keyword, size_t start = 0, size_t end = 0) {
-    //cout << "  findOccurrences " << keyword << " from " << start << " to " << end << ", N " << buffer.size() << endl;
-    std::vector<size_t> positions;
-    if (end == 0) end = buffer.size();
-    string data(buffer.begin()+start, buffer.begin()+end);
-
-    size_t pos = 0;
-    while ((pos = data.find(keyword, pos)) != std::string::npos) {
-        positions.push_back(pos + start);
-        pos += keyword.length(); // Move past the last found position
-    }
-    //cout << "   found " << positions.size() << endl;
-    return positions;
-}
-
-vector<PDF::Object> extractObjects(const vector<char>& buffer) {
-    vector<PDF::Object> objects;
-    auto A = findOccurrences(buffer, " obj\r");
-    auto B = findOccurrences(buffer, "\rendobj\r");
-
-    map<size_t, string> pairs;
-    for (auto a : A) pairs[a] = "obj";
-    for (auto b : B) pairs[b] = "end";
-
-    size_t start;
-    bool inObj = false;
-    for (auto x : pairs) {
-        size_t p = x.first;
-        if (x.second == "obj") {
-            start = x.first;
-            inObj = true;
-        }
-
-        if (x.second == "end") {
-            objects.push_back( PDF::Object(start, x.first, "object") );
-            inObj = false;
-        }
-    }
-
-    return objects;
-}
-
-void extractObjectNames(const std::vector<char>& buffer, vector<PDF::Object>& objects) {
-    for (auto& obj : objects) {
-        size_t N = 0;
-        size_t a = 0;
-        for (size_t i = obj.begin; i<obj.end; i++) {
-
-            if (buffer[i-1] == '<' && buffer[i] == '<') { // "<<"
-                if (N == 0) a = i-1;
-                N += 1;
-            }
-
-            if (buffer[i-1] == '>' && buffer[i] == '>') { // ">>"
-                N -= 1;
-
-                if (N == 0) {
-                    obj.name = string(buffer.begin()+a, buffer.begin()+i+1);
-                    break;
-                }
-            }
-        }
-    }
-}
-
-void extractStreams(const std::vector<char>& buffer, vector<PDF::Object>& objects) {
-    for (auto& obj : objects) {
-        auto A = findOccurrences(buffer, "stream\r\n", obj.begin, obj.end);
-        auto B = findOccurrences(buffer, "endstream", obj.begin, obj.end);
-
-        map<size_t, string> pairs;
-        for (auto a : A) pairs[a] = "obj";
-        for (auto b : B) pairs[b] = "end";
-
-        size_t start;
-        bool inObj = false;
-        for (auto x : pairs) {
-            size_t p = x.first;
-            if (x.second == "obj") {
-                start = x.first + 6;
-                while (buffer[start] == '\r' || buffer[start] == '\n') start++; // strip
-                inObj = true;
-            }
-
-            if (x.second == "end") {
-                size_t end = x.first-1;
-                while (buffer[end-1] == '\r' || buffer[end-1] == '\n') end--; // strip
-                obj.streams.push_back( PDF::Stream(start, end, "stream") );
-                inObj = false;
-            }
-        }
-    }
-}
-
-vector<PDF::Object> filter3DObjects(vector<PDF::Object>& objects) {
-    vector<PDF::Object> res;
+vector<VRPDFData::Object> filter3DObjects(vector<VRPDFData::Object>& objects) {
+    vector<VRPDFData::Object> res;
 
     for (auto& obj : objects) {
         if ( contains(obj.name, "PRC") ) res.push_back(obj);
@@ -261,19 +89,19 @@ std::string decompressZlib(const std::string& compressedData) {
     return std::string(decompressedBuffer.begin(), decompressedBuffer.begin() + decompressedSize);
 }
 
-void unpack3DObject(const std::vector<char>& buffer, PDF::Object& object) {
+void unpack3DObject(const std::vector<char>& buffer, VRPDFData::Object& object) {
     if (object.streams.size() == 0) return;
-    PDF::Stream& stream = object.streams[0];
+    VRPDFData::Stream& stream = object.streams[0];
     string data(buffer.begin()+stream.begin, buffer.begin()+stream.end);
     data = decompressZlib(data);
     if (!startsWith(data, "PRC")) return;
     stream.unpacked = data;
 }
 
-void printObjects(vector<PDF::Object>& objects) {
-    for (PDF::Object& object : objects) {
+void printObjects(vector<VRPDFData::Object>& objects) {
+    for (VRPDFData::Object& object : objects) {
         cout << "Object " << object.name << endl;
-        for (PDF::Stream& stream : object.streams) {
+        for (VRPDFData::Stream& stream : object.streams) {
             cout << " Stream " << stream.name << ", size: " << stream.size << endl;
         }
     }
@@ -2683,9 +2511,9 @@ VRTransformPtr parsePRCStructure(string& data, PRC::FileStructureDescription& de
     return root;
 }
 
-VRTransformPtr processPRC(PDF::Object& object) {
+VRTransformPtr processPRC(VRPDFData::Object& object) {
     if (object.streams.size() == 0) return 0;
-    PDF::Stream& stream = object.streams[0];
+    VRPDFData::Stream& stream = object.streams[0];
     if (stream.unpacked == "") return 0;
 
 
@@ -2759,7 +2587,7 @@ bool testUInt(unsigned int i) {
     return (i == I.i);
 }
 
-VRTransformPtr VRPDF::extract3DModels(string path) {
+vector<VRTransformPtr> VRPDF3DModel::extract(vector<VRPDFData::Object>& objects, const std::vector<char>& buffer) {
     //string s = writeUnsignedInteger(232);
     //::printBits(s);
 
@@ -2772,20 +2600,13 @@ VRTransformPtr VRPDF::extract3DModels(string path) {
     //testUInt(305);
 
     //return 0;
+    vector<VRTransformPtr> res;
 
-    auto root = VRTransform::create("PDF");
-
-    ifstream file(path, std::ios::binary);
-    vector<char> buffer((istreambuf_iterator<char>(file)), istreambuf_iterator<char>());
-
-    vector<PDF::Object> objects = extractObjects(buffer);
-    extractObjectNames(buffer, objects);
-    extractStreams(buffer, objects);
-    vector<PDF::Object> geometries = filter3DObjects(objects);
+    vector<VRPDFData::Object> geometries = filter3DObjects(objects);
     for (auto& obj : geometries) unpack3DObject(buffer, obj);
     for (auto& obj : geometries) {
         auto model = processPRC(obj);
-        root->addChild(model);
+        res.push_back(model);
     }
 
     // TODO: convert PRC to geometry
@@ -2793,10 +2614,6 @@ VRTransformPtr VRPDF::extract3DModels(string path) {
     //printObjects(objects);
     //printObjects(geometries);
 
-    return root;
+    return res;
 }
-
-
-
-
 
