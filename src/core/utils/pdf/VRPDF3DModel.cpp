@@ -23,7 +23,7 @@ vector<VRPDFData::Object> filter3DObjects(vector<VRPDFData::Object>& objects) {
     vector<VRPDFData::Object> res;
 
     for (auto& obj : objects) {
-        if ( contains(obj.name, "PRC") ) res.push_back(obj);
+        if ( contains(obj.header, "PRC") ) res.push_back(obj);
     }
 
     return res;
@@ -100,7 +100,7 @@ void unpack3DObject(const std::vector<char>& buffer, VRPDFData::Object& object) 
 
 void printObjects(vector<VRPDFData::Object>& objects) {
     for (VRPDFData::Object& object : objects) {
-        cout << "Object " << object.name << endl;
+        cout << "Object " << object.header << endl;
         for (VRPDFData::Stream& stream : object.streams) {
             cout << " Stream " << stream.name << ", size: " << stream.size << endl;
         }

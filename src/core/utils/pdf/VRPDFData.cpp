@@ -1,8 +1,11 @@
 #include "VRPDFData.h"
+#include "core/utils/toString.h"
 
 #include <map>
 #include <zlib.h>
 #include <fstream>
+#include <iostream>
+#include <regex>
 
 using namespace OSG;
 
@@ -16,7 +19,7 @@ void VRPDFData::read(string path) {
     ifstream file(path, std::ios::binary);
     buffer = std::vector<char>((istreambuf_iterator<char>(file)), istreambuf_iterator<char>());
     objects = extractObjects(buffer);
-    extractObjectNames(buffer, objects);
+    extractObjectMetadata(buffer, objects);
     extractStreams(buffer, objects);
 }
 
@@ -35,7 +38,29 @@ std::vector<size_t> VRPDFData::findOccurrences(const std::vector<char>& buffer, 
     return positions;
 }
 
+pair<size_t,int> findNext(const std::vector<char>& buffer, vector<string> strings, size_t b, size_t e) {
+    if (e == 0) e = buffer.size();
+
+    auto isMatchAt = [&](const string& s, size_t i) {
+        for (size_t j=0; j<s.size(); j++) {
+            if (i+j >= e) return false;
+            if (buffer[i+j] != s[j]) return false;
+        }
+        return true;
+    };
+
+    for (size_t i=b; i<e; i++) {
+        for (size_t k=0; k<strings.size(); k++) {
+            if (isMatchAt(strings[k], i)) return pair<size_t,int>(i,k);
+        }
+    }
+
+    return pair<size_t,int>(0,-1);
+}
+
 vector<VRPDFData::Object> VRPDFData::extractObjects(const vector<char>& buffer) {
+    //cout << "VRPDFData::extractObjects " << endl;
+
     vector<VRPDFData::Object> objects;
     auto A = findOccurrences(buffer, " obj\r");
     auto B = findOccurrences(buffer, "\rendobj\r");
@@ -44,6 +69,7 @@ vector<VRPDFData::Object> VRPDFData::extractObjects(const vector<char>& buffer) 
     for (auto a : A) pairs[a] = "obj";
     for (auto b : B) pairs[b] = "end";
 
+    //string indent = " ";
     size_t start;
     bool inObj = false;
     for (auto x : pairs) {
@@ -51,37 +77,65 @@ vector<VRPDFData::Object> VRPDFData::extractObjects(const vector<char>& buffer) 
         if (x.second == "obj") {
             start = x.first;
             inObj = true;
+            //cout << indent << x.first << " - " << x.second << endl;
+            //indent += " ";
         }
 
         if (x.second == "end") {
-            objects.push_back( VRPDFData::Object(start, x.first, "object") );
+            objects.push_back( VRPDFData::Object(start, x.first) );
             inObj = false;
+            //indent = indent.substr(0, indent.size()-1);
+            //cout << indent << x.first << " - " << x.second << endl;
         }
     }
 
     return objects;
 }
 
-void VRPDFData::extractObjectNames(const std::vector<char>& buffer, vector<VRPDFData::Object>& objects) {
+void VRPDFData::extractObjectMetadata(const std::vector<char>& buffer, vector<VRPDFData::Object>& objects) {
     for (auto& obj : objects) {
-        size_t N = 0;
-        size_t a = 0;
-        for (size_t i = obj.begin; i<obj.end; i++) {
 
-            if (buffer[i-1] == '<' && buffer[i] == '<') { // "<<"
-                if (N == 0) a = i-1;
-                N += 1;
+        // extract object ID
+        for (size_t i=0; true; i++) {
+            auto c = buffer[obj.begin - i];
+            if (c == '\r' || c == 'n') {
+                obj.name = string(buffer.begin()+obj.begin-i+1, buffer.begin()+obj.begin);
+                break;
             }
+            if (i > 10) break;
+        }
 
-            if (buffer[i-1] == '>' && buffer[i] == '>') { // ">>"
-                N -= 1;
+        // extract header
+        size_t a0 = 0;
+        int level = 0;
+        vector<string> brackets = {"<<", ">>"};
+        for (size_t i = obj.begin; i< obj.end; i++) {
+            auto f = findNext(buffer, brackets, i, obj.end);
+            if (f.second == -1) continue;
+            i = f.first;
 
-                if (N == 0) {
-                    obj.name = string(buffer.begin()+a, buffer.begin()+i+1);
+            if (f.second == 0) { // found "<<"
+                level += 1;
+                if (a0 == 0) a0 = f.first + 2;
+            } else if (f.second == 1) { // found ">>"
+                level -= 1;
+                if (level == 0) {
+                    obj.header = string( buffer.begin() + a0, buffer.begin() + f.first );
                     break;
                 }
             }
         }
+
+        auto parts = splitString(obj.header, '/');
+        for (size_t i=1; i<parts.size(); i++) {
+            if (parts[i-1] == "Type") obj.type = parts[i];
+        }
+
+
+        //cout << " pdf obj header " << obj.header << endl;
+        cout << " pdf object: " << obj.name << ", " << obj.type << endl;
+
+
     }
 }
 

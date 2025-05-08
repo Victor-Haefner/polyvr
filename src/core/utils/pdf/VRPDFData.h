@@ -27,9 +27,11 @@ class VRPDFData : public std::enable_shared_from_this<VRPDFData> {
 
         struct Object : Chunk {
             string name;
+            string header;
+            string type;
             vector<Stream> streams;
 
-            Object(size_t b, size_t e, string n) : name(n), Chunk(b,e) {}
+            Object(size_t b, size_t e) : Chunk(b,e) {}
         };
 
     public:
@@ -47,7 +49,7 @@ class VRPDFData : public std::enable_shared_from_this<VRPDFData> {
 
 		std::vector<size_t> findOccurrences(const std::vector<char>& buffer, const std::string& keyword, size_t start = 0, size_t end = 0);
         vector<Object> extractObjects(const vector<char>& buffer);
-        void extractObjectNames(const std::vector<char>& buffer, vector<Object>& objects);
+        void extractObjectMetadata(const std::vector<char>& buffer, vector<Object>& objects);
         void extractStreams(const std::vector<char>& buffer, vector<Object>& objects);
 };
 
