@@ -239,6 +239,14 @@ void VRGlutEditor::setIcon(string iconpath) {
 int VRGlutEditor::getCurrentWinID() { return glutGetWindow(); }
 void VRGlutEditor::setCurrentWinID(int i) { glutSetWindow(i); }
 
+int VRGlutEditor::getWinID(CONTEXT c) {
+    if (c == TOP) return topWin;
+    if (c == SCENE) return winGL;
+    if (c == IMGUI) return winUI;
+    if (c == POPUP) return winPopup;
+    return -1;
+}
+
 void VRGlutEditor::onMain_Keyboard_special(int k) {
     //cout << " VRGlutEditor::onMain_Keyboard_special " << k << endl;
 }
