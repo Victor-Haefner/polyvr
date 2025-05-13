@@ -9,6 +9,22 @@
 
 using namespace OSG;
 
+
+string VRPDFData::Stream::decompressZlib(const string& compressedData) {
+    uLong decompressedSize = compressedData.size() * 4; // A rough guess
+    vector<char> decompressedBuffer(decompressedSize);
+    int result = uncompress(reinterpret_cast<Bytef*>(decompressedBuffer.data()), &decompressedSize,
+                            reinterpret_cast<const Bytef*>(compressedData.data()), compressedData.size());
+    if (result != Z_OK) { cerr << "Decompression failed with error: " << result << endl; return ""; }
+    return string(decompressedBuffer.begin(), decompressedBuffer.begin() + decompressedSize);
+}
+
+string VRPDFData::Stream::decode(const std::vector<char>& buffer) {
+    string data(buffer.begin()+begin, buffer.begin()+end);
+    return decompressZlib(data);
+}
+
+
 VRPDFData::VRPDFData() {}
 VRPDFData::~VRPDFData() {}
 
@@ -21,6 +37,7 @@ void VRPDFData::read(string path) {
     objects = extractObjects(buffer);
     extractObjectMetadata(buffer, objects);
     extractStreams(buffer, objects);
+    processCompressedObjects(buffer);
 }
 
 std::vector<size_t> VRPDFData::findOccurrences(const std::vector<char>& buffer, const std::string& keyword, size_t start, size_t end) {
@@ -83,6 +100,7 @@ vector<VRPDFData::Object> VRPDFData::extractObjects(const vector<char>& buffer) 
 
         if (x.second == "end") {
             objects.push_back( VRPDFData::Object(start, x.first) );
+            objects[objects.size()-1].index = objects.size()-1;
             inObj = false;
             //indent = indent.substr(0, indent.size()-1);
             //cout << indent << x.first << " - " << x.second << endl;
@@ -98,11 +116,13 @@ void VRPDFData::extractObjectMetadata(const std::vector<char>& buffer, vector<VR
         // extract object ID
         for (size_t i=0; true; i++) {
             auto c = buffer[obj.begin - i];
-            if (c == '\r' || c == 'n') {
-                obj.name = string(buffer.begin()+obj.begin-i+1, buffer.begin()+obj.begin);
+            if (c == '\r' || c == '\n') {
+                auto beg = buffer.begin()+obj.begin;
+                obj.name = string(beg-i+1, beg);
+                objByName[obj.name] = obj.index;
                 break;
             }
-            if (i > 10) break;
+            if (i > 30) break;
         }
 
         // extract header
@@ -128,14 +148,13 @@ void VRPDFData::extractObjectMetadata(const std::vector<char>& buffer, vector<VR
 
         auto parts = splitString(obj.header, '/');
         for (size_t i=1; i<parts.size(); i++) {
-            if (parts[i-1] == "Type") obj.type = parts[i];
+            if (parts[i-1] == "Type") {
+                obj.type = parts[i];
+                objByType[obj.type].push_back( obj.index );
+            }
         }
 
-
-        //cout << " pdf obj header " << obj.header << endl;
-        cout << " pdf object: " << obj.name << ", " << obj.type << endl;
-
-
+        cout << " pdf object: " << obj.name << ", " << obj.type << " - " << obj.header << endl;
     }
 }
 
@@ -167,3 +186,16 @@ void VRPDFData::extractStreams(const std::vector<char>& buffer, vector<VRPDFData
         }
     }
 }
+
+void VRPDFData::processCompressedObjects(const std::vector<char>& buffer) {
+    if (!objByType.count("ObjStm")) return;
+
+    for (auto& objI : objByType["ObjStm"]) {
+        auto& obj = objects[objI];
+        for (auto& s : obj.streams) {
+            string data = s.decode(buffer);
+            cout << " ObjStm data: " << data << endl;
+        }
+    }
+}
+

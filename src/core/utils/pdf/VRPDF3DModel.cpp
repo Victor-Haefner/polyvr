@@ -80,20 +80,10 @@ void printBits(string s) {
     }
 }
 
-std::string decompressZlib(const std::string& compressedData) {
-    uLong decompressedSize = compressedData.size() * 4; // A rough guess
-    std::vector<char> decompressedBuffer(decompressedSize);
-    int result = uncompress(reinterpret_cast<Bytef*>(decompressedBuffer.data()), &decompressedSize,
-                            reinterpret_cast<const Bytef*>(compressedData.data()), compressedData.size());
-    if (result != Z_OK) { std::cerr << "Decompression failed with error: " << result << std::endl; return ""; }
-    return std::string(decompressedBuffer.begin(), decompressedBuffer.begin() + decompressedSize);
-}
-
 void unpack3DObject(const std::vector<char>& buffer, VRPDFData::Object& object) {
     if (object.streams.size() == 0) return;
     VRPDFData::Stream& stream = object.streams[0];
-    string data(buffer.begin()+stream.begin, buffer.begin()+stream.end);
-    data = decompressZlib(data);
+    string data = stream.decode(buffer);
     if (!startsWith(data, "PRC")) return;
     stream.unpacked = data;
 }
@@ -2444,7 +2434,7 @@ VRTransformPtr parsePRCStructure(string& data, PRC::FileStructureDescription& de
     auto extractSection = [&](size_t& a, size_t N) -> string {
         //cout << "try to uncompress section, from " << a << " -> " << a+N << " ( " << N << " )";
         string udata(data.begin()+a, data.begin()+a+N);
-        udata = decompressZlib(udata);
+        udata = VRPDFData::Stream::decompressZlib(udata);
         //cout << " uncompressed data size: " << udata.size() << endl;
         a += N;
         return udata;

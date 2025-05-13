@@ -2,6 +2,7 @@
 #define VRPDFDATA_H_INCLUDED
 
 #include <OpenSG/OSGConfig.h>
+#include <map>
 #include "core/utils/VRUtilsFwd.h"
 
 using namespace std;
@@ -23,9 +24,13 @@ class VRPDFData : public std::enable_shared_from_this<VRPDFData> {
             string name;
 
             Stream(size_t b, size_t e, string n) : name(n), Chunk(b,e) {}
+
+            static string decompressZlib(const string& compressedData);
+            string decode(const std::vector<char>& buffer);
         };
 
         struct Object : Chunk {
+            size_t index = 0;
             string name;
             string header;
             string type;
@@ -36,6 +41,8 @@ class VRPDFData : public std::enable_shared_from_this<VRPDFData> {
 
     public:
         vector<Object> objects;
+        map<string, int> objByName;
+        map<string, vector<int>> objByType;
         std::vector<char> buffer;
 
 	public:
@@ -51,6 +58,7 @@ class VRPDFData : public std::enable_shared_from_this<VRPDFData> {
         vector<Object> extractObjects(const vector<char>& buffer);
         void extractObjectMetadata(const std::vector<char>& buffer, vector<Object>& objects);
         void extractStreams(const std::vector<char>& buffer, vector<Object>& objects);
+        void processCompressedObjects(const std::vector<char>& buffer);
 };
 
 OSG_END_NAMESPACE;
