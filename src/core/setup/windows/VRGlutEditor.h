@@ -10,6 +10,14 @@ using namespace std;
 
 
 class VRGlutEditor: public VRWindow {
+    public:
+        enum CONTEXT {
+            TOP = 0,
+            SCENE,
+            IMGUI,
+            POPUP,
+        };
+
     private:
         GLUTWindowMTRecPtr win;
         int topWin = -1;
@@ -39,6 +47,7 @@ class VRGlutEditor: public VRWindow {
         static void initGlut();
 
         int getCurrentWinID();
+        int getWinID(CONTEXT c);
         void setCurrentWinID(int i);
 
         void setTitle(string title) override;

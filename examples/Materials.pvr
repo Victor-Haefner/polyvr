@@ -9,7 +9,7 @@
           </attachments>
           <constraint persistency="666"/>
         </Object>
-        <Object accept_root="1" aspect="1" at="1.13202 0.0386471 0.365667" at_dir="0" base_name="Default" camType="perspective" far="512" fov="1.0472" from="1.72802 0.611705 1.7391" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="4294967295">
+        <Object accept_root="1" aspect="1" at="0.271261 -0.98909 -1.7821" at_dir="0" base_name="Default" camType="perspective" far="512" fov="1.0472" from="-0.890932 0.615897 3.85803" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="4294967295">
           <attachments>
             <Node base_name="transform" name_space="VRAttachment" name_suffix="0" persistency="666" value=""/>
           </attachments>
@@ -154,7 +154,7 @@ vec4 getColor() {
 	vec4 grey  = vec4(0.7,0.7,0.7,1.0);
 	vec4 white = vec4(1.0,1.0,1.0,1.0);
 	
-	float h = height;
+	float h = height*2.0;
 	if (h &gt; 1.2) return mixColor(grey, white, 10*(h-1.2));
 	if (h &gt; 1.0 &amp;&amp; h &lt;= 1.2) return mixColor(brown, grey, 5*(h-1.0));
 	if (h &gt; 0.8 &amp;&amp; h &lt;= 1.0) return mixColor(green, brown, 5*(h-0.8));
@@ -427,7 +427,6 @@ void main() {
 		tr = VR.TextureRenderer()
 		tr.setup(cam, 400, 400)
 		tr.setActive(False)
-		
 		tr.addLink(VR.find('light'))
 		
 		"""
@@ -441,12 +440,6 @@ void main() {
 		
 		#VR.find('Root').addChild(tr)
 		maps = tr.createCubeMaps(sphere)
-		for i,t in enumerate(maps):
-			s = VR.Sprite('map', 'light')
-			s.setFrom([i,2,0])
-			m = VR.Material('bla')
-			m.setTexture(t)
-			s.setMaterial(m)
 		return maps
 		
 	mat4 = simpleMaterial([0.6,0.6,0.6], [1,1,1], [0.2,0.2,0.2])
@@ -494,7 +487,7 @@ void main() {
 	
 	
 	# displacement map
-	noise3 = simpleNoise([1,1,1], [0.5,0.5,0.5], 128)
+	noise3 = simpleNoise([1,1,1], [0,0,0], 128)
 	mat8.setTexture(noise3)
 	mat8.setVertexProgram('displacementVP')
 	mat8.setFragmentProgram('displacementFP')
@@ -502,20 +495,23 @@ void main() {
 	mat8.setTessControlProgram('displacementTCP')
 	mat8.setTessEvaluationProgram('displacementTEP')
 	mat8.setShaderParameter('offset', -5)
-	mat8.setShaderParameter('scale', 5)
+	mat8.setShaderParameter('scale', 15)
 	S8.convertToTrianglePatches()
 	
-	return # TODO: fix cubemap
+	#return # TODO: fix cubemap
 	
 	# reflection (last to get environment with other spheres on it)
 	#return
-	maps = makeCubeMap(S6)
-	#mat6.setTexture(noise2)
-	#mat6.addPass()
-	mat6.setTextureType('CubeEnv')
-	#mat6.setTransparency(0.5)
-	for tex,side in zip(maps, ['front', 'back', 'left', 'right', 'top', 'bottom']):
-		mat6.setCubeTexture(tex, side)
+	def setupEnvMap():
+		maps = makeCubeMap(S6)
+		#mat6.setTexture(noise2)
+		#mat6.addPass()
+		mat6.setTextureType('CubeEnv')
+		#mat6.setTransparency(0.5)
+		for tex,side in zip(maps, ['front', 'back', 'left', 'right', 'top', 'bottom']):
+			mat6.setCubeTexture(tex, side)
+			
+	VR.stackCall(setupEnvMap, 0.1)
 		
 		
 			
@@ -524,7 +520,7 @@ void main() {
     </Script>
   </Scripts>
   <Sockets persistency="666"/>
-  <Background color="1 1 1" format=".png" path="" persistency="666" type="0"/>
+  <Background color="1 1 1" format=".png" path="" persistency="666" showSplash="0" splashPath="" type="0"/>
   <Navigation persistency="666">
     <presetStates>
       <Orbit>1</Orbit>

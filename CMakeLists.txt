@@ -107,6 +107,7 @@ endif() # not apple
 
 
 add_definitions( -D__USE_MISC=1 )
+add_definitions( -DOSG_SILENT_SHUTDOWN=1 )
 
 set(INCLUDE_DIRS "")
 set(LIB_DIRS "")
@@ -143,18 +144,18 @@ endif()
 
 # command to copy the freeglut dll, lib and header to /c/usr/
 if(WIN32)
-#(TARGET freeglut POST_BUILD
-#    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/src/core/setup/windows/glut/freeglut/include/GL/* ${DISK}:/usr/vcpkg/installed/x64-windows/include/GL/
-#    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-#)
-add_custom_command(TARGET freeglut POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/build/Release/freeglut.dll ${DISK}:/usr/vcpkg/installed/x64-windows/bin/
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-)
-add_custom_command(TARGET freeglut POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/build/Release/freeglut.lib ${DISK}:/usr/vcpkg/installed/x64-windows/lib/
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-)
+	#(TARGET freeglut POST_BUILD
+	#    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/src/core/setup/windows/glut/freeglut/include/GL/* ${DISK}:/usr/vcpkg/installed/x64-windows/include/GL/
+	#    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+	#)
+	add_custom_command(TARGET freeglut POST_BUILD
+	    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/build/Release/freeglut.dll ${DISK}:/usr/vcpkg/installed/x64-windows/bin/
+	    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+	)
+	add_custom_command(TARGET freeglut POST_BUILD
+	    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/build/Release/freeglut.lib ${DISK}:/usr/vcpkg/installed/x64-windows/lib/
+	    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+	)
 endif()
 
 if(UNIX)
@@ -401,8 +402,8 @@ function(FIND_CEF)
 		set(LIB_DIRS ${LIB_DIRS} "/usr/local/lib/cef" PARENT_SCOPE)
 		set(LINKER_FLAGS "${LINKER_FLAGS} -lcef_dll_wrapper -undefined dynamic_lookup" PARENT_SCOPE)
 		#set(LINKER_FLAGS "${LINKER_FLAGS} -lcef -lcef_dll_wrapper" PARENT_SCOPE)
-    #set(LINKER_FLAGS "${LINKER_FLAGS} -lcef_dll_wrapper -F/usr/local/lib/cef -framework \"Chromium Embedded Framework\"" PARENT_SCOPE)
-    add_definitions( -DCEF18 )
+		#set(LINKER_FLAGS "${LINKER_FLAGS} -lcef_dll_wrapper -F/usr/local/lib/cef -framework \"Chromium Embedded Framework\"" PARENT_SCOPE)
+		add_definitions( -DCEF18 )
 	endif()
 	if(WIN32)
 		set(INCLUDE_DIRS ${INCLUDE_DIRS} "${DISK}:/usr/include/CEF" PARENT_SCOPE)

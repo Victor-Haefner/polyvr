@@ -519,17 +519,19 @@ class OpenRenderAction : public RenderAction {
 
 VRTexturePtr VRTextureRenderer::renderOnce(CHANNEL c) { // TODO: not working!
 #ifndef WITHOUT_IMGUI
-    cout << "VRTextureRenderer::renderOnce" << endl;
+    //cout << "VRTextureRenderer::renderOnce" << endl;
     if (!cam) return 0;
     bool deferred = VRScene::getCurrent()->getDefferedShading();
 
     auto ew = VRSetup::getCurrent()->getEditorWindow();
     int cwID = ew->getCurrentWinID();
-    //ew->setCurrentWinID(3);
-    cout << " current glut win ID: " << ew->getCurrentWinID() << endl;
+    ew->setCurrentWinID( ew->getWinID(VRGlutEditor::SCENE) );
+    //cout << " current glut win ID: " << ew->getCurrentWinID() << endl;
+    //for ( auto c : {VRGlutEditor::TOP, VRGlutEditor::SCENE, VRGlutEditor::IMGUI, VRGlutEditor::POPUP} )
+    //    cout << "  windows (TOP, SCENE, IMGUI, POPUP) ID: " << ew->getWinID(c) << endl;
 
     if (!data->ract) {
-        cout << " setup render action and stuff.." << endl;
+        //cout << " setup render action and stuff.." << endl;
         data->ract = RenderAction::create();
         data->ract->setFrustumCulling(false);
         data->ract->setOcclusionCulling(false);
@@ -590,7 +592,7 @@ VRTexturePtr VRTextureRenderer::renderOnce(CHANNEL c) { // TODO: not working!
     //auto core = getNode()->node->getCore();
     //UInt32 uiFunctorIndex = core->getType().getId();
 
-    cout << " renderaction apply" << endl;
+    //cout << " renderaction apply" << endl;
     data->ract->apply( getNode()->node );
     /*ract->start();
     auto res = ract->traverse(getNode()->node); // segfault
@@ -598,7 +600,7 @@ VRTexturePtr VRTextureRenderer::renderOnce(CHANNEL c) { // TODO: not working!
     CHECK_GL_ERROR("renderOnce");
 #endif
 
-    cout << " window render" << endl;
+    //cout << " window render" << endl;
     //data->win->render(data->ract);
     //data->win->renderNoFinish(data->ract);
     if (deferred) data->win->render(data->ract); // hack, TODO: for some reason the fbo gets not updated the first render call..
@@ -608,10 +610,10 @@ VRTexturePtr VRTextureRenderer::renderOnce(CHANNEL c) { // TODO: not working!
     ImageMTRecPtr img = Image::create();
     img->set( data->fboTexImg );
     if (c != RENDER) resetChannelSubstitutes();
-    cout << " done" << endl;
+    //cout << " done" << endl;
     auto tex = VRTexture::create( img );
 
-    //ew->setCurrentWinID(cwID);
+    ew->setCurrentWinID(cwID);
     return tex;
 #endif
 }

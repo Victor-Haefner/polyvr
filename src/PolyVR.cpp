@@ -120,9 +120,15 @@ PolyVR::~PolyVR() {
     sound_mgr.reset();
     options.reset();
 
+#ifdef WIN32
+#define OSG_SILENT_SHUTDOWN
+#endif
+
     cout << " terminated all polyvr modules" << endl;
 #ifndef WASM
+#ifndef OSG_SILENT_SHUTDOWN
     printFieldContainer();
+#endif
 #endif
 
     cout << "call osgExit" << endl;
