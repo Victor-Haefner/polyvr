@@ -26,7 +26,7 @@ class VRPDFData : public std::enable_shared_from_this<VRPDFData> {
             Stream(size_t b, size_t e, string n) : name(n), Chunk(b,e) {}
 
             static string decompressZlib(const string& compressedData);
-            string decode(const std::vector<char>& buffer);
+            string decode(const vector<char>& buffer);
         };
 
         struct Object : Chunk {
@@ -34,6 +34,7 @@ class VRPDFData : public std::enable_shared_from_this<VRPDFData> {
             string name;
             string header;
             string type;
+            map<string, string> params;
             vector<Stream> streams;
 
             Object(size_t b, size_t e) : Chunk(b,e) {}
@@ -43,7 +44,11 @@ class VRPDFData : public std::enable_shared_from_this<VRPDFData> {
         vector<Object> objects;
         map<string, int> objByName;
         map<string, vector<int>> objByType;
-        std::vector<char> buffer;
+        vector<char> buffer;
+
+        template<typename T>
+        string extractHeader(const T& buffer, size_t beg, size_t end);
+        map<string, string> extractParameters(const string header);
 
 	public:
 		VRPDFData();
@@ -54,11 +59,11 @@ class VRPDFData : public std::enable_shared_from_this<VRPDFData> {
 
 		void read(string path);
 
-		std::vector<size_t> findOccurrences(const std::vector<char>& buffer, const std::string& keyword, size_t start = 0, size_t end = 0);
+		vector<size_t> findOccurrences(const vector<char>& buffer, const string& keyword, size_t start = 0, size_t end = 0);
         vector<Object> extractObjects(const vector<char>& buffer);
-        void extractObjectMetadata(const std::vector<char>& buffer, vector<Object>& objects);
-        void extractStreams(const std::vector<char>& buffer, vector<Object>& objects);
-        void processCompressedObjects(const std::vector<char>& buffer);
+        void extractObjectMetadata(const vector<char>& buffer, vector<Object>& objects);
+        void extractStreams(const vector<char>& buffer, vector<Object>& objects);
+        void extractPackedObjects(const vector<char>& buffer);
 };
 
 OSG_END_NAMESPACE;

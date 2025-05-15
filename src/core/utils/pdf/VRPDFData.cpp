@@ -37,7 +37,7 @@ void VRPDFData::read(string path) {
     objects = extractObjects(buffer);
     extractObjectMetadata(buffer, objects);
     extractStreams(buffer, objects);
-    processCompressedObjects(buffer);
+    extractPackedObjects(buffer);
 }
 
 std::vector<size_t> VRPDFData::findOccurrences(const std::vector<char>& buffer, const std::string& keyword, size_t start, size_t end) {
@@ -55,7 +55,8 @@ std::vector<size_t> VRPDFData::findOccurrences(const std::vector<char>& buffer, 
     return positions;
 }
 
-pair<size_t,int> findNext(const std::vector<char>& buffer, vector<string> strings, size_t b, size_t e) {
+template<typename T>
+pair<size_t,int> findNext(const T& buffer, vector<string> strings, size_t b, size_t e) {
     if (e == 0) e = buffer.size();
 
     auto isMatchAt = [&](const string& s, size_t i) {
@@ -110,7 +111,32 @@ vector<VRPDFData::Object> VRPDFData::extractObjects(const vector<char>& buffer) 
     return objects;
 }
 
-void VRPDFData::extractObjectMetadata(const std::vector<char>& buffer, vector<VRPDFData::Object>& objects) {
+template<typename T>
+string VRPDFData::extractHeader(const T& buffer, size_t beg, size_t end) {
+    size_t a0 = 0;
+    int level = 0;
+    vector<string> brackets = {"<<", ">>"};
+
+    for (size_t i = beg; i<end; i++) {
+        auto f = findNext(buffer, brackets, i, end);
+        if (f.second == -1) continue;
+        i = f.first;
+
+        if (f.second == 0) { // found "<<"
+            level += 1;
+            if (a0 == 0) a0 = f.first + 2;
+            //cout << " found << at " << a0 << ", level: " << level << endl;
+        } else if (f.second == 1) { // found ">>"
+            level -= 1;
+            //cout << " found >> at " << f.first << ", level: " << level << endl;
+            if (level == 0) return string( buffer.begin() + a0, buffer.begin() + f.first );
+        }
+    }
+
+    return "";
+}
+
+void VRPDFData::extractObjectMetadata(const vector<char>& buffer, vector<VRPDFData::Object>& objects) {
     for (auto& obj : objects) {
 
         // extract object ID
@@ -118,33 +144,14 @@ void VRPDFData::extractObjectMetadata(const std::vector<char>& buffer, vector<VR
             auto c = buffer[obj.begin - i];
             if (c == '\r' || c == '\n') {
                 auto beg = buffer.begin()+obj.begin;
-                obj.name = string(beg-i+1, beg);
+                obj.name = splitString( string(beg-i+1, beg), ' ' )[0];
                 objByName[obj.name] = obj.index;
                 break;
             }
             if (i > 30) break;
         }
 
-        // extract header
-        size_t a0 = 0;
-        int level = 0;
-        vector<string> brackets = {"<<", ">>"};
-        for (size_t i = obj.begin; i< obj.end; i++) {
-            auto f = findNext(buffer, brackets, i, obj.end);
-            if (f.second == -1) continue;
-            i = f.first;
-
-            if (f.second == 0) { // found "<<"
-                level += 1;
-                if (a0 == 0) a0 = f.first + 2;
-            } else if (f.second == 1) { // found ">>"
-                level -= 1;
-                if (level == 0) {
-                    obj.header = string( buffer.begin() + a0, buffer.begin() + f.first );
-                    break;
-                }
-            }
-        }
+        obj.header = extractHeader(buffer, obj.begin, obj.end);
 
         auto parts = splitString(obj.header, '/');
         for (size_t i=1; i<parts.size(); i++) {
@@ -158,7 +165,7 @@ void VRPDFData::extractObjectMetadata(const std::vector<char>& buffer, vector<VR
     }
 }
 
-void VRPDFData::extractStreams(const std::vector<char>& buffer, vector<VRPDFData::Object>& objects) {
+void VRPDFData::extractStreams(const vector<char>& buffer, vector<VRPDFData::Object>& objects) {
     for (auto& obj : objects) {
         auto A = findOccurrences(buffer, "stream\r\n", obj.begin, obj.end);
         auto B = findOccurrences(buffer, "endstream", obj.begin, obj.end);
@@ -187,14 +194,238 @@ void VRPDFData::extractStreams(const std::vector<char>& buffer, vector<VRPDFData
     }
 }
 
-void VRPDFData::processCompressedObjects(const std::vector<char>& buffer) {
+
+#define pdfPtrFwd( X ) \
+struct X; \
+typedef std::shared_ptr<X> X ## Ptr; \
+typedef std::weak_ptr<X> X ## WeakPtr; \
+
+pdfPtrFwd(PDFPair);
+pdfPtrFwd(PDFValue);
+pdfPtrFwd(PDFString);
+pdfPtrFwd(PDFArray);
+pdfPtrFwd(PDFDict);
+
+struct PDFValue {
+    int type = -1;
+    virtual string toString() = 0;
+};
+
+struct PDFPair {
+    PDFPairWeakPtr parent;
+    string key;
+    PDFValuePtr val;
+    string toString() { return key + " : " + string(val?val->toString():string()); }
+    static PDFPairPtr create() { return PDFPairPtr(new PDFPair); };
+};
+
+struct PDFString : PDFValue {
+    string str;
+    PDFString() { type = 1; }
+    string toString() { return str; }
+    static PDFStringPtr create() { return PDFStringPtr(new PDFString); };
+};
+
+struct PDFArray : PDFValue {
+    vector<PDFPairPtr> params;
+    string toString() { string s = " ["; for(auto& p : params) s += p->toString()+", "; s += "] "; return s; }
+    PDFArray() { type = 2; }
+    static PDFArrayPtr create() { return PDFArrayPtr(new PDFArray); };
+};
+
+struct PDFDict : PDFValue {
+    map<string, PDFPairPtr> params;
+    string toString() { string s = " {"; for(auto& p : params) s += p.second->toString()+"; "; s += "} "; return s; }
+    PDFDict() { type = 3; }
+    static PDFDictPtr create() { return PDFDictPtr(new PDFDict); };
+};
+
+// <</ColorSpace<</Cs14 133 0 R/Cs6 166 0 R>>/ExtGState<</GS1 167 0 R>>/Font<</TT1 170 0 R/TT2 173 0 R/TT4 175 0 R/TT5 178 0 R>>/ProcSet[/PDF/Text/ImageC/ImageI]/XObject<</Im43 73 0 R/Im44 74 0 R/Im45 75 0 R/Im46 76 0 R/Im47 77 0 R>>>>
+
+/*
+<<
+    /ColorSpace <</Cs14 133 0 R/Cs6 166 0 R>>
+    /ExtGState <</GS1 167 0 R>>
+    /Font <</TT1 170 0 R/TT2 173 0 R/TT4 175 0 R/TT5 178 0 R>>
+    /ProcSet [/PDF/Text/ImageC/ImageI]
+    /XObject <</Im43 73 0 R/Im44 74 0 R/Im45 75 0 R/Im46 76 0 R/Im47 77 0 R>>
+>>
+*/
+
+vector<PDFPairPtr> stackToVector(stack<PDFPairPtr> s) {
+    size_t N = s.size();
+    vector<PDFPairPtr> v(N);
+    for (int i=0; i<N; i++) {
+        v[N-i-1] = s.top();
+        s.pop();
+    }
+    return v;
+}
+
+PDFValuePtr parseHeader(const string header) {
+    PDFValuePtr root;
+    stack<PDFPairPtr> context;
+    bool nextIsName = false;
+    bool firstElement = false;
+
+    auto endPair = [&]() {
+        if (context.size() == 0) return;
+        cout << " endPair" << endl;
+
+        auto current = context.top();
+
+        if (auto parent = current->parent.lock()) {
+            if (auto a = dynamic_pointer_cast<PDFArray>(parent->val)) {
+                cout << "  append '" << current->key << "' to array " << parent->key << endl;
+                a->params.push_back( current );
+            }
+
+            else if (auto d = dynamic_pointer_cast<PDFDict> (parent->val)) {
+                cout << "  append '" << current->key << "' to dict " << parent->key << endl;
+                d->params[current->key] = current;
+            }
+
+            else cout << "Warning! parent is neither array nor dictionary!" << endl;
+        } else if (root) {
+            if (auto a = dynamic_pointer_cast<PDFArray>(root)) {
+                cout << "  append '" << current->key << "' to array root" << endl;
+                a->params.push_back( current );
+            }
+
+            else if (auto d = dynamic_pointer_cast<PDFDict> (root)) {
+                cout << "  append '" << current->key << "' to dict root" << endl;
+                d->params[current->key] = current;
+            }
+
+            else cout << "Warning! root is neither array nor dictionary!" << endl;
+        }
+
+        context.pop();
+    };
+
+    auto endArray = [&]() {
+        endPair();
+        cout << "endArray" << endl;
+    };
+
+    auto endDict  = [&]() {
+        endPair();
+        cout << "endDict" << endl;
+    };
+
+
+
+    auto newValue = [&](PDFValuePtr p) {
+        if (context.size() > 0) {
+            auto current = context.top();
+            if (current) {
+                cout << " set val of pair " << current->key << endl;
+                current->val = p;
+            }
+        }
+        if (!root) root = p;
+    };
+
+    auto startArray = [&]() {
+        cout << "startArray" << endl;
+        auto a = PDFArray::create();
+        newValue(a);
+        firstElement = true;
+    };
+
+    auto startDict = [&]() {
+        cout << "startDict" << endl;
+        auto d = PDFDict::create();
+        newValue(d);
+        firstElement = true;
+    };
+
+    auto startPair = [&]() {
+        if (!firstElement) endPair();
+        firstElement = false;
+
+        cout << "startPair" << endl;
+        PDFPairPtr parent;
+        if (context.size() > 0) parent = context.top();
+
+        auto p = PDFPair::create();
+        if (parent) p->parent = parent;
+        context.push(p);
+        nextIsName = true;
+    };
+
+
+    auto processCharacter = [&](char newC) {
+        auto currentPair = context.top();
+        if (nextIsName) currentPair->key += newC;
+        else {
+            if (!currentPair->val) currentPair->val = PDFString::create();
+            if (auto v = dynamic_pointer_cast<PDFString>(currentPair->val)) {
+                v->str += newC;
+            }
+        }
+    };
+
+
+    size_t pos = 0;
+    char lastC = 0;
+
+    cout << " process header: " << header << endl;
+    while (pos < header.size()) {
+        char newC = header[pos];
+        cout << "  " << pos << ", '" << newC << "' - " << context.size() << endl;
+        //cout << "  " << pos << ", '" << newC << "/" << lastC << "' - " << context.size() << " -: ";
+        //for (auto s : stackToVector(context)) cout << " " << s->type;
+
+        if (newC == '<')      { if (lastC == '<') { startDict(); nextIsName = false; newC = 0; } } // avoid <<< issue
+        else if (newC == '>') { if (lastC == '>') { endDict();   nextIsName = false; newC = 0; } } // avoid >>> issue
+        else if (newC == '[') { nextIsName = false; startArray(); }
+        else if (newC == ']') { nextIsName = false; endArray(); }
+        else if (newC == '/' && !nextIsName) startPair();
+        else if (newC == ' ' &&  nextIsName) nextIsName = false;
+        else if (newC != 0) processCharacter(newC);
+        lastC = newC;
+        pos++;
+    }
+
+    cout << root->toString() << endl;
+    return root;
+}
+
+
+
+void VRPDFData::extractPackedObjects(const vector<char>& buffer) {
     if (!objByType.count("ObjStm")) return;
 
     for (auto& objI : objByType["ObjStm"]) {
         auto& obj = objects[objI];
+        cout << "ObjStm header: " << obj.header << endl;
         for (auto& s : obj.streams) {
             string data = s.decode(buffer);
+            string objIDsStr = splitString(data, "<<")[0];
+            vector<string> objIDs = splitString( objIDsStr, ' ' );
+            string objHeaders = subString(data, objIDsStr.size(), data.size()-objIDsStr.size());
+            cout << objHeaders << endl;
+            //auto root = parseHeader(objHeaders);
+            auto root = parseHeader("<</ColorSpace<</Cs14 133 0 R/Cs6 166 0 R>>/ExtGState<</GS1 167 0 R>>/Font<</TT1 170 0 R/TT2 173 0 R/TT4 175 0 R/TT5 178 0 R>>/ProcSet[/PDF/Text/ImageC/ImageI]/XObject<</Im43 73 0 R/Im44 74 0 R/Im45 75 0 R/Im46 76 0 R/Im47 77 0 R>>>>");
+            //auto root = parseHeader("<</ColorSpace<</Cs14 133 0 R/Cs6 166 0 R>>/ExtGState<</GS1 167 0 R>>>>");
+            //auto root = parseHeader("<</A<</B 7/C 8>>/D<</E 3/F [/G 5/H 6]>>>>");
+            //auto root = parseHeader("<</A 7/B 8>>");
+
+            return;
+
+
             cout << " ObjStm data: " << data << endl;
+
+
+            for (int i=1; i<objIDs.size(); i+=2) {
+                string oID = objIDs[i-1];
+                if (oID == "165" || oID == "166") {
+                    int offset = toInt( objIDs[i] );
+                    string objData = extractHeader(objHeaders, offset, objHeaders.size());
+                    cout << "  Object: " << oID << ", data: " << objData << endl;
+                }
+            }
         }
     }
 }
