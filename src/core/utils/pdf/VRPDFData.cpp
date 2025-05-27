@@ -209,6 +209,7 @@ pdfPtrFwd(PDFDict);
 struct PDFValue {
     int type = -1;
     virtual string toString() = 0;
+    virtual string structAsString(string indent) = 0;
 };
 
 struct PDFPair {
@@ -216,6 +217,7 @@ struct PDFPair {
     string key;
     PDFValuePtr val;
     string toString() { return key + " : " + string(val?val->toString():string()); }
+    string structAsString(string indent) { return "\n"+indent+"pair (" + key + "):" + string(val?val->structAsString(indent+" "):string()); }
     static PDFPairPtr create() { return PDFPairPtr(new PDFPair); };
 };
 
@@ -223,6 +225,7 @@ struct PDFString : PDFValue {
     string str;
     PDFString() { type = 1; }
     string toString() { return str; }
+    string structAsString(string indent) { return "\n"+indent+"string (" + str + ")"; }
     static PDFStringPtr create() { return PDFStringPtr(new PDFString); };
 };
 
@@ -231,6 +234,13 @@ struct PDFArray : PDFValue {
     string toString() { string s = " ["; for(auto& p : params) s += p->toString()+", "; s += "] "; return s; }
     PDFArray() { type = 2; }
     static PDFArrayPtr create() { return PDFArrayPtr(new PDFArray); };
+
+    string structAsString(string indent) {
+        string s = "\n"+indent+"array [";
+        for(auto& p : params) if (p) s += p->structAsString(indent+" ");
+        s += "\n"+indent+"]";
+        return s;
+    }
 };
 
 struct PDFDict : PDFValue {
@@ -238,19 +248,14 @@ struct PDFDict : PDFValue {
     string toString() { string s = " {"; for(auto& p : params) s += p.second->toString()+"; "; s += "} "; return s; }
     PDFDict() { type = 3; }
     static PDFDictPtr create() { return PDFDictPtr(new PDFDict); };
+
+    string structAsString(string indent) {
+        string s = "\n"+indent+"dict {";
+        for(auto& p : params) if (p.second) s += p.second->structAsString(indent+" ");
+        s += "\n"+indent+"}";
+        return s;
+    }
 };
-
-// <</ColorSpace<</Cs14 133 0 R/Cs6 166 0 R>>/ExtGState<</GS1 167 0 R>>/Font<</TT1 170 0 R/TT2 173 0 R/TT4 175 0 R/TT5 178 0 R>>/ProcSet[/PDF/Text/ImageC/ImageI]/XObject<</Im43 73 0 R/Im44 74 0 R/Im45 75 0 R/Im46 76 0 R/Im47 77 0 R>>>>
-
-/*
-<<
-    /ColorSpace <</Cs14 133 0 R/Cs6 166 0 R>>
-    /ExtGState <</GS1 167 0 R>>
-    /Font <</TT1 170 0 R/TT2 173 0 R/TT4 175 0 R/TT5 178 0 R>>
-    /ProcSet [/PDF/Text/ImageC/ImageI]
-    /XObject <</Im43 73 0 R/Im44 74 0 R/Im45 75 0 R/Im46 76 0 R/Im47 77 0 R>>
->>
-*/
 
 vector<PDFPairPtr> stackToVector(stack<PDFPairPtr> s) {
     size_t N = s.size();
@@ -262,8 +267,9 @@ vector<PDFPairPtr> stackToVector(stack<PDFPairPtr> s) {
     return v;
 }
 
-PDFValuePtr parseHeader(const string header) {
-    PDFValuePtr root;
+vector<PDFValuePtr> parseHeader(const string header) {
+    vector<PDFValuePtr> roots;
+    PDFValuePtr currentRoot;
     stack<PDFPairPtr> context;
     bool nextIsName = false;
     bool firstElement = false;
@@ -286,13 +292,13 @@ PDFValuePtr parseHeader(const string header) {
             }
 
             else cout << "Warning! parent is neither array nor dictionary!" << endl;
-        } else if (root) {
-            if (auto a = dynamic_pointer_cast<PDFArray>(root)) {
+        } else if (currentRoot) {
+            if (auto a = dynamic_pointer_cast<PDFArray>(currentRoot)) {
                 cout << "  append '" << current->key << "' to array root" << endl;
                 a->params.push_back( current );
             }
 
-            else if (auto d = dynamic_pointer_cast<PDFDict> (root)) {
+            else if (auto d = dynamic_pointer_cast<PDFDict> (currentRoot)) {
                 cout << "  append '" << current->key << "' to dict root" << endl;
                 d->params[current->key] = current;
             }
@@ -321,9 +327,11 @@ PDFValuePtr parseHeader(const string header) {
             if (current) {
                 cout << " set val of pair " << current->key << endl;
                 current->val = p;
+                return;
             }
         }
-        if (!root) root = p;
+
+        roots.push_back(p);
     };
 
     auto startArray = [&]() {
@@ -371,9 +379,10 @@ PDFValuePtr parseHeader(const string header) {
     char lastC = 0;
 
     cout << " process header: " << header << endl;
+
     while (pos < header.size()) {
         char newC = header[pos];
-        cout << "  " << pos << ", '" << newC << "' - " << context.size() << endl;
+        //cout << "  " << pos << ", '" << newC << "' - " << context.size() << endl;
         //cout << "  " << pos << ", '" << newC << "/" << lastC << "' - " << context.size() << " -: ";
         //for (auto s : stackToVector(context)) cout << " " << s->type;
 
@@ -388,8 +397,12 @@ PDFValuePtr parseHeader(const string header) {
         pos++;
     }
 
-    cout << root->toString() << endl;
-    return root;
+    cout << endl << "N roots: " << roots.size() << endl;
+    for (auto root : roots) {
+        cout << root->toString() << endl;
+        cout << root->structAsString("") << endl;
+    }
+    return roots;
 }
 
 
@@ -406,11 +419,12 @@ void VRPDFData::extractPackedObjects(const vector<char>& buffer) {
             vector<string> objIDs = splitString( objIDsStr, ' ' );
             string objHeaders = subString(data, objIDsStr.size(), data.size()-objIDsStr.size());
             cout << objHeaders << endl;
-            //auto root = parseHeader(objHeaders);
-            auto root = parseHeader("<</ColorSpace<</Cs14 133 0 R/Cs6 166 0 R>>/ExtGState<</GS1 167 0 R>>/Font<</TT1 170 0 R/TT2 173 0 R/TT4 175 0 R/TT5 178 0 R>>/ProcSet[/PDF/Text/ImageC/ImageI]/XObject<</Im43 73 0 R/Im44 74 0 R/Im45 75 0 R/Im46 76 0 R/Im47 77 0 R>>>>");
-            //auto root = parseHeader("<</ColorSpace<</Cs14 133 0 R/Cs6 166 0 R>>/ExtGState<</GS1 167 0 R>>>>");
-            //auto root = parseHeader("<</A<</B 7/C 8>>/D<</E 3/F [/G 5/H 6]>>>>");
-            //auto root = parseHeader("<</A 7/B 8>>");
+            //auto roots = parseHeader(objHeaders);
+            //auto roots = parseHeader("<</ColorSpace<</Cs6 166 0 R>>/ExtGState<</GS1 167 0 R>>/Font<</TT1 170 0 R/TT2 173 0 R/TT4 175 0 R/TT5 178 0 R>>/ProcSet[/PDF/Text/ImageC]/XObject<</Im1 162 0 R/Im2 163 0 R>>>>[/ICCBased 154 0 R]<</OP false/OPM 1/SA false/SM 0.02/Type/ExtGState/op false>>");
+            //auto roots = parseHeader("<</ColorSpace<</Cs14 133 0 R/Cs6 166 0 R>>/ExtGState<</GS1 167 0 R>>/Font<</TT1 170 0 R/TT2 173 0 R/TT4 175 0 R/TT5 178 0 R>>/ProcSet[/PDF/Text/ImageC/ImageI]/XObject<</Im43 73 0 R/Im44 74 0 R/Im45 75 0 R/Im46 76 0 R/Im47 77 0 R>>>>");
+            //auto roots = parseHeader("<</ColorSpace<</Cs14 133 0 R/Cs6 166 0 R>>/ExtGState<</GS1 167 0 R>>>>");
+            //auto roots = parseHeader("<</A<</B 7/C 8>>/D<</E 3/F [/G 5/H 6]>>>>");
+            auto roots = parseHeader("<</A 7/B 8>>");
 
             return;
 
