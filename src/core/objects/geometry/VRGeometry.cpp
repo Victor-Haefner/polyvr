@@ -476,7 +476,7 @@ void calcFaceNormals(GeometryMTRecPtr geo) {
     Vec3f normal;
 
     FaceIterator faceIter = geo->beginFaces();
-    GeoIntegralPropertyMTRecPtr oldPosIndex = geo->getIndex(Geometry::PositionsIndex);
+    GeoIntegralPropertyMTRecPtr posIndex = geo->getIndex(Geometry::PositionsIndex);
     GeoIntegralPropertyMTRecPtr oldNormsIndex = geo->getIndex(Geometry::NormalsIndex);
 
     auto calcNormal = [&](FaceIterator& f) {
@@ -516,7 +516,7 @@ void calcFaceNormals(GeometryMTRecPtr geo) {
         return res;
     };*/
 
-    if (oldPosIndex) { //Indexed
+    if (posIndex) { //Indexed
         /*if (oldPosIndex != oldNormsIndex) { // multi indexed -> TODO
             MFUInt16& oldIndexMap = geo->getIndexMapping();
             UInt32 oldIMSize = oldIndexMap.size();
@@ -541,24 +541,35 @@ void calcFaceNormals(GeometryMTRecPtr geo) {
         }*/
     }
 
+    if (posIndex) newIndex->resize( posIndex->size() );
+    else {
+        auto positions = geo->getPositions();
+        newIndex->resize( positions->size() );
+    }
+
     for(; faceIter != geo->endFaces(); ++faceIter) {
         normal = calcNormal(faceIter);
+        size_t normIdx = newNormals->size();
         newNormals->addValue(normal);
 
-        switch(faceIter.getType()) {
+        for (UInt32 i = 0; i < faceIter.getLength(); ++i) {
+            newIndex->setValue( normIdx, faceIter.getIndex(i) );
+        }
+
+        /*switch(faceIter.getType()) {
             case GL_TRIANGLE_FAN:
             case GL_TRIANGLE_STRIP:
-                newIndex->addValue(faceIter.getIndex(2));
+                newIndex->setValue( normIdx, faceIter.getIndex(2) );
                 break;
             case GL_QUAD_STRIP:
-                newIndex->addValue(faceIter.getIndex(3));
+                newIndex->setValue( normIdx, faceIter.getIndex(3) );
                 break;
             default:
                 for (UInt32 i = 0; i < faceIter.getLength(); ++i) {
-                    newIndex->addValue(faceIter.getIndex(i));
+                    newIndex->setValue( normIdx, faceIter.getIndex(i) );
                 }
                 break;
-            }
+            }*/
     }
 
     geo->setNormals(newNormals);
