@@ -66,7 +66,7 @@ void VRAppLauncher::toggle_lock() {
 
 void VRAppLauncher::setup(VRAppManager* mgr) {
     string rpath = VRSceneManager::get()->getOriginalWorkdir();
-    uiSignal("setupAppLauncher", {{"ID",ID},{"name",path}});
+    uiSignal("setupAppLauncher", {{"ID",ID},{"name",path},{"previewPath",pxm_path}});
 
     auto sigs = OSG::VRGuiSignals::get();
     sigs->addCallback("on_toggle_app", [&](OSG::VRGuiSignals::Options o) { if (o["ID"] == ID) mgr->toggleDemo( shared_from_this() ); return true; }, true );

@@ -14,6 +14,8 @@
 #include "VRGlutEditor.h"
 #include "core/utils/VROptions.h"
 #include "core/utils/VRProfiler.h"
+#include "core/utils/system/VRSystem.h"
+#include "core/utils/png.h"
 
 #include "../devices/VRMouse.h"
 #include "../devices/VRKeyboard.h"
@@ -204,6 +206,7 @@ VRGlutEditor::VRGlutEditor() {
     mgr->addCallback("ui_toggle_vsync", [&](VRGuiSignals::Options o) { enableVSync(toBool(o["active"])); return true; } );
     mgr->addCallback("relayedImguiKeySignal", [&](VRGuiSignals::Options o) { handleRelayedKey(toInt(o["key"]), toInt(o["state"]), false); return true; } );
     mgr->addCallback("relayedImguiSpecialKeySignal", [&](VRGuiSignals::Options o) { handleRelayedKey(toInt(o["key"]), toInt(o["state"]), true); return true; } );
+    mgr->addCallback("onSaveSnapshot", [&](VRGuiSignals::Options o) { saveSnapshot(o["path"]); return true; } );
 
     bool fullscreen = VROptions::get()->getOption<bool>("fullscreen");
     if (fullscreen) setFullscreen(true);
@@ -402,8 +405,9 @@ void VRGlutEditor::handleRelayedKey(int key, int state, bool special) {
     //cout << "handleRelayedKey, spacial? " << special << ", key: " << key << ", state: " << state << ", has focus? " << glViewFocussed << endl;
     if (!glViewFocussed) return;
     auto k = getKeyboard();
-    if (special) if (k) k->keyboard_special(key, state, 0, 0, 1);
-    else if (k) k->keyboard(key, state, 0, 0, 1);
+    if (!k) return;
+    if (special) k->keyboard_special(key, state, 0, 0, 1);
+    else k->keyboard(key, state, 0, 0, 1);
 }
 
 void VRGlutEditor::render(bool fromThread) {
@@ -469,6 +473,30 @@ void VRGlutEditor::on_resize_window(int w, int h) { // resize top window
         resize(w, h);
         glutReshapeWindow(w, h);
     } else if (resizeSignal) resizeSignal("glutResize", 0,0,w,h);
+}
+
+void VRGlutEditor::saveSnapshot(string path) {
+    if (!exists(getFolderName(path))) return;
+    glutSetWindow(winGL);
+    int w = 400;
+    int h = 300;
+    float a = h/float(w);
+
+    int W = glutGet(GLUT_WINDOW_WIDTH);
+    int H = glutGet(GLUT_WINDOW_HEIGHT);
+    int S = min(W, H);
+    int Sa = S*a;
+    int u = max(0.0, W*0.5 - S*0.5);
+    int v = max(0.0, H*0.5 - Sa*0.5);
+
+    int Nc = 3;
+    VRImage img;
+    img.setup(S, Sa, Nc);
+    glReadBuffer(GL_FRONT); // alternative: GL_BACK
+    glReadPixels(u, v, S, Sa, GL_RGB, GL_UNSIGNED_BYTE, &img.pixels[0]);
+
+    img.resize(w,h);
+    writePNG(path, img);
 }
 
 void VRGlutEditor::on_gl_display() {

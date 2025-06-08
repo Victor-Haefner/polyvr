@@ -6,6 +6,7 @@
 #endif
 
 #include "core/utils/toString.h"
+#include "core/utils/system/VRSystem.h"
 #include "core/gui/VRGuiManager.h"
 
 #include <algorithm>
@@ -32,23 +33,33 @@ void ImAppLauncher::render(string filter, ImImage& preview, int fullWidth, int c
 
     if (!sensitive) ImGui::BeginDisabled();
 
+    int col0 = colWidth1;
+    int col2 = colWidth1*0.25;
+    int col1 = fullWidth - col0-col2;
+
     ImVec2 cursorBeg = ImGui::GetCursorScreenPos();
     ImGui::BeginGroup();
         ImGui::Spacing();
         ImGui::Indent(5.0);
-        ImGui::Columns(2);
-            float width2 = fullWidth - colWidth1;
+        ImGui::Columns(3);
+            if (previewOK) {
+                miniPreview.read(previewPath);
+                miniPreview.render(60, 45);
+                ImGui::SameLine();
+            }
 
-            ImGui::SetColumnWidth(-1, colWidth1);
+            ImGui::SetColumnWidth(-1, col0);
             if (ImGui::CollapsingHeader(("advanced##"+ID).c_str(), flags) && sensitive) {
                 if (ImGui::Button(("Run without scripts##"+ID).c_str())) uiSignal("on_toggle_app_no_scripts", {{"ID",ID}});
             }
 
             ImGui::NextColumn();
+            ImGui::SetColumnWidth(-1, col1);
             string label = ellipsize(name);
             ImGui::Text(label.c_str());
 
-            ImGui::SameLine();
+            ImGui::NextColumn();
+            ImGui::SetColumnWidth(-1, col2);
             if (!running) {
                 if (ImGui::Button(("Run##"+ID).c_str())) uiSignal("on_toggle_app", {{"ID",ID}});
             } else {
@@ -58,6 +69,7 @@ void ImAppLauncher::render(string filter, ImImage& preview, int fullWidth, int c
         ImGui::Spacing();
     ImGui::EndGroup();
     ImVec2 cursorEnd = ImGui::GetCursorScreenPos();
+
 
     ImVec2 min_pos = ImVec2(ImMin(cursorBeg.x, cursorEnd.x), ImMin(cursorBeg.y, cursorEnd.y));
     ImVec2 max_pos = ImVec2(ImMax(cursorBeg.x+fullWidth, cursorEnd.x+fullWidth), ImMax(cursorBeg.y, cursorEnd.y));
@@ -74,13 +86,14 @@ void ImAppLauncher::render(string filter, ImImage& preview, int fullWidth, int c
 
     if (!sensitive) ImGui::EndDisabled();
 
-    if (doHover && false) { // TODO: load actual screenshot!
-        int h = fullWidth * 9.0/16.0;
+    if (doHover && previewOK) {
+        //int h = fullWidth * 9.0/16.0;
+        int h = fullWidth * 3.0/4.0;
         auto p = ImGui::GetCursorScreenPos();
         ImGui::SetNextWindowPos(ImVec2(p.x, p.y+5));
         ImGui::SetNextWindowSize(ImVec2(fullWidth,h));
         ImGui::Begin("OpenGL Texture Text", 0, ImGuiWindowFlags_NoNav | ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoInputs);
-        preview.read("test.png");
+        preview.read(previewPath);
         preview.render(fullWidth, h);
         ImGui::End();
     }
@@ -124,7 +137,8 @@ void ImAppPanel::render(string filter, map<string, ImAppLauncher>& launcherPool,
 ImAppManager::ImAppManager() : ImWidget("AppManager"), examples("") {
     auto mgr = OSG::VRGuiSignals::get();
     mgr->addCallback("newAppLauncher", [&](OSG::VRGuiSignals::Options o){ newAppLauncher(o["panel"], o["ID"], o["timestamp"]); return true; } );
-    mgr->addCallback("setupAppLauncher", [&](OSG::VRGuiSignals::Options o){ setupAppLauncher(o["ID"], o["name"]); return true; } );
+    mgr->addCallback("setupAppLauncher", [&](OSG::VRGuiSignals::Options o){ setupAppLauncher(o["ID"], o["name"], o["previewPath"]); return true; } );
+    mgr->addCallback("updateAppLauncherPixmap", [&](OSG::VRGuiSignals::Options o){ updateAppLauncherPixmap(o["ID"], o["path"]); return true; } );
     mgr->addCallback("setAppLauncherState", [&](OSG::VRGuiSignals::Options o){ setAppLauncherState(o["ID"], toBool(o["running"]), toBool(o["sensitive"])); return true; } );
 }
 
@@ -198,10 +212,18 @@ void ImAppManager::setAppLauncherState(string ID, bool running, bool sensitive) 
     l.sensitive = sensitive;
 }
 
-void ImAppManager::setupAppLauncher(string ID, string name) {
+void ImAppManager::setupAppLauncher(string ID, string name, string previewPath) {
     if (!launchers.count(ID)) return;
     auto& l = launchers[ID];
     l.name = name;
+    l.previewPath = previewPath;
+    l.previewOK = exists(previewPath);
+}
+
+void ImAppManager::updateAppLauncherPixmap(string ID, string path) {
+    if (!launchers.count(ID)) return;
+    auto& l = launchers[ID];
+    l.previewPath = path;
 }
 
 void ImAppManager::begin() {

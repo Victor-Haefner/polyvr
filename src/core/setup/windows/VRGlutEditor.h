@@ -52,6 +52,7 @@ class VRGlutEditor: public VRWindow {
 
         void setTitle(string title) override;
         void setIcon(string iconpath) override;
+        void saveSnapshot(string path);
 
         void onMain_Keyboard_special(int k);
 

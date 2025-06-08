@@ -5222,6 +5222,13 @@
 			<Option target="Release" />
 			<Option target="PVR-Utils-d" />
 		</Unit>
+		<Unit filename="src/core/utils/png.cpp">
+			<Option target="PVR-Utils-d" />
+			<Option target="Release" />
+		</Unit>
+		<Unit filename="src/core/utils/png.h">
+			<Option target="PVR-Utils-d" />
+		</Unit>
 		<Unit filename="src/core/utils/system/VRSystem.cpp">
 			<Option target="Release" />
 			<Option target="PVR-Utils-d" />
