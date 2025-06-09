@@ -61,12 +61,12 @@ void writePNG(string path, VRImage& img) {
     );
     png_write_info(png_ptr, info_ptr);
 
-    png_bytep row_pointers[height];
+    vector<png_bytep> row_pointers(height, 0);
     for (int y = 0; y < height; ++y) {
         row_pointers[y] = pixels + (height - 1 - y) * width * img.channels; // flip y
     }
 
-    png_write_image(png_ptr, row_pointers);
+    png_write_image(png_ptr, &row_pointers[0]);
     png_write_end(png_ptr, NULL);
     png_destroy_write_struct(&png_ptr, &info_ptr);
     fclose(fp);
