@@ -29,6 +29,7 @@ class VRGlutEditor: public VRWindow {
         bool maximized = false;
         bool glViewFocussed = true;
         string popup;
+        string iconPath;
 
         typedef function<void(string, map<string, string>)> Signal;
         typedef function<void(string, int, int, int, int)> ResizeSignal;
@@ -56,8 +57,8 @@ class VRGlutEditor: public VRWindow {
 
         void onMain_Keyboard_special(int k);
 
-        void openPopupWindow(string name, int width, int height);
-        void togglePopupWindow(string name, int width, int height);
+        void openPopupWindow(string name, string title, int width, int height);
+        void togglePopupWindow(string name, string title, int width, int height);
         void closePopupWindow();
 
         void render(bool fromThread = false) override;

@@ -167,8 +167,8 @@ void ImToolbar::begin() {
         string filters = "PolyVR Project (.pvr .pvc){.pvr,.pvc,.xml}";
         uiSignal("set_file_dialog_signal", {{"signal","ui_new_file"}});
         uiSignal("set_file_dialog_filter", {{"filter",filters}});
-        uiSignal("set_file_dialog_setup", {{"title","Choose File"}, {"dir","."}, {"file","myApp.pvr"}});
-        uiSignal("ui_toggle_popup", {{"name","file"}, {"width","600"}, {"height","500"}});
+        uiSignal("set_file_dialog_setup", {{"title","Choose File"}, {"dir","."}, {"file","myApp\.pvr"}});
+        uiSignal("ui_toggle_popup", {{"name","file"},{"title","Choose Filename"}, {"width","600"}, {"height","500"}});
     }
 
     ImGui::SameLine();
@@ -181,7 +181,7 @@ void ImToolbar::begin() {
         uiSignal("set_file_dialog_signal", {{"signal","ui_open_file"}});
         uiSignal("set_file_dialog_filter", {{"filter",filters}});
         uiSignal("set_file_dialog_setup", {{"title","Open File"}, {"dir","."}, {"file",""}});
-        uiSignal("ui_toggle_popup", {{"name","file"}, {"width","600"}, {"height","500"}});
+        uiSignal("ui_toggle_popup", {{"name","file"},{"title","Choose File"}, {"width","600"}, {"height","500"}});
     }
 
     ImGui::SameLine(); if (ImGui::Button("Save")) uiSignal("toolbar_save");
@@ -191,16 +191,16 @@ void ImToolbar::begin() {
         string filters = "PolyVR Project (.pvr .pvc){.pvr,.pvc,.xml}";
         uiSignal("set_file_dialog_signal", {{"signal","ui_saveas_file"}});
         uiSignal("set_file_dialog_filter", {{"filter",filters}});
-        uiSignal("set_file_dialog_setup", {{"title","Save as.."}, {"dir","."}, {"file","myApp.pvr"}});
-        uiSignal("ui_toggle_popup", {{"name","file"}, {"width","600"}, {"height","500"}});
+        uiSignal("set_file_dialog_setup", {{"title","Save As.."}, {"dir","."}, {"file","myApp.pvr"}});
+        uiSignal("ui_toggle_popup", {{"name","file"},{"title","Save As.."}, {"width","600"}, {"height","500"}});
     }
 
     ImGui::SameLine(); if (ImGui::Button("Export")) uiSignal("toolbar_export");
     ImGui::SameLine(); if (ImGui::Button("Close")) uiSignal("toolbar_close");
     ImGui::SameLine(); if (ImGui::Button("Exit")) uiSignal("toolbar_exit");
-    ImGui::SameLine(); if (ImGui::Button("About")) uiSignal("ui_toggle_popup", {{"name","about"}, {"width","400"}, {"height","500"}});
-    ImGui::SameLine(); if (ImGui::Button("Profiler")) uiSignal("ui_toggle_popup", {{"name","profiler"}, {"width","600"}, {"height","500"}});
-    ImGui::SameLine(); if (ImGui::Button("Recorder")) uiSignal("ui_toggle_popup", {{"name","recorder"}, {"width","400"}, {"height","200"}});
+    ImGui::SameLine(); if (ImGui::Button("About")) uiSignal("ui_toggle_popup", {{"name","about"},{"title","About"}, {"width","400"}, {"height","500"}});
+    ImGui::SameLine(); if (ImGui::Button("Profiler")) uiSignal("ui_toggle_popup", {{"name","profiler"},{"title","Profiler"}, {"width","600"}, {"height","500"}});
+    ImGui::SameLine(); if (ImGui::Button("Recorder")) uiSignal("ui_toggle_popup", {{"name","recorder"},{"title","Recorder"}, {"width","400"}, {"height","200"}});
     ImGui::SameLine(); if (ImGui::Checkbox("Fotomode", &fotomode)) uiSignal("ui_toggle_fotomode", {{"active",toString(fotomode)}});
 }
 
@@ -802,7 +802,7 @@ void ImNotifyDialog::open(string msg1, string msg2, string sig) {
     message1 = msg1;
     message2 = msg2;
     signal = sig;
-    uiSignal("ui_toggle_popup", {{"name","notify"}, {"width","400"}, {"height","200"}});
+    uiSignal("ui_toggle_popup", {{"name","notify"},{"title","Notification"}, {"width","400"}, {"height","200"}});
 }
 
 void ImNotifyDialog::begin() {

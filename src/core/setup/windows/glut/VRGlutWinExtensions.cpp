@@ -8,9 +8,13 @@
 
 static bool doGrabShiftTab = true;
 string backend;
-HWND hwnd = 0;
+HWND hwndMain = 0;
+HWND hwndDialog = 0;
 
-void setWindowIcon(string path) {
+void setWindowIcon(string path, bool dialog) {
+    HWND hwnd = hwndMain;
+    if (dialog) hwnd = hwndDialog;
+
     cout << "  SetWindowIcon hwnd: " << hwnd << ", path: " << path << endl;
     if (!hwnd) return;
     HICON hIcon = static_cast<HICON>(LoadImage(nullptr, path.c_str(), IMAGE_ICON, 0, 0, LR_LOADFROMFILE | LR_DEFAULTSIZE | LR_SHARED));
@@ -22,17 +26,23 @@ void setWindowIcon(string path) {
 }
 
 void maximizeWindow() {
-    cout << "  maximizeWindow hwnd: " << hwnd << endl;
-    if (!hwnd) return;
-    ShowWindow(hwnd, SW_MAXIMIZE);
+    cout << "  maximizeWindow hwnd: " << hwndMain << endl;
+    if (!hwndMain) return;
+    ShowWindow(hwndMain, SW_MAXIMIZE);
 }
 
 void initGlutExtensions() {
     cout << " initGlutExtensions" << endl;
-    string icon = "ressources/gui/logo_icon_win.ico";
-    hwnd = FindWindow(nullptr, "PolyVR");
-    if (!hwnd) cout << "Cannot find window 'PolyVR'" << endl;
-    setWindowIcon("ressources/gui/logo_icon_win.ico");
+    hwndMain = FindWindow(nullptr, "PolyVR");
+    if (!hwndMain) cout << "Cannot find window 'PolyVR'" << endl;
+    setWindowIcon("ressources/gui/logo_icon_win.ico", false);
+}
+
+void initGlutDialogExtensions(string name) {
+    cout << " initGlutDialogExtensions" << endl;
+    hwndDialog = FindWindow(nullptr, name.c_str());
+    if (!hwndDialog) cout << "Cannot find window '" << name << "'" << endl;
+    setWindowIcon("ressources/gui/logo_icon_win.ico", true);
 }
 
 void cleanupGlutExtensions() {

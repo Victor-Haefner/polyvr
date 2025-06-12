@@ -28,8 +28,9 @@ struct IconList {
 };
 
 void initGlutExtensions();
+void initGlutDialogExtensions(string name);
 void cleanupGlutExtensions();
-void setWindowIcon(string path);
+void setWindowIcon(string path, bool dialog);
 void startGrabShiftTab();
 void maximizeWindow();
 

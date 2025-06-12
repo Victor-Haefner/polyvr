@@ -198,9 +198,9 @@ VRGlutEditor::VRGlutEditor() {
     cout << " Glut window initiated" << endl;
 
     auto mgr = OSG::VRGuiSignals::get();
-    mgr->addCallback("ui_open_popup", [&](VRGuiSignals::Options o) { openPopupWindow(o["name"], toInt(o["width"]), toInt(o["height"])); return true; } );
+    mgr->addCallback("ui_open_popup", [&](VRGuiSignals::Options o) { openPopupWindow(o["name"], o["title"], toInt(o["width"]), toInt(o["height"])); return true; } );
     mgr->addCallback("ui_close_popup", [&](VRGuiSignals::Options o) { closePopupWindow(); return true; } );
-    mgr->addCallback("ui_toggle_popup", [&](VRGuiSignals::Options o) { togglePopupWindow(o["name"], toInt(o["width"]), toInt(o["height"])); return true; }, true );
+    mgr->addCallback("ui_toggle_popup", [&](VRGuiSignals::Options o) { togglePopupWindow(o["name"], o["title"], toInt(o["width"]), toInt(o["height"])); return true; }, true );
     mgr->addCallback("set_editor_fullscreen", [&](VRGuiSignals::Options o) { setFullscreen(toBool(o["fullscreen"])); return true; }, true );
     mgr->addCallback("uiGrabFocus", [&](VRGuiSignals::Options o) { glViewFocussed = false; return true; } );
     mgr->addCallback("ui_toggle_vsync", [&](VRGuiSignals::Options o) { enableVSync(toBool(o["active"])); return true; } );
@@ -234,9 +234,11 @@ void VRGlutEditor::setTitle(string title) {
     glutSetWindow(w);
 }
 
-void VRGlutEditor::setIcon(string iconpath) {
-    VRWindow::setIcon(iconpath);
-    setWindowIcon(iconpath);
+void VRGlutEditor::setIcon(string path) {
+    iconPath = path;
+    VRWindow::setIcon(iconPath);
+    setWindowIcon(iconPath, false);
+    setWindowIcon(iconPath, true);
 }
 
 int VRGlutEditor::getCurrentWinID() { return glutGetWindow(); }
@@ -312,9 +314,9 @@ bool doShutdown = false;
 void VRGlutEditor::on_close_window() { doShutdown = true;  signal("glutCloseWindow", {}); }
 void VRGlutEditor::on_popup_close() { popup = ""; winPopup = -1; }
 
-void VRGlutEditor::togglePopupWindow(string name, int width, int height) {
+void VRGlutEditor::togglePopupWindow(string name, string title, int width, int height) {
     if (popup == name) closePopupWindow();
-    else openPopupWindow(name, width, height);
+    else openPopupWindow(name, title, width, height);
 }
 
 void VRGlutEditor::closePopupWindow() {
@@ -324,7 +326,7 @@ void VRGlutEditor::closePopupWindow() {
     winPopup = -1;
 }
 
-void VRGlutEditor::openPopupWindow(string name, int width, int height) {
+void VRGlutEditor::openPopupWindow(string name, string title, int width, int height) {
     popup = name;
 
     int screenWidth = glutGet(GLUT_SCREEN_WIDTH);
@@ -332,7 +334,8 @@ void VRGlutEditor::openPopupWindow(string name, int width, int height) {
 
     glutInitWindowSize(width, height);
     glutInitWindowPosition((screenWidth-width)*0.5, (screenHeight-height)*0.5);
-    winPopup = glutCreateWindow(name.c_str());
+    winPopup = glutCreateWindow(title.c_str());
+    initGlutDialogExtensions(title);
     setSwapInterval(0);
     glutEditors[winPopup] = this;
 
