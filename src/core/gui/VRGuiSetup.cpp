@@ -1232,7 +1232,7 @@ VRGuiSetup::VRGuiSetup() {
     mgr->addCallback("setup_set_view_invert_eyes", [&](OSG::VRGuiSignals::Options o) { on_toggle_view_invert(toBool(o["active"])); return true; }, true );
     mgr->addCallback("setup_set_view_active_stereo", [&](OSG::VRGuiSignals::Options o) { on_toggle_view_active_stereo(toBool(o["active"])); return true; }, true );
     mgr->addCallback("setup_set_view_projection", [&](OSG::VRGuiSignals::Options o) { on_toggle_display_projection(toBool(o["active"])); return true; }, true );
-    mgr->addCallback("setup_switch_view_user", [&](OSG::VRGuiSignals::Options o) { on_change_view_user(o["tracker"]); return true; }, true );
+    mgr->addCallback("setup_switch_view_user", [&](OSG::VRGuiSignals::Options o) { on_change_view_user(o["selection"]); return true; }, true );
     mgr->addCallback("setup_set_view_proj_center", [&](OSG::VRGuiSignals::Options o) { on_proj_center_edit(Vec3d(toFloat(o["x"]), toFloat(o["y"]), toFloat(o["z"]))); return true; }, true );
     mgr->addCallback("setup_set_view_proj_user", [&](OSG::VRGuiSignals::Options o) { on_proj_user_edit(Vec3d(toFloat(o["x"]), toFloat(o["y"]), toFloat(o["z"]))); return true; }, true );
     mgr->addCallback("setup_set_view_proj_normal", [&](OSG::VRGuiSignals::Options o) { on_proj_normal_edit(Vec3d(toFloat(o["x"]), toFloat(o["y"]), toFloat(o["z"]))); return true; }, true );
