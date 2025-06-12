@@ -104,6 +104,7 @@ void VRGuiSetup::updateObjectData() {
             {"position", toString(p)},
             {"size", toString(view->getSize())},
             {"stereo", toString(view->isStereo())},
+            {"stereoMode", toString(view->getStereoMode())},
             {"eyesInverted", toString(view->eyesInverted())},
             {"activeStereo", toString(view->activeStereo())},
             {"projection", toString(view->isProjection())},
@@ -657,6 +658,12 @@ void VRGuiSetup::on_change_view_user(string name) {
     if (selected_type != "view") return;
     auto u = dynamic_pointer_cast<VRTransform>( VRScene::getCurrent()->get(name) );
     if (view && u) view->setUser(u);
+}
+
+void VRGuiSetup::on_change_view_stereoMode(string mode) {
+    if (guard) return;
+    if (selected_type != "view") return;
+    if (view) view->setStereoMode(mode);
 }
 
 void VRGuiSetup::on_view_size_edit(Vec2d v) {
@@ -1233,6 +1240,7 @@ VRGuiSetup::VRGuiSetup() {
     mgr->addCallback("setup_set_view_active_stereo", [&](OSG::VRGuiSignals::Options o) { on_toggle_view_active_stereo(toBool(o["active"])); return true; }, true );
     mgr->addCallback("setup_set_view_projection", [&](OSG::VRGuiSignals::Options o) { on_toggle_display_projection(toBool(o["active"])); return true; }, true );
     mgr->addCallback("setup_switch_view_user", [&](OSG::VRGuiSignals::Options o) { on_change_view_user(o["selection"]); return true; }, true );
+    mgr->addCallback("setup_switch_view_stereoMode", [&](OSG::VRGuiSignals::Options o) { on_change_view_stereoMode(o["selection"]); return true; }, true );
     mgr->addCallback("setup_set_view_proj_center", [&](OSG::VRGuiSignals::Options o) { on_proj_center_edit(Vec3d(toFloat(o["x"]), toFloat(o["y"]), toFloat(o["z"]))); return true; }, true );
     mgr->addCallback("setup_set_view_proj_user", [&](OSG::VRGuiSignals::Options o) { on_proj_user_edit(Vec3d(toFloat(o["x"]), toFloat(o["y"]), toFloat(o["z"]))); return true; }, true );
     mgr->addCallback("setup_set_view_proj_normal", [&](OSG::VRGuiSignals::Options o) { on_proj_normal_edit(Vec3d(toFloat(o["x"]), toFloat(o["y"]), toFloat(o["z"]))); return true; }, true );

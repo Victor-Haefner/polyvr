@@ -33,7 +33,7 @@ bool ImCombo::render(int width) {
 }
 
 void ImCombo::signal(string s) {
-    uiSignal(s, {{"selection", strings[current]}});
+    uiSignal(s, {{"selection", strings[current]}, {"index", toString(current)}});
 }
 
 void ImCombo::set(string s) {

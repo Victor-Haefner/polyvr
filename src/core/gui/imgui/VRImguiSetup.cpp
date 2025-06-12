@@ -35,6 +35,7 @@ ImSetupManager::ImSetupManager() : ImWidget("SetupManager"),
 
     windowMSAA.setList({"none", "x2", "x4", "x8", "x16"});
     slaveSystemScreens.setList({":0.0", ":0.1", ":1.0", ":1.1"});
+    viewStereoMode.setList({"Side by side", "Top and bottom", "Frame Packed"});
 
     //vector<string> ctypes = {"Multicast", "SockPipeline", "StreamSock"};
     vector<string> ctypes = {"Multicast", "StreamSock"};
@@ -343,6 +344,7 @@ void ImSetupManager::begin() {
 
             if (viewStereo) {
                 ImGui::Indent(10);
+                if (viewStereoMode.render(200)) viewStereoMode.signal("setup_switch_view_stereoMode");
                 if (eyeSeparation.render(50)) uiSignal("setup_set_view_eye_separation", {{"value", eyeSeparation.value}});
                 if (ImGui::Checkbox("Invert eyes", &viewEyesInverted)) uiSignal("setup_set_view_invert_eyes", {{"active", toString(viewEyesInverted)}});
                 if (ImGui::Checkbox("Active stereo", &viewActiveStereo)) uiSignal("setup_set_view_active_stereo", {{"active", toString(viewActiveStereo)}});

@@ -604,6 +604,7 @@ void VRView::setWindow() {
 }
 
 void VRView::setStereo(bool b) { stereo = b; update(); }
+void VRView::setStereoMode(string mode) { stereoMode = mode; update(); }
 void VRView::setActiveStereo(bool b) { active_stereo = b; update(); }
 
 void VRView::setStereoEyeSeparation(float v) {
@@ -694,6 +695,7 @@ VRTexturePtr VRView::grab() {
 
 void VRView::save(XMLElementPtr node) {
     node->setAttribute("stereo", toString(stereo).c_str());
+    node->setAttribute("stereoMode", stereoMode.c_str());
     node->setAttribute("active_stereo", toString(active_stereo).c_str());
     node->setAttribute("projection", toString(projection).c_str());
     node->setAttribute("eye_inverted", toString(eyeinverted).c_str());
@@ -716,6 +718,7 @@ void VRView::save(XMLElementPtr node) {
 
 void VRView::load(XMLElementPtr node) {
     stereo = toValue<bool>(node->getAttribute("stereo"));
+    if (node->hasAttribute("stereoMode")) stereoMode = node->getAttribute("stereoMode");
     active_stereo = toValue<bool>(node->getAttribute("active_stereo"));
     projection = toValue<bool>(node->getAttribute("projection"));
     eyeinverted = toValue<bool>(node->getAttribute("eye_inverted"));
@@ -753,6 +756,7 @@ ViewportMTRecPtr VRView::getViewportL() { return lView; }
 ViewportMTRecPtr VRView::getViewportR() { return rView; }
 float VRView::getEyeSeparation() { return eyeSeparation; }
 bool VRView::isStereo() { return stereo; }
+string VRView::getStereoMode() { return stereoMode; }
 
 void VRView::setProjection(bool b) { projection = b; update(); }
 bool VRView::isProjection() { return projection; }
