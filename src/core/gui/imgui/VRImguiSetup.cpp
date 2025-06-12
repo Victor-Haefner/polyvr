@@ -35,7 +35,7 @@ ImSetupManager::ImSetupManager() : ImWidget("SetupManager"),
 
     windowMSAA.setList({"none", "x2", "x4", "x8", "x16"});
     slaveSystemScreens.setList({":0.0", ":0.1", ":1.0", ":1.1"});
-    viewStereoMode.setList({"Side by side", "Top and bottom", "Frame Packed"});
+    viewStereoMode.setList({"Side by side", "Top and bottom", "Frame packed"});
 
     //vector<string> ctypes = {"Multicast", "SockPipeline", "StreamSock"};
     vector<string> ctypes = {"Multicast", "StreamSock"};

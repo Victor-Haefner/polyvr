@@ -126,10 +126,28 @@ void VRView::setViewports() {//create && set size of viewports
     if (stereo && !active_stereo) {
         lView = Viewport::create();
         rView = Viewport::create();
-        double a = p[0]*0.5;
-        double b = (1.0-p[2])*0.5;
-        lView->setSize(a,     p[1], 0.5-b, p[3]);
-        rView->setSize(0.5+a, p[1], 1.0-b, p[3]);
+
+        if (stereoMode == "Side by side") {
+            double a = p[0]*0.5;
+            double b = (1.0-p[2])*0.5;
+            lView->setSize(a,     p[1], 0.5-b, p[3]);
+            rView->setSize(0.5+a, p[1], 1.0-b, p[3]);
+        }
+
+        if (stereoMode == "Top and bottom") {
+            double a = p[1]*0.5;
+            double b = (1.0-p[3])*0.5;
+            lView->setSize(p[0], a,     p[2], 0.5-b);
+            rView->setSize(p[0], 0.5+a, p[2], 1.0-b);
+        }
+
+        if (stereoMode == "Frame packed") {
+            double a = p[1]*0.5;
+            double b = (1.0-p[3])*0.5;
+            double c = 0.010204082; // half of the 45 pixels in between L and R
+            lView->setSize(p[0], a,     p[2], 0.5-b-c);
+            rView->setSize(p[0], 0.5+a+c, p[2], 1.0-b);
+        }
     }
 
     if (active_stereo) {
