@@ -104,6 +104,7 @@ class ImFileDialog : public ImDialog {
 
         ImFileDialog();
         void begin() override;
+        void close();
 };
 
 class ImRecorderDialog : public ImDialog {

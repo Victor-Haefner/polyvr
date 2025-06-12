@@ -678,9 +678,17 @@ ImFileDialog::ImFileDialog() : ImDialog("file"), scaleInput("geoScale", "Scale:"
     mgr->addCallback("set_file_dialog_signal", [&](OSG::VRGuiSignals::Options o){ sig = o["signal"]; return true; } );
     mgr->addCallback("set_file_dialog_setup", [&](OSG::VRGuiSignals::Options o){ title = o["title"]; startDir = o["dir"]; startFile = o["file"]; return true; } );
     mgr->addCallback("set_file_dialog_options", [&](OSG::VRGuiSignals::Options o){ options = o["options"]; return true; } );
+    mgr->addCallback("ui_close_popup", [&](OSG::VRGuiSignals::Options o) { close(); return true; });
 }
 
 IGFD::FileDialog* imGuiFileDialogInstance = 0;
+
+
+void ImFileDialog::close() {
+    imGuiFileDialogInstance->Close();
+    delete imGuiFileDialogInstance;
+    internalOpened = false;
+}
 
 void ImFileDialog::begin() {
     if (!internalOpened) {
@@ -702,10 +710,7 @@ void ImFileDialog::begin() {
             signal(sig, {{"fileName",fileName},{"filePath",filePath}});
         }
 
-        imGuiFileDialogInstance->Close();
-        delete imGuiFileDialogInstance;
         signal("ui_close_popup", {});
-        internalOpened = false;
     }
 
     if (doGeoOpts) {
