@@ -2,10 +2,14 @@
 #include "core/gui/VRGuiManager.h"
 #include "core/utils/toString.h"
 
-ImRendering::ImRendering() : pathInput("bgPath", "Path:", ""), pathSplash("splashPath", "Path:", ""), extInput("bgExtension", "Extension:", "") {
+ImRendering::ImRendering() :
+        pathInput("bgPath", "Path:", ""),
+        pathSplash("splashPath", "Path:", ""),
+        extInput("bgExtension", "Extension:", ""),
+        bgColor("bgColor", "Color:") {
     auto mgr = OSG::VRGuiSignals::get();
     mgr->addCallback("set_bg_type", [&](OSG::VRGuiSignals::Options o){ setBGType(o["type"]); return true; } );
-    mgr->addCallback("set_bg_solid_color", [&](OSG::VRGuiSignals::Options o){ setBGColor(o["color"]); return true; } );
+    mgr->addCallback("set_bg_solid_color", [&](OSG::VRGuiSignals::Options o){ bgColor.set(o["color"]); return true; } );
     mgr->addCallback("set_bg_path", [&](OSG::VRGuiSignals::Options o){ setBGPath(o["path"]); return true; } );
     mgr->addCallback("set_bg_file_ext", [&](OSG::VRGuiSignals::Options o){ setBGExt(o["ext"]); return true; } );
     mgr->addCallback("set_enable_splash", [&](OSG::VRGuiSignals::Options o){ setShowSplash(toBool(o["show"])); return true; } );
@@ -17,14 +21,6 @@ void ImRendering::setBGType(string data) {
     if (data == "image") bgType = 1;
     if (data == "skybox") bgType = 2;
     if (data == "sky") bgType = 3;
-}
-
-void ImRendering::setBGColor(string data) {
-    auto parts = splitString(data);
-    color.x = toFloat(parts[0]);
-    color.y = toFloat(parts[0]);
-    color.z = toFloat(parts[0]);
-    color.w = toFloat(parts[0]);
 }
 
 void ImRendering::setBGPath(string data) {
@@ -71,11 +67,7 @@ void ImRendering::render() {
         if (ImGui::RadioButton("Sky", &bgType, 3)) uiSignal("on_toggle_bg", {{"type","sky"}});
 
         if (bgType == 0) { // solid
-            ImGui::Text("Color:");
-            ImGui::SameLine();
-            if (ImGui::ColorEdit4("##bgpicker", (float*)&color, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoAlpha | ImGuiColorEditFlags_NoSidePreview)) {
-                uiSignal("on_change_bg_color", {{"color",toString(color.x)+"|"+toString(color.y)+"|"+toString(color.z)+"|"+toString(color.w)}});
-            }
+            if (bgColor.render()) bgColor.signal("on_change_bg_color");
         }
 
         if (bgType == 1) {

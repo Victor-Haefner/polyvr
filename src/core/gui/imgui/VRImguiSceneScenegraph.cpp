@@ -99,7 +99,13 @@ void ImScenegraph::render() {
             ImGui::Indent(10);
 
             if (matName != "") {
-                ImGui::Text(("Diffuse: " + matDiffuse).c_str());
+                /*ImGui::Text(("Diffuse: ").c_str());
+                ImGui::SameLine();
+                if (ImGui::ColorEdit4("##bgpicker", (float*)&color, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoAlpha | ImGuiColorEditFlags_NoSidePreview)) {
+                    uiSignal("sg_set_mat_diffuse", {{"color",toString(color.x)+"|"+toString(color.y)+"|"+toString(color.z)+"|"+toString(color.w)}});
+                }*/
+
+                ImGui::Text(("Diffuse:" + matDiffuse).c_str());
                 ImGui::Text(("Specular: " + matSpecular).c_str());
                 ImGui::Text(("Ambient: " + matAmbient).c_str());
                 ImGui::Text(("Lit: " + toString(matLit)).c_str());
