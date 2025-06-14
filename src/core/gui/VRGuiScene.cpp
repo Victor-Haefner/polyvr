@@ -1026,12 +1026,18 @@ void VRGuiScene::setMaterial_gui() {
     cout << "\nNot yet implemented\n";
 }
 
-void VRGuiScene::setMaterial_lit() {
+void VRGuiScene::setMaterial_lit(bool b) {
     if(!trigger_cbs) return;
     auto geo = selected_geometry.lock();
     if(!geo) return;
-    /*bool b = getCheckButtonState("checkbutton3");
-    geo->getMaterial()->setLit(b);*/
+    geo->getMaterial()->setLit(b);
+}
+
+void VRGuiScene::setMaterial_meshcolors(bool b) {
+    if(!trigger_cbs) return;
+    auto geo = selected_geometry.lock();
+    if(!geo) return;
+    geo->getMaterial()->ignoreMeshColors(!b);
 }
 
 bool VRGuiScene::setMaterial_diffuse(Color4f c) {
@@ -1281,6 +1287,8 @@ VRGuiScene::VRGuiScene() { // TODO: reduce callbacks with templated functions
     mgr->addCallback("sg_set_mat_diffuse", [&](OSG::VRGuiSignals::Options o) { setMaterial_diffuse(toValue<Color4f>(o["color"])); return true; }, true );
     mgr->addCallback("sg_set_mat_specular", [&](OSG::VRGuiSignals::Options o) { setMaterial_specular(toValue<Color4f>(o["color"])); return true; }, true );
     mgr->addCallback("sg_set_mat_emission", [&](OSG::VRGuiSignals::Options o) { setMaterial_emission(toValue<Color4f>(o["color"])); return true; }, true );
+    mgr->addCallback("sg_set_mat_lit", [&](OSG::VRGuiSignals::Options o) { setMaterial_lit(toBool(o["state"])); return true; }, true );
+    mgr->addCallback("sg_set_mat_meshcolors", [&](OSG::VRGuiSignals::Options o) { setMaterial_meshcolors(toBool(o["state"])); return true; }, true );
 }
 
 // new scene, update stuff here

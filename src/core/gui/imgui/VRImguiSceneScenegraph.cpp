@@ -107,8 +107,8 @@ void ImScenegraph::render() {
                 if (matDiffuse.render())  matDiffuse.signal("sg_set_mat_diffuse");
                 if (matSpecular.render()) matSpecular.signal("sg_set_mat_specular");
                 if (matEmission.render()) matEmission.signal("sg_set_mat_emission");
-                ImGui::Text(("Lit: " + toString(matLit)).c_str());
-                ImGui::Text(("MeshColors: " + toString(matMeshColors)).c_str());
+                if (ImGui::Checkbox("Lit", &matLit)) uiSignal("sg_set_mat_lit", {{"state",toString(matLit)}});
+                if (ImGui::Checkbox("Use mesh colors", &matMeshColors)) uiSignal("sg_set_mat_meshcolors", {{"state",toString(matMeshColors)}});
             }
 
             if (texDims != "") {
