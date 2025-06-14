@@ -23,7 +23,11 @@ ImScenegraph::ImScenegraph() :  tree("scenegraph"),
                                 constrDof4("dof3", "DoF 3 rx"),
                                 constrDof5("dof4", "DoF 4 ry"),
                                 constrDof6("dof5", "DoF 5 rz"),
-                                lodCenter("lodCenter", "center") {
+                                lodCenter("lodCenter", "center"),
+                                matAmbient("colAmbient", "Ambient: "),
+                                matDiffuse("colDiffuse", "Diffuse: "),
+                                matSpecular("colSpecular", "Specular:"),
+                                matEmission("colEmission", "Emission:") {
     auto mgr = OSG::VRGuiSignals::get();
     mgr->addCallback("set_sg_title", [&](OSG::VRGuiSignals::Options o){ title = o["title"]; return true; } );
     mgr->addCallback("on_sg_tree_clear", [&](OSG::VRGuiSignals::Options o){ treeClear(); return true; } );
@@ -99,15 +103,10 @@ void ImScenegraph::render() {
             ImGui::Indent(10);
 
             if (matName != "") {
-                /*ImGui::Text(("Diffuse: ").c_str());
-                ImGui::SameLine();
-                if (ImGui::ColorEdit4("##bgpicker", (float*)&color, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoAlpha | ImGuiColorEditFlags_NoSidePreview)) {
-                    uiSignal("sg_set_mat_diffuse", {{"color",toString(color.x)+"|"+toString(color.y)+"|"+toString(color.z)+"|"+toString(color.w)}});
-                }*/
-
-                ImGui::Text(("Diffuse:" + matDiffuse).c_str());
-                ImGui::Text(("Specular: " + matSpecular).c_str());
-                ImGui::Text(("Ambient: " + matAmbient).c_str());
+                if (matAmbient.render())  matAmbient.signal("sg_set_mat_ambient");
+                if (matDiffuse.render())  matDiffuse.signal("sg_set_mat_diffuse");
+                if (matSpecular.render()) matSpecular.signal("sg_set_mat_specular");
+                if (matEmission.render()) matEmission.signal("sg_set_mat_emission");
                 ImGui::Text(("Lit: " + toString(matLit)).c_str());
                 ImGui::Text(("MeshColors: " + toString(matMeshColors)).c_str());
             }
@@ -326,9 +325,10 @@ void ImScenegraph::setupMaterial(OSG::VRGuiSignals::Options o) {
     if (!o.count("name")) matName = "";
     else {
         matName = o["name"];
-        matDiffuse = o["diffuse"];
-        matSpecular = o["specular"];
-        matAmbient = o["ambient"];
+        matAmbient.set(o["ambient"]);
+        matDiffuse.set(o["diffuse"]);
+        matSpecular.set(o["specular"]);
+        matEmission.set(o["emission"]);
         matLit = toBool(o["isLit"]);
         matMeshColors = !toBool(o["ignoreMeshCols"]);
 

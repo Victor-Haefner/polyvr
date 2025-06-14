@@ -5,6 +5,7 @@
 #include "core/gui/VRGuiSignals.h"
 #include "imWidgets/VRImguiTreeview.h"
 #include "imWidgets/VRImguiVector.h"
+#include "imWidgets/VRImguiColorPicker.h"
 
 using namespace std;
 
@@ -64,9 +65,10 @@ class ImScenegraph {
         vector<pair<string, int>> geoData;
 
         string matName;
-        string matDiffuse;
-        string matSpecular;
-        string matAmbient;
+        ImColorPicker matAmbient;
+        ImColorPicker matDiffuse;
+        ImColorPicker matSpecular;
+        ImColorPicker matEmission;
         bool matLit;
         bool matMeshColors;
 

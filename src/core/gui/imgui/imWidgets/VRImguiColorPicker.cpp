@@ -3,6 +3,8 @@
 #include "core/utils/toString.h"
 
 #include <iostream>
+#include <OpenSG/OSGColor.h>
+
 using namespace std;
 
 ImColorPicker::ImColorPicker(string ID, string label) : ID("##"+ID), label(label) {}
@@ -13,7 +15,7 @@ bool ImColorPicker::render() {
         ImGui::SameLine();
     }
 
-    return ImGui::ColorEdit4("##bgpicker", (float*)&color, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoAlpha | ImGuiColorEditFlags_NoSidePreview);
+    return ImGui::ColorEdit4(ID.c_str(), (float*)&color, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoAlpha | ImGuiColorEditFlags_NoSidePreview);
 }
 
 void ImColorPicker::signal(string s) {
@@ -21,13 +23,15 @@ void ImColorPicker::signal(string s) {
 }
 
 void ImColorPicker::set(string s) {
-    auto parts = splitString(s);
-    color.x = toFloat(parts[0]);
-    color.y = toFloat(parts[0]);
-    color.z = toFloat(parts[0]);
-    color.w = toFloat(parts[0]);
+    OSG::Color4f c;
+    toValue(s, c);
+    color.x = c[0];
+    color.y = c[1];
+    color.z = c[2];
+    color.w = c[3];
 }
 
 string ImColorPicker::get() {
-    return toString(color.x)+"|"+toString(color.y)+"|"+toString(color.z)+"|"+toString(color.w);
+    OSG::Color4f c(color.x, color.y, color.z, color.w);
+    return toString(c);
 }

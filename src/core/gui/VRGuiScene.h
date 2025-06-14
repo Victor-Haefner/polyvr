@@ -113,9 +113,10 @@ class VRGuiScene {
         // ------------- material -----------------------
         void setMaterial_gui();
         void setMaterial_lit();
-        bool setMaterial_diffuse();
-        bool setMaterial_specular();
-        bool setMaterial_ambient();
+        bool setMaterial_diffuse(Color4f c);
+        bool setMaterial_specular(Color4f c);
+        bool setMaterial_ambient(Color4f c);
+        bool setMaterial_emission(Color4f c);
         void setMaterial_pointsize();
         void setMaterial_texture_toggle();
         void setMaterial_texture_name();
