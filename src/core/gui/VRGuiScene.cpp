@@ -136,6 +136,8 @@ void VRGuiScene::setMaterial(VRMaterialPtr mat) {
         params["emission"] = toString(mat->getEmission());
         params["isLit"] = toString(mat->isLit());
         params["ignoreMeshCols"] = toString(mat->doesIgnoreMeshColors());
+        params["pointsize"] = toString(mat->getPointSize());
+        params["linewidth"] = toString(mat->getLineWidth());
 
         VRTexturePtr tex = mat->getTexture();
         if (tex) {
@@ -1072,12 +1074,18 @@ bool VRGuiScene::setMaterial_emission(Color4f c) {
     return true;
 }
 
-void VRGuiScene::setMaterial_pointsize() { // TODO
+void VRGuiScene::setMaterial_pointsize(int ps) {
     if(!trigger_cbs) return;
     auto geo = selected_geometry.lock();
     if(!geo) return;
-    //int ps = 5;
-    //selected_geometry->setPointSize(ps);
+    geo->getMaterial()->setPointSize(ps);
+}
+
+void VRGuiScene::setMaterial_linewidth(int ps) {
+    if(!trigger_cbs) return;
+    auto geo = selected_geometry.lock();
+    if(!geo) return;
+    geo->getMaterial()->setLineWidth(ps);
 }
 
 void VRGuiScene::setMaterial_texture_toggle() {
@@ -1289,6 +1297,8 @@ VRGuiScene::VRGuiScene() { // TODO: reduce callbacks with templated functions
     mgr->addCallback("sg_set_mat_emission", [&](OSG::VRGuiSignals::Options o) { setMaterial_emission(toValue<Color4f>(o["color"])); return true; }, true );
     mgr->addCallback("sg_set_mat_lit", [&](OSG::VRGuiSignals::Options o) { setMaterial_lit(toBool(o["state"])); return true; }, true );
     mgr->addCallback("sg_set_mat_meshcolors", [&](OSG::VRGuiSignals::Options o) { setMaterial_meshcolors(toBool(o["state"])); return true; }, true );
+    mgr->addCallback("sg_set_mat_pointsize", [&](OSG::VRGuiSignals::Options o) { setMaterial_pointsize(toInt(o["selection"])); return true; }, true );
+    mgr->addCallback("sg_set_mat_linewidth", [&](OSG::VRGuiSignals::Options o) { setMaterial_linewidth(toInt(o["selection"])); return true; }, true );
 }
 
 // new scene, update stuff here

@@ -6,6 +6,7 @@
 #include "imWidgets/VRImguiTreeview.h"
 #include "imWidgets/VRImguiVector.h"
 #include "imWidgets/VRImguiColorPicker.h"
+#include "imWidgets/VRImguiCombo.h"
 
 using namespace std;
 
@@ -71,6 +72,8 @@ class ImScenegraph {
         ImColorPicker matEmission;
         bool matLit;
         bool matMeshColors;
+        ImCombo matPointsize;
+        ImCombo matLinewidth;
 
         string texDims;
         string texSize;

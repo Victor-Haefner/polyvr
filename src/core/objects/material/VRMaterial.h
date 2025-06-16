@@ -145,6 +145,8 @@ class VRMaterial : public VRObject {
         float getShininess();
         Color3f getEmission();
         float getTransparency();
+        int getPointSize();
+        int getLineWidth();
         int getDepthTest();
 
         string constructShaderVP(VRMatDataPtr data = 0);

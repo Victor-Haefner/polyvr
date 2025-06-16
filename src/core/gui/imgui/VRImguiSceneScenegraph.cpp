@@ -27,7 +27,9 @@ ImScenegraph::ImScenegraph() :  tree("scenegraph"),
                                 matAmbient("colAmbient", "Ambient: "),
                                 matDiffuse("colDiffuse", "Diffuse: "),
                                 matSpecular("colSpecular", "Specular:"),
-                                matEmission("colEmission", "Emission:") {
+                                matEmission("colEmission", "Emission:"),
+                                matPointsize("pointSize", "Point size:"),
+                                matLinewidth("lineWidth", "Line width:") {
     auto mgr = OSG::VRGuiSignals::get();
     mgr->addCallback("set_sg_title", [&](OSG::VRGuiSignals::Options o){ title = o["title"]; return true; } );
     mgr->addCallback("on_sg_tree_clear", [&](OSG::VRGuiSignals::Options o){ treeClear(); return true; } );
@@ -47,6 +49,8 @@ ImScenegraph::ImScenegraph() :  tree("scenegraph"),
     camProjections = {"perspective", "orthographic"};
     lightTypes = {"point", "directional", "spot", "photometric"};
     shadowResolutions = {"1024", "2048", "4096", "8192"};
+    matPointsize.setList({"1", "2", "3", "4", "5", "6", "7", "8", "9", "10"});
+    matLinewidth.setList({"1", "2", "3", "4", "5", "6", "7", "8", "9", "10"});
 }
 
 void ImScenegraph::render() {
@@ -109,6 +113,8 @@ void ImScenegraph::render() {
                 if (matEmission.render()) matEmission.signal("sg_set_mat_emission");
                 if (ImGui::Checkbox("Lit", &matLit)) uiSignal("sg_set_mat_lit", {{"state",toString(matLit)}});
                 if (ImGui::Checkbox("Use mesh colors", &matMeshColors)) uiSignal("sg_set_mat_meshcolors", {{"state",toString(matMeshColors)}});
+                if (matPointsize.render(100)) matPointsize.signal("sg_set_mat_pointsize");
+                if (matLinewidth.render(100)) matLinewidth.signal("sg_set_mat_linewidth");
             }
 
             if (texDims != "") {
@@ -331,6 +337,8 @@ void ImScenegraph::setupMaterial(OSG::VRGuiSignals::Options o) {
         matEmission.set(o["emission"]);
         matLit = toBool(o["isLit"]);
         matMeshColors = !toBool(o["ignoreMeshCols"]);
+        matPointsize.set(o["pointsize"]);
+        matLinewidth.set(o["linewidth"]);
 
         if (o.count("texDims")) {
             texDims = o["texDims"];
