@@ -58,33 +58,52 @@ using namespace std;
 
 PolyVR* pvr = 0;
 
-void printFieldContainer(int maxID = -1) {
+void printFieldContainer() {
     int N = FieldContainerFactory::the()->getNumTotalContainers();
-    for (int i=0;i<N;++i) {
-        FieldContainer* fc = FieldContainerFactory::the()->getContainer(i);
-        if(fc == 0) continue;
-        int fcID = fc->getId();
-        if(fcID <= 358) continue; // stuff created in osgInit()
-        if(fcID > maxID && maxID > 0) break; // stop
+    cout << "... found " << N << " remaining field containers" << endl;
 
-        // skip prototypes
-        if(fc->getType().getPrototype() == 0 || fc->getType().getPrototype() == fc  ) continue;
+    int printedN = 0;
 
-        //cout << "\nFC id: " << fcID << flush;
+    auto printFC = [&](FieldContainer* fc, FieldContainer* pfc) {
+        if (!fc) return false;
+        if (printedN == 20) { cout << "more than 20 fieldcontainers found, skipping.." << endl; printedN++; }
+        if (printedN > 20) return true;
+        printedN++;
 
         AttachmentContainer* ac = dynamic_cast<AttachmentContainer*>(fc);
+        const Char8* name = getName(ac);
+        cout << "Detected living FC " << fc->getTypeName() << " (" << fc << ") ";
+        if (name) cout << "named '" << name << "'";
+        cout << " refcount " << fc->getRefCount() << ", ID " << fc->getId() << endl;
+
+        if (pfc) {
+            AttachmentContainer* ac = dynamic_cast<AttachmentContainer*>(pfc);
+            const Char8* name = getName(ac);
+            cout << " Parent container FC " << pfc->getTypeName() << " (" << pfc << ") ";
+            if (name) cout << "named '" << name << "'";
+            cout << " refcount " << pfc->getRefCount() << ", ID " << pfc->getId() << endl;
+        }
+
+        return false;
+    };
+
+    for (int i=0; i<N; i++) {
+        FieldContainer* fc = FieldContainerFactory::the()->getContainer(i);
+        if (!fc) continue;
+        int fcID = fc->getId();
+        if (fcID <= 358) continue; // stuff created in osgInit()
+        if (fc->getType().getPrototype() == 0 || fc->getType().getPrototype() == fc  ) continue; // skip prototypes
+
+        AttachmentContainer* ac = dynamic_cast<AttachmentContainer*>(fc);
+        FieldContainer* parentfc = 0;
         if (ac == 0) {
             Attachment* a = dynamic_cast<Attachment*>(fc);
             if (a != 0) {
-                FieldContainer* dad = 0;
-                if (a->getMFParents()->size() > 0) dad = a->getParents(0);
-                ac = dynamic_cast<AttachmentContainer*>(dad);
+                if (a->getMFParents()->size() > 0) parentfc = a->getParents(0);
             }
         }
 
-        const Char8* name = getName(ac);
-        if (name != 0) printf("Detected living FC %s (%s) %p refcount %d ID %d\n", fc->getTypeName(), name, fc, fc->getRefCount(), fcID);
-        else printf( "Detected living FC %s (no name) %p refcount %d ID %d\n", fc->getTypeName(), fc, fc->getRefCount(), fcID );
+        if (printFC(fc, parentfc)) break;
     }
 }
 
@@ -126,9 +145,7 @@ PolyVR::~PolyVR() {
 
     cout << " terminated all polyvr modules" << endl;
 #ifndef WASM
-#ifndef OSG_SILENT_SHUTDOWN
     printFieldContainer();
-#endif
 #endif
 
     cout << "call osgExit" << endl;

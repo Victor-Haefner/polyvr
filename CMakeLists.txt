@@ -1116,6 +1116,7 @@ target_sources(polyvr PRIVATE src/core/gui/imgui/imWidgets/VRImguiCombo.cpp)
 target_sources(polyvr PRIVATE src/core/gui/imgui/imWidgets/VRImguiInput.cpp)
 target_sources(polyvr PRIVATE src/core/gui/imgui/imWidgets/VRImguiTreeview.cpp)
 target_sources(polyvr PRIVATE src/core/gui/imgui/imWidgets/VRImguiVector.cpp)
+target_sources(polyvr PRIVATE src/core/gui/imgui/imWidgets/VRImguiColorPicker.cpp)
 endif()
 
 if(TRUE) # ok
