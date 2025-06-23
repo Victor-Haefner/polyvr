@@ -55,6 +55,10 @@ using namespace OSG;
 vector< weak_ptr<CEF> > instances;
 bool cef_gl_init = false;
 
+#if !defined(_WIN32) && !defined(__APPLE__)
+class CefPermissionHandler {};
+#endif
+
 
 class CEF_app : public CefApp, public CefBrowserProcessHandler {
     public:
@@ -104,10 +108,12 @@ class CEF_handler : public CefRenderHandler, public CefLoadHandler, public CefCo
 #else
         bool GetViewRect(CefRefPtr<CefBrowser> browser, CefRect& rect) override;
 #endif
-        
+
+#if defined(_WIN32) || defined(__APPLE__)
         bool OnRequestMediaAccessPermission(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, const CefString& requesting_origin, uint32 requested_permissions, CefRefPtr<CefMediaAccessCallback> callback) override;
         bool OnShowPermissionPrompt(CefRefPtr<CefBrowser> browser, uint64 prompt_id, const CefString& requesting_origin, uint32 requested_permissions, CefRefPtr<CefPermissionPromptCallback> callback) override;
         void OnDismissPermissionPrompt(CefRefPtr<CefBrowser> browser, uint64 prompt_id, cef_permission_request_result_t result) override;
+#endif
 
         void OnBeforeContextMenu(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, CefRefPtr<CefContextMenuParams> params, CefRefPtr<CefMenuModel> model) override;
         bool OnContextMenuCommand(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, CefRefPtr<CefContextMenuParams> params, int command_id, EventFlags event_flags) override;
@@ -193,10 +199,11 @@ bool CEF_handler::GetViewRect(CefRefPtr<CefBrowser> browser, CefRect& rect) {
 #endif
 
 // handle permissions requests
+#if defined(_WIN32) || defined(__APPLE__)
 bool CEF_handler::OnRequestMediaAccessPermission(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, const CefString& requesting_origin, uint32 requested_permissions, CefRefPtr<CefMediaAccessCallback> callback) { callback->Cancel(); return true; };
 bool CEF_handler::OnShowPermissionPrompt(CefRefPtr<CefBrowser> browser, uint64 prompt_id, const CefString& requesting_origin, uint32 requested_permissions, CefRefPtr<CefPermissionPromptCallback> callback) { callback->Continue(CEF_PERMISSION_RESULT_DISMISS); return true; };
 void CEF_handler::OnDismissPermissionPrompt(CefRefPtr<CefBrowser> browser, uint64 prompt_id, cef_permission_request_result_t result) {};
-
+#endif
 
 //Disable context menu
 //Define below two functions to essentially do nothing, overwriting defaults
