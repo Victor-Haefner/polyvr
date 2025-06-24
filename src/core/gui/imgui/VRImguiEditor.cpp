@@ -685,9 +685,12 @@ IGFD::FileDialog* imGuiFileDialogInstance = 0;
 
 
 void ImFileDialog::close() {
-    imGuiFileDialogInstance->Close();
-    delete imGuiFileDialogInstance;
-    internalOpened = false;
+    if (imGuiFileDialogInstance) {
+        imGuiFileDialogInstance->Close();
+        delete imGuiFileDialogInstance;
+        imGuiFileDialogInstance = 0;
+        internalOpened = false;
+    }
 }
 
 void ImFileDialog::begin() {
