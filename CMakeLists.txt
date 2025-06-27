@@ -305,6 +305,7 @@ function(FIND_PNG)
 		set(LINKER_FLAGS "${LINKER_FLAGS} -lpng" PARENT_SCOPE)
 	endif()
 	if(WIN32)
+		set(LINKER_FLAGS ${LINKER_FLAGS} libpng16 PARENT_SCOPE)
 	endif()
 endfunction()
 
@@ -1115,6 +1116,7 @@ target_sources(polyvr PRIVATE src/core/gui/imgui/imWidgets/VRImguiCombo.cpp)
 target_sources(polyvr PRIVATE src/core/gui/imgui/imWidgets/VRImguiInput.cpp)
 target_sources(polyvr PRIVATE src/core/gui/imgui/imWidgets/VRImguiTreeview.cpp)
 target_sources(polyvr PRIVATE src/core/gui/imgui/imWidgets/VRImguiVector.cpp)
+target_sources(polyvr PRIVATE src/core/gui/imgui/imWidgets/VRImguiColorPicker.cpp)
 endif()
 
 if(TRUE) # ok
@@ -1459,6 +1461,7 @@ target_sources(polyvr PRIVATE src/core/utils/VRVisualLayer.cpp)
 target_sources(polyvr PRIVATE src/core/utils/VRMutex.cpp)
 target_sources(polyvr PRIVATE src/core/utils/VRScheduler.cpp)
 target_sources(polyvr PRIVATE src/core/utils/xml.cpp)
+target_sources(polyvr PRIVATE src/core/utils/png.cpp)
 endif()
 
 if(TRUE) # ok

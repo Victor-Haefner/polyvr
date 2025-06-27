@@ -11,8 +11,11 @@ class ImAppLauncher {
         string name;
         string panel;
         string timestamp;
+        string previewPath;
+        ImImage miniPreview;
         bool running = false;
         bool sensitive = true;
+        bool previewOK = false;
 
         ImAppLauncher() {}
         ImAppLauncher(string ID, string panel, string timestamp);
@@ -42,8 +45,9 @@ class ImAppManager : public ImWidget {
 
         void updatePannels();
         void newAppLauncher(string pannel, string ID, string timestamp);
-        void setupAppLauncher(string ID, string name);
+        void setupAppLauncher(string ID, string name, string previewPath);
         void setAppLauncherState(string ID, bool running, bool sensitive);
+        void updateAppLauncherPixmap(string ID, string path);
 
         void renderLauncher(string name);
         ImAppManager();

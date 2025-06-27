@@ -14,6 +14,8 @@
 #include "VRGlutEditor.h"
 #include "core/utils/VROptions.h"
 #include "core/utils/VRProfiler.h"
+#include "core/utils/system/VRSystem.h"
+#include "core/utils/png.h"
 
 #include "../devices/VRMouse.h"
 #include "../devices/VRKeyboard.h"
@@ -196,14 +198,15 @@ VRGlutEditor::VRGlutEditor() {
     cout << " Glut window initiated" << endl;
 
     auto mgr = OSG::VRGuiSignals::get();
-    mgr->addCallback("ui_open_popup", [&](VRGuiSignals::Options o) { openPopupWindow(o["name"], toInt(o["width"]), toInt(o["height"])); return true; } );
+    mgr->addCallback("ui_open_popup", [&](VRGuiSignals::Options o) { openPopupWindow(o["name"], o["title"], toInt(o["width"]), toInt(o["height"])); return true; } );
     mgr->addCallback("ui_close_popup", [&](VRGuiSignals::Options o) { closePopupWindow(); return true; } );
-    mgr->addCallback("ui_toggle_popup", [&](VRGuiSignals::Options o) { togglePopupWindow(o["name"], toInt(o["width"]), toInt(o["height"])); return true; }, true );
+    mgr->addCallback("ui_toggle_popup", [&](VRGuiSignals::Options o) { togglePopupWindow(o["name"], o["title"], toInt(o["width"]), toInt(o["height"])); return true; }, true );
     mgr->addCallback("set_editor_fullscreen", [&](VRGuiSignals::Options o) { setFullscreen(toBool(o["fullscreen"])); return true; }, true );
     mgr->addCallback("uiGrabFocus", [&](VRGuiSignals::Options o) { glViewFocussed = false; return true; } );
     mgr->addCallback("ui_toggle_vsync", [&](VRGuiSignals::Options o) { enableVSync(toBool(o["active"])); return true; } );
     mgr->addCallback("relayedImguiKeySignal", [&](VRGuiSignals::Options o) { handleRelayedKey(toInt(o["key"]), toInt(o["state"]), false); return true; } );
     mgr->addCallback("relayedImguiSpecialKeySignal", [&](VRGuiSignals::Options o) { handleRelayedKey(toInt(o["key"]), toInt(o["state"]), true); return true; } );
+    mgr->addCallback("onSaveSnapshot", [&](VRGuiSignals::Options o) { saveSnapshot(o["path"]); return true; } );
 
     bool fullscreen = VROptions::get()->getOption<bool>("fullscreen");
     if (fullscreen) setFullscreen(true);
@@ -231,9 +234,11 @@ void VRGlutEditor::setTitle(string title) {
     glutSetWindow(w);
 }
 
-void VRGlutEditor::setIcon(string iconpath) {
-    VRWindow::setIcon(iconpath);
-    setWindowIcon(iconpath);
+void VRGlutEditor::setIcon(string path) {
+    iconPath = path;
+    VRWindow::setIcon(iconPath);
+    setWindowIcon(iconPath, false);
+    setWindowIcon(iconPath, true);
 }
 
 int VRGlutEditor::getCurrentWinID() { return glutGetWindow(); }
@@ -309,9 +314,9 @@ bool doShutdown = false;
 void VRGlutEditor::on_close_window() { doShutdown = true;  signal("glutCloseWindow", {}); }
 void VRGlutEditor::on_popup_close() { popup = ""; winPopup = -1; }
 
-void VRGlutEditor::togglePopupWindow(string name, int width, int height) {
+void VRGlutEditor::togglePopupWindow(string name, string title, int width, int height) {
     if (popup == name) closePopupWindow();
-    else openPopupWindow(name, width, height);
+    else openPopupWindow(name, title, width, height);
 }
 
 void VRGlutEditor::closePopupWindow() {
@@ -321,7 +326,7 @@ void VRGlutEditor::closePopupWindow() {
     winPopup = -1;
 }
 
-void VRGlutEditor::openPopupWindow(string name, int width, int height) {
+void VRGlutEditor::openPopupWindow(string name, string title, int width, int height) {
     popup = name;
 
     int screenWidth = glutGet(GLUT_SCREEN_WIDTH);
@@ -329,7 +334,8 @@ void VRGlutEditor::openPopupWindow(string name, int width, int height) {
 
     glutInitWindowSize(width, height);
     glutInitWindowPosition((screenWidth-width)*0.5, (screenHeight-height)*0.5);
-    winPopup = glutCreateWindow(name.c_str());
+    winPopup = glutCreateWindow(title.c_str());
+    initGlutDialogExtensions(title);
     setSwapInterval(0);
     glutEditors[winPopup] = this;
 
@@ -402,8 +408,9 @@ void VRGlutEditor::handleRelayedKey(int key, int state, bool special) {
     //cout << "handleRelayedKey, spacial? " << special << ", key: " << key << ", state: " << state << ", has focus? " << glViewFocussed << endl;
     if (!glViewFocussed) return;
     auto k = getKeyboard();
-    if (special) if (k) k->keyboard_special(key, state, 0, 0, 1);
-    else if (k) k->keyboard(key, state, 0, 0, 1);
+    if (!k) return;
+    if (special) k->keyboard_special(key, state, 0, 0, 1);
+    else k->keyboard(key, state, 0, 0, 1);
 }
 
 void VRGlutEditor::render(bool fromThread) {
@@ -469,6 +476,30 @@ void VRGlutEditor::on_resize_window(int w, int h) { // resize top window
         resize(w, h);
         glutReshapeWindow(w, h);
     } else if (resizeSignal) resizeSignal("glutResize", 0,0,w,h);
+}
+
+void VRGlutEditor::saveSnapshot(string path) {
+    if (!exists(getFolderName(path))) return;
+    glutSetWindow(winGL);
+    int w = 400;
+    int h = 300;
+    float a = h/float(w);
+
+    int W = glutGet(GLUT_WINDOW_WIDTH);
+    int H = glutGet(GLUT_WINDOW_HEIGHT);
+    int S = min(W, H);
+    int Sa = S*a;
+    int u = max(0.0, W*0.5 - S*0.5);
+    int v = max(0.0, H*0.5 - Sa*0.5);
+
+    int Nc = 3;
+    VRImage img;
+    img.setup(S, Sa, Nc);
+    glReadBuffer(GL_FRONT); // alternative: GL_BACK
+    glReadPixels(u, v, S, Sa, GL_RGB, GL_UNSIGNED_BYTE, &img.pixels[0]);
+
+    img.resize(w,h);
+    writePNG(path, img);
 }
 
 void VRGlutEditor::on_gl_display() {

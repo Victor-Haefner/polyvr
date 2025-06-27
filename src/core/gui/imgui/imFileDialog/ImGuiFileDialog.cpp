@@ -3964,7 +3964,8 @@ namespace IGFD
 					// init list of files
 					if (fdFile.IsFileListEmpty() && !fdFile.puShowDrives)
 					{
-						IGFD::Utils::ReplaceString(fdFile.puDLGDefaultFileName, fdFile.puDLGpath, ""); // local path
+						if (fdFile.puDLGpath != ".") 
+							IGFD::Utils::ReplaceString(fdFile.puDLGDefaultFileName, fdFile.puDLGpath, ""); // local path
 						if (!fdFile.puDLGDefaultFileName.empty())
 						{
 							fdFile.SetDefaultFileName(fdFile.puDLGDefaultFileName);

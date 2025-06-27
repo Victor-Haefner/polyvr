@@ -499,7 +499,7 @@ PyObject* VRSceneGlobals::openFileDialog(VRSceneGlobals* self, PyObject *args) {
     uiSignal("set_file_dialog_filter", {{"filter",PyUnicode_AsUTF8(filter)}});
     uiSignal("set_file_dialog_setup", {{"title",PyUnicode_AsUTF8(title)}, {"dir",openPath}, {"file",""}});
     uiSignal("set_file_dialog_options", {{"options","geoOpts"}});
-    uiSignal("ui_toggle_popup", {{"name","file"}, {"width","600"}, {"height","500"}});
+    uiSignal("ui_toggle_popup", {{"name","file"},{"title","Choose File"}, {"width","600"}, {"height","500"}});
     Py_RETURN_TRUE;
 }
 

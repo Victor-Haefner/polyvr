@@ -8,6 +8,7 @@
 
 Display* xdisplay = 0;
 XID xwindow = 0;
+XID xwindowDiag = 0;
 static bool doGrabShiftTab = true;
 string backend;
 
@@ -25,7 +26,11 @@ void initGlutExtensions() {
     xwindow = glXGetCurrentDrawable();
 }
 
-void setWindowIcon(string s) {
+void initGlutDialogExtensions(string name) {
+    xwindowDiag = glXGetCurrentDrawable();
+}
+
+void setWindowIcon(string s, bool dialog) {
     // TODO
 }
 

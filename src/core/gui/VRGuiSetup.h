@@ -108,6 +108,7 @@ class VRGuiSetup {
         void on_toggle_view_user(bool b);
         void on_toggle_view_mirror(bool b);
         void on_change_view_user(string name);
+        void on_change_view_stereoMode(string mode);
         void on_pos_edit(Vec4d p);
         void on_eyesep_edit(float d);
 

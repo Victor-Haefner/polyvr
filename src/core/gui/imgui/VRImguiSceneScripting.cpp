@@ -469,7 +469,7 @@ ImScripting::ImScripting() {
 void ImScripting::render() {
     auto openSearch = [&]() {
         string s = editor.getSelection();
-        uiSignal("ui_open_popup", {{"name","search"}, {"width","400"}, {"height","300"}});
+        uiSignal("ui_open_popup", {{"name","search"},{"title","Find"}, {"width","400"}, {"height","300"}});
         uiSignal("ui_search_set", {{"string",s}});
     };
 
@@ -489,9 +489,9 @@ void ImScripting::render() {
     ImGui::Spacing();
     ImGui::Indent(5);
         if (ImGui::Button("New")) uiSignal("scripts_toolbar_new");
-        ImGui::SameLine(); if (ImGui::Button("Template")) uiSignal("ui_toggle_popup", {{"name","template"}, {"width","800"}, {"height","600"}});
+        ImGui::SameLine(); if (ImGui::Button("Template")) uiSignal("ui_toggle_popup", {{"name","template"},{"title","Script Templates"}, {"width","800"}, {"height","600"}});
         ImGui::SameLine(); if (ImGui::Button("Group")) uiSignal("scripts_toolbar_group");
-        ImGui::SameLine(); if (ImGui::Button("Import")) uiSignal("ui_toggle_popup", {{"name","import"}, {"width","400"}, {"height","300"}});
+        ImGui::SameLine(); if (ImGui::Button("Import")) uiSignal("ui_toggle_popup", {{"name","import"},{"title","Import Script"}, {"width","400"}, {"height","300"}});
         ImGui::SameLine(); if (ImGui::Button("Delete")) uiSignal("askUser", {{"msg1","This will remove the selected script!"}, {"msg2","Are you sure?"}, {"sig","scripts_toolbar_delete"}});
 
         if (pause) pushGlowBorderStyle(1);
@@ -505,7 +505,7 @@ void ImScripting::render() {
                            if (ImGui::Button("Save")) uiSignal("scripts_toolbar_save");
         ImGui::SameLine(); if (ImGui::Button("Execute")) uiSignal("scripts_toolbar_execute");
         ImGui::SameLine(); if (ImGui::Button("Search")) openSearch();
-        ImGui::SameLine(); if (ImGui::Button("Documentation")) uiSignal("ui_toggle_popup", {{"name","documentation"}, {"width","800"}, {"height","600"}});
+        ImGui::SameLine(); if (ImGui::Button("Documentation")) uiSignal("ui_toggle_popup", {{"name","documentation"},{"title","API Documentation"}, {"width","800"}, {"height","600"}});
         ImGui::SameLine(); if (ImGui::Checkbox("Performance", &perf)) { scriptlist.doPerf = perf; scriptlist.computeMinWidth(); uiSignal("scripts_toolbar_performance", {{"state",toString(perf)}}); }
 
         ImGui::SameLine(0,30); ImGui::TextColored( io.KeyAlt   ? ImVec4(0,1,0,1) : ImVec4(0.8,0.8,0.8,1), "A");

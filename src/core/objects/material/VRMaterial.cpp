@@ -1165,6 +1165,9 @@ float VRMaterial::getShininess() { return mats[activePass]->colChunk->getShinine
 float VRMaterial::getTransparency() { return mats[activePass]->colChunk->getDiffuse()[3]; }
 bool VRMaterial::isLit() { return mats[activePass]->colChunk->getLit(); }
 
+int VRMaterial::getPointSize() { if (auto pc = mats[activePass]->pointChunk) return pc->getSize(); return 1; }
+int VRMaterial::getLineWidth() { if (auto lc = mats[activePass]->lineChunk)  return lc->getWidth(); return 1; }
+
 VRTexturePtr VRMaterial::getTexture(int unit) {
     auto md = mats[activePass];
     if (md->texChunks.count(unit) == 0) return 0;

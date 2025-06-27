@@ -182,6 +182,9 @@ void ImImage::read(string p) {
     width = s[0];
     height = s[1];
 
+    int colorLayout = GL_RGBA;
+    if (tex->getChannels() == 3) colorLayout = GL_RGB;
+
     // Create a OpenGL texture identifier
     glGenTextures(1, &glID);
     glBindTexture(GL_TEXTURE_2D, glID);
@@ -191,8 +194,7 @@ void ImImage::read(string p) {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE); // This is required on WebGL for non power-of-two textures
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE); // Same
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, image_data);
-
+    glTexImage2D(GL_TEXTURE_2D, 0, colorLayout, width, height, 0, colorLayout, GL_UNSIGNED_BYTE, image_data);
 }
 
 void ImImage::render(int w, int h) {

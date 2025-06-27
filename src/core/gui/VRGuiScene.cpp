@@ -130,11 +130,14 @@ void VRGuiScene::setMaterial(VRMaterialPtr mat) {
 
     if (mat) {
         params["name"] = mat->getName();
+        params["ambient"] = toString(mat->getAmbient());
         params["diffuse"] = toString(mat->getDiffuse());
         params["specular"] = toString(mat->getSpecular());
-        params["ambient"] = toString(mat->getAmbient());
+        params["emission"] = toString(mat->getEmission());
         params["isLit"] = toString(mat->isLit());
         params["ignoreMeshCols"] = toString(mat->doesIgnoreMeshColors());
+        params["pointsize"] = toString(mat->getPointSize());
+        params["linewidth"] = toString(mat->getLineWidth());
 
         VRTexturePtr tex = mat->getTexture();
         if (tex) {
@@ -1025,50 +1028,64 @@ void VRGuiScene::setMaterial_gui() {
     cout << "\nNot yet implemented\n";
 }
 
-void VRGuiScene::setMaterial_lit() {
+void VRGuiScene::setMaterial_lit(bool b) {
     if(!trigger_cbs) return;
     auto geo = selected_geometry.lock();
     if(!geo) return;
-    /*bool b = getCheckButtonState("checkbutton3");
-    geo->getMaterial()->setLit(b);*/
+    geo->getMaterial()->setLit(b);
 }
 
-bool VRGuiScene::setMaterial_diffuse() {
+void VRGuiScene::setMaterial_meshcolors(bool b) {
+    if(!trigger_cbs) return;
+    auto geo = selected_geometry.lock();
+    if(!geo) return;
+    geo->getMaterial()->ignoreMeshColors(!b);
+}
+
+bool VRGuiScene::setMaterial_diffuse(Color4f c) {
     if(!trigger_cbs) return true;
     auto geo = selected_geometry.lock();
     if(!geo) return true;
-    /*Color4f c = toColor4f(geo->getMaterial()->getDiffuse());
-    c[3] = geo->getMaterial()->getTransparency();
-    c = chooseColor("mat_diffuse", c);
     geo->getMaterial()->setDiffuse(toColor3f(c));
-    geo->getMaterial()->setTransparency(c[3]);*/
     return true;
 }
 
-bool VRGuiScene::setMaterial_specular() {
+bool VRGuiScene::setMaterial_specular(Color4f c) {
     if(!trigger_cbs) return true;
     auto geo = selected_geometry.lock();
     if(!geo) return true;
-    /*Color4f c = chooseColor("mat_specular", toColor4f(geo->getMaterial()->getSpecular()));
-    geo->getMaterial()->setSpecular(toColor3f(c));*/
+    geo->getMaterial()->setSpecular(toColor3f(c));
     return true;
 }
 
-bool VRGuiScene::setMaterial_ambient() {
+bool VRGuiScene::setMaterial_ambient(Color4f c) {
     if(!trigger_cbs) return true;
     auto geo = selected_geometry.lock();
     if(!geo) return true;
-    /*Color4f c = chooseColor("mat_ambient", toColor4f(geo->getMaterial()->getAmbient()));
-    geo->getMaterial()->setAmbient(toColor3f(c));*/
+    geo->getMaterial()->setAmbient(toColor3f(c));
     return true;
 }
 
-void VRGuiScene::setMaterial_pointsize() { // TODO
+bool VRGuiScene::setMaterial_emission(Color4f c) {
+    if(!trigger_cbs) return true;
+    auto geo = selected_geometry.lock();
+    if(!geo) return true;
+    geo->getMaterial()->setEmission(toColor3f(c));
+    return true;
+}
+
+void VRGuiScene::setMaterial_pointsize(int ps) {
     if(!trigger_cbs) return;
     auto geo = selected_geometry.lock();
     if(!geo) return;
-    //int ps = 5;
-    //selected_geometry->setPointSize(ps);
+    geo->getMaterial()->setPointSize(ps);
+}
+
+void VRGuiScene::setMaterial_linewidth(int ps) {
+    if(!trigger_cbs) return;
+    auto geo = selected_geometry.lock();
+    if(!geo) return;
+    geo->getMaterial()->setLineWidth(ps);
 }
 
 void VRGuiScene::setMaterial_texture_toggle() {
@@ -1273,6 +1290,15 @@ VRGuiScene::VRGuiScene() { // TODO: reduce callbacks with templated functions
     mgr->addCallback("sg_set_light_diffuse", [&](OSG::VRGuiSignals::Options o) { setLight_diff_color(toValue<Color4f>(o["color"])); return true; }, true );
     mgr->addCallback("sg_set_light_ambient", [&](OSG::VRGuiSignals::Options o) { setLight_amb_color(toValue<Color4f>(o["color"])); return true; }, true );
     mgr->addCallback("sg_set_light_specular", [&](OSG::VRGuiSignals::Options o) { setLight_spec_color(toValue<Color4f>(o["color"])); return true; }, true );
+
+    mgr->addCallback("sg_set_mat_ambient", [&](OSG::VRGuiSignals::Options o) { setMaterial_ambient(toValue<Color4f>(o["color"])); return true; }, true );
+    mgr->addCallback("sg_set_mat_diffuse", [&](OSG::VRGuiSignals::Options o) { setMaterial_diffuse(toValue<Color4f>(o["color"])); return true; }, true );
+    mgr->addCallback("sg_set_mat_specular", [&](OSG::VRGuiSignals::Options o) { setMaterial_specular(toValue<Color4f>(o["color"])); return true; }, true );
+    mgr->addCallback("sg_set_mat_emission", [&](OSG::VRGuiSignals::Options o) { setMaterial_emission(toValue<Color4f>(o["color"])); return true; }, true );
+    mgr->addCallback("sg_set_mat_lit", [&](OSG::VRGuiSignals::Options o) { setMaterial_lit(toBool(o["state"])); return true; }, true );
+    mgr->addCallback("sg_set_mat_meshcolors", [&](OSG::VRGuiSignals::Options o) { setMaterial_meshcolors(toBool(o["state"])); return true; }, true );
+    mgr->addCallback("sg_set_mat_pointsize", [&](OSG::VRGuiSignals::Options o) { setMaterial_pointsize(toInt(o["selection"])); return true; }, true );
+    mgr->addCallback("sg_set_mat_linewidth", [&](OSG::VRGuiSignals::Options o) { setMaterial_linewidth(toInt(o["selection"])); return true; }, true );
 }
 
 // new scene, update stuff here

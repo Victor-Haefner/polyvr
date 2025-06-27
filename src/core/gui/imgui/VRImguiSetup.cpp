@@ -9,7 +9,9 @@ ImSetupManager::ImSetupManager() : ImWidget("SetupManager"),
         displaysOffset("displaysOffset", "Offset"),
         viewPosition("viewPos", "Area"),
         viewSize("viewSize", "Size"),
+        viewStereoMode("viewStereoMode", "Stereo Mode:"),
         eyeSeparation("eyeSep", "Eye separation [m]", "0.06"),
+        current_view_user("ViewTracker", "Tracker:"),
         viewProjUser("viewProjUser", "User"),
         viewProjCenter("viewProjCenter", "Center"),
         viewProjNormal("viewProjNormal", "Normal"),
@@ -33,6 +35,7 @@ ImSetupManager::ImSetupManager() : ImWidget("SetupManager"),
 
     windowMSAA.setList({"none", "x2", "x4", "x8", "x16"});
     slaveSystemScreens.setList({":0.0", ":0.1", ":1.0", ":1.1"});
+    viewStereoMode.setList({"Side by side", "Top and bottom", "Frame packed"});
 
     //vector<string> ctypes = {"Multicast", "SockPipeline", "StreamSock"};
     vector<string> ctypes = {"Multicast", "StreamSock"};
@@ -41,7 +44,6 @@ ImSetupManager::ImSetupManager() : ImWidget("SetupManager"),
 
     auto mgr = OSG::VRGuiSignals::get();
     mgr->addCallback("updateSetupsList", [&](OSG::VRGuiSignals::Options o){ updateSetupsList(o["setups"]); return true; } );
-    mgr->addCallback("updateViewTrackersList", [&](OSG::VRGuiSignals::Options o){ updateViewTrackersList(o["trackers"]); return true; } );
     mgr->addCallback("setCurrentSetup", [&](OSG::VRGuiSignals::Options o){ current_setup = toInt(o["setup"]); return true; } );
     mgr->addCallback("on_setup_tree_clear", [&](OSG::VRGuiSignals::Options o){ tree.clear(); return true; } );
     mgr->addCallback("on_setup_tree_append", [&](OSG::VRGuiSignals::Options o) { treeAppend(o["ID"], o["label"], o["type"], o["parent"]); return true; } );
@@ -56,6 +58,9 @@ ImSetupManager::ImSetupManager() : ImWidget("SetupManager"),
     mgr->addCallback("on_setup_select_slave", [&](OSG::VRGuiSignals::Options o) { selectSlave(o); return true; } );
     mgr->addCallback("on_setup_select_art_device", [&](OSG::VRGuiSignals::Options o) { selectARTDevice(o); return true; } );
     mgr->addCallback("on_setup_select_art", [&](OSG::VRGuiSignals::Options o) { selectART(o); return true; } );
+
+    mgr->addCallback("updateStereoModeList", [&](OSG::VRGuiSignals::Options o) { viewStereoMode.setList(o["list"]); return true; } );
+    mgr->addCallback("updateViewTrackersList", [&](OSG::VRGuiSignals::Options o) { current_view_user.setList(o["trackers"]); return true; } );
 
     mgr->addCallback("updateMouseList", [&](OSG::VRGuiSignals::Options o) { windowMouse.setList(o["list"]); return true; } );
     mgr->addCallback("updateMTouchList", [&](OSG::VRGuiSignals::Options o) { windowMultitouch.setList(o["list"]); return true; } );
@@ -99,17 +104,15 @@ void ImSetupManager::selectView(OSG::VRGuiSignals::Options o) {
     viewProjection = toBool(o["projection"]);
     viewMirror = toBool(o["mirror"]);
     eyeSeparation.value = o["eyeSeparation"];
-    string beacon = o["userBeacon"];
-    current_view_user = 0;
-    for (int i=0; i<view_users.size(); i++) {
-        if (view_users[i] == beacon) { current_view_user = i; break; }
-    }
+
+    current_view_user.set(o["userBeacon"]);
+    viewStereoMode.set(o["stereoMode"]);
 
     viewProjUser.set3( o["projUser"]);
     viewProjCenter.set3( o["projCenter"]);
     viewProjNormal.set3( o["projNormal"]);
     viewProjUp.set3( o["projUp"]);
-    viewProjSize.set3( o["projSize"]);
+    viewProjSize.set2( o["projSize"]);
     viewProjShear.set2( o["projShear"]);
     viewProjWarp.set2( o["projWarp"]);
     viewMirrorPos.set3( o["mirrorPos"]);
@@ -223,10 +226,6 @@ void ImSetupManager::treeAppend(string ID, string label, string type, string par
 
 void ImSetupManager::updateSetupsList(string s) {
     toValue(s, setups);
-}
-
-void ImSetupManager::updateViewTrackersList(string s) {
-    toValue(s, view_users);
 }
 
 void ImSetupManager::begin() {
@@ -345,6 +344,7 @@ void ImSetupManager::begin() {
 
             if (viewStereo) {
                 ImGui::Indent(10);
+                if (viewStereoMode.render(200)) viewStereoMode.signal("setup_switch_view_stereoMode");
                 if (eyeSeparation.render(50)) uiSignal("setup_set_view_eye_separation", {{"value", eyeSeparation.value}});
                 if (ImGui::Checkbox("Invert eyes", &viewEyesInverted)) uiSignal("setup_set_view_invert_eyes", {{"active", toString(viewEyesInverted)}});
                 if (ImGui::Checkbox("Active stereo", &viewActiveStereo)) uiSignal("setup_set_view_active_stereo", {{"active", toString(viewActiveStereo)}});
@@ -354,15 +354,7 @@ void ImSetupManager::begin() {
             if (ImGui::Checkbox("Projection", &viewProjection)) uiSignal("setup_set_view_projection", {{"active", toString(viewProjection)}});
             if (viewProjection) {
                 ImGui::Indent(10);
-                vector<const char*> tmpViewUsers(view_users.size(), 0);
-                for (int i=0; i<view_users.size(); i++) tmpViewUsers[i] = view_users[i].c_str();
-                ImGui::Text("Tracker:");
-                ImGui::SameLine();
-                ImGui::SetNextItemWidth(150);
-                if (ImGui::Combo("##ViewTracker", &current_view_user, &tmpViewUsers[0], tmpViewUsers.size())) {
-                    uiSignal("setup_switch_view_user", {{"tracker",view_users[current_view_user]}});
-                }
-
+                if (current_view_user.render(100)) current_view_user.signal("setup_switch_view_user");
                 if (viewProjCenter.render(w3)) viewProjCenter.signal("setup_set_view_proj_center");
                 if (viewProjUser.render(w3)) viewProjUser.signal("setup_set_view_proj_user");
                 if (viewProjNormal.render(w3)) viewProjNormal.signal("setup_set_view_proj_normal");
