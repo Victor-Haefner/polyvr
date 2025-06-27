@@ -564,6 +564,7 @@ BoundingboxPtr VRObject::getBoundingbox() {
         if (!geo) continue;
         Matrix4d M = geo->getMatrixTo(self);
         if (!geo->getMesh() || !geo->getMesh()->geo) continue;
+        if (!geo->isVisible("", true)) continue;
         auto pos = geo->getMesh()->geo->getPositions();
         if (!pos) continue;
         for (unsigned int i=0; i<pos->size(); i++) {
@@ -582,6 +583,7 @@ BoundingboxPtr VRObject::getWorldBoundingbox() {
         if (!geo) continue;
         Matrix4d M = geo->getWorldMatrix();
         if (!geo->getMesh() || !geo->getMesh()->geo) continue;
+        if (!geo->isVisible("", true)) continue;
         auto pos = geo->getMesh()->geo->getPositions();
         if (!pos) continue;
         for (unsigned int i=0; i<pos->size(); i++) {
