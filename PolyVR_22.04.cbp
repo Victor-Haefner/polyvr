@@ -299,6 +299,7 @@
 			<Add directory="/usr/include/openvr" />
 			<Add directory="/usr/include/imgui" />
 			<Add directory="/usr/include/vtk-9.1" />
+-			<Add directory="/usr/include/cairo" />
 		</Compiler>
 		<Linker>
 			<Add option="-lTKV3d" />
