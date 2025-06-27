@@ -274,6 +274,7 @@
 			<Add option="-DWITHOUT_NUMPY" />
 			<Add option="-DWITHOUT_COCOA" />
 			<Add option="-DUSE_IFC4" />
+			<Add option="-DBOOST_SP_USE_SPINLOCK" />
 			<Add directory="/usr/include/pango-1.0" />
 			<Add directory="/usr/include/glib-2.0" />
 			<Add directory="/usr/include/freetype2" />
@@ -298,7 +299,6 @@
 			<Add directory="/usr/include/openvr" />
 			<Add directory="/usr/include/imgui" />
 			<Add directory="/usr/include/vtk-9.1" />
-			<Add directory="/usr/include/cairo" />
 		</Compiler>
 		<Linker>
 			<Add option="-lTKV3d" />
@@ -2025,6 +2025,13 @@
 		</Unit>
 		<Unit filename="src/core/gui/imgui/imFileDialog/ImGuiFileDialog.cpp">
 			<Option target="Release" />
+			<Option target="PVR-Gui-d" />
+		</Unit>
+		<Unit filename="src/core/gui/imgui/imWidgets/VRImguiColorPicker.cpp">
+			<Option target="PVR-Gui-d" />
+			<Option target="Release" />
+		</Unit>
+		<Unit filename="src/core/gui/imgui/imWidgets/VRImguiColorPicker.h">
 			<Option target="PVR-Gui-d" />
 		</Unit>
 		<Unit filename="src/core/gui/imgui/imWidgets/VRImguiCombo.cpp">
@@ -5105,6 +5112,14 @@
 			<Option target="Release" />
 			<Option target="PVR-Utils-d" />
 		</Unit>
+		<Unit filename="src/core/utils/VRPDF.cpp">
+			<Option target="Release" />
+			<Option target="PVR-Utils-d" />
+		</Unit>
+		<Unit filename="src/core/utils/VRPDF.h">
+			<Option target="Release" />
+			<Option target="PVR-Utils-d" />
+		</Unit>
 		<Unit filename="src/core/utils/VRProfiler.cpp">
 			<Option target="Release" />
 			<Option target="PVR-Utils-d" />
@@ -5211,6 +5226,13 @@
 		</Unit>
 		<Unit filename="src/core/utils/isNan.h">
 			<Option target="Release" />
+			<Option target="PVR-Utils-d" />
+		</Unit>
+		<Unit filename="src/core/utils/png.cpp">
+			<Option target="PVR-Utils-d" />
+			<Option target="Release" />
+		</Unit>
+		<Unit filename="src/core/utils/png.h">
 			<Option target="PVR-Utils-d" />
 		</Unit>
 		<Unit filename="src/core/utils/pdf/RPCUtils.h">
