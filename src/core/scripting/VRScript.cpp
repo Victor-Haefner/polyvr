@@ -196,6 +196,7 @@ VRScript::VRScript(string _name) {
     cbfkt_soc = VRMessageCb::create(_name + "_ScriptCallback_soc", bind(&VRScript::execute_soc, this, _1));
 
     setOverrideCallbacks(true);
+    store("pyVersion", &pyVersion);
     store("type", &type);
     store("server", &server);
     store("group", &group);
@@ -466,6 +467,8 @@ void VRScript::pyErrPrint(string channel) {
 PyObject* VRScript::getFunction() { return fkt; }
 
 void VRScript::preprocess() {
+    if (pyVersion[0] != '2') return;
+
     stringstream input(core);
     stringstream output;
 
@@ -485,6 +488,8 @@ void VRScript::preprocess() {
     }
 
     core = output.str();
+    pyVersion = Py_GetVersion();
+    pyVersion = splitString(pyVersion)[0];
 }
 
 void VRScript::compile( PyObject* pGlobal, PyObject* pModVR ) {
@@ -647,6 +652,7 @@ void VRScript::save(XMLElementPtr e, int p) {
 void VRScript::load(XMLElementPtr e, VRStorageContextPtr context) {
     clean();
     VRName::load(e, context);
+    if (e->hasAttribute("pyVersion")) pyVersion = e->getAttribute("pyVersion");
     if (e->hasAttribute("core")) core = e->getAttribute("core");
     if (e->hasAttribute("type")) type = e->getAttribute("type");
     if (e->hasAttribute("server")) server = e->getAttribute("server");

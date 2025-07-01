@@ -91,6 +91,7 @@ class VRScript : public std::enable_shared_from_this<VRScript>, public VRName {
         string type = "Python";
         string server = "server1";
         string group = "no group";
+        string pyVersion = "2.7.18"; // latest pre python 3
         PyObject* fkt = 0;
         PyObject* pargs = 0;
         argPtr devArg = 0;
