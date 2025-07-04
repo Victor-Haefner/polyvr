@@ -556,7 +556,7 @@ bool VRObject::hasGraphChanged() {
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/geometry/OSGGeometry.h"
 
-BoundingboxPtr VRObject::getBoundingbox() {
+BoundingboxPtr VRObject::getBoundingbox(bool onlyVisible) {
     auto b = Boundingbox::create();
     auto self = ptr();
     for (auto obj : getChildren(true, "", true)) {
@@ -564,7 +564,7 @@ BoundingboxPtr VRObject::getBoundingbox() {
         if (!geo) continue;
         Matrix4d M = geo->getMatrixTo(self);
         if (!geo->getMesh() || !geo->getMesh()->geo) continue;
-        if (!geo->isVisible("", true)) continue;
+        if (onlyVisible && !geo->isVisible("", true)) continue;
         auto pos = geo->getMesh()->geo->getPositions();
         if (!pos) continue;
         for (unsigned int i=0; i<pos->size(); i++) {
@@ -576,14 +576,14 @@ BoundingboxPtr VRObject::getBoundingbox() {
     return b;
 }
 
-BoundingboxPtr VRObject::getWorldBoundingbox() {
+BoundingboxPtr VRObject::getWorldBoundingbox(bool onlyVisible) {
     auto b = Boundingbox::create();
     for (auto obj : getChildren(true, "", true)) {
         auto geo = dynamic_pointer_cast<VRGeometry>(obj);
         if (!geo) continue;
         Matrix4d M = geo->getWorldMatrix();
         if (!geo->getMesh() || !geo->getMesh()->geo) continue;
-        if (!geo->isVisible("", true)) continue;
+        if (onlyVisible && !geo->isVisible("", true)) continue;
         auto pos = geo->getMesh()->geo->getPositions();
         if (!pos) continue;
         for (unsigned int i=0; i<pos->size(); i++) {
