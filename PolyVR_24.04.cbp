@@ -212,9 +212,8 @@
 			<Add option="-Wall" />
 			<Add option="-fPIC" />
 			<Add option="-std=c++14" />
-			<Add option="`pkg-config gtk+-3.0 --cflags`" />
 			<Add option="`pkg-config gmodule-2.0 --cflags`" />
-			<Add option="`pkg-config python2 --cflags`" />
+			<Add option="`pkg-config python3 --cflags`" />
 			<Add option="-fopenmp" />
 			<Add option="-use_readonly_const" />
 			<Add option="-Wno-deprecated" />
@@ -294,7 +293,6 @@
 			<Add directory="/usr/include/DWG" />
 			<Add directory="/usr/include/libxml2" />
 			<Add directory="/usr/include/eigen3" />
-			<Add directory="/usr/include/python2.7" />
 			<Add directory="/usr/include/jsoncpp" />
 			<Add directory="/usr/include/openvr" />
 			<Add directory="/usr/include/imgui" />
@@ -329,10 +327,10 @@
 			<Add option="-lTKSTEPBase" />
 			<Add option="-lIfcParse" />
 			<Add option="`pkg-config icu-i18n --libs`" />
+			<Add option="`pkg-config python3-embed --libs`" />
 			<Add option="-lcef" />
 			<Add option="-lcef_dll_wrapper" />
 			<Add option="`pkg-config bullet --libs`" />
-			<Add option="-lpython2.7" />
 			<Add option="`pkg-config vte --libs`" />
 			<Add option="-ljsoncpp" />
 			<Add option="-lvrpn" />
@@ -443,7 +441,6 @@
 			<Add directory="/usr/lib/OPCUA" />
 			<Add directory="/usr/lib/OCE" />
 			<Add directory="/usr/lib/DWG" />
-			<Add directory="/usr/lib/python2.7" />
 		</Linker>
 		<ExtraCommands>
 			<Add before="src/version/genVersion.sh" />
