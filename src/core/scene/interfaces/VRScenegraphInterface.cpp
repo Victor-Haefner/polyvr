@@ -1182,7 +1182,7 @@ void VRScenegraphInterface::handle(string msg) {
 
 		if (geo) {
             VRGeoData tester(geo);
-            if (tester.valid() && tester.validIndices()) geo->setMeshVisibility(1);
+            if (tester.valid(false) && tester.validIndices(false)) geo->setMeshVisibility(1);
 		}
 	}
 
