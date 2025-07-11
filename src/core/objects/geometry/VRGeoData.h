@@ -53,8 +53,8 @@ class VRGeoData {
 
         void clear();
         void reset();
-        bool valid() const;
-        bool validIndices() const;
+        bool valid(bool verbose = true) const;
+        bool validIndices(bool verbose = true) const;
 
         int getType(int i);
         int getLength(int i);

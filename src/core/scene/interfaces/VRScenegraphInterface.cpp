@@ -6,6 +6,7 @@
 #include "core/utils/VRFunction.h"
 #include "core/utils/toString.h"
 #include "core/objects/geometry/VRGeometry.h"
+#include "core/objects/geometry/OSGGeometry.h"
 #include "core/objects/geometry/VRGeoData.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/tools/selection/VRSelector.h"
@@ -89,17 +90,9 @@ void VRScenegraphInterface::loadStream(string path) {
 	f.close();
 }
 
-template<class T>
-vector<T> parseVec(string& data) {
-    vector<T> res;
-    stringstream ss(data);
-    T f;
-    while (ss >> f) res.push_back(f);
-    return res;
-}
-
 template<class T, typename V>
 void parseOSGVec(string& data, V& v) {
+    replace( data.begin(), data.end(), ',', '.');
     stringstream ss(data);
     T f;
     while (ss >> f) v->addValue(f);
@@ -108,6 +101,7 @@ void parseOSGVec(string& data, V& v) {
 // T2 allows to pass type double because stringstreams may fail to convert scientific notations to float
 template<class T, class U, class T2, typename V>
 void parseOSGVec2(string& data, V& v) {
+    replace( data.begin(), data.end(), ',', '.');
     int N = sizeof(U)/sizeof(T);
     stringstream ss(data);
     T2 f;
@@ -1033,8 +1027,11 @@ void VRScenegraphInterface::handle(string msg) {
 	'clear'
 	'new|type|objName|objID|parentID'
 	'set|transform|objID|r r r r r r r r r x y z'
+	'set|types|objName|x y z x y z x y z x y z ...'
+	'set|lengths|objName|x y z x y z x y z x y z ...'
 	'set|positions|objName|x y z x y z x y z x y z ...'
 	'set|normals|objName|x y z x y z x y z x y z ...'
+	'set|colors|objName|x y z x y z x y z x y z ...'
 	'set|indices|objName|x y z x y z x y z x y z ...'
 
 	"*/
@@ -1055,6 +1052,15 @@ void VRScenegraphInterface::handle(string msg) {
 	if (m.size() > 1)   cout << "receive data, cmd: " << m[0] << " " << m[1] << endl;
 	else                cout << "receive data, cmd: " << m[0] << endl;
 
+	auto setDefaultTypes = [](VRGeometryPtr geo, int Ninds) {
+        GeoUInt8PropertyMTRecPtr types = GeoUInt8Property::create();
+        GeoUInt32PropertyMTRecPtr lengths = GeoUInt32Property::create();
+        types->addValue(GL_TRIANGLES);
+        lengths->addValue(Ninds);
+        geo->setTypes(types);
+        geo->setLengths(lengths);
+	};
+
 	if (m[0] == "set" && m.size() > 2) {
 		string objID = m[2];
 		VRGeometryPtr geo;
@@ -1067,59 +1073,55 @@ void VRScenegraphInterface::handle(string msg) {
 		if (m[1] == "transform") {
 			if (trans && m.size() > 3) {
                 replace( m[3].begin(), m[3].end(), ',', '.');
-                vector<double> M = parseVec<double>(m[3]);
+                vector<double> M;
+                toValue(m[3], M);
                 Matrix4d M2 = toMatrix(M, 0);
                 trans->setWorldMatrix(M2);
 			}
 		}
 
-		if (m[1] == "positions") {
-			//cout << "set geo positions " << obj << " " << trans << " " << geo << endl;
-            if (geo && m.size() > 3) {
+		if (geo) geo->setMeshVisibility(0);
+
+        if (geo && m.size() > 3) {
+            if (m[1] == "positions") {
                 GeoPnt3fPropertyMTRecPtr pos = GeoPnt3fProperty::create();
-                replace( m[3].begin(), m[3].end(), ',', '.');
                 parseOSGVec2<float, Pnt3f, double>(m[3], pos);
                 geo->setPositions(pos);
-                //cout << "set geo positions " << geo->getName() << "  " << pos->size() << endl;
             }
-		}
 
-		if (m[1] == "normals") {
-            if (geo && m.size() > 3) {
+            if (m[1] == "normals") {
                 GeoVec3fPropertyMTRecPtr norms = GeoVec3fProperty::create();
-                replace( m[3].begin(), m[3].end(), ',', '.');
                 parseOSGVec2<float, Vec3f, double>(m[3], norms);
                 geo->setNormals(norms);
-                //cout << "set geo normals " << geo->getName() << "  " << norms->size() << "  " << m[3].size() << endl;
             }
-		}
 
-		if (m[1] == "colors") {
-            if (geo && m.size() > 3) {
+            if (m[1] == "colors") {
                 GeoColor4fPropertyMTRecPtr cols = GeoColor4fProperty::create();
-                replace( m[3].begin(), m[3].end(), ',', '.');
                 parseOSGVec2<float, Color4f, double>(m[3], cols);
                 geo->setColors(cols);
-                //cout << "set geo colors " << geo->getName() << "  " << cols->size() << endl;
             }
-		}
 
-		if (m[1] == "indices") {
-            if (geo && m.size() > 3) {
-                //cout << "set geo indices " << geo->getName() << endl;
-                GeoUInt8PropertyMTRecPtr types = GeoUInt8Property::create();
+            if (m[1] == "lengths") {
                 GeoUInt32PropertyMTRecPtr lengths = GeoUInt32Property::create();
+                parseOSGVec<int>(m[3], lengths);
+                geo->setLengths(lengths);
+            }
+
+            if (m[1] == "types") {
+                GeoUInt32PropertyMTRecPtr types = GeoUInt32Property::create();
+                parseOSGVec<int>(m[3], types);
+                geo->setTypes(types);
+            }
+
+            if (m[1] == "indices") {
+                auto types = (GeoUInt8Property*)geo->getMesh()->geo->getTypes();
+                auto lengths = (GeoUInt32Property*)geo->getMesh()->geo->getLengths();
+
                 GeoUInt32PropertyMTRecPtr indices = GeoUInt32Property::create();
                 parseOSGVec<int>(m[3], indices);
-                types->addValue(GL_TRIANGLES);
-                lengths->addValue(indices->size());
-                geo->setTypes(types);
-                geo->setLengths(lengths);
                 geo->setIndices(indices);
-                geo->setMeshVisibility(0);
 
-				VRGeoData tester(geo);
-				if (tester.valid() && tester.validIndices()) geo->setMeshVisibility(1);
+                if (!types && !lengths) setDefaultTypes(geo, indices->size());
             }
 		}
 
@@ -1146,7 +1148,8 @@ void VRScenegraphInterface::handle(string msg) {
             if (materials.count(objID) && m.size() > 3) {
                 // format: [red, green, blue, ambient, diffuse, specular, shininess, transparency, emission]
                 replace( m[3].begin(), m[3].end(), ',', '.');
-                auto matData = parseVec<float>(m[3]);
+                vector<float> matData;
+                toValue(m[3], matData);
                 Color3f rgb = Color3f(1,0,1);
                 Color3f ads = Color3f(1,1,1);
                 if (matData.size() > 2) rgb = Color3f(matData[0], matData[1], matData[2]); // r,g,b = mat[:3]
@@ -1175,6 +1178,11 @@ void VRScenegraphInterface::handle(string msg) {
 
 		if (m[1] == "kinematic") {
 			buildKinematics(m);
+		}
+
+		if (geo) {
+            VRGeoData tester(geo);
+            if (tester.valid(false) && tester.validIndices(false)) geo->setMeshVisibility(1);
 		}
 	}
 

@@ -138,12 +138,7 @@ VRScriptManager::~VRScriptManager() {
 
     PyErr_Clear();
     cout << " VRScriptManager Py_Finalize\n";
-#ifndef __APPLE__ // Py_Finalize, crash on apple, just upgrade to python 3 ;)
     Py_Finalize();
-#else
-    N = Py_REFCNT(pModVR);
-    if (N == 1) Py_DECREF(pModVR);
-#endif
     VRPyBase::err = 0;
 }
 
@@ -246,10 +241,8 @@ void VRScriptManager::updateScript(string name, string core, bool compile) {
 
 static string pyOutConsole = "Console";
 static string pyErrConsole = "Errors";
-static PyObject* modOut = 0;
-static PyObject* modErr = 0;
 
-// intersept python stdout
+// intercept python stdout
 static PyObject* writeOut(PyObject *self, PyObject *args) {
     const char* what = 0;
     if (!PyArg_ParseTuple(args, "s", &what)) return NULL;
@@ -261,6 +254,7 @@ static PyObject* writeOut(PyObject *self, PyObject *args) {
     return Py_BuildValue("");
 }
 
+// intercept python stderr
 static PyObject* writeErr(PyObject *self, PyObject *args) {
     const char* what = 0;
     if (!PyArg_ParseTuple(args, "s", &what)) return NULL;
@@ -272,32 +266,60 @@ static PyObject* writeErr(PyObject *self, PyObject *args) {
     return Py_BuildValue("");
 }
 
+static PyObject* flushDummy(PyObject *self, PyObject *args) {
+    Py_RETURN_NONE;
+}
+
 static PyMethodDef methOut[] = {
     {"write", writeOut, METH_VARARGS, "Write something."},
+    {"flush", flushDummy, METH_NOARGS, "Dummy flush."},
     {NULL, NULL, 0, NULL}
 };
 
 static PyMethodDef methErr[] = {
     {"write", writeErr, METH_VARARGS, "Write something."},
+    {"flush", flushDummy, METH_NOARGS, "Dummy flush."},
     {NULL, NULL, 0, NULL}
 };
 
-static struct PyModuleDef modOutDef = { PyModuleDef_HEAD_INIT, "pystdout", "Redirect output", -1, methOut };
-static struct PyModuleDef modErrDef = { PyModuleDef_HEAD_INIT, "pystderr", "Redirect output", -1, methErr };
+typedef struct {
+    PyObject_HEAD
+} PyConsoleRedirect;
+
+static PyTypeObject PyOutConsoleType = {
+    PyVarObject_HEAD_INIT(NULL, 0)
+    "OutConsoleRedirect",             /* tp_name */
+    sizeof(PyConsoleRedirect),    /* tp_basicsize */
+    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+    Py_TPFLAGS_DEFAULT,            /* tp_flags */
+    "Console redirection object", /* tp_doc */
+    0,0,0,0,0,0,
+    methOut,              /* tp_methods */
+};
+
+static PyTypeObject PyErrConsoleType = {
+    PyVarObject_HEAD_INIT(NULL, 0)
+    "ErrConsoleRedirect",             /* tp_name */
+    sizeof(PyConsoleRedirect),    /* tp_basicsize */
+    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+    Py_TPFLAGS_DEFAULT,            /* tp_flags */
+    "Console redirection object", /* tp_doc */
+    0,0,0,0,0,0,
+    methErr,              /* tp_methods */
+};
 
 void VRScriptManager::redirectPyOutput(string pyOutput, string console) {
     if (pyOutput == "stdout") {
-        if (!modOut) {
-            modOut = PyModule_Create(&modOutDef);
-            if (modOut) PySys_SetObject((char *)pyOutput.c_str(), modOut);
-        }
+        if (PyType_Ready(&PyOutConsoleType) < 0) return;
+        PyObject* redirector = (PyObject*)PyObject_New(PyConsoleRedirect, &PyOutConsoleType);
+        PySys_SetObject(pyOutput.c_str(), redirector);
         pyOutConsole = console;
     }
+
     if (pyOutput == "stderr") {
-        if (!modErr) {
-            modErr = PyModule_Create(&modErrDef);
-            if (modErr) PySys_SetObject((char *)pyOutput.c_str(), modErr);
-        }
+        if (PyType_Ready(&PyErrConsoleType) < 0) return;
+        PyObject* redirector = (PyObject*)PyObject_New(PyConsoleRedirect, &PyErrConsoleType);
+        PySys_SetObject(pyOutput.c_str(), redirector);
         pyErrConsole = console;
     }
 }
@@ -322,8 +344,6 @@ PyMODINIT_FUNC PyInit_VR(void) {
 
 void VRScriptManager::initPyModules() {
     cout << " initPyModules" << endl;
-    modOut = 0;
-    modErr = 0;
 #if defined(WASM) || defined(WIN32)
     Py_NoSiteFlag = 1;
 #endif

@@ -198,10 +198,10 @@ void VRGeoData::reset() {
     data->lastPrim = -1;
 }
 
-bool VRGeoData::valid() const {
-    if (!data->types->size()) { cout << "VRGeoData invalid: no types!\n"; return false; }
-    if (!data->lengths->size()) { cout << "VRGeoData invalid: no lengths!\n"; return false; }
-    if (!data->pos->size()) { cout << "VRGeoData invalid: no pos!\n"; return false; }
+bool VRGeoData::valid(bool verbose) const {
+    if (!data->types->size()) { if (verbose) cout << "VRGeoData invalid: no types!\n"; return false; }
+    if (!data->lengths->size()) { if (verbose) cout << "VRGeoData invalid: no lengths!\n"; return false; }
+    if (!data->pos->size()) { if (verbose) cout << "VRGeoData invalid: no pos!\n"; return false; }
 
     int Ni = data->indices->size();
     int Nni = data->indicesNormals->size();
@@ -213,19 +213,19 @@ bool VRGeoData::valid() const {
     int Nc = max( max( data->cols3->size(), data->cols3ub->size() ), max(data->cols4->size(), data->cols4ub->size() ) );
     int Nt = max( data->texs[0]->size(), data->texs3[0]->size() );
 
-    if (Ni > 0 && Nni > 0 && Nni != Ni) { cout << "VRGeoData invalid: coord and normal indices lengths mismatch!\n"; return false; }
-    if (Ni > 0 && Nci > 0 && Nci != Ni) { cout << "VRGeoData invalid: coord and color indices lengths mismatch!\n"; return false; }
-    if (Ni > 0 && Nti > 0 && Nti != Ni) { cout << "VRGeoData invalid: coord and texcoords indices lengths mismatch!\n"; return false; }
-    if (Ni == 0 && Nni > 0) { cout << "VRGeoData invalid: normal indices defined but no coord indices!\n"; return false; }
-    if (Ni == 0 && Nci > 0) { cout << "VRGeoData invalid: color indices defined but no coord indices!\n"; return false; }
-    if (Ni == 0 && Nti > 0) { cout << "VRGeoData invalid: texcoords indices defined but no coord indices!\n"; return false; }
-    if (Nni == 0 && Nn > 0 && Nn != Np) { cout << "VRGeoData invalid: common index but normals and positions length mismatch!\n"; return false; }
-    if (Nci == 0 && Nc > 0 && Nc != Np) { cout << "VRGeoData invalid: common index but colors and positions length mismatch!\n"; return false; }
-    if (Nti == 0 && Nt > 0 && Nt != Np) { cout << "VRGeoData invalid: common index but texcoords and positions length mismatch!\n"; return false; }
+    if (Ni > 0 && Nni > 0 && Nni != Ni) { if (verbose) cout << "VRGeoData invalid: coord and normal indices lengths mismatch!\n"; return false; }
+    if (Ni > 0 && Nci > 0 && Nci != Ni) { if (verbose) cout << "VRGeoData invalid: coord and color indices lengths mismatch!\n"; return false; }
+    if (Ni > 0 && Nti > 0 && Nti != Ni) { if (verbose) cout << "VRGeoData invalid: coord and texcoords indices lengths mismatch!\n"; return false; }
+    if (Ni == 0 && Nni > 0) { if (verbose) cout << "VRGeoData invalid: normal indices defined but no coord indices!\n"; return false; }
+    if (Ni == 0 && Nci > 0) { if (verbose) cout << "VRGeoData invalid: color indices defined but no coord indices!\n"; return false; }
+    if (Ni == 0 && Nti > 0) { if (verbose) cout << "VRGeoData invalid: texcoords indices defined but no coord indices!\n"; return false; }
+    if (Nni == 0 && Nn > 0 && Nn != Np) { if (verbose) cout << "VRGeoData invalid: common index but normals and positions length mismatch!\n"; return false; }
+    if (Nci == 0 && Nc > 0 && Nc != Np) { if (verbose) cout << "VRGeoData invalid: common index but colors and positions length mismatch!\n"; return false; }
+    if (Nti == 0 && Nt > 0 && Nt != Np) { if (verbose) cout << "VRGeoData invalid: common index but texcoords and positions length mismatch!\n"; return false; }
     return true;
 }
 
-bool VRGeoData::validIndices() const {
+bool VRGeoData::validIndices(bool verbose) const {
     auto checkMaxIndex = [](GeoUInt32PropertyMTRecPtr indices, unsigned int VecN, unsigned int& Imax) {
         if (VecN == 0) return true;
         Imax = 0;
@@ -238,17 +238,17 @@ bool VRGeoData::validIndices() const {
     };
 
     unsigned int Imax = 0;
-    if (!checkMaxIndex(data->indices, data->pos->size(), Imax)) { cout << "VRGeoData invalid: coord indices have too big values! max index is " << data->pos->size() << "/" << Imax << endl; return false; }
-    if (!checkMaxIndex(data->indicesNormals, data->norms->size(), Imax)) { cout << "VRGeoData invalid: normal indices have too big values!\n"; return false; }
-    if (!checkMaxIndex(data->indicesTexCoords, data->texs[0]->size(), Imax)) { cout << "VRGeoData invalid: tex coords indices have too big values!\n"; return false; }
+    if (!checkMaxIndex(data->indices, data->pos->size(), Imax)) { if (verbose) cout << "VRGeoData invalid: coord indices have too big values! max index is " << data->pos->size() << "/" << Imax << endl; return false; }
+    if (!checkMaxIndex(data->indicesNormals, data->norms->size(), Imax)) { if (verbose) cout << "VRGeoData invalid: normal indices have too big values!\n"; return false; }
+    if (!checkMaxIndex(data->indicesTexCoords, data->texs[0]->size(), Imax)) { if (verbose) cout << "VRGeoData invalid: tex coords indices have too big values!\n"; return false; }
     if (data->cols3->size())
-        if (!checkMaxIndex(data->indicesColors, data->cols3->size(), Imax)) { cout << "VRGeoData invalid: color3 indices have too big values!\n"; return false; }
+        if (!checkMaxIndex(data->indicesColors, data->cols3->size(), Imax)) { if (verbose) cout << "VRGeoData invalid: color3 indices have too big values!\n"; return false; }
     if (data->cols4->size())
-        if (!checkMaxIndex(data->indicesColors, data->cols4->size(), Imax)) { cout << "VRGeoData invalid: color4 indices have too big values!\n"; return false; }
+        if (!checkMaxIndex(data->indicesColors, data->cols4->size(), Imax)) { if (verbose) cout << "VRGeoData invalid: color4 indices have too big values!\n"; return false; }
     if (data->cols3ub->size())
-        if (!checkMaxIndex(data->indicesColors, data->cols3ub->size(), Imax)) { cout << "VRGeoData invalid: color3ub indices have too big values!\n"; return false; }
+        if (!checkMaxIndex(data->indicesColors, data->cols3ub->size(), Imax)) { if (verbose) cout << "VRGeoData invalid: color3ub indices have too big values!\n"; return false; }
     if (data->cols4ub->size())
-        if (!checkMaxIndex(data->indicesColors, data->cols4ub->size(), Imax)) { cout << "VRGeoData invalid: color4ub indices have too big values!\n"; return false; }
+        if (!checkMaxIndex(data->indicesColors, data->cols4ub->size(), Imax)) { if (verbose) cout << "VRGeoData invalid: color4ub indices have too big values!\n"; return false; }
     return true;
 }
 

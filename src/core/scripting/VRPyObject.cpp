@@ -135,8 +135,8 @@ PyMethodDef VRPyObject::methods[] = {
     {"clearChildren", PyWrapOpt(Object, clearChildren, "Remove all children", "1", void, bool) },
     {"getChildIndex", PyWrap(Object, getChildIndex, "Return the child index of this object", int) },
     {"getOSGTreeString", PyWrap(Object, getOSGTreeString, "Get string description of OSG subtree", string) },
-    {"getBoundingbox", PyWrap(Object, getBoundingbox, "get Boundingbox in object coord system", BoundingboxPtr) },
-    {"getWorldBoundingbox", PyWrap(Object, getWorldBoundingbox, "get world Boundingbox", BoundingboxPtr) },
+    {"getBoundingbox", PyWrapOpt(Object, getBoundingbox, "get Boundingbox in object coord system\n getBoundingbox(onlyVisible)", "1", BoundingboxPtr, bool) },
+    {"getWorldBoundingbox", PyWrapOpt(Object, getWorldBoundingbox, "get world Boundingbox\n getWorldBoundingbox(onlyVisible)", "1", BoundingboxPtr, bool) },
     {"setVolume", PyWrap(Object, setVolume, "Set the scenegraph volume to boundingbox", void, Boundingbox) },
     {"getPoseTo", PyWrap(Object, getPoseTo, "Get the transformation from this object to another, returns a pose", PosePtr, VRObjectPtr ) },
     {"exportToFile", PyWrap(Object, exportToFile, "Export object (and subtree) to file, supported extensions: [wrl, wrz, obj, osb, osg, ply, gltf, dae]", void, string, mapStrStr) },
@@ -167,7 +167,7 @@ PyObject* VRPyObject::getPersistency(VRPyObject* self) {
 }
 
 PyObject* VRPyObject::compare(PyObject* p1, PyObject* p2, int op) {
-    if (op != Py_EQ || op != Py_NE) Py_RETURN_NOTIMPLEMENTED;
+    if (op != Py_EQ && op != Py_NE) Py_RETURN_NOTIMPLEMENTED;
     bool same = true;
     if (Py_TYPE(p1) != Py_TYPE(p2)) same = false;
     VRPyBaseT* o1 = (VRPyBaseT*)p1;
