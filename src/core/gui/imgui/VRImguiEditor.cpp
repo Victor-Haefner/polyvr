@@ -540,7 +540,9 @@ void VRImguiEditor::render() {
     // Start the Dear ImGui frame
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGLUT_NewFrame();
+#if IMGUI_VERSION_NUM > 18600
     ImGui::NewFrame();
+#endif
     ImGui::GetStyle().TouchExtraPadding = ImVec2(3, 3); // make DnD of section borders easier
 
 
@@ -572,7 +574,9 @@ void VRImguiEditor::renderPopup(OSG::VRGuiSignals::Options options) {
     // Start the Dear ImGui frame
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGLUT_NewFrame();
+#if IMGUI_VERSION_NUM > 18600
     ImGui::NewFrame();
+#endif
 
     string name = options["name"];
     if (name == "notify") notifyDialog.render();

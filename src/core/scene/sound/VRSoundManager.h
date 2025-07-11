@@ -4,12 +4,12 @@
 #include "core/math/OSGMathFwd.h"
 #include <map>
 #include <vector>
-#include <libavformat/version_major.h>
+#include <libavformat/version.h>
 
 #include "VRSoundFwd.h"
 #include "core/utils/VRFunctionFwd.h"
 
-#if LIBAVFORMAT_VERSION_MAJOR >= 58
+#if LIBAVFORMAT_VERSION_MAJOR > 58
 struct ALCdevice;
 struct ALCcontext;
 #else
@@ -24,7 +24,7 @@ struct VRSoundChannel;
 
 class VRSoundContext {
 	public:
-#if LIBAVFORMAT_VERSION_MAJOR >= 58
+#if LIBAVFORMAT_VERSION_MAJOR > 58
 		ALCdevice* device = 0;
 		ALCcontext* context = 0;
 #else

@@ -40,7 +40,7 @@ string toString(ALenum error) {
 
 VRSoundContext::VRSoundContext() {
     cout << " create new sound context!" << endl;
-#if LIBAVFORMAT_VERSION_MAJOR < 58
+#if LIBAVFORMAT_VERSION_MAJOR <= 58
     av_register_all();
 #endif
     device = alcOpenDevice(NULL);

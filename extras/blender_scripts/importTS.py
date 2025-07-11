@@ -6,7 +6,7 @@ from mathutils import Vector
 
 def importTS(filepath, offset, scale):
     def parse_vector3(data, i1, i2, i3):
-        return Vector(( float(data[i1]) + offset[0], float(data[i3]) + offset[2], -float(data[i2]) + offset[1])) * scale # Swapped Z and Y
+        return Vector(( float(data[i1]) + offset[0], float(data[i2]) + offset[1], -float(data[i3]) + offset[2])) * scale # Swapped Z and Y
           
     verts_dict = {}
     tris = []
