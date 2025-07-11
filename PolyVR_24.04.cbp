@@ -210,7 +210,6 @@
 		</VirtualTargets>
 		<Compiler>
 			<Add option="-Wall" />
-			<Add option="-std=gnu++20" />
 			<Add option="-std=c++20" />
 			<Add option="-fPIC" />
 			<Add option="`pkg-config gmodule-2.0 --cflags`" />
