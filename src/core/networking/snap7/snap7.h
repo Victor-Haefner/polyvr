@@ -38,7 +38,7 @@
 
 // Visual Studio needs this to use the correct time_t size
 #if defined (_WIN32) && !defined(_WIN64)
-# define _USE_32BIT_TIME_T 
+# define _USE_32BIT_TIME_T
 #endif
 
 #if defined(unix) || defined(__unix__) || defined(__unix)
@@ -74,7 +74,7 @@
 // Visual C++ not C99 compliant (VS2008--)
 #ifdef _MSC_VER
 # if _MSC_VER >= 1600
-#  include <stdint.h>  // VS2010++ have it 
+#  include <stdint.h>  // VS2010++ have it
 # else
    typedef signed __int8     int8_t;
    typedef signed __int16    int16_t;
@@ -107,12 +107,12 @@ extern "C" {
 #endif
 
 #ifdef OS_OSX
-#  include <stdint.h>  
+#  include <stdint.h>
 #  include <time.h>
 #endif
 
 #ifdef OS_SOLARIS
-#  include <stdint.h>  
+#  include <stdint.h>
 #  include <time.h>
 #endif
 
@@ -144,7 +144,7 @@ extern "C" {
 typedef uint8_t    byte;
 typedef uint16_t   word;
 typedef uint32_t   longword;
-typedef byte       *pbyte;
+typedef ::byte       *pbyte;
 typedef word       *pword;
 typedef uintptr_t  S7Object; // multi platform/processor object reference
                              // DON'T CONFUSE IT WITH AN OLE OBJECT, IT'S SIMPLY
@@ -204,7 +204,7 @@ typedef struct{
 }TS7Tag, *PS7Tag;
 
 //------------------------------------------------------------------------------
-//                                  PARAMS LIST            
+//                                  PARAMS LIST
 //------------------------------------------------------------------------------
 const int p_u16_LocalPort  	    = 1;
 const int p_u16_RemotePort 	    = 2;
@@ -222,7 +222,7 @@ const int p_i32_BRecvTimeout    = 13;
 const int p_u32_RecoveryTime    = 14;
 const int p_u32_KeepAliveTime   = 15;
 
-// Client/Partner Job status 
+// Client/Partner Job status
 const int JobComplete           = 0;
 const int JobPending            = 1;
 
@@ -278,12 +278,12 @@ const word CONNTYPE_OP                      = 0x0002;  // Connect to the PLC as 
 const word CONNTYPE_BASIC                   = 0x0003;  // Basic connection
 
 // Area ID
-const byte S7AreaPE   =	0x81;
-const byte S7AreaPA   =	0x82;
-const byte S7AreaMK   =	0x83;
-const byte S7AreaDB   =	0x84;
-const byte S7AreaCT   =	0x1C;
-const byte S7AreaTM   =	0x1D;
+const ::byte S7AreaPE   =	0x81;
+const ::byte S7AreaPA   =	0x82;
+const ::byte S7AreaMK   =	0x83;
+const ::byte S7AreaDB   =	0x84;
+const ::byte S7AreaCT   =	0x1C;
+const ::byte S7AreaTM   =	0x1D;
 
 // Word Length
 const int S7WLBit     = 0x01;
@@ -295,30 +295,30 @@ const int S7WLCounter = 0x1C;
 const int S7WLTimer   = 0x1D;
 
 // Block type
-const byte Block_OB   = 0x38;
-const byte Block_DB   = 0x41;
-const byte Block_SDB  = 0x42;
-const byte Block_FC   = 0x43;
-const byte Block_SFC  = 0x44;
-const byte Block_FB   = 0x45;
-const byte Block_SFB  = 0x46;
+const ::byte Block_OB   = 0x38;
+const ::byte Block_DB   = 0x41;
+const ::byte Block_SDB  = 0x42;
+const ::byte Block_FC   = 0x43;
+const ::byte Block_SFC  = 0x44;
+const ::byte Block_FB   = 0x45;
+const ::byte Block_SFB  = 0x46;
 
 // Sub Block Type
-const byte SubBlk_OB  = 0x08;
-const byte SubBlk_DB  = 0x0A;
-const byte SubBlk_SDB = 0x0B;
-const byte SubBlk_FC  = 0x0C;
-const byte SubBlk_SFC = 0x0D;
-const byte SubBlk_FB  = 0x0E;
-const byte SubBlk_SFB = 0x0F;
+const ::byte SubBlk_OB  = 0x08;
+const ::byte SubBlk_DB  = 0x0A;
+const ::byte SubBlk_SDB = 0x0B;
+const ::byte SubBlk_FC  = 0x0C;
+const ::byte SubBlk_SFC = 0x0D;
+const ::byte SubBlk_FB  = 0x0E;
+const ::byte SubBlk_SFB = 0x0F;
 
 // Block languages
-const byte BlockLangAWL       = 0x01;
-const byte BlockLangKOP       = 0x02;
-const byte BlockLangFUP       = 0x03;
-const byte BlockLangSCL       = 0x04;
-const byte BlockLangDB        = 0x05;
-const byte BlockLangGRAPH     = 0x06;
+const ::byte BlockLangAWL       = 0x01;
+const ::byte BlockLangKOP       = 0x02;
+const ::byte BlockLangFUP       = 0x03;
+const ::byte BlockLangSCL       = 0x04;
+const ::byte BlockLangDB        = 0x05;
+const ::byte BlockLangGRAPH     = 0x06;
 
 // Read/Write Multivars
 typedef struct{
@@ -347,7 +347,7 @@ typedef struct {
 
 // Blocks info
 typedef struct {
-   int BlkType;    // Block Type (OB, DB) 
+   int BlkType;    // Block Type (OB, DB)
    int BlkNumber;  // Block number
    int BlkLang;    // Block Language
    int BlkFlags;   // Block flags
@@ -359,7 +359,7 @@ typedef struct {
    int Version;    // Block version
    // Chars info
    char CodeDate[11]; // Code date
-   char IntfDate[11]; // Interface date 
+   char IntfDate[11]; // Interface date
    char Author[9];    // Author
    char Family[9];    // Family
    char Header[9];    // Header
@@ -371,9 +371,9 @@ typedef TS7BlocksOfType *PS7BlocksOfType;
 // Order code
 typedef struct {
    char Code[21];
-   byte V1;
-   byte V2;
-   byte V3;
+   ::byte V1;
+   ::byte V2;
+   ::byte V3;
 } TS7OrderCode, *PS7OrderCode;
 
 // CPU Info
@@ -402,7 +402,7 @@ typedef struct {
 
 typedef struct {
    SZL_HEADER Header;
-   byte Data[0x4000-4];
+   ::byte Data[0x4000-4];
 } TS7SZL, *PS7SZL;
 
 // SZL List of available SZL IDs : same as SZL but List items are big-endian adjusted

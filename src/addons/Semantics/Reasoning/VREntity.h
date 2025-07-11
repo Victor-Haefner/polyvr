@@ -86,7 +86,7 @@ struct VREntity : public VROntoID, public VRName {
     Vec3d getVec3(const string& prop, int i = 0);
     vector< Vec3d > getAllVec3(const string& prop);
 
-    bool is_a(string concept);
+    bool is_a(string concept_);
     string toString();
     void save(XMLElementPtr e, int p) override;
     void load(XMLElementPtr e, VRStorageContextPtr context = 0) override;

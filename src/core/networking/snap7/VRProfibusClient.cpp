@@ -12,7 +12,7 @@ using namespace OSG;
 struct VRProfinetClient::Data {
      TS7Client* Client = 0;
      string Address;     // PLC IP Address
-	 byte Buffer[65536]; // 64 K buffer
+	 ::byte Buffer[65536]; // 64 K buffer
 
 	 ::Thread* writeThread = 0;
 	 bool active = true;
@@ -172,7 +172,7 @@ int VRProfinetClient::toInt(string bytes) {
 
 
 bool VRProfinetClient::readBool(int db, int pos, int bit, string dbType) {
-    byte B = read(db, pos, 1, dbType)[0];
+    ::byte B = read(db, pos, 1, dbType)[0];
     //cout << " readBool " << (int)B << endl;
     bool b = ((B >> bit) & 0x01);
     return b;
@@ -192,7 +192,7 @@ float VRProfinetClient::readFloat(int db, int pos, string dbType) {
 
 
 void VRProfinetClient::writeBool(int db, int pos, int bit, bool val, string dbType) {
-    byte B = read(db, pos, 1, dbType)[0];
+    ::byte B = read(db, pos, 1, dbType)[0];
     if (val) B |= (1 << bit);
     else B &= ~(1 << bit);
     string f = string((char*)&B, 1);

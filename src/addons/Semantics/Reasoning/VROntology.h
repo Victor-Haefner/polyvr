@@ -54,17 +54,17 @@ struct VROntology : public std::enable_shared_from_this<VROntology>, public VRNa
     void remConcept(VRConceptPtr c);
     void remEntity(VREntityPtr e);
     void remEntity(string name);
-    void remEntities(string concept);
+    void remEntities(string concept_);
     void remRule(VROntologyRulePtr rule);
     void renameConcept(VRConceptPtr c, string newName);
     void renameEntity(VREntityPtr e, string s);
 
-    VRConceptPtr addConcept(string concept, string parent = "", map<string, string> props = map<string, string>(), string comment = "");
+    VRConceptPtr addConcept(string concept_, string parent = "", map<string, string> props = map<string, string>(), string comment = "");
     VROntologyRulePtr addRule(string rule, string ac);
-    VREntityPtr addEntity(string name, string concept = "", map<string, string> props = map<string, string>());
-    VREntityPtr addVectorEntity(string name, string concept, string x, string y, string z);
-    VREntityPtr addVectorEntity(string name, string concept, vector<string> val);
-    VREntityPtr addVec3Entity(string name, string concept, Vec3d v);
+    VREntityPtr addEntity(string name, string concept_ = "", map<string, string> props = map<string, string>());
+    VREntityPtr addVectorEntity(string name, string concept_, string x, string y, string z);
+    VREntityPtr addVectorEntity(string name, string concept_, vector<string> val);
+    VREntityPtr addVec3Entity(string name, string concept_, Vec3d v);
 
     template <typename T, typename R, typename ...Args>
     VRCallbackStrWrapperPtr addBuiltin(string builtin, R (T::*callback)(Args...) );
@@ -74,7 +74,7 @@ struct VROntology : public std::enable_shared_from_this<VROntology>, public VRNa
     VREntityPtr getEntity(int ID);
     VREntityPtr getEntity(string instance);
     VRPropertyPtr getProperty(string prop);
-    vector<VREntityPtr> getEntities(string concept);
+    vector<VREntityPtr> getEntities(string concept_);
     vector<VROntologyRulePtr> getRules();
 
     void openOWL(string path);

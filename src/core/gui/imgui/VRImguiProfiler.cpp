@@ -9,6 +9,10 @@
 #include "core/utils/toString.h"
 #include "core/gui/VRGuiManager.h"
 
+#if (IMGUI_VERSION_NUM > 19000)
+#define ImDrawCornerFlags_All ImDrawFlags_RoundCornersAll
+#endif
+
 ImProfiler::ImProfiler() : ImWidget("Profiler") {
     auto mgr = OSG::VRGuiSignals::get();
     mgr->addCallback("set_profiler_system", [&](OSG::VRGuiSignals::Options o){ updateSystem(o); return true; }, true );

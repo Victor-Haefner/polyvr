@@ -70,7 +70,7 @@ struct VRConcept : public std::enable_shared_from_this<VRConcept>, public VROnto
     void detach();
 
     bool is_a(VRConceptPtr c);
-    bool is_a(string concept);
+    bool is_a(string concept_);
     string toString(string indent = "");
     string toString(map<int, vector<VRConceptPtr>>& cMap, string indent = "");
 

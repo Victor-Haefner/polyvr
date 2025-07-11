@@ -24,7 +24,7 @@ string Evaluation::toString() {
 Variable::Variable() {;}
 
 string Variable::toString() {
-    string s = valToString()+" (" + concept + "){";
+    string s = valToString()+" (" + concept_ + "){";
     for (auto i : entities) s += i.second->getName()+",";
     for (auto i : evaluations) s += i.second.toString()+",";
     if (entities.size() > 0) s.pop_back();
@@ -49,11 +49,11 @@ string Variable::valToString() {
     !valid: something is terribly wrong!
 */
 
-Variable::Variable(VROntologyPtr onto, string concept, vector<string> var, VRSemanticContextPtr context) {
-    auto cl = onto->getConcept(concept);
+Variable::Variable(VROntologyPtr onto, string concept_, vector<string> var, VRSemanticContextPtr context) {
+    auto cl = onto->getConcept(concept_);
     if (cl == 0) return;
 
-    this->concept = concept; // TODO: maybe the entity has a concept that inherits from the concept passed above?
+    this->concept_ = concept_; // TODO: maybe the entity has a concept that inherits from the concept passed above?
     value = var;
 
     for (auto v : value) {
@@ -61,7 +61,7 @@ Variable::Variable(VROntologyPtr onto, string concept, vector<string> var, VRSem
             addEntity(i);
             isAnonymous = false;
         } else { // get all entities of the required type
-            for (auto i : onto->getEntities(concept)) addEntity(i);
+            for (auto i : onto->getEntities(concept_)) addEntity(i);
             if (entities.size() == 0) addAssumption(context, v);
         }
     }
@@ -73,13 +73,13 @@ Variable::Variable(VROntologyPtr onto, vector<string> val) {
     value = val;
 }
 
-shared_ptr<Variable> Variable::create(VROntologyPtr onto, string concept, vector<string> var, VRSemanticContextPtr context) { return shared_ptr<Variable>( new Variable(onto, concept, var, context) ); }
+shared_ptr<Variable> Variable::create(VROntologyPtr onto, string concept_, vector<string> var, VRSemanticContextPtr context) { return shared_ptr<Variable>( new Variable(onto, concept_, var, context) ); }
 shared_ptr<Variable> Variable::create(VROntologyPtr onto, vector<string> val) { return shared_ptr<Variable>( new Variable(onto, val) ); }
 
 void Variable::addAssumption(VRSemanticContextPtr context, string var) {
     if (context->getOption("allowAssumptions")) {
-        auto c = context->onto->getConcept(concept);
-        auto e = context->onto->addEntity(var, concept);
+        auto c = context->onto->getConcept(concept_);
+        auto e = context->onto->addEntity(var, concept_);
         addEntity(e, true);
         if (c->is_a("Vector")) {
             Vec3d v;
@@ -412,7 +412,7 @@ void VRSemanticContext::init() {
                 auto var = s->terms[0].var;
                 if (var->value != t.var->value) continue;
 
-                t.var->concept = s->verb;
+                t.var->concept_ = s->verb;
                 //cout << " Set concept of " << t.var->value << " to " << s->verb << endl;
                 break;
             }

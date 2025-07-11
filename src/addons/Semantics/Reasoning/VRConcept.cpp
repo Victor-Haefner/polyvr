@@ -164,9 +164,9 @@ bool VRConcept::is_a(VRConceptPtr c) {
     return false;
 }
 
-bool VRConcept::is_a(string concept) {
-    if (getName() == concept) return true;
-    for (auto p : getParents()) if (p->is_a(concept)) return true;
+bool VRConcept::is_a(string concept_) {
+    if (getName() == concept_) return true;
+    for (auto p : getParents()) if (p->is_a(concept_)) return true;
     return false;
 }
 

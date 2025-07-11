@@ -213,10 +213,10 @@ bool VRReasoner::has(VRStatementPtr statement, VRSemanticContextPtr context) { /
 
     // DEBUG -> TODO
 
-    auto Pconcept = context->onto->getConcept( left.var->concept ); // parent concept
-    auto Cconcept = context->onto->getConcept( right.var->concept ); // child concept
-    if (Pconcept == 0) { cout << "Warning (has): first concept " << left.var->concept << " not found!\n"; return false; }
-    if (Cconcept == 0) { cout << "Warning (has): second concept " << right.var->concept << " not found!\n"; return false; }
+    auto Pconcept = context->onto->getConcept( left.var->concept_ ); // parent concept
+    auto Cconcept = context->onto->getConcept( right.var->concept_ ); // child concept
+    if (Pconcept == 0) { cout << "Warning (has): first concept " << left.var->concept_ << " not found!\n"; return false; }
+    if (Cconcept == 0) { cout << "Warning (has): second concept " << right.var->concept_ << " not found!\n"; return false; }
     auto prop = Pconcept->getProperties( Cconcept->getName() );
     if (prop.size() == 0) { cout << "Warning: has evaluation failed, property " << right.var->valToString() << " missing!\n"; return false; }
     return false;
@@ -301,8 +301,8 @@ bool VRReasoner::apply(VRStatementPtr statement, Query query, VRSemanticContextP
     if (statement->verb == "has" && statement->terms.size() >= 2) {
         auto& left = statement->terms[0];
         auto& right = statement->terms[1];
-        auto Cconcept = context->onto->getConcept( right.var->concept ); // child concept
-        auto Pconcept = context->onto->getConcept( left.var->concept ); // parent concept
+        auto Cconcept = context->onto->getConcept( right.var->concept_ ); // child concept
+        auto Pconcept = context->onto->getConcept( left.var->concept_ ); // parent concept
         if (!Pconcept || !Cconcept) { print("Warning: failed to apply " + statement->toString()); return false; }
         auto prop = Pconcept->getProperties( Cconcept->getName() );
         if (prop.size() == 0) { print("Warning: failed to apply " + statement->toString()); return false; }
@@ -361,7 +361,7 @@ bool VRReasoner::apply(VRStatementPtr statement, Query query, VRSemanticContextP
     }
 
     if (statement->constructor && statement->terms.size() >= 1) { // 'Error(e) : Event(v) ; is(v.name,crash)'
-        string concept = statement->verb;
+        string concept_ = statement->verb;
         string x = statement->terms[0].var->value[0];
         VariablePtr v = getVariable(x);
         if (!v) return false;
@@ -375,7 +375,7 @@ bool VRReasoner::apply(VRStatementPtr statement, Query query, VRSemanticContextP
             if (!context->onto->getConcept(s->verb)) continue; // check for concept
             print("   construction variable found: " + v2->toString(), GREEN);
             for (auto E : v2->getEntities(Evaluation::VALID)) {
-                auto e = context->onto->addEntity(x, concept);
+                auto e = context->onto->addEntity(x, concept_);
                 v->addEntity(e);
                 print("    construct entity " + e->toString(), GREEN);
             }
@@ -436,7 +436,7 @@ bool VRReasoner::evaluate(VRStatementPtr statement, VRSemanticContextPtr context
     }
 
     if (statement->terms.size() == 1) { // resolve (anonymous?) variables
-        string concept = statement->verb;
+        string concept_ = statement->verb;
 
         auto findConstructorRules = [&](VRStatementPtr statement, VRSemanticContextPtr context) {
             print("     search constructors for statement: " + statement->toString());
@@ -454,13 +454,13 @@ bool VRReasoner::evaluate(VRStatementPtr statement, VRSemanticContextPtr context
             }
         };
 
-        if (auto c = context->onto->getConcept(concept)) {
+        if (auto c = context->onto->getConcept(concept_)) {
             findConstructorRules(statement, context);
 
             string name = statement->terms[0].path.root;
             if (context->vars.count(name)) { // there is already a variable with that name!
                 auto var = context->vars[name];
-                if ( c->is_a(var->concept) && var->concept != concept ) { // the variable is not the same type or a subtype of concept!
+                if ( c->is_a(var->concept_) && var->concept_ != concept_ ) { // the variable is not the same type or a subtype of concept!
                     //TODO: what happens then?
                     //  are the entities that don't have the concept removed from the variable? I think not...
                 }
@@ -469,7 +469,7 @@ bool VRReasoner::evaluate(VRStatementPtr statement, VRSemanticContextPtr context
                 return true;
             }
 
-            auto var = Variable::create( context->onto, concept, {name}, context );
+            auto var = Variable::create( context->onto, concept_, {name}, context );
             context->vars[name] = var;
             print("  added variable " + var->toString(), BLUE);
             statement->state = 1;

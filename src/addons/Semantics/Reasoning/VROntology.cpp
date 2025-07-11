@@ -118,21 +118,21 @@ vector<VRConceptPtr> VROntology::getConcepts() {
     return res;
 }
 
-VRConceptPtr VROntology::addConcept(string concept, string parents, map<string, string> props, string comment) {
-    if (concepts.count(concept) && concept != "Thing") { cout << "WARNING in VROntology::addConcept, " << concept << " known, skipping!\n"; return 0;  }
+VRConceptPtr VROntology::addConcept(string concept_, string parents, map<string, string> props, string comment) {
+    if (concepts.count(concept_) && concept_ != "Thing") { cout << "WARNING in VROntology::addConcept, " << concept_ << " known, skipping!\n"; return 0;  }
 
     vector<VRConceptPtr> Parents;
     if (parents != "") {
         for (auto parent : splitString(parents, ' ')) {
             auto p = getConcept(parent);
-            if (!p) { WARN("WARNING in VROntology::addConcept, " + parent + " not found while adding " + concept); return 0;  }
+            if (!p) { WARN("WARNING in VROntology::addConcept, " + parent + " not found while adding " + concept_); return 0;  }
             Parents.push_back(p);
         }
     }
 
     VRConceptPtr Concept;
-    if (Parents.size() == 0) Concept = thing->append(concept);
-    else Concept = Parents[0]->append(concept);
+    if (Parents.size() == 0) Concept = thing->append(concept_);
+    else Concept = Parents[0]->append(concept_);
 
     //cout << "VROntology::addConcept " << concept << " " << parents << " " << Concept->getName() << " " << Concept->ID << endl;
     for (unsigned int i=1; i<Parents.size(); i++) Parents[i]->append(Concept);
@@ -179,8 +179,8 @@ void VROntology::remEntity(string name) {
     remEntity(getEntity(name));
 }
 
-void VROntology::remEntities(string concept) {
-    for (auto e : getEntities(concept)) remEntity(e);
+void VROntology::remEntities(string concept_) {
+    for (auto e : getEntities(concept_)) remEntity(e);
 }
 
 void VROntology::remRule(VROntologyRulePtr r) {
@@ -230,14 +230,14 @@ VROntologyRulePtr VROntology::addRule(string rule, string ac) {
     return r;
 }
 
-VREntityPtr VROntology::addVectorEntity(string name, string concept, string x, string y, string z) {
+VREntityPtr VROntology::addVectorEntity(string name, string concept_, string x, string y, string z) {
     vector<string> v;
     v.push_back(x); v.push_back(y); v.push_back(z);
-    return addVectorEntity(name, concept, v);
+    return addVectorEntity(name, concept_, v);
 }
 
-VREntityPtr VROntology::addVectorEntity(string name, string concept, vector<string> val) {
-    auto i = addEntity(name, concept);
+VREntityPtr VROntology::addVectorEntity(string name, string concept_, vector<string> val) {
+    auto i = addEntity(name, concept_);
     int N = val.size();
     if (0 < N) i->set("x", val[0]);
     if (1 < N) i->set("y", val[1]);
@@ -257,8 +257,8 @@ void VROntology::addEntity(VREntityPtr& e) {
     //cout << "VROntology::addEntity " << entities.size() << " " << entities[e->ID] << endl;
 }
 
-VREntityPtr VROntology::addEntity(string name, string concept, map<string, string> props) {
-    auto c = getConcept(concept);
+VREntityPtr VROntology::addEntity(string name, string concept_, map<string, string> props) {
+    auto c = getConcept(concept_);
     auto e = VREntity::create(name, ptr(), c);
     addEntity(e);
     for (auto p : props) e->set(p.first, p.second);
@@ -279,10 +279,10 @@ VREntityPtr VROntology::getEntity(string e) {
     return entitiesByName[e];
 }
 
-vector<VREntityPtr> VROntology::getEntities(string concept) {
+vector<VREntityPtr> VROntology::getEntities(string concept_) {
     vector<VREntityPtr> res;
-    if (concept != "") {
-        for (auto i : entities) if (i.second->is_a(concept)) res.push_back(i.second);
+    if (concept_ != "") {
+        for (auto i : entities) if (i.second->is_a(concept_)) res.push_back(i.second);
     } else for (auto i : entities) res.push_back(i.second);
     return res;
 }
@@ -353,6 +353,6 @@ vector<VREntityPtr> VROntology::process(string query, bool allowAssumptions) {
     return r->process(query, ptr());
 }
 
-VREntityPtr VROntology::addVec3Entity(string name, string concept, Vec3d v) {
-    return addVectorEntity(name, concept, {::toString(v[0]), ::toString(v[1]), ::toString(v[2])});
+VREntityPtr VROntology::addVec3Entity(string name, string concept_, Vec3d v) {
+    return addVectorEntity(name, concept_, {::toString(v[0]), ::toString(v[1]), ::toString(v[2])});
 }

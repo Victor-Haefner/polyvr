@@ -281,10 +281,10 @@ string VREntity::toString() {
     return data;
 }
 
-bool VREntity::is_a(string concept) {
+bool VREntity::is_a(string concept_) {
     for (auto cw : concepts) {
         if (auto c = cw.lock()) {
-            if (c->is_a(concept)) return true;
+            if (c->is_a(concept_)) return true;
         }
     }
     return false;

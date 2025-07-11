@@ -43,7 +43,7 @@ int getNColors(AVPixelFormat pfmt) {
     return 3;
 }
 
-#if defined(_WIN32) || defined(__APPLE__)
+#if LIBAVFORMAT_VERSION_MAJOR >= 58
 int avcodec_decode_video2(AVCodecContext* video_ctx, AVFrame* frame, int* got_frame, AVPacket* pkt) {
     int used = 0;
     if (video_ctx->codec_type == AVMEDIA_TYPE_VIDEO || video_ctx->codec_type == AVMEDIA_TYPE_AUDIO) {
@@ -235,8 +235,8 @@ bool VRVideoStream::decode(AVPacket* packet) {
 VRVideo::VRVideo(VRMaterialPtr mat) {
     //avMutex = new boost::mutex();
     material = mat;
-#if !defined(_WIN32) && !defined(__APPLE__)
-    av_register_all(); // Register all formats && codecs
+#if LIBAVFORMAT_VERSION_MAJOR < 58
+    av_register_all();
 #endif
 
     mainLoopCb = VRUpdateCb::create("Video main update", bind(&VRVideo::mainThreadUpdate, this));

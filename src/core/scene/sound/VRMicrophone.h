@@ -4,11 +4,12 @@
 #include <OpenSG/OSGConfig.h>
 #include <list>
 #include <string>
+#include <libavformat/version_major.h>
 
 #include "VRSoundFwd.h"
 #include "core/networking/VRNetworkingFwd.h"
 
-#if defined(WIN32) || defined(__APPLE__)
+#if LIBAVFORMAT_VERSION_MAJOR >= 58
 struct ALCdevice;
 #else
 struct ALCdevice_struct;
@@ -36,7 +37,7 @@ class VRMicrophone : public std::enable_shared_from_this<VRMicrophone> {
 
         ::Thread* recordingThread = 0;
         ::Thread* streamingThread = 0;
-#if defined(WIN32) || defined(__APPLE__)
+#if LIBAVFORMAT_VERSION_MAJOR >= 58
 	    ALCdevice* device = 0;
 #else
 	    ALCdevice_struct* device = 0;

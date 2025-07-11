@@ -885,10 +885,8 @@ void close_stream(AVFormatContext *oc, OutputStream *ost) {
 void VRSound::exportToFile(string path) {
     OutputStream audio_st;
     const char *filename = path.c_str();
-#ifndef _WIN32
-#ifndef __APPLE__
+#if LIBAVFORMAT_VERSION_MAJOR < 58
     av_register_all();
-#endif
 #endif
 
 	cout << "sound exportToFile: " << filename << endl;
@@ -969,10 +967,8 @@ bool VRSound::addOutStreamClient(VRNetworkClientPtr client, string method) {
     if (method == "raw") return true;
 
     audio_ost = new OutputStream();
-#ifndef _WIN32
-#ifndef __APPLE__
+#if LIBAVFORMAT_VERSION_MAJOR < 58
     av_register_all();
-#endif
 #endif
 
     //AVOutputFormat* fmt = av_guess_format("opus", NULL, NULL);
@@ -1131,10 +1127,8 @@ bool VRSound::listenStream(int port, bool stereo) {
         udpServer->listen(port);
     }
 
-#ifndef _WIN32
-#ifndef __APPLE__
+#if LIBAVFORMAT_VERSION_MAJOR < 58
     av_register_all();
-#endif
 #endif
     return true;
 }
@@ -1142,10 +1136,8 @@ bool VRSound::listenStream(int port, bool stereo) {
 bool VRSound::playPeerStream(VRNetworkClientPtr client, bool stereo) {
     auto streamCb = bind(&VRSound::onStreamData, this, placeholders::_1, stereo);
     client->onMessage(streamCb);
-#ifndef _WIN32
-#ifndef __APPLE__
+#if LIBAVFORMAT_VERSION_MAJOR < 58
     av_register_all();
-#endif
 #endif
     return true;
 }
@@ -1427,10 +1419,8 @@ void VRSound::testMP3Write() {
 
     OutputStream audio_st;
     const char *filename = path.c_str();
-#ifndef _WIN32
-#ifndef __APPLE__
+#if LIBAVFORMAT_VERSION_MAJOR < 58
     av_register_all();
-#endif
 #endif
 
 	cout << "sound exportToFile: " << filename << endl;

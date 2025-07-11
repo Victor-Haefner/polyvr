@@ -210,11 +210,10 @@
 		</VirtualTargets>
 		<Compiler>
 			<Add option="-Wall" />
+			<Add option="-std=gnu++20" />
 			<Add option="-fPIC" />
-			<Add option="-std=c++14" />
-			<Add option="`pkg-config gtk+-3.0 --cflags`" />
 			<Add option="`pkg-config gmodule-2.0 --cflags`" />
-			<Add option="`pkg-config python2 --cflags`" />
+			<Add option="`pkg-config python3 --cflags`" />
 			<Add option="-fopenmp" />
 			<Add option="-use_readonly_const" />
 			<Add option="-Wno-deprecated" />
@@ -275,6 +274,7 @@
 			<Add option="-DWITHOUT_NUMPY" />
 			<Add option="-DWITHOUT_COCOA" />
 			<Add option="-DUSE_IFC4" />
+			<Add option="-DBOOST_SP_USE_SPINLOCK" />
 			<Add directory="/usr/include/pango-1.0" />
 			<Add directory="/usr/include/glib-2.0" />
 			<Add directory="/usr/include/freetype2" />
@@ -294,11 +294,12 @@
 			<Add directory="/usr/include/DWG" />
 			<Add directory="/usr/include/libxml2" />
 			<Add directory="/usr/include/eigen3" />
-			<Add directory="/usr/include/python2.7" />
+			<Add directory="/usr/include/python3.11" />
 			<Add directory="/usr/include/jsoncpp" />
 			<Add directory="/usr/include/openvr" />
 			<Add directory="/usr/include/imgui" />
 			<Add directory="/usr/include/vtk-9.1" />
+			<Add directory="/usr/include/cairo" />
 		</Compiler>
 		<Linker>
 			<Add option="-lTKV3d" />
@@ -332,7 +333,7 @@
 			<Add option="-lcef" />
 			<Add option="-lcef_dll_wrapper" />
 			<Add option="`pkg-config bullet --libs`" />
-			<Add option="-lpython2.7" />
+			<Add option="-lpython3.12" />
 			<Add option="`pkg-config vte --libs`" />
 			<Add option="-ljsoncpp" />
 			<Add option="-lvrpn" />
@@ -397,7 +398,6 @@
 			<Add option="-lpng" />
 			<Add option="-lz" />
 			<Add option="-lXt" />
-			<Add option="-lbase" />
 			<Add option="-lsdai_ap214e3" />
 			<Add option="-lstepdai" />
 			<Add option="-lsteputils" />
@@ -430,6 +430,7 @@
 			<Add option="-lopcuacore" />
 			<Add option="-lxml2" />
 			<Add option="-lredwg" />
+			<Add option="-lmdbsql" />
 			<Add option="-lmdb" />
 			<Add option="-lxcb" />
 			<Add option="-Wl,-rpath=/usr/lib/x86_64-linux-gnu:/usr/lib/OCE" />
@@ -443,7 +444,7 @@
 			<Add directory="/usr/lib/OPCUA" />
 			<Add directory="/usr/lib/OCE" />
 			<Add directory="/usr/lib/DWG" />
-			<Add directory="/usr/lib/python2.7" />
+			<Add directory="/usr/lib/python3.11" />
 		</Linker>
 		<ExtraCommands>
 			<Add before="src/version/genVersion.sh" />
@@ -2025,6 +2026,13 @@
 		</Unit>
 		<Unit filename="src/core/gui/imgui/imFileDialog/ImGuiFileDialog.cpp">
 			<Option target="Release" />
+			<Option target="PVR-Gui-d" />
+		</Unit>
+		<Unit filename="src/core/gui/imgui/imWidgets/VRImguiColorPicker.cpp">
+			<Option target="PVR-Gui-d" />
+			<Option target="Release" />
+		</Unit>
+		<Unit filename="src/core/gui/imgui/imWidgets/VRImguiColorPicker.h">
 			<Option target="PVR-Gui-d" />
 		</Unit>
 		<Unit filename="src/core/gui/imgui/imWidgets/VRImguiCombo.cpp">
@@ -5105,10 +5113,6 @@
 			<Option target="Release" />
 			<Option target="PVR-Utils-d" />
 		</Unit>
-		<Unit filename="src/core/utils/VRPDF.cpp">
-			<Option target="Release" />
-			<Option target="PVR-Utils-d" />
-		</Unit>
 		<Unit filename="src/core/utils/VRPDF.h">
 			<Option target="Release" />
 			<Option target="PVR-Utils-d" />
@@ -5219,6 +5223,46 @@
 		</Unit>
 		<Unit filename="src/core/utils/isNan.h">
 			<Option target="Release" />
+			<Option target="PVR-Utils-d" />
+		</Unit>
+		<Unit filename="src/core/utils/pdf/RPCUtils.h">
+			<Option target="PVR-Utils-d" />
+		</Unit>
+		<Unit filename="src/core/utils/pdf/VRPDF.cpp">
+			<Option target="PVR-Utils-d" />
+		</Unit>
+		<Unit filename="src/core/utils/pdf/VRPDF.h">
+			<Option target="PVR-Utils-d" />
+		</Unit>
+		<Unit filename="src/core/utils/pdf/VRPDF2DModel.cpp">
+			<Option target="PVR-Utils-d" />
+		</Unit>
+		<Unit filename="src/core/utils/pdf/VRPDF2DModel.h">
+			<Option target="PVR-Utils-d" />
+		</Unit>
+		<Unit filename="src/core/utils/pdf/VRPDF3DModel.cpp">
+			<Option target="PVR-Utils-d" />
+		</Unit>
+		<Unit filename="src/core/utils/pdf/VRPDF3DModel.h">
+			<Option target="PVR-Utils-d" />
+		</Unit>
+		<Unit filename="src/core/utils/pdf/VRPDFData.cpp">
+			<Option target="PVR-Utils-d" />
+		</Unit>
+		<Unit filename="src/core/utils/pdf/VRPDFData.h">
+			<Option target="PVR-Utils-d" />
+		</Unit>
+		<Unit filename="src/core/utils/pdf/VRPDFPage.cpp">
+			<Option target="PVR-Utils-d" />
+		</Unit>
+		<Unit filename="src/core/utils/pdf/VRPDFPage.h">
+			<Option target="PVR-Utils-d" />
+		</Unit>
+		<Unit filename="src/core/utils/png.cpp">
+			<Option target="PVR-Utils-d" />
+			<Option target="Release" />
+		</Unit>
+		<Unit filename="src/core/utils/png.h">
 			<Option target="PVR-Utils-d" />
 		</Unit>
 		<Unit filename="src/core/utils/system/VRSystem.cpp">

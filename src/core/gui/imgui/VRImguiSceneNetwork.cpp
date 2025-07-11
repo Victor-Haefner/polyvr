@@ -16,6 +16,10 @@ ImNetwork::ImNetwork() {
     mgr->addCallback("canvas_widget_move", [&](OSG::VRGuiSignals::Options o) { placeWidget(o["ID"], toFloat(o["x"]), toFloat(o["y"])); return true; } );
 }
 
+#if (IMGUI_VERSION_NUM > 19000)
+#define ImDrawCornerFlags_All ImDrawFlags_RoundCornersAll
+#endif
+
 void ImNetwork::render() {
     // toolbar
     ImGui::Spacing();

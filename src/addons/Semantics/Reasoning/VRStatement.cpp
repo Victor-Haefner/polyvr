@@ -96,12 +96,12 @@ bool VRStatement::match(VRStatementPtr s) {
         auto tR = terms[i];
         if (!tS.valid() || !tR.valid()) continue; // may be anything..
 
-        auto cS = onto->getConcept(tS.var->concept);
-        auto cR = onto->getConcept(tR.var->concept);
+        auto cS = onto->getConcept(tS.var->concept_);
+        auto cR = onto->getConcept(tR.var->concept_);
         if (!cS || !cR) continue; // may be anything..
 
         if (!cS->is_a(cR) && !cR->is_a(cS)) { // check if the concepts are related
-            VRReasoner::print("       var "+tR.var->valToString()+" ("+tR.var->concept+") and var "+tS.var->valToString()+" ("+tS.var->concept+") are not related!", VRReasoner::RED);
+            VRReasoner::print("       var "+tR.var->valToString()+" ("+tR.var->concept_+") and var "+tS.var->valToString()+" ("+tS.var->concept_+") are not related!", VRReasoner::RED);
             return false;
         }
 
