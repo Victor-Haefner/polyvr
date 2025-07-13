@@ -39,6 +39,7 @@ class VRGuiBits {
         void on_quit_clicked();
         void on_internal_clicked();
         void on_fullscreen_clicked();
+        void on_seeall_clicked();
 
         void on_internal_close_clicked();
 

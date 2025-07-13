@@ -229,6 +229,8 @@ void ImViewControls::render() {
 
     ImGui::SameLine();
     if (ImGui::Button("Fullscreen")) uiSignal("toolbar_fullscreen");
+    ImGui::SameLine();
+    if (ImGui::Button("See All")) uiSignal("toolbar_seeall");
 
 
     ImGui::SameLine(ImGui::GetWindowWidth()-250*io.FontGlobalScale);

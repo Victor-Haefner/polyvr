@@ -227,6 +227,12 @@ void VRGuiBits::on_fullscreen_clicked() {
     toggleFullscreen();
 }
 
+void VRGuiBits::on_seeall_clicked() {
+    auto scene = VRScene::getCurrent();
+    auto cam = scene->getActiveCamera();
+    cam->focusObject( scene->getRoot() );
+}
+
 void VRGuiBits::on_internal_clicked() {
     uiSignal("toolbar_profiler");
 }
@@ -370,6 +376,7 @@ VRGuiBits::VRGuiBits() {
     mgr->addCallback("view_toggle_navigation", [&](OSG::VRGuiSignals::Options o) { on_navigation_toggled(o["nav"], toBool(o["state"])); return true; }, true );
     mgr->addCallback("view_toggle_layer", [&](OSG::VRGuiSignals::Options o) { on_view_option_toggle(o["layer"], toBool(o["state"])); return true; }, true );
     mgr->addCallback("toolbar_fullscreen", [&](OSG::VRGuiSignals::Options o) { on_fullscreen_clicked(); return true; }, true );
+    mgr->addCallback("toolbar_seeall", [&](OSG::VRGuiSignals::Options o) { on_seeall_clicked(); return true; }, true );
 
     /*setToolButtonCallback("toolbutton18", bind(&VRGuiBits::on_internal_clicked, this));*/
     /*setButtonCallback("button21", bind(&VRGuiBits::on_internal_close_clicked, this));
