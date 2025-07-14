@@ -33,7 +33,7 @@ template<> PyTypeObject VRPyBaseT<OSG::VRObject>::type = {
     0,                         /*tp_as_number*/
     0,                         /*tp_as_sequence*/
     0,                         /*tp_as_mapping*/
-    VRPyObject::hash,                         /*tp_hash */
+    VRPyObject::hash,          /*tp_hash */
     0,                         /*tp_call*/
     0,                         /*tp_str*/
     0,                         /*tp_getattro*/
@@ -178,9 +178,9 @@ PyObject* VRPyObject::compare(PyObject* p1, PyObject* p2, int op) {
     Py_RETURN_FALSE;
 }
 
-long VRPyObject::hash(PyObject* p) {
+Py_hash_t VRPyObject::hash(PyObject* p) {
     VRPyBaseT* o = (VRPyBaseT*)p;
-    return (long)o->objPtr.get();
+    return (Py_hash_t)o->objPtr.get();
 }
 
 PyObject* VRPyObject::getName(VRPyObject* self) {

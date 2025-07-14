@@ -540,7 +540,7 @@ void VRImguiEditor::render() {
     // Start the Dear ImGui frame
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGLUT_NewFrame();
-#if IMGUI_VERSION_NUM > 18600
+#if IMGUI_VERSION_NUM > 18940
     ImGui::NewFrame();
 #endif
     ImGui::GetStyle().TouchExtraPadding = ImVec2(3, 3); // make DnD of section borders easier

@@ -431,7 +431,7 @@ TSnap7Partner::~TSnap7Partner()
     delete RecvEvt;
 }
 //------------------------------------------------------------------------------
-byte TSnap7Partner::GetNextByte()
+::byte TSnap7Partner::GetNextByte()
 {
     NextByte++;
     if (NextByte==0xFF)
@@ -709,7 +709,7 @@ bool TSnap7Partner::BlockSend()
     uintptr_t Offset;
     pbyte Source;
     bool First, Last;
-    byte Seq_IN;
+    ::byte Seq_IN;
     int TxIsoSize;
     pbyte Data;
     pword TotalPackSize;

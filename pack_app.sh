@@ -3,6 +3,7 @@
 #./pack_app.sh PolyVR
 #./pack_app.sh FinancialFolder conceptV1.pvr /c/Users/Victor/Projects/financialocean
 #./pack_app.sh PoscarViewer poscarImport.pvr /c/Users/Victor/Projects/surfacechemistry
+#./pack_app.sh Lernfabrik futurefactory.pvr /c/Users/victo/Projects/lernfabrik
 
 appName=$1
 appProject=$2

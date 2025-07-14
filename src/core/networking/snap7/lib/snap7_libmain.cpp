@@ -876,7 +876,7 @@ int S7API Srv_Stop(S7Object Server)
         return errLibInvalidObject;
 }
 //---------------------------------------------------------------------------
-int Srv_GetDiagRequest(S7Object Server, longword id, byte job_id, RequestDiag*& rd) {
+int Srv_GetDiagRequest(S7Object Server, longword id, ::byte job_id, RequestDiag*& rd) {
     if (Server) {
         rd = PSnap7Server(Server)->GetDiagRequest(id, job_id);
         return 0;
@@ -884,7 +884,7 @@ int Srv_GetDiagRequest(S7Object Server, longword id, byte job_id, RequestDiag*& 
         return errLibInvalidObject;
 }
 //---------------------------------------------------------------------------
-int Srv_AddDiagResponse(S7Object Server, longword id, byte job_id, ResponseDiag* rd) {
+int Srv_AddDiagResponse(S7Object Server, longword id, ::byte job_id, ResponseDiag* rd) {
     if (Server)
         return PSnap7Server(Server)->AddDiagResponse(id, job_id, rd);
     else
@@ -906,7 +906,7 @@ int S7API Srv_AddDiagItem(S7Object Server, pbyte Item) {
         return errLibInvalidObject;
 }
 //---------------------------------------------------------------------------
-int S7API Srv_GetBlock(S7Object Server, byte BlkType, word BlkNum, pbyte &block) {
+int S7API Srv_GetBlock(S7Object Server, ::byte BlkType, word BlkNum, pbyte &block) {
     if (Server) {
         block = PSnap7Server(Server)->GetBlock(BlkType, BlkNum);
         return 0;

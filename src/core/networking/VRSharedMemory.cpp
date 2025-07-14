@@ -22,7 +22,7 @@ struct Barrier {
     ~Barrier() {}
 
     void wait() {
-        scoped_lock<interprocess_mutex> lock(mutex);
+        boost::interprocess::scoped_lock<interprocess_mutex> lock(mutex);
         if (--count == 0) {
             count = threshold;
             condition.notify_all();

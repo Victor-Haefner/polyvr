@@ -90,7 +90,7 @@ using std::ios_base;
 using std::scientific;
 using std::setprecision;
 using std::string;
-using std::auto_ptr;
+using std::unique_ptr;
 using std::min;
 using std::max;
 
@@ -6232,7 +6232,7 @@ CompressedVectorReaderImpl::CompressedVectorReaderImpl(shared_ptr<CompressedVect
     /// Verify that packet given by dataPhysicalOffset is actually a data packet, init channels
     {
         char* anyPacket = NULL;
-        auto_ptr<PacketLock> packetLock = cache_->lock(dataLogicalOffset, anyPacket);
+        unique_ptr<PacketLock> packetLock = cache_->lock(dataLogicalOffset, anyPacket);
 
         DataPacket* dpkt = reinterpret_cast<DataPacket*>(anyPacket);
 
@@ -6405,7 +6405,7 @@ void CompressedVectorReaderImpl::feedPacketToDecoders(uint64_t currentPacketLogi
     {
         /// Get packet at currentPacketLogicalOffset into memory.
         char* anyPacket = NULL;
-        auto_ptr<PacketLock> packetLock = cache_->lock(currentPacketLogicalOffset, anyPacket);
+        unique_ptr<PacketLock> packetLock = cache_->lock(currentPacketLogicalOffset, anyPacket);
         DataPacket* dpkt = reinterpret_cast<DataPacket*>(anyPacket);
 
         /// Double check that have a data packet.  Should have already determined this.
@@ -6476,7 +6476,7 @@ void CompressedVectorReaderImpl::feedPacketToDecoders(uint64_t currentPacketLogi
         if (nextPacketLogicalOffset < E57_UINT64_MAX) { //??? huh?
             /// Get packet at nextPacketLogicalOffset into memory.
             char* anyPacket = NULL;
-            auto_ptr<PacketLock> packetLock = cache_->lock(nextPacketLogicalOffset, anyPacket);
+            unique_ptr<PacketLock> packetLock = cache_->lock(nextPacketLogicalOffset, anyPacket);
             DataPacket* dpkt = reinterpret_cast<DataPacket*>(anyPacket);
 
             /// Got a data packet, update the channels with exhausted input
@@ -6525,7 +6525,7 @@ uint64_t CompressedVectorReaderImpl::findNextDataPacket(uint64_t nextPacketLogic
     /// Starting at nextPacketLogicalOffset, search for next data packet until hit end of binary section.
     while (nextPacketLogicalOffset < sectionEndLogicalOffset_) {
         char* anyPacket = NULL;
-        auto_ptr<PacketLock> packetLock = cache_->lock(nextPacketLogicalOffset, anyPacket);
+        unique_ptr<PacketLock> packetLock = cache_->lock(nextPacketLogicalOffset, anyPacket);
 
         /// Guess it's a data packet, if not continue to next packet
         DataPacket* dpkt = reinterpret_cast<DataPacket*>(anyPacket);
@@ -6569,7 +6569,7 @@ void CompressedVectorReaderImpl::skip(uint64_t Nskip, uint64_t offset) {
     for (unsigned i = 0; i < channels_.size(); i++) {
         DecodeChannel& chan = channels_[i];
 
-        auto_ptr<PacketLock> packetLock = cache_->lock(chan.currentPacketLogicalOffset, anyPacket);
+        unique_ptr<PacketLock> packetLock = cache_->lock(chan.currentPacketLogicalOffset, anyPacket);
         DataPacket* dpkt = reinterpret_cast<DataPacket*>(anyPacket);
         size_t Nb = dpkt->getBytestreamBufferLength(chan.bytestreamNumber);
 
@@ -6599,7 +6599,7 @@ void CompressedVectorReaderImpl::skip(uint64_t Nskip, uint64_t offset) {
 
             cout << "    channel buffer offset: " << chan.currentPacketLogicalOffset << endl;
 
-            /*auto_ptr<PacketLock> packetLock = cache_->lock(chan.currentPacketLogicalOffset, anyPacket);
+            /*unique_ptr<PacketLock> packetLock = cache_->lock(chan.currentPacketLogicalOffset, anyPacket);
             DataPacket* dpkt = reinterpret_cast<DataPacket*>(anyPacket);
             Nb = dpkt->getBytestreamBufferLength(chan.bytestreamNumber);*/
         //}
@@ -6637,7 +6637,7 @@ void CompressedVectorReaderImpl::seek(uint64_t Nskip) {
     for (unsigned i = 0; i < channels_.size(); i++) {
         DecodeChannel& chan = channels_[i];
 
-        auto_ptr<PacketLock> packetLock = cache_->lock(chan.currentPacketLogicalOffset, anyPacket);
+        unique_ptr<PacketLock> packetLock = cache_->lock(chan.currentPacketLogicalOffset, anyPacket);
         DataPacket* dpkt = reinterpret_cast<DataPacket*>(anyPacket);
         size_t Nb = dpkt->getBytestreamBufferLength(chan.bytestreamNumber);
 
@@ -6654,7 +6654,7 @@ void CompressedVectorReaderImpl::seek(uint64_t Nskip) {
 
             cout << "    channel buffer offset: " << chan.currentPacketLogicalOffset << endl;
 
-            /*auto_ptr<PacketLock> packetLock = cache_->lock(chan.currentPacketLogicalOffset, anyPacket);
+            /*unique_ptr<PacketLock> packetLock = cache_->lock(chan.currentPacketLogicalOffset, anyPacket);
             DataPacket* dpkt = reinterpret_cast<DataPacket*>(anyPacket);
             Nb = dpkt->getBytestreamBufferLength(chan.bytestreamNumber);*/
         //}
@@ -7899,7 +7899,7 @@ PacketReadCache::~PacketReadCache()
     }
 }
 
-auto_ptr<PacketLock> PacketReadCache::lock(uint64_t packetLogicalOffset, char* &pkt)
+unique_ptr<PacketLock> PacketReadCache::lock(uint64_t packetLogicalOffset, char* &pkt)
 {
 #ifdef E57_MAX_VERBOSE
     cout << "PacketReadCache::lock() called, packetLogicalOffset=" << packetLogicalOffset << endl;
@@ -7927,7 +7927,7 @@ auto_ptr<PacketLock> PacketReadCache::lock(uint64_t packetLogicalOffset, char* &
             pkt = entries_[i].buffer_;
 
             /// Create lock so we are sure that we will be unlocked when use is finished.
-            auto_ptr<PacketLock> plock(new PacketLock(this, i));
+            unique_ptr<PacketLock> plock(new PacketLock(this, i));
 
             /// Increment cache lock just before return
             lockCount_++;
@@ -7955,7 +7955,7 @@ auto_ptr<PacketLock> PacketReadCache::lock(uint64_t packetLogicalOffset, char* &
     pkt = entries_[oldestEntry].buffer_;
 
     /// Create lock so we are sure we will be unlocked when use is finished.
-    auto_ptr<PacketLock> plock(new PacketLock(this, oldestEntry));
+    unique_ptr<PacketLock> plock(new PacketLock(this, oldestEntry));
 
     /// Increment cache lock just before return
     lockCount_++;
