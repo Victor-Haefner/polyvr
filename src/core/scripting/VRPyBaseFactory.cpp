@@ -45,9 +45,11 @@ template<> bool toValue(PyObject* o, double& v) { if (!PyNumber_Check(o)) return
 template<> bool toValue(PyObject* o, string& v) {
     if (o == 0) return 1;
 
+    string oType = string(o->ob_type->tp_name);
+
     //cout << "toValue->string " << bool(o == Py_None) << " " << o << endl;
-    //cout << "toValue->string " << o->ob_type->tp_name << endl;
-    if (string(o->ob_type->tp_name) == "tuple") {
+    //cout << " - - - toValue->string " << o->ob_type->tp_name << endl;
+    if (oType == "tuple") {
         v = "(";
         for (int i=0; i<PyTuple_GET_SIZE(o); i++) {
             auto c = PyTuple_GET_ITEM(o, i);
@@ -56,6 +58,15 @@ template<> bool toValue(PyObject* o, string& v) {
         }
         v += ")";
         return 1;
+    }
+
+    if (oType == "bytes") {
+        char* buffer = nullptr;
+        Py_ssize_t length = 0;
+        if (PyBytes_AsStringAndSize(o, &buffer, &length) == 0) {
+            v.assign(buffer, length);
+            return 1;
+        }
     }
 
     if (VRPyBase::isNone(o)) return 1;
