@@ -188,8 +188,8 @@ void VRTexture::paste(VRTexturePtr other, Vec3i destOffset) { // copy from other
     Vec3i winSize = srcSize;
     Vec3i srcOffset = Vec3i(0,0,0);
     for (int i=0; i<3; i++) {
-        if (destOffset[i] > 0) winSize[i] = min(srcSize[i], destSize[i]-destOffset[i]);
-        if (destOffset[i] < 0) winSize[i] = min(srcSize[i] + destOffset[i], destSize[i]);
+        if (destOffset[i] > 0)  winSize[i] = min(srcSize[i], destSize[i]-destOffset[i]);
+        if (destOffset[i] <= 0) winSize[i] = min(srcSize[i] + destOffset[i], destSize[i]);
         if (destOffset[i] < 0) srcOffset[i] = -destOffset[i];
         if (destOffset[i] < 0) destOffset[i] = 0;
     }
