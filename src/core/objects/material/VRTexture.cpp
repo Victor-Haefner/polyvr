@@ -260,6 +260,38 @@ void VRTexture::resize(Vec3i size, bool scale, Vec3i offset) {
     paste(tmp, offset);
 }
 
+void VRTexture::turn(int steps) {
+    if (steps%4 == 0) return; // full circles
+
+    Vec3i sSrc = getSize();
+    Vec3i sDst = getSize();
+    if (steps%2 == 1) sDst = Vec3i(sSrc[1], sSrc[0], sSrc[2]); // 90 deg rotation
+
+    ImageMTRecPtr rimg = Image::create();
+    rimg->set(img->getPixelFormat(), sDst[0], sDst[1], sDst[2], img->getMipMapCount(), img->getFrameCount(), img->getFrameDelay(), 0, img->getDataType(), true, img->getSideCount());
+
+    auto src = img->editData();
+    auto dst = rimg->editData();
+
+    auto indexOf = [](size_t i, size_t j, size_t k, Vec3i s) {
+        return i + j*s[0] + k*s[0]*s[1];
+    };
+
+    int bpp = getPixelByteSize();
+
+    for (size_t k=0; k<sDst[2]; k++) {
+        for (size_t j=0; j<sDst[1]; j++) {
+            for (size_t i=0; i<sDst[0]; i++) {
+                size_t a = indexOf( i,j,k, sDst) * bpp;
+                size_t b = indexOf( j,i,k, sSrc) * bpp;
+                memcpy(dst+a, src+b, bpp);
+            }
+        }
+    }
+
+    img = rimg;
+}
+
 void VRTexture::merge(VRTexturePtr other, Vec3d pos) {
     if (!other) return;
     if (!other->img) return;

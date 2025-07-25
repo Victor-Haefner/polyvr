@@ -64,6 +64,7 @@ class VRTexture : public std::enable_shared_from_this<VRTexture> {
         void paste(VRTexturePtr other, Vec3i offset);
         void merge(VRTexturePtr other, Vec3d pos);
         void mixColor(Color4f c, float a);
+        void turn(int steps); // turn n times 90 deg
 
         static string typeToString(int t);
         static string formatToString(int f);
