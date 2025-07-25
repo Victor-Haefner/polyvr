@@ -167,31 +167,55 @@ struct Pixel {
     Pixel(char r, char g, char b, char a) : r(r), g(g), b(b), a(a) {}
 };
 
-void VRTexture::paste(VRTexturePtr other, Vec3i offset) {
-    Vec3i s1 = getSize();
-    Vec3i s2 = other->getSize();
-    if (s2[0]*s2[1]*s2[2] == 0) return;
+void VRTexture::paste(VRTexturePtr other, Vec3i destOffset) { // copy from other into itself
+    auto memPos = [](const Vec3i& p, const Vec3i& s, const int& bpp) {
+        return (p[0] + p[1]*s[0] + p[2]*s[0]*s[1])*bpp;
+    };
 
-    Vec3i S = offset + s2;
-    S[0] = min(S[0], s1[0]);
-    S[1] = min(S[1], s1[1]);
-    S[2] = min(S[2], s1[2]);
-    Vec3i s3 = S - offset;
+    auto validPoint = [](const Vec3i& p, const Vec3i& s) {
+        if (p[0] < 0 || p[1] < 0 || p[2] < 0) return false;
+        if (p[0] >= s[0] || p[1] >= s[1] || p[2] >= s[2]) return false;
+        return true;
+    };
+
+    Vec3i destSize = getSize();
+    Vec3i srcSize = other->getSize();
+    if (srcSize[0]*srcSize[1]*srcSize[2] == 0) return;
+    if (destOffset[0] <= -srcSize[0] || destOffset[1] <= -srcSize[1] || destOffset[2] <= -srcSize[2]) return; // img not visible
+    if (destOffset[0] > destSize[0] || destOffset[1] > destSize[1] || destOffset[2] > destSize[2]) return; // img not visible
+
+    // compute window to copy
+    Vec3i winSize = srcSize;
+    Vec3i srcOffset = Vec3i(0,0,0);
+    for (int i=0; i<3; i++) {
+        if (destOffset[i] > 0) winSize[i] = min(srcSize[i], destSize[i]-destOffset[i]);
+        if (destOffset[i] < 0) winSize[i] = min(srcSize[i] + destOffset[i], destSize[i]);
+        if (destOffset[i] < 0) srcOffset[i] = -destOffset[i];
+        if (destOffset[i] < 0) destOffset[i] = 0;
+    }
+
+    //cout << "window size: " << winSize << ", src offset: " << srcOffset << ", dest offset: " << destOffset << endl;
 
     auto data1 = img->editData();
     auto data2 = other->img->editData();
     int Bpp1 = getPixelByteSize();
     int Bpp2 = other->getPixelByteSize();
     int BppMin = min(Bpp1, Bpp2);
-    for (int k=0; k<s3[2]; k++) {
-        for (int j=0; j<s3[1]; j++) {
-            size_t J1 = (offset[0] + (j+offset[1])*s1[0] + (k+offset[2])*s1[0]*s1[1])*Bpp1;
-            size_t J2 = (j*s2[0] + k*s2[0]*s2[1])*Bpp2;
-            if (Bpp1 == Bpp2) memcpy(data1+J1, data2+J2, s3[0]*Bpp2); // copy whole line
-            else {
-                for (int i=0; i<s3[0]; i++) {
-                    size_t J11 = J1 + i*Bpp1;
-                    size_t J21 = J2 + i*Bpp2;
+
+    for (int k=0; k<winSize[2]; k++) {
+        for (int j=0; j<winSize[1]; j++) {
+            Vec3i dstP = Vec3i(0,j,k)+destOffset;
+            Vec3i srcP = Vec3i(0,j,k)+srcOffset;
+            size_t dstMem = memPos(dstP, destSize, Bpp1);
+            size_t srcMem = memPos(srcP, srcSize , Bpp2);
+
+            if (Bpp1 == Bpp2) {
+                    //cout << " copy " << srcP << " -> " << dstP << "/" << winSize[0] << " - dstMem: " << dstMem/Bpp1 << "/" << destSize[0]*destSize[1]*destSize[2] << endl;
+                    memcpy(data1+dstMem, data2+srcMem, winSize[0]*Bpp2); // copy whole line
+            } else {
+                for (int i=0; i<winSize[0]; i++) {
+                    size_t J11 = dstMem + i*Bpp1;
+                    size_t J21 = srcMem + i*Bpp2;
 
                     if (Bpp1 == 4 && Bpp2 == 1) { // hack, make it nicer later on
                         char c = *(data2+J21);
