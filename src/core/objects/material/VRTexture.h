@@ -36,7 +36,7 @@ class VRTexture : public std::enable_shared_from_this<VRTexture> {
         void setImage(ImageMTRecPtr img);
         void setInternalFormat(int ipf);
         void setPixel(Vec3i p, Color4f c);
-        void setPixel(int i, Color4f c);
+        void setIthPixel(int i, Color4f c);
         void setByteData(vector<char> data, Vec3i layout, int chanels, int Nmipmaps, int internalpf);
         void setFloatData(vector<float> data, Vec3i layout, int chanels, int Nmipmaps, int internalpf);
 

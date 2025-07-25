@@ -173,23 +173,23 @@ void VRTexture::paste(VRTexturePtr other, Vec3i offset) {
     if (s2[0]*s2[1]*s2[2] == 0) return;
 
     Vec3i S = offset + s2;
-    if (S[0] > s1[0]) { cout << "VRTexture::paste sx too big: " << S << " s " << s1 << endl; return; }
-    if (S[1] > s1[1]) { cout << "VRTexture::paste sy too big: " << S << " s " << s1 << endl; return; }
-    if (S[2] > s1[2]) { cout << "VRTexture::paste sz too big: " << S << " s " << s1 << endl; return; }
-
+    S[0] = min(S[0], s1[0]);
+    S[1] = min(S[1], s1[1]);
+    S[2] = min(S[2], s1[2]);
+    Vec3i s3 = S - offset;
 
     auto data1 = img->editData();
     auto data2 = other->img->editData();
     int Bpp1 = getPixelByteSize();
     int Bpp2 = other->getPixelByteSize();
     int BppMin = min(Bpp1, Bpp2);
-    for (int k=0; k<s2[2]; k++) {
-        for (int j=0; j<s2[1]; j++) {
+    for (int k=0; k<s3[2]; k++) {
+        for (int j=0; j<s3[1]; j++) {
             size_t J1 = (offset[0] + (j+offset[1])*s1[0] + (k+offset[2])*s1[0]*s1[1])*Bpp1;
             size_t J2 = (j*s2[0] + k*s2[0]*s2[1])*Bpp2;
-            if (Bpp1 == Bpp2) memcpy(data1+J1, data2+J2, s2[0]*Bpp2); // copy whole line
+            if (Bpp1 == Bpp2) memcpy(data1+J1, data2+J2, s3[0]*Bpp2); // copy whole line
             else {
-                for (int i=0; i<s2[0]; i++) {
+                for (int i=0; i<s3[0]; i++) {
                     size_t J11 = J1 + i*Bpp1;
                     size_t J21 = J2 + i*Bpp2;
 
@@ -218,6 +218,7 @@ void VRTexture::paste(VRTexturePtr other, Vec3i offset) {
 }
 
 void VRTexture::resize(Vec3i size, bool scale, Vec3i offset) {
+    cout << "resize " << getSize() << " to " << size << ", scale " << scale << ", offset " << offset << endl;
     ImageMTRecPtr nimg = Image::create();
     nimg->set(img->getPixelFormat(), size[0], size[1], size[2], img->getMipMapCount(), img->getFrameCount(), img->getFrameDelay(), 0, img->getDataType(), true, img->getSideCount());
     VRTexturePtr tmp;
@@ -343,7 +344,7 @@ void VRTexture::setPixel(Vec3i p, Color4f c) {
     int h = img->getHeight();
     clampToImage(p);
     int i = p[0] + p[1]*w + p[2]*w*h;
-    setPixel(i, c);
+    setIthPixel(i, c);
 }
 
 size_t VRTexture::getNPixel() {
@@ -351,7 +352,7 @@ size_t VRTexture::getNPixel() {
     return s[0]*s[1]*s[2];
 }
 
-void VRTexture::setPixel(int i, Color4f c) {
+void VRTexture::setIthPixel(int i, Color4f c) {
     int N = getChannels();
     int Nbytes = getPixelByteN();
     auto data = img->editData();
@@ -607,7 +608,7 @@ void VRTexture::mixColor(Color4f c, float a) {
     size_t N = getNPixel();
     for (size_t i=0; i<N; i++) {
         Color4f p = getPixel(i);
-        setPixel(i, p*(1-a) + c*a);
+        setIthPixel(i, p*(1-a) + c*a);
     }
 }
 

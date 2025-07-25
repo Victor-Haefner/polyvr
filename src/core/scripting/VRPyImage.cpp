@@ -56,20 +56,24 @@ template<> PyTypeObject VRPyBaseT<VRTexture>::type = {
 };
 
 PyMethodDef VRPyTexture::methods[] = {
+    {"copy", PyWrap(Texture, copy, "Copy texture", VRTexturePtr ) },
     {"read", PyWrap(Texture, read, "Read an image from disk", bool, string ) },
     {"readGIS", PyWrap(Texture, readGIS, "Read GIS raster data from disk", void, string ) },
     {"readBuffer", PyWrapOpt(Texture, readBuffer, "Read binary file as raster data", "1|0", void, string, string, Vec3i, int, int, int ) },
     {"write", PyWrapOpt(Texture, write, "Write an image to disk - write( str path )", "0", void, string, bool ) },
-    {"getPixel", PyWrap(Texture, getPixelUV, "Return pixel at coordinates u,v - getPixel( [u,v] )", Color4f, Vec2d, bool ) },
+    {"getPixel", PyWrapOpt(Texture, getPixelVec, "Return pixel at coordinates [i,j,k]", "0", Color4f, Vec3i, bool ) },
+    {"getPixelUV", PyWrapOpt(Texture, getPixelUV, "Return pixel at coordinates u,v - getPixel( [u,v] )", "0", Color4f, Vec2d, bool ) },
     {"getPixels", PyWrap(Texture, getPixels, "Return pixels", vector<Color4f>, bool ) },
     {"getSize", PyWrap(Texture, getSize, "Return texture size, [W,H,D]", Vec3i ) },
     {"getAspectRatio", PyWrap(Texture, getAspectRatio, "Return aspect ratio between width and height", float ) },
     {"getChannels", PyWrap(Texture, getChannels, "Get number of image channels", int ) },
     {"mixColor", PyWrap(Texture, mixColor, "Mix texture colors with color", void, Color4f, float ) },
+    {"setPixel", PyWrap(Texture, setPixel, "Set pixel, (pos, color)", void, Vec3i, Color4f ) },
+    {"setIthPixel", PyWrap(Texture, setIthPixel, "Set ith pixel, (i, color)", void, int, Color4f ) },
     {"setByteData", PyWrapOpt(Texture, setByteData, "Set byte texture data", "1|0", void, vector<char>, Vec3i, int, int, int ) },
     {"setFloatData", PyWrapOpt(Texture, setFloatData, "Set float texture data", "1|0", void, vector<float>, Vec3i, int, int, int ) },
     {"setInternalFormat", PyWrap(Texture, setInternalFormat, "Set internal format", void, int ) },
-    {"resize", PyWrapOpt(Texture, resize, "Resize image, optional scaling and offset", "1|0 0 0", void, Vec3i, bool, Vec3i ) },
+    {"resize", PyWrapOpt(Texture, resize, "Resize image, (newSize | doScale, offset)", "1|0 0 0", void, Vec3i, bool, Vec3i ) },
     {NULL}  /* Sentinel */
 };
 
