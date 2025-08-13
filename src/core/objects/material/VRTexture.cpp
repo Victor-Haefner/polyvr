@@ -281,14 +281,16 @@ void VRTexture::turn(int steps) {
 
     int bpp = getPixelByteSize();
 
+    //cout << "VRTexture::turn " << steps << ", N " << N << endl;
+
     for (size_t k=0; k<sDst[2]; k++) {
         for (size_t j=0; j<sDst[1]; j++) {
             for (size_t i=0; i<sDst[0]; i++) {
                 size_t a = indexOf( i,j,k, sDst) * bpp;
                 size_t b = 0;
-                if (N == 1) b = indexOf( sDst[1]-j,i,k, sSrc) * bpp;
-                if (N == 2) b = indexOf( sDst[0]-i,sDst[1]-j,k, sSrc) * bpp;
-                if (N == 3) b = indexOf( j,sDst[0]-i,k, sSrc) * bpp;
+                if (N == 1) b = indexOf( sDst[1]-1-j,i,k, sSrc) * bpp;
+                if (N == 2) b = indexOf( sDst[0]-1-i,sDst[1]-1-j,k, sSrc) * bpp;
+                if (N == 3) b = indexOf( j,sDst[0]-1-i,k, sSrc) * bpp;
                 memcpy(dst+a, src+b, bpp);
             }
         }
