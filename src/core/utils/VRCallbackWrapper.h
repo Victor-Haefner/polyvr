@@ -4,6 +4,10 @@
 #include "VRUtilsFwd.h"
 #include "toString.h"
 
+
+template<typename T> int convertDefaultParam(string s, T& t) { return toValue(s, t); }
+template<> int convertDefaultParam(string s, int& t);
+
 struct VRCallbackWrapperBase { static string err; };
 
 template<class Param>

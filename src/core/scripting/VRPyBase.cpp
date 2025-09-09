@@ -455,6 +455,22 @@ int VRPyBase::toGLConst(string s) {
     if (s == "GL_ONE_MINUS_SRC_COLOR") return GL_ONE_MINUS_SRC_COLOR;
     if (s == "GL_ONE_MINUS_DST_COLOR") return GL_ONE_MINUS_DST_COLOR;
 
+    if (s == "GL_RED") return GL_RED;
+    if (s == "GL_R8") return GL_R8;
+#ifndef __EMSCRIPTEN__
+    if (s == "GL_ALPHA8") return GL_ALPHA8;
+    if (s == "GL_LUMINANCE8") return GL_LUMINANCE8;
+    if (s == "GL_RGB8") return GL_RGB8;
+    if (s == "GL_RGBA8") return GL_RGBA8;
+#endif
+
+    if (s == "GL_R32F") return GL_R32F;
+    if (s == "GL_ALPHA32F_ARB") return GL_ALPHA32F_ARB;
+    if (s == "GL_LUMINANCE32F_ARB") return GL_LUMINANCE32F_ARB;
+    if (s == "GL_LUMINANCE_ALPHA32F_ARB") return GL_LUMINANCE_ALPHA32F_ARB;
+    if (s == "GL_RGB32F") return GL_RGB32F;
+    if (s == "GL_RGBA32F") return GL_RGBA32F;
+    if (s == "GL_RED_INTEGER_EXT") return GL_RED_INTEGER_EXT;
 
     return -1;
 }

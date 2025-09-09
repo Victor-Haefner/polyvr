@@ -71,7 +71,7 @@ PyMethodDef VRPyTexture::methods[] = {
     {"setPixel", PyWrap(Texture, setPixel, "Set pixel, (pos, color)", void, Vec3i, Color4f ) },
     {"setIthPixel", PyWrap(Texture, setIthPixel, "Set ith pixel, (i, color)", void, int, Color4f ) },
     {"setByteData", PyWrapOpt(Texture, setByteData, "Set byte texture data", "1|0", void, vector<char>, Vec3i, int, int, int ) },
-    {"setFloatData", PyWrapOpt(Texture, setFloatData, "Set float texture data", "1|0", void, vector<float>, Vec3i, int, int, int ) },
+    {"setFloatData", PyWrapOpt(Texture, setFloatData, "Set float texture data (data, layout | channels = 'GL_RED', Nmipmaps = 0, ipf = 'GL_R32F')", "GL_RED|0|GL_R32F", void, vector<float>, Vec3i, int, int, int ) },
     {"setInternalFormat", PyWrap(Texture, setInternalFormat, "Set internal format", void, int ) },
     {"resize", PyWrapOpt(Texture, resize, "Resize image, (newSize | doScale, offset)", "1|0 0 0", void, Vec3i, bool, Vec3i ) },
     {"turn", PyWrap(Texture, turn, "Turn image n times 90 degree", void, int ) },

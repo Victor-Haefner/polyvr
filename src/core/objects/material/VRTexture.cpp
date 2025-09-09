@@ -31,6 +31,15 @@ void VRTexture::setInternalFormat(int ipf) { internal_format = ipf; }
 int VRTexture::getInternalFormat() { return internal_format; }
 ImageMTRecPtr VRTexture::getImage() { return img; }
 
+int VRTexture_getChnEnum(int chanels) {
+    int chEnum = chanels; // chanels may be an enum already
+    if (chanels == 1) chEnum = Image::OSG_I_PF;
+    if (chanels == 2) chEnum = Image::OSG_LA_PF;
+    if (chanels == 3) chEnum = Image::OSG_RGB_PF;
+    if (chanels == 4) chEnum = Image::OSG_RGBA_PF;
+    return chEnum;
+}
+
 void VRTexture::readBuffer(string path, string format, Vec3i layout, int chanels, int Nmipmaps, int ipf) {
     int frmt = -1;
     if (format == "UINT8") frmt = Image::OSG_UINT8_IMAGEDATA;
@@ -53,23 +62,20 @@ void VRTexture::readBuffer(string path, string format, Vec3i layout, int chanels
 
     file.close();
 
-    int chEnum = 0;
-    if (chanels == 1) chEnum = Image::OSG_I_PF;
-    if (chanels == 2) chEnum = Image::OSG_LA_PF;
-    if (chanels == 3) chEnum = Image::OSG_RGB_PF;
-    if (chanels == 4) chEnum = Image::OSG_RGBA_PF;
-
+    int chEnum = VRTexture_getChnEnum(chanels);
     img->set( chEnum, layout[0], layout[1], layout[2], Nmipmaps, 1, 0, (const uint8_t*)&data[0], frmt, true, 1);
     internal_format = ipf;
 }
 
 void VRTexture::setByteData(vector<char> data, Vec3i layout, int chanels, int Nmipmaps, int ipf) {
-    img->set( chanels, layout[0], layout[1], layout[2], Nmipmaps, 1, 0, (const uint8_t*)&data[0], Image::OSG_UINT8_IMAGEDATA, true, 1);
+    int chEnum = VRTexture_getChnEnum(chanels);
+    img->set( chEnum, layout[0], layout[1], layout[2], Nmipmaps, 1, 0, (const uint8_t*)&data[0], Image::OSG_UINT8_IMAGEDATA, true, 1);
     internal_format = ipf;
 }
 
 void VRTexture::setFloatData(vector<float> data, Vec3i layout, int chanels, int Nmipmaps, int ipf) {
-    img->set( chanels, layout[0], layout[1], layout[2], Nmipmaps, 1, 0, (const uint8_t*)&data[0], Image::OSG_FLOAT32_IMAGEDATA, true, 1);
+    int chEnum = VRTexture_getChnEnum(chanels);
+    img->set( chEnum, layout[0], layout[1], layout[2], Nmipmaps, 1, 0, (const uint8_t*)&data[0], Image::OSG_FLOAT32_IMAGEDATA, true, 1);
     internal_format = ipf;
 }
 
