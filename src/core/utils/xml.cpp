@@ -38,7 +38,9 @@ string XMLElement::getName() {
 
 string XMLElement::getNameSpace() {
     if (!node || ! node->ns) return "";
-    return string((const char*)node->ns);
+    if (node->ns->href) return string((const char*)node->ns->href);
+    //return string((const char*)node->ns);
+    return "";
 }
 
 string XMLElement::getText() {
@@ -53,6 +55,7 @@ bool XMLElement::hasText() {
     if (!node || !node->children) return false;
     auto txt = xmlNodeGetContent( node->children );
     if (!txt) return false;
+    xmlFree(txt);
     return true;
 }
 
@@ -74,10 +77,12 @@ map<string,string> XMLElement::getAttributes() {
     xmlAttr* attribute = node->properties;
     while(attribute) {
         xmlChar* value = xmlNodeListGetString(node->doc, attribute->children, 1);
-        string ans((const char*)attribute->name);
-        string vas((const char*)value);
-        res[ans] = vas;
-        xmlFree(value);
+        if (value) {
+            string ans((const char*)attribute->name);
+            string vas((const char*)value);
+            res[ans] = vas;
+            xmlFree(value);
+        }
         attribute = attribute->next;
     }
     return res;
@@ -254,6 +259,7 @@ string XML::toString() {
     xmlBuffer* buffer = xmlBufferCreate();
     xmlOutputBuffer* outputBuffer = xmlOutputBufferCreateBuffer( buffer, NULL );
     xmlSaveFormatFileTo(outputBuffer, doc, "UTF-8", 1);
+    xmlOutputBufferClose(outputBuffer);
     string str( (char*) buffer->content, buffer->use );
     xmlBufferFree( buffer );
     return str;

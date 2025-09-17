@@ -148,7 +148,10 @@ class FTRenderer {
                 pen.x += slot->advance.x;
                 pen.y += slot->advance.y;
                 //cout << " pen " << Vec2i(pen.x, pen.y) << endl;
+                FT_Done_Glyph(glyph);
             }
+
+            FT_Stroker_Done(stroker);
         }
 
         void drawGraphemes(vector<pair<unsigned long, string>>& graphemes) {
