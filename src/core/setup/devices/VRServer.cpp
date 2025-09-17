@@ -32,6 +32,8 @@ VRServer::VRServer(int port) : VRDevice("server") {
 
 VRServer::~VRServer() {
     //cout << "~VRServer " << getName() << endl;
+    if (soc) soc->setHTTPCallback(0);
+    if (cb) delete cb;
 }
 
 VRServerPtr VRServer::create(int p) {

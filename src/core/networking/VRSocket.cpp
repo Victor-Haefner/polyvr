@@ -95,7 +95,8 @@ class HTTPServer {
         }
 
         ~HTTPServer() {
-            delete data;
+            if (server) delete server;
+            if (data) delete data;
         }
 
         bool initServer(VRHTTP_cb* fkt, int p) {

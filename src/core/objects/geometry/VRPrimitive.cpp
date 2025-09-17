@@ -15,24 +15,24 @@ int VRPrimitive::getNParams() { return N; }
 string VRPrimitive::getType() { return type; }
 void VRPrimitive::fromString(string s) { stringstream ss(s); fromStream(ss); }
 string VRPrimitive::toString() { stringstream ss; toStream(ss); return ss.str(); }
-VRPrimitive* VRPrimitive::create(string p) {
-    if (p == "Plane") return new VRPlane();
-    if (p == "Box") return new VRBox();
-    if (p == "Sphere") return new VRSphere();
-    if (p == "Torus") return new VRTorus();
-    if (p == "Teapot") return new VRTeapot();
-    if (p == "Cylinder") return new VRCylinder();
-    if (p == "Cone") return new VRCone();
-    if (p == "Arrow") return new VRArrow();
-    if (p == "Pill") return new VRPill();
-    if (p == "Gear") return new VRGear();
-    if (p == "Thread") return new VRScrewThread();
-    if (p == "Disk") return new VRDisk();
-    if (p == "Annulus") return new VRAnnulus();
+shared_ptr<VRPrimitive> VRPrimitive::create(string p) {
+    if (p == "Plane") return shared_ptr<VRPrimitive>( new VRPlane() );
+    if (p == "Box") return shared_ptr<VRPrimitive>( new VRBox() );
+    if (p == "Sphere") return shared_ptr<VRPrimitive>( new VRSphere() );
+    if (p == "Torus") return shared_ptr<VRPrimitive>( new VRTorus() );
+    if (p == "Teapot") return shared_ptr<VRPrimitive>( new VRTeapot() );
+    if (p == "Cylinder") return shared_ptr<VRPrimitive>( new VRCylinder() );
+    if (p == "Cone") return shared_ptr<VRPrimitive>( new VRCone() );
+    if (p == "Arrow") return shared_ptr<VRPrimitive>( new VRArrow() );
+    if (p == "Pill") return shared_ptr<VRPrimitive>( new VRPill() );
+    if (p == "Gear") return shared_ptr<VRPrimitive>( new VRGear() );
+    if (p == "Thread") return shared_ptr<VRPrimitive>( new VRScrewThread() );
+    if (p == "Disk") return shared_ptr<VRPrimitive>( new VRDisk() );
+    if (p == "Annulus") return shared_ptr<VRPrimitive>( new VRAnnulus() );
     return 0;
 }
 
-VRPrimitive* VRPrimitive::copy() {
+shared_ptr<VRPrimitive> VRPrimitive::copy() {
     auto p = create(getType());
     p->fromString(toString());
     return p;

@@ -1301,7 +1301,7 @@ OSGGeometryPtr VRGeometry::getMesh() {
     else return 0;
 }
 
-VRPrimitive* VRGeometry::getPrimitive() { return primitive; }
+shared_ptr<VRPrimitive> VRGeometry::getPrimitive() { return primitive; }
 
 void VRGeometry::setMeshVisibility(bool b) {
     if (!mesh_node) return;

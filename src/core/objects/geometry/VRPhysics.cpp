@@ -492,7 +492,9 @@ btSoftBody* VRPhysics::createCloth() {
     geo->setIdentity();
     btSoftBodyWorldInfo* info = OSG::VRScene::getCurrent()->getSoftBodyWorldInfo();
 
-    VRPlane* prim = (VRPlane*)geo->getPrimitive();
+    shared_ptr<VRPlane> prim = dynamic_pointer_cast<VRPlane>( geo->getPrimitive() );
+    if (!prim) return;
+
     float nx = prim->Nx;
     float ny = prim->Ny;
     //float h = prim->height;

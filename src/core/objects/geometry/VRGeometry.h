@@ -32,7 +32,7 @@ class VRGeometry : public VRTransform {
 
     protected:
         VRMaterialPtr mat = 0;
-        VRPrimitive* primitive = 0;
+        shared_ptr<VRPrimitive> primitive = 0;
         OSGGeometryPtr mesh;
         OSGObjectPtr mesh_node;
         bool meshSet = false;
@@ -141,7 +141,7 @@ class VRGeometry : public VRTransform {
         float getMin(int axis);
 
         OSGGeometryPtr getMesh();
-        VRPrimitive* getPrimitive();
+        shared_ptr<VRPrimitive> getPrimitive();
 
         void setColor(string c);
         void setMaterial(VRMaterialPtr mat = 0);

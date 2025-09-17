@@ -33,7 +33,7 @@ struct Barrier {
 VRSharedMemory::VRSharedMemory(string segment, bool init, bool remove) :
     mtx( boost::interprocess::open_or_create, (segment+"_mtx").c_str() ) {
 
-    this->segment = new Segment();
+    this->segment = std::shared_ptr<Segment>( new Segment() );
     this->segment->name = segment;
     this->init = init;
     if (!init) return;
@@ -46,12 +46,13 @@ VRSharedMemory::VRSharedMemory(string segment, bool init, bool remove) :
 }
 
 VRSharedMemory::~VRSharedMemory() {
+    string sName = segment->name;
     if (!init) return;
     int U = getObject<int>("__users__")-1;
     setObject<int>("__users__", U);
     if (U == 0) {
-        cout << " clear shared memory, segment: '" << segment->name << "'" << endl;
-        shared_memory_object::remove(segment->name.c_str());
+        cout << " clear shared memory, segment: '" << sName << "'" << endl;
+        shared_memory_object::remove(sName.c_str());
     }
 }
 

@@ -5,6 +5,7 @@
 #include <map>
 #include <vector>
 #include <iostream>
+#include <memory>
 #include <boost/interprocess/managed_shared_memory.hpp>
 #include <boost/interprocess/allocators/allocator.hpp>
 #include <boost/interprocess/sync/named_mutex.hpp>
@@ -18,7 +19,7 @@ class VRSharedMemory {
             boost::interprocess::managed_shared_memory memory;
         };
 
-        Segment* segment = 0;
+        std::shared_ptr<Segment> segment = 0;
         boost::interprocess::named_mutex mtx;
         bool init = false;
 
