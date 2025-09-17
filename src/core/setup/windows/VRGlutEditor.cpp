@@ -39,33 +39,35 @@ using namespace std;
 map<int, VRGlutEditor*> glutEditors;
 
 VRGlutEditor* getCurrentEditor() {
-    return glutEditors[glutGetWindow()];
+    int gID = glutGetWindow();
+    if (!glutEditors.count(gID)) return 0;
+    return glutEditors[gID];
 }
 
 void onMainDisplay() { ; }
-void onMainReshape(int w, int h) { getCurrentEditor()->on_resize_window(w,h); }
-void onMainClose() { getCurrentEditor()->on_close_window(); }
-void onMainKeyboard(unsigned char k, int x, int y) { /*printf("gl key down %i\n", k);*/ getCurrentEditor()->onKeyboard(k, 1, x, y); }
-void onMainSpecial(int k, int x, int y) { /*printf("gl special down %i\n", k);*/ getCurrentEditor()->onKeyboard_special(k, 1, x, y); }
-void onMainKeyboardUp(unsigned char k, int x, int y) { /*printf("gl key up %i\n", k);*/ getCurrentEditor()->onKeyboard(k, 0, x, y); }
-void onMainSpecialUp(int k, int x, int y) { /*printf("gl special up %i\n", k);*/ getCurrentEditor()->onKeyboard_special(k, 0, x, y); }
+void onMainReshape(int w, int h) { auto e = getCurrentEditor(); if (e) e->on_resize_window(w,h); }
+void onMainClose() { auto e = getCurrentEditor(); if (e) e->on_close_window(); }
+void onMainKeyboard(unsigned char k, int x, int y) { /*printf("gl key down %i\n", k);*/ auto e = getCurrentEditor(); if (e) e->onKeyboard(k, 1, x, y); }
+void onMainSpecial(int k, int x, int y) { /*printf("gl special down %i\n", k);*/ auto e = getCurrentEditor(); if (e) e->onKeyboard_special(k, 1, x, y); }
+void onMainKeyboardUp(unsigned char k, int x, int y) { /*printf("gl key up %i\n", k);*/ auto e = getCurrentEditor(); if (e) e->onKeyboard(k, 0, x, y); }
+void onMainSpecialUp(int k, int x, int y) { /*printf("gl special up %i\n", k);*/ auto e = getCurrentEditor(); if (e) e->onKeyboard_special(k, 0, x, y); }
 
-void onUIDisplay() { getCurrentEditor()->on_ui_display(); }
-void onGLDisplay() { getCurrentEditor()->on_gl_display(); }
-void onUIReshape(int w, int h) { getCurrentEditor()->on_ui_resize(w, h); }
+void onUIDisplay() { auto e = getCurrentEditor(); if (e) e->on_ui_display(); }
+void onGLDisplay() { auto e = getCurrentEditor(); if (e) e->on_gl_display(); }
+void onUIReshape(int w, int h) { auto e = getCurrentEditor(); if (e) e->on_ui_resize(w, h); }
 
-void onPopupDisplay() { getCurrentEditor()->on_popup_display(); }
-void onPopupReshape(int w, int h) { getCurrentEditor()->on_popup_resize(w, h); }
-void onPopupClose() { getCurrentEditor()->on_popup_close(); }
+void onPopupDisplay() { auto e = getCurrentEditor(); if (e) e->on_popup_display(); }
+void onPopupReshape(int w, int h) { auto e = getCurrentEditor(); if (e) e->on_popup_resize(w, h); }
+void onPopupClose() { auto e = getCurrentEditor(); if (e) e->on_popup_close(); }
 
 // callbacks for GL view
-void glutEResize(int w, int h) { getCurrentEditor()->on_gl_resize(w, h); }
-void glutEMouse(int b, int s, int x, int y) { getCurrentEditor()->onMouse(b ,s ,x ,y); }
-void glutEMotion(int x, int y) { getCurrentEditor()->onMotion(x, y); }
-void glutEKeyboard(unsigned char k, int x, int y) { /*printf("gl key down %i\n", k);*/ getCurrentEditor()->onKeyboard(k, 1, x, y); }
-void glutESpecial(int k, int x, int y) { /*printf("gl special down %i\n", k);*/ getCurrentEditor()->onKeyboard_special(k, 1, x, y); }
-void glutEKeyboardUp(unsigned char k, int x, int y) { /*printf("gl key up %i\n", k);*/ getCurrentEditor()->onKeyboard(k, 0, x, y); }
-void glutESpecialUp(int k, int x, int y) { /*printf("gl special up %i\n", k);*/ getCurrentEditor()->onKeyboard_special(k, 0, x, y); }
+void glutEResize(int w, int h) { auto e = getCurrentEditor(); if (e) e->on_gl_resize(w, h); }
+void glutEMouse(int b, int s, int x, int y) { auto e = getCurrentEditor(); if (e) e->onMouse(b ,s ,x ,y); }
+void glutEMotion(int x, int y) { auto e = getCurrentEditor(); if (e) e->onMotion(x, y); }
+void glutEKeyboard(unsigned char k, int x, int y) { /*printf("gl key down %i\n", k);*/ auto e = getCurrentEditor(); if (e) e->onKeyboard(k, 1, x, y); }
+void glutESpecial(int k, int x, int y) { /*printf("gl special down %i\n", k);*/ auto e = getCurrentEditor(); if (e) e->onKeyboard_special(k, 1, x, y); }
+void glutEKeyboardUp(unsigned char k, int x, int y) { /*printf("gl key up %i\n", k);*/ auto e = getCurrentEditor(); if (e) e->onKeyboard(k, 0, x, y); }
+void glutESpecialUp(int k, int x, int y) { /*printf("gl special up %i\n", k);*/ auto e = getCurrentEditor(); if (e) e->onKeyboard_special(k, 0, x, y); }
 
 void testGLCapabilities() {
     cout << "Check OpenGL capabilities:" << endl;
@@ -221,6 +223,7 @@ VRGlutEditor::~VRGlutEditor() {
     glutDestroyWindow(winUI);
     glutDestroyWindow(topWin);
     win = NULL;
+    glutEditors.clear();
 }
 
 VRGlutEditorPtr VRGlutEditor::ptr() { return static_pointer_cast<VRGlutEditor>( shared_from_this() ); }
@@ -311,7 +314,7 @@ void VRGlutEditor::setFullscreen(bool b) {
 }
 
 bool doShutdown = false;
-void VRGlutEditor::on_close_window() { doShutdown = true;  signal("glutCloseWindow", {}); }
+void VRGlutEditor::on_close_window() { doShutdown = true; signal("glutCloseWindow", {}); }
 void VRGlutEditor::on_popup_close() { popup = ""; winPopup = -1; }
 
 void VRGlutEditor::togglePopupWindow(string name, string title, int width, int height) {
