@@ -133,6 +133,12 @@ void VRThreadManager::setThreadName(string name) {
     std::wstring stemp = std::wstring(name.begin(), name.end());
     SetThreadDescription(GetCurrentThread(), stemp.c_str());
 #endif
+
+#ifdef __linux__
+    if (name.size() >= 16) name = name.substr(0, 15); // pthread_setname_np limits names to 16 chars including '\0'
+    int rc = pthread_setname_np(pthread_self(), name.c_str());
+    if (rc != 0) cout << "pthread_setname_np failed!!" << endl;
+#endif
 }
 
 string VRThreadManager::getThreadName() {
@@ -145,6 +151,11 @@ string VRThreadManager::getThreadName() {
         name = string(stemp.begin(), stemp.end());
         LocalFree(data);
     }
+#endif
+#ifdef __linux__
+    char buf[16]; // max 16 bytes
+    int rc = pthread_getname_np(pthread_self(), buf, sizeof(buf));
+    if (rc == 0) name = buf;
 #endif
     return name;
 }

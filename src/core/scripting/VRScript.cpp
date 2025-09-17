@@ -506,8 +506,11 @@ void VRScript::compile( PyObject* pGlobal, PyObject* pModVR ) {
     setFunction( PyObject_GetAttrString(pModVR, name.c_str()) );
 }
 
+#include "core/utils/system/VRSystem.h"
 void VRScript::execute() {
     if (type == "Python") {
+        printBacktrace();
+
         if (!isInitScript && VRGlobals::CURRENT_FRAME <= loadingFrame + 2) return; // delay timeout scripts
         if (fkt == 0 || !active) return;
         PyGILState_STATE gstate = PyGILState_Ensure();

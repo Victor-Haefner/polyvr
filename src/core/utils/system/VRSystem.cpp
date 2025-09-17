@@ -1,6 +1,7 @@
 #include "VRSystem.h"
 #include "../VRTimer.h"
 #include "../toString.h"
+
 #include <stdlib.h>
 #include <cstdlib>
 #include <sys/stat.h>
@@ -29,6 +30,7 @@
 #include <mach/mach_time.h>
 #endif
 
+#include "core/scene/VRThreadManager.h"
 #include "core/utils/Thread.h"
 #include <chrono>
 
@@ -146,6 +148,8 @@ void printBacktrace() {
 
     int nptrs = backtrace(buffer, 100);
     printf("backtrace() returned %d addresses\n", nptrs);
+
+    cout << " thread: " << OSG::VRThreadManager::getThreadName() << endl;
 
     strings = backtrace_symbols(buffer, nptrs);
     if (strings != NULL) {
