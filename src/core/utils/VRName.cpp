@@ -123,12 +123,15 @@ void VRNameSpace::print() {
     }
 }
 
+bool namespacesValid = true;
+
 class VRNameManager {
     private:
         map<string, VRNameSpace> nameDicts;
 
     public:
         VRNameManager() {}
+        ~VRNameManager() { namespacesValid = false; }
 
         VRNameSpace* getNameSpace(string s) {
             if (!nameDicts.count(s)) nameDicts[s] = VRNameSpace(s);
@@ -146,6 +149,8 @@ void VRName::printInternals() { nmgr.print(); }
 VRNameSpace* VRName::getNameSpace() { return nameSpace; }
 
 VRNameSpace* VRName::setNameSpace(string s) {
+    if (!namespacesValid) return 0;
+
     nameSpaceName = s;
     if (nameSpace) {
         if(nameSpace->nspace == s) return nameSpace;
@@ -164,6 +169,7 @@ VRNameSpace* VRName::setNameSpace(string s) {
 VRNameSpace* VRName::resetNameSpace() { return setNameSpace("__global__"); }
 
 void VRName::compileName(bool expectUnique) {
+    if (!namespacesValid) return;
     if (!nameSpace) setNameSpace(nameSpaceName);
 
     if (expectUnique) { // when loading it may happen that suffixes are redundant
@@ -176,6 +182,7 @@ void VRName::compileName(bool expectUnique) {
 }
 
 string VRName::setName(string name) {
+    if (!namespacesValid) return "";
     if (!nameSpace) setNameSpace(nameSpaceName);
     nameSpace->applyFilter(name);
     if (base_name == name && name_suffix == 0) return this->name; // already named like that, return
