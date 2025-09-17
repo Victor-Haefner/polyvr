@@ -34,7 +34,7 @@
 
 using namespace OSG;
 
-vector< weak_ptr<VRGui> > instances;
+vector< weak_ptr<VRGui> > guiInstances;
 bool VRGui_gl_init = false;
 
 ImGuiContext* uiContext = 0;
@@ -102,7 +102,7 @@ VRGui::~VRGui() {
 
 VRGuiPtr VRGui::create() {
     auto gui = VRGuiPtr(new VRGui());
-    instances.push_back(gui);
+    guiInstances.push_back(gui);
     return gui;
 }
 
@@ -214,7 +214,7 @@ void VRGui::resize() {
 
 vector<VRGuiPtr> VRGui::getInstances() {
     vector<VRGuiPtr> res;
-    for (auto i : instances) {
+    for (auto i : guiInstances) {
         auto VRGui = i.lock();
         if (!VRGui) continue;
         res.push_back(VRGui);
@@ -223,7 +223,7 @@ vector<VRGuiPtr> VRGui::getInstances() {
 }
 
 void VRGui::reloadScripts(string path) {
-    for (auto i : instances) {
+    for (auto i : guiInstances) {
         auto VRGui = i.lock();
         if (!VRGui) continue;
         string s = VRGui->getSite();

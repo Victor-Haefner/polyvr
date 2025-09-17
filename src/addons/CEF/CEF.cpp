@@ -52,7 +52,7 @@ namespace std {
 
 using namespace OSG;
 
-vector< weak_ptr<CEF> > instances;
+vector< weak_ptr<CEF> > cefInstances;
 bool cef_gl_init = false;
 
 #if !defined(_WIN32) && !defined(__APPLE__)
@@ -250,7 +250,7 @@ void setSubData(Image* img, Int32 x0, Int32 y0, Int32 z0, Int32 srcW, Int32 srcH
     UChar8* dest = img->editData();
     if (!src || !dest) return;
 
-    UInt32 xMax = x0 + srcW;
+    //UInt32 xMax = x0 + srcW;
     UInt32 yMax = y0 + srcH;
     UInt32 zMax = z0 + srcD;
 
@@ -377,7 +377,7 @@ void CEF::shutdown() {
 
 CEFPtr CEF::create() {
     auto cef = CEFPtr(new CEF());
-    instances.push_back(cef);
+    cefInstances.push_back(cef);
     return cef;
 }
 
@@ -579,7 +579,7 @@ void CEF::resize() {
 
 vector<CEFPtr> CEF::getInstances() {
     vector<CEFPtr> res;
-    for (auto i : instances) {
+    for (auto i : cefInstances) {
         auto cef = i.lock();
         if (!cef) continue;
         res.push_back(cef);
@@ -588,7 +588,7 @@ vector<CEFPtr> CEF::getInstances() {
 }
 
 void CEF::reloadScripts(string path) {
-    for (auto i : instances) {
+    for (auto i : cefInstances) {
         auto cef = i.lock();
         if (!cef) continue;
         string s = cef->getSite();
