@@ -15,7 +15,6 @@ VRMutex mtx;
 VRCallbackManager::VRCallbackManager() { updateListsChanged = false; }
 VRCallbackManager::~VRCallbackManager() {
     cout << "VRCallbackManager::~VRCallbackManager" << endl;
-    for (auto ufs : updateFktPtrs) delete ufs.second;
 }
 
 void VRCallbackManager::queueJob(VRUpdateCbPtr f, int priority, int delay, bool ownRef) {
@@ -31,7 +30,7 @@ void VRCallbackManager::addUpdateFkt(VRUpdateCbWeakPtr f, int priority) {
     VRLock lock(mtx);
     updateListsChanged = true;
     if (updateFktPtrs.count(priority) == 0) {
-        updateFktPtrs[priority] = new list<VRUpdateCbWeakPtr>();
+        updateFktPtrs[priority] = shared_ptr<list<VRUpdateCbWeakPtr>>(new list<VRUpdateCbWeakPtr>());
     }
     updateFktPtrs_priorities[f.lock().get()] = priority;
     updateFktPtrs[priority]->push_back(f);
@@ -43,7 +42,7 @@ void VRCallbackManager::addTimeoutFkt(VRUpdateCbWeakPtr p, int priority, int tim
     updateListsChanged = true;
     if (updateFktPtrs_priorities.count(f)) return;
 
-    if (timeoutFktPtrs.count(priority) == 0) timeoutFktPtrs[priority] = new list<timeoutFkt>();
+    if (timeoutFktPtrs.count(priority) == 0) timeoutFktPtrs[priority] = shared_ptr<list<timeoutFkt>>(new list<timeoutFkt>());
     updateFktPtrs_priorities[f] = priority;
 
     timeoutFkt tof;
@@ -58,8 +57,9 @@ void VRCallbackManager::dropUpdateFkt(VRUpdateCbWeakPtr p) {//replace by list ||
     auto f = p.lock().get();
     if (updateFktPtrs_priorities.count(f) == 0) return;
     int prio = updateFktPtrs_priorities[f];
-    list<VRUpdateCbWeakPtr>* l = updateFktPtrs[prio];
-    if (l == 0) return;
+    if (!updateFktPtrs.count(prio)) return;
+    auto l = updateFktPtrs[prio];
+    if (!l) return;
 
     l->remove_if([p](VRUpdateCbWeakPtr p2){
         auto sp = p.lock();
@@ -77,8 +77,8 @@ void VRCallbackManager::dropTimeoutFkt(VRUpdateCbWeakPtr p) {//replace by list |
     if (updateFktPtrs_priorities.count(f) == 0) return;
     int prio = updateFktPtrs_priorities[f];
     if (timeoutFktPtrs.count(prio) == 0) return;
-    list<timeoutFkt>* l = timeoutFktPtrs[prio];
-    if (l == 0) return;
+    auto l = timeoutFktPtrs[prio];
+    if (!l) return;
 
     auto sp = p.lock();
     list<timeoutFkt>::iterator itr;
