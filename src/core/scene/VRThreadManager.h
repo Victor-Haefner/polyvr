@@ -25,11 +25,11 @@ class VRThread {
 
         ThreadRefPtr appThread;
         int ID = -1;
-        ::Thread* std_thread = 0;
+        shared_ptr<::Thread> std_thread = 0;
         ExternalThreadRefPtr osg_t = 0;
         BarrierRefPtr mainSyncBarrier;
         BarrierRefPtr selfSyncBarrier;
-        ChangeList* initCl = 0;
+        shared_ptr<ChangeList> initCl = 0;
         string name;
         bool control_flag = false;
         int status = 0;

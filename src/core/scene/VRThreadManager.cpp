@@ -24,7 +24,7 @@ VRThread::~VRThread() {
     control_flag = false;
     if (std_thread) {
         std_thread->join();
-        delete std_thread;
+        std_thread.reset();
     }
 }
 
@@ -96,7 +96,7 @@ void VRThreadManager::stopAllThreads() {
         for (auto t : threads) {
             //cout << "wait for " << t.second->name << " ID " << t.second->ID << " c " << count << endl;
             if (t.second->status == 2) {
-                if (t.second->std_thread) { t.second->std_thread->join(); delete t.second->std_thread; t.second->std_thread = 0; }
+                if (t.second->std_thread) { t.second->std_thread->join(); t.second->std_thread.reset(); }
                 threads.erase(t.first); break;
             }
         }
@@ -124,7 +124,7 @@ void VRThreadManager::stopThread(int id, int tries) {
         osgSleep(10);
     }
 
-    if (t->std_thread) { t->std_thread->join(); delete t->std_thread; t->std_thread = 0; }
+    if (t->std_thread) { t->std_thread->join(); t->std_thread.reset(); }
     threads.erase(id);
 }
 
@@ -182,6 +182,12 @@ void VRThreadManager::runLoop(VRThreadWeakPtr wt) {
     t->status = 2;
 }
 
+class MyChangeList : public OSG::ChangeList {
+    public:
+        MyChangeList() {}
+        ~MyChangeList() {}
+};
+
 int VRThreadManager::initThread(VRThreadCbPtr f, string name, bool loop, int aspect) { //start thread
 #ifndef WASM
     static int id = 1;
@@ -196,8 +202,8 @@ int VRThreadManager::initThread(VRThreadCbPtr f, string name, bool loop, int asp
     t->t_last = getTime()*1e-3;
     t->selfSyncBarrier = Barrier::create();
     t->mainSyncBarrier = Barrier::create();
-    t->initCl = ChangeList::create();
-    t->std_thread = new ::Thread(name, bind(&VRThreadManager::runLoop, this, t));
+    t->initCl = shared_ptr<ChangeList>( (MyChangeList*) ChangeList::create() );
+    t->std_thread = shared_ptr<::Thread>(new ::Thread(name, bind(&VRThreadManager::runLoop, this, t)));
     threads[id] = t;
 
     id++;
@@ -221,7 +227,7 @@ void VRThreadManager::waitThread(int id) {
 void VRThreadManager::killThread(int id) {
     if (threads.count(id) == 0) return;
     cout << "\nKILL THREAD " << id << endl;
-    if (threads[id]->std_thread) { threads[id]->std_thread->join(); delete threads[id]->std_thread; threads[id]->std_thread = 0; }
+    if (threads[id]->std_thread) { threads[id]->std_thread->join(); threads[id]->std_thread.reset(); }
     threads.erase(id);
 }
 
