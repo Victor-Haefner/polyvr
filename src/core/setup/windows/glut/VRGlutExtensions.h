@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <vector>
 #include <string>
+#include <memory>
 
 using namespace std;
 
@@ -13,18 +14,22 @@ struct Icon {
     int h = 0;
 
     Icon(int w, int h);
+    ~Icon();
 };
 
 struct IconList {
     int size = 0;
     uint64_t* data = 0;
-    vector<Icon> images;
+    vector<shared_ptr<Icon>> images;
 
     uint64_t* add(int w, int h);
     void addTest();
     void load(string path);
     void compile();
     void apply();
+
+    IconList();
+    ~IconList();
 };
 
 void initGlutExtensions();
