@@ -250,22 +250,141 @@ void handleMouseWheel(int b, int s) {
     }
 }
 
-void handleSpecial(int b, int s) { // TODO: for some reason the imgui state is inverted..
-    //cout << "handleSpecial " << b << ", " << s << endl;
-    ImGuiIO& io = ImGui::GetIO();
-    if (b == 112) io.KeyShift = s;
-    if (b == 113) io.KeyShift = s;
-    if (b == 114) io.KeyCtrl = s;
-    if (b == 115) io.KeyCtrl = s;
-    if (b == 116) io.KeyAlt = s;
+static ImGuiKey ImGui_ImplGLUT_KeyToImGuiKey(int key) {
+    switch (key) {
+        case '\t':                      return ImGuiKey_Tab;
+        case 256 + GLUT_KEY_LEFT:       return ImGuiKey_LeftArrow;
+        case 256 + GLUT_KEY_RIGHT:      return ImGuiKey_RightArrow;
+        case 256 + GLUT_KEY_UP:         return ImGuiKey_UpArrow;
+        case 256 + GLUT_KEY_DOWN:       return ImGuiKey_DownArrow;
+        case 256 + GLUT_KEY_PAGE_UP:    return ImGuiKey_PageUp;
+        case 256 + GLUT_KEY_PAGE_DOWN:  return ImGuiKey_PageDown;
+        case 256 + GLUT_KEY_HOME:       return ImGuiKey_Home;
+        case 256 + GLUT_KEY_END:        return ImGuiKey_End;
+        case 256 + GLUT_KEY_INSERT:     return ImGuiKey_Insert;
+        case 127:                       return ImGuiKey_Delete;
+        case 8:                         return ImGuiKey_Backspace;
+        case ' ':                       return ImGuiKey_Space;
+        case 13:                        return ImGuiKey_Enter;
+        case 27:                        return ImGuiKey_Escape;
+        case 39:                        return ImGuiKey_Apostrophe;
+        case 44:                        return ImGuiKey_Comma;
+        case 45:                        return ImGuiKey_Minus;
+        case 46:                        return ImGuiKey_Period;
+        case 47:                        return ImGuiKey_Slash;
+        case 59:                        return ImGuiKey_Semicolon;
+        case 61:                        return ImGuiKey_Equal;
+        case 91:                        return ImGuiKey_LeftBracket;
+        case 92:                        return ImGuiKey_Backslash;
+        case 93:                        return ImGuiKey_RightBracket;
+        case 96:                        return ImGuiKey_GraveAccent;
+        //case 0:                         return ImGuiKey_CapsLock;
+        //case 0:                         return ImGuiKey_ScrollLock;
+        case 256 + 0x006D:              return ImGuiKey_NumLock;
+        //case 0:                         return ImGuiKey_PrintScreen;
+        //case 0:                         return ImGuiKey_Pause;
+        //case '0':                       return ImGuiKey_Keypad0;
+        //case '1':                       return ImGuiKey_Keypad1;
+        //case '2':                       return ImGuiKey_Keypad2;
+        //case '3':                       return ImGuiKey_Keypad3;
+        //case '4':                       return ImGuiKey_Keypad4;
+        //case '5':                       return ImGuiKey_Keypad5;
+        //case '6':                       return ImGuiKey_Keypad6;
+        //case '7':                       return ImGuiKey_Keypad7;
+        //case '8':                       return ImGuiKey_Keypad8;
+        //case '9':                       return ImGuiKey_Keypad9;
+        //case 46:                        return ImGuiKey_KeypadDecimal;
+        //case 47:                        return ImGuiKey_KeypadDivide;
+        case 42:                        return ImGuiKey_KeypadMultiply;
+        //case 45:                        return ImGuiKey_KeypadSubtract;
+        case 43:                        return ImGuiKey_KeypadAdd;
+        //case 13:                        return ImGuiKey_KeypadEnter;
+        //case 0:                         return ImGuiKey_KeypadEqual;
+        case 256 + 0x0072:              return ImGuiKey_LeftCtrl;
+        case 256 + 0x0070:              return ImGuiKey_LeftShift;
+        case 256 + 0x0074:              return ImGuiKey_LeftAlt;
+        //case 0:                         return ImGuiKey_LeftSuper;
+        case 256 + 0x0073:              return ImGuiKey_RightCtrl;
+        case 256 + 0x0071:              return ImGuiKey_RightShift;
+        case 256 + 0x0075:              return ImGuiKey_RightAlt;
+        //case 0:                         return ImGuiKey_RightSuper;
+        //case 0:                         return ImGuiKey_Menu;
+        case '0':                       return ImGuiKey_0;
+        case '1':                       return ImGuiKey_1;
+        case '2':                       return ImGuiKey_2;
+        case '3':                       return ImGuiKey_3;
+        case '4':                       return ImGuiKey_4;
+        case '5':                       return ImGuiKey_5;
+        case '6':                       return ImGuiKey_6;
+        case '7':                       return ImGuiKey_7;
+        case '8':                       return ImGuiKey_8;
+        case '9':                       return ImGuiKey_9;
+        case 'A': case 'a':             return ImGuiKey_A;
+        case 'B': case 'b':             return ImGuiKey_B;
+        case 'C': case 'c':             return ImGuiKey_C;
+        case 'D': case 'd':             return ImGuiKey_D;
+        case 'E': case 'e':             return ImGuiKey_E;
+        case 'F': case 'f':             return ImGuiKey_F;
+        case 'G': case 'g':             return ImGuiKey_G;
+        case 'H': case 'h':             return ImGuiKey_H;
+        case 'I': case 'i':             return ImGuiKey_I;
+        case 'J': case 'j':             return ImGuiKey_J;
+        case 'K': case 'k':             return ImGuiKey_K;
+        case 'L': case 'l':             return ImGuiKey_L;
+        case 'M': case 'm':             return ImGuiKey_M;
+        case 'N': case 'n':             return ImGuiKey_N;
+        case 'O': case 'o':             return ImGuiKey_O;
+        case 'P': case 'p':             return ImGuiKey_P;
+        case 'Q': case 'q':             return ImGuiKey_Q;
+        case 'R': case 'r':             return ImGuiKey_R;
+        case 'S': case 's':             return ImGuiKey_S;
+        case 'T': case 't':             return ImGuiKey_T;
+        case 'U': case 'u':             return ImGuiKey_U;
+        case 'V': case 'v':             return ImGuiKey_V;
+        case 'W': case 'w':             return ImGuiKey_W;
+        case 'X': case 'x':             return ImGuiKey_X;
+        case 'Y': case 'y':             return ImGuiKey_Y;
+        case 'Z': case 'z':             return ImGuiKey_Z;
+        case 256 + GLUT_KEY_F1:         return ImGuiKey_F1;
+        case 256 + GLUT_KEY_F2:         return ImGuiKey_F2;
+        case 256 + GLUT_KEY_F3:         return ImGuiKey_F3;
+        case 256 + GLUT_KEY_F4:         return ImGuiKey_F4;
+        case 256 + GLUT_KEY_F5:         return ImGuiKey_F5;
+        case 256 + GLUT_KEY_F6:         return ImGuiKey_F6;
+        case 256 + GLUT_KEY_F7:         return ImGuiKey_F7;
+        case 256 + GLUT_KEY_F8:         return ImGuiKey_F8;
+        case 256 + GLUT_KEY_F9:         return ImGuiKey_F9;
+        case 256 + GLUT_KEY_F10:        return ImGuiKey_F10;
+        case 256 + GLUT_KEY_F11:        return ImGuiKey_F11;
+        case 256 + GLUT_KEY_F12:        return ImGuiKey_F12;
+        default:                        return ImGuiKey_None;
+    }
 }
 
-void checkSpecials() {
+static void ImGui_ImplGLUT_UpdateKeyModifiers() {
     ImGuiIO& io = ImGui::GetIO();
-    auto mods = glutGetModifiers();
-    io.KeyCtrl = (mods & GLUT_ACTIVE_CTRL);
-    io.KeyShift = (mods & GLUT_ACTIVE_SHIFT);
-    io.KeyAlt = (mods & GLUT_ACTIVE_ALT);
+    int mods = glutGetModifiers();
+    io.AddKeyEvent(ImGuiMod_Ctrl,  (mods & GLUT_ACTIVE_CTRL)  != 0);
+    io.AddKeyEvent(ImGuiMod_Shift, (mods & GLUT_ACTIVE_SHIFT) != 0);
+    io.AddKeyEvent(ImGuiMod_Alt,   (mods & GLUT_ACTIVE_ALT)   != 0);
+}
+
+static void ImGui_ImplGLUT_AddKeyEvent(ImGuiKey key, bool down, int native_keycode) {
+    ImGuiIO& io = ImGui::GetIO();
+    io.AddKeyEvent(key, down);
+    io.SetKeyEventNativeData(key, native_keycode, -1); // To support legacy indexing (<1.87 user code)
+    if (key == ImGuiKey_LeftShift || key == ImGuiKey_RightShift) io.AddKeyEvent(ImGuiMod_Shift, down);
+    if (key == ImGuiKey_LeftCtrl || key == ImGuiKey_RightCtrl) io.AddKeyEvent(ImGuiMod_Ctrl, down);
+    if (key == ImGuiKey_LeftAlt || key == ImGuiKey_RightAlt) io.AddKeyEvent(ImGuiMod_Alt, down);
+}
+
+static void printMods(const char *label) {
+    int m = glutGetModifiers();
+    printf("%s  mods: %s%s%s\n",
+           label,
+           (m & GLUT_ACTIVE_SHIFT) ? "Shift " : "",
+           (m & GLUT_ACTIVE_CTRL)  ? "Ctrl "  : "",
+           (m & GLUT_ACTIVE_ALT)   ? "Alt "   : "");
 }
 
 struct Utf8Handler {
@@ -295,6 +414,12 @@ struct Utf8Handler {
 };
 
 void ImGui_ImplGLUT_KeyboardUpFunc_main(unsigned char c, int x, int y) {
+    //printMods("KeyboardUp");
+    ImGui_ImplGLUT_UpdateKeyModifiers();
+
+    int mods = glutGetModifiers();
+    if ((mods & GLUT_ACTIVE_CTRL) && c <= 26) c = c + 'a' - 1; // convert ^A..^Z back to a..z
+
     static Utf8Handler utf8Handler;
     if (utf8Handler.checkByte(c)) {
         if (utf8Handler.active) return;
@@ -307,12 +432,17 @@ void ImGui_ImplGLUT_KeyboardUpFunc_main(unsigned char c, int x, int y) {
 }
 
 void ImGui_ImplGLUT_KeyboardFunc_main(unsigned char c, int x, int y) {
+    //printMods("KeyboardDown");
+    ImGui_ImplGLUT_UpdateKeyModifiers();
+
+    int mods = glutGetModifiers();
+    if ((mods & GLUT_ACTIVE_CTRL) && c <= 26) c = c + 'a' - 1; // convert ^A..^Z back to a..z
+
     static Utf8Handler utf8Handler;
     if (utf8Handler.checkByte(c)) {
         if (!utf8Handler.active) {
             //printf("imgui utf8 key down %s\n", utf8Handler.str().c_str());
             ImGui::SetCurrentContext(mainContext);
-            checkSpecials();
             ImGui::GetIO().AddInputCharactersUTF8( utf8Handler.str().c_str() );
         }
         return;
@@ -321,36 +451,45 @@ void ImGui_ImplGLUT_KeyboardFunc_main(unsigned char c, int x, int y) {
     //printf("imgui key down %i\n", c);
     if (c == 27) uiSignal("ui_close_popup");
     ImGui::SetCurrentContext(mainContext);
-    checkSpecials();
     ImGui_ImplGLUT_KeyboardFunc(c, x, y);
 }
 
 void ImGui_ImplGLUT_SpecialUpFunc_main(int k, int x, int y) {
-    //printf("imgui special up %i\n", k);
+    //printMods("SpecialUp");
     uiSignal("relayedImguiSpecialKeySignal", {{"key",toString(k)},{"state",toString(0)}});
     ImGui::SetCurrentContext(mainContext);
-    ImGui_ImplGLUT_SpecialUpFunc(k,x,y);
-    handleSpecial(k,0);
+    ImGuiKey imgui_key = ImGui_ImplGLUT_KeyToImGuiKey(k + 256);
+    ImGui_ImplGLUT_AddKeyEvent(imgui_key, false, k + 256);
 }
 
-void ImGui_ImplGLUT_SpecialFunc_main(int k, int x, int y) { ImGui::SetCurrentContext(mainContext); checkSpecials(); ImGui_ImplGLUT_SpecialFunc(k,x,y); handleSpecial(k,1); }
+void ImGui_ImplGLUT_SpecialFunc_main(int k, int x, int y) {
+    //printMods("SpecialDown");
+    ImGui::SetCurrentContext(mainContext);
+    ImGuiKey imgui_key = ImGui_ImplGLUT_KeyToImGuiKey(k + 256);
+    ImGui_ImplGLUT_AddKeyEvent(imgui_key, true, k + 256);
+}
+
 void ImGui_ImplGLUT_ReshapeFunc_main(int x, int y) { ImGui::SetCurrentContext(mainContext); ImGui_ImplGLUT_ReshapeFunc(x,y); }
 void ImGui_ImplGLUT_MotionFunc_main(int x, int y) { updateGlutCursor(); ImGui::SetCurrentContext(mainContext); ImGui_ImplGLUT_MotionFunc(x, y); }
+
 void ImGui_ImplGLUT_MouseFunc_main(int b, int s, int x, int y) {
     ImGui::SetCurrentContext(mainContext);
-    checkSpecials();
     ImGui_ImplGLUT_MouseFunc(b,s,x,y);
     handleMouseWheel(b,s);
     uiSignal("uiGrabFocus", {});
 }
 
 void ImGui_ImplGLUT_KeyboardFunc_popup(unsigned char c, int x, int y) {
+    ImGui_ImplGLUT_UpdateKeyModifiers();
+
+    int mods = glutGetModifiers();
+    if ((mods & GLUT_ACTIVE_CTRL) && c <= 26) c = c + 'a' - 1; // convert ^A..^Z back to a..z
+
     static Utf8Handler utf8Handler;
     if (utf8Handler.checkByte(c)) {
         if (!utf8Handler.active) {
             //printf("imgui utf8 key down %s\n", utf8Handler.str().c_str());
             ImGui::SetCurrentContext(popupContext);
-            checkSpecials();
             ImGui::GetIO().AddInputCharactersUTF8( utf8Handler.str().c_str() );
         }
         return;
@@ -358,11 +497,15 @@ void ImGui_ImplGLUT_KeyboardFunc_popup(unsigned char c, int x, int y) {
 
     if (c == 27) uiSignal("ui_close_popup");
     ImGui::SetCurrentContext(popupContext);
-    checkSpecials();
     ImGui_ImplGLUT_KeyboardFunc(c, x, y);
 }
 
 void ImGui_ImplGLUT_KeyboardUpFunc_popup(unsigned char c, int x, int y) {
+    ImGui_ImplGLUT_UpdateKeyModifiers();
+
+    int mods = glutGetModifiers();
+    if ((mods & GLUT_ACTIVE_CTRL) && c <= 26) c = c + 'a' - 1; // convert ^A..^Z back to a..z
+
     static Utf8Handler utf8Handler;
     if (utf8Handler.checkByte(c)) {
         if (utf8Handler.active) return;
@@ -372,9 +515,22 @@ void ImGui_ImplGLUT_KeyboardUpFunc_popup(unsigned char c, int x, int y) {
     ImGui_ImplGLUT_KeyboardUpFunc(c,x,y);
 }
 
-void ImGui_ImplGLUT_SpecialFunc_popup(int k, int x, int y) { ImGui::SetCurrentContext(popupContext); checkSpecials(); ImGui_ImplGLUT_SpecialFunc(k,x,y); handleSpecial(k,1); }
-void ImGui_ImplGLUT_SpecialUpFunc_popup(int k, int x, int y) { ImGui::SetCurrentContext(popupContext); ImGui_ImplGLUT_SpecialUpFunc(k,x,y); handleSpecial(k,0); }
-void ImGui_ImplGLUT_MouseFunc_popup(int b, int s, int x, int y) { ImGui::SetCurrentContext(popupContext); checkSpecials(); ImGui_ImplGLUT_MouseFunc(b,s,x,y); handleMouseWheel(b,s); }
+
+void ImGui_ImplGLUT_SpecialFunc_popup(int k, int x, int y) {
+    //printMods("SpecialUp");
+    ImGui::SetCurrentContext(popupContext);
+    ImGuiKey imgui_key = ImGui_ImplGLUT_KeyToImGuiKey(k + 256);
+    ImGui_ImplGLUT_AddKeyEvent(imgui_key, false, k + 256);
+}
+
+void ImGui_ImplGLUT_SpecialUpFunc_popup(int k, int x, int y) {
+    //printMods("SpecialDown");
+    ImGui::SetCurrentContext(popupContext);
+    ImGuiKey imgui_key = ImGui_ImplGLUT_KeyToImGuiKey(k + 256);
+    ImGui_ImplGLUT_AddKeyEvent(imgui_key, true, k + 256);
+}
+
+void ImGui_ImplGLUT_MouseFunc_popup(int b, int s, int x, int y) { ImGui::SetCurrentContext(popupContext); ImGui_ImplGLUT_MouseFunc(b,s,x,y); handleMouseWheel(b,s); }
 //void ImGui_ImplGLUT_ReshapeFunc_popup(int x, int y) { ImGui::SetCurrentContext(popupContext); ImGui_ImplGLUT_ReshapeFunc(x,y); }
 void ImGui_ImplGLUT_MotionFunc_popup(int x, int y) { updateGlutCursor(); ImGui::SetCurrentContext(popupContext); ImGui_ImplGLUT_MotionFunc(x,y); }
 

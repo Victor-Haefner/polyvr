@@ -270,6 +270,7 @@ void ImScriptEditor::focusOn(string line, string column) {
 }
 
 void ImScriptEditor::editorCommand(string cmd) {
+    //cout << "editorCommand cmd " << cmd << endl;
     if (cmd == "toggleLine") {
         auto p = imEditor.GetCursorPosition();
         if (p.mLine <= 1) return;
@@ -544,6 +545,7 @@ void ImScripting::render() {
         if (io.KeyCtrl && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_T))) { uiSignal("editor_cmd", {{"cmd","toggleLine"}}); }
         if (io.KeyCtrl && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_D))) { uiSignal("editor_cmd", {{"cmd","duplicateLine"}}); }
 #else
+        //cout << " ---- " << io.KeyCtrl << " - " << io.KeysDown['d'] << " - " << ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_D)) << endl;
         if (io.KeyCtrl && io.KeysDown['t']) { io.KeysDown['t'] = false; uiSignal("editor_cmd", {{"cmd","toggleLine"}}); }
         if (io.KeyCtrl && io.KeysDown['d']) { io.KeysDown['d'] = false; uiSignal("editor_cmd", {{"cmd","duplicateLine"}}); }
 #endif
