@@ -171,7 +171,7 @@
 				<Compiler>
 					<Add option="-O2" />
 					<Add option="-g" />
-					<Add option="-std=c++14" />
+					<Add option="-std=c++17" />
 				</Compiler>
 				<Linker>
 					<Add library="bin/Debug/libPVR-Gui.so" />
@@ -197,7 +197,7 @@
 				<Option compiler="gcc" />
 				<Compiler>
 					<Add option="-O2" />
-					<Add option="-std=c++14" />
+					<Add option="-std=c++17" />
 				</Compiler>
 				<Linker>
 					<Add option="-s" />
@@ -210,8 +210,8 @@
 		</VirtualTargets>
 		<Compiler>
 			<Add option="-Wall" />
-			<Add option="-std=c++20" />
 			<Add option="-fPIC" />
+			<Add option="-std=c++17" />
 			<Add option="`pkg-config gmodule-2.0 --cflags`" />
 			<Add option="`pkg-config python3 --cflags`" />
 			<Add option="-fopenmp" />
