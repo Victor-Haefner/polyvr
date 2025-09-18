@@ -42,6 +42,11 @@ string formatPerformance(float exec_time) {
     return time;
 }
 
+bool imguiKeyPressed(int c) {
+    return ImGui::IsKeyPressed( ImGui::GetKeyIndex((ImGuiKey)c) );
+    //return io.KeysDown[(char)c]; // old way
+}
+
 ImScriptGroup::ImScriptGroup(string name) : name(name) {}
 ImScriptEntry::ImScriptEntry(string name) : name(name) {}
 
@@ -260,8 +265,10 @@ string ImScriptEditor::getSelection() {
 
 void ImScriptEditor::handleShiftTab(int tab, int shift) {
 	ImGuiIO& io = ImGui::GetIO();
-	io.KeysDown[int('\t')] = tab;
-	io.KeyShift = shift;
+	//io.KeysDown[int('\t')] = tab;
+	//io.KeyShift = shift;
+	io.AddKeyEvent(ImGuiKey_Tab, tab);
+	io.AddKeyEvent(ImGuiKey_ModShift, shift);
 }
 
 void ImScriptEditor::focusOn(string line, string column) {
@@ -475,16 +482,11 @@ void ImScripting::render() {
     };
 
     ImGuiIO& io = ImGui::GetIO();
-#ifdef WIN32
-    if (io.KeyCtrl && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_S))) { uiSignal("scripts_toolbar_save"); }
-    if (io.KeyCtrl && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_E))) { uiSignal("scripts_toolbar_execute"); }
-    if (io.KeyCtrl && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_W))) { uiSignal("clearConsoles"); }
-#else
-    if (io.KeyCtrl && io.KeysDown['s']) { io.KeysDown['s'] = false; uiSignal("scripts_toolbar_save"); }
-    if (io.KeyCtrl && io.KeysDown['e']) { io.KeysDown['e'] = false; uiSignal("scripts_toolbar_execute"); }
-    if (io.KeyCtrl && io.KeysDown['w']) { io.KeysDown['w'] = false; uiSignal("clearConsoles"); }
-    if (io.KeyCtrl && io.KeysDown['f']) { io.KeysDown['f'] = false; openSearch(); }
-#endif
+    if (io.KeyCtrl) {
+        if (imguiKeyPressed(ImGuiKey_S)) { uiSignal("scripts_toolbar_save"); }
+        if (imguiKeyPressed(ImGuiKey_E)) { uiSignal("scripts_toolbar_execute"); }
+        if (imguiKeyPressed(ImGuiKey_W)) { uiSignal("clearConsoles"); }
+    }
 
     // toolbar
     ImGui::Spacing();
@@ -540,15 +542,9 @@ void ImScripting::render() {
     ImGui::BeginGroup();
     ImGui::Spacing();
     ImGui::BeginChild("ScriptEditorPanel", ImVec2(w2, h), false, flags);
-    if (ImGui::IsWindowFocused(ImGuiFocusedFlags_ChildWindows)) {
-#ifdef WIN32
-        if (io.KeyCtrl && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_T))) { uiSignal("editor_cmd", {{"cmd","toggleLine"}}); }
-        if (io.KeyCtrl && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_D))) { uiSignal("editor_cmd", {{"cmd","duplicateLine"}}); }
-#else
-        //cout << " ---- " << io.KeyCtrl << " - " << io.KeysDown['d'] << " - " << ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_D)) << endl;
-        if (io.KeyCtrl && io.KeysDown['t']) { io.KeysDown['t'] = false; uiSignal("editor_cmd", {{"cmd","toggleLine"}}); }
-        if (io.KeyCtrl && io.KeysDown['d']) { io.KeysDown['d'] = false; uiSignal("editor_cmd", {{"cmd","duplicateLine"}}); }
-#endif
+    if (ImGui::IsWindowFocused(ImGuiFocusedFlags_ChildWindows) && io.KeyCtrl) {
+        if (imguiKeyPressed(ImGuiKey_T)) { uiSignal("editor_cmd", {{"cmd","toggleLine"}}); }
+        if (imguiKeyPressed(ImGuiKey_D)) { uiSignal("editor_cmd", {{"cmd","duplicateLine"}}); }
     }
 
     editor.render();
