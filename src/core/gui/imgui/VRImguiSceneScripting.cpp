@@ -42,9 +42,24 @@ string formatPerformance(float exec_time) {
     return time;
 }
 
+
+#if IMGUI_VERSION_NUM <= 18600
+#define ImGuiKey_S 's'
+#define ImGuiKey_E 'e'
+#define ImGuiKey_W 'w'
+#define ImGuiKey_T 't'
+#define ImGuiKey_D 'd'
+#endif // IMGUI_VERSION_NUM
+
 bool imguiKeyPressed(int c) {
+#if IMGUI_VERSION_NUM <= 18600
+	ImGuiIO& io = ImGui::GetIO();
+	bool kDown = io.KeysDown[c];
+	io.KeysDown[c] = false;
+    return kDown;
+#else
     return ImGui::IsKeyPressed( ImGui::GetKeyIndex((ImGuiKey)c) );
-    //return io.KeysDown[(char)c]; // old way
+#endif
 }
 
 ImScriptGroup::ImScriptGroup(string name) : name(name) {}
@@ -265,10 +280,13 @@ string ImScriptEditor::getSelection() {
 
 void ImScriptEditor::handleShiftTab(int tab, int shift) {
 	ImGuiIO& io = ImGui::GetIO();
-	//io.KeysDown[int('\t')] = tab;
-	//io.KeyShift = shift;
+#if IMGUI_VERSION_NUM <= 18600
+	io.KeysDown[int('\t')] = tab;
+	io.KeyShift = shift;
+#else
 	io.AddKeyEvent(ImGuiKey_Tab, tab);
 	io.AddKeyEvent(ImGuiKey_ModShift, shift);
+#endif
 }
 
 void ImScriptEditor::focusOn(string line, string column) {

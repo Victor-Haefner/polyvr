@@ -4,6 +4,7 @@
 #include <iostream>
 #include <GL/glew.h>
 #include <GL/glut.h>
+#include <GL/freeglut_ext.h>
 
 #ifdef _WIN32
 #include <imgui_impl_glut.h>
@@ -250,6 +251,7 @@ void handleMouseWheel(int b, int s) {
     }
 }
 
+#if IMGUI_VERSION_NUM > 18600
 static ImGuiKey ImGui_ImplGLUT_KeyToImGuiKey(int key) {
     switch (key) {
         case '\t':                      return ImGuiKey_Tab;
@@ -360,22 +362,39 @@ static ImGuiKey ImGui_ImplGLUT_KeyToImGuiKey(int key) {
         default:                        return ImGuiKey_None;
     }
 }
+#endif
 
 static void ImGui_ImplGLUT_UpdateKeyModifiers() {
     ImGuiIO& io = ImGui::GetIO();
     int mods = glutGetModifiers();
-    io.AddKeyEvent(ImGuiMod_Ctrl,  (mods & GLUT_ACTIVE_CTRL)  != 0);
-    io.AddKeyEvent(ImGuiMod_Shift, (mods & GLUT_ACTIVE_SHIFT) != 0);
-    io.AddKeyEvent(ImGuiMod_Alt,   (mods & GLUT_ACTIVE_ALT)   != 0);
+    bool shiftDown = ((mods & GLUT_ACTIVE_SHIFT) != 0);
+    bool ctrlDown = ((mods & GLUT_ACTIVE_CTRL) != 0);
+    bool altDown = ((mods & GLUT_ACTIVE_ALT) != 0);
+#if IMGUI_VERSION_NUM > 18600
+    io.AddKeyEvent(ImGuiMod_Shift, shiftDown);
+    io.AddKeyEvent(ImGuiMod_Ctrl,  ctrlDown);
+    io.AddKeyEvent(ImGuiMod_Alt,   altDown);
+#else
+	io.KeyShift = shiftDown;
+	io.KeyCtrl  = ctrlDown;
+	io.KeyAlt   = altDown;
+#endif
 }
 
-static void ImGui_ImplGLUT_AddKeyEvent(ImGuiKey key, bool down, int native_keycode) {
+static void ImGui_ImplGLUT_AddKeyEvent(ImGuiKey key, bool down, int nKey) {
     ImGuiIO& io = ImGui::GetIO();
+#if IMGUI_VERSION_NUM > 18600
     io.AddKeyEvent(key, down);
-    io.SetKeyEventNativeData(key, native_keycode, -1); // To support legacy indexing (<1.87 user code)
+    io.SetKeyEventNativeData(key, nKey, -1); // To support legacy indexing (<1.87 user code)
     if (key == ImGuiKey_LeftShift || key == ImGuiKey_RightShift) io.AddKeyEvent(ImGuiMod_Shift, down);
     if (key == ImGuiKey_LeftCtrl || key == ImGuiKey_RightCtrl) io.AddKeyEvent(ImGuiMod_Ctrl, down);
     if (key == ImGuiKey_LeftAlt || key == ImGuiKey_RightAlt) io.AddKeyEvent(ImGuiMod_Alt, down);
+#else
+    if (nKey < IM_ARRAYSIZE(io.KeysDown)) io.KeysDown[nKey] = down;
+    if (nKey == 256+GLUT_KEY_SHIFT_L || nKey == 256+GLUT_KEY_SHIFT_R) io.KeyShift = down;
+    if (nKey == 256+GLUT_KEY_CTRL_L || nKey == 256+GLUT_KEY_CTRL_R) io.KeyCtrl = down;
+    if (nKey == 256+GLUT_KEY_ALT_L || nKey == 256+GLUT_KEY_ALT_R) io.KeyAlt = down;
+#endif
 }
 
 static void printMods(const char *label) {
@@ -458,15 +477,23 @@ void ImGui_ImplGLUT_SpecialUpFunc_main(int k, int x, int y) {
     //printMods("SpecialUp");
     uiSignal("relayedImguiSpecialKeySignal", {{"key",toString(k)},{"state",toString(0)}});
     ImGui::SetCurrentContext(mainContext);
+#if IMGUI_VERSION_NUM > 18600
     ImGuiKey imgui_key = ImGui_ImplGLUT_KeyToImGuiKey(k + 256);
     ImGui_ImplGLUT_AddKeyEvent(imgui_key, false, k + 256);
+#else
+    ImGui_ImplGLUT_AddKeyEvent(0, false, k + 256);
+#endif
 }
 
 void ImGui_ImplGLUT_SpecialFunc_main(int k, int x, int y) {
     //printMods("SpecialDown");
     ImGui::SetCurrentContext(mainContext);
+#if IMGUI_VERSION_NUM > 18600
     ImGuiKey imgui_key = ImGui_ImplGLUT_KeyToImGuiKey(k + 256);
     ImGui_ImplGLUT_AddKeyEvent(imgui_key, true, k + 256);
+#else
+    ImGui_ImplGLUT_AddKeyEvent(0, true, k + 256);
+#endif
 }
 
 void ImGui_ImplGLUT_ReshapeFunc_main(int x, int y) { ImGui::SetCurrentContext(mainContext); ImGui_ImplGLUT_ReshapeFunc(x,y); }
@@ -519,15 +546,23 @@ void ImGui_ImplGLUT_KeyboardUpFunc_popup(unsigned char c, int x, int y) {
 void ImGui_ImplGLUT_SpecialFunc_popup(int k, int x, int y) {
     //printMods("SpecialUp");
     ImGui::SetCurrentContext(popupContext);
+#if IMGUI_VERSION_NUM > 18600
     ImGuiKey imgui_key = ImGui_ImplGLUT_KeyToImGuiKey(k + 256);
     ImGui_ImplGLUT_AddKeyEvent(imgui_key, false, k + 256);
+#else
+    ImGui_ImplGLUT_AddKeyEvent(0, false, k + 256);
+#endif
 }
 
 void ImGui_ImplGLUT_SpecialUpFunc_popup(int k, int x, int y) {
     //printMods("SpecialDown");
     ImGui::SetCurrentContext(popupContext);
+#if IMGUI_VERSION_NUM > 18600
     ImGuiKey imgui_key = ImGui_ImplGLUT_KeyToImGuiKey(k + 256);
     ImGui_ImplGLUT_AddKeyEvent(imgui_key, true, k + 256);
+#else
+    ImGui_ImplGLUT_AddKeyEvent(0, true, k + 256);
+#endif
 }
 
 void ImGui_ImplGLUT_MouseFunc_popup(int b, int s, int x, int y) { ImGui::SetCurrentContext(popupContext); ImGui_ImplGLUT_MouseFunc(b,s,x,y); handleMouseWheel(b,s); }
