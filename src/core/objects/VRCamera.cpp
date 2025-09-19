@@ -156,7 +156,7 @@ void VRCamera::activate() {
     if (scene) scene->setActiveCamera(getName());
 #ifndef WITHOUT_IMGUI
     VRGuiManager::broadcast("camera_changed");
-    uiSignal("ui_set_active_camera", {{"camIndex",toString(scene->getActiveCameraIndex())}});
+    uiSignal("ui_set_active_camera", {{"cam",toString(scene->getActiveCameraName())}});
 #endif
 }
 

@@ -182,19 +182,19 @@ void ImConsoles::pushConsole(string ID, string data, string style, string mark) 
     consoles[ID].push(data, style, mark);
 }
 
-ImViewControls::ImViewControls() {
+ImViewControls::ImViewControls() : cameras("currentCamera", "Camera:") {
     auto mgr = OSG::VRGuiSignals::get();
     mgr->addCallback("ui_clear_navigations", [&](OSG::VRGuiSignals::Options o){ navigations.clear(); return true; } );
     mgr->addCallback("ui_add_navigation", [&](OSG::VRGuiSignals::Options o){ navigations[o["nav"]] = toBool(o["active"]); return true; } );
 
-    mgr->addCallback("ui_clear_cameras", [&](OSG::VRGuiSignals::Options o){ cameras.clear(); return true; } );
-    mgr->addCallback("ui_add_camera", [&](OSG::VRGuiSignals::Options o){ cameras.push_back(o["cam"]); return true; } );
-    mgr->addCallback("ui_set_active_camera", [&](OSG::VRGuiSignals::Options o){ current_camera = toInt(o["camIndex"]); return true; } );
+    mgr->addCallback("ui_clear_cameras", [&](OSG::VRGuiSignals::Options o){ cameras.clearList(); return true; } );
+    mgr->addCallback("ui_add_camera", [&](OSG::VRGuiSignals::Options o){ cameras.appendList(o["cam"]); return true; } );
+    mgr->addCallback("ui_set_active_camera", [&](OSG::VRGuiSignals::Options o){ cameras.set(o["cam"]); return true; } );
 }
 
 void ImViewControls::render() {
     ImGuiIO& io = ImGui::GetIO();
-    vector<const char*> tmpCameras(cameras.size(), 0);
+    /*vector<const char*> tmpCameras(cameras.size(), 0);
     for (int i=0; i<cameras.size(); i++) tmpCameras[i] = cameras[i].c_str();
     ImGui::SameLine();
     ImGui::Text("Camera:");
@@ -202,13 +202,16 @@ void ImViewControls::render() {
     ImGui::SetNextItemWidth(150*io.FontGlobalScale);
     if (ImGui::Combo("##Cameras", &current_camera, &tmpCameras[0], tmpCameras.size())) {
         uiSignal("view_switch_camera", {{"cam",cameras[current_camera]}});
-    }
+    }*/
+    ImGui::SameLine();
+    if (cameras.render(150*io.FontGlobalScale)) cameras.signal("view_switch_camera");
 
     ImGui::SameLine();
     ImGui::SetNextItemWidth(150*io.FontGlobalScale);
     if (ImGui::BeginCombo("##Navigations", "Navigations", 0)) {
         for (auto& n : navigations) {
-            if (ImGui::Checkbox(n.first.c_str(), &n.second)) uiSignal("view_toggle_navigation", {{"nav",n.first}, {"state",toString(n.second)}});
+            string ID = n.first + "##navOpt";
+            if (ImGui::Checkbox(ID.c_str(), &n.second)) uiSignal("view_toggle_navigation", {{"nav",n.first}, {"state",toString(n.second)}});
         }
         ImGui::EndCombo();
     }

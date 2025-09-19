@@ -350,7 +350,6 @@ void VRSceneManager::update() {
         if (auto setup = VRSetup::getCurrent()) {
             VRTimer t2; t2.start();
             setup->updateWindows(); // rendering
-            setup.reset(); // updateGtk may close application, reset setup to avoid memory leak
             VRGlobals::WINDOWS_FRAME_RATE.update(t2);
             VRGlobals::UPDATE_LOOP5.update(timer);
         }

@@ -3,13 +3,13 @@
 
 #include "VRImguiUtils.h"
 #include "imEditor/TextEditor.h"
+#include "imWidgets/VRImguiCombo.h"
 
 using namespace std;
 
 class ImViewControls {
     public:
-        vector<string> cameras;
-        int current_camera = 0;
+        ImCombo cameras;
         int uiTheme = 1;
         int uiFont = 0;
 

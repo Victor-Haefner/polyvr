@@ -372,7 +372,7 @@ VRGuiBits::VRGuiBits() {
     mgr->addCallback("toolbar_export", [&](OSG::VRGuiSignals::Options o) { on_web_export_clicked(); return true; }, true );
     mgr->addCallback("toolbar_exit", [&](OSG::VRGuiSignals::Options o) { on_quit_clicked(); return true; }, true );
 
-    mgr->addCallback("view_switch_camera", [&](OSG::VRGuiSignals::Options o) { on_camera_changed(o["cam"]); return true; }, true );
+    mgr->addCallback("view_switch_camera", [&](OSG::VRGuiSignals::Options o) { on_camera_changed(o["selection"]); return true; }, true );
     mgr->addCallback("view_toggle_navigation", [&](OSG::VRGuiSignals::Options o) { on_navigation_toggled(o["nav"], toBool(o["state"])); return true; }, true );
     mgr->addCallback("view_toggle_layer", [&](OSG::VRGuiSignals::Options o) { on_view_option_toggle(o["layer"], toBool(o["state"])); return true; }, true );
     mgr->addCallback("toolbar_fullscreen", [&](OSG::VRGuiSignals::Options o) { on_fullscreen_clicked(); return true; }, true );
@@ -438,7 +438,7 @@ bool VRGuiBits::update() { // scene changed
 
     uiSignal("ui_clear_cameras");
     for (auto cam : scene->getCameraNames()) uiSignal("ui_add_camera", {{"cam",cam}});
-    uiSignal("ui_set_active_camera", {{"camIndex",toString(scene->getActiveCameraIndex())}});
+    uiSignal("ui_set_active_camera", {{"cam",toString(scene->getActiveCameraName())}});
 
     /* // update setup && project label
     setLabel("label24", "Project: " + scene->getName());*/
