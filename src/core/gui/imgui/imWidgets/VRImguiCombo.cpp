@@ -18,6 +18,16 @@ void ImCombo::setList(string v) {
     setList(strings);
 }
 
+void ImCombo::appendList(string s) {
+    strings.push_back(s);
+    cstrings.push_back(strings[strings.size()-1].c_str());
+}
+
+void ImCombo::clearList() {
+    strings.clear();
+    cstrings.clear();
+}
+
 bool ImCombo::render(int width) {
     if (label != "") {
         ImGui::Text(label.c_str());

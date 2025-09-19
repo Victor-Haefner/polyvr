@@ -176,7 +176,7 @@ void VRWindowManager::updateWindows() {
     }
     profiler->regStop(pID1);
 
-    //TODO: use barrier->getnumwaiting to make a state machine, allways ensure all are waiting!!
+    //TODO: use barrier->getnumwaiting to make a state machine, always ensure all are waiting!!
 
 #ifndef WASM
     BarrierRefPtr barrier = Barrier::get("PVR_rendering", true);
@@ -227,11 +227,13 @@ void VRWindowManager::updateWindows() {
         if (!wait()) return false;
         // let the windows merge the change lists, sync and clear
         if (!wait()) return false;
+
 #ifndef WITHOUT_GLUT
         int pID2 = profiler->regStart("process glut events");
         glutMainLoopEvent();
         profiler->regStop(pID2);
 #endif
+
         for (auto w : getWindows()) {
 #ifndef WITHOUT_GLUT
             int pID3 = profiler->regStart("render glut editor");

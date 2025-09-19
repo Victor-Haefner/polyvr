@@ -302,6 +302,7 @@ void PolyVR::update() {
         float d = float(i)/(initQueue.size()-1);
         i++;
         VRSetup::sendToBrowser("setProgress|"+toString(d)+"|"+cp->name);
+        cout << " init done!" << endl;
         return;
     }
 
@@ -313,6 +314,7 @@ void PolyVR::update() {
     int appInitFrame = 2;
 #endif
     if (VRGlobals::CURRENT_FRAME == appInitFrame) {
+        cout << " resolve init frame" << endl;
         string app = options->getOption<string>("application");
         //app = "/home/victor/Projects/polyvr/examples/CEF.xml";
         string dcy = options->getOption<string>("decryption");
@@ -320,6 +322,7 @@ void PolyVR::update() {
         if (startsWith(dcy, "key:")) key = subString(dcy, 4, dcy.size()-4);
         if (startsWith(dcy, "serial:")) key = "123"; // TODO: access serial connection to retrieve key
         if (app != "") VRSceneManager::get()->loadScene(app, false, key);
+        cout << "   init frame done!" << endl;
     }
 
     //if (VRGlobals::CURRENT_FRAME == 1000) { shutdown(); }

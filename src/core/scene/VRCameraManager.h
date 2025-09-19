@@ -30,6 +30,7 @@ class VRCameraManager : public VRStorage {
         VRCameraPtr getCamera(int ID);
         VRCameraPtr getActiveCamera();
         int getActiveCameraIndex();
+        string getActiveCameraName();
 
         vector<string> getCameraNames();
 
