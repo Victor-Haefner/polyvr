@@ -182,11 +182,9 @@ void VRThreadManager::runLoop(VRThreadWeakPtr wt) {
     t->status = 2;
 }
 
-class MyChangeList : public OSG::ChangeList {
-    public:
-        MyChangeList() {}
-        ~MyChangeList() {}
-};
+shared_ptr<ChangeList> createChangeList() {
+    return shared_ptr<ChangeList>(ChangeList::create(), [](ChangeList* cl){ OSG::subRef(cl); });
+}
 
 int VRThreadManager::initThread(VRThreadCbPtr f, string name, bool loop, int aspect) { //start thread
 #ifndef WASM
@@ -202,7 +200,7 @@ int VRThreadManager::initThread(VRThreadCbPtr f, string name, bool loop, int asp
     t->t_last = getTime()*1e-3;
     t->selfSyncBarrier = Barrier::create();
     t->mainSyncBarrier = Barrier::create();
-    t->initCl = shared_ptr<ChangeList>( (MyChangeList*) ChangeList::create() );
+    t->initCl = createChangeList();
     t->std_thread = shared_ptr<::Thread>(new ::Thread(name, bind(&VRThreadManager::runLoop, this, t)));
     threads[id] = t;
 

@@ -65,12 +65,14 @@ void VRAppLauncher::toggle_lock() {
 }
 
 void VRAppLauncher::setup(VRAppManager* mgr) {
+    manager = mgr;
+
     string rpath = VRSceneManager::get()->getOriginalWorkdir();
     uiSignal("setupAppLauncher", {{"ID",ID},{"name",path},{"previewPath",pxm_path}});
 
     auto sigs = OSG::VRGuiSignals::get();
-    sigs->addCallback("on_toggle_app", [&](OSG::VRGuiSignals::Options o) { if (o["ID"] == ID) mgr->toggleDemo( shared_from_this() ); return true; }, true );
-    sigs->addCallback("on_toggle_app_no_scripts", [&](OSG::VRGuiSignals::Options o) { if (o["ID"] == ID) mgr->toggleDemo( shared_from_this(), true ); return true; }, true );
+    sigs->addCallback("on_toggle_app", [&](OSG::VRGuiSignals::Options o) { if (o["ID"] == ID && manager) manager->toggleDemo( shared_from_this() ); return true; }, true );
+    sigs->addCallback("on_toggle_app_no_scripts", [&](OSG::VRGuiSignals::Options o) { if (o["ID"] == ID && manager) manager->toggleDemo( shared_from_this(), true ); return true; }, true );
 
     // prep icons
     /*imgPlay = (GtkImage*)gtk_image_new_from_icon_name("media-playback-start", GTK_ICON_SIZE_BUTTON);
