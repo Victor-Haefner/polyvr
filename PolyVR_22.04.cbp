@@ -366,6 +366,7 @@
 			<Add option="-lOSGDrawable" />
 			<Add option="-lOSGEffectGroups" />
 			<Add option="-lOSGFileIO" />
+			<Add option="-lOSGDynamics" />
 			<Add option="-lOSGGroup" />
 			<Add option="-lOSGImageFileIO" />
 			<Add option="-lOSGState" />
