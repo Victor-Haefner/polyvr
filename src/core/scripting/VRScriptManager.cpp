@@ -110,6 +110,8 @@ VRScriptManager::VRScriptManager() {
     cout << "Init ScriptManager" << endl;
     initPyModules();
 
+    cout << " Python version: " << Py_GetVersion() << endl;
+
     setStorageType("Scripts");
     storeMap("Script", &scripts);
 
@@ -314,6 +316,7 @@ void VRScriptManager::redirectPyOutput(string pyOutput, string console) {
         PyObject* redirector = (PyObject*)PyObject_New(PyConsoleRedirect, &PyOutConsoleType);
         PySys_SetObject(pyOutput.c_str(), redirector);
         pyOutConsole = console;
+        Py_DECREF(redirector);
     }
 
     if (pyOutput == "stderr") {
@@ -321,6 +324,7 @@ void VRScriptManager::redirectPyOutput(string pyOutput, string console) {
         PyObject* redirector = (PyObject*)PyObject_New(PyConsoleRedirect, &PyErrConsoleType);
         PySys_SetObject(pyOutput.c_str(), redirector);
         pyErrConsole = console;
+        Py_DECREF(redirector);
     }
 }
 

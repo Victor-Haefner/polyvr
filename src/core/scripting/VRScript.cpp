@@ -224,7 +224,7 @@ PyObject* VRScript::getPyObj(argPtr a) {
     updateArgPtr(a);
     if (a->type == "int") return Py_BuildValue("i", toInt(a->val.c_str()));
     else if (a->type == "float") return Py_BuildValue("f", toFloat(a->val.c_str()));
-    else if (a->type == "NoneType") return Py_None;
+    else if (a->type == "NoneType") Py_RETURN_NONE;
     else if (a->type == "str") return PyUnicode_FromString(a->val.c_str());
     else if (a->ptr == 0) { /*cout << "\ngetPyObj ERROR: " << a->type << " ptr is 0\n";*/ Py_RETURN_NONE; }
     else if (a->type == "VRPyObjectType") return VRPyObject::fromSharedPtr(((VRObject*)a->ptr)->ptr());
