@@ -494,9 +494,10 @@ void VRScript::preprocess() {
 
 void VRScript::compile( PyObject* pGlobal, PyObject* pModVR ) {
     //cout << "VRScript::compile " << getName() << ", \"" << getScript() << "\"" << endl;
+    string name = getName();
     setFunction( 0 );
     preprocess();
-    PyObject* pCode = Py_CompileString(getScript().c_str(), getName().c_str(), Py_file_input);
+    PyObject* pCode = Py_CompileString(getScript().c_str(), name.c_str(), Py_file_input);
     if (!pCode) { pyErrPrint("Syntax"); return; }
     PyObject* pValue = PyEval_EvalCode(pCode, pGlobal, PyModule_GetDict(pModVR));
     pyErrPrint("Errors");
@@ -532,16 +533,15 @@ void VRScript::execute() {
             i++;
         }
 
+        //cout << "execute script " << name << endl;
         auto res = PyObject_CallObject(fkt, pArgs);
         if (!res) cout << "Warning in VRScript::execute: PyObject_CallObject failed! in script " << name << endl;
+        if (res) Py_XDECREF(res);
+
         pyErrPrint("Errors");
-        if (!res) return;
-
-        execution_time = timer.stop();
-
         Py_XDECREF(pArgs);
-        pyErrPrint("Errors");
         PyGILState_Release(gstate);
+        execution_time = timer.stop();
     }
 
     if (type == "HTML") {
