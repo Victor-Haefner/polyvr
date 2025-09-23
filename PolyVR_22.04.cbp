@@ -213,7 +213,7 @@
 			<Add option="-fPIC" />
 			<Add option="-std=c++14" />
 			<Add option="`pkg-config gmodule-2.0 --cflags`" />
-			<Add option="`pkg-config python3 --cflags`" />
+			<Add option="`pkg-config python3-embed --cflags`" />
 			<Add option="-fopenmp" />
 			<Add option="-use_readonly_const" />
 			<Add option="-Wno-deprecated" />

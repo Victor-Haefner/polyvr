@@ -6,14 +6,6 @@
 #include <OpenSG/OSGImage.h>
 
 
-#ifdef WASM
-PyGILState_STATE PyGILState_Ensure() {
-	return PyGILState_STATE();
-}
-
-void PyGILState_Release(PyGILState_STATE state) {}
-#endif
-
 static vector<PyObject*> pyCallbacks;
 
 void addPyCallback(PyObject* o) {
@@ -26,6 +18,19 @@ void cleanupPyCallbacks() {
 }
 
 PyObject* VRPyBase::err = NULL;
+
+VRPyGilGuard::VRPyGilGuard() {
+    if (Py_IsInitialized()) {
+        state = (int)PyGILState_Ensure();
+        acquired = true;
+    }
+}
+
+VRPyGilGuard::~VRPyGilGuard() {
+    if (acquired && Py_IsInitialized()) {
+        PyGILState_Release((PyGILState_STATE)state);
+    }
+}
 
 void VRPyBase::registerModule(PyTypeObject* typeRef, string name, PyObject* mod, vector<PyTypeObject*> tp_bases) {
     if (tp_bases.size() == 1) typeRef->tp_base = tp_bases[0];
@@ -479,7 +484,7 @@ bool VRPyBase::isNone(PyObject* o) { return (o == Py_None); }
 
 void VRPyBase::execPyCallVoidVoid(PyObject* pyFkt, PyObject* pArgs) {
     if (pyFkt == 0) return;
-    PyGILState_STATE gstate = PyGILState_Ensure();
+    VRPyGilGuard gilGuard;
     if (PyErr_Occurred() != NULL) PyErr_Print();
 
     PyObject_CallObject(pyFkt, pArgs);
@@ -487,5 +492,4 @@ void VRPyBase::execPyCallVoidVoid(PyObject* pyFkt, PyObject* pArgs) {
     //Py_XDECREF(pArgs); Py_DecRef(pyFkt); // TODO!!
 
     if (PyErr_Occurred() != NULL) PyErr_Print();
-    PyGILState_Release(gstate);
 }

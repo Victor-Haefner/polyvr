@@ -62,6 +62,8 @@ void clear_all_objects() {
 }
 
 void checkGarbageCollection() { // for diagnostic purposes
+    VRPyGilGuard gilGuard;
+
     auto gc = PyImport_ImportModule("gc");
     string name = PyModule_GetName(gc);
     cout << "Python checkGarbageColection, module " << name << endl;
@@ -79,11 +81,9 @@ void checkGarbageCollection() { // for diagnostic purposes
 
     auto exec = [&](string cb) {
         auto pyFkt = gc_members[cb];
-        PyGILState_STATE gstate = PyGILState_Ensure();
         if (PyErr_Occurred() != NULL) PyErr_Print();
         PyObject* res = PyObject_CallObject(pyFkt, 0);
         if (PyErr_Occurred() != NULL) PyErr_Print();
-        PyGILState_Release(gstate);
         return res;
     };
 

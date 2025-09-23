@@ -36,7 +36,6 @@
 
 using namespace OSG;
 
-
 void updateArgPtr(VRScript::argPtr a) {
     string t = a->type;
     auto scene = VRScene::getCurrent();
@@ -514,7 +513,7 @@ void VRScript::execute() {
 
         if (!isInitScript && VRGlobals::CURRENT_FRAME <= loadingFrame + 2) return; // delay timeout scripts
         if (fkt == 0 || !active) return;
-        PyGILState_STATE gstate = PyGILState_Ensure();
+        VRPyGilGuard gilGuard;
         pyErrPrint( "Errors" );
 
         VRTimer timer; timer.start();
@@ -540,7 +539,6 @@ void VRScript::execute() {
 
         pyErrPrint("Errors");
         Py_XDECREF(pArgs);
-        PyGILState_Release(gstate);
         execution_time = timer.stop();
     }
 

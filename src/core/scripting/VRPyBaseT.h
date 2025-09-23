@@ -90,9 +90,9 @@ bool VRPyBaseT<T>::check(PyObject* o) {
 
 template <typename T, typename R>
 R VRPyBase::execPyCall(PyObject* pyFkt, PyObject* pArgs, T t) {
+    VRPyGilGuard gilGuard;
     R r;
     if (pyFkt == 0) return r;
-    PyGILState_STATE gstate = PyGILState_Ensure();
     if (PyErr_Occurred() != NULL) PyErr_Print();
 
     PyTuple_SetItem(pArgs, pySize(pArgs)-1, VRPyTypeCaster::cast(t));
@@ -101,7 +101,6 @@ R VRPyBase::execPyCall(PyObject* pyFkt, PyObject* pArgs, T t) {
     //Py_XDECREF(pArgs); Py_DecRef(pyFkt); // TODO!!
 
     if (PyErr_Occurred() != NULL) PyErr_Print();
-    PyGILState_Release(gstate);
 
     toValue(res, r);
     return r;
@@ -109,9 +108,9 @@ R VRPyBase::execPyCall(PyObject* pyFkt, PyObject* pArgs, T t) {
 
 template <typename T1, typename T2, typename R>
 R VRPyBase::execPyCall2(PyObject* pyFkt, PyObject* pArgs, T1 t1, T2 t2) {
+    VRPyGilGuard gilGuard;
     R r;
     if (pyFkt == 0) return r;
-    PyGILState_STATE gstate = PyGILState_Ensure();
     if (PyErr_Occurred() != NULL) PyErr_Print();
 
     PyTuple_SetItem(pArgs, pySize(pArgs)-2, VRPyTypeCaster::cast(t1));
@@ -121,7 +120,6 @@ R VRPyBase::execPyCall2(PyObject* pyFkt, PyObject* pArgs, T1 t1, T2 t2) {
     //Py_XDECREF(pArgs); Py_DecRef(pyFkt); // TODO!!
 
     if (PyErr_Occurred() != NULL) PyErr_Print();
-    PyGILState_Release(gstate);
 
     toValue(res, r);
     return r;
@@ -129,8 +127,8 @@ R VRPyBase::execPyCall2(PyObject* pyFkt, PyObject* pArgs, T1 t1, T2 t2) {
 
 template <typename T>
 void VRPyBase::execPyCallVoid(PyObject* pyFkt, PyObject* pArgs, T t) {
+    VRPyGilGuard gilGuard;
     if (pyFkt == 0) return;
-    PyGILState_STATE gstate = PyGILState_Ensure();
     if (PyErr_Occurred() != NULL) PyErr_Print();
 
     PyTuple_SetItem(pArgs, pySize(pArgs)-1, VRPyTypeCaster::cast(t));
@@ -139,7 +137,6 @@ void VRPyBase::execPyCallVoid(PyObject* pyFkt, PyObject* pArgs, T t) {
     //Py_XDECREF(pArgs); Py_DecRef(pyFkt); // TODO!!
 
     if (PyErr_Occurred() != NULL) PyErr_Print();
-    PyGILState_Release(gstate);
 }
 
 template <typename T, typename R>

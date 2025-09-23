@@ -18,6 +18,13 @@ using namespace std;
 void addPyCallback(PyObject* o);
 void cleanupPyCallbacks();
 
+struct VRPyGilGuard {
+    bool acquired = false;
+    int state = 0;
+    VRPyGilGuard();
+    ~VRPyGilGuard();
+};
+
 struct VRPyBase {
     PyObject_HEAD;
     static PyObject* err;

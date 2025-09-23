@@ -95,6 +95,8 @@ vector<string> VRPyCodeCompletion::getJediSuggestions(VRScriptPtr script, int li
 
     cout << "VRPyCodeCompletion::getJediSuggestions " << script->getName() << "  l " << line << "  c " << column << endl;
 
+    VRPyGilGuard gilGuard;
+
     if (!jediWrap) {
         auto scene = VRScene::getCurrent();
         string jediScript = "def jediScript(script,l,c):\n\timport jedi\n\treturn [ c.name for c in jedi.Script(script, l, c, '').completions() ]";
@@ -110,7 +112,6 @@ vector<string> VRPyCodeCompletion::getJediSuggestions(VRScriptPtr script, int li
 
     if (jediWrap) {
         string data = script->getScript();
-        PyGILState_STATE gstate = PyGILState_Ensure();
         auto args = PyTuple_New(3);
         PyTuple_SetItem(args, 0, PyUnicode_FromString(data.c_str()));
         PyTuple_SetItem(args, 1, PyLong_FromLong(line));
@@ -121,7 +122,6 @@ vector<string> VRPyCodeCompletion::getJediSuggestions(VRScriptPtr script, int li
             auto c = PyList_GetItem(r,i);
             res.push_back(PyUnicode_AsUTF8(c));
         }
-        PyGILState_Release(gstate);
     }
 
     return res;

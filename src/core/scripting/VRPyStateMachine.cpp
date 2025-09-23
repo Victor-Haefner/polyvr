@@ -33,7 +33,7 @@ PyMethodDef VRPyStateMachine::methods[] = {
 
 string cbWrapper(PyObject* pyFkt, const PyObject* params) {
     if (pyFkt == 0) return "";
-    PyGILState_STATE gstate = PyGILState_Ensure();
+    VRPyGilGuard gilGuard;
     if (PyErr_Occurred() != NULL) PyErr_Print();
 
     /*PyObject* dict = PyDict_New();
@@ -47,7 +47,6 @@ string cbWrapper(PyObject* pyFkt, const PyObject* params) {
     Py_XDECREF(args);
 
     if (PyErr_Occurred() != NULL) PyErr_Print();
-    PyGILState_Release(gstate);
 
     if (!res) return "";
     if (!PyUnicode_Check(res)) return "";

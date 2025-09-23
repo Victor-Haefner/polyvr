@@ -370,7 +370,7 @@ PyObject* VRSceneGlobals::pyTriggerScript(VRSceneGlobals* self, PyObject *args) 
 
 void execCall(PyObject* pyFkt, PyObject* pArgs, float f) {
     if (pyFkt == 0) return;
-    PyGILState_STATE gstate = PyGILState_Ensure();
+    VRPyGilGuard gilGuard;
     if (PyErr_Occurred() != NULL) PyErr_Print();
     if (pArgs == 0) pArgs = PyTuple_New(0);
 
@@ -380,7 +380,6 @@ void execCall(PyObject* pyFkt, PyObject* pArgs, float f) {
     Py_DecRef(pyFkt);
 
     if (PyErr_Occurred() != NULL) PyErr_Print();
-    PyGILState_Release(gstate);
 }
 
 void execThread(PyObject* pyFkt, PyObject* pArgs,  std::weak_ptr<VRThread>  thread) {
