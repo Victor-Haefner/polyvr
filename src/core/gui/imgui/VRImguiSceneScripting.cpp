@@ -284,8 +284,8 @@ void ImScriptEditor::handleShiftTab(int tab, int shift) {
 	io.KeysDown[int('\t')] = tab;
 	io.KeyShift = shift;
 #else
-	io.AddKeyEvent(ImGuiKey_Tab, tab);
-	io.AddKeyEvent(ImGuiKey_ModShift, shift);
+	io.AddKeyEvent(ImGuiKey_Tab, (tab != 0));
+	io.AddKeyEvent(ImGuiMod_Shift, (shift != 0));
 #endif
 }
 
