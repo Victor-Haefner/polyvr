@@ -28,6 +28,15 @@
 #include "../clipboard/clip.h"
 #include "../VRGuiManager.h"
 
+
+
+
+void checkKeysDownMap(string tag) {
+    ImGuiIO& io = ImGui::GetIO();
+    for (int i=0; i<512; i++) if (io.KeysDown[i]) cout << " AAAAAAAAAA " << i << " " << tag << endl;
+}
+
+
 void updateGlutCursor() {
     auto mc = ImGui::GetMouseCursor();
     if (mc == ImGuiMouseCursor_None) glutSetCursor(GLUT_CURSOR_NONE);
@@ -385,7 +394,6 @@ static void ImGui_ImplGLUT_AddKeyEvent(ImGuiKey key, bool down, int nKey) {
     ImGuiIO& io = ImGui::GetIO();
 #if IMGUI_VERSION_NUM > 18600
     io.AddKeyEvent(key, down);
-    io.SetKeyEventNativeData(key, nKey, -1); // To support legacy indexing (<1.87 user code)
     if (key == ImGuiKey_LeftShift || key == ImGuiKey_RightShift) io.AddKeyEvent(ImGuiMod_Shift, down);
     if (key == ImGuiKey_LeftCtrl || key == ImGuiKey_RightCtrl) io.AddKeyEvent(ImGuiMod_Ctrl, down);
     if (key == ImGuiKey_LeftAlt || key == ImGuiKey_RightAlt) io.AddKeyEvent(ImGuiMod_Alt, down);
@@ -444,13 +452,15 @@ void ImGui_ImplGLUT_KeyboardUpFunc_main(unsigned char c, int x, int y) {
         if (utf8Handler.active) return;
     }
 
-    //printf("imgui key up %i\n", c);
     uiSignal("relayedImguiKeySignal", {{"key",toString((int)c)},{"state",toString(0)}});
     ImGui::SetCurrentContext(mainContext);
-    ImGui_ImplGLUT_KeyboardUpFunc(c,x,y);
+    ImGuiKey key = ImGui_ImplGLUT_KeyToImGuiKey(c);
+    ImGui_ImplGLUT_AddKeyEvent(key, false, c);
 }
 
 void ImGui_ImplGLUT_KeyboardFunc_main(unsigned char c, int x, int y) {
+    ImGuiIO& io = ImGui::GetIO();
+
     //printMods("KeyboardDown");
     ImGui_ImplGLUT_UpdateKeyModifiers();
 
@@ -462,7 +472,7 @@ void ImGui_ImplGLUT_KeyboardFunc_main(unsigned char c, int x, int y) {
         if (!utf8Handler.active) {
             //printf("imgui utf8 key down %s\n", utf8Handler.str().c_str());
             ImGui::SetCurrentContext(mainContext);
-            ImGui::GetIO().AddInputCharactersUTF8( utf8Handler.str().c_str() );
+            io.AddInputCharactersUTF8( utf8Handler.str().c_str() );
         }
         return;
     }
@@ -470,7 +480,10 @@ void ImGui_ImplGLUT_KeyboardFunc_main(unsigned char c, int x, int y) {
     //printf("imgui key down %i\n", c);
     if (c == 27) uiSignal("ui_close_popup");
     ImGui::SetCurrentContext(mainContext);
-    ImGui_ImplGLUT_KeyboardFunc(c, x, y);
+
+    if (c >= 32) io.AddInputCharacter((unsigned int)c);
+    ImGuiKey key = ImGui_ImplGLUT_KeyToImGuiKey(c);
+    ImGui_ImplGLUT_AddKeyEvent(key, true, c);
 }
 
 void ImGui_ImplGLUT_SpecialUpFunc_main(int k, int x, int y) {
@@ -508,6 +521,7 @@ void ImGui_ImplGLUT_MouseFunc_main(int b, int s, int x, int y) {
 
 void ImGui_ImplGLUT_KeyboardFunc_popup(unsigned char c, int x, int y) {
     ImGui_ImplGLUT_UpdateKeyModifiers();
+    ImGuiIO& io = ImGui::GetIO();
 
     int mods = glutGetModifiers();
     if ((mods & GLUT_ACTIVE_CTRL) && c <= 26) c = c + 'a' - 1; // convert ^A..^Z back to a..z
@@ -517,14 +531,17 @@ void ImGui_ImplGLUT_KeyboardFunc_popup(unsigned char c, int x, int y) {
         if (!utf8Handler.active) {
             //printf("imgui utf8 key down %s\n", utf8Handler.str().c_str());
             ImGui::SetCurrentContext(popupContext);
-            ImGui::GetIO().AddInputCharactersUTF8( utf8Handler.str().c_str() );
+            io.AddInputCharactersUTF8( utf8Handler.str().c_str() );
         }
         return;
     }
 
     if (c == 27) uiSignal("ui_close_popup");
     ImGui::SetCurrentContext(popupContext);
-    ImGui_ImplGLUT_KeyboardFunc(c, x, y);
+
+    if (c >= 32) io.AddInputCharacter((unsigned int)c);
+    ImGuiKey key = ImGui_ImplGLUT_KeyToImGuiKey(c);
+    ImGui_ImplGLUT_AddKeyEvent(key, true, c);
 }
 
 void ImGui_ImplGLUT_KeyboardUpFunc_popup(unsigned char c, int x, int y) {
@@ -539,7 +556,8 @@ void ImGui_ImplGLUT_KeyboardUpFunc_popup(unsigned char c, int x, int y) {
     }
 
     ImGui::SetCurrentContext(popupContext);
-    ImGui_ImplGLUT_KeyboardUpFunc(c,x,y);
+    ImGuiKey key = ImGui_ImplGLUT_KeyToImGuiKey(c);
+    ImGui_ImplGLUT_AddKeyEvent(key, false, c);
 }
 
 

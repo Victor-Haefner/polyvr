@@ -58,7 +58,7 @@ bool imguiKeyPressed(int c) {
 	io.KeysDown[c] = false;
     return kDown;
 #else
-    return ImGui::IsKeyPressed( ImGui::GetKeyIndex((ImGuiKey)c) );
+    return ImGui::IsKeyPressed( (ImGuiKey)c );
 #endif
 }
 
