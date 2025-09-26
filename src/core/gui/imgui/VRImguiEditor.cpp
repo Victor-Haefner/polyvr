@@ -454,8 +454,12 @@ void ImGui_ImplGLUT_KeyboardUpFunc_main(unsigned char c, int x, int y) {
 
     uiSignal("relayedImguiKeySignal", {{"key",toString((int)c)},{"state",toString(0)}});
     ImGui::SetCurrentContext(mainContext);
+#if IMGUI_VERSION_NUM > 18600
     ImGuiKey key = ImGui_ImplGLUT_KeyToImGuiKey(c);
     ImGui_ImplGLUT_AddKeyEvent(key, false, c);
+#else
+    ImGui_ImplGLUT_KeyboardUpFunc(c,x,y);
+#endif
 }
 
 void ImGui_ImplGLUT_KeyboardFunc_main(unsigned char c, int x, int y) {
@@ -481,9 +485,13 @@ void ImGui_ImplGLUT_KeyboardFunc_main(unsigned char c, int x, int y) {
     if (c == 27) uiSignal("ui_close_popup");
     ImGui::SetCurrentContext(mainContext);
 
+#if IMGUI_VERSION_NUM > 18600
     if (c >= 32) io.AddInputCharacter((unsigned int)c);
     ImGuiKey key = ImGui_ImplGLUT_KeyToImGuiKey(c);
     ImGui_ImplGLUT_AddKeyEvent(key, true, c);
+#else
+    ImGui_ImplGLUT_KeyboardFunc(c,x,y);
+#endif
 }
 
 void ImGui_ImplGLUT_SpecialUpFunc_main(int k, int x, int y) {
@@ -539,9 +547,13 @@ void ImGui_ImplGLUT_KeyboardFunc_popup(unsigned char c, int x, int y) {
     if (c == 27) uiSignal("ui_close_popup");
     ImGui::SetCurrentContext(popupContext);
 
+#if IMGUI_VERSION_NUM > 18600
     if (c >= 32) io.AddInputCharacter((unsigned int)c);
     ImGuiKey key = ImGui_ImplGLUT_KeyToImGuiKey(c);
     ImGui_ImplGLUT_AddKeyEvent(key, true, c);
+#else
+    ImGui_ImplGLUT_KeyboardFunc(c,x,y);
+#endif
 }
 
 void ImGui_ImplGLUT_KeyboardUpFunc_popup(unsigned char c, int x, int y) {
@@ -556,8 +568,12 @@ void ImGui_ImplGLUT_KeyboardUpFunc_popup(unsigned char c, int x, int y) {
     }
 
     ImGui::SetCurrentContext(popupContext);
+#if IMGUI_VERSION_NUM > 18600
     ImGuiKey key = ImGui_ImplGLUT_KeyToImGuiKey(c);
     ImGui_ImplGLUT_AddKeyEvent(key, false, c);
+#else
+    ImGui_ImplGLUT_KeyboardUpFunc(c,x,y);
+#endif
 }
 
 
