@@ -59,6 +59,11 @@ bool XMLElement::hasText() {
     return true;
 }
 
+void XMLElement::setText(string text) {
+    if (!node) return;
+    xmlNodeSetContent(node, (const xmlChar*)text.c_str());
+}
+
 string XMLElement::getAttribute(string name) {
     auto a = xmlGetProp(node, (xmlChar*)name.c_str());
     string v = a ? string((const char*)a) : "";
@@ -148,11 +153,6 @@ XMLElementPtr XMLElement::addChild(string name) {
     auto child = xmlNewNode(NULL, (xmlChar*)name.c_str());
     xmlAddChild(node, child);
     return XMLElement::create(child);
-}
-
-void XMLElement::setText(string text) {
-    auto child = xmlNewText((xmlChar*)text.c_str());
-    xmlAddChild(node, child);
 }
 
 void XMLElement::importNode(XMLElementPtr e, bool recursive, XML& xml) {
