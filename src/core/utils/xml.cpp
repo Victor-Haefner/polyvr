@@ -258,10 +258,9 @@ string XML::toString() {
     xmlKeepBlanksDefault(0);
     xmlBuffer* buffer = xmlBufferCreate();
     xmlOutputBuffer* outputBuffer = xmlOutputBufferCreateBuffer( buffer, NULL );
-    xmlSaveFormatFileTo(outputBuffer, doc, "UTF-8", 1);
-    xmlOutputBufferClose(outputBuffer);
+    xmlSaveFormatFileTo(outputBuffer, doc, "UTF-8", 1); // frees outputBuffer
     string str( (char*) buffer->content, buffer->use );
-    xmlBufferFree( buffer );
+    xmlBufferFree(buffer);
     return str;
 }
 

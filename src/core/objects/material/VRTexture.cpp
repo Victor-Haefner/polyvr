@@ -74,6 +74,7 @@ void VRTexture::setByteData(vector<char> data, Vec3i layout, int chanels, int Nm
 }
 
 void VRTexture::setFloatData(vector<float> data, Vec3i layout, int chanels, int Nmipmaps, int ipf) {
+    //cout << "setFloatData " << toString(data) << "  " << data.size() << "  " << layout[0]*layout[1]*layout[2] << endl;
     int chEnum = VRTexture_getChnEnum(chanels);
     img->set( chEnum, layout[0], layout[1], layout[2], Nmipmaps, 1, 0, (const uint8_t*)&data[0], Image::OSG_FLOAT32_IMAGEDATA, true, 1);
     internal_format = ipf;
