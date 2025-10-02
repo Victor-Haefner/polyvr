@@ -61,7 +61,8 @@ bool XMLElement::hasText() {
 
 void XMLElement::setText(string text) {
     if (!node) return;
-    xmlNodeSetContent(node, (const xmlChar*)text.c_str());
+    xmlNodeSetContent(node, NULL);
+    xmlNodeAddContent(node, (const xmlChar*)text.c_str());
 }
 
 string XMLElement::getAttribute(string name) {
