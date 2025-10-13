@@ -47,6 +47,8 @@ class VRTexture : public std::enable_shared_from_this<VRTexture> {
         size_t getNPixel();
         vector<Color4f> getPixels(bool invertY = false);
         ImageMTRecPtr getImage();
+        vector<Color4f> randomSamples(int N);
+        Color4f sampleMeanColor(int N);
 
         void convertToBytes();
         void writeImage(ImageMTRecPtr img, string path);

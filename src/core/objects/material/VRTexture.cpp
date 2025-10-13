@@ -8,6 +8,7 @@
 #endif
 
 #include <OpenSG/OSGImage.h>
+#include <random>
 
 using namespace OSG;
 
@@ -476,6 +477,30 @@ void VRTexture::clampToImage(Vec3i& p) {
     if (p[1] >= img->getHeight()) p[1] = img->getHeight()-1;
     if (p[2] < 0) p[2] = 0;
     if (p[2] >= img->getDepth()) p[2] = img->getDepth()-1;
+}
+
+vector<Color4f> VRTexture::randomSamples(int N) {
+    size_t Np = getNPixel();
+    N = min(N, int(Np));
+
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<> dist(0, Np);
+
+    vector<Color4f> res;
+    for (int i = 0; i < N; i++) {
+        int k = min(dist(gen), int(Np)-1);
+        res.push_back( getPixel(k) );
+    }
+    return res;
+}
+
+Color4f VRTexture::sampleMeanColor(int N) {
+    auto samples = randomSamples(N);
+    Color4f r;
+    for (auto& s : samples) r += s;
+    r *= 1.0/samples.size();
+    return r;
 }
 
 vector<Color4f> VRTexture::getPixels(bool invertY) {

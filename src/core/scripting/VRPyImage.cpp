@@ -75,6 +75,8 @@ PyMethodDef VRPyTexture::methods[] = {
     {"setInternalFormat", PyWrap(Texture, setInternalFormat, "Set internal format", void, int ) },
     {"resize", PyWrapOpt(Texture, resize, "Resize image, (newSize | doScale, offset)", "1|0 0 0", void, Vec3i, bool, Vec3i ) },
     {"turn", PyWrap(Texture, turn, "Turn image n times 90 degree", void, int ) },
+    {"randomSamples", PyWrap(Texture, randomSamples, "Randomly sample the texture (Nsamples)", vector<Color4f>, int ) },
+    {"sampleMeanColor", PyWrap(Texture, sampleMeanColor, "Randomly sample the texture to compute a mean color (Nsamples)", Color4f, int ) },
     {NULL}  /* Sentinel */
 };
 
