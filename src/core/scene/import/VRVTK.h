@@ -3,12 +3,14 @@
 
 #include <OpenSG/OSGConfig.h>
 #include <string>
+#include <map>
 #include "core/objects/VRObjectFwd.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-void loadVtk(string path, VRTransformPtr res);
+void loadVTK(string path, VRTransformPtr res);
+void writeVTK(VRObjectPtr obj, string path, map<string, string> options);
 
 OSG_END_NAMESPACE;
 

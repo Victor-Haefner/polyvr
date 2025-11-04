@@ -9,6 +9,9 @@
 #ifndef WITHOUT_DWG
 #include "VRDWG.h"
 #endif
+#ifndef WITHOUT_VTK
+#include "VRVTK.h"
+#endif
 //#include "VRCOLLADA.h"
 //#include "VRSTEP.h"
 
@@ -48,5 +51,8 @@ void VRExport::write(VRObjectPtr obj, string path, map<string, string> options) 
 #endif
 #ifndef WITHOUT_GDAL
     if (ext == ".shp") { writeSHP(obj, path, options); }
+#endif
+#ifndef WITHOUT_VTK
+    if (ext == ".vtk") { writeVTK(obj, path, options); return; }
 #endif
 }

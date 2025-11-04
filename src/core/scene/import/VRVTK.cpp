@@ -1,14 +1,24 @@
 #include "VRVTK.h"
 
 #include <vtkVersion.h>
-#include <vtkDataSetReader.h>
-#include <vtkDataSet.h>
+
 #include <vtkDataArray.h>
-#include <vtkCellData.h>
-#include <vtkPointData.h>
+#include <vtkDataSet.h>
+#include <vtkDataSetReader.h>
+#include <vtkDataSetWriter.h>
+
 #include <vtkCell.h>
-#include <vtkQuad.h>
+#include <vtkCellData.h>
+#include <vtkCellArray.h>
+
+#include <vtkPoints.h>
+#include <vtkPointData.h>
 #include <vtkLine.h>
+#include <vtkTriangle.h>
+#include <vtkQuad.h>
+
+#include <vtkSmartPointer.h>
+#include <vtkPolyData.h>
 
 #include "core/utils/zipper/unzipper.h"
 #include "core/utils/system/VRSystem.h"
@@ -24,9 +34,13 @@ sudo apt-get install libvtk9-dev
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/material/VRMaterial.h"
 
+#define vtkGeometryPtr vtkSmartPointer<vtkPolyData>
+#define vtkCellArrayPtr vtkSmartPointer<vtkCellArray>
+#define vtkPointsPtr vtkSmartPointer<vtkPoints>
+
 OSG_BEGIN_NAMESPACE;
 
-void loadVtk(string path, VRTransformPtr res) {
+void loadVTK(string path, VRTransformPtr res) {
     cout << "load VTK file " << path << endl;
     if (endsWith(path, ".gz")) {
         Unzipper uzip(path);
@@ -234,6 +248,93 @@ void loadVtk(string path, VRTransformPtr res) {
     //g->updateNormals();
     res->addChild( g );
 }
+
+
+
+struct VTKData {
+    vtkPointsPtr points = vtkPointsPtr::New();
+    vtkCellArrayPtr verts = vtkCellArrayPtr::New();
+    vtkCellArrayPtr lines = vtkCellArrayPtr::New();
+    vtkCellArrayPtr polys = vtkCellArrayPtr::New();
+};
+
+void vtkFromGeometry(VRGeometryPtr g, Matrix4d M, VTKData& vData) {
+    VRGeoData data(g);
+    if (!data.valid()) return;
+
+    for (size_t i = 0; i<data.size(); i++) {
+        auto p = Pnt3d(data.getPosition(i));
+        M.mult(p, p);
+        vData.points->InsertNextPoint(p[0], p[1], p[2]);
+    }
+
+    size_t offset = 0;
+    for (int i = 0; i<data.getNTypes(); i++) {
+        int type = data.getType(i);
+        int length = data.getLength(i);
+
+        if (type == GL_POINTS) {
+            for (size_t j = 0; j < length; j++) {
+                vtkIdType vID[1] = { data.getIndex(offset+j) };
+                vData.verts->InsertNextCell( 1, vID );
+            }
+        }
+
+        if (type == GL_LINES) {
+            for (size_t j = 0; j < length/2; j++) {
+                size_t k = offset+j*2;
+                vtkIdType vID[2] = { data.getIndex(k), data.getIndex(k+1) };
+                vData.lines->InsertNextCell( 2, vID );
+            }
+        }
+
+        if (type == GL_TRIANGLES) {
+            for (size_t j = 0; j < length/3; j++) {
+                size_t k = offset+j*3;
+                vtkIdType vID[3] = { data.getIndex(k), data.getIndex(k+1), data.getIndex(k+2) };
+                vData.polys->InsertNextCell( 3, vID );
+            }
+        }
+
+        if (type == GL_QUADS) {
+            for (size_t j = 0; j < length/4; j++) {
+                size_t k = offset+j*4;
+                vtkIdType vID[4] = { data.getIndex(k), data.getIndex(k+1), data.getIndex(k+2), data.getIndex(k+3) };
+                vData.polys->InsertNextCell( 4, vID );
+            }
+        }
+
+        offset += length;
+    }
+}
+
+void writeVTK(VRObjectPtr root, string path, map<string, string> options) {
+    VTKData vData;
+
+    auto objs = root->getChildren(true, "", true);
+    for (auto obj : objs) {
+        auto geo = dynamic_pointer_cast<VRGeometry>(obj);
+        if (!geo) continue;
+        Matrix4d M = root->getMatrixTo(geo);
+        vtkFromGeometry( geo, M, vData );
+    }
+
+    auto vGeo = vtkGeometryPtr::New();
+    vGeo->SetPoints( vData.points );
+    vGeo->SetVerts( vData.verts );
+    vGeo->SetLines( vData.lines );
+    vGeo->SetPolys( vData.polys );
+
+    vtkSmartPointer<vtkDataSetWriter> writer = vtkSmartPointer<vtkDataSetWriter>::New();
+    writer->SetFileName(path.c_str());
+    writer->SetInputData(vGeo);
+    writer->SetFileTypeToBinary(); // or SetFileTypeToASCII()
+    writer->Write();
+}
+
+
+
+
 
 
 struct VTKProject {

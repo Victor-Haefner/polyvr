@@ -276,8 +276,8 @@ void VRImport::LoadJob::load(VRThreadWeakPtr tw) {
         }
 #ifndef WASM
 #ifndef WITHOUT_VTK
-        if (ext == ".vtk") { loadVtk(path, res); return; }
-        if (ext == ".gz" && endsWith(path, ".vtk.gz")) { loadVtk(path, res); return; }
+        if (ext == ".vtk") { loadVTK(path, res); return; }
+        if (ext == ".gz" && endsWith(path, ".vtk.gz")) { loadVTK(path, res); return; }
 #endif
 #ifndef WITHOUT_GDAL
         if (ext == ".pdf") { loadPDF(path, res, options); return; }
