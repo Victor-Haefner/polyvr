@@ -634,6 +634,8 @@ void CEF::mouse_move(VRDeviceWeakPtr d) {
     if (!dev) return;
     auto geo = obj.lock();
     if (!geo) return;
+    if (!geo->isVisible("", true)) return;
+
     VRIntersectionPtr ins = dev->intersect(geo);
 
     if (!ins->hit) return;
@@ -679,6 +681,7 @@ bool CEF::mouse(int lb, int mb, int rb, int wu, int wd, VRDeviceWeakPtr d) {
 
     auto geo = obj.lock();
     if (!geo) return true;
+    if (!geo->isVisible("", true)) return true;
 
     auto ins = dev->intersect(geo);
     auto iobj = ins->object.lock();
