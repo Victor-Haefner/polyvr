@@ -918,7 +918,7 @@ void VRMaterial::setTextureType(string type, int unit) {
     }
 }
 
-void VRMaterial::setQRCode(string s, Vec3d fg, Vec3d bg, int offset) {
+void VRMaterial::setQRCode(string s, Color3f fg, Color3f bg, int offset) {
 #ifndef WITHOUT_QRENCODE
     createQRCode(s, ptr(), fg, bg, offset);
     setTextureParams(GL_NEAREST_MIPMAP_NEAREST, GL_NEAREST, -1, -1, -1);

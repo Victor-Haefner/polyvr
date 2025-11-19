@@ -53,7 +53,7 @@ PyMethodDef VRPyMaterial::methods[] = {
     {"setPointSize", (PyCFunction)VRPyMaterial::setPointSize, METH_VARARGS, "Sets the GL point size - setPointSize(i)" },
     {"setLineWidth", (PyCFunction)VRPyMaterial::setLineWidth, METH_VARARGS, "Sets the GL line width - setLineWidth(i)" },
     {"getTexture", (PyCFunction)VRPyMaterial::getTexture, METH_VARARGS, "Get the texture - texture getTexture( int unit = 0 )" },
-    {"setQRCode", (PyCFunction)VRPyMaterial::setQRCode, METH_VARARGS, "Encode a string as QR code texture - setQRCode(string, fg[r,g,b], bg[r,g,b], offset)" },
+    {"setQRCode", PyWrap(Material, setQRCode, "Encode a string as QR code texture - setQRCode(string, fg[r,g,b], bg[r,g,b], offset)", void, string, Color3f, Color3f, int) },
     {"setMagMinFilter", (PyCFunction)VRPyMaterial::setMagMinFilter, METH_VARARGS, "Set the mag and min filtering mode - setMagMinFilter( mag, min | int unit )\n possible values for mag are GL_X && min can be GL_X || GL_X_MIPMAP_Y, where X && Y can be NEAREST || LINEAR" },
     {"setTextureWrapping", (PyCFunction)VRPyMaterial::setTextureWrapping, METH_VARARGS, "Set the texture wrap in u and v - setTextureWrapping( wrapU, wrapV | int unit )\n possible values for wrap are 'GL_CLAMP_TO_EDGE', 'GL_CLAMP_TO_BORDER', 'GL_CLAMP', 'GL_REPEAT'" },
     {"setVertexProgram", (PyCFunction)VRPyMaterial::setVertexProgram, METH_VARARGS, "Set vertex program - setVertexProgram( myScript )" },
@@ -350,13 +350,5 @@ PyObject* VRPyMaterial::setPointSize(VRPyMaterial* self, PyObject* args) {
 PyObject* VRPyMaterial::setLineWidth(VRPyMaterial* self, PyObject* args) {
 	if (self->objPtr == 0) { PyErr_SetString(err, "VRPyMaterial::setLineWidth, C obj is invalid"); return NULL; }
 	self->objPtr->setLineWidth(parseInt(args));
-	Py_RETURN_TRUE;
-}
-
-PyObject* VRPyMaterial::setQRCode(VRPyMaterial* self, PyObject* args) {
-	if (self->objPtr == 0) { PyErr_SetString(err, "VRPyMaterial::setQRCode, C obj is invalid"); return NULL; }
-	PyObject *data, *fg, *bg; int i;
-    if (! PyArg_ParseTuple(args, "OOOi", &data, &fg, &bg, &i)) return NULL;
-	self->objPtr->setQRCode(PyUnicode_AsUTF8(data), parseVec3dList(fg), parseVec3dList(bg), i);
 	Py_RETURN_TRUE;
 }
