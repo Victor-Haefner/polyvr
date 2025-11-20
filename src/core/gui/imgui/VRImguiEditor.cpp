@@ -27,6 +27,7 @@
 #include "imFileDialog/ImGuiFileDialog.h"
 #include "../clipboard/clip.h"
 #include "../VRGuiManager.h"
+#include "core/utils/VRTimer.h"
 
 
 
@@ -391,6 +392,7 @@ static void ImGui_ImplGLUT_UpdateKeyModifiers() {
 }
 
 static void ImGui_ImplGLUT_AddKeyEvent(ImGuiKey key, bool down, int nKey) {
+    uiSignal("uiKeyEvent", {{"state", toString(down)}, {"key", toString(int(key))}});
     ImGuiIO& io = ImGui::GetIO();
 #if IMGUI_VERSION_NUM > 18600
     io.AddKeyEvent(key, down);
@@ -403,6 +405,24 @@ static void ImGui_ImplGLUT_AddKeyEvent(ImGuiKey key, bool down, int nKey) {
     if (nKey == 256+GLUT_KEY_CTRL_L || nKey == 256+GLUT_KEY_CTRL_R) io.KeyCtrl = down;
     if (nKey == 256+GLUT_KEY_ALT_L || nKey == 256+GLUT_KEY_ALT_R) io.KeyAlt = down;
 #endif
+}
+
+static void ImGui_ImplGLUT_ReleaseAllKeys() {
+    //cout << "release all keys!!" << endl;
+    ImGuiIO& io = ImGui::GetIO();
+
+    for (int k = 0; k < ImGuiKey_COUNT; k++) {
+        ImGuiKey key = (ImGuiKey)k;
+
+        if (io.KeysDown[k]) {
+            ImGui_ImplGLUT_AddKeyEvent(key, false, 0);  // release it
+        }
+    }
+
+    io.AddKeyEvent(ImGuiMod_Shift, false);
+    io.AddKeyEvent(ImGuiMod_Ctrl,  false);
+    io.AddKeyEvent(ImGuiMod_Alt,   false);
+    io.AddKeyEvent(ImGuiMod_Super, false);
 }
 
 static void printMods(const char *label) {
@@ -599,9 +619,19 @@ void ImGui_ImplGLUT_SpecialUpFunc_popup(int k, int x, int y) {
 #endif
 }
 
-void ImGui_ImplGLUT_MouseFunc_popup(int b, int s, int x, int y) { ImGui::SetCurrentContext(popupContext); ImGui_ImplGLUT_MouseFunc(b,s,x,y); handleMouseWheel(b,s); }
+void ImGui_ImplGLUT_MouseFunc_popup(int b, int s, int x, int y) {
+    ImGui::SetCurrentContext(popupContext);
+    ImGui_ImplGLUT_MouseFunc(b,s,x,y);
+    handleMouseWheel(b,s);
+}
+
 //void ImGui_ImplGLUT_ReshapeFunc_popup(int x, int y) { ImGui::SetCurrentContext(popupContext); ImGui_ImplGLUT_ReshapeFunc(x,y); }
-void ImGui_ImplGLUT_MotionFunc_popup(int x, int y) { updateGlutCursor(); ImGui::SetCurrentContext(popupContext); ImGui_ImplGLUT_MotionFunc(x,y); }
+
+void ImGui_ImplGLUT_MotionFunc_popup(int x, int y) {
+    updateGlutCursor();
+    ImGui::SetCurrentContext(popupContext);
+    ImGui_ImplGLUT_MotionFunc(x,y);
+}
 
 void ImGui_ImplGLUT_InstallFuncs_main() {
     glutReshapeFunc(ImGui_ImplGLUT_ReshapeFunc_main);
@@ -641,6 +671,23 @@ const char* IMGUIGetClipboardText(void* user_data) {
     else return 0;
 }
 
+void VRImguiEditor::onLooseFocus() {
+    ImGui::SetCurrentContext(mainContext);
+    ImGui_ImplGLUT_ReleaseAllKeys();
+}
+
+void VRImguiEditor::onAnyKey() {
+    focusTimer->start();
+}
+
+void VRImguiEditor::pollFocusSafety() {
+    double delta = focusTimer->stop();
+    if (delta > 2000) {
+        ImGui_ImplGLUT_ReleaseAllKeys();
+        focusTimer->start();
+    }
+}
+
 void VRImguiEditor::handleRelayedKey(int key, int state, bool special) {
     if (special) {
         if (state) ImGui_ImplGLUT_SpecialFunc_main(key, 0, 0);
@@ -655,6 +702,7 @@ void VRImguiEditor::handleRelayedKey(int key, int state, bool special) {
 void VRImguiEditor::init(Signal signal, ResizeSignal resizeSignal) {
     this->signal = signal;
     this->resizeSignal = resizeSignal;
+    focusTimer = OSG::VRTimer::create();
 
     cout << "Imgui::init" << endl;
     IMGUI_CHECKVERSION();
@@ -685,6 +733,8 @@ void VRImguiEditor::init(Signal signal, ResizeSignal resizeSignal) {
     auto mgr = OSG::VRGuiSignals::get();
     mgr->addCallback("relayedKeySignal", [&](OSG::VRGuiSignals::Options o){ handleRelayedKey(toInt(o["key"]), toInt(o["state"]), false); return true; } );
     mgr->addCallback("relayedSpecialKeySignal", [&](OSG::VRGuiSignals::Options o){ handleRelayedKey(toInt(o["key"]), toInt(o["state"]), true); return true; } );
+    mgr->addCallback("setWindowFocus", [&](OSG::VRGuiSignals::Options o){ if (o["winName"] != "uiMain") onLooseFocus(); return true; } );
+    mgr->addCallback("uiKeyEvent", [&](OSG::VRGuiSignals::Options o){ onAnyKey(); return true; } );
 
     uiInitStore();
     toValue(uiGetParameter("fontScale", "1.0"), io.FontGlobalScale);
@@ -761,6 +811,8 @@ void VRImguiEditor::render() {
     ImGui::SetCurrentContext(mainContext);
     ImGuiIO& io = ImGui::GetIO();
     if (io.DisplaySize.x < 0 || io.DisplaySize.y < 0) return;
+
+    pollFocusSafety();
 
     // Start the Dear ImGui frame
     ImGui_ImplOpenGL3_NewFrame();

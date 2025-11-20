@@ -6,6 +6,7 @@
 #include <map>
 #include <vector>
 
+#include "core/utils/VRUtilsFwd.h"
 #include "VRImguiUtils.h"
 #include "imWidgets/VRImguiInput.h"
 #include "imWidgets/VRImguiTreeview.h"
@@ -172,6 +173,7 @@ class VRImguiEditor {
     private:
         Signal signal;
         ResizeSignal resizeSignal;
+        OSG::VRTimerPtr focusTimer;
 
         ImToolbar toolbar = ImToolbar({0,1,0.95,1});
         ImSidePanel sidePanel = ImSidePanel({0,0.3,0,0.95});
@@ -190,6 +192,9 @@ class VRImguiEditor {
 
         void resolveResize(const string& name, const ResizeEvent& resizer);
         void handleRelayedKey(int key, int state, bool special);
+        void onLooseFocus();
+        void onAnyKey();
+        void pollFocusSafety();
 
     public:
         void init(Signal signal, ResizeSignal resizeSignal);

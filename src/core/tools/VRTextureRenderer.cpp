@@ -472,7 +472,7 @@ class OpenRenderAction : public RenderAction {
         }
 
         Action::ResultE traverse(Node* const node) {
-            NodeCore* core = node->getCore();
+            //NodeCore* core = node->getCore();
 
             Action::ResultE result = Continue;
 

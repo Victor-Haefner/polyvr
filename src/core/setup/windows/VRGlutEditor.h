@@ -27,7 +27,7 @@ class VRGlutEditor: public VRWindow {
         VRHeadMountedDisplayPtr hmd;
         bool fullscreen = false;
         bool maximized = false;
-        bool glViewFocussed = true;
+        int focusedWinID = -1;
         string popup;
         string iconPath;
 
@@ -36,6 +36,7 @@ class VRGlutEditor: public VRWindow {
         Signal signal;
         ResizeSignal resizeSignal;
 
+        void getsFocus(int wID);
         void handleRelayedKey(int key, int state, bool special);
 
     public:

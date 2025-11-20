@@ -32,6 +32,7 @@
 #endif
 
 
+bool doPrintKeyEvents = false;
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -47,10 +48,10 @@ VRGlutEditor* getCurrentEditor() {
 void onMainDisplay() { ; }
 void onMainReshape(int w, int h) { auto e = getCurrentEditor(); if (e) e->on_resize_window(w,h); }
 void onMainClose() { auto e = getCurrentEditor(); if (e) e->on_close_window(); }
-void onMainKeyboard(unsigned char k, int x, int y) { /*printf("gl key down %i\n", k);*/ auto e = getCurrentEditor(); if (e) e->onKeyboard(k, 1, x, y); }
-void onMainSpecial(int k, int x, int y) { /*printf("gl special down %i\n", k);*/ auto e = getCurrentEditor(); if (e) e->onKeyboard_special(k, 1, x, y); }
-void onMainKeyboardUp(unsigned char k, int x, int y) { /*printf("gl key up %i\n", k);*/ auto e = getCurrentEditor(); if (e) e->onKeyboard(k, 0, x, y); }
-void onMainSpecialUp(int k, int x, int y) { /*printf("gl special up %i\n", k);*/ auto e = getCurrentEditor(); if (e) e->onKeyboard_special(k, 0, x, y); }
+void onMainKeyboard(unsigned char k, int x, int y) { if (doPrintKeyEvents) printf("top key down %i\n", k); auto e = getCurrentEditor(); if (e) e->onKeyboard(k, 1, x, y); }
+void onMainSpecial(int k, int x, int y) { if (doPrintKeyEvents) printf("top special down %i\n", k); auto e = getCurrentEditor(); if (e) e->onKeyboard_special(k, 1, x, y); }
+void onMainKeyboardUp(unsigned char k, int x, int y) { if (doPrintKeyEvents) printf("top key up %i\n", k); auto e = getCurrentEditor(); if (e) e->onKeyboard(k, 0, x, y); }
+void onMainSpecialUp(int k, int x, int y) { if (doPrintKeyEvents) printf("top special up %i\n", k); auto e = getCurrentEditor(); if (e) e->onKeyboard_special(k, 0, x, y); }
 
 void onUIDisplay() { auto e = getCurrentEditor(); if (e) e->on_ui_display(); }
 void onGLDisplay() { auto e = getCurrentEditor(); if (e) e->on_gl_display(); }
@@ -64,10 +65,10 @@ void onPopupClose() { auto e = getCurrentEditor(); if (e) e->on_popup_close(); }
 void glutEResize(int w, int h) { auto e = getCurrentEditor(); if (e) e->on_gl_resize(w, h); }
 void glutEMouse(int b, int s, int x, int y) { auto e = getCurrentEditor(); if (e) e->onMouse(b ,s ,x ,y); }
 void glutEMotion(int x, int y) { auto e = getCurrentEditor(); if (e) e->onMotion(x, y); }
-void glutEKeyboard(unsigned char k, int x, int y) { /*printf("gl key down %i\n", k);*/ auto e = getCurrentEditor(); if (e) e->onKeyboard(k, 1, x, y); }
-void glutESpecial(int k, int x, int y) { /*printf("gl special down %i\n", k);*/ auto e = getCurrentEditor(); if (e) e->onKeyboard_special(k, 1, x, y); }
-void glutEKeyboardUp(unsigned char k, int x, int y) { /*printf("gl key up %i\n", k);*/ auto e = getCurrentEditor(); if (e) e->onKeyboard(k, 0, x, y); }
-void glutESpecialUp(int k, int x, int y) { /*printf("gl special up %i\n", k);*/ auto e = getCurrentEditor(); if (e) e->onKeyboard_special(k, 0, x, y); }
+void glutEKeyboard(unsigned char k, int x, int y) { if (doPrintKeyEvents) printf("gl key down %i\n", k); auto e = getCurrentEditor(); if (e) e->onKeyboard(k, 1, x, y); }
+void glutESpecial(int k, int x, int y) { if (doPrintKeyEvents) printf("gl special down %i\n", k); auto e = getCurrentEditor(); if (e) e->onKeyboard_special(k, 1, x, y); }
+void glutEKeyboardUp(unsigned char k, int x, int y) { if (doPrintKeyEvents) printf("gl key up %i\n", k); auto e = getCurrentEditor(); if (e) e->onKeyboard(k, 0, x, y); }
+void glutESpecialUp(int k, int x, int y) { if (doPrintKeyEvents) printf("gl special up %i\n", k); auto e = getCurrentEditor(); if (e) e->onKeyboard_special(k, 0, x, y); }
 
 void testGLCapabilities() {
     cout << "Check OpenGL capabilities:" << endl;
@@ -204,7 +205,7 @@ VRGlutEditor::VRGlutEditor() {
     mgr->addCallback("ui_close_popup", [&](VRGuiSignals::Options o) { closePopupWindow(); return true; } );
     mgr->addCallback("ui_toggle_popup", [&](VRGuiSignals::Options o) { togglePopupWindow(o["name"], o["title"], toInt(o["width"]), toInt(o["height"])); return true; }, true );
     mgr->addCallback("set_editor_fullscreen", [&](VRGuiSignals::Options o) { setFullscreen(toBool(o["fullscreen"])); return true; }, true );
-    mgr->addCallback("uiGrabFocus", [&](VRGuiSignals::Options o) { glViewFocussed = false; return true; } );
+    mgr->addCallback("uiGrabFocus", [&](VRGuiSignals::Options o) { getsFocus(winUI); return true; } );
     mgr->addCallback("ui_toggle_vsync", [&](VRGuiSignals::Options o) { enableVSync(toBool(o["active"])); return true; } );
     mgr->addCallback("relayedImguiKeySignal", [&](VRGuiSignals::Options o) { handleRelayedKey(toInt(o["key"]), toInt(o["state"]), false); return true; } );
     mgr->addCallback("relayedImguiSpecialKeySignal", [&](VRGuiSignals::Options o) { handleRelayedKey(toInt(o["key"]), toInt(o["state"]), true); return true; } );
@@ -376,8 +377,17 @@ void VRGlutEditor::initGlut() {
 void VRGlutEditor::save(XMLElementPtr node) { VRWindow::save(node); }
 void VRGlutEditor::load(XMLElementPtr node) { VRWindow::load(node); }
 
+void VRGlutEditor::getsFocus(int wID) {
+    focusedWinID = wID;
+    string winName = "Unknown";
+    if (wID == winGL) winName = "GL";
+    if (wID == winUI) winName = "uiMain";
+    if (wID == winPopup) winName = "uiPopup";
+    uiSignal("setWindowFocus", {{"winID",toString(wID)}, {"winName", winName}});
+}
+
 void VRGlutEditor::onMouse(int b, int s, int x, int y) {
-    glViewFocussed = true;
+    getsFocus(winGL);
 
     // swap mouse wheel
     if (b == 3) b = 4;
@@ -396,20 +406,20 @@ void VRGlutEditor::onMotion(int x, int y) {
 void VRGlutEditor::onKeyboard(int c, int s, int x, int y) {
     //cout << " VRGlutEditor::onKeyboard " << c << " " << s << " " << x << " " << y << endl;
     if (s == 0 && c == 27) if (fullscreen) setFullscreen(false); // ESC
-    if (!glViewFocussed) { if (signal) signal("relayedKeySignal", {{"key",toString(c)},{"state",toString(s)}}); }
+    if (focusedWinID != winGL) { if (signal) signal("relayedKeySignal", {{"key",toString(c)},{"state",toString(s)}}); }
     else if (auto k = getKeyboard()) k->keyboard(c, s, x, y, 1);
 }
 
 void VRGlutEditor::onKeyboard_special(int c, int s, int x, int y) {
     //cout << " VRGlutEditor::onKeyboard_special " << c << " " << s << " " << x << " " << y << endl;
     if (s == 0 && c == 11) setFullscreen(!fullscreen); // F11
-    if (!glViewFocussed) { if (signal) signal("relayedSpecialKeySignal", {{"key",toString(c)},{"state",toString(s)}}); }
+    if (focusedWinID != winGL) { if (signal) signal("relayedSpecialKeySignal", {{"key",toString(c)},{"state",toString(s)}}); }
     else if (auto k = getKeyboard()) k->keyboard_special(c, s, x, y, 1);
 }
 
 void VRGlutEditor::handleRelayedKey(int key, int state, bool special) {
     //cout << "handleRelayedKey, spacial? " << special << ", key: " << key << ", state: " << state << ", has focus? " << glViewFocussed << endl;
-    if (!glViewFocussed) return;
+    if (focusedWinID != winGL) return;
     auto k = getKeyboard();
     if (!k) return;
     if (special) k->keyboard_special(key, state, 0, 0, 1);
@@ -445,9 +455,9 @@ void VRGlutEditor::enableVSync(bool b) {
     int swapInterval = b ? 1 : 0;
 
     int current = glutGetWindow();
-    if (winGL >= 0) glutSetWindow(winGL); setSwapInterval(swapInterval);
-    if (winUI >= 0) glutSetWindow(winUI); setSwapInterval(0);
-    if (winPopup >= 0) glutSetWindow(winPopup); setSwapInterval(0);
+    if (winGL >= 0) { glutSetWindow(winGL); setSwapInterval(swapInterval); }
+    if (winUI >= 0) { glutSetWindow(winUI); setSwapInterval(0); }
+    if (winPopup >= 0) { glutSetWindow(winPopup); setSwapInterval(0); }
     glutSetWindow(current);
 }
 
