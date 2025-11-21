@@ -419,10 +419,16 @@ static void ImGui_ImplGLUT_ReleaseAllKeys() {
         }
     }
 
+#if IMGUI_VERSION_NUM > 18600
     io.AddKeyEvent(ImGuiMod_Shift, false);
     io.AddKeyEvent(ImGuiMod_Ctrl,  false);
     io.AddKeyEvent(ImGuiMod_Alt,   false);
     io.AddKeyEvent(ImGuiMod_Super, false);
+#else
+	io.KeyShift = false;
+	io.KeyCtrl  = false;
+	io.KeyAlt   = false;
+#endif
 }
 
 static void printMods(const char *label) {
