@@ -135,24 +135,31 @@ struct GLTFUtils {
 
 };
 
+struct GLTFMesh {
+    VRGeoDataPtr geoData;
+    int matID = -1;
+    VRMaterialPtr material;
+    VRGeometryPtr geo;
+};
+
 struct GLTFNode : GLTFUtils {
     string name;
     string type;
     int nID = -1;
     GLTFNode* parent = 0;
     vector<GLTFNode*> children;
-    vector<Pnt3d> positions;
+    /*vector<Pnt3d> positions;
     vector<Vec3d> normals;
     vector<Color3f> colors;
     vector<Vec2d> texCoords;
     vector<int> coordIndex;
     vector<int> normalIndex;
     vector<int> colorIndex;
-    vector<int> texCoordIndex;
+    vector<int> texCoordIndex;*/
     VRObjectPtr obj;
-    VRMaterialPtr material;
     Matrix4d pose = Matrix4d();
-    VRGeoData geoData;
+
+    map<int, GLTFMesh> meshes;
 
     string animationInterpolationTra;
     string animationInterpolationSca;
@@ -168,7 +175,6 @@ struct GLTFNode : GLTFUtils {
     int lastFrameSca = 0;
     float animationMaxDuration = 0.0;
 
-    int matID = -1;
 
     Vec3d translation = Vec3d(0,0,0);
     Vec4d rotation = Vec4d(0,0,1,0);
@@ -208,7 +214,7 @@ struct GLTFNode : GLTFUtils {
         if (g) cout << " obj name: '" << g->getName() << "'";
         cout << " ID: " << nID;
         cout << " of type '" << type << "'";
-        if (type == "Mesh" || type == "Primitive") cout << " with matID: " << matID;
+        if (type == "Mesh" || type == "Primitive") cout << " with N materials: " << meshes.size();
         //if (type == "Mesh" && name == "Node") cout << "-------";
         if (type == "Primitive") cout << "----PRIM----";
         cout << endl;
@@ -220,8 +226,14 @@ struct GLTFNode : GLTFUtils {
     VRObjectPtr makeObject() {
         //cout << "make object '" << name << "' of type " << type << endl;
         if (isGeometryNode(type)) {
-            return VRGeometry::create(name);
+            for (auto m : meshes) m.second.geo = VRGeometry::create(name);
+            if (meshes.size() == 0) return VRGeometry::create(name);
+            if (meshes.size() == 1) return meshes.begin()->second.geo;
+            VRObjectPtr o = VRObject::create(name);
+            for (auto m : meshes) o->addChild( m.second.geo );
+            return o;
         }
+
         if (isPropertyNode(type)) {
             if (type == "PointLight") return VRLight::create(name);
             if (type == "DirectionalLight") return VRLight::create(name);
@@ -246,8 +258,10 @@ struct GLTFNode : GLTFUtils {
     }
 
     void applyMaterial() {
-        VRGeometryPtr g = dynamic_pointer_cast<VRGeometry>(obj);
-        if (g && material) g->setMaterial(material);
+        for (auto m : meshes) {
+            if (!m.second.geo || !m.second.material) continue;
+            m.second.geo->setMaterial(m.second.material);
+        }
     }
 
     // transformation data
@@ -302,7 +316,7 @@ struct GLTFNode : GLTFUtils {
     }
 };
 
-struct GLTFNNode : GLTFNode{
+struct GLTFNNode : GLTFNode {
     GLTFNNode(string type, string name = "Unnamed") : GLTFNode(type, name) { version = 2; }
     ~GLTFNNode() {}
 
@@ -315,11 +329,9 @@ struct GLTFNNode : GLTFNode{
 
     void applyMaterials() override {
         if (isGeometryNode(type)) {
-            VRGeometryPtr g = dynamic_pointer_cast<VRGeometry>(obj);
-            if (g) {
-                if (material) {
-                    g->setMaterial(material);
-                }
+            for (auto m : meshes) {
+                if (!m.second.geo || !m.second.material) continue;
+                m.second.geo->setMaterial(m.second.material);
             }
         }
 
@@ -328,9 +340,11 @@ struct GLTFNNode : GLTFNode{
 
     void applyGeometries() override {
         if (type == "Mesh" || type == "Primitive") {
-            VRGeometryPtr g = dynamic_pointer_cast<VRGeometry>(obj);
-            if (g) {
-                if (geoData.size()>0) geoData.apply(g); //TODO: what if more than one primitive per mesh?
+            for (auto m : meshes) {
+                VRGeometryPtr g = m.second.geo;
+                if (!g) cout << " ----------- AAAAAAAAAAAAAAAAAAAAAA??? " << endl;
+                if (!g) continue;
+                if (m.second.geoData->size()>0) m.second.geoData->apply(g);
                 else cout << g->getName() << " geoData with no data found" << endl;
             }
         }
@@ -1294,7 +1308,7 @@ class GLTFLoader : public GLTFUtils {
             bool mtF = false;
             bool rfF = false;
             //bool emF = false;
-            bool alphaBlend = false;
+            bool alphaBlend = true;
             //bool alphaMask = false;
             //bool alphaOpaque = false;
             bool singleFace = false;
@@ -1320,7 +1334,7 @@ class GLTFLoader : public GLTFUtils {
                 }
                 if (content.first == "alphaMode") {
                     //cout << "alhphaMODE " << gltfMaterial.alphaMode << endl;
-                    if (gltfMaterial.alphaMode == "BLEND") alphaBlend = true;
+                    if (gltfMaterial.alphaMode != "BLEND") alphaBlend = false;
                 }
                 if (content.first == "doubleSided") {
                     if (!gltfMaterial.doubleSided) { singleFace = true; cout << "GLTFLOADER::WARNING IN MATERIAL " << gltfMaterial.name << " - SINGLE SIDE - ambient set to black" << endl; }
@@ -1589,11 +1603,11 @@ class GLTFLoader : public GLTFUtils {
             return T( data2[k]*s, data2[k+1]*s, data2[k+2]*s, data2[k+3]*s );
         };
 
-        void handleMesh(const tinygltf::Mesh &gltfMesh) {
-            bool verbose = true;
 
+
+        void handleMesh(const tinygltf::Mesh &gltfMesh) {
             meshID++;
-            GLTFNode* node;
+            GLTFNode* node = 0;
             string name;
             name = gltfMesh.name;
             if (name == "") name = ""; //empty name not prevented
@@ -1604,11 +1618,7 @@ class GLTFLoader : public GLTFUtils {
             node->nID = meshID;
 
             long nPos = 0;
-            long nUpTo = 0; //nUpToThisPrimitive
             long n = 0;
-            VRGeoData gdata = VRGeoData();
-            bool firstPrim = true;
-            bool pointsOnly = false;
 
             // if (gltfMesh.primitives.size() > 1) cout << "GLTFLOADER::WARNING IN MESH: multiple primitives per mesh" << endl;
             /*
@@ -1623,6 +1633,14 @@ class GLTFLoader : public GLTFUtils {
             }*/
 
             for (tinygltf::Primitive primitive : gltfMesh.primitives) {
+                if (!node->meshes.count(primitive.material)) node->meshes[primitive.material] = GLTFMesh();
+                auto& m = node->meshes[primitive.material];
+                if (!m.geoData) m.geoData = VRGeoData::create();
+                if (!m.geo) m.geo = VRGeometry::create(name);
+                auto gdata = m.geoData;
+
+                long nUpTo = gdata->size(); //nUpToThisPrimitive
+
                 int componentType = 0, componentCount = 0;
                 size_t elementCount = 0, stride = 0;
 
@@ -1641,7 +1659,7 @@ class GLTFLoader : public GLTFUtils {
                 if (primitive.attributes.count("POSITION")) {
                     auto data = getBufferPtr(model, primitive.attributes["POSITION"], componentType, componentCount, elementCount, stride);
                     if (componentType == GL_FLOAT && componentCount == 3) {
-                        for (size_t i = 0; i < elementCount; i++) gdata.pushVert( toVec3<Vec3d, float>(data, i*stride) );
+                        for (size_t i = 0; i < elementCount; i++) gdata->pushVert( toVec3<Vec3d, float>(data, i*stride) );
                         nPos += elementCount;
                     } else { cout << "GLTFLOADER::ERROR IN MESH unexpected positions with " << componentType << "/" << componentCount << endl; continue; }
                 }
@@ -1649,7 +1667,7 @@ class GLTFLoader : public GLTFUtils {
                 if (primitive.attributes.count("NORMAL")) {
                     auto data = getBufferPtr(model, primitive.attributes["NORMAL"], componentType, componentCount, elementCount, stride);
                     if (componentType == GL_FLOAT && componentCount == 3) {
-                        for (size_t i = 0; i < elementCount; i++) gdata.pushNorm( toVec3<Vec3d, float>(data, i*stride) );
+                        for (size_t i = 0; i < elementCount; i++) gdata->pushNorm( toVec3<Vec3d, float>(data, i*stride) );
                     } else { cout << "GLTFLOADER::ERROR IN MESH unexpected normals with " << componentType << "/" << componentCount << endl; continue; }
                 }
 
@@ -1663,12 +1681,12 @@ class GLTFLoader : public GLTFUtils {
                         double s2 = 1.0/255.0;
 
                         for (size_t i = 0; i < elementCount; i++) {
-                            if      (componentType == GL_FLOAT && componentCount == 3) { gdata.pushColor( toVec3<Color3f, float>(data, i*stride) ); }
-                            else if (componentType == GL_FLOAT && componentCount == 4) { gdata.pushColor( toVec4<Color4f, float>(data, i*stride) ); }
-                            else if (componentType == GL_UNSIGNED_SHORT && componentCount == 3) { gdata.pushColor( toVec3<Color3f, unsigned short>(data, i*stride, s1) ); }
-                            else if (componentType == GL_UNSIGNED_SHORT && componentCount == 4) { gdata.pushColor( toVec4<Color4f, unsigned short>(data, i*stride, s1) ); }
-                            else if (componentType == GL_UNSIGNED_BYTE && componentCount == 3) { gdata.pushColor( toVec3<Color3f, unsigned char>(data, i*stride, s2) ); }
-                            else if (componentType == GL_UNSIGNED_BYTE && componentCount == 4) { gdata.pushColor( toVec4<Color4f, unsigned char>(data, i*stride, s2) ); }
+                            if      (componentType == GL_FLOAT && componentCount == 3) { gdata->pushColor( toVec3<Color3f, float>(data, i*stride) ); }
+                            else if (componentType == GL_FLOAT && componentCount == 4) { gdata->pushColor( toVec4<Color4f, float>(data, i*stride) ); }
+                            else if (componentType == GL_UNSIGNED_SHORT && componentCount == 3) { gdata->pushColor( toVec3<Color3f, unsigned short>(data, i*stride, s1) ); }
+                            else if (componentType == GL_UNSIGNED_SHORT && componentCount == 4) { gdata->pushColor( toVec4<Color4f, unsigned short>(data, i*stride, s1) ); }
+                            else if (componentType == GL_UNSIGNED_BYTE && componentCount == 3) { gdata->pushColor( toVec3<Color3f, unsigned char>(data, i*stride, s2) ); }
+                            else if (componentType == GL_UNSIGNED_BYTE && componentCount == 4) { gdata->pushColor( toVec4<Color4f, unsigned char>(data, i*stride, s2) ); }
                             else { cout << " got unknown color: " << componentType << "/" << componentCount << ", count: " << elementCount << endl; break; }
                         }
                     }
@@ -1681,7 +1699,7 @@ class GLTFLoader : public GLTFUtils {
                         for (size_t i = 0; i < elementCount; ++i) {
                             if (componentType == GL_FLOAT && componentCount == 2) {
                                 Vec2d UV = toVec2<Vec2d, float>( data, i*stride );
-                                gdata.pushTexCoord(UV, tcIndex);
+                                gdata->pushTexCoord(UV, tcIndex);
                                 tangentsUVs.push_back(UV);
                             } else { cout << "got unknown tex coords 0: " << componentType << "/" << componentCount << endl; break; }
                         }
@@ -1732,12 +1750,11 @@ class GLTFLoader : public GLTFUtils {
                     auto data = getBufferPtr(model, primitive.indices, componentType, componentCount, elementCount, stride);
 
                     if (primitive.mode == 0) { // POINT
-                        pointsOnly = true;
                         for (size_t i = 0; i < elementCount; i++) {
-                            if (componentType == GL_UNSIGNED_BYTE) gdata.pushPoint(nUpTo + toIndex<int, unsigned char>(data, i));
-                            else if (componentType == GL_SHORT) gdata.pushPoint(nUpTo + toIndex<int, short>(data, i));
-                            else if (componentType == GL_UNSIGNED_SHORT) gdata.pushPoint(nUpTo+toIndex<int, unsigned short>(data, i));
-                            else if (componentType == GL_UNSIGNED_INT) gdata.pushPoint(nUpTo+toIndex<int, unsigned int>(data, i));
+                            if (componentType == GL_UNSIGNED_BYTE) gdata->pushPoint(nUpTo + toIndex<int, unsigned char>(data, i));
+                            else if (componentType == GL_SHORT) gdata->pushPoint(nUpTo + toIndex<int, short>(data, i));
+                            else if (componentType == GL_UNSIGNED_SHORT) gdata->pushPoint(nUpTo+toIndex<int, unsigned short>(data, i));
+                            else if (componentType == GL_UNSIGNED_INT) gdata->pushPoint(nUpTo+toIndex<int, unsigned int>(data, i));
                             else { cout << "GLTF-LOADER: data type of POINT INDICES unknown: " << componentType << endl; }
                         }
                     }
@@ -1750,7 +1767,7 @@ class GLTFLoader : public GLTFUtils {
                             else if (componentType == GL_UNSIGNED_SHORT) v = toVec2<Vec2i, unsigned short>(data, i*2);
                             else if (componentType == GL_UNSIGNED_INT) v = toVec2<Vec2i, unsigned int>(data, i*2);
                             else { cout << "GLTF-LOADER: data type of LINE INDICES unknown: " << componentType << endl; }
-                            gdata.pushLine(nUpTo+v[0], nUpTo+v[1]);
+                            gdata->pushLine(nUpTo+v[0], nUpTo+v[1]);
                         }
                     }
 
@@ -1762,7 +1779,7 @@ class GLTFLoader : public GLTFUtils {
                             else if (componentType == GL_UNSIGNED_SHORT) v = toVec3<Vec3i, unsigned short>(data, i*3);
                             else if (componentType == GL_UNSIGNED_INT) v = toVec3<Vec3i, unsigned int>(data, i*3);
                             else { cout << "GLTF-LOADER: data type of TRIANGLE INDICES unknown: " << componentType << endl; break; }
-                            gdata.pushTri(nUpTo+v[0], nUpTo+v[1], nUpTo+v[2]);
+                            gdata->pushTri(nUpTo+v[0], nUpTo+v[1], nUpTo+v[2]);
                         }
                     }
 
@@ -1775,8 +1792,8 @@ class GLTFLoader : public GLTFUtils {
                             else if (componentType == GL_UNSIGNED_INT) v = toVec3<Vec3i, unsigned int>(data, i);
                             else { cout << "GLTF-LOADER: data type of TRIANGLE SRIP INDICES unknown: " << componentType << endl; break; }
 
-                            if (i%2) gdata.pushTri(nUpTo+indices[i+1], nUpTo+indices[i+0], nUpTo+indices[i+2]);
-                            else     gdata.pushTri(nUpTo+indices[i+0], nUpTo+indices[i+1], nUpTo+indices[i+2]);
+                            if (i%2) gdata->pushTri(nUpTo+v[1], nUpTo+v[0], nUpTo+v[2]);
+                            else     gdata->pushTri(nUpTo+v[0], nUpTo+v[1], nUpTo+v[2]);
                         }
                     }
 
@@ -1786,16 +1803,15 @@ class GLTFLoader : public GLTFUtils {
 
                 } else { // no indices array
                     if (primitive.mode == 0) { // POINTS
-                        pointsOnly = true;
-                        for (long i = nUpTo; i < nPos; i++) gdata.pushPoint(i);
+                        for (long i = nUpTo; i < nPos; i++) gdata->pushPoint(i);
                     }
 
                     if (primitive.mode == 1) { // LINE
-                        for (long i = nUpTo; i < nPos/2; ++i) gdata.pushLine(i*2,i*2+1);
+                        for (long i = nUpTo; i < nPos/2; ++i) gdata->pushLine(i*2,i*2+1);
                     }
 
                     if (primitive.mode == 4) { // TRIANGLES
-                        for (long i = 0; i < n/3; i++) gdata.pushTri(nUpTo+i*3+0,nUpTo+i*3+1,nUpTo+i*3+2);
+                        for (long i = 0; i < n/3; i++) gdata->pushTri(nUpTo+i*3+0,nUpTo+i*3+1,nUpTo+i*3+2);
                     }
 
                     if (primitive.mode == 2) { /*LINE LOOP*/ cout << "GLTF-LOADER: not implemented LINE LOOP" << endl; }
@@ -1804,7 +1820,7 @@ class GLTFLoader : public GLTFUtils {
                     if (primitive.mode == 6) { /*TRAINGLE FAN*/ cout << "GLTF-LOADER: not implemented TRAINGLE FAN" << endl;}
                 }
 
-                //cout << meshID << " " << gdata.size() << " --- " << n <<  endl;
+                //cout << meshID << " " << gdata->size() << " --- " << n <<  endl;
                 //cout << "prim with v " << n << " : " << primitive.mode <<  endl;
 
 
@@ -1831,23 +1847,17 @@ class GLTFLoader : public GLTFUtils {
                 }
 #endif // HANDLE_PBR_MATERIAL
 
-                if (firstPrim) {
-                    node->matID = primitive.material;
-                    if (materials.count(primitive.material)) {
-                        node->material = materials[primitive.material];
-                        if (pointsOnly) materials[primitive.material]->setLit(false);
+                m.matID = primitive.material;
+                if (materials.count(primitive.material)) m.material = materials[primitive.material];
 #ifdef HANDLE_PBR_MATERIAL
-                        if (tangentsVec.size() > 0) {
-                            materials[primitive.material]->setShaderParameter("u_TangentSampler",4);
-                            materials[primitive.material]->setTexture(img, true, 4);
-                        }
-#endif // HANDLE_PBR_MATERIAL
+                if (m.material)
+                    if (tangentsVec.size() > 0) {
+                        m.material->setShaderParameter("u_TangentSampler",4);
+                        m.material->setTexture(img, true, 4);
                     }
-                    firstPrim = false;
                 }
-                nUpTo = nPos;
+#endif // HANDLE_PBR_MATERIAL
             }
-            node->geoData = gdata;
         }
 
         void handleSkin(const tinygltf::Skin &gltfSkin){
