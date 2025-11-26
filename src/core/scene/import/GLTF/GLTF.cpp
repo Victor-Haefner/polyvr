@@ -1754,9 +1754,6 @@ class GLTFLoader : public GLTFUtils {
                         }
                     }
 
-                    if (primitive.mode == 2) { /*LINE LOOP*/ cout << "GLTF-LOADER: not implemented LINE LOOP" << endl; }
-                    if (primitive.mode == 3) { /*LINE STRIP*/ cout << "GLTF-LOADER: not implemented LINE STRIP" << endl; }
-
                     if (primitive.mode == 4) { // TRIANGLES
                         for (size_t i = 0; i < elementCount/3; i++) {
                             Vec3i v;
@@ -1764,72 +1761,49 @@ class GLTFLoader : public GLTFUtils {
                             else if (componentType == GL_SHORT) v = toVec3<Vec3i, short>(data, i*3);
                             else if (componentType == GL_UNSIGNED_SHORT) v = toVec3<Vec3i, unsigned short>(data, i*3);
                             else if (componentType == GL_UNSIGNED_INT) v = toVec3<Vec3i, unsigned int>(data, i*3);
-                            else { cout << "GLTF-LOADER: data type of TRIANGLE INDICES unknwon: " << componentType << endl; }
+                            else { cout << "GLTF-LOADER: data type of TRIANGLE INDICES unknown: " << componentType << endl; break; }
                             gdata.pushTri(nUpTo+v[0], nUpTo+v[1], nUpTo+v[2]);
                         }
                     }
 
-                    if (primitive.mode == 5) { /*TRIANGLE STRIP*/
-                        if (componentType == GL_UNSIGNED_BYTE) {
-                            const unsigned char* indices   = reinterpret_cast<const unsigned char*>(data);
-                            for (size_t i = 0; i < elementCount-2; ++i) {
-                                if (i%2) {
-                                    gdata.pushTri(nUpTo+indices[i+1],nUpTo+indices[i+0],nUpTo+indices[i+2]);
-                                } else {
-                                    gdata.pushTri(nUpTo+indices[i+0],nUpTo+indices[i+1],nUpTo+indices[i+2]);
-                                }
-                            }
+                    if (primitive.mode == 5) { // TRIANGLE STRIP
+                        for (size_t i = 0; i < elementCount-2; ++i) {
+                            Vec3i v;
+                            if (componentType == GL_UNSIGNED_BYTE) v = toVec3<Vec3i, unsigned char>(data, i);
+                            else if (componentType == GL_SHORT) v = toVec3<Vec3i, short>(data, i);
+                            else if (componentType == GL_UNSIGNED_SHORT) v = toVec3<Vec3i, unsigned short>(data, i);
+                            else if (componentType == GL_UNSIGNED_INT) v = toVec3<Vec3i, unsigned int>(data, i);
+                            else { cout << "GLTF-LOADER: data type of TRIANGLE SRIP INDICES unknown: " << componentType << endl; break; }
+
+                            if (i%2) gdata.pushTri(nUpTo+indices[i+1], nUpTo+indices[i+0], nUpTo+indices[i+2]);
+                            else     gdata.pushTri(nUpTo+indices[i+0], nUpTo+indices[i+1], nUpTo+indices[i+2]);
                         }
-                        else if (componentType == GL_SHORT) {
-                            const short* indices   = reinterpret_cast<const short*>(data);
-                            for (size_t i = 0; i < elementCount-2; ++i)  {
-                                if (i%2) {
-                                    gdata.pushTri(nUpTo+indices[i+1],nUpTo+indices[i+0],nUpTo+indices[i+2]);
-                                } else {
-                                    gdata.pushTri(nUpTo+indices[i+0],nUpTo+indices[i+1],nUpTo+indices[i+2]);
-                                }
-                            }
-                        }
-                        else if (componentType == GL_UNSIGNED_SHORT) {
-                            const unsigned short* indices   = reinterpret_cast<const unsigned short*>(data);
-                            for (size_t i = 0; i < elementCount-2; ++i)  {
-                                if (i%2) {
-                                    gdata.pushTri(nUpTo+indices[i+1],nUpTo+indices[i+0],nUpTo+indices[i+2]);
-                                } else {
-                                    gdata.pushTri(nUpTo+indices[i+0],nUpTo+indices[i+1],nUpTo+indices[i+2]);
-                                }
-                            }
-                        }
-                        else if (componentType == GL_UNSIGNED_INT) {
-                            const unsigned int* indices   = reinterpret_cast<const unsigned int*>(data);
-                            for (size_t i = 0; i < elementCount-2; ++i)  {
-                                if (i%2) {
-                                    gdata.pushTri(nUpTo+indices[i+1],nUpTo+indices[i+0],nUpTo+indices[i+2]);
-                                } else {
-                                    gdata.pushTri(nUpTo+indices[i+0],nUpTo+indices[i+1],nUpTo+indices[i+2]);
-                                }
-                            }
-                        }
-                        else { cout << "GLTF-LOADER: data type of TRIANGLE SRIP INDICES unknwon: " << componentType << endl; }
                     }
+
+                    if (primitive.mode == 2) { /*LINE LOOP*/ cout << "GLTF-LOADER: not implemented LINE LOOP" << endl; }
+                    if (primitive.mode == 3) { /*LINE STRIP*/ cout << "GLTF-LOADER: not implemented LINE STRIP" << endl; }
                     if (primitive.mode == 6) { /*TRAINGLE FAN*/ cout << "GLTF-LOADER: not implemented fTRAINGLE FAN" << endl;}
-                } else {
-                    if (primitive.mode == 0) { /*POINTS*/
+
+                } else { // no indices array
+                    if (primitive.mode == 0) { // POINTS
                         pointsOnly = true;
                         for (long i = nUpTo; i < nPos; i++) gdata.pushPoint(i);
                     }
-                    if (primitive.mode == 1) { /*LINE*/
-                        for (long i = nUpTo; i < nPos; i++) gdata.pushPoint(i);
+
+                    if (primitive.mode == 1) { // LINE
                         for (long i = nUpTo; i < nPos/2; ++i) gdata.pushLine(i*2,i*2+1);
                     }
-                    if (primitive.mode == 2) { /*LINE LOOP*/ cout << "GLTF-LOADER: not implemented LINE LOOP" << endl; }
-                    if (primitive.mode == 3) { /*LINE STRIP*/ cout << "GLTF-LOADER: not implemented LINE STRIP" << endl; }
-                    if (primitive.mode == 4) { /*TRIANGLES*/
+
+                    if (primitive.mode == 4) { // TRIANGLES
                         for (long i = 0; i < n/3; i++) gdata.pushTri(nUpTo+i*3+0,nUpTo+i*3+1,nUpTo+i*3+2);
                     }
+
+                    if (primitive.mode == 2) { /*LINE LOOP*/ cout << "GLTF-LOADER: not implemented LINE LOOP" << endl; }
+                    if (primitive.mode == 3) { /*LINE STRIP*/ cout << "GLTF-LOADER: not implemented LINE STRIP" << endl; }
                     if (primitive.mode == 5) { /*TRIANGLE STRIP*/ cout << "GLTF-LOADER: not implemented TRIANGLE STRIP" << endl; }
                     if (primitive.mode == 6) { /*TRAINGLE FAN*/ cout << "GLTF-LOADER: not implemented TRAINGLE FAN" << endl;}
                 }
+
                 //cout << meshID << " " << gdata.size() << " --- " << n <<  endl;
                 //cout << "prim with v " << n << " : " << primitive.mode <<  endl;
 
