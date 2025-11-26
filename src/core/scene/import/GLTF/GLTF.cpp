@@ -1566,6 +1566,12 @@ class GLTFLoader : public GLTFUtils {
         }
 
         template<class T, typename S>
+        T toIndex(const unsigned char* data, size_t k, double s = 1.0) {
+            const S* data2 = (const S*)data;
+            return T( data2[k]*s );
+        };
+
+        template<class T, typename S>
         T toVec2(const unsigned char* data, size_t k, double s = 1.0) {
             const S* data2 = (const S*)data;
             return T( data2[k]*s, data2[k+1]*s );
@@ -1723,77 +1729,50 @@ class GLTFLoader : public GLTFUtils {
                 }
 
                 if (primitive.indices > -1) {
-                    const tinygltf::Accessor& accessorIndices = model.accessors[primitive.indices];
-                    const tinygltf::BufferView& bufferViewIndices = model.bufferViews[accessorIndices.bufferView];
-                    const tinygltf::Buffer& bufferInd = model.buffers[bufferViewIndices.buffer];
-                    if (primitive.mode == 0) { /*POINTS*/
+                    auto data = getBufferPtr(model, primitive.indices, componentType, componentCount, elementCount, stride);
+
+                    if (primitive.mode == 0) { // POINT
                         pointsOnly = true;
-                        if (accessorIndices.componentType == GL_UNSIGNED_BYTE) {
-                            const unsigned char* indices   = reinterpret_cast<const unsigned char*>(&bufferInd.data[bufferViewIndices.byteOffset + accessorIndices.byteOffset]);
-                            for (size_t i = 0; i < accessorIndices.count; ++i) gdata.pushPoint(nUpTo+indices[i]);
+                        for (size_t i = 0; i < elementCount; i++) {
+                            if (componentType == GL_UNSIGNED_BYTE) gdata.pushPoint(nUpTo + toIndex<int, unsigned char>(data, i));
+                            else if (componentType == GL_SHORT) gdata.pushPoint(nUpTo + toIndex<int, short>(data, i));
+                            else if (componentType == GL_UNSIGNED_SHORT) gdata.pushPoint(nUpTo+toIndex<int, unsigned short>(data, i));
+                            else if (componentType == GL_UNSIGNED_INT) gdata.pushPoint(nUpTo+toIndex<int, unsigned int>(data, i));
+                            else { cout << "GLTF-LOADER: data type of POINT INDICES unknown: " << componentType << endl; }
                         }
-                        else if (accessorIndices.componentType == GL_SHORT) {
-                            const short* indices   = reinterpret_cast<const short*>(&bufferInd.data[bufferViewIndices.byteOffset + accessorIndices.byteOffset]);
-                            for (size_t i = 0; i < accessorIndices.count; ++i) gdata.pushPoint(nUpTo+indices[i]);
-                        }
-                        else if (accessorIndices.componentType == GL_UNSIGNED_SHORT) {
-                            const unsigned short* indices   = reinterpret_cast<const unsigned short*>(&bufferInd.data[bufferViewIndices.byteOffset + accessorIndices.byteOffset]);
-                            for (size_t i = 0; i < accessorIndices.count; ++i) gdata.pushPoint(nUpTo+indices[i]);
-                        }
-                        else if (accessorIndices.componentType == GL_UNSIGNED_INT) {
-                            const unsigned int* indices   = reinterpret_cast<const unsigned int*>(&bufferInd.data[bufferViewIndices.byteOffset + accessorIndices.byteOffset]);
-                            for (size_t i = 0; i < accessorIndices.count; ++i) gdata.pushPoint(nUpTo+indices[i]);
-                        }
-                        else { cout << "GLTF-LOADER: data type of POINT INDICES unknwon: " << accessorIndices.componentType << endl; }
                     }
-                    if (primitive.mode == 1) { /*LINE*/
-                        if (accessorIndices.componentType == GL_UNSIGNED_BYTE) {
-                            const unsigned char* indices   = reinterpret_cast<const unsigned char*>(&bufferInd.data[bufferViewIndices.byteOffset + accessorIndices.byteOffset]);
-                            for (size_t i = 0; i < accessorIndices.count; ++i) gdata.pushPoint(nUpTo+indices[i]);
-                            for (size_t i = 0; i < accessorIndices.count/2; ++i) gdata.pushLine(nUpTo+indices[i*2],nUpTo+indices[i*2+1]);
+
+                    if (primitive.mode == 1) { // LINE
+                        for (size_t i = 0; i < elementCount/2; i++) {
+                            Vec2i v;
+                            if (componentType == GL_UNSIGNED_BYTE) v = toVec2<Vec2i, unsigned char>(data, i*2);
+                            else if (componentType == GL_SHORT) v = toVec2<Vec2i, short>(data, i*2);
+                            else if (componentType == GL_UNSIGNED_SHORT) v = toVec2<Vec2i, unsigned short>(data, i*2);
+                            else if (componentType == GL_UNSIGNED_INT) v = toVec2<Vec2i, unsigned int>(data, i*2);
+                            else { cout << "GLTF-LOADER: data type of LINE INDICES unknown: " << componentType << endl; }
+                            gdata.pushLine(nUpTo+v[0], nUpTo+v[1]);
                         }
-                        else if (accessorIndices.componentType == GL_SHORT) {
-                            const short* indices   = reinterpret_cast<const short*>(&bufferInd.data[bufferViewIndices.byteOffset + accessorIndices.byteOffset]);
-                            for (size_t i = 0; i < accessorIndices.count; ++i) gdata.pushPoint(nUpTo+indices[i]);
-                            for (size_t i = 0; i < accessorIndices.count/2; ++i) gdata.pushLine(nUpTo+indices[i*2],nUpTo+indices[i*2+1]);
-                        }
-                        else if (accessorIndices.componentType == GL_UNSIGNED_SHORT) {
-                            const unsigned short* indices   = reinterpret_cast<const unsigned short*>(&bufferInd.data[bufferViewIndices.byteOffset + accessorIndices.byteOffset]);
-                            for (size_t i = 0; i < accessorIndices.count; ++i) gdata.pushPoint(nUpTo+indices[i]);
-                            for (size_t i = 0; i < accessorIndices.count/2; ++i) gdata.pushLine(nUpTo+indices[i*2],nUpTo+indices[i*2+1]);
-                        }
-                        else if (accessorIndices.componentType == GL_UNSIGNED_INT) {
-                            const unsigned int* indices   = reinterpret_cast<const unsigned int*>(&bufferInd.data[bufferViewIndices.byteOffset + accessorIndices.byteOffset]);
-                            for (size_t i = 0; i < accessorIndices.count; ++i) gdata.pushPoint(nUpTo+indices[i]);
-                            for (size_t i = 0; i < accessorIndices.count/2; ++i) gdata.pushLine(nUpTo+indices[i*2],nUpTo+indices[i*2+1]);
-                        }
-                        else { cout << "GLTF-LOADER: data type of LINE INDICES unknwon: " << accessorIndices.componentType << endl; }
                     }
+
                     if (primitive.mode == 2) { /*LINE LOOP*/ cout << "GLTF-LOADER: not implemented LINE LOOP" << endl; }
                     if (primitive.mode == 3) { /*LINE STRIP*/ cout << "GLTF-LOADER: not implemented LINE STRIP" << endl; }
-                    if (primitive.mode == 4) { /*TRIANGLES*/
-                        if (accessorIndices.componentType == GL_UNSIGNED_BYTE) {
-                            const unsigned char* indices   = reinterpret_cast<const unsigned char*>(&bufferInd.data[bufferViewIndices.byteOffset + accessorIndices.byteOffset]);
-                            for (size_t i = 0; i < accessorIndices.count/3; ++i) gdata.pushTri(nUpTo+indices[i*3+0],nUpTo+indices[i*3+1],nUpTo+indices[i*3+2]);
+
+                    if (primitive.mode == 4) { // TRIANGLES
+                        for (size_t i = 0; i < elementCount/3; i++) {
+                            Vec3i v;
+                            if (componentType == GL_UNSIGNED_BYTE) v = toVec3<Vec3i, unsigned char>(data, i*3);
+                            else if (componentType == GL_SHORT) v = toVec3<Vec3i, short>(data, i*3);
+                            else if (componentType == GL_UNSIGNED_SHORT) v = toVec3<Vec3i, unsigned short>(data, i*3);
+                            else if (componentType == GL_UNSIGNED_INT) v = toVec3<Vec3i, unsigned int>(data, i*3);
+                            else { cout << "GLTF-LOADER: data type of TRIANGLE INDICES unknwon: " << componentType << endl; }
+                            gdata.pushTri(nUpTo+v[0], nUpTo+v[1], nUpTo+v[2]);
                         }
-                        else if (accessorIndices.componentType == GL_SHORT) {
-                            const short* indices   = reinterpret_cast<const short*>(&bufferInd.data[bufferViewIndices.byteOffset + accessorIndices.byteOffset]);
-                            for (size_t i = 0; i < accessorIndices.count/3; ++i) gdata.pushTri(nUpTo+indices[i*3+0],nUpTo+indices[i*3+1],nUpTo+indices[i*3+2]);
-                        }
-                        else if (accessorIndices.componentType == GL_UNSIGNED_SHORT) {
-                            const unsigned short* indices   = reinterpret_cast<const unsigned short*>(&bufferInd.data[bufferViewIndices.byteOffset + accessorIndices.byteOffset]);
-                            for (size_t i = 0; i < accessorIndices.count/3; ++i) gdata.pushTri(nUpTo+indices[i*3+0],nUpTo+indices[i*3+1],nUpTo+indices[i*3+2]);
-                        }
-                        else if (accessorIndices.componentType == GL_UNSIGNED_INT) {
-                            const unsigned int* indices   = reinterpret_cast<const unsigned int*>(&bufferInd.data[bufferViewIndices.byteOffset + accessorIndices.byteOffset]);
-                            for (size_t i = 0; i < accessorIndices.count/3; ++i) gdata.pushTri(nUpTo+indices[i*3+0],nUpTo+indices[i*3+1],nUpTo+indices[i*3+2]);
-                        }
-                        else { cout << "GLTF-LOADER: data type of TRIANGLE INDICES unknwon: " << accessorIndices.componentType << endl; }
                     }
+
                     if (primitive.mode == 5) { /*TRIANGLE STRIP*/
-                        if (accessorIndices.componentType == GL_UNSIGNED_BYTE) {
-                            const unsigned char* indices   = reinterpret_cast<const unsigned char*>(&bufferInd.data[bufferViewIndices.byteOffset + accessorIndices.byteOffset]);
-                            for (size_t i = 0; i < accessorIndices.count-2; ++i) {
+                        if (componentType == GL_UNSIGNED_BYTE) {
+                            const unsigned char* indices   = reinterpret_cast<const unsigned char*>(data);
+                            for (size_t i = 0; i < elementCount-2; ++i) {
                                 if (i%2) {
                                     gdata.pushTri(nUpTo+indices[i+1],nUpTo+indices[i+0],nUpTo+indices[i+2]);
                                 } else {
@@ -1801,9 +1780,9 @@ class GLTFLoader : public GLTFUtils {
                                 }
                             }
                         }
-                        else if (accessorIndices.componentType == GL_SHORT) {
-                            const short* indices   = reinterpret_cast<const short*>(&bufferInd.data[bufferViewIndices.byteOffset + accessorIndices.byteOffset]);
-                            for (size_t i = 0; i < accessorIndices.count-2; ++i)  {
+                        else if (componentType == GL_SHORT) {
+                            const short* indices   = reinterpret_cast<const short*>(data);
+                            for (size_t i = 0; i < elementCount-2; ++i)  {
                                 if (i%2) {
                                     gdata.pushTri(nUpTo+indices[i+1],nUpTo+indices[i+0],nUpTo+indices[i+2]);
                                 } else {
@@ -1811,9 +1790,9 @@ class GLTFLoader : public GLTFUtils {
                                 }
                             }
                         }
-                        else if (accessorIndices.componentType == GL_UNSIGNED_SHORT) {
-                            const unsigned short* indices   = reinterpret_cast<const unsigned short*>(&bufferInd.data[bufferViewIndices.byteOffset + accessorIndices.byteOffset]);
-                            for (size_t i = 0; i < accessorIndices.count-2; ++i)  {
+                        else if (componentType == GL_UNSIGNED_SHORT) {
+                            const unsigned short* indices   = reinterpret_cast<const unsigned short*>(data);
+                            for (size_t i = 0; i < elementCount-2; ++i)  {
                                 if (i%2) {
                                     gdata.pushTri(nUpTo+indices[i+1],nUpTo+indices[i+0],nUpTo+indices[i+2]);
                                 } else {
@@ -1821,9 +1800,9 @@ class GLTFLoader : public GLTFUtils {
                                 }
                             }
                         }
-                        else if (accessorIndices.componentType == GL_UNSIGNED_INT) {
-                            const unsigned int* indices   = reinterpret_cast<const unsigned int*>(&bufferInd.data[bufferViewIndices.byteOffset + accessorIndices.byteOffset]);
-                            for (size_t i = 0; i < accessorIndices.count-2; ++i)  {
+                        else if (componentType == GL_UNSIGNED_INT) {
+                            const unsigned int* indices   = reinterpret_cast<const unsigned int*>(data);
+                            for (size_t i = 0; i < elementCount-2; ++i)  {
                                 if (i%2) {
                                     gdata.pushTri(nUpTo+indices[i+1],nUpTo+indices[i+0],nUpTo+indices[i+2]);
                                 } else {
@@ -1831,10 +1810,10 @@ class GLTFLoader : public GLTFUtils {
                                 }
                             }
                         }
-                        else { cout << "GLTF-LOADER: data type of TRIANGLE SRIP INDICES unknwon: " << accessorIndices.componentType << endl; }
+                        else { cout << "GLTF-LOADER: data type of TRIANGLE SRIP INDICES unknwon: " << componentType << endl; }
                     }
                     if (primitive.mode == 6) { /*TRAINGLE FAN*/ cout << "GLTF-LOADER: not implemented fTRAINGLE FAN" << endl;}
-                }   else {
+                } else {
                     if (primitive.mode == 0) { /*POINTS*/
                         pointsOnly = true;
                         for (long i = nUpTo; i < nPos; i++) gdata.pushPoint(i);
