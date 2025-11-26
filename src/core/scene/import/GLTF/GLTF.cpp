@@ -1541,7 +1541,51 @@ class GLTFLoader : public GLTFUtils {
             textures[texID] = img;
         }
 
-        void handleMesh(const tinygltf::Mesh &gltfMesh){
+
+        inline const unsigned char* getBufferPtr(const tinygltf::Model& model, const int& accessorI, int& componentType, int& componentCount, size_t& elementCount, size_t& stride) {
+            if (accessorI < 0 || accessorI >= (int)model.accessors.size()) return 0;
+            const tinygltf::Accessor& accessor = model.accessors[accessorI];
+            if (accessor.bufferView < 0 || accessor.bufferView >= (int)model.bufferViews.size()) return 0;
+
+            componentType = accessor.componentType;
+            elementCount = accessor.count;
+            componentCount = tinygltf::GetNumComponentsInType(accessor.type);
+            int componentSize = tinygltf::GetComponentSizeInBytes(componentType);
+            if (componentSize == 0) return 0;
+
+            const tinygltf::BufferView& bv = model.bufferViews[accessor.bufferView];
+            if (bv.buffer < 0 || bv.buffer >= (int)model.buffers.size()) return 0;
+            const tinygltf::Buffer& buf = model.buffers[bv.buffer];
+            size_t offset = bv.byteOffset + accessor.byteOffset;
+            size_t required = offset + elementCount * componentCount * componentSize;
+            if (offset >= buf.data.size() || required > buf.data.size()) return 0;
+
+            stride = bv.byteStride / componentSize;
+            if (stride == 0) stride = componentCount;
+            return &buf.data[offset];
+        }
+
+        template<class T, typename S>
+        T toVec2(const unsigned char* data, size_t k, double s = 1.0) {
+            const S* data2 = (const S*)data;
+            return T( data2[k]*s, data2[k+1]*s );
+        };
+
+        template<class T, typename S>
+        T toVec3(const unsigned char* data, size_t k, double s = 1.0) {
+            const S* data2 = (const S*)data;
+            return T( data2[k]*s, data2[k+1]*s, data2[k+2]*s );
+        };
+
+        template<class T, typename S>
+        T toVec4(const unsigned char* data, size_t k, double s = 1.0) {
+            const S* data2 = (const S*)data;
+            return T( data2[k]*s, data2[k+1]*s, data2[k+2]*s, data2[k+3]*s );
+        };
+
+        void handleMesh(const tinygltf::Mesh &gltfMesh) {
+            bool verbose = true;
+
             meshID++;
             GLTFNode* node;
             string name;
@@ -1559,6 +1603,7 @@ class GLTFLoader : public GLTFUtils {
             VRGeoData gdata = VRGeoData();
             bool firstPrim = true;
             bool pointsOnly = false;
+
             // if (gltfMesh.primitives.size() > 1) cout << "GLTFLOADER::WARNING IN MESH: multiple primitives per mesh" << endl;
             /*
             else if (gltfMesh.primitives.size() > 1) {
@@ -1570,7 +1615,11 @@ class GLTFLoader : public GLTFUtils {
                 for (auto nodeID : meshToNodes[meshID]) { references[nodeID] = node; }
                 nodes[meshToNodes[meshID][0]]->addChild(node);
             }*/
+
             for (tinygltf::Primitive primitive : gltfMesh.primitives) {
+                int componentType = 0, componentCount = 0;
+                size_t elementCount = 0, stride = 0;
+
                 if (gltfMesh.primitives.size() > 1) {
                     /*
                     primID++;
@@ -1583,37 +1632,59 @@ class GLTFLoader : public GLTFUtils {
 
                 if (!primitive.attributes.count("POSITION")) { cout << "GLTFLOADER::ERROR IN MESH this primitive has no pos" << endl; continue; }
 
-                if (primitive.attributes.count("POSITION")){
-                    const tinygltf::Accessor& accessorP = model.accessors[primitive.attributes["POSITION"]];
-                    const tinygltf::BufferView& bufferViewP = model.bufferViews[accessorP.bufferView];
-                    const tinygltf::Buffer& bufferP = model.buffers[bufferViewP.buffer];
-                    if (accessorP.componentType == GL_FLOAT) {
-                        const float* positions = reinterpret_cast<const float*>(&bufferP.data[bufferViewP.byteOffset + accessorP.byteOffset]);
-                        for (size_t i = 0; i < accessorP.count; ++i) {
-                            // Positions are Vec3 components, so for each vec3 stride, offset for x, y, and z.
-                            Vec3d pos;
-                            if (bufferViewP.byteStride > 12) { pos = Vec3d( positions[i * (bufferViewP.byteStride/4) + 0], positions[i * (bufferViewP.byteStride/4) + 1], positions[i * (bufferViewP.byteStride/4) + 2] ); }
-                            else pos = Vec3d( positions[i * 3 + 0], positions[i * 3 + 1], positions[i * 3 + 2] );
-                            gdata.pushVert(pos);
-                            nPos++;
-                        }
-                    }
+                if (primitive.attributes.count("POSITION")) {
+                    auto data = getBufferPtr(model, primitive.attributes["POSITION"], componentType, componentCount, elementCount, stride);
+                    if (componentType == GL_FLOAT && componentCount == 3) {
+                        for (size_t i = 0; i < elementCount; i++) gdata.pushVert( toVec3<Vec3d, float>(data, i*stride) );
+                        nPos += elementCount;
+                    } else { cout << "GLTFLOADER::ERROR IN MESH unexpected positions with " << componentType << "/" << componentCount << endl; continue; }
                 }
 
                 if (primitive.attributes.count("NORMAL")) {
-                    const tinygltf::Accessor& accessorN = model.accessors[primitive.attributes["NORMAL"]];
-                    const tinygltf::BufferView& bufferViewN = model.bufferViews[accessorN.bufferView];
-                    const tinygltf::Buffer& bufferN = model.buffers[bufferViewN.buffer];
-                    if (accessorN.componentType == GL_FLOAT) {
-                        const float* normals   = reinterpret_cast<const float*>(&bufferN.data[bufferViewN.byteOffset + accessorN.byteOffset]);
-                        for (size_t i = 0; i < accessorN.count; ++i) {
-                            Vec3d nor;
-                            if (bufferViewN.byteStride > 12) { nor = Vec3d( normals[i * (bufferViewN.byteStride/4) + 0], normals[i * (bufferViewN.byteStride/4) + 1], normals[i * (bufferViewN.byteStride/4) + 2] ); }
-                            else nor = Vec3d( normals[i * 3 + 0], normals[i * 3 + 1], normals[i * 3 + 2] );
-                            gdata.pushNorm(nor);
+                    auto data = getBufferPtr(model, primitive.attributes["NORMAL"], componentType, componentCount, elementCount, stride);
+                    if (componentType == GL_FLOAT && componentCount == 3) {
+                        for (size_t i = 0; i < elementCount; i++) gdata.pushNorm( toVec3<Vec3d, float>(data, i*stride) );
+                    } else { cout << "GLTFLOADER::ERROR IN MESH unexpected normals with " << componentType << "/" << componentCount << endl; continue; }
+                }
+
+
+                auto processColors = [&](const char* key, int cIndex) {
+                    if (cIndex != 0) { cout << " got inhandled color index: " << cIndex << endl; return; }
+
+                    if (primitive.attributes.count(key)) {
+                        auto data = getBufferPtr(model, primitive.attributes[key], componentType, componentCount, elementCount, stride);
+                        double s1 = 1.0/(256*256 - 1);
+                        double s2 = 1.0/255.0;
+
+                        for (size_t i = 0; i < elementCount; i++) {
+                            if      (componentType == GL_FLOAT && componentCount == 3) { gdata.pushColor( toVec3<Color3f, float>(data, i*stride) ); }
+                            else if (componentType == GL_FLOAT && componentCount == 4) { gdata.pushColor( toVec4<Color4f, float>(data, i*stride) ); }
+                            else if (componentType == GL_UNSIGNED_SHORT && componentCount == 3) { gdata.pushColor( toVec3<Color3f, unsigned short>(data, i*stride, s1) ); }
+                            else if (componentType == GL_UNSIGNED_SHORT && componentCount == 4) { gdata.pushColor( toVec4<Color4f, unsigned short>(data, i*stride, s1) ); }
+                            else if (componentType == GL_UNSIGNED_BYTE && componentCount == 3) { gdata.pushColor( toVec3<Color3f, unsigned char>(data, i*stride, s2) ); }
+                            else if (componentType == GL_UNSIGNED_BYTE && componentCount == 4) { gdata.pushColor( toVec4<Color4f, unsigned char>(data, i*stride, s2) ); }
+                            else { cout << " got unknown color: " << componentType << "/" << componentCount << ", count: " << elementCount << endl; break; }
                         }
                     }
-                }
+                };
+
+                auto processTexCoords = [&](const char* key, int tcIndex) {
+                    if (primitive.attributes.count(key)) {
+                        auto data = getBufferPtr(model, primitive.attributes[key], componentType, componentCount, elementCount, stride);
+
+                        for (size_t i = 0; i < elementCount; ++i) {
+                            if (componentType == GL_FLOAT && componentCount == 2) {
+                                Vec2d UV = toVec2<Vec2d, float>( data, i*stride );
+                                gdata.pushTexCoord(UV, tcIndex);
+                                tangentsUVs.push_back(UV);
+                            } else { cout << "got unknown tex coords 0: " << componentType << "/" << componentCount << endl; break; }
+                        }
+                    }
+                };
+
+                processColors("COLOR_0", 0);
+                processTexCoords("TEXCOORD_0", 0);
+                processTexCoords("TEXCOORD_1", 1);
 
 #ifdef HANDLE_PBR_MATERIAL
                 if (primitive.attributes.count("TANGENT")) {
@@ -1633,77 +1704,22 @@ class GLTFLoader : public GLTFUtils {
                 }
 #endif // HANDLE_PBR_MATERIAL
 
-                if (primitive.attributes.count("COLOR_0")){
-                    const tinygltf::Accessor& accessorColor = model.accessors[primitive.attributes["COLOR_0"]];
-                    const tinygltf::BufferView& bufferViewCO = model.bufferViews[accessorColor.bufferView];
-                    const tinygltf::Buffer& bufferCO = model.buffers[bufferViewCO.buffer];
-
-                    if (accessorColor.componentType == GL_FLOAT) {
-                        const float* colors = reinterpret_cast<const float*>(&bufferCO.data[bufferViewCO.byteOffset + accessorColor.byteOffset]);
-                        for (size_t i = 0; i < accessorColor.count; ++i) {
-                            if (accessorColor.type == 3){ auto cl = Color3f( colors[i * 3 + 0], colors[i * 3 + 1], colors[i * 3 + 2] ); gdata.pushColor(cl); }
-                            if (accessorColor.type == 4){ auto cl = Color4f( colors[i * 4 + 0], colors[i * 4 + 1], colors[i * 4 + 2], colors[i * 4 + 3] ); gdata.pushColor(cl);  }
-                        }
-                    }
-
-                    else if (accessorColor.componentType == GL_UNSIGNED_SHORT) {
-                        const unsigned short* colors = reinterpret_cast<const unsigned short*>(&bufferCO.data[bufferViewCO.byteOffset + accessorColor.byteOffset]);
-                        double s = 1.0/(256*256 - 1);
-                        for (size_t i = 0; i < accessorColor.count; ++i) {
-                            if (accessorColor.type == 3){ auto cl = Color3f( colors[i * 3 + 0]*s, colors[i * 3 + 1]*s, colors[i * 3 + 2]*s ); gdata.pushColor(cl); }
-                            if (accessorColor.type == 4){ auto cl = Color4f( colors[i * 4 + 0]*s, colors[i * 4 + 1]*s, colors[i * 4 + 2]*s, colors[i * 4 + 3]*s ); gdata.pushColor(cl);  }
-                        }
-                    }
-
-                    else {
-                        cout << " got unknown colors comp: " << int(accessorColor.componentType) << ", acc: " << int(accessorColor.type) << ", count: " << int(accessorColor.count) << endl;
-                    }
-                }
-
-                if (primitive.attributes.count("TEXCOORD_0")) {
-                    const tinygltf::Accessor& accessorTexUV = model.accessors[primitive.attributes["TEXCOORD_0"]];
-                    const tinygltf::BufferView& bufferViewUV = model.bufferViews[accessorTexUV.bufferView];
-                    const tinygltf::Buffer& bufferUV = model.buffers[bufferViewUV.buffer];
-                    if (accessorTexUV.componentType == GL_FLOAT) {
-                        const float* UVs   = reinterpret_cast<const float*>(&bufferUV.data[bufferViewUV.byteOffset + accessorTexUV.byteOffset]);
-                        for (size_t i = 0; i < accessorTexUV.count; ++i) {
-                            Vec2d UV = Vec2d( UVs[i*2 + 0], UVs[i*2 + 1] );
-                            if (firstPrim) gdata.pushTexCoord(UV);
-                            tangentsUVs.push_back(UV);
-                        }
-                    }
-                }
-
-                if (primitive.attributes.count("TEXCOORD_1")) {
-                    //const tinygltf::Accessor& accessorTexUV1 = model.accessors[primitive.attributes["TEXCOORD_1"]];
-                }
-
                 if (primitive.attributes.count("JOINTS_0")) {
-                    const tinygltf::Accessor& accessor= model.accessors[primitive.attributes["JOINTS_0"]];
-                    const tinygltf::BufferView& bufferView = model.bufferViews[accessor.bufferView];
-                    const tinygltf::Buffer& buffer = model.buffers[bufferView.buffer];
+                    auto data = getBufferPtr(model, primitive.attributes["JOINTS_0"], componentType, componentCount, elementCount, stride);
                     vector<Vec4i> joints;
-                    if (accessor.type == 4) {
-                        if (accessor.componentType == GL_UNSIGNED_SHORT) {
-                            const unsigned short* jointsData   = reinterpret_cast<const unsigned short*>(&buffer.data[bufferView.byteOffset + accessor.byteOffset]);
-                            for (size_t i = 0; i < accessor.count; i++) joints.push_back( Vec4i( jointsData[i*4 + 0], jointsData[i*4 + 1], jointsData[i*4 + 2], jointsData[i*4 + 3] ) );
-                        }
+                    if (componentCount == 4 && componentType == GL_UNSIGNED_SHORT) {
+                        for (size_t i = 0; i < elementCount; i++) joints.push_back( toVec4<Vec4i, unsigned short>( data, i*stride ) );
                     }
-                    cout << " vertex_joints type: " << accessor.componentType << " accessor type: " << accessor.type << " accessor count: " << accessor.count << endl;//  << " joints:  " << toString(joints) << endl;
+                    cout << " vertex_joints type: " << componentType << " accessor type: " << componentCount << " accessor count: " << elementCount << endl;//  << " joints:  " << toString(joints) << endl;
                 }
 
                 if (primitive.attributes.count("WEIGHTS_0")) {
-                    const tinygltf::Accessor& accessor = model.accessors[primitive.attributes["WEIGHTS_0"]];
-                    const tinygltf::BufferView& bufferView = model.bufferViews[accessor.bufferView];
-                    const tinygltf::Buffer& buffer = model.buffers[bufferView.buffer];
+                    auto data = getBufferPtr(model, primitive.attributes["WEIGHTS_0"], componentType, componentCount, elementCount, stride);
                     vector<Vec4d> weights;
-                    if (accessor.type == 4) {
-                        if (accessor.componentType == GL_FLOAT) {
-                            const float* weightsData   = reinterpret_cast<const float*>(&buffer.data[bufferView.byteOffset + accessor.byteOffset]);
-                            for (size_t i = 0; i < accessor.count; i++) weights.push_back( Vec4d( weightsData[i*4 + 0],  weightsData[i*4 + 1],  weightsData[i*4 + 2],  weightsData[i*4 + 3] ) );
-                        }
+                    if (componentCount == 4 && componentType == GL_FLOAT) {
+                        for (size_t i = 0; i < elementCount; i++) weights.push_back( toVec4<Vec4d, float>( data, i*stride ) );
                     }
-                    cout << " vertex_weights type: " << accessor.componentType << " accessor type: " << accessor.type << " accessor count: " << accessor.count << endl;// << " weights: " << toString(weights) << endl;
+                    cout << " vertex_weights type: " << componentType << " accessor type: " << componentCount << " accessor count: " << elementCount << endl;// << " weights: " << toString(weights) << endl;
                 }
 
                 if (primitive.indices > -1) {
