@@ -33,9 +33,10 @@ void ImAppLauncher::render(string filter, ImImage& preview, int fullWidth, int c
 
     if (!sensitive) ImGui::BeginDisabled();
 
-    int col0 = colWidth1;
-    int col2 = colWidth1*0.25;
-    int col1 = fullWidth - col0-col2;
+    int wMin = 32;
+    int col0 = max(wMin,colWidth1);
+    int col2 = max(wMin,colWidth1/4);
+    int col1 = max(wMin,fullWidth - col0-col2);
 
     ImVec2 cursorBeg = ImGui::GetCursorScreenPos();
     ImGui::BeginGroup();
