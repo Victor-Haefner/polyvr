@@ -31,6 +31,7 @@
 
 
 
+bool doPrintKeyEvents2 = true;
 
 void checkKeysDownMap(string tag) {
     ImGuiIO& io = ImGui::GetIO();
@@ -467,11 +468,23 @@ struct Utf8Handler {
 };
 
 void ImGui_ImplGLUT_KeyboardUpFunc_main(unsigned char c, int x, int y) {
+    if (doPrintKeyEvents2) printf("imgui main key up %i\n", c);
     //printMods("KeyboardUp");
     ImGui_ImplGLUT_UpdateKeyModifiers();
 
     int mods = glutGetModifiers();
-    if ((mods & GLUT_ACTIVE_CTRL) && c <= 26) c = c + 'a' - 1; // convert ^A..^Z back to a..z
+    if (mods & GLUT_ACTIVE_CTRL) {
+        // first release potential Enter/Backspace/Tab etc..
+#if IMGUI_VERSION_NUM > 18600
+        ImGuiKey key = ImGui_ImplGLUT_KeyToImGuiKey(c);
+        ImGui_ImplGLUT_AddKeyEvent(key, false, c);
+#else
+        ImGui_ImplGLUT_KeyboardUpFunc(c,x,y);
+#endif
+
+        //if (c <= 26) cout << " ------ " << (int)c << " -> " << (int)(c + 'a' - 1) << endl;
+        if (c <= 26) c = c + 'a' - 1; // convert ^A..^Z back to a..z
+    }
 
     static Utf8Handler utf8Handler;
     if (utf8Handler.checkByte(c)) {
@@ -489,6 +502,7 @@ void ImGui_ImplGLUT_KeyboardUpFunc_main(unsigned char c, int x, int y) {
 }
 
 void ImGui_ImplGLUT_KeyboardFunc_main(unsigned char c, int x, int y) {
+    if (doPrintKeyEvents2) printf("imgui main key down %i\n", c);
     ImGuiIO& io = ImGui::GetIO();
 
     //printMods("KeyboardDown");
@@ -521,6 +535,7 @@ void ImGui_ImplGLUT_KeyboardFunc_main(unsigned char c, int x, int y) {
 }
 
 void ImGui_ImplGLUT_SpecialUpFunc_main(int k, int x, int y) {
+    if (doPrintKeyEvents2) printf("imgui main special up %i\n", k);
     //printMods("SpecialUp");
     uiSignal("relayedImguiSpecialKeySignal", {{"key",toString(k)},{"state",toString(0)}});
     ImGui::SetCurrentContext(mainContext);
@@ -533,6 +548,7 @@ void ImGui_ImplGLUT_SpecialUpFunc_main(int k, int x, int y) {
 }
 
 void ImGui_ImplGLUT_SpecialFunc_main(int k, int x, int y) {
+    if (doPrintKeyEvents2) printf("imgui main special down %i\n", k);
     //printMods("SpecialDown");
     ImGui::SetCurrentContext(mainContext);
 #if IMGUI_VERSION_NUM > 18600

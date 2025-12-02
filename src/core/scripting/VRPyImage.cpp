@@ -90,9 +90,9 @@ bool CheckExtension(string extN) {
 }
 
 PyObject* VRPyTexture::New(PyTypeObject *type, PyObject *args, PyObject *kwds) {
+    VRTexturePtr img = VRTexture::create();
 #ifndef WITHOUT_NUMPY
     //import_array1(NULL);
-    VRTexturePtr img = VRTexture::create();
     if (pySize(args) == 0) return allocPtr( type, img );
 
     PyArrayObject* data = 0;
@@ -117,11 +117,8 @@ PyObject* VRPyTexture::New(PyTypeObject *type, PyObject *args, PyObject *kwds) {
 
     img->getImage()->set(pf, W, H, 1, 1, 1, 0, cdata, dt, true);
     if (channels2) img->setInternalFormat( toOSGConst(PyUnicode_AsUTF8((PyObject*)channels2)) );
-    return allocPtr( type, img );
-#else
-    VRTexturePtr img = VRTexture::create();
-    return allocPtr( type, img );
 #endif
+    return allocPtr( type, img );
 }
 
 
