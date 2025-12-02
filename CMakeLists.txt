@@ -1772,3 +1772,24 @@ target_link_libraries(polyvr PRIVATE ${LINKER_FLAGS} freeglut)
 else()
 target_link_libraries(polyvr PRIVATE ${LINKER_FLAGS})
 endif()
+
+
+if(LINUX)
+message("create run script ${CMAKE_BINARY_DIR}/run.sh")
+# Location where the script will be created
+set(RUN_SCRIPT "${CMAKE_BINARY_DIR}/run.sh")
+
+# Write the script
+file(WRITE ${RUN_SCRIPT} "#!/bin/bash\n")
+file(APPEND ${RUN_SCRIPT} "libs=/usr/lib/opensg:/usr/lib/CEF:/usr/lib/1.4:/usr/lib/virtuose:/usr/lib/STEPcode:/usr/lib/OCE:/usr/lib/OPCUA:/usr/lib/DWG\n")
+file(APPEND ${RUN_SCRIPT} "export LD_LIBRARY_PATH=\"\$libs\$LD_LIBRARY_PATH\"\n\n")
+file(APPEND ${RUN_SCRIPT} "DIR=\"\$( cd \"\$( dirname \"\${BASH_SOURCE[0]}\" )\" && pwd )\"\n")
+file(APPEND ${RUN_SCRIPT} "cd \$DIR/..\n\n")
+file(APPEND ${RUN_SCRIPT} "./build/polyvr \"\$@\"\n")
+
+# Make it executable
+execute_process(COMMAND chmod +x ${RUN_SCRIPT})
+endif()
+
+
+
