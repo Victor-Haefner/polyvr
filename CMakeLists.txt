@@ -1,5 +1,15 @@
 cmake_minimum_required (VERSION 3.0)
 
+
+# to compile wasm build on ubuntu
+#  mkdir build
+#  cd build
+#  emcmake cmake ..
+
+# install dependencies with
+#  sudo apt install emscripten
+
+
 #set( CMAKE_VERBOSE_MAKEFILE on )
 #set(CMAKE_BUILD_TYPE Debug) # Warning! this will recompile everything!
 
@@ -54,7 +64,7 @@ if(APPLE)
 endif()
 
 
-if(NOT APPLE)
+if(NOT APPLE AND NOT WASM)
 # Define the name of your library and specify its source files
 add_library(freeglut SHARED)
 
@@ -149,18 +159,17 @@ if(WASM)
 	# debugging flags:
 	#  -g -s ASSERTIONS=1
 
-	#set(LINKER_FLAGS "${LINKER_FLAGS} -s ALLOW_MEMORY_GROWTH=1 -s EXIT_RUNTIME=1 -s DISABLE_EXCEPTION_CATCHING=0 -g")
-	set(LINKER_FLAGS "${LINKER_FLAGS} -s ALLOW_MEMORY_GROWTH=1 -s EXIT_RUNTIME=1 -s DISABLE_EXCEPTION_CATCHING=0 -s TOTAL_MEMORY=33554432")
+	#set(LINKER_FLAGS -s ALLOW_MEMORY_GROWTH=1 -s EXIT_RUNTIME=1 -s DISABLE_EXCEPTION_CATCHING=0 -g")
+	set(LINKER_FLAGS "-s ALLOW_MEMORY_GROWTH=1 -s EXIT_RUNTIME=1 -s DISABLE_EXCEPTION_CATCHING=0")
 	set(LINKER_FLAGS "${LINKER_FLAGS} -s MIN_WEBGL_VERSION=2 -s MAX_WEBGL_VERSION=2")
-	set(LINKER_FLAGS "${LINKER_FLAGS} -s EXPORTED_RUNTIME_METHODS=['lengthBytesUTF8','stringToUTF8','UTF8ToString']")
+	set(LINKER_FLAGS "${LINKER_FLAGS} -s EXPORTED_RUNTIME_METHODS=['stringToUTF8','UTF8ToString']")
 
 	add_definitions( -DWASM=1 )
 	add_definitions( -DGLUT_glut_LIBRARY=1 )
 	add_definitions( -DGLUT_Xi_LIBRARY=1 )
 	add_definitions( -DGLUT_Xmu_LIBRARY=1 )
-	add_definitions( -DCMAKE_TOOLCHAIN_FILE=../emsdk/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake )
-	add_definitions( -DCMAKE_MODULE_PATH=../emsdk/upstream/emscripten/cmake/Modules )
 endif()
+
 
 if(WIN32)
 	add_definitions( -DWIN32_LEAN_AND_MEAN=1 -D_WIN32_WINNT=0x0502 )
@@ -1751,7 +1760,7 @@ endif()
 
 add_dependencies(polyvr versionTarget)
 
-if(NOT APPLE)
+if(NOT APPLE AND NOT WASM)
 add_dependencies(polyvr freeglut)
 endif()
 
@@ -1767,7 +1776,7 @@ message("linking with: ${LINKER_FLAGS}")
 
 target_compile_options(polyvr PRIVATE ${COMPILER_FLAGS})
 message(${LINKER_FLAGS})
-if(NOT APPLE)
+if(NOT APPLE AND NOT WASM)
 target_link_libraries(polyvr PRIVATE ${LINKER_FLAGS} freeglut)
 else()
 target_link_libraries(polyvr PRIVATE ${LINKER_FLAGS})
