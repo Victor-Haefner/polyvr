@@ -76,7 +76,9 @@ VRScene::VRScene() {
 VRScene::~VRScene() {
     //kill physics thread
     cout << "VRScene::~VRScene " << name << endl;
-		CEF::shutdown();
+#ifndef WITHOUT_CEF
+    CEF::shutdown();
+#endif
     VRThreadManager::stopThread(physicsThreadID);
     VRImport::get()->clearCache();
     root->destroy();

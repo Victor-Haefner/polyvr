@@ -217,8 +217,10 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
 #endif
     sm->registerModule<VRPyRestResponse>("RestResponse", pModVR);
     sm->registerModule<VRPyRestClient>("RestClient", pModVR);
+#ifndef WITHOUT_TCP
     sm->registerModule<VRPyRestServer>("RestServer", pModVR);
     sm->registerModule<VRPyWebSocket>("WebSocket", pModVR);
+#endif
     sm->registerModule<VRPyState>("State", pModVR);
     sm->registerModule<VRPyGraphLayout>("GraphLayout", pModVR);
     sm->registerModule<VRPyPathFinding>("PathFinding", pModVR);
@@ -328,9 +330,11 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPyTimeline>("Timeline", pModVR);
     sm->registerModule<VRPyGizmo>("Gizmo", pModVR, VRPyTransform::typeRef);
 
+#ifndef WASM
 	sm->registerModule<VRPyBRepSurface>("BRepSurface", pModVR);
 	sm->registerModule<VRPyBRepEdge>("BRepEdge", pModVR);
 	sm->registerModule<VRPyBRepBound>("BRepBound", pModVR);
+#endif
 
 	sm->registerModule<VRPyTechnicalDrawing>("TechnicalDrawing", pModVR);
 #ifndef WITHOUT_CGAL
@@ -424,12 +428,17 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPyOPCUANode>("OPCUANode", pModVR);
 #endif
 
+#ifndef WITHOUT_TCP
     sm->registerModule<VRPyPing>("Ping", pModVR);
+#endif
 #ifndef WITHOUT_SNAP7
     sm->registerModule<VRPyProfinetClient>("ProfinetClient", pModVR);
 #endif
+
+#ifndef WITHOUT_TCP
     sm->registerModule<VRPyMQTTClient>("MQTTClient", pModVR, VRPyNetworkClient::typeRef);
     sm->registerModule<VRPyMQTTServer>("MQTTServer", pModVR);
+#endif
 
 #ifndef WITHOUT_CRYPTOPP
     sm->registerModule<VRPyEncryption>("Encryption", pModVR);

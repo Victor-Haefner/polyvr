@@ -82,6 +82,7 @@ void VRGuiNetwork::updateFlows() {
 
     //cout << "updateFlows" << endl;
 
+#ifndef WITHOUT_TCP
     auto updateFlowWidgets = [&](VRNetworkFlow& flow) {
         if (!flows.count(&flow)) return;
 
@@ -109,6 +110,7 @@ void VRGuiNetwork::updateFlows() {
         updateFlowWidgets(server->getInFlow());
         updateFlowWidgets(server->getOutFlow());
     }
+#endif
 }
 
 int VRGuiNetwork::addFlow(Vec2i pos, void* key) {
@@ -134,6 +136,7 @@ void VRGuiNetwork::connectNodes(int n1, int n2, string color) {
 }
 
 int VRGuiNetwork::addUDPClient(VRUDPClientPtr client, Vec2i& position) {
+#ifndef WITHOUT_TCP
     string name = client->getName();
     string protocol = client->getProtocol(); // tcp or udp
     string remoteUri = client->getConnectedUri();
@@ -147,9 +150,13 @@ int VRGuiNetwork::addUDPClient(VRUDPClientPtr client, Vec2i& position) {
     addFlow(position+Vec2i(20,22), &client->getInFlow());
     addFlow(position+Vec2i(50,22), &client->getOutFlow());
     return n1;
+#else
+    return -1;
+#endif
 }
 
 int VRGuiNetwork::addUDPServer(VRUDPServerPtr server, Vec2i& position) {
+#ifndef WITHOUT_TCP
     string name = server->getName();
     string protocol = server->getProtocol(); // tcp or udp
 
@@ -162,9 +169,13 @@ int VRGuiNetwork::addUDPServer(VRUDPServerPtr server, Vec2i& position) {
     addFlow(position+Vec2i(20,22), &server->getInFlow());
     addFlow(position+Vec2i(50,22), &server->getOutFlow());
     return n1;
+#else
+    return -1;
+#endif
 }
 
 int VRGuiNetwork::addTCPServer(VRTCPServerPtr server, Vec2i& position) {
+#ifndef WITHOUT_TCP
     string name = server->getName();
     string protocol = server->getProtocol(); // tcp or udp
 
@@ -177,9 +188,13 @@ int VRGuiNetwork::addTCPServer(VRTCPServerPtr server, Vec2i& position) {
     addFlow(position+Vec2i(20,22), &server->getInFlow());
     addFlow(position+Vec2i(50,22), &server->getOutFlow());
     return n1;
+#else
+    return -1;
+#endif
 }
 
 int VRGuiNetwork::addTCPClient(VRTCPClientPtr client, Vec2i& position) {
+#ifndef WITHOUT_TCP
     string name = client->getName();
     string protocol = client->getProtocol(); // tcp or udp
     string remoteUri = client->getConnectedUri();
@@ -194,9 +209,13 @@ int VRGuiNetwork::addTCPClient(VRTCPClientPtr client, Vec2i& position) {
     addFlow(position+Vec2i(20,22), &client->getInFlow());
     addFlow(position+Vec2i(50,22), &client->getOutFlow());
     return n1;
+#else
+    return -1;
+#endif
 }
 
 void VRGuiNetwork::addICEClient(VRICEClientPtr client, Vec2i& position) {
+#ifndef WITHOUT_TCP
     string name = client->getName();
     string protocol = client->getProtocol(); // tcp or udp
     string remoteUri = client->getTurnServer();
@@ -225,6 +244,7 @@ void VRGuiNetwork::addICEClient(VRICEClientPtr client, Vec2i& position) {
         }
     }
     position += Vec2i(0,50*(i-1));
+#endif
 }
 
 void VRGuiNetwork::update() {
@@ -236,6 +256,7 @@ void VRGuiNetwork::update() {
 
     //map<string, VRNetworkRemote> remotes;
 
+#ifndef WITHOUT_TCP
     Vec2i position(100, 100);
     auto clients = netMgr->getNetworkClients();
     for (auto& client : clients) {
@@ -260,6 +281,7 @@ void VRGuiNetwork::update() {
         if (protocol == "udp") addUDPServer(dynamic_pointer_cast<VRUDPServer>(server), position);
         if (protocol == "tcp") addTCPServer(dynamic_pointer_cast<VRTCPServer>(server), position);
     }
+#endif
 
     //canvas->updateLayout();
 }

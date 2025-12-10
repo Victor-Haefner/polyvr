@@ -52,11 +52,13 @@ size_t getRespHeaders(char* ptr, size_t size, size_t nitems, VRRestResponse* res
 }
 
 
+#ifndef __EMSCRIPTEN__
 void setupHeaders(CURL* curl, vector<string>& headers) {
     struct curl_slist* hlist = NULL;
     for (auto h : headers) if (h != "") hlist = curl_slist_append(hlist, h.c_str());
     curl_easy_setopt(curl, CURLOPT_HTTPHEADER, hlist);
 }
+#endif
 
 VRRestResponsePtr VRRestClient::get(string uri, int timeoutSecs, vector<string> headers) {
     auto res = VRRestResponse::create();

@@ -630,7 +630,9 @@ PyObject* VRPyGeometry::getTexCoords(VRPyGeometry* self, PyObject *args) {
     int type = tc->getType().getId();
     int eN = 2;
     if (type == GeoVec3fProperty::create()->getType().getId()) eN = 3;
+#ifndef WASM
     if (type == GeoVec3dProperty::create()->getType().getId()) eN = 3;
+#endif
 
     for (unsigned int i=0; i<tc->size(); i++) {
         if (eN == 2) {

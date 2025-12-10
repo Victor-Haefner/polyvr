@@ -460,7 +460,11 @@ int VRPyBase::toGLConst(string s) {
     if (s == "GL_ONE_MINUS_SRC_COLOR") return GL_ONE_MINUS_SRC_COLOR;
     if (s == "GL_ONE_MINUS_DST_COLOR") return GL_ONE_MINUS_DST_COLOR;
 
+#ifndef __EMSCRIPTEN__
     if (s == "GL_RED") return GL_RED;
+#else
+    if (s == "GL_RED") return OSG::Image::OSG_R_PF;
+#endif
     if (s == "GL_R8") return GL_R8;
 #ifndef __EMSCRIPTEN__
     if (s == "GL_ALPHA8") return GL_ALPHA8;

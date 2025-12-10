@@ -270,13 +270,19 @@ void VRSceneManager::updateSceneThread(VRThreadWeakPtr tw) {
 
 void VRSceneManager::updateScene() {
     if (!current) return;
+#ifndef WASM
     auto profiler = VRProfiler::get();
     int pID1 = profiler->regStart("update setup");
+#endif
     if (auto setup = VRSetup::getCurrent()) setup->updateActivatedSignals();
+#ifndef WASM
     profiler->regStop(pID1);
     int pID2 = profiler->regStart("update scene");
+#endif
     current->update();
+#ifndef WASM
     profiler->regStop(pID2);
+#endif
 }
 
 void VRSceneManager::setTargetFPS(double fps) { targetFPS = fps;  }

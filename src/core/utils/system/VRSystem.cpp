@@ -447,16 +447,16 @@ void fileReplaceStrings(string filePath, string oldString, string newString) {
     cout << "fileReplaceStrings " << cmd << endl;
 }
 
-#ifdef WASM
+/*#ifdef WASM
 namespace boost {
 	namespace filesystem {
-		BOOST_FILESYSTEM_DECL int path::compare(path const& p) const BOOST_NOEXCEPT
+		BOOST_FILESYSTEM_DECL int path::compare(path const& p) const
 		{
 		    return bool(string() == p.string());
 		}
 	}
 }
-#endif
+#endif*/
 
 long readAvailableRAM() {
     std::ifstream meminfo("/proc/meminfo");

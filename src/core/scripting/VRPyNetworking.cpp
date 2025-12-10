@@ -7,11 +7,13 @@ using namespace OSG;
 #ifndef WITHOUT_HDLC
 simpleVRPyType(HDLC, New_ptr);
 #endif
-simpleVRPyType(Ping, New_ptr);
 simpleVRPyType(RestResponse, 0);
 simpleVRPyType(RestClient, New_optNamed_ptr);
+#ifndef WITHOUT_TCP
+simpleVRPyType(Ping, New_ptr);
 simpleVRPyType(RestServer, New_optNamed_ptr);
 simpleVRPyType(WebSocket, New_optNamed_ptr);
+#endif
 
 simpleVRPyType(MQTTClient, New_ptr);
 simpleVRPyType(MQTTServer, New_ptr);
@@ -51,7 +53,6 @@ template<> PyObject* VRPyTypeCaster::cast(const VRICEClient::CHANNEL& v) {
     if (v == VRICEClient::AUDIO) s = "AUDIO";
     return cast(s);
 }
-#endif
 
 PyMethodDef VRPyPing::methods[] = {
     {"startOnPort", PyWrap(Ping, startOnPort, "Ping server on port (address, port, timeout)", bool, string, string, int) },
@@ -59,6 +60,7 @@ PyMethodDef VRPyPing::methods[] = {
     {"getMAC", PyWrap(Ping, getMAC, "Get MAC by IP, only works in local network (IP, interface)", string, string, string) },
     {NULL}  /* Sentinel */
 };
+#endif
 
 #ifndef WITHOUT_SNAP7
 PyMethodDef VRPyProfinetClient::methods[] = {
@@ -136,6 +138,7 @@ PyMethodDef VRPyRestClient::methods[] = {
     {NULL}  /* Sentinel */
 };
 
+#ifndef WITHOUT_TCP
 PyMethodDef VRPyRestServer::methods[] = {
     {"listen", PyWrap(RestServer, listen, "Listen on port, (port, callback)", void, int, VRRestCbPtr) },
     {NULL}  /* Sentinel */
@@ -149,6 +152,7 @@ PyMethodDef VRPyWebSocket::methods[] = {
     {"registerStringCallback", PyWrap(WebSocket, registerStringCallback, "Return if connected", void, std::function<void(string)>) },
     {NULL}  /* Sentinel */
 };
+#endif
 
 #ifndef WITHOUT_TCP
 PyMethodDef VRPyNetworkClient::methods[] = {
