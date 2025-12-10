@@ -1,7 +1,5 @@
 #include "VRUDPServer.h"
-#include <boost/asio.hpp>
-#include <boost/bind.hpp>
-#include <boost/array.hpp>
+#include "asio.hpp"
 
 #include <cstdlib>
 #include <iostream>
@@ -18,35 +16,33 @@
 
 using namespace std;
 using namespace OSG;
-using namespace boost::asio;
-using ip::address;
-using ip::udp;
+using asio::ip::udp;
 
 class UDPServer {
     private:
         VRUDPServer* parent = 0;
-        boost::asio::io_service io_service;
-        boost::asio::io_service::work worker;
+        asio::io_context io_service;
+        asio::executor_work_guard<asio::io_context::executor_type> worker;
         udp::socket socket;
         ::Thread* service = 0;
-        //boost::array<char, 1024> recv_buffer;
-        //boost::asio::streambuf buffer;
-        boost::array<char, 1024> buffer;
+        //array<char, 1024> recv_buffer;
+        //asio::streambuf buffer;
+        array<char, 1024> buffer;
         udp::endpoint remote_endpoint;
 
         function<string (string)> onMessageCb;
         bool deferredMessaging = false;
 
         void wait() {
-            auto cb = boost::bind(&UDPServer::read_handler, this, boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred);
-            socket.async_receive_from(boost::asio::buffer(buffer), remote_endpoint, cb);
+            auto cb = bind(&UDPServer::read_handler, this, asio::placeholders::error, asio::placeholders::bytes_transferred);
+            socket.async_receive_from(asio::buffer(buffer), remote_endpoint, cb);
         }
 
 		void run() {
 			io_service.run();
 		}
 
-        void read_handler(const boost::system::error_code& ec, size_t N) {
+        void read_handler(const std::error_code& ec, size_t N) {
             if (ec) { cout << "Receive failed: " << ec.message() << "\n"; return; }
             string msg(buffer.begin(), buffer.begin()+N);
             //cout << "Received: '" << msg << "' (" << ec.message() << ")\n";
@@ -60,8 +56,8 @@ class UDPServer {
                 if (!deferredMessaging) {
                     string res = onMessageCb(msg);
                     if (res != "") {
-                        boost::system::error_code ec;
-                        auto N = socket.send_to(boost::asio::buffer(res), remote_endpoint, 0, ec);
+                        std::error_code ec;
+                        auto N = socket.send_to(asio::buffer(res), remote_endpoint, 0, ec);
 
                         if (parent) {
                             auto& oFlow = parent->getOutFlow();
@@ -78,7 +74,7 @@ class UDPServer {
         }
 
     public:
-        UDPServer(VRUDPServer* s) : parent(s), worker(io_service), socket(io_service) {
+        UDPServer(VRUDPServer* s) : parent(s), worker(asio::make_work_guard(io_service)), socket(io_service) {
             service = new ::Thread("UDPServer_service", [this](){ run(); });
         }
 
@@ -100,7 +96,7 @@ class UDPServer {
         void close() {
             io_service.stop();
             socket.cancel();
-            boost::system::error_code _error_code;
+            std::error_code _error_code;
             socket.shutdown(udp::socket::shutdown_both, _error_code);
             if (service->joinable()) service->join();
         }
