@@ -8,7 +8,8 @@
 #include <errno.h>
 #include <iostream>
 #include <fstream>
-#include <boost/filesystem.hpp>
+#include <filesystem>
+
 #ifndef WITHOUT_EXECINFO
 #include <execinfo.h>
 #include <cxxabi.h>
@@ -168,7 +169,7 @@ bool exists(string path) {
 	struct stat buffer;
 	return (stat (path.c_str(), &buffer) == 0);
 #else
-	return boost::filesystem::exists(path);
+	return std::filesystem::exists(path);
 #endif
 }
 
@@ -176,8 +177,8 @@ bool exists(string path) {
 bool isFile(string path) { return false; }
 bool isFolder(string path) { return false; }
 #else
-bool isFile(string path) { return boost::filesystem::is_regular_file(path); }
-bool isFolder(string path) { return boost::filesystem::is_directory(path); }
+bool isFile(string path) { return std::filesystem::is_regular_file(path); }
+bool isFolder(string path) { return std::filesystem::is_directory(path); }
 #endif
 
 bool makedir(string path) {
@@ -197,8 +198,8 @@ bool makedir(string path) {
         tmp += f+"/";
     }
 #else
-    try { res = boost::filesystem::create_directories(path); }
-    catch(const boost::filesystem::filesystem_error& e) { cout << "ERROR: makedir failed when trying to create directory '" + path + "', " << e.code().message() << endl; }
+    try { res = std::filesystem::create_directories(path); }
+    catch(const std::filesystem::filesystem_error& e) { cout << "ERROR: makedir failed when trying to create directory '" + path + "', " << e.code().message() << endl; }
     catch(...) { cout << "ERROR: makedir failed when trying to create directory '" + path + "'" << endl; }
 #endif
     return res;
@@ -208,7 +209,7 @@ bool removeFile(string path) {
 #ifdef WASM
     return bool(std::remove(path.c_str()) == 0);
 #else
-    return boost::filesystem::remove(path);
+    return std::filesystem::remove(path);
 #endif
 }
 
@@ -216,7 +217,7 @@ string canonical(string path) {
 #ifdef WASM
     return path;
 #else
-    return boost::filesystem::canonical(path).string();
+    return std::filesystem::canonical(path).string();
 #endif
 }
 
@@ -224,7 +225,7 @@ string absolute(string path) {
 #ifdef WASM
     return path;
 #else
-    return boost::filesystem::absolute(path).string();
+    return std::filesystem::absolute(path).string();
 #endif
 }
 
@@ -232,7 +233,7 @@ bool isSamePath(string path1, string path2) {
 #ifdef WASM
     return false;
 #else
-    return boost::filesystem::equivalent(path1, path2);
+    return std::filesystem::equivalent(path1, path2);
 #endif
 }
 
@@ -266,10 +267,8 @@ vector<string> openFolder(string folder) {
     if ( !isFolder( folder ) ) return res;
 
 #ifndef WASM
-    boost::filesystem::directory_iterator End; // default construction yields past-the-end
-    for ( boost::filesystem::directory_iterator itr( folder ); itr != End; ++itr ) {
-        string name = itr->path().filename().string();
-        res.push_back( name );
+    for (const auto& entry : std::filesystem::directory_iterator(folder)) {
+        res.push_back(entry.path().filename().string());
     }
 #endif
     return res;
@@ -446,17 +445,6 @@ void fileReplaceStrings(string filePath, string oldString, string newString) {
     systemCall(cmd);
     cout << "fileReplaceStrings " << cmd << endl;
 }
-
-/*#ifdef WASM
-namespace boost {
-	namespace filesystem {
-		BOOST_FILESYSTEM_DECL int path::compare(path const& p) const
-		{
-		    return bool(string() == p.string());
-		}
-	}
-}
-#endif*/
 
 long readAvailableRAM() {
     std::ifstream meminfo("/proc/meminfo");
