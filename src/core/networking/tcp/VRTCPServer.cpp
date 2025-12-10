@@ -1,8 +1,7 @@
 #include "VRTCPServer.h"
 #include "VRTCPUtils.h"
 
-#include <boost/asio.hpp>
-#include <boost/bind.hpp>
+#include "asio.hpp"
 
 #include <cstdlib>
 #include <iostream>
@@ -16,8 +15,7 @@
 
 using namespace std;
 using namespace OSG;
-using namespace boost::asio;
-using ip::tcp;
+using asio::ip::tcp;
 
 
 class Session {
@@ -26,13 +24,13 @@ class Session {
         tcp::socket socket;
         string guard;
         size_t uID = 0;
-        boost::asio::streambuf buffer;
+        asio::streambuf buffer;
         function<string (string, size_t)> onMessageCb;
         //enum { max_length = 1024 };
         //char data_[max_length];
 
     public:
-        Session(boost::asio::io_service& io, string g, function<string (string, size_t)> cb, VRTCPServer* p)
+        Session(asio::io_context& io, string g, function<string (string, size_t)> cb, VRTCPServer* p)
             : parent(p), socket(io), guard(g), onMessageCb(cb) {
             static size_t uIDcounter = 0;
             uID = uIDcounter++;
@@ -41,7 +39,7 @@ class Session {
         ~Session() {
             try {
                 socket.cancel();
-                boost::system::error_code _error_code;
+                std::error_code _error_code;
                 socket.shutdown(tcp::socket::shutdown_both, _error_code);
             } catch(...) {
                 ;
@@ -49,17 +47,17 @@ class Session {
         }
 
         void start() {
-            /*socket.async_read_some(boost::asio::buffer(data_, max_length),
-                boost::bind(&Session::handle_read, this,
-                  boost::asio::placeholders::error,
-                  boost::asio::placeholders::bytes_transferred));*/
+            /*socket.async_read_some(asio::buffer(data_, max_length),
+                bind(&Session::handle_read, this,
+                  asio::placeholders::error,
+                  asio::placeholders::bytes_transferred));*/
 
-            if (guard == "") boost::asio::async_read( socket, buffer, boost::asio::transfer_at_least(1), bind(&Session::read_handler, this, std::placeholders::_1, std::placeholders::_2) );
-            else boost::asio::async_read_until( socket, buffer, guard, bind(&Session::read_handler, this, std::placeholders::_1, std::placeholders::_2) );
+            if (guard == "") asio::async_read( socket, buffer, asio::transfer_at_least(1), bind(&Session::read_handler, this, std::placeholders::_1, std::placeholders::_2) );
+            else asio::async_read_until( socket, buffer, guard, bind(&Session::read_handler, this, std::placeholders::_1, std::placeholders::_2) );
 
         }
 
-        void handle_write(const boost::system::error_code& error, size_t bytes_transferred) {
+        void handle_write(const std::error_code& error, size_t bytes_transferred) {
             if (parent) {
                 auto& oFlow = parent->getOutFlow();
                 oFlow.logFlow(bytes_transferred*0.001);
@@ -69,7 +67,7 @@ class Session {
             else delete this;
         }
 
-        void read_handler(const boost::system::error_code& ec, size_t N) {
+        void read_handler(const std::error_code& ec, size_t N) {
             //cout << "Session, read_handler, got: " << N << endl;
             if (ec.value() == 2) { start(); return; } // EOF
             if (ec) cout << "Session, read_handler failed with: " << ec.message() << endl;
@@ -93,8 +91,8 @@ class Session {
                     string answer = onMessageCb(data, uID);
                     //cout << " send answer: " << answer << endl;
                     if (answer.size() > 0) {
-                        auto cb = boost::bind(&Session::handle_write, this, boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred);
-                        boost::asio::async_write(socket, boost::asio::buffer(answer, answer.size()), cb);
+                        auto cb = bind(&Session::handle_write, this, asio::placeholders::error, asio::placeholders::bytes_transferred);
+                        asio::async_write(socket, asio::buffer(answer, answer.size()), cb);
                     } else start();
                 }
             } else {}
@@ -105,8 +103,8 @@ class Session {
 class TCPServer {
     private:
         VRTCPServer* parent = 0;
-        boost::asio::io_service io_service;
-        boost::asio::io_service::work worker;
+        asio::io_context io_service;
+        asio::executor_work_guard<asio::io_context::executor_type> worker;
         vector<Session*> sessions;
         unique_ptr<tcp::acceptor> acceptor;
         Thread* service = 0;
@@ -122,7 +120,7 @@ class TCPServer {
         void waitFor() {
             Session* s = new Session(io_service, guard, onMessageCb, parent);
             sessions.push_back(s);
-            acceptor->async_accept(s->socket, [this,s](boost::system::error_code ec) { if (!ec) { s->start(); waitFor(); } });
+            acceptor->async_accept(s->socket, [this,s](std::error_code ec) { if (!ec) { s->start(); waitFor(); } });
         }
 
 		void run() {
@@ -130,7 +128,7 @@ class TCPServer {
 		}
 
     public:
-        TCPServer(VRTCPServer* p) : parent(p), worker(io_service) {
+        TCPServer(VRTCPServer* p) : parent(p), worker(asio::make_work_guard(io_service)) {
             service = new ::Thread("TCPServer_service", [this](){ run(); });
         }
 
