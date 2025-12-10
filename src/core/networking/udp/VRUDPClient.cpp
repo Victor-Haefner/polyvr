@@ -4,20 +4,19 @@
 #include "core/gui/VRGuiConsole.h"
 #include "core/scene/VRSceneManager.h"
 
-#include <boost/asio.hpp>
-#include <boost/array.hpp>
+#include "asio.hpp"
 #include <iostream>
 #include <list>
 #include "core/utils/Thread.h"
 
 using namespace OSG;
-using boost::asio::ip::udp;
+using asio::ip::udp;
 
 class UDPClient {
     private:
         VRUDPClient* parent = 0;
-        boost::asio::io_service io_service;
-        boost::asio::io_service::work worker;
+        asio::io_context io_service;
+        asio::executor_work_guard<asio::io_context::executor_type> worker;
         udp::endpoint remote_endpoint;
         udp::socket socket;
         list<string> messages;
@@ -27,19 +26,17 @@ class UDPClient {
         bool stop = false;
         bool broken = false;
         function<string (string)> onMessageCb;
-        boost::array<char, 32768> buffer;
+        array<char, 32768> buffer;
 
-        vector<boost::asio::ip::udp::endpoint> uriToEndpoints(const string& uri) {
-            boost::asio::ip::udp::resolver resolver(io_service);
-            boost::asio::ip::udp::resolver::query query(uri, "");
-            vector<boost::asio::ip::udp::endpoint> res;
-            for(boost::asio::ip::udp::resolver::iterator i = resolver.resolve(query); i != boost::asio::ip::udp::resolver::iterator(); ++i) {
-                res.push_back(*i);
-            }
+        vector<asio::ip::udp::endpoint> uriToEndpoints(const string& uri) {
+            asio::ip::udp::resolver resolver(io_service);
+            vector<asio::ip::udp::endpoint> res;
+            auto results = resolver.resolve(uri, "");
+            for (const auto& entry : results) res.push_back(entry.endpoint());
             return res;
         }
 
-        bool read_handler(const boost::system::error_code& ec, size_t N) {
+        bool read_handler(const std::error_code& ec, size_t N) {
             if (parent) {
                 auto& iFlow = parent->getInFlow();
                 iFlow.logFlow(N*0.001);
@@ -55,8 +52,8 @@ class UDPClient {
             if (onMessageCb) {
                 string res = onMessageCb(msg);
                 if (res != "") {
-                    boost::system::error_code ec;
-                    auto N = socket.send_to(boost::asio::buffer(res), remote_endpoint, 0, ec);
+                    std::error_code ec;
+                    auto N = socket.send_to(asio::buffer(res), remote_endpoint, 0, ec);
                     // TODO: respond to client
                 }
             }
@@ -70,21 +67,21 @@ class UDPClient {
 #endif
             if (broken) return false;
 
-            auto onRead = [this](const boost::system::error_code& ec, size_t N) {
+            auto onRead = [this](const std::error_code& ec, size_t N) {
                 read_handler(ec, N);
                 read();
             };
 
-            //auto cb = boost::bind(&UDPClient::read_handler, this, boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred);
-            socket.async_receive_from(boost::asio::buffer(buffer), remote_endpoint, onRead);
+            //auto cb = bind(&UDPClient::read_handler, this, asio::placeholders::error, asio::placeholders::bytes_transferred);
+            socket.async_receive_from(asio::buffer(buffer), remote_endpoint, onRead);
             return true;
         }
 
         void processQueue() {
             if (broken) return;
             VRLock lock(mtx);
-            boost::system::error_code ec;
-            auto N = socket.send_to(boost::asio::buffer(messages.front()), remote_endpoint, 0, ec);
+            std::error_code ec;
+            auto N = socket.send_to(asio::buffer(messages.front()), remote_endpoint, 0, ec);
 
             if (parent) {
                 auto& oFlow = parent->getOutFlow();
@@ -106,7 +103,7 @@ class UDPClient {
         }
 
     public:
-        UDPClient(VRUDPClient* c) : parent(c), worker(io_service), socket(io_service) {
+        UDPClient(VRUDPClient* c) : parent(c), worker(asio::make_work_guard(io_service)), socket(io_service) {
             socket.open(udp::v4());
             service = new ::Thread("UDPClient_service", [this]() { runService(); });
         }
@@ -125,8 +122,8 @@ class UDPClient {
             try {
                 io_service.stop();
                 socket.close();
-                boost::system::error_code _error_code;
-                socket.shutdown(boost::asio::ip::udp::socket::shutdown_both, _error_code);
+                std::error_code _error_code;
+                socket.shutdown(asio::ip::udp::socket::shutdown_both, _error_code);
             } catch(...) {
                 ;
             }
@@ -138,8 +135,7 @@ class UDPClient {
         void connect(string host, int port) {
             cout << "UDPClient::connect " << this << " to: " << host << ", on port " << port << endl;
             try {
-                remote_endpoint = udp::endpoint( boost::asio::ip::address::from_string(host), port);
-                //socket.connect( udp::endpoint( boost::asio::ip::address::from_string(host), port ));
+                remote_endpoint = asio::ip::udp::endpoint( asio::ip::make_address(host), port );
                 read();
             } catch(std::exception& e) {
                 cout << "UDPClient::connect failed with: " << e.what() << endl;
