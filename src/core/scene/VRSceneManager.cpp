@@ -24,7 +24,7 @@
 #include "core/gui/VRGuiSignals.h"
 
 #include <OpenSG/OSGSceneFileHandler.h>
-#include <boost/filesystem.hpp>
+#include <filesystem>
 #ifndef WASM
 #include "core/utils/VRMutex.h"
 
@@ -43,7 +43,7 @@ VRSceneManager::VRSceneManager() {
 #ifdef WASM
     original_workdir = "/";
 #else
-	original_workdir = boost::filesystem::current_path().string();
+	original_workdir = std::filesystem::current_path().string();
 #endif
 	examples = VRProjectsList::create();
 	projects = VRProjectsList::create();
@@ -136,10 +136,10 @@ void VRSceneManager::setWorkdir(string path) {
 	if (path == "") return;
 	if (exists(path)) path = canonical(path);
 #ifndef __EMSCRIPTEN__
-    boost::system::error_code ec;
-	boost::filesystem::current_path(path, ec);
+    std::error_code ec;
+	std::filesystem::current_path(path, ec);
 #endif
-    //cout << " VRSceneManager::setWorkdir A4 err: " << ec.message() << " " << BOOST_LIB_VERSION << endl;
+    //cout << " VRSceneManager::setWorkdir A4 err: " << ec.message() << endl;
 	clearDumpFiles();
 }
 

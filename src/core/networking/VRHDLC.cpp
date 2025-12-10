@@ -3,7 +3,7 @@
 #include "core/utils/toString.h"
 #include "core/utils/system/VRSystem.h"
 
-#include <boost/filesystem.hpp>
+#include <filesystem>
 
 #include <iostream>
 #include <sstream>
@@ -134,7 +134,7 @@ void VRHDLC::pauseReceive(int T) {
 string VRHDLC::getInterface() {
     auto interfaces = { "/dev/ttyACM0", "/dev/car-interface" };
     for (auto i : interfaces) {
-        if (boost::filesystem::exists(i)) return i;
+        if (std::filesystem::exists(i)) return i;
     }
     for (auto f : openFolder("/dev")) {
         if (startsWith(f, "ttyUSB")) return "/dev/"+f;

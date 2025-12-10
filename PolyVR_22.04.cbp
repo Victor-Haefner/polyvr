@@ -388,7 +388,6 @@
 			<Add option="-lXi" />
 			<Add option="-lboost_system" />
 			<Add option="-lboost_serialization" />
-			<Add option="-lboost_filesystem" />
 			<Add option="-lboost_regex" />
 			<Add option="-lrt" />
 			<Add option="-ljpeg" />

@@ -3,8 +3,9 @@
 #ifndef _WIN32
 #include <sys/resource.h>
 #endif
+
 #include <iostream>
-#include <boost/filesystem.hpp>
+#include <filesystem>
 #include <signal.h>
 
 using namespace std;
@@ -29,7 +30,7 @@ extern "C" void coreDump(int sig) {
     } else {
         cout << "\n dump core, check in /var/lib/apport/coredump" << endl;
         //cout << "\n dump core to " << dumpFile << endl;
-        //boost::filesystem::current_path(dumpPath); // TODO: doesnt work anymore, coredumps are in /var/lib/apport/coredump
+        //std::filesystem::current_path(dumpPath); // TODO: doesnt work anymore, coredumps are in /var/lib/apport/coredump
     }
     once = false;
 #ifndef __EMSCRIPTEN__
@@ -42,7 +43,7 @@ void clearDumpFiles() {
 #ifndef WASM
     remove(dumpFile); // in /tmp
 
-    string file = boost::filesystem::current_path().string()+"/core";
+    string file = std::filesystem::current_path().string()+"/core";
     remove(file.c_str()); // in current folder
 #endif
 }

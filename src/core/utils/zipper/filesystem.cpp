@@ -1,7 +1,7 @@
 #include "filesystem.h"
-#include <boost/filesystem.hpp>
+#include <filesystem>
 
-namespace fs = boost::filesystem;
+namespace fs = std::filesystem;
 
 bool FILESYSTEM::isFile(const string& path) {
     return fs::is_regular_file(path);
@@ -52,11 +52,9 @@ string FILESYSTEM::normalize(const string & path) {
 vector<string> FILESYSTEM::getFiles(const string& dir) {
     vector<string> files;
     fs::path path(dir);
-    fs::recursive_directory_iterator end;
 
-    for (fs::recursive_directory_iterator i(path); i != end; ++i) {
-        const fs::path cp = (*i);
-        files.push_back(cp.string());
+    for (const auto& entry : fs::recursive_directory_iterator(path)) {
+        files.push_back(entry.path().string());
     }
     return files;
 }
