@@ -9,15 +9,13 @@
 #include <OpenSG/OSGColor.h>
 #include <OpenSG/OSGLine.h>
 
-#include <boost/algorithm/string.hpp>
-#include <boost/uuid/uuid.hpp>
-#include <boost/uuid/uuid_io.hpp>
-#include <boost/uuid/uuid_generators.hpp>
-
 #include <algorithm>
+#include <random>
+#include <sstream>
+#include <iomanip>
+#include <string>
 
 using namespace OSG;
-using namespace boost::algorithm;
 
 
 size_t countLines(const string& s) {
@@ -28,8 +26,28 @@ size_t countLines(const string& s) {
 
 
 string genUUID() {
-    boost::uuids::uuid u = boost::uuids::random_generator()();
-    return boost::uuids::to_string(u);
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<uint32_t> dis(0, 0xFFFFFFFF);
+
+    auto rand32 = [&]() { return dis(gen); };
+
+    std::stringstream ss;
+    ss << std::hex << std::setfill('0');
+
+    uint32_t a = rand32();
+    uint16_t b = rand32() & 0xFFFF;
+    uint16_t c = rand32() & 0xFFFF;
+    uint16_t d = rand32() & 0xFFFF;
+    uint64_t e = ((uint64_t)rand32() << 32) | rand32();
+
+    ss << std::setw(8) << a << "-";
+    ss << std::setw(4) << b << "-";
+    ss << std::setw(4) << c << "-";
+    ss << std::setw(4) << d << "-";
+    ss << std::setw(12) << (e & 0xFFFFFFFFFFFF);
+
+    return ss.str();
 }
 
 vector<string> splitString(const string& s, char c) {
@@ -70,6 +88,12 @@ string stripString(const string& str) {
     if (strBegin == string::npos) return "";
     auto strEnd = str.find_last_not_of(delims);
     return str.substr(strBegin, strEnd - strBegin + 1);
+}
+
+string to_lower_copy(const string& s) {
+    string result = s;
+    transform(result.begin(), result.end(), result.begin(), [](unsigned char c){ return std::tolower(c); });
+    return result;
 }
 
 bool startsWith(const string& s, const string& s2, bool caseSensitive) {
