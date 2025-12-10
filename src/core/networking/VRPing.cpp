@@ -4,37 +4,28 @@
 #include "VRARP.h"
 #endif
 
-#include <boost/asio.hpp>
 #include <iostream>
-
-#include <boost/asio/connect.hpp>
-#include <boost/asio/deadline_timer.hpp>
-#include <boost/asio/io_service.hpp>
-#include <boost/asio/ip/tcp.hpp>
-#include <boost/asio/read_until.hpp>
-#include <boost/asio/streambuf.hpp>
-#include <boost/system/system_error.hpp>
-#include <boost/asio/write.hpp>
 #include <cstdlib>
 #include <iostream>
 #include <string>
 
-using boost::asio::deadline_timer;
-using boost::asio::ip::tcp;
+#include "asio.hpp"
 
+using asio::ip::tcp;
+using namespace std::placeholders;
 
 class ping_client {
     private:
-        boost::asio::io_service io_service_;
+        asio::io_context io_service_;
         tcp::socket socket_;
-        deadline_timer deadline_;
-        boost::asio::streambuf input_buffer_;
+        asio::steady_timer deadline_;
+        asio::streambuf input_buffer_;
 
         void check_deadline() {
-            if (deadline_.expires_at() <= deadline_timer::traits_type::now()) {
-                  boost::system::error_code ignored_ec;
+            if (deadline_.expiry() <= std::chrono::steady_clock::now()) {
+                  asio::error_code ignored_ec;
                   socket_.close(ignored_ec);
-                  deadline_.expires_at(boost::posix_time::pos_infin);
+                  deadline_.expires_at(std::chrono::steady_clock::time_point::max());
             }
 
             deadline_.async_wait(bind(&ping_client::check_deadline, this)); // Put the actor back to sleep.
@@ -42,21 +33,21 @@ class ping_client {
 
     public:
         ping_client() : socket_(io_service_), deadline_(io_service_) {
-            deadline_.expires_at(boost::posix_time::pos_infin);
+            deadline_.expires_at(std::chrono::steady_clock::time_point::max());
             check_deadline();
         }
 
-        bool connect(const std::string& host, const std::string& port, boost::posix_time::time_duration timeout) {
+        bool connect(const std::string& host, const std::string& port, std::chrono::steady_clock::duration timeout) {
             try {
-                tcp::resolver::query query(host, port);
-                tcp::resolver::iterator iter = tcp::resolver(io_service_).resolve(query);
-                deadline_.expires_from_now(timeout);
+                tcp::resolver resolver(io_service_);
+                tcp::resolver::results_type endpoints = resolver.resolve(host, port);
+                deadline_.expires_after(timeout);
 
-                boost::system::error_code ec = boost::asio::error::would_block;
-                auto onErr = [&](const boost::system::error_code& e, tcp::resolver::iterator i) { ec = e; };
-                boost::asio::async_connect(socket_, iter, onErr);
+                asio::error_code ec = asio::error::would_block;
+                auto onErr = [&](const asio::error_code& e, tcp::endpoint) { ec = e; };
+                asio::async_connect(socket_, endpoints, onErr);
 
-                do io_service_.run_one(); while (ec == boost::asio::error::would_block);
+                do io_service_.run_one(); while (ec == asio::error::would_block);
 
                 return !(ec || !socket_.is_open());
             } catch(...) {
@@ -72,7 +63,7 @@ std::shared_ptr<OSG::VRPing> OSG::VRPing::create() { return std::shared_ptr<OSG:
 
 bool OSG::VRPing::startOnPort(string address, string port, int timeout) {
     ping_client c;
-    return c.connect(address, port, boost::posix_time::seconds(timeout));
+    return c.connect(address, port, std::chrono::seconds(timeout));
 }
 
 /**
