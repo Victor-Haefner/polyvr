@@ -130,6 +130,7 @@ template<> string toString(const unsigned short& i) { stringstream ss; ss << i; 
 template<> string toString(const int& i) { stringstream ss; ss << i; return ss.str(); }
 template<> string toString(const long& i) { stringstream ss; ss << i; return ss.str(); }
 template<> string toString(const unsigned long& i) { stringstream ss; ss << i; return ss.str(); } // sometimes same as size_t ?
+template<> string toString(const long long& i) { stringstream ss; ss << i; return ss.str(); }
 template<> string toString(const signed char& i) { stringstream ss; ss << i; return ss.str(); }
 template<> string toString(const unsigned char& i) { stringstream ss; ss << int(i); return ss.str(); }
 template<> string toString(const voidPtr& i) { stringstream ss; ss << i; return ss.str(); }
