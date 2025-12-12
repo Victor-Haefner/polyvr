@@ -44,6 +44,7 @@ int VRViewManager::addView(string name) {
     view->setRoot(0, anchor);
     view->setID(id);
     return id;
+    cout << "  addView " << name << " done " << endl;
 }
 
 void VRViewManager::setViewCamera(VRCameraPtr c, int i) {

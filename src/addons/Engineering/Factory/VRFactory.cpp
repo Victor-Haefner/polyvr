@@ -16,7 +16,6 @@
 #include <OpenSG/OSGGeometry.h>
 
 using namespace OSG;
-using namespace boost::filesystem;
 
 VRFactory::VRFactory() {}
 

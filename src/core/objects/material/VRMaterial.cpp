@@ -446,8 +446,15 @@ void VRMaterial::updateOGL2Parameters() {
     setShaderParameter("mat_ambient", Vec4f(a[0], a[1], a[2], 1.0));
     setShaderParameter("mat_diffuse", Vec4f(d[0], d[1], d[2], 1.0));
     setShaderParameter("mat_specular", Vec4f(s[0], s[1], s[2], 1.0));
-    auto lb = VRLightBeacon::getAll()[0].lock();
-    lb->getLight().lock()->updateMaterial(ptr());
+    for (auto wlb : VRLightBeacon::getAll()) {
+        auto lb = wlb.lock();
+        if (!lb) continue;
+        auto wli = lb->getLight();
+        //if (!wli) continue;
+        auto li = wli.lock();
+        if (!li) continue;
+        li->updateMaterial(ptr());
+    }
     //setShaderParameter("glLightPosition", Vec4f(0, 0, 0, 1)); // pnt light
     //setFrontBackModes(GL_NONE, GL_FILL);
 #endif

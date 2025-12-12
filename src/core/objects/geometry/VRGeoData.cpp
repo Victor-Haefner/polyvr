@@ -199,7 +199,9 @@ void VRGeoData::reset() {
 }
 
 bool VRGeoData::valid(bool verbose) const {
-    if (!data->types->size()) { if (verbose) cout << "VRGeoData invalid: no types!\n"; return false; }
+    if (!data->types->size()) { if (verbose) cout << "VRGeoData invalid: no types!\n"; 
+    cout << status() << endl;
+    return false; }
     if (!data->lengths->size()) { if (verbose) cout << "VRGeoData invalid: no lengths!\n"; return false; }
     if (!data->pos->size()) { if (verbose) cout << "VRGeoData invalid: no pos!\n"; return false; }
 
@@ -741,7 +743,7 @@ VRGeometryPtr VRGeoData::asGeometry(string name) const {
     return geo;
 }
 
-string VRGeoData::status() {
+string VRGeoData::status() const {
     string res;
     res += "VRGeoData stats:\n";
     res += " " + toString(data->types->size()) + " types: ";
@@ -950,6 +952,7 @@ void VRGeoData::addVertexTexCoords(Vec2d tc) {
 
 void VRGeoData::makeSingleIndex() {
     if (!geo) return;
+    if (size() == 0) return;
     //if (geo->getMesh()->geo->isSingleIndex()) return;
 
     geo->convertToTriangles(); // TODO: temp fix..

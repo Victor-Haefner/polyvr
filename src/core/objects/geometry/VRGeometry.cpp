@@ -285,7 +285,12 @@ VRGeometry::~VRGeometry() {
     if (mesh) remGeometryAttachment(mesh->geo);
 }
 
-VRGeometryPtr VRGeometry::create(string name) { auto g = VRGeometryPtr(new VRGeometry(name) ); g->setMesh(); return g; }
+VRGeometryPtr VRGeometry::create(string name) { 
+	auto g = VRGeometryPtr(new VRGeometry(name) ); 
+	g->setMesh();
+	return g; 
+}
+
 VRGeometryPtr VRGeometry::create(string name, bool hidden) { auto g = VRGeometryPtr(new VRGeometry(name, hidden) ); g->setMesh(); return g; }
 VRGeometryPtr VRGeometry::create(string name, string primitive, string params) {
     auto g = VRGeometryPtr(new VRGeometry(name) );

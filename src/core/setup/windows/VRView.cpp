@@ -271,6 +271,7 @@ void VRView::setDecorators() {//set decorators, only if projection true
     PCDecoratorRight->editMFSurface()->push_back(screenUpperLeft);
 }
 
+#ifndef OSG_OGL_ES2
 static string coordsVP =
 "attribute vec4 osg_Vertex;\n"
 "attribute vec4 osg_Color;\n"
@@ -290,10 +291,31 @@ static string coordsFP =
 "void main(void) {\n"
 "  gl_FragColor = color;\n"
 "}\n";
+#else
+static string coordsVP =
+"attribute vec4 osg_Vertex;\n"
+"attribute vec4 osg_Color;\n"
+"uniform mat4 OSGModelViewProjectionMatrix;\n"
+"uniform mat4 OSGViewMatrix;\n"
+"varying vec4 color;\n"
+"void main(void) {\n"
+"  mat4 M = OSGViewMatrix;\n"
+"  M[3] = vec4(0,0,0,1);\n"
+"  vec4 p = vec4(osg_Vertex.xyz*0.08, osg_Vertex.w);\n"
+"  gl_Position = (OSGModelViewProjectionMatrix * ( M * p + vec4(0,0,-0.5,0))) + vec4(0.85,-0.8,0,0);\n"
+"  gl_Position.w = 1.0;\n"
+"  color = osg_Color;\n"
+"}\n";
+
+static string coordsFP =
+"varying vec4 color;\n"
+"void main(void) {\n"
+"  gl_FragColor = color;\n"
+"}\n";
+#endif
 
 VRView::VRView(string name) {
     this->name = name;
-
     SolidBackgroundMTRecPtr sbg = SolidBackground::create();
     sbg->setColor(Color3f(0.7, 0.7, 0.7));
     background = sbg;

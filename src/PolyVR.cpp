@@ -259,11 +259,10 @@ void PolyVR::initUI() {
     VRSetupManager::get()->load("Browser", "Browser.xml");
     cout << " Browser setup loaded!" << endl;
 #else
-	main_interface = shared_ptr<VRMainInterface>(VRMainInterface::get());
-#endif
-
+    main_interface = shared_ptr<VRMainInterface>(VRMainInterface::get());
     gui_mgr = shared_ptr<VRGuiManager>(VRGuiManager::get());
     gui_mgr->init();
+#endif
 
     loader = shared_ptr<VRSceneLoader>(VRSceneLoader::get());
 }

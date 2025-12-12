@@ -79,15 +79,11 @@ VRWindowPtr VRWindowManager::addCocoaWindow(string name) {
 }
 
 VRWindowPtr VRWindowManager::addGlutWindow(string name) {
-#ifndef WITHOUT_IMGUI
     VRGlutWindowPtr win = VRGlutWindow::create();
     win->setName(name);
     win->setAction(ract);
     windows[win->getName()] = win;
     return win;
-#else
-    return 0;
-#endif
 }
 
 VRWindowPtr VRWindowManager::addGlutEditor(string name) {
@@ -338,22 +334,22 @@ void VRWindowManager::load(XMLElementPtr node) {
 
         if (type == "0" || type == "distributed") {
             win = addMultiWindow(name);
-            win->load(el);
+            if (win) win->load(el);
         }
 
         if (type == "1" || type == "glut") {
             win = addGlutWindow(name);
-            win->load(el);
+            if (win) win->load(el);
         }
 
         if (type == "glutEditor") {
             win = addGlutEditor(name);
-            win->load(el);
+            if (win) win->load(el);
         }
 
         if (type == "cocoa") {
             win = addCocoaWindow(name);
-            win->load(el);
+            if (win) win->load(el);
         }
     }
 }

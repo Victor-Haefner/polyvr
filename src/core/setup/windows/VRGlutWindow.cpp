@@ -106,9 +106,8 @@ void VRGlutWindow::initGlut() {
     if (VROptions::get()->getOption<bool>("active_stereo"))
         glutInitDisplayMode(GLUT_RGBA | GLUT_DEPTH | GLUT_DOUBLE | GLUT_STEREO | GLUT_STENCIL | GLUT_MULTISAMPLE);
     else glutInitDisplayMode(GLUT_RGBA | GLUT_DEPTH | GLUT_DOUBLE | GLUT_STENCIL | GLUT_MULTISAMPLE);
-#endif
-
     glutSetOption(GLUT_ACTION_ON_WINDOW_CLOSE, GLUT_ACTION_CONTINUE_EXECUTION);
+#endif
 
     cout << " ..done " << endl;
 }
@@ -139,7 +138,7 @@ void VRGlutWindow::onKeyboard_special(int c, int s, int x, int y) {
 }
 
 void VRGlutWindow::onDisplay() {
-    #ifndef WITHOUT_OPENVR
+#ifndef WITHOUT_OPENVR
     if (hmd) {
         hmd->render();
     }
@@ -153,7 +152,9 @@ void VRGlutWindow::onDisplay() {
 void VRGlutWindow::render(bool fromThread) {
     if (fromThread) return;
     glutPostRedisplay();
+#ifndef WASM
     glutMainLoopEvent();
+#endif
 }
 
 OSG_END_NAMESPACE;
