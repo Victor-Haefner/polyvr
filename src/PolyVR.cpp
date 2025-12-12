@@ -318,6 +318,7 @@ void PolyVR::update() {
         string key;
         if (startsWith(dcy, "key:")) key = subString(dcy, 4, dcy.size()-4);
         if (startsWith(dcy, "serial:")) key = "123"; // TODO: access serial connection to retrieve key
+        if (app != "") cout << "  requested start of: '" << app << "'" << endl;
         if (app != "") VRSceneManager::get()->loadScene(app, false, key);
         cout << "   init frame done!" << endl;
     }

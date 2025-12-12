@@ -67,7 +67,9 @@ VRGlutWindow::VRGlutWindow() {
 
     glutWindows[winID] = this;
 
+#ifndef WASM
     glutDisplayFunc(glutDisplay);
+#endif
     glutReshapeFunc(glutResize);
     glutKeyboardFunc(glutKeyboard);
     glutSpecialFunc(glutSpecial);

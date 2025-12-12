@@ -67,15 +67,23 @@ void VROptions::parse(int _argc, char** _argv) {
             }
 
             if (arg.rfind("--", 0) == 0) {
-                string name = arg.substr(2);
+                string name;
                 string value;
 
-                // Check if next argument exists and is not another option
-                if (i + 1 < argc && argv[i + 1][0] != '-') {
-                    value = argv[++i];
-                } else {
-                    value = "true"; // boolean flag
-                }
+                auto eqPos = arg.find('=');
+		if (eqPos != std::string::npos) {
+		    name = arg.substr(2, eqPos - 2);
+		    value = arg.substr(eqPos + 1);
+		} else {
+		    name = arg.substr(2);
+
+		    // Support --name value
+		    if (i + 1 < argc && argv[i + 1][0] != '-') {
+		        value = argv[++i];
+		    } else {
+		        value = "true";  // Boolean flag
+		    }
+		}
 
                 options[name] = value;
             } else {
