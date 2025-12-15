@@ -61,9 +61,13 @@ void VRWindow::setAction(RenderActionRefPtr ract) { this->ract = ract; }
 bool VRWindow::hasType(string i) { return (i == type); }
 string VRWindow::getType() { return type; }
 Vec2i VRWindow::getSize() { return Vec2i(width, height); }
-void VRWindow::render(bool fromThread) { if(_win) _win->render(ract); }
 void VRWindow::sync(bool fromThread) { ; }
 void VRWindow::clear(Color3f c) { ; }
+
+void VRWindow::render(bool fromThread) { 
+	if (!_win) return;
+	_win->render(ract);
+}
 
 void VRWindow::resize(int w, int h) {
     if (_win->getWidth() == w && _win->getHeight() == h) return;

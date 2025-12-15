@@ -78,6 +78,7 @@ VRGlutWindow::VRGlutWindow() {
     glutMotionFunc(glutMotion);
     glutMouseFunc(glutMouse);
 
+    cout << " Glut window check fullscreen" << endl;
     bool fullscreen = VROptions::get()->getOption<bool>("fullscreen");
     if (fullscreen) glutFullScreen();
     cout << " Glut window initiated" << endl;
@@ -153,8 +154,10 @@ void VRGlutWindow::onDisplay() {
 
 void VRGlutWindow::render(bool fromThread) {
     if (fromThread) return;
+#ifdef WASM
+    onDisplay();
+#else
     glutPostRedisplay();
-#ifndef WASM
     glutMainLoopEvent();
 #endif
 }

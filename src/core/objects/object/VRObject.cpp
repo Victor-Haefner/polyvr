@@ -641,7 +641,7 @@ string VRObject::getOSGTreeString() {
 }
 
 string VRObject::printOSGTreeString(OSGObjectPtr o, string indent) {
-    if (indent.size() > 10) return "recursionLimit10";
+    if (indent.size() > 30) return "recursionLimit 30";
     if (o == 0) return "";
     if (!o->node) return "noNode";
 
@@ -652,7 +652,7 @@ string VRObject::printOSGTreeString(OSGObjectPtr o, string indent) {
     string name = "Unnamed";
     if (OSG::getName(o->node)) name = OSG::getName(o->node);
 
-    string data = indent + name + " " + type + "  ";
+    string data = indent + name + " " + type + ", mask: " + toString(o->node->getTravMask()) + "  ";
     if (type == "Transform") {
         Transform* t = dynamic_cast<Transform*>(core);
         if (t) data += toString(Vec4d(t->getMatrix()[0])) + "  " + toString(Vec4d(t->getMatrix()[1])) + "  " + toString(Vec4d(t->getMatrix()[2]));
@@ -670,6 +670,15 @@ string VRObject::printOSGTreeString(OSGObjectPtr o, string indent) {
     for (uint i=0; i<o->node->getNChildren(); i++) {
         auto child = o->node->getChild(i);
         if (child) data += "\n" + printOSGTreeString(OSGObject::create(child), indent + " ");
+    }
+    
+    if (type == "VisitSubTree") {
+        VisitSubTree* v = dynamic_cast<VisitSubTree*>(core);
+    	auto n = v->getSubTreeRoot();
+    	if (n) {
+    		data += "\n" + indent + " -->";
+    		data += "\n" + printOSGTreeString(OSGObject::create(n), indent + " ");
+    	}
     }
     return data;
 }

@@ -196,9 +196,7 @@ void printOSGImportCapabilities() {
 
 void PolyVR::initEnvironment() {
     initTime();
-    //setlocale(LC_ALL, "C");
     setlocale(LC_ALL, "en_US.UTF-8"); // C locale
-    std::locale::global(std::locale("en_US.UTF-8")); // cpp locale
 
 #ifdef _WIN32
     // to get windows to compile for UTF8
