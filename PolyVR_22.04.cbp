@@ -398,9 +398,6 @@
 			<Add option="-lstb" />
 			<Add option="-lXmu" />
 			<Add option="-lXi" />
-			<Add option="-lboost_system" />
-			<Add option="-lboost_serialization" />
-			<Add option="-lboost_regex" />
 			<Add option="-lrt" />
 			<Add option="-ljpeg" />
 			<Add option="-lpng" />
