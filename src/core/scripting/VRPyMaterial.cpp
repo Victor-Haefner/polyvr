@@ -57,7 +57,7 @@ PyMethodDef VRPyMaterial::methods[] = {
     {"setMagMinFilter", PyWrapOpt(Material, setMagMinFilter, "Set the mag and min filtering mode - setMagMinFilter( mag, min | int unit )\n possible values for mag are GL_X && min can be GL_X || GL_X_MIPMAP_Y, where X && Y can be NEAREST || LINEAR", "0", void, int, int, int ) },
     {"setTextureWrapping", PyWrap(Material, setTextureWrapping, "Set the texture wrap in u and v - setTextureWrapping( wrapU, wrapV | int unit )\n possible values for wrap are 'GL_CLAMP_TO_EDGE', 'GL_CLAMP_TO_BORDER', 'GL_CLAMP', 'GL_REPEAT'", void, int, int, int ) },
     {"setVertexProgram", PyWrap(Material, setVertexScript, "Set vertex program - setVertexProgram( myScript )", void, string ) },
-    {"setFragmentProgram", PyWrap(Material, setFragmentScript, "Set fragment program - setFragmentProgram( myScript | bool deferred )", void, string, bool ) },
+    {"setFragmentProgram", PyWrapOpt(Material, setFragmentScript, "Set fragment program - setFragmentProgram( myScript | bool deferred )", "0", void, string, bool ) },
     {"setGeometryProgram", PyWrap(Material, setGeometryScript, "Set geometry program - setGeometryProgram( myScript )", void, string ) },
     {"setTessControlProgram", PyWrap(Material, setTessControlScript, "Set tess control program - setTessControlProgram( myScript )", void, string ) },
     {"setTessEvaluationProgram", PyWrap(Material, setTessEvaluationScript, "Set tess evaluation program - setTessEvaluationProgram( myScript )", void, string ) },
