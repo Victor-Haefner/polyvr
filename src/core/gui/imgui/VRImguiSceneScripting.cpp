@@ -47,6 +47,7 @@ string formatPerformance(float exec_time) {
 #define ImGuiKey_S 's'
 #define ImGuiKey_E 'e'
 #define ImGuiKey_W 'w'
+#define ImGuiKey_F 'f'
 #define ImGuiKey_T 't'
 #define ImGuiKey_D 'd'
 #endif // IMGUI_VERSION_NUM
@@ -510,6 +511,7 @@ void ImScripting::render() {
         if (imguiKeyPressed(ImGuiKey_S)) { uiSignal("scripts_toolbar_save"); }
         if (imguiKeyPressed(ImGuiKey_E)) { uiSignal("scripts_toolbar_execute"); }
         if (imguiKeyPressed(ImGuiKey_W)) { uiSignal("clearConsoles"); }
+        if (imguiKeyPressed(ImGuiKey_F)) { openSearch(); }
     }
 
     // toolbar
