@@ -331,13 +331,18 @@ void VRGlutEditor::closePopupWindow() {
 }
 
 void VRGlutEditor::openPopupWindow(string name, string title, int width, int height) {
+    glutSetWindow(topWin);
+    int mainX      = glutGet(GLUT_WINDOW_X);
+    int mainY      = glutGet(GLUT_WINDOW_Y);
+    int mainWidth  = glutGet(GLUT_WINDOW_WIDTH);
+    int mainHeight = glutGet(GLUT_WINDOW_HEIGHT);
+    int popupX = mainX + (mainWidth  - width)  / 2;
+    int popupY = mainY + (mainHeight - height) / 2;
+
     popup = name;
 
-    int screenWidth = glutGet(GLUT_SCREEN_WIDTH);
-    int screenHeight = glutGet(GLUT_SCREEN_HEIGHT);
-
     glutInitWindowSize(width, height);
-    glutInitWindowPosition((screenWidth-width)*0.5, (screenHeight-height)*0.5);
+    glutInitWindowPosition(popupX, popupY);
     winPopup = glutCreateWindow(title.c_str());
     initGlutDialogExtensions(title);
     setSwapInterval(0);
