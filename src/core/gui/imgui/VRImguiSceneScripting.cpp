@@ -23,7 +23,7 @@ void renderCombo(string& opt, vector<string>& options, string ID, string signal,
     ID = "##"+ID;
     int labelI = 0;
     vector<const char*> optionsCstr(options.size(),0);
-    for (int i=0; i<options.size(); i++) {
+    for (size_t i=0; i<options.size(); i++) {
         optionsCstr[i] = options[i].c_str();
         if (options[i] == opt) labelI = i;
     }
@@ -193,7 +193,7 @@ void ImScriptList::renderScriptEntry(ImScriptEntry& scriptEntry) {
     if (doPerf) {
         string pTime = formatPerformance(scriptEntry.perf);
         ImGui::SameLine();
-        ImGui::Text(pTime.c_str());
+        ImGui::TextUnformatted(pTime.c_str());
     }
 
     //if (isSelected) ImGui::PopStyleColor();
@@ -260,11 +260,12 @@ ImScriptEditor::ImScriptEditor() {
     mgr->addCallback("script_editor_clear_trigs_and_args", [&](OSG::VRGuiSignals::Options o){ clearTrigsAndArgs(); return true; } );
     mgr->addCallback("script_editor_add_trigger", [&](OSG::VRGuiSignals::Options o){ addTrigger(o["name"], o["trigger"], o["parameter"], o["device"], o["key"], o["state"]); return true; } );
     mgr->addCallback("script_editor_add_argument", [&](OSG::VRGuiSignals::Options o){ addArgument(o["name"], o["type"], o["value"]); return true; } );
+    mgr->addCallback("script_editor_toggle_whitespace", [&](OSG::VRGuiSignals::Options o){ showWhitespace(!doShowWhitespace); return true; } );
     mgr->addCallback("editor_cmd", [&](OSG::VRGuiSignals::Options o){ editorCommand(o["cmd"]); return true; } );
     mgr->addCallback("openUiScript", [&](OSG::VRGuiSignals::Options o){ focusOn(o["line"], o["column"]); return true; } );
     mgr->addCallback("shiftTab", [&](OSG::VRGuiSignals::Options o){ handleShiftTab(toInt(o["tab"]), toInt(o["shift"])); return true; }, true );
 
-    imEditor.SetShowWhitespaces(false); // TODO: add as feature!
+    imEditor.SetShowWhitespaces(doShowWhitespace);
     imEditor.SetLanguageDefinition(TextEditor::LanguageDefinition::Python());
 
     typeList = {"Logic (Python)", "Shader (GLSL)", "Web (HTML/JS/CSS)"};
@@ -272,6 +273,11 @@ ImScriptEditor::ImScriptEditor() {
     triggerTypes = {"None", "on_scene_load", "on_scene_close", "on_scene_import", "on_timeout", "on_device", "on_socket"};
     device_types = {"None", "mouse", "multitouch", "keyboard", "flystick", "haptic", "server1", "leap", "vrpn_device"};
     trigger_states = {"Pressed", "Released", "Drag", "Drop", "To edge", "From edge"};
+}
+
+void ImScriptEditor::showWhitespace(bool b) {
+    doShowWhitespace = b;
+    imEditor.SetShowWhitespaces(b);
 }
 
 string ImScriptEditor::getSelection() {
@@ -370,7 +376,7 @@ void ImScriptEditor::setBuffer(string data) {
 
 void ImScriptEditor::setParameters(string type, string group) {
     current_group = 0;
-    for (int i = 0; i < groupList.size(); i++) {
+    for (size_t i = 0; i < groupList.size(); i++) {
         if (startsWith(groupList[i], group)) current_group = i;
     }
 
@@ -416,7 +422,7 @@ void ImScriptEditor::render() {
         ImGui::Text("Type: ");
         ImGui::SameLine();
         vector<const char*> types(typeList.size(),0);
-        for (int i=0; i<typeList.size(); i++) types[i] = typeList[i].c_str();
+        for (size_t i=0; i<typeList.size(); i++) types[i] = typeList[i].c_str();
         if (ImGui::Combo("##scriptTypesCombo", &current_type, &types[0], types.size())) {
             string type = "Python";
             if (current_type == 1) type = "GLSL";
@@ -425,7 +431,7 @@ void ImScriptEditor::render() {
         }
 
         vector<const char*> groupsCstr(groupList.size(),0);
-        for (int i=0; i<groupList.size(); i++) groupsCstr[i] = groupList[i].c_str();
+        for (size_t i=0; i<groupList.size(); i++) groupsCstr[i] = groupList[i].c_str();
         ImGui::Text("Group:");
         ImGui::SameLine();
         if (ImGui::Combo("##groupsCombo", &current_group, &groupsCstr[0], groupsCstr.size())) {
@@ -522,6 +528,7 @@ void ImScripting::render() {
         popGlowBorderStyle();
 
         ImGui::SameLine(); if (ImGui::Button("CPP")) uiSignal("scripts_toolbar_cpp");
+        ImGui::SameLine(); if (ImGui::Button("¶·>")) uiSignal("script_editor_toggle_whitespace");
 
                            if (ImGui::Button("Save")) uiSignal("scripts_toolbar_save");
         ImGui::SameLine(); if (ImGui::Button("Execute")) uiSignal("scripts_toolbar_execute");

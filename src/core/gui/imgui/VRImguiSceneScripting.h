@@ -67,6 +67,7 @@ class ImScriptEditor {
             string value;
         };
 
+        bool doShowWhitespace = false;
         bool sensitive = false;
         TextEditor imEditor;
         int current_type = 0;
@@ -94,6 +95,7 @@ class ImScriptEditor {
         void editorCommand(string cmd);
         void focusOn(string line, string column);
         void handleShiftTab(int tab, int shift);
+        void showWhitespace(bool b);
 
     public:
         ImScriptEditor();
