@@ -465,6 +465,13 @@ void VRScript::pyErrPrint(string channel) {
 
 PyObject* VRScript::getFunction() { return fkt; }
 
+void replaceSpaceTab(std::string& s) {
+    size_t pos = 0;
+    while ((pos = s.find(" \t", pos)) != std::string::npos) {
+        s.replace(pos, 2, "\t");
+    }
+}
+
 void VRScript::preprocess() {
     if (pyVersion[0] != '2') return;
 
@@ -476,6 +483,9 @@ void VRScript::preprocess() {
     string line;
     while (getline(input, line)) {
         smatch match;
+
+        replaceSpaceTab(line);
+
         if (regex_search(line, match, printRegex)) {
             string indentation = match[1];
             string printContent = match[2];
@@ -483,6 +493,7 @@ void VRScript::preprocess() {
         } else {
             output << line;
         }
+
         output << '\n';
     }
 
