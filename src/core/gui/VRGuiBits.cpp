@@ -67,9 +67,9 @@ void VRGuiBits::updateWebPortRessources(bool withXR, bool withEditor, bool runBr
     for (auto script : VRScene::getCurrent()->getScripts()) {
         if (script.second->getType() == "HTML") script.second->exportForWasm();
     }
-    
+
     return; // TODO, update webport repo, add a install to directory script that does the copying below
-    
+
     string folder = D+"/ressources/webBuild";
     if (!exists(folder+"/.git"))
         systemCall("git clone https://github.com/Victor-Haefner/polyvr-webport.git \"" + folder + "\"");
@@ -152,19 +152,6 @@ void VRGuiBits::updateWebPortRessources(bool withXR, bool withEditor, bool runBr
 
     if (runBrowser)
         systemCall("google-chrome --new-window \"http://localhost:5500/"+projectName+".html"+optionstr+"\"");
-}
-
-void VRGuiBits::on_web_export_clicked() {
-    uiSignal("toolbar_export");
-}
-
-void VRGuiBits::on_web_cancel() {
-    uiSignal("dialog_export_cancel");
-}
-
-void VRGuiBits::on_web_start() {
-    uiSignal("dialog_export_start");
-    updateWebPortRessources(false, false, false); // TODO, get the flags from ui signal options
 }
 
 void VRGuiBits::on_fullscreen_clicked() {
@@ -315,7 +302,7 @@ VRGuiBits::VRGuiBits() {
 
     auto mgr = VRGuiSignals::get();
     mgr->addCallback("toolbar_save", [&](OSG::VRGuiSignals::Options o) { on_save_clicked(); return true; }, true );
-    mgr->addCallback("toolbar_export", [&](OSG::VRGuiSignals::Options o) { on_web_export_clicked(); return true; }, true );
+    mgr->addCallback("web_export", [&](OSG::VRGuiSignals::Options o) { updateWebPortRessources(toBool(o["withXR"]), toBool(o["withEditor"]), toBool(o["runBrowser"])); return true; }, true );
     mgr->addCallback("toolbar_exit", [&](OSG::VRGuiSignals::Options o) { on_quit_clicked(); return true; }, true );
 
     mgr->addCallback("view_switch_camera", [&](OSG::VRGuiSignals::Options o) { on_camera_changed(o["selection"]); return true; }, true );

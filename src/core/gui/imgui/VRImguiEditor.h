@@ -169,6 +169,12 @@ class ImImportDialog : public ImDialog {
         void begin() override;
 };
 
+class ImWebExportDialog : public ImDialog {
+    public:
+        ImWebExportDialog();
+        void begin() override;
+};
+
 class VRImguiEditor {
     private:
         Signal signal;
@@ -189,6 +195,7 @@ class VRImguiEditor {
         ImProfDialog profDialog = ImProfDialog();
         ImImportDialog importDialog = ImImportDialog();
         ImTemplateDialog templateDialog = ImTemplateDialog();
+        ImWebExportDialog webExportDialog = ImWebExportDialog();
 
         void resolveResize(const string& name, const ResizeEvent& resizer);
         void handleRelayedKey(int key, int state, bool special);

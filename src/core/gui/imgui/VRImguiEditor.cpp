@@ -207,7 +207,7 @@ void ImToolbar::begin() {
         uiSignal("ui_toggle_popup", {{"name","file"},{"title","Save As.."}, {"width","600"}, {"height","500"}});
     }
 
-    ImGui::SameLine(); if (ImGui::Button("Export")) uiSignal("toolbar_export");
+    ImGui::SameLine(); if (ImGui::Button("Export")) uiSignal("ui_toggle_popup", {{"name","webExport"},{"title","Web export"}, {"width","400"}, {"height","300"}});
     ImGui::SameLine(); if (ImGui::Button("Close")) uiSignal("toolbar_close");
     ImGui::SameLine(); if (ImGui::Button("Exit")) uiSignal("toolbar_exit");
     ImGui::SameLine(); if (ImGui::Button("About")) uiSignal("ui_toggle_popup", {{"name","about"},{"title","About"}, {"width","400"}, {"height","500"}});
@@ -242,6 +242,7 @@ void VRImguiEditor::resizePopup(const Surface& parent) {
     profDialog.resize(parent);
     importDialog.resize(parent);
     templateDialog.resize(parent);
+    webExportDialog.resize(parent);
     ImGui_ImplGLUT_ReshapeFunc(parent.width, parent.height);
 }
 
@@ -751,6 +752,7 @@ void VRImguiEditor::init(Signal signal, ResizeSignal resizeSignal) {
     profDialog.signal = signal;
     importDialog.signal = signal;
     templateDialog.signal = signal;
+    webExportDialog.signal = signal;
 
     auto mgr = OSG::VRGuiSignals::get();
     mgr->addCallback("relayedKeySignal", [&](OSG::VRGuiSignals::Options o){ handleRelayedKey(toInt(o["key"]), toInt(o["state"]), false); return true; } );
@@ -887,6 +889,7 @@ void VRImguiEditor::renderPopup(OSG::VRGuiSignals::Options options) {
     if (name == "profiler") profDialog.render();
     if (name == "import") importDialog.render();
     if (name == "template") templateDialog.render();
+    if (name == "webExport") webExportDialog.render();
 
     // Rendering
     ImGui::Render();
@@ -942,6 +945,7 @@ ImSearchDialog::ImSearchDialog() : ImDialog("search")
 
 ImRecorderDialog::ImRecorderDialog() : ImDialog("recorder") {}
 ImImportDialog::ImImportDialog() : ImDialog("import") {}
+ImWebExportDialog::ImWebExportDialog() : ImDialog("webExport") {}
 
 ImProfDialog::ImProfDialog() : ImDialog("profiler") {
     profiler = ImWidgetPtr(new ImProfiler());
@@ -1134,6 +1138,22 @@ void ImProfDialog::begin() {
 void ImImportDialog::begin() {
     ImSection::begin();
     centeredText("Import");
+}
+
+void ImWebExportDialog::begin() {
+    ImSection::begin();
+    centeredText("Export this project as webassembly");
+
+    bool withXR = false;
+    bool withEditor = false;
+    bool runBrowser = false;
+
+    if (ImGui::Button("Ok")) {
+        uiSignal("ui_close_popup");
+        uiSignal("web_export", {{"withXR", toString(withXR)}, {"withEditor", toString(withEditor)}, {"runBrowser", toString(runBrowser)}});
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("Cancel")) uiSignal("ui_close_popup");
 }
 
 void ImTemplateDialog::begin() {
