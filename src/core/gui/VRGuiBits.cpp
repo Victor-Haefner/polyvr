@@ -57,76 +57,23 @@ void VRGuiBits::on_quit_clicked() {
     PolyVR::shutdown();
 }
 
-static string wasmServerSend =
-"\nfunction send(m) {\n"
-"    window.parent.postMessage(m, window.origin);\n"
-"}\n";
-
-static string wasmServerReceive =
-"window.addEventListener('message', (event) => {\n"
-"    handle(event.data);\n"
-"}, false);\n";
-
-string wrapTimeout(string code, string delay) {
-    return "setTimeout(function(){ "+code+" }, "+delay+");";
-}
-
-void VRGuiBits::updateWebPortRessources() {
-    /*bool withXR = getCheckButtonState("wed_opt_xr");
-
-    int startOpt = getRadioButtonState("wed_opt_start1");
-    startOpt +=  2*getRadioButtonState("wed_opt_start2");
-    startOpt +=  3*getRadioButtonState("wed_opt_start3");
-
+void VRGuiBits::updateWebPortRessources(bool withXR, bool withEditor, bool runBrowser) {
     string D = VRSceneManager::get()->getOriginalWorkdir();
     string project = VRScene::getCurrent()->getFile();
     string projectName = VRScene::getCurrent()->getFileName();
 
+    // copy websites
+    //if (!exists("./websites")) makedir("./websites");
+    for (auto script : VRScene::getCurrent()->getScripts()) {
+        if (script.second->getType() == "HTML") script.second->exportForWasm();
+    }
+    
+    return; // TODO, update webport repo, add a install to directory script that does the copying below
+    
     string folder = D+"/ressources/webBuild";
     if (!exists(folder+"/.git"))
         systemCall("git clone https://github.com/Victor-Haefner/polyvr-webport.git \"" + folder + "\"");
 
-    // copy websites
-    //if (!exists("./websites")) makedir("./websites");
-    for (auto script : VRScene::getCurrent()->getScripts()) {
-        if (script.second->getType() != "HTML") continue;
-        string core = script.second->getCore();
-
-        string onOpen = "";
-        auto itr = core.find("websocket.onopen"); // get the code executed on ws open
-        if (itr != string::npos) {
-            auto itr2 = core.find("{", itr);
-            if (itr2 != string::npos) {
-                auto itr3 = core.find("}", itr2);
-                if (itr3 != string::npos) {
-                    onOpen = core.substr(itr2+1, itr3-itr2-1);
-                    cout << " on open action: " << onOpen << endl;
-                }
-            }
-        }
-
-        itr = core.find("function send("); // delete that line, then insert wasmServerSend
-        if (itr != string::npos) {
-            auto itr2 = core.find("\n", itr);
-            if (itr2 != string::npos) {
-                core.erase(itr, itr2-itr);
-                core.insert(itr, wasmServerSend);
-            }
-        }
-
-        itr = core.find("var websocket"); // prepend wasmServerReceive
-        if (itr != string::npos) core.insert(itr, wasmServerReceive + wrapTimeout(onOpen, "1000") + "\n\t/*");
-
-        itr = core.find("websocket.onclose"); // close the comment to disable the websocket
-        if (itr != string::npos) {
-            auto itr2 = core.find("\n", itr);
-            if (itr2 != string::npos) core.insert(itr2, "*\/");
-        }
-
-        ofstream out(script.first+".html");
-        out << core;
-        out.close();
-    }
 
     systemCall("git -C \"" + folder + "\" pull");
     systemCall("cp -f \"" + folder + "/polyvr.wasm\" ./");
@@ -193,9 +140,8 @@ void VRGuiBits::updateWebPortRessources() {
     }
 
     vector<string> options;
-
     if (withXR) options.push_back("webXR");
-    if (startOpt == 3) options.push_back("editor");
+    if (withEditor) options.push_back("editor");
 
     string optionstr = "";
     for (int i=0; i<options.size(); i++) {
@@ -204,8 +150,8 @@ void VRGuiBits::updateWebPortRessources() {
         optionstr += options[i];
     }
 
-    if (startOpt > 1)
-        systemCall("google-chrome --new-window \"http://localhost:5500/"+projectName+".html"+optionstr+"\"");*/
+    if (runBrowser)
+        systemCall("google-chrome --new-window \"http://localhost:5500/"+projectName+".html"+optionstr+"\"");
 }
 
 void VRGuiBits::on_web_export_clicked() {
@@ -218,7 +164,7 @@ void VRGuiBits::on_web_cancel() {
 
 void VRGuiBits::on_web_start() {
     uiSignal("dialog_export_start");
-    updateWebPortRessources();
+    updateWebPortRessources(false, false, false); // TODO, get the flags from ui signal options
 }
 
 void VRGuiBits::on_fullscreen_clicked() {

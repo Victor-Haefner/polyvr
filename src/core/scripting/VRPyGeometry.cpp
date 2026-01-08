@@ -483,7 +483,7 @@ PyObject* VRPyGeometry::setTexCoords(VRPyGeometry* self, PyObject *args) {
     Py_RETURN_TRUE;
 }
 
-PyObject* VRPyGeometry::getPositions(VRPyGeometry* self) {
+PyObject* VRPyGeometry::getPositions(VRPyGeometry* self, PyObject *args) {
     if (!self->valid()) return NULL;
     if (self->objPtr->getMesh() == 0) { PyErr_SetString(err, "VRPyGeometry::getPositions - Mesh is invalid"); return NULL; }
 
@@ -502,7 +502,7 @@ PyObject* VRPyGeometry::getPositions(VRPyGeometry* self) {
     return res;
 }
 
-PyObject* VRPyGeometry::getTypes(VRPyGeometry* self) {
+PyObject* VRPyGeometry::getTypes(VRPyGeometry* self, PyObject *args) {
     if (!self->valid()) return NULL;
     if (self->objPtr->getMesh() == 0) { PyErr_SetString(err, "VRPyGeometry::getNormals - Mesh is invalid"); return NULL; }
 
@@ -519,7 +519,7 @@ PyObject* VRPyGeometry::getTypes(VRPyGeometry* self) {
     return res;
 }
 
-PyObject* VRPyGeometry::getLengths(VRPyGeometry* self) {
+PyObject* VRPyGeometry::getLengths(VRPyGeometry* self, PyObject *args) {
     if (!self->valid()) return NULL;
     if (self->objPtr->getMesh() == 0) { PyErr_SetString(err, "VRPyGeometry::getNormals - Mesh is invalid"); return NULL; }
 
@@ -536,7 +536,7 @@ PyObject* VRPyGeometry::getLengths(VRPyGeometry* self) {
     return res;
 }
 
-PyObject* VRPyGeometry::getNormals(VRPyGeometry* self) {
+PyObject* VRPyGeometry::getNormals(VRPyGeometry* self, PyObject *args) {
     if (!self->valid()) return NULL;
     if (self->objPtr->getMesh() == 0) { PyErr_SetString(err, "VRPyGeometry::getNormals - Mesh is invalid"); return NULL; }
 
@@ -554,7 +554,7 @@ PyObject* VRPyGeometry::getNormals(VRPyGeometry* self) {
     return res;
 }
 
-PyObject* VRPyGeometry::getColors(VRPyGeometry* self) {
+PyObject* VRPyGeometry::getColors(VRPyGeometry* self, PyObject *args) {
     if (!self->valid()) return NULL;
     if (self->objPtr->getMesh() == 0) { PyErr_SetString(err, "VRPyGeometry::getColors - Mesh is invalid"); return NULL; }
 

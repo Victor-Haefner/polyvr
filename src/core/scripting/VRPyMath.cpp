@@ -117,18 +117,18 @@ PyObject* VRPyVec2f::Print(PyObject* self) {
     return PyUnicode_FromString( s.c_str() );
 }
 
-PyObject* VRPyVec2f::normalize(VRPyVec2f* self) {
+PyObject* VRPyVec2f::normalize(VRPyVec2f* self, PyObject* args) {
     self->v.normalize();
     return (PyObject*) toPyVec2f(self->v);
 }
 
-PyObject* VRPyVec2f::normalized(VRPyVec2f* self) {
+PyObject* VRPyVec2f::normalized(VRPyVec2f* self, PyObject* args) {
     auto v = self->v;
     v.normalize();
     return (PyObject*) toPyVec2f(v);
 }
 
-PyObject* VRPyVec2f::asList(VRPyVec2f* self) {
+PyObject* VRPyVec2f::asList(VRPyVec2f* self, PyObject* args) {
     auto l = PyList_New(3);
     PyList_SetItem(l,0,PyFloat_FromDouble(self->v[0]));
     PyList_SetItem(l,1,PyFloat_FromDouble(self->v[1]));
@@ -136,7 +136,7 @@ PyObject* VRPyVec2f::asList(VRPyVec2f* self) {
     return l;
 }
 
-PyObject* VRPyVec2f::length(VRPyVec2f* self) {
+PyObject* VRPyVec2f::length(VRPyVec2f* self, PyObject* args) {
     return PyFloat_FromDouble( self->v.length() );
 }
 
@@ -359,18 +359,18 @@ PyObject* VRPyVec3f::Print(PyObject* self) {
     return PyUnicode_FromString( s.c_str() );
 }
 
-PyObject* VRPyVec3f::normalize(VRPyVec3f* self) {
+PyObject* VRPyVec3f::normalize(VRPyVec3f* self, PyObject* args) {
     self->v.normalize();
     return (PyObject*) toPyVec3f(self->v);
 }
 
-PyObject* VRPyVec3f::normalized(VRPyVec3f* self) {
+PyObject* VRPyVec3f::normalized(VRPyVec3f* self, PyObject* args) {
     auto v = self->v;
     v.normalize();
     return (PyObject*) toPyVec3f(v);
 }
 
-PyObject* VRPyVec3f::asList(VRPyVec3f* self) {
+PyObject* VRPyVec3f::asList(VRPyVec3f* self, PyObject* args) {
     auto l = PyList_New(3);
     PyList_SetItem(l,0,PyFloat_FromDouble(self->v[0]));
     PyList_SetItem(l,1,PyFloat_FromDouble(self->v[1]));
@@ -378,7 +378,7 @@ PyObject* VRPyVec3f::asList(VRPyVec3f* self) {
     return l;
 }
 
-PyObject* VRPyVec3f::length(VRPyVec3f* self) {
+PyObject* VRPyVec3f::length(VRPyVec3f* self, PyObject* args) {
     return PyFloat_FromDouble( self->v.length() );
 }
 
@@ -564,11 +564,11 @@ PyObject* VRPyLine::Print(PyObject* self) {
     return PyUnicode_FromString( s.c_str() );
 }
 
-PyObject* VRPyLine::pos(VRPyLine* self) {
+PyObject* VRPyLine::pos(VRPyLine* self, PyObject* args) {
     return ::toPyObject(Vec3d(self->l.getPosition()));
 }
 
-PyObject* VRPyLine::dir(VRPyLine* self) {
+PyObject* VRPyLine::dir(VRPyLine* self, PyObject* args) {
     return ::toPyObject(Vec3d(self->l.getDirection()));
 }
 

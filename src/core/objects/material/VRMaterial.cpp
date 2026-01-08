@@ -1363,11 +1363,15 @@ void VRMaterial::setVertexShader(string s, string name) {
     if (startsWith(s, "#version")) {
 	auto i = s.find('\n');
 	string s1 = s.substr(0,i);
+	if (s1 == "#version 120") s1 = "";
+	
 	string s2 = s.substr(i);
 	s = s1 + "\n#define WEBGL\n" + s2;
 	//s = "#define WEBGL\n" + s.substr(i);
     } else s = "#define WEBGL\n" + s;
 #endif
+
+    //if (name == "logsVP") cout << endl << s << endl << endl;
 
 #ifndef OSG_OGL_ES2
     m->vProgram->setProgram(s);
@@ -1401,6 +1405,7 @@ void VRMaterial::setFragmentShader(string s, string name, bool deferred) {
 	auto i = s.find('\n');
         vStr = s.substr(0,i);
 	s = s.substr(i);
+	if (vStr == "#version 120") vStr = "";
     }
 
     if (!contains(s, "precision mediump")) s = "precision mediump float;\n" + s;

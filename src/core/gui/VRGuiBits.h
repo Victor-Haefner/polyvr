@@ -43,7 +43,7 @@ class VRGuiBits {
 
         void on_internal_close_clicked();
 
-        void updateWebPortRessources();
+        void updateWebPortRessources(bool withXR, bool withEditor, bool runBrowser);
         void on_web_cancel();
         void on_web_start();
 

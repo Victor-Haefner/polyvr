@@ -144,7 +144,7 @@ PyMethodDef VRPyObject::methods[] = {
     {NULL}  /* Sentinel */
 };
 
-PyObject* VRPyObject::destroy(VRPyObject* self) {
+PyObject* VRPyObject::destroy(VRPyObject* self, PyObject* args) {
     if (self->objPtr == 0) { PyErr_SetString(err, "VRPyObject::destroy - C Object is invalid"); return NULL; }
     self->objPtr->destroy();
     self->objPtr = 0;
@@ -161,7 +161,7 @@ PyObject* VRPyObject::setPersistency(VRPyObject* self, PyObject* args) {
     Py_RETURN_TRUE;
 }
 
-PyObject* VRPyObject::getPersistency(VRPyObject* self) {
+PyObject* VRPyObject::getPersistency(VRPyObject* self, PyObject* args) {
     if (self->objPtr == 0) { PyErr_SetString(err, "VRPyObject::getPersistency - C Object is invalid"); return NULL; }
     return PyLong_FromLong( self->objPtr->getPersistency() );
 }
@@ -183,12 +183,12 @@ Py_hash_t VRPyObject::hash(PyObject* p) {
     return (Py_hash_t)o->objPtr.get();
 }
 
-PyObject* VRPyObject::getName(VRPyObject* self) {
+PyObject* VRPyObject::getName(VRPyObject* self, PyObject* args) {
     if (self->objPtr == 0) { PyErr_SetString(err, "C Object is invalid"); return NULL; }
     return PyUnicode_FromString(self->objPtr->getName().c_str());
 }
 
-PyObject* VRPyObject::getBaseName(VRPyObject* self) {
+PyObject* VRPyObject::getBaseName(VRPyObject* self, PyObject* args) {
     if (self->objPtr == 0) { PyErr_SetString(err, "C Object is invalid"); return NULL; }
     return PyUnicode_FromString(self->objPtr->getBaseName().c_str());
 }

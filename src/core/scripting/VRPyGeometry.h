@@ -16,11 +16,11 @@ struct VRPyGeometry : VRPyBaseT<OSG::VRGeometry> {
     static PyObject* setIndices(VRPyGeometry* self, PyObject *args);
     static PyObject* setTexCoords(VRPyGeometry* self, PyObject *args);
 
-    static PyObject* getTypes(VRPyGeometry* self);
-    static PyObject* getLengths(VRPyGeometry* self);
-    static PyObject* getPositions(VRPyGeometry* self);
-    static PyObject* getNormals(VRPyGeometry* self);
-    static PyObject* getColors(VRPyGeometry* self);
+    static PyObject* getTypes(VRPyGeometry* self, PyObject *args);
+    static PyObject* getLengths(VRPyGeometry* self, PyObject *args);
+    static PyObject* getPositions(VRPyGeometry* self, PyObject *args);
+    static PyObject* getNormals(VRPyGeometry* self, PyObject *args);
+    static PyObject* getColors(VRPyGeometry* self, PyObject *args);
     static PyObject* getIndices(VRPyGeometry* self, PyObject *args);
     static PyObject* getTexCoords(VRPyGeometry* self, PyObject *args);
 

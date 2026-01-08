@@ -25,6 +25,7 @@
 #include "addons/LeapMotion/VRPyLeap.h"
 #include "core/utils/VRTimer.h"
 #include "core/utils/toString.h"
+#include "core/utils/system/VRSystem.h"
 #include "core/utils/xml.h"
 #include "core/setup/VRSetup.h"
 #include "core/setup/devices/VRKeyboard.h"
@@ -719,3 +720,63 @@ void VRScript::queueExecution() {
 }
 
 VRGlobals::Int VRScript::loadingFrame = 0;
+
+
+
+static string wasmServerSend =
+"\nfunction send(m) {\n"
+"    window.parent.postMessage(m, window.origin);\n"
+"}\n";
+
+static string wasmServerReceive =
+"window.addEventListener('message', (event) => {\n"
+"    handle(event.data);\n"
+"}, false);\n";
+
+string wrapTimeout(string code, string delay) {
+    return "setTimeout(function(){ "+code+" }, "+delay+");";
+}
+
+void VRScript::exportForWasm() {
+	if (getType() != "HTML") return;
+	
+	string pathOut = name+".html";
+	if (exists(pathOut)) return;
+	
+	string core = getCore();
+
+	string onOpen = "";
+	auto itr = core.find("websocket.onopen"); // get the code executed on ws open
+	if (itr != string::npos) {
+	    auto itr2 = core.find("{", itr);
+	    if (itr2 != string::npos) {
+		auto itr3 = core.find("}", itr2);
+		if (itr3 != string::npos) {
+		    onOpen = core.substr(itr2+1, itr3-itr2-1);
+		    cout << " on open action: " << onOpen << endl;
+		}
+	    }
+	}
+
+	itr = core.find("function send("); // delete that line, then insert wasmServerSend
+	if (itr != string::npos) {
+	    auto itr2 = core.find("\n", itr);
+	    if (itr2 != string::npos) {
+		core.erase(itr, itr2-itr);
+		core.insert(itr, wasmServerSend);
+	    }
+	}
+
+	itr = core.find("var websocket"); // prepend wasmServerReceive
+	if (itr != string::npos) core.insert(itr, wasmServerReceive + wrapTimeout(onOpen, "1000") + "\n\t/*");
+
+	itr = core.find("websocket.onclose"); // close the comment to disable the websocket
+	if (itr != string::npos) {
+	    auto itr2 = core.find("\n", itr);
+	    if (itr2 != string::npos) core.insert(itr2, "*\/");
+	}
+
+	ofstream out(pathOut);
+	out << core;
+	out.close();
+}

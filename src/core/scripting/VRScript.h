@@ -183,6 +183,8 @@ class VRScript : public std::enable_shared_from_this<VRScript>, public VRName {
 
         void save(XMLElementPtr e, int p = 0) override;
         void load(XMLElementPtr e, VRStorageContextPtr context = 0) override;
+        
+        void exportForWasm();
 };
 
 OSG_END_NAMESPACE;

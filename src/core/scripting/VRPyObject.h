@@ -10,13 +10,13 @@ struct VRPyObject : VRPyBaseT<OSG::VRObject> {
     static PyObject* compare(PyObject* o1, PyObject* o2, int op);
     static Py_hash_t hash(PyObject* o);
 
-    static PyObject* destroy(VRPyObject* self);
+    static PyObject* destroy(VRPyObject* self, PyObject* args);
 
-    static PyObject* getName(VRPyObject* self);
-    static PyObject* getBaseName(VRPyObject* self);
+    static PyObject* getName(VRPyObject* self, PyObject* args);
+    static PyObject* getBaseName(VRPyObject* self, PyObject* args);
     static PyObject* setName(VRPyObject* self, PyObject* args);
     static PyObject* setPersistency(VRPyObject* self, PyObject* args);
-    static PyObject* getPersistency(VRPyObject* self);
+    static PyObject* getPersistency(VRPyObject* self, PyObject* args);
 };
 
 #endif // VRPYOBJECT_H_INCLUDED
