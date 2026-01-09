@@ -638,7 +638,14 @@ int VRPipeSystem::disconnect(int nID, int sID) {
     return cID;
 }
 
-void VRPipeSystem::setDoVisual(bool b, float s) { doVisual = b; spread = s; rebuildMesh = true; }
+void VRPipeSystem::setDoVisual(bool b, float s) {
+    doVisual = b;
+    spread = s;
+    rebuildMesh = true;
+    updateInspection(0);
+}
+
+void VRPipeSystem::setVisuals(vector<string> ls) { layers = ls; }
 
 VREntityPtr VRPipeSystem::getEntity(string name) {
     if (!nodesByName.count(name)) return 0;
@@ -684,7 +691,14 @@ void VRPipeSystem::setFlowParameters(float l) {
 }
 
 void VRPipeSystem::updateInspection(int nID) {
-    if (!doVisual) return;
+    if (!doVisual) {
+        if (inspectionTool) {
+            inspectionTool->clear();
+            inspectionTool->destroy();
+            inspectionTool = 0;
+        }
+        return;
+    }
 
     if (!inspectionTool) {
         inspectionTool = VRAnalyticGeometry::create("inspectionTool");
@@ -731,22 +745,28 @@ void VRPipeSystem::updateInspection(int nID) {
 }
 
 void VRPipeSystem::updateVisual() {
-    if (!doVisual) return;
+    if (!doVisual) {
+        VRGeoData data(ptr());
+        if (data.size() > 0) {
+            data.reset();
+            data.apply(ptr());
+        }
+        return;
+    }
+
+    const Color3f white(1,1,1);
+    const Color3f yellow(1,1,0);
+    const Color3f blue(0.2,0.5,1);
+    const Color3f green(0.2,1.0,0.2);
 
     VRGeoData data(ptr());
 
     Vec3d dO = Vec3d(-spread,-spread,-spread);
-    Vec3d d1 = dO*2;
-    Vec3d d2 = dO*3;
 
     if (rebuildMesh) {
         data.reset();
         rebuildMesh = false;
         Vec3d norm(0,1,0);
-        Color3f white(1,1,1);
-        Color3f yellow(1,1,0);
-        Color3f blue(0.2,0.5,1);
-        Color3f green(0.2,1.0,0.2);
 
         for (auto& s : segments) {
             auto edge = graph->getEdge(s.first);
@@ -757,18 +777,21 @@ void VRPipeSystem::updateVisual() {
             Vec2d tcID1 = Vec2d(edge.from, 0);
             Vec2d tcID2 = Vec2d(edge.to, 0);
 
-            data.pushVert(p1->pos(), norm, white, tcID1);
-            data.pushVert(p2->pos(), norm, white, tcID2);
-            data.pushLine();
-            data.pushVert(p1->pos()+dO, norm, yellow, tcID1);
-            data.pushVert(p2->pos()+dO, norm, yellow, tcID2);
-            data.pushLine();
-            data.pushVert(p1->pos()+d1, norm, blue, tcID1);
-            data.pushVert(p2->pos()+d1, norm, blue, tcID2);
-            data.pushLine();
-            data.pushVert(p1->pos()+d2, norm, white, tcID1);
-            data.pushVert(p2->pos()+d2, norm, green, tcID2);
-            data.pushLine();
+            Color3f col1 = white;
+            Color3f col2 = white;
+            int k = 0;
+            for (auto l : layers) {
+                if (l == "p") { col1 = white; col2 = white; }
+                else if (l == "d") { col1 = yellow; col2 = yellow; }
+                else if (l == "v") { col1 = blue; col2 = blue; }
+                else if (l == "n") { col1 = white; col2 = green; }
+                else continue;
+
+                data.pushVert(p1->pos()+dO*k, norm, col1, tcID1);
+                data.pushVert(p2->pos()+dO*k, norm, col2, tcID2);
+                data.pushLine();
+                k++;
+            }
         }
 
         for (auto& n : nodes) {
@@ -819,9 +842,6 @@ void VRPipeSystem::updateVisual() {
         if (t2 > 0) c2 = Color3f(0, 0, 1-t2); // below 1 bar
         else c2 = Color3f(-t2*S, 0, 1+t2*S);
 
-        data.setColor(i, c1); i++;
-        data.setColor(i, c2); i++;
-
         // density
         float D = 1.0; // color scale above 1
         Color3f cd;
@@ -829,19 +849,24 @@ void VRPipeSystem::updateVisual() {
         if (d > 0) cd = Color3f(1-d, 1-d, 0); // below 1
         else cd = Color3f(1, 1, -d*D);
 
-        data.setColor(i, cd); i++;
-        data.setColor(i, cd); i++;
-
-
         // flow
         Color3f cf = Color3f(0,0,0);
         double f = min(1.0, abs(flow)*100.0);
-        if (f > 1e-3) cf = Color3f(0.2,0.5*f,0.5+0.5*f);
+        if (f > 1e-3) cf = Color3f(0.3*f,0.7*f,0.5+0.5*f);
 
-        data.setColor(i, cf); i++;
-        data.setColor(i, cf); i++;
+        // visuals
+        Color3f col1, col2;
+        for (auto l : layers) {
+            if (l == "p") { col1 = c1; col2 = c2; }
+            else if (l == "d") { col1 = cd; col2 = cd; }
+            else if (l == "v") { col1 = cf; col2 = cf; }
+            else if (l == "n") { col1 = white; col2 = green; }
+            else continue;
 
-        i += 2;
+            data.setColor(i, col1); i++;
+            data.setColor(i, col2); i++;
+        }
+
         //cout << "flow " << s.first << " " << f << endl;
     }
 

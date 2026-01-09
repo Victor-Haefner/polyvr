@@ -39,6 +39,7 @@ PyMethodDef VRPyPipeSystem::methods[] = {
     {"remSegment", PyWrap( PipeSystem, remSegment, "Remove segment", void, int ) },
     {"setFlowParameters", PyWrap( PipeSystem, setFlowParameters, "Set flow parameters, (latency)", void, float ) },
     {"setDoVisual", PyWrapOpt( PipeSystem, setDoVisual, "Enable visual - (bool, | 0.1)", "0.1", void, bool, float ) },
+    {"setVisuals", PyWrap( PipeSystem, setVisuals, "Set visual layers - ([layers])\n layers can be pressure: \"p\", density: \"d\", flow: \"v\", edge directions: \"n\"", void, vector<string> ) },
     {"setNodePose", PyWrap( PipeSystem, setNodePose, "Set node pose by ID", void, int, PosePtr ) },
     {"disconnect", PyWrap( PipeSystem, disconnect, "Disconnect a node from a segment, keeps the segment by adding a junction to its end (nId, sID)", int, int, int ) },
     {"insertSegment", PyWrap( PipeSystem, insertSegment, "Insert a segment between a node and segment (nID, sID, radius)", int, int, int, float ) },
