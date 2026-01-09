@@ -32,8 +32,19 @@ template<> PyObject* VRPyTypeCaster::cast(const VRElectricComponent::Address& a)
     return VRPyTypeCaster::cast(v);
 }
 
+#define DOC_addNode \
+"\
+Add node (name, pose, type, params)\n\
+ type can be [Tank, Valve, Outlet, Pump, Junction]\n\
+ params can be:\n\
+  Tank: 'volume', 'level', 'pressure', 'isOpen', 'density'\n\
+  Valve: 'radius', 'state'\n\
+  Outlet: 'radius'\n\
+  Pump: 'performance', 'maxPressure', 'isOpen'\
+"
+
 PyMethodDef VRPyPipeSystem::methods[] = {
-    {"addNode", PyWrap( PipeSystem, addNode, "Add node, type can be [Tank, Valve, Outlet, Pump]", int, string, PosePtr, string, map<string, string> ) },
+    {"addNode", PyWrap( PipeSystem, addNode, DOC_addNode, int, string, PosePtr, string, map<string, string> ) },
     {"remNode", PyWrap( PipeSystem, remNode, "Remove node", void, int ) },
     {"addSegment", PyWrap( PipeSystem, addSegment, "Add segment between nodes (radius, n1, n2)", int, double, int, int ) },
     {"remSegment", PyWrap( PipeSystem, remSegment, "Remove segment", void, int ) },

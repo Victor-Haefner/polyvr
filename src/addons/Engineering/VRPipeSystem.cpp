@@ -642,7 +642,7 @@ void VRPipeSystem::setDoVisual(bool b, float s) {
     doVisual = b;
     spread = s;
     rebuildMesh = true;
-    updateInspection(0);
+    if (!b) updateInspection(0);
 }
 
 void VRPipeSystem::setVisuals(vector<string> ls) { layers = ls; }
@@ -708,13 +708,18 @@ void VRPipeSystem::updateInspection(int nID) {
 
     //if (inspected == nID) return;
     inspected = nID;
-    if (nID < 0 || nID >= nodes.size()) return;
+    if (!nodes.count(nID)) return;
     auto node = nodes[nID];
+    if (!node) return;
+    if (!node->entity) return;
 
     Vec3d d = Vec3d(-spread,-spread,-spread) * 0.2;
+    auto P = getNodePose(nID);
+    if (!P) return;
     Vec3d pn = getNodePose(nID)->pos();
 
     inspectionTool->clear();
+
 
     for (auto pIn : getInPipes(nID)) {
         double p1 = pIn->pressure1;
@@ -727,6 +732,7 @@ void VRPipeSystem::updateInspection(int nID) {
         inspectionTool->addVector(pn+d+D*0.05, D*0.45, Color3f(0,1,0), "p: " +toString(p1)+"->"+toString(p2));
         inspectionTool->addVector(pn+d+D*0.5 , D*0.45, Color3f(0,1,0), "df: " +toString(df1)+"->"+toString(df2));
     }
+
 
     for (auto pOut : getOutPipes(nID)) {
         double p1 = pOut->pressure1;
@@ -741,7 +747,10 @@ void VRPipeSystem::updateInspection(int nID) {
     }
 
     auto labels = inspectionTool->getAnnotationEngine();
-    labels->add(pn, "Node "+toString(nID)+": "+node->entity->getConcept()->getName());
+    if (!labels) return;
+    string concept = "unknown";
+    if (auto c = node->entity->getConcept() ) concept = c->getName();
+    labels->add(pn, "Node "+toString(nID)+": "+concept);
 }
 
 void VRPipeSystem::updateVisual() {
