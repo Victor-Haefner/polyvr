@@ -4,7 +4,7 @@
 #include <map>
 #include <vector>
 #include <OpenSG/OSGConfig.h>
-#include "VREngineeringFwd.h"
+#include "../VREngineeringFwd.h"
 #include "core/math/VRMathFwd.h"
 #include "core/utils/VRFunctionFwd.h"
 #include "core/objects/geometry/VRGeometry.h"
@@ -13,29 +13,43 @@
 using namespace std;
 OSG_BEGIN_NAMESPACE;
 
+class VRPipeEnd {
+    public:
+        VRPipeSegmentWeakPtr pipe;
+        double height = 0.0;
+        double flow = 0.0;
+        double pressure = 1.0;
+
+    public:
+        VRPipeEnd(VRPipeSegmentPtr s);
+        ~VRPipeEnd();
+
+        static VRPipeEndPtr create(VRPipeSegmentPtr s);
+};
+
 class VRPipeSegment {
     public:
         int eID = 0;
-        double radius = 0;
-        double length = 0;
-        double area = 0;
-        double volume = 0;
-        double density = 1.0;
-        double flow = 0.0;
-        double dFl1 = 0.0;
-        double dFl2 = 0.0;
+        double radius = 0.0;
+        double length = 0.0;
+        double area = 0.0;
+        double volume = 0.0;
+        double resistance = 0.0;
+        double density = 1000.0; // kg / m3
+        double viscosity = 1e-3; // Pa s
+        double level = 0.0;
         bool flowBlocked = false;
 
-        double pressure1 = 1.0;
-        double pressure2 = 1.0;
+        VRPipeEndWeakPtr end1;
+        VRPipeEndWeakPtr end2;
 
         double computeExchange(double hole, VRPipeSegmentPtr other, double dt, bool p1, bool op1);
 
     public:
-        VRPipeSegment(int eID, double radius, double length);
+        VRPipeSegment(int eID, double radius, double length, double level, double h1, double h2);
         ~VRPipeSegment();
 
-        static VRPipeSegmentPtr create(int eID, double radius, double length);
+        static VRPipeSegmentPtr create(int eID, double radius, double length, double level, double h1 = 0, double h2 = 0);
 
         void handleTank(double& pressure, double otherVolume, double& otherDensity, double dt, bool p1);
         void handleValve(double area, VRPipeSegmentPtr other, double dt, bool p1, bool op1);
@@ -52,6 +66,7 @@ class VRPipeNode {
         VREntityPtr entity;
         string name;
         double lastPressureDelta = 0.0;
+        vector<VRPipeEndPtr> pipes;
 
     public:
         VRPipeNode(VREntityPtr entity);
@@ -75,6 +90,10 @@ class VRPipeSystem : public VRGeometry {
         double latency = 0.001;
         vector<string> layers = { "p", "d", "v", "n" };
 
+        double gravity = 9.81;
+        double atmosphericPressure = 101325; // Pa at sea level (1 atm)
+        double pipeFriction = 0.02;
+
         map<int, VRPipeNodePtr> nodes;
         map<string, int> nodesByName;
         map<int, VRPipeSegmentPtr> segments;
@@ -90,6 +109,13 @@ class VRPipeSystem : public VRGeometry {
         VREntityPtr getEntity(string name);
         void setupMaterial();
 
+        void assignBoundaryPressures();
+        void computePipePressures(double dt);
+        void computePipePressures2(double dt);
+        void computePipeFlows(double dt);
+        void computePipeFlows2(double dt);
+        void updateLevels(double dt);
+
 	public:
 		VRPipeSystem();
 		~VRPipeSystem();
@@ -101,7 +127,7 @@ class VRPipeSystem : public VRGeometry {
         VROntologyPtr getOntology();
 
 		int addNode(string name, PosePtr pos, string type, map<string, string> params);
-		int addSegment(double radius, int n1, int n2);
+		int addSegment(double radius, int n1, int n2, double level, double h1, double h2);
 		void remNode(int nID);
 		void remSegment(int eID);
 		int getNode(string name);
@@ -127,10 +153,9 @@ class VRPipeSystem : public VRGeometry {
 		Vec2d getSegmentGradient(int i);
 		double getSegmentDensity(int i);
 		double getSegmentFlow(int i);
-		Vec2d getSegmentFlowAccelleration(int i);
 		double getTankPressure(string n);
 		double getTankDensity(string n);
-		double getTankVolume(string n);
+		double getTankLevel(string n);
 		double getPump(string n);
 		bool getValveState(string n);
 

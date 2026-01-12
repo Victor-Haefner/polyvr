@@ -883,6 +883,9 @@
 		<Unit filename="src/addons/Engineering/Factory/network.h">
 			<Option target="PVR-Addons-d" />
 		</Unit>
+		<Unit filename="src/addons/Engineering/Hydraulics/VRPipeSystem.cpp">
+			<Option target="PVR-Addons-d" />
+		</Unit>
 		<Unit filename="src/addons/Engineering/Machining/VRCartesianKinematics.cpp">
 			<Option target="Release" />
 			<Option target="PVR-Addons-d" />
@@ -1071,11 +1074,9 @@
 		</Unit>
 		<Unit filename="src/addons/Engineering/VRPipeSystem.cpp">
 			<Option target="Release" />
-			<Option target="PVR-Addons-d" />
 		</Unit>
 		<Unit filename="src/addons/Engineering/VRPipeSystem.h">
 			<Option target="Release" />
-			<Option target="PVR-Addons-d" />
 		</Unit>
 		<Unit filename="src/addons/Engineering/VRProfile.cpp">
 			<Option target="Release" />

@@ -37,7 +37,7 @@ template<> PyObject* VRPyTypeCaster::cast(const VRElectricComponent::Address& a)
 Add node (name, pose, type, params)\n\
  type can be [Tank, Valve, Outlet, Pump, Junction]\n\
  params can be:\n\
-  Tank: 'volume', 'level', 'pressure', 'isOpen', 'density'\n\
+  Tank: 'area', 'height', 'level', 'pressure', 'isOpen', 'density'\n\
   Valve: 'radius', 'state'\n\
   Outlet: 'radius'\n\
   Pump: 'performance', 'maxPressure', 'isOpen'\
@@ -46,7 +46,7 @@ Add node (name, pose, type, params)\n\
 PyMethodDef VRPyPipeSystem::methods[] = {
     {"addNode", PyWrap( PipeSystem, addNode, DOC_addNode, int, string, PosePtr, string, map<string, string> ) },
     {"remNode", PyWrap( PipeSystem, remNode, "Remove node", void, int ) },
-    {"addSegment", PyWrap( PipeSystem, addSegment, "Add segment between nodes (radius, n1, n2)", int, double, int, int ) },
+    {"addSegment", PyWrapOpt( PipeSystem, addSegment, "Add segment between nodes, optional height [0.0->1.0] for connecting tanks (radius, n1, n2, level | height1, height2)", "0|0", int, double, int, int, double, double, double ) },
     {"remSegment", PyWrap( PipeSystem, remSegment, "Remove segment", void, int ) },
     {"setFlowParameters", PyWrap( PipeSystem, setFlowParameters, "Set flow parameters, (latency)", void, float ) },
     {"setDoVisual", PyWrapOpt( PipeSystem, setDoVisual, "Enable visual - (bool, | 0.1)", "0.1", void, bool, float ) },
@@ -67,10 +67,9 @@ PyMethodDef VRPyPipeSystem::methods[] = {
     {"getSegmentDensity", PyWrap( PipeSystem, getSegmentDensity, "Get segment density", double, int ) },
     {"getSegmentFlow", PyWrap( PipeSystem, getSegmentFlow, "Get segment flow", double, int ) },
     {"getValveState", PyWrap( PipeSystem, getValveState, "Get valve state", bool, string ) },
-    {"getSegmentFlowAccelleration", PyWrap( PipeSystem, getSegmentFlowAccelleration, "Get segment flow acceleration due to pressure gradient", Vec2d, int ) },
     {"getTankPressure", PyWrap( PipeSystem, getTankPressure, "Get tank pressure", double, string ) },
     {"getTankDensity", PyWrap( PipeSystem, getTankDensity, "Get tank density", double, string ) },
-    {"getTankVolume", PyWrap( PipeSystem, getTankVolume, "Get tank volume", double, string ) },
+    {"getTankLevel", PyWrap( PipeSystem, getTankLevel, "Get tank level", double, string ) },
     {"getPump", PyWrap( PipeSystem, getPump, "Get pump performance", double, string ) },
     {"setPump", PyWrap( PipeSystem, setPump, "Set pump performance and max pressure", void, string, double, double ) },
     {"setValve", PyWrap( PipeSystem, setValve, "Set valve state", void, string, bool ) },
