@@ -1075,10 +1075,6 @@
 			<Option target="Release" />
 			<Option target="PVR-Addons-d" />
 		</Unit>
-		<Unit filename="src/addons/Engineering/VRPipeSystem.cpp">
-			<Option target="Release" />
-			<Option target="PVR-Addons-d" />
-		</Unit>
 		<Unit filename="src/addons/Engineering/VRPipeSystem.h">
 			<Option target="Release" />
 			<Option target="PVR-Addons-d" />
