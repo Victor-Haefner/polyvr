@@ -78,9 +78,12 @@ void VRPipeSystem::setupMaterial() {
     auto m = VRMaterial::create("pipes");
     m->setLineWidth(5);
     m->setLit(0);
+    m->setFrontBackModes(GL_NONE, GL_FILL);
+
     m->addPass();
     m->setPointSize(10);
     m->setLit(0);
+    m->setFrontBackModes(GL_NONE, GL_FILL);
     setMaterial(m);
 }
 
@@ -402,9 +405,13 @@ void VRPipeSystem::updateVisual() {
 
         for (auto& s : segments) {
             auto edge = graph->getEdge(s.first);
+            double r = s.second->radius;
+            double l = s.second->length;
 
-            auto p1 = graph->getPosition(edge.from);
-            auto p2 = graph->getPosition(edge.to);
+            Vec3d p1 = graph->getPosition(edge.from)->pos();
+            Vec3d p2 = graph->getPosition(edge.to)->pos();
+            Vec3d pm = (p1+p2)*0.5;
+            Vec3d d = (p2-p1); d.normalize();
 
             Vec2d tcID1 = Vec2d(edge.from, 0);
             Vec2d tcID2 = Vec2d(edge.to, 0);
@@ -419,20 +426,48 @@ void VRPipeSystem::updateVisual() {
                 else if (l == "n") { col1 = white; col2 = green; }
                 else continue;
 
-                data.pushVert(p1->pos()+dO*k, norm, col1, tcID1);
-                data.pushVert(p2->pos()+dO*k, norm, col2, tcID2);
+                data.pushVert(p1+dO*k, norm, col1, tcID1);
+                data.pushVert(p2+dO*k, norm, col2, tcID2);
                 data.pushLine();
                 k++;
             }
+
+            double g = r*2;
+            Vec3d u = Vec3d(1,0,0);
+            if (d[1] < 0.99) { u = d.cross(Vec3d(0,1,0)); u.normalize(); }
+            double a = d.enclosedAngle(Vec3d(0,1,0));
+            double t = g*cos(a) + l*sin(a);
+            data.pushQuad(p1, d, u, Vec2d(g,g), false);
+            data.pushQuad(pm, Vec3d(0,1,0), u, Vec2d(t,g), true);
+            data.pushQuad(p2, d, u, Vec2d(g,g), true);
+            data.pushQuad(-9, -10, -11, -12); // bottom
+            data.pushQuad(-5, -6, -7, -8); // mid but reversed
+            data.pushQuad(-1, -2, -10,  -9); // sides
+            data.pushQuad(-2, -3, -11, -10);
+            data.pushQuad(-3, -4, -12, -11);
+            data.pushQuad(-4, -1,  -9, -12);
+            for (int i=0; i<4; i++) data.pushColor(white);
+            for (int i=0; i<4; i++) data.pushColor(blue);
+            for (int i=0; i<4; i++) data.pushColor(white);
         }
 
         for (auto& n : nodes) {
             auto p = graph->getPosition(n.first);
             auto e = n.second->entity;
             if (e->is_a("Tank")) {
-                double s = spread*3;
-                data.pushQuad(p->pos(), Vec3d(0,0,1), Vec3d(0,1,0), Vec2d(s,s), true);
-                data.pushQuad(p->pos(), Vec3d(0,0,1), Vec3d(0,1,0), Vec2d(s,s), true);
+                double a = e->getValue("area", 0.0);
+                double h = e->getValue("height", 0.0);
+                double s = sqrt(a);
+                data.pushQuad(p->pos() - Vec3d(0,h*0.5,0), Vec3d(0,1,0), Vec3d(0,0,1), Vec2d(s,s), false);
+                data.pushQuad(p->pos() - Vec3d(0,h*0.5,0), Vec3d(0,1,0), Vec3d(0,0,1), Vec2d(s,s), true);
+                data.pushQuad(p->pos() + Vec3d(0,h*0.5,0), Vec3d(0,1,0), Vec3d(0,0,1), Vec2d(s,s), true);
+                data.pushQuad(-9, -10, -11, -12); // bottom
+                data.pushQuad(-5, -6, -7, -8); // mid but reversed
+                data.pushQuad(-1, -2, -10,  -9); // sides
+                data.pushQuad(-2, -3, -11, -10);
+                data.pushQuad(-3, -4, -12, -11);
+                data.pushQuad(-4, -1,  -9, -12);
+                for (int i=0; i<4; i++) data.pushColor(white);
                 for (int i=0; i<4; i++) data.pushColor(blue);
                 for (int i=0; i<4; i++) data.pushColor(white);
             } else {
@@ -501,35 +536,70 @@ void VRPipeSystem::updateVisual() {
             data.setColor(i, col2); i++;
         }
 
-        //cout << "flow " << s.first << " " << f << endl;
+
+        std::array<double, 4> heights;
+        heights[0] = data.getPosition(i+ 0)[1];
+        heights[1] = data.getPosition(i+ 2)[1];
+        heights[2] = data.getPosition(i+ 8)[1];
+        heights[3] = data.getPosition(i+10)[1];
+        std::sort(heights.begin(), heights.end());
+        double l = s.second->level;
+        double h = heights[0] + l*(heights[3] - heights[0]);
+
+        vector<Pnt3d> intersections;
+        auto intersectHz = [&](int a, int b) { // intersect edge (a,b) with horizontal plane at height h
+            Pnt3d p1 = data.getPosition(i+a);
+            Pnt3d p2 = data.getPosition(i+b);
+            if (abs(p2[1]-p1[1]) < 1e-6) return;
+            double k = (h-p1[1])/(p2[1]-p1[1]);
+            if (k < 0.0 || k > 1.0) return;
+            Pnt3d I = p1 + k*(p2-p1);
+            intersections.push_back(I);
+        };
+
+        intersectHz(0, 1);
+        intersectHz(3, 2);
+        intersectHz(8, 9);
+        intersectHz(11, 10);
+        intersectHz(0, 8);
+        intersectHz(3, 11);
+        intersectHz(1, 9);
+        intersectHz(2, 10);
+
+        if (intersections.size() == 4) {
+            data.setPos(i+4, intersections[0]);
+            data.setPos(i+5, intersections[1]);
+            data.setPos(i+6, intersections[2]);
+            data.setPos(i+7, intersections[3]);
+        }
+
+        i += 12;
     }
 
     for (auto& n : nodes) {
-        if (n.second->entity->is_a("Tank")) {
-            double l = n.second->entity->getValue("level", 0.0);
-            double A = 3*spread;
-            //c = s ? Color3f(0,1,0) : Color3f(1,0,0);
-            Pnt3d pwRef1 = data.getPosition(i+3);
-            Pnt3d pwRef2 = data.getPosition(i+2);
-            Pnt3d pw1 = pwRef1 - Vec3d(0,l*A,0);
-            Pnt3d pw2 = pwRef2 - Vec3d(0,l*A,0);
-            data.setPos(i+0, pw1);
-            data.setPos(i+1, pw2);
-            data.setPos(i+7, pw1);
-            data.setPos(i+6, pw2);
-            i += 8;
+        auto e = n.second->entity;
+        if (e->is_a("Tank")) {
+            double l = e->getValue("level", 0.0);
+            double h = e->getValue("height", 0.0);
+            double s = h*l;
+            for (int j=0; j<4; j++) {
+                Pnt3d p = data.getPosition(i+j);
+                p[1] += s;
+                data.setPos(i+4+j, p);
+            }
+            i += 12;
         } else {
             Color3f c(0.4,0.4,0.4);
-            if (n.second->entity->is_a("Valve")) {
-                bool s = n.second->entity->getValue("state", false);
+            if (e->is_a("Valve")) {
+                bool s = e->getValue("state", false);
                 c = s ? Color3f(0,1,0) : Color3f(1,0,0);
             }
 
-            if (n.second->entity->is_a("Junction")) c = Color3f(0.2,0.4,1);
-            if (n.second->entity->is_a("Outlet"))   c = Color3f(0.1,0.2,0.8);
+            if (e->is_a("Junction")) c = Color3f(0.2,0.4,1);
+            if (e->is_a("Outlet"))   c = Color3f(0.1,0.2,0.8);
 
-            if (n.second->entity->is_a("Pump")) {
-                double p = n.second->entity->getValue("performance", 0.0);
+            if (e->is_a("Pump")) {
+                double p = e->getValue("performance", 0.0);
                 c = p>1e-3 ? Color3f(1,1,0) : Color3f(1,0.5,0);
             }
 
@@ -719,18 +789,30 @@ void VRPipeSystem::updateLevels(double dt) {
             double tankDensity = entity->getValue("density", 1000.0);
             bool tankOpen = entity->getValue("isOpen", false);
 
-            double flow = 0;
+            double totalFlow = 0;
+            double totalFlowIn = 0;
+            double totalFlowOut = 0;
             for (auto& pEnd : node->pipes) {
                 auto pipe = pEnd->pipe.lock();
                 if (!pipe) continue;
-                flow += pEnd->flow;
+                totalFlow += pEnd->flow;
+                if (pEnd->flow > 0) totalFlowIn += pEnd->flow;
+                if (pEnd->flow < 0) totalFlowOut += pEnd->flow;
                 // TODO: limit flow here?
             }
 
-            double level = clamp(tankLevel + flow*dt / tankVolume, 0.0, 1.0);
-            //cout << std::setprecision(17);
-            //cout << "update tank " << nID << ", level: " << tankLevel << " -> " << level << ", flow: " << flow << ", delta: " << tankLevel + flow*dt / tankVolume << endl;
-            entity->set("level", toString(level));
+            //cout << "tank " << nID << " totalFlowIn: " << totalFlowIn << ", totalFlowOut: " << totalFlowOut << endl;
+
+            double newLevel = clamp(tankLevel + totalFlow*dt / tankVolume, 0.0, 1.0);
+            entity->set("level", toString(newLevel));
+            //double deltaMass = (newLevel - tankLevel)*tankVolume;
+        }
+
+        for (auto& s : segments) {
+            auto& pipe = s.second;
+            double flow = -pipe->end1.lock()->flow; // TODO: check sign
+            pipe->level = clamp(pipe->level + flow*dt / pipe->volume, 0.0, 1.0);
+            //cout << " pipe " << flow << ", " << pipe->volume << ", " << pipe->level << endl;
         }
     }
 }
