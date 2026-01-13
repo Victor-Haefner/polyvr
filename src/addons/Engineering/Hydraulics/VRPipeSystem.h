@@ -21,10 +21,10 @@ class VRPipeEnd {
         double pressure = 1.0;
 
     public:
-        VRPipeEnd(VRPipeSegmentPtr s);
+        VRPipeEnd(VRPipeSegmentPtr s, double height = 0.0);
         ~VRPipeEnd();
 
-        static VRPipeEndPtr create(VRPipeSegmentPtr s);
+        static VRPipeEndPtr create(VRPipeSegmentPtr s, double height = 0.0);
 };
 
 class VRPipeSegment {
@@ -46,10 +46,10 @@ class VRPipeSegment {
         double computeExchange(double hole, VRPipeSegmentPtr other, double dt, bool p1, bool op1);
 
     public:
-        VRPipeSegment(int eID, double radius, double length, double level, double h1, double h2);
+        VRPipeSegment(int eID, double radius, double length, double level);
         ~VRPipeSegment();
 
-        static VRPipeSegmentPtr create(int eID, double radius, double length, double level, double h1 = 0, double h2 = 0);
+        static VRPipeSegmentPtr create(int eID, double radius, double length, double level);
 
         void handleTank(double& pressure, double otherVolume, double& otherDensity, double dt, bool p1);
         void handleValve(double area, VRPipeSegmentPtr other, double dt, bool p1, bool op1);
@@ -111,9 +111,7 @@ class VRPipeSystem : public VRGeometry {
 
         void assignBoundaryPressures();
         void computePipePressures(double dt);
-        void computePipePressures2(double dt);
         void computePipeFlows(double dt);
-        void computePipeFlows2(double dt);
         void updateLevels(double dt);
 
 	public:
