@@ -78,7 +78,7 @@ class Session {
                 std::istream is(&buffer);
                 std::istreambuf_iterator<char> it(is);
                 copy_n( it, N-gN, std::back_inserter<std::string>(data) );
-                for (int i=0; i<=gN; i++) it++;
+                for (size_t i=0; i<=gN; i++) it++;
                 //data += "\n";
                 //cout << "Session, received: " << data << ", cb: " << endl;
 

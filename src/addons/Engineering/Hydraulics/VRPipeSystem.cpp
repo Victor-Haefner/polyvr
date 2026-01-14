@@ -709,7 +709,6 @@ void VRPipeSegment::handlePump(double performance, double maxPressure, bool isOp
 
 void VRPipeSystem::assignBoundaryPressures() {
     for (auto n : nodes) {
-        int nID = n.first;
         auto node = n.second;
         auto entity = node->entity;
 
@@ -725,19 +724,18 @@ void VRPipeSystem::assignBoundaryPressures() {
 }
 
 void VRPipeSystem::computePipePressures(double dt) {
-    auto clamp = [](double f, double a = -1, double b = 1) -> double { return f<a ? a : f>b ? b : f; };
+    //auto clamp = [](double f, double a = -1, double b = 1) -> double { return f<a ? a : f>b ? b : f; };
 
     auto computeHydraustaticPressure = [this](const double& height, const double& density) {
         return height * density * gravity;
     };
 
     for (auto n : nodes) { // traverse nodes, change pressure in segments
-        int nID = n.first;
         auto node = n.second;
         auto entity = node->entity;
 
         if (entity->is_a("Tank")) {
-            double tankArea = entity->getValue("area", 0.0);
+            //double tankArea = entity->getValue("area", 0.0);
             double tankHeight = entity->getValue("height", 0.0);
             double tankLevel = entity->getValue("level", 1.0);
             double tankPressure = entity->getValue("pressure", 1.0);
@@ -776,7 +774,7 @@ void VRPipeSystem::computePipeFlows(double dt) {
 
 void VRPipeSystem::updateLevels(double dt) {
     for (auto n : nodes) { // traverse nodes, change pressure in segments
-        int nID = n.first;
+        //int nID = n.first;
         auto node = n.second;
         auto entity = node->entity;
 
@@ -785,9 +783,9 @@ void VRPipeSystem::updateLevels(double dt) {
             double tankHeight = entity->getValue("height", 0.0);
             double tankVolume = tankHeight * tankArea;
             double tankLevel = entity->getValue("level", 1.0);
-            double tankPressure = entity->getValue("pressure", 1.0);
-            double tankDensity = entity->getValue("density", 1000.0);
-            bool tankOpen = entity->getValue("isOpen", false);
+            //double tankPressure = entity->getValue("pressure", 1.0);
+            //double tankDensity = entity->getValue("density", 1000.0);
+            //bool tankOpen = entity->getValue("isOpen", false);
 
             double totalFlow = 0;
             double totalFlowIn = 0;
