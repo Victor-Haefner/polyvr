@@ -16,15 +16,17 @@ OSG_BEGIN_NAMESPACE;
 class VRPipeEnd {
     public:
         VRPipeSegmentWeakPtr pipe;
+        int nID = -1;
         double height = 0.0;
         double flow = 0.0;
         double pressure = 1.0;
+        Vec3d offset; // offset relative to node center
 
     public:
-        VRPipeEnd(VRPipeSegmentPtr s, double height = 0.0);
+        VRPipeEnd(VRPipeSegmentPtr s, int nID, double height = 0.0);
         ~VRPipeEnd();
 
-        static VRPipeEndPtr create(VRPipeSegmentPtr s, double height = 0.0);
+        static VRPipeEndPtr create(VRPipeSegmentPtr s, int nID, double height = 0.0);
 };
 
 class VRPipeSegment {
@@ -63,6 +65,7 @@ class VRPipeSegment {
 
 class VRPipeNode {
     public:
+        int nID = 0;
         VREntityPtr entity;
         string name;
         double lastPressureDelta = 0.0;
@@ -94,9 +97,15 @@ class VRPipeSystem : public VRGeometry {
         double atmosphericPressure = 101325; // Pa at sea level (1 atm)
         double pipeFriction = 0.02;
 
+        struct Group {
+            vector<int> nodes;
+            //vector<int> segments;
+        };
+
         map<int, VRPipeNodePtr> nodes;
         map<string, int> nodesByName;
         map<int, VRPipeSegmentPtr> segments;
+        vector<Group> hydrostaticGroups;
 
         void initOntology();
 
@@ -109,7 +118,10 @@ class VRPipeSystem : public VRGeometry {
         VREntityPtr getEntity(string name);
         void setupMaterial();
 
+        void computeEndOffset(VRPipeEndPtr e);
+
         void assignBoundaryPressures();
+        void computeHydrostaticGroups();
         void computePipePressures(double dt);
         void computePipeFlows(double dt);
         void updateLevels(double dt);

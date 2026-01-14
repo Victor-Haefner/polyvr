@@ -21,9 +21,9 @@ double gasSpeed = 300;
 
 // Pipe End ----
 
-VRPipeEnd::VRPipeEnd(VRPipeSegmentPtr s, double h) { pipe = s; height = h; }
+VRPipeEnd::VRPipeEnd(VRPipeSegmentPtr s, int n, double h) { pipe = s; nID = n; height = h; }
 VRPipeEnd::~VRPipeEnd() {}
-VRPipeEndPtr VRPipeEnd::create(VRPipeSegmentPtr s, double h) { return VRPipeEndPtr( new VRPipeEnd(s,h) ); }
+VRPipeEndPtr VRPipeEnd::create(VRPipeSegmentPtr s, int n, double h) { return VRPipeEndPtr( new VRPipeEnd(s,n,h) ); }
 
 
 
@@ -102,6 +102,7 @@ int VRPipeSystem::addNode(string name, PosePtr pos, string type, map<string, str
     n->name = name;
     for (auto& p : params) e->set(p.first, p.second);
     int nID = graph->addNode(pos);
+    n->nID = nID;
     nodes[nID] = n;
     nodesByName[name] = nID;
     return nID;
@@ -121,6 +122,16 @@ int VRPipeSystem::getNode(string name) { return nodesByName[name]; }
 string VRPipeSystem::getNodeName(int nID) { if (nodes.count(nID)) return nodes[nID]->name; return ""; }
 int VRPipeSystem::getSegment(int n1, int n2) { return graph->getEdgeID(n1, n2); }
 
+void VRPipeSystem::computeEndOffset(VRPipeEndPtr e) {
+    auto entity = nodes[e->nID]->entity;
+    if (entity->is_a("Tank")) {
+        //double A = entity->getValue("area", 1.0);
+        double H = entity->getValue("height", 1.0);
+        Vec3d o = Vec3d(0,(e->height-0.5)*H,0);
+        e->offset = o;
+    }
+}
+
 int VRPipeSystem::addSegment(double radius, int n1, int n2, double level, double h1, double h2) {
     rebuildMesh = true;
     int sID = graph->connect(n1, n2);
@@ -129,12 +140,14 @@ int VRPipeSystem::addSegment(double radius, int n1, int n2, double level, double
     double length = (p2-p1).length();
     auto s = VRPipeSegment::create(sID, radius, length, level);
     segments[sID] = s;
-    auto e1 = VRPipeEnd::create(s, h1);
-    auto e2 = VRPipeEnd::create(s, h2);
+    auto e1 = VRPipeEnd::create(s, n1, h1);
+    auto e2 = VRPipeEnd::create(s, n2, h2);
     s->end1 = e1;
     s->end2 = e2;
     nodes[n1]->pipes.push_back(e1);
     nodes[n2]->pipes.push_back(e2);
+    computeEndOffset(e1);
+    computeEndOffset(e2);
     return sID;
 }
 
@@ -179,13 +192,15 @@ void VRPipeSystem::printSystem() {
     for (auto n : nodes) { // print some stats
         auto entity = n.second->entity;
         double P = entity->getValue("pressure", 1.0);
-        double A = entity->getValue("area", 1.0);
-        double H = entity->getValue("height", 1.0);
-        if (entity->is_a("Tank")) cout << " tank (n" << n.first << "): P " << P << " V " << A*H << endl;
+        if (entity->is_a("Tank")) {
+            double A = entity->getValue("area", 1.0);
+            double H = entity->getValue("height", 1.0);
+            cout << " tank (n" << n.first << "): P " << P << " V " << A*H << endl;
+            totalEnergy += P*A*H;
+        }
         else cout << " " << entity->getName() << " (n" << n.first << ")" << endl;
         for (auto nIn : getInPipes (n.first)) cout << "  in  e" << nIn->eID << endl;
         for (auto nOt : getOutPipes(n.first)) cout << "  out e" << nOt->eID << endl;
-        totalEnergy += P*A*H;
     }
 
     for (auto s : segments) { // print some stats
@@ -410,6 +425,10 @@ void VRPipeSystem::updateVisual() {
 
             Vec3d p1 = graph->getPosition(edge.from)->pos();
             Vec3d p2 = graph->getPosition(edge.to)->pos();
+
+            p1 += s.second->end1.lock()->offset;
+            p2 += s.second->end2.lock()->offset;
+
             Vec3d pm = (p1+p2)*0.5;
             Vec3d d = (p2-p1); d.normalize();
 
@@ -723,6 +742,61 @@ void VRPipeSystem::assignBoundaryPressures() {
     }
 }
 
+void VRPipeSystem::computeHydrostaticGroups() {
+    vector<Group> groups;
+    map<int, bool> traversedNodes;
+    map<int, bool> traversedSegments;
+
+    function<void(const VRPipeNodePtr&, Group&, int)> traverseNode;
+    function<void(const VRPipeSegmentPtr&, Group&, int)> traverseSegment;
+
+    traverseSegment = [&](const VRPipeSegmentPtr& segment, Group& group, int origin) {
+        if (traversedSegments.count(segment->eID)) return;
+        traversedSegments[segment->eID] = true;
+
+        if (segment->level < 1.0-1e-6) return; // not full
+
+        auto e1 = segment->end1.lock();
+        auto e2 = segment->end2.lock();
+        if (e1 && e1->nID != origin) traverseNode(nodes[e1->nID], group, segment->eID);
+        if (e2 && e1->nID != origin) traverseNode(nodes[e2->nID], group, segment->eID);
+    };
+
+    traverseNode = [&](const VRPipeNodePtr& node, Group& group, int origin) {
+        if (traversedNodes.count(node->nID)) return;
+        traversedNodes[node->nID] = true;
+        group.nodes.push_back(node->nID);
+
+        auto& entity = node->entity;
+
+        double level = 1;
+        if (entity->is_a("Tank")) {
+            bool tankOpen = entity->getValue("isOpen", false);
+            level = entity->getValue("level", false);
+        }
+
+        for (auto& e : node->pipes) {
+            if (e->height > level) continue;
+            auto s = e->pipe.lock();
+            if (s) traverseSegment(s, group, node->nID);
+        }
+    };
+
+    for (auto& n : nodes) {
+        if (traversedNodes.count(n.first)) continue;
+        groups.push_back(Group());
+        traverseNode(n.second, groups.back(), -1);
+    }
+
+    for (auto& s : segments) {
+        if (traversedSegments.count(s.first)) continue;
+        groups.push_back(Group());
+        traverseSegment(s.second, groups.back(), -1);
+    }
+
+    hydrostaticGroups = groups;
+}
+
 void VRPipeSystem::computePipePressures(double dt) {
     //auto clamp = [](double f, double a = -1, double b = 1) -> double { return f<a ? a : f>b ? b : f; };
 
@@ -749,6 +823,12 @@ void VRPipeSystem::computePipePressures(double dt) {
                 else pEnd->pressure = hP + tankPressure;
                 //cout << " tank " << nID << ", " << tankLevel << ", " << pEnd->height << ", " << h << endl;
             }
+        }
+
+        for (auto& s : segments) {
+            auto& pipe = s.second;
+            auto e1 = pipe->end1.lock();
+            auto e2 = pipe->end2.lock();
         }
     }
 }
@@ -780,7 +860,7 @@ void VRPipeSystem::computePipeFlows(double dt) {
             }
         }
 
-        cout << "pipe flow " << flow << ", delta P: " << dP << ", dir: " << dir << ", P1 " << e1->pressure << ", P2 " << e2->pressure << endl;
+        //cout << "pipe flow " << flow << ", delta P: " << dP << ", dir: " << dir << ", P1 " << e1->pressure << ", P2 " << e2->pressure << endl;
     }
 }
 
@@ -830,6 +910,7 @@ void VRPipeSystem::update() {
     double dt = dT/subSteps;
 
     for (int i=0; i<subSteps; i++) {
+        computeHydrostaticGroups();
         assignBoundaryPressures();
         computePipePressures(dt);
         computePipeFlows(dt);
