@@ -100,37 +100,37 @@ void ImProfiler::begin() {
 void ImProfiler::renderTabSystem() {
     ImGuiIO& io = ImGui::GetIO();
 
-    ImGui::Text("System:");
+    ImGui::TextUnformatted("System:");
     ImGui::SameLine(ImGui::GetWindowContentRegionMax().x - 50*io.FontGlobalScale);
     if (ImGui::Button("update##profSys")) uiSignal("profiler_update_system");
 
     ImGui::Indent(10);
-        ImGui::Text(("Vendor: " + vendor).c_str());
-        ImGui::Text(("Version: " + version).c_str());
-        ImGui::Text(("GLSL: " + glsl).c_str());
-        ImGui::Text(("Has geom. shader: " + hasGeomShader).c_str());
-        ImGui::Text(("Has tess. shader: " + hasTessShader).c_str());
+        ImGui::TextUnformatted(("Vendor: " + vendor).c_str());
+        ImGui::TextUnformatted(("Version: " + version).c_str());
+        ImGui::TextUnformatted(("GLSL: " + glsl).c_str());
+        ImGui::TextUnformatted(("Has geom. shader: " + hasGeomShader).c_str());
+        ImGui::TextUnformatted(("Has tess. shader: " + hasTessShader).c_str());
     ImGui::Unindent(10);
 }
 
 void ImProfiler::renderTabScene() {
     ImGuiIO& io = ImGui::GetIO();
 
-    ImGui::Text("Nodes:");
+    ImGui::TextUnformatted("Nodes:");
     ImGui::SameLine(ImGui::GetWindowContentRegionMax().x - 50*io.FontGlobalScale);
     if (ImGui::Button("update##profScn")) uiSignal("profiler_update_scene");
 
     ImGui::Indent(10);
-        ImGui::Text(("Total nodes: " + Nnodes).c_str());
-        ImGui::Text(("Total transformations: " + Ntransformations).c_str());
-        ImGui::Text(("Total geometries: " + Ngeometries).c_str());
+        ImGui::TextUnformatted(("Total nodes: " + Nnodes).c_str());
+        ImGui::TextUnformatted(("Total transformations: " + Ntransformations).c_str());
+        ImGui::TextUnformatted(("Total geometries: " + Ngeometries).c_str());
     ImGui::Unindent(10);
 }
 
 void ImProfiler::renderTabPerformance() {
     ImGuiIO& io = ImGui::GetIO();
 
-    ImGui::Text("Frames:");
+    ImGui::TextUnformatted("Frames:");
     ImGui::SameLine(ImGui::GetWindowContentRegionMax().x - 50*io.FontGlobalScale);
     if (ImGui::Button("update##profPrf")) uiSignal("profiler_update_performance");
 
@@ -150,13 +150,13 @@ void ImProfiler::renderTabPerformance() {
 
     double T = frameT;
 
-    ImGui::Text(("frame: "+frameID).c_str());
+    ImGui::TextUnformatted(("frame: "+frameID).c_str());
     ImGui::SameLine(0,20*io.FontGlobalScale);
-    ImGui::Text(("duration: "+toString(T*0.001) + " ms").c_str());
+    ImGui::TextUnformatted(("duration: "+toString(T*0.001) + " ms").c_str());
 
-    ImGui::Text(("N fields changes: "+toString(frameNChanges)).c_str());
+    ImGui::TextUnformatted(("N fields changes: "+toString(frameNChanges)).c_str());
     ImGui::SameLine(0,20*io.FontGlobalScale);
-    ImGui::Text(("N fields created: "+toString(frameNCreated)).c_str());
+    ImGui::TextUnformatted(("N fields created: "+toString(frameNCreated)).c_str());
 
 
     ImGui::BeginChild("ProfFrame", ImGui::GetContentRegionAvail(), true, ImGuiWindowFlags_None);

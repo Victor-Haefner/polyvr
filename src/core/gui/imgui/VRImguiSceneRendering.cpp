@@ -80,7 +80,7 @@ void ImRendering::render() {
         }
 
         if (bgType == 3) {
-            ImGui::Text("Sky params (TODO)"); // TODO: set some of the params like speed, overcast etc..
+            ImGui::TextUnformatted("Sky params (TODO)"); // TODO: set some of the params like speed, overcast etc..
         }
 
         if (ImGui::Checkbox("Splash Image", &splash)) uiSignal("on_enable_splash", {{"state",toString(splash)}});

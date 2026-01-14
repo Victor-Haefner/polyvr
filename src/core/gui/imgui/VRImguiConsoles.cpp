@@ -197,7 +197,7 @@ void ImViewControls::render() {
     /*vector<const char*> tmpCameras(cameras.size(), 0);
     for (int i=0; i<cameras.size(); i++) tmpCameras[i] = cameras[i].c_str();
     ImGui::SameLine();
-    ImGui::Text("Camera:");
+    ImGui::TextUnformatted("Camera:");
     ImGui::SameLine();
     ImGui::SetNextItemWidth(150*io.FontGlobalScale);
     if (ImGui::Combo("##Cameras", &current_camera, &tmpCameras[0], tmpCameras.size())) {
@@ -246,7 +246,7 @@ void ImViewControls::render() {
     }
     ImGui::SameLine();
 
-    ImGui::Text("Font size:"); ImGui::SameLine();
+    ImGui::TextUnformatted("Font size:"); ImGui::SameLine();
     //io.FontAllowUserScaling = false;
     if (ImGui::Button("+##FontSizeP")) { io.FontGlobalScale += 0.1; uiStoreParameter("fontScale", toString(io.FontGlobalScale)); } ImGui::SameLine();
     if (ImGui::Button("-##FontSizeM")) { io.FontGlobalScale -= 0.1; uiStoreParameter("fontScale", toString(io.FontGlobalScale)); } ImGui::SameLine();

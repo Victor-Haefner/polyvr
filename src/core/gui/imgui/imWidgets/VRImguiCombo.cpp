@@ -10,7 +10,7 @@ ImCombo::ImCombo(string ID, string label, int flags) : ID("##"+ID), label(label)
 void ImCombo::setList(vector<string> v) {
     strings = v;
     cstrings = vector<const char*>(v.size(), 0);
-    for (int i=0; i<strings.size(); i++) cstrings[i] = strings[i].c_str();
+    for (size_t i=0; i<strings.size(); i++) cstrings[i] = strings[i].c_str();
 }
 
 void ImCombo::setList(string v) {
@@ -30,7 +30,7 @@ void ImCombo::clearList() {
 
 bool ImCombo::render(int width) {
     if (label != "") {
-        ImGui::Text(label.c_str());
+        ImGui::TextUnformatted(label.c_str());
         ImGui::SameLine();
     }
 

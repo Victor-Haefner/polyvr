@@ -915,7 +915,7 @@ void centeredText(string txt) {
     float avail = ImGui::GetContentRegionAvail().x;
     float off = (avail - size) * 0.5;
     if (off > 0.0f) ImGui::SetCursorPosX(ImGui::GetCursorPosX() + off);
-    ImGui::Text(txt.c_str());
+    ImGui::TextUnformatted(txt.c_str());
 }
 
 void ImAboutDialog::begin() {
@@ -1083,7 +1083,7 @@ void ImDocDialog::begin() {
     // doc text
     //ImGui::BeginChild("docText", region2, false, flags);
     ImGui::InputTextMultiline("docText", &text[0], text.size(), region2, ImGuiInputTextFlags_ReadOnly);
-    //ImGui::Text(text.c_str());
+    //ImGui::TextUnformatted(text.c_str());
     //ImGui::EndChild();
 
 }

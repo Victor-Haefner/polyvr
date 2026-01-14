@@ -57,7 +57,7 @@ void ImAppLauncher::render(string filter, ImImage& preview, int fullWidth, int c
             ImGui::NextColumn();
             ImGui::SetColumnWidth(-1, col1);
             string label = ellipsize(name);
-            ImGui::Text(label.c_str());
+            ImGui::TextUnformatted(label.c_str());
 
             ImGui::NextColumn();
             ImGui::SetColumnWidth(-1, col2);
@@ -116,7 +116,7 @@ void ImAppPanel::render(string filter, map<string, ImAppLauncher>& launcherPool,
     if (label.size() > 0) {
         ImGui::Spacing();
         ImGui::Spacing();
-        ImGui::Text(label.c_str());
+        ImGui::TextUnformatted(label.c_str());
         //ImGui::SameLine();
         ImGui::Separator();
         ImGui::Spacing();
@@ -232,7 +232,7 @@ void ImAppManager::begin() {
     memcpy(str0, filter.c_str(), filter.size());
     str0[filter.size()] = 0;
 
-    ImGui::Text("filter:");
+    ImGui::TextUnformatted("filter:");
     ImGui::SameLine();
     if (ImGui::InputText("##AppFilter", str0, 128) ) {
         filter = string(str0);

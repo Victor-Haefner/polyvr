@@ -11,7 +11,7 @@ ImColorPicker::ImColorPicker(string ID, string label) : ID("##"+ID), label(label
 
 bool ImColorPicker::render() {
     if (label != "") {
-        ImGui::Text(label.c_str());
+        ImGui::TextUnformatted(label.c_str());
         ImGui::SameLine();
     }
 

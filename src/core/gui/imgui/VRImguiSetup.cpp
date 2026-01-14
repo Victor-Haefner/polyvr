@@ -231,7 +231,7 @@ void ImSetupManager::updateSetupsList(string s) {
 void ImSetupManager::begin() {
     vector<const char*> tmpSetups(setups.size(), 0);
     for (int i=0; i<setups.size(); i++) tmpSetups[i] = setups[i].c_str();
-    ImGui::Text("Setup:");
+    ImGui::TextUnformatted("Setup:");
     ImGui::SameLine();
     ImGui::SetNextItemWidth(150);
     if (ImGui::Combo("##Setups", &current_setup, &tmpSetups[0], tmpSetups.size())) {
@@ -263,7 +263,7 @@ void ImSetupManager::begin() {
     ImGui::BeginChild("setupProps", ImVec2(w2, h), false, flags);
         if (showDisplay) {
             int w3 = w2-20;
-            ImGui::Text(("Displays: " + selected).c_str());
+            ImGui::TextUnformatted(("Displays: " + selected).c_str());
             ImGui::Indent(10);
             if (displaysOffset.render(w3)) displaysOffset.signal("setup_set_displays_offset");
             if (ImGui::Checkbox("CalibrationOverlay", &calibOverlay)) uiSignal("setup_set_calibration_overlay", {{"active", toString(calibOverlay)}});
@@ -271,7 +271,7 @@ void ImSetupManager::begin() {
         }
 
         if (showWindow) {
-            ImGui::Text(("Window: " + selected).c_str());
+            ImGui::TextUnformatted(("Window: " + selected).c_str());
             ImGui::Indent(10);
             if (ImGui::Checkbox("active##winActive", &windowActive)) uiSignal("setup_set_win_active", {{"active", toString(windowActive)}});
             if (windowSize.render(220) && windowSize.vX > 0 && windowSize.vY > 0) windowSize.signal("win_set_res");
@@ -288,7 +288,7 @@ void ImSetupManager::begin() {
 
         if (showEditorWindow) {
             ImGui::Separator();
-            ImGui::Text(("Editor Window: " + selected).c_str());
+            ImGui::TextUnformatted(("Editor Window: " + selected).c_str());
             ImGui::Indent(10);
             // nothing yet
             ImGui::Unindent(10);
@@ -296,18 +296,18 @@ void ImSetupManager::begin() {
 
         if (showLocalWindow) {
             ImGui::Separator();
-            ImGui::Text(("Local Window: " + selected).c_str());
+            ImGui::TextUnformatted(("Local Window: " + selected).c_str());
             ImGui::Indent(10);
             ImGui::Unindent(10);
         }
 
         if (showRemoteWindow) {
             ImGui::Separator();
-            ImGui::Text(("Remote Window: " + selected).c_str());
+            ImGui::TextUnformatted(("Remote Window: " + selected).c_str());
             ImGui::Indent(10);
-            ImGui::Text("State:");
+            ImGui::TextUnformatted("State:");
             ImGui::SameLine();
-            ImGui::Text(remoteWinState.c_str());
+            ImGui::TextUnformatted(remoteWinState.c_str());
             ImGui::SameLine();
             if (ImGui::Button("connect##win")) uiSignal("win_click_connect", {{}});
 
@@ -321,7 +321,7 @@ void ImSetupManager::begin() {
                     string sID = "";
                     if (k < serverIDs.size()) sID = serverIDs[k];
                     string xy = toString(x) + " " + toString(y);
-                    ImGui::Text(xy.c_str());
+                    ImGui::TextUnformatted(xy.c_str());
                     ImInput entry("##nxy_"+xy, "", sID, ImGuiInputTextFlags_EnterReturnsTrue);
                     ImGui::SameLine();
                     if (entry.render(240)) uiSignal("win_set_serverID", {{"x", toString(x)}, {"y", toString(y)}, {"sID", entry.value}});
@@ -333,7 +333,7 @@ void ImSetupManager::begin() {
         }
 
         if (showViewport) {
-            ImGui::Text(("Viewport: " + selected).c_str());
+            ImGui::TextUnformatted(("Viewport: " + selected).c_str());
             ImGui::Indent(10);
 
             int w3 = w2-20;
@@ -376,7 +376,7 @@ void ImSetupManager::begin() {
         }
 
         if (showVRPN) {
-            ImGui::Text(("VRPN: " + selected).c_str());
+            ImGui::TextUnformatted(("VRPN: " + selected).c_str());
             ImGui::Indent(10);
             ImGui::Checkbox("active##VRPN", &vrpnActive);
             ImGui::SameLine();
@@ -387,7 +387,7 @@ void ImSetupManager::begin() {
         }
 
         if (showVRPNTracker) {
-            ImGui::Text(("VRPN Tracker: " + selected).c_str());
+            ImGui::TextUnformatted(("VRPN Tracker: " + selected).c_str());
             ImGui::Indent(10);
             // address: entry ADDR
             // IF selected_type == "vrpn_device"
@@ -398,7 +398,7 @@ void ImSetupManager::begin() {
 
         if (showART) {
             int w3 = w2-20;
-            ImGui::Text("ART System");
+            ImGui::TextUnformatted("ART System");
             ImGui::Indent(10);
             if (ImGui::Checkbox("active##ART", &artActive)) uiSignal("setup_set_art_active", {{"active", toString(artActive)}});
 
@@ -411,14 +411,14 @@ void ImSetupManager::begin() {
         }
 
         if (showARTDevice) {
-            ImGui::Text(("ART Device: " + selected).c_str());
+            ImGui::TextUnformatted(("ART Device: " + selected).c_str());
             ImGui::Indent(10);
-            ImGui::Text(artID.c_str());
+            ImGui::TextUnformatted(artID.c_str());
             ImGui::Unindent(10);
         }
 
         if (showDevice) {
-            ImGui::Text(("Device: " + selected).c_str());
+            ImGui::TextUnformatted(("Device: " + selected).c_str());
             ImGui::Indent(10);
             // name: DEVICENAME
             // type: Combo devicetype
@@ -430,14 +430,14 @@ void ImSetupManager::begin() {
         }
 
         if (showMultitouch) {
-            ImGui::Text(("Multitouch Device: " + selected).c_str());
+            ImGui::TextUnformatted(("Multitouch Device: " + selected).c_str());
             ImGui::Indent(10);
             // device: combo devicelist
             ImGui::Unindent(10);
         }
 
         if (showLeap) {
-            ImGui::Text(("Leap Device: " + selected).c_str());
+            ImGui::TextUnformatted(("Leap Device: " + selected).c_str());
             ImGui::Indent(10);
             // address: entry ADDR
             // status: STATUS
@@ -451,7 +451,7 @@ void ImSetupManager::begin() {
         }
 
         if (showHaptics) {
-            ImGui::Text(("Haptic Device: " + selected).c_str());
+            ImGui::TextUnformatted(("Haptic Device: " + selected).c_str());
             ImGui::Indent(10);
             // IP: entry IP
             // combo type
@@ -465,25 +465,25 @@ void ImSetupManager::begin() {
             ImInput nUserEntry("##sshUsr", "ssh user:", nodeUser, ImGuiInputTextFlags_EnterReturnsTrue);
             ImInput nPathEntry("##pvrPath", "root path:", nodeSlave, ImGuiInputTextFlags_EnterReturnsTrue);
 
-            ImGui::Text(("Network Node: " + selected).c_str());
+            ImGui::TextUnformatted(("Network Node: " + selected).c_str());
             ImGui::Indent(10);
             if (nAddrEntry.render(240)) uiSignal("node_set_address", {{"address", nAddrEntry.value}});
             ImGui::SameLine();
-            ImGui::Text(nodeStatus.c_str());
+            ImGui::TextUnformatted(nodeStatus.c_str());
 
             if (nUserEntry.render(240)) uiSignal("node_set_user", {{"user", nUserEntry.value}});
             ImGui::SameLine();
-            ImGui::Text(nodeSshStatus.c_str());
+            ImGui::TextUnformatted(nodeSshStatus.c_str());
 
             if (ImGui::Button("distribute key##node")) uiSignal("node_clicked_distribkey", {{}});
             ImGui::SameLine();
-            ImGui::Text(nodeSshKeyStatus.c_str());
+            ImGui::TextUnformatted(nodeSshKeyStatus.c_str());
 
             if (ImGui::Button("stop slaves##node")) uiSignal("node_clicked_stopslaves", {{}});
 
             if (nPathEntry.render(240)) uiSignal("node_set_path", {{"path", nPathEntry.value}});
             ImGui::SameLine();
-            ImGui::Text(nodePathStatus.c_str());
+            ImGui::TextUnformatted(nodePathStatus.c_str());
             ImGui::Unindent(10);
         }
 
@@ -493,14 +493,14 @@ void ImSetupManager::begin() {
             ImInput sDelayEntry("##startupDelay", "startup delay:", slaveDelay, ImGuiInputTextFlags_EnterReturnsTrue);
             ImInput sGeometryEntry("##winGeometry", "geometry ('512x512+0+0'):", slaveGeometry, ImGuiInputTextFlags_EnterReturnsTrue);
 
-            ImGui::Text(("Network Slave, connection ID: " + slaveConnetionID).c_str());
+            ImGui::TextUnformatted(("Network Slave, connection ID: " + slaveConnetionID).c_str());
             ImGui::Indent(10);
             // connection identifier:  CONN_ID_STR
             if (ImGui::Checkbox("autostart##slave", &slaveAutostart)) uiSignal("slave_toggle_autostart", {{"state",toString(slaveAutostart)}});
             ImGui::SameLine();
             if (ImGui::Button("start##slave")) uiSignal("slave_clicked_start", {{}});
             ImGui::SameLine();
-            ImGui::Text(slaveStatus.c_str());
+            ImGui::TextUnformatted(slaveStatus.c_str());
 
             if (ImGui::Checkbox("active stereo##slave", &slaveActiveStereo)) uiSignal("slave_toggle_activestereo", {{"state",toString(slaveActiveStereo)}});
             if (ImGui::Checkbox("fullscreen##slave", &slaveFullscreen)) uiSignal("slave_toggle_fullscreen", {{"state",toString(slaveFullscreen)}});
@@ -511,13 +511,13 @@ void ImSetupManager::begin() {
             if (slaveSystemScreens.render(100)) uiSignal("slave_set_screen", {{"screen", slaveSystemScreens.get()}});
             if (sDelayEntry.render(240)) uiSignal("slave_set_delay", {{"delay", sDelayEntry.value}});
             ImGui::SameLine();
-            ImGui::Text("seconds");
+            ImGui::TextUnformatted("seconds");
             if (sGeometryEntry.render(240)) uiSignal("slave_set_geometry", {{"geometry", sGeometryEntry.value}});
             ImGui::Unindent(10);
         }
 
         if (showScript) {
-            ImGui::Text(("Script: " + selected).c_str());
+            ImGui::TextUnformatted(("Script: " + selected).c_str());
             ImGui::Indent(10);
             // nothing, TODO or deprecate?
             ImGui::Unindent(10);

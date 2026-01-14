@@ -72,10 +72,10 @@ void ImScenegraph::render() {
 
     ImGui::BeginChild("scProps", region2, false, flags);
         // object
-        ImGui::Text(("Object: " + selected).c_str());
+        ImGui::TextUnformatted(("Object: " + selected).c_str());
         ImGui::Indent(10);
-            ImGui::Text(("Parent: " + parent).c_str());
-            ImGui::Text(("Persistency: " + persistency).c_str());
+            ImGui::TextUnformatted(("Parent: " + parent).c_str());
+            ImGui::TextUnformatted(("Persistency: " + persistency).c_str());
 
             if (ImGui::Checkbox("visible", &visible)) uiSignal( "sg_toggle_visible", {{"visible",toString(visible)}} );
             ImGui::SameLine();
@@ -87,23 +87,23 @@ void ImScenegraph::render() {
         // geometry
         if (isGeometry) {
             ImGui::Separator();
-            ImGui::Text("Geometry:");
+            ImGui::TextUnformatted("Geometry:");
             ImGui::Indent(10);
-            ImGui::Text(("Origin: " + geoOrigin).c_str());
+            ImGui::TextUnformatted(("Origin: " + geoOrigin).c_str());
             if (geoOrigin == "primitive") {
-                ImGui::Text(("Primitive: " + geoParams[0]).c_str());
+                ImGui::TextUnformatted(("Primitive: " + geoParams[0]).c_str());
                 for (int i=1; i<geoParams.size(); i++) {
-                    ImGui::Text((" param " + geoParamNames[i-1] + ": " + geoParams[i]).c_str());
+                    ImGui::TextUnformatted((" param " + geoParamNames[i-1] + ": " + geoParams[i]).c_str());
                 }
             }
-            for (auto& p : geoData) ImGui::Text((" data " + p.first + " : " + toString(p.second)).c_str());
+            for (auto& p : geoData) ImGui::TextUnformatted((" data " + p.first + " : " + toString(p.second)).c_str());
             ImGui::Unindent(10);
         }
 
         // material
         if (isMaterial) {
             ImGui::Separator();
-            ImGui::Text(("Material: " + matName).c_str());
+            ImGui::TextUnformatted(("Material: " + matName).c_str());
             ImGui::Indent(10);
 
             if (matName != "") {
@@ -118,9 +118,9 @@ void ImScenegraph::render() {
             }
 
             if (texDims != "") {
-                ImGui::Text(("Tex dimensions: " + texDims).c_str());
-                ImGui::Text(("Tex size (mb): " + texSize).c_str());
-                ImGui::Text(("Tex N channels: " + texChannels).c_str());
+                ImGui::TextUnformatted(("Tex dimensions: " + texDims).c_str());
+                ImGui::TextUnformatted(("Tex size (mb): " + texSize).c_str());
+                ImGui::TextUnformatted(("Tex N channels: " + texChannels).c_str());
             }
 
             ImGui::Unindent(10);
@@ -129,7 +129,7 @@ void ImScenegraph::render() {
         // camera
         if (objType == "Camera") {
             ImGui::Separator();
-            ImGui::Text("Camera:");
+            ImGui::TextUnformatted("Camera:");
             ImGui::Indent(10);
                 if (ImGui::Checkbox("accept setup root:", &doAcceptRoot)) uiSignal("sg_set_cam_accept_root", {{"value", toString(doAcceptRoot)}});
                 if (camAspect.render(50)) uiSignal("sg_set_cam_aspect", {{"value", camAspect.value}});
@@ -139,7 +139,7 @@ void ImScenegraph::render() {
                 ImGui::SameLine();
                 if (camFar.render(50)) uiSignal("sg_set_cam_far", {{"value", camFar.value}});
 
-                ImGui::Text("Projection:");
+                ImGui::TextUnformatted("Projection:");
                 ImGui::SameLine();
                 ImGui::SetNextItemWidth(150);
                 if (ImGui::Combo("##camProj", &camProjection, &camProjections[0], camProjections.size())) {
@@ -151,10 +151,10 @@ void ImScenegraph::render() {
         // light
         if (objType == "Light") {
             ImGui::Separator();
-            ImGui::Text("Light:");
+            ImGui::TextUnformatted("Light:");
             ImGui::Indent(10);
                 if (ImGui::Checkbox("Active", &lightOn)) uiSignal("sg_set_light_state", {{"state",toString(lightOn)}});
-                ImGui::Text("Type:");
+                ImGui::TextUnformatted("Type:");
                 ImGui::SameLine();
                 ImGui::SetNextItemWidth(150);
                 if (ImGui::Combo("##LightTypes", &lightType, &lightTypes[0], lightTypes.size())) {
@@ -172,12 +172,12 @@ void ImScenegraph::render() {
         // lod
         if (objType == "Lod") {
             ImGui::Separator();
-            ImGui::Text("LoD:");
+            ImGui::TextUnformatted("LoD:");
             ImGui::Indent(10);
                 if (lodCenter.render(region2.x-10)) lodCenter.signal("sg_set_lod_center");
                 for (int i=0; i<lodDistances.size(); i++) {
                     string lbl = "child " + toString(i) + ", distance: " + toString(lodDistances[i]);
-                    ImGui::Text(lbl.c_str());
+                    ImGui::TextUnformatted(lbl.c_str());
                 }
             ImGui::Unindent(10);
         }
@@ -185,7 +185,7 @@ void ImScenegraph::render() {
         // transform
         if (isTransform) {
             ImGui::Separator();
-            ImGui::Text("Transformation:");
+            ImGui::TextUnformatted("Transformation:");
             ImGui::Indent(10);
                 if (ImGui::Button("Focus")) uiSignal( "sg_focus_transform");
                 ImGui::SameLine();
@@ -200,7 +200,7 @@ void ImScenegraph::render() {
                 if (ImGui::Checkbox("global", &global)) uiSignal( "sg_toggle_global", {{"global",toString(global)}} );
             ImGui::Unindent(10);
 
-            ImGui::Text("Constraints:");
+            ImGui::TextUnformatted("Constraints:");
             ImGui::Indent(10);
                 if (ImGui::Checkbox("active", &constrActive)) uiSignal( "sg_set_constraint_active", {{"active",toString(constrActive)}} );
                 if (constrActive) {
@@ -213,7 +213,7 @@ void ImScenegraph::render() {
                     if (constrDof4.render(L)) uiSignal( "sg_set_constraint_dof", {{"dof",toString(3)}, {"min",toString(constrDof4.vX)}, {"max",toString(constrDof4.vY)}} );
                     if (constrDof5.render(L)) uiSignal( "sg_set_constraint_dof", {{"dof",toString(4)}, {"min",toString(constrDof5.vX)}, {"max",toString(constrDof5.vY)}} );
                     if (constrDof6.render(L)) uiSignal( "sg_set_constraint_dof", {{"dof",toString(5)}, {"min",toString(constrDof6.vX)}, {"max",toString(constrDof6.vY)}} );
-                    ImGui::Text("Rotation:");
+                    ImGui::TextUnformatted("Rotation:");
                     ImGui::SameLine();
                     if (ImGui::Button("lock")) uiSignal( "sg_set_constraint_lock_rotation" );
                     ImGui::SameLine();
@@ -221,7 +221,7 @@ void ImScenegraph::render() {
                 }
             ImGui::Unindent(10);
 
-            ImGui::Text("Physics:");
+            ImGui::TextUnformatted("Physics:");
             ImGui::Indent(10);
                 if (ImGui::Checkbox("physicalize:", &doPhysicalize)) ;//uiSignal( "sg_toggle_global", {{"global",toString(global)}} );
                 if (doPhysicalize) {

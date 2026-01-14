@@ -828,7 +828,7 @@ namespace IGFD
 		if (ImGui::IsItemHovered())
 			ImGui::SetTooltip(buttonResetSearchString);
 		ImGui::SameLine();
-		ImGui::Text(searchString);
+		ImGui::TextUnformatted(searchString);
 		ImGui::SameLine();
 		ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
 		bool edited = ImGui::InputText("##InputImGuiFileDialogSearchField", puSearchBuffer, MAX_FILE_DIALOG_NAME_BUFFER);
@@ -3964,7 +3964,7 @@ namespace IGFD
 					// init list of files
 					if (fdFile.IsFileListEmpty() && !fdFile.puShowDrives)
 					{
-						if (fdFile.puDLGpath != ".") 
+						if (fdFile.puDLGpath != ".")
 							IGFD::Utils::ReplaceString(fdFile.puDLGDefaultFileName, fdFile.puDLGpath, ""); // local path
 						if (!fdFile.puDLGDefaultFileName.empty())
 						{
@@ -4278,9 +4278,9 @@ namespace IGFD
 		ImGui::AlignTextToFramePadding();
 
 		if (!fdFile.puDLGDirectoryMode)
-			ImGui::Text(fileNameString);
+			ImGui::TextUnformatted(fileNameString);
 		else // directory chooser
-			ImGui::Text(dirNameString);
+			ImGui::TextUnformatted(dirNameString);
 
 		ImGui::SameLine();
 

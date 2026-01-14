@@ -41,7 +41,7 @@ void ImNetwork::render() {
             p.x += n.second.x;
             p.y += n.second.y;
             ImGui::SetCursorScreenPos(p);
-            ImGui::Text(n.second.name.c_str());
+            ImGui::TextUnformatted(n.second.name.c_str());
         }
 
         const ImU32 col32 = ImColor(1.0f, 1.0f, 1.0f, 1.0f);

@@ -420,7 +420,7 @@ void ImScriptEditor::render() {
 
     ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_CollapsingHeader;
     if (ImGui::CollapsingHeader("Options", flags)) {
-        ImGui::Text("Type: ");
+        ImGui::TextUnformatted("Type: ");
         ImGui::SameLine();
         vector<const char*> types(typeList.size(),0);
         for (size_t i=0; i<typeList.size(); i++) types[i] = typeList[i].c_str();
@@ -433,7 +433,7 @@ void ImScriptEditor::render() {
 
         vector<const char*> groupsCstr(groupList.size(),0);
         for (size_t i=0; i<groupList.size(); i++) groupsCstr[i] = groupList[i].c_str();
-        ImGui::Text("Group:");
+        ImGui::TextUnformatted("Group:");
         ImGui::SameLine();
         if (ImGui::Combo("##groupsCombo", &current_group, &groupsCstr[0], groupsCstr.size())) {
             string group = groups[groupList[current_group]];
