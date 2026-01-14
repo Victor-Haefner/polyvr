@@ -761,14 +761,26 @@ void VRPipeSystem::computePipeFlows(double dt) {
         auto e1 = pipe->end1.lock();
         auto e2 = pipe->end2.lock();
         double dP = e2->pressure - e1->pressure; // compute pressure gradient
+        int dir = sign(dP);
 
         // based on Darcy-Weisbach for turbulent flow
         double Rt = pipeFriction * pipe->length * pipe->density / ( 4 * pipe->radius * pow(pipe->area,2));
-        double flow = sqrt( abs(dP) / Rt ) * sign(dP);
+        double flow = sqrt( abs(dP) / Rt ) * dir;
 
-        e1->flow =  flow;
-        e2->flow = -flow;
-        //cout << "pipe flow " << flow << ", delta P: " << dP << ", R: " << pipe->resistance << " " << endl;
+        if (pipe->level > 1.0-1e-6) { // full pipe
+            e1->flow =  flow;
+            e2->flow = -flow;
+        } else {
+            if (dir < 0) { // filling towards e2
+                e1->flow =  flow;
+                e2->flow = -flow * pipe->level * 0;
+            } else { // filling towards e1
+                e1->flow =  flow * pipe->level * 0;
+                e2->flow = -flow;
+            }
+        }
+
+        cout << "pipe flow " << flow << ", delta P: " << dP << ", dir: " << dir << ", P1 " << e1->pressure << ", P2 " << e2->pressure << endl;
     }
 }
 
@@ -788,14 +800,10 @@ void VRPipeSystem::updateLevels(double dt) {
             //bool tankOpen = entity->getValue("isOpen", false);
 
             double totalFlow = 0;
-            double totalFlowIn = 0;
-            double totalFlowOut = 0;
             for (auto& pEnd : node->pipes) {
                 auto pipe = pEnd->pipe.lock();
                 if (!pipe) continue;
-                totalFlow += pEnd->flow;
-                if (pEnd->flow > 0) totalFlowIn += pEnd->flow;
-                if (pEnd->flow < 0) totalFlowOut += pEnd->flow;
+                totalFlow += pEnd->flow; // positive flow is defined as going out the pipe
                 // TODO: limit flow here?
             }
 
@@ -808,8 +816,8 @@ void VRPipeSystem::updateLevels(double dt) {
 
         for (auto& s : segments) {
             auto& pipe = s.second;
-            double flow = -pipe->end1.lock()->flow; // TODO: check sign
-            pipe->level = clamp(pipe->level + flow*dt / pipe->volume, 0.0, 1.0);
+            double flow = pipe->end1.lock()->flow + pipe->end2.lock()->flow; // positive flow is going out the pipe
+            pipe->level = clamp(pipe->level - flow*dt / pipe->volume, 0.0, 1.0);
             //cout << " pipe " << flow << ", " << pipe->volume << ", " << pipe->level << endl;
         }
     }
