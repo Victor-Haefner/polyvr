@@ -56,6 +56,7 @@ class VRPipeSegment {
         ~VRPipeSegment();
 
         static VRPipeSegmentPtr create(int eID, double radius, double length, double level);
+        VRPipeEndPtr otherEnd(VRPipeEndPtr e);
 
         void handleTank(double& pressure, double otherVolume, double& otherDensity, double dt, bool p1);
         void handleValve(double area, VRPipeSegmentPtr other, double dt, bool p1, bool op1);
@@ -72,7 +73,6 @@ class VRPipeNode {
         int nID = 0;
         VREntityPtr entity;
         string name;
-        double lastPressureDelta = 0.0;
         vector<VRPipeEndPtr> pipes;
 
     public:
@@ -101,15 +101,9 @@ class VRPipeSystem : public VRGeometry {
         double atmosphericPressure = 101325; // Pa at sea level (1 atm)
         double pipeFriction = 0.02;
 
-        struct Group {
-            vector<int> nodes;
-            //vector<int> segments;
-        };
-
         map<int, VRPipeNodePtr> nodes;
         map<string, int> nodesByName;
         map<int, VRPipeSegmentPtr> segments;
-        vector<Group> hydrostaticGroups;
 
         void initOntology();
 
@@ -125,8 +119,7 @@ class VRPipeSystem : public VRGeometry {
         void computeEndOffset(VRPipeEndPtr e);
 
         void assignBoundaryPressures();
-        void computeHydrostaticGroups();
-        void computePipePressures(double dt);
+        void solveNodeHeads(double dt);
         void computePipeFlows(double dt);
         void updateLevels(double dt);
 

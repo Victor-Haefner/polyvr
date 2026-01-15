@@ -36,6 +36,11 @@ VRPipeSegment::~VRPipeSegment() {}
 
 VRPipeSegmentPtr VRPipeSegment::create(int eID, double radius, double length, double level) { return VRPipeSegmentPtr( new VRPipeSegment(eID, radius, length, level) ); }
 
+VRPipeEndPtr VRPipeSegment::otherEnd(VRPipeEndPtr e) {
+    bool isFirst = (end1.lock().get() == e.get());
+    return isFirst ? end2.lock() : end1.lock();
+}
+
 void VRPipeSegment::setLength(double l) {
     length = l;
     computeGeometry();
@@ -731,62 +736,6 @@ void VRPipeSegment::handlePump(double performance, double maxPressure, bool isOp
 }
 
 
-
-
-void VRPipeSystem::computeHydrostaticGroups() {
-    map<int, bool> traversedNodes;
-    map<int, bool> traversedSegments;
-
-    function<void(const VRPipeNodePtr&, Group&, int)> traverseNode;
-    function<void(const VRPipeSegmentPtr&, Group&, int)> traverseSegment;
-
-    traverseSegment = [&](const VRPipeSegmentPtr& segment, Group& group, int origin) {
-        if (traversedSegments.count(segment->eID)) return;
-        traversedSegments[segment->eID] = true;
-
-        if (segment->level < 1.0-1e-6) return; // not full
-
-        auto e1 = segment->end1.lock();
-        auto e2 = segment->end2.lock();
-        if (e1 && e1->nID != origin) traverseNode(nodes[e1->nID], group, segment->eID);
-        if (e2 && e1->nID != origin) traverseNode(nodes[e2->nID], group, segment->eID);
-    };
-
-    traverseNode = [&](const VRPipeNodePtr& node, Group& group, int origin) {
-        if (traversedNodes.count(node->nID)) return;
-        traversedNodes[node->nID] = true;
-        group.nodes.push_back(node->nID);
-
-        auto& entity = node->entity;
-
-        double level = 1;
-        if (entity->is_a("Tank")) {
-            bool tankOpen = entity->getValue("isOpen", false);
-            level = entity->getValue("level", false);
-        }
-
-        for (auto& e : node->pipes) {
-            if (e->height > level) continue;
-            auto s = e->pipe.lock();
-            if (s) traverseSegment(s, group, node->nID);
-        }
-    };
-
-    hydrostaticGroups.clear();
-
-    for (auto& n : nodes) {
-        if (traversedNodes.count(n.first)) continue;
-        hydrostaticGroups.push_back(Group());
-        traverseNode(n.second, hydrostaticGroups.back(), -1);
-    }
-
-    for (auto& s : segments) {
-        if (traversedSegments.count(s.first)) continue;
-        hydrostaticGroups.push_back(Group());
-        traverseSegment(s.second, hydrostaticGroups.back(), -1);
-    }
-}
-
 void VRPipeSystem::assignBoundaryPressures() {
     for (auto n : nodes) {
         auto node = n.second;
@@ -820,54 +769,31 @@ void VRPipeSystem::assignBoundaryPressures() {
     }
 }
 
-void VRPipeSystem::computePipePressures(double dt) {
-    //auto clamp = [](double f, double a = -1, double b = 1) -> double { return f<a ? a : f>b ? b : f; };
+void VRPipeSystem::solveNodeHeads(double dt) {
+    for (int it = 0; it < 10; ++it) {
+        for (auto& n : nodes) {
+            auto node = n.second;
+            auto entity = node->entity;
 
-    /*auto computeHydraustaticPressure = [this](const double& height, const double& density) {
-        return height * density * gravity;
-    };
+            if (entity->is_a("Tank") || entity->is_a("Outlet"))
+                continue; // already prescribed
 
-    for (auto& group : hydrostaticGroups) {
+            double num = 0.0;
+            double den = 0.0;
 
-        ;
-    }
-
-    for (auto n : nodes) { // traverse nodes, change pressure in segments
-        auto node = n.second;
-        auto entity = node->entity;
-
-        if (entity->is_a("Tank")) {
-            //double tankArea = entity->getValue("area", 0.0);
-            double tankHeight = entity->getValue("height", 0.0);
-            double tankLevel = entity->getValue("level", 1.0);
-            double tankPressure = entity->getValue("pressure", 1.0);
-            double tankDensity = entity->getValue("density", 1000.0);
-            bool tankOpen = entity->getValue("isOpen", false);
-
-            for (auto& pEnd : node->pipes) {
-                double h = max(0.0, tankLevel - pEnd->offsetHeight) * tankHeight;
-                double hP = computeHydraustaticPressure(h, tankDensity);
-                if (tankOpen) pEnd->pressure = hP + atmosphericPressure;
-                else pEnd->pressure = hP + tankPressure;
-                //cout << " tank " << nID << ", " << tankLevel << ", " << pEnd->offsetHeight << ", " << h << endl;
+            for (auto& e : node->pipes) {
+                auto pipe = e->pipe.lock();
+                auto otherEnd = pipe->otherEnd(e);
+                double R = pipe->resistance; // or Rt-equivalent
+                num += otherEnd->hydraulicHead / R;
+                den += 1.0 / R;
             }
+
+            if (den > 0)
+                for (auto& e : node->pipes)
+                    e->hydraulicHead = num / den;
         }
     }
-// TODO: doesnt work like this, needs to define highest point to reference pressure in hydro group!
-    for (auto& s : segments) {
-        auto& pipe = s.second;
-        auto level = pipe->level;
-        auto e1 = pipe->end1.lock();
-        auto e2 = pipe->end2.lock();
-        double h1 = getNodePose(e1->nID)->pos()[1] + e1->offset[1];
-        double h2 = getNodePose(e2->nID)->pos()[1] + e2->offset[1];
-        double hP1 = computeHydraustaticPressure(h1, pipe->density) + atmosphericPressure;
-        double hP2 = computeHydraustaticPressure(h2, pipe->density) + atmosphericPressure;
-        cout << " pipe  " << hP1 << ", " << hP2 << ", " << e1->pressure << ", " << e2->pressure << endl;
-        e1->pressure = max(e1->pressure, hP1);
-        e2->pressure = max(e2->pressure, hP2);
-        cout << " pipe  " << hP1 << ", " << hP2 << ", " << e1->pressure << ", " << e2->pressure << endl;
-    }*/
 }
 
 void VRPipeSystem::computePipeFlows(double dt) {
@@ -897,8 +823,6 @@ void VRPipeSystem::computePipeFlows(double dt) {
                 e2->flow = -flow;
             }
         }
-
-        //cout << "pipe flow " << flow << ", delta P: " << dP << ", dir: " << dir << ", P1 " << e1->pressure << ", P2 " << e2->pressure << endl;
     }
 
     // update heads
@@ -913,7 +837,6 @@ void VRPipeSystem::computePipeFlows(double dt) {
 
 void VRPipeSystem::updateLevels(double dt) {
     for (auto n : nodes) { // traverse nodes, change pressure in segments
-        //int nID = n.first;
         auto node = n.second;
         auto entity = node->entity;
 
@@ -922,30 +845,22 @@ void VRPipeSystem::updateLevels(double dt) {
             double tankHeight = entity->getValue("height", 0.0);
             double tankVolume = tankHeight * tankArea;
             double tankLevel = entity->getValue("level", 1.0);
-            //double tankPressure = entity->getValue("pressure", 1.0);
-            //double tankDensity = entity->getValue("density", 1000.0);
-            //bool tankOpen = entity->getValue("isOpen", false);
 
             double totalFlow = 0;
             for (auto& pEnd : node->pipes) {
                 auto pipe = pEnd->pipe.lock();
                 if (!pipe) continue;
                 totalFlow += pEnd->flow; // positive flow is defined as going out the pipe
-                // TODO: limit flow here?
             }
-
-            //cout << "tank " << nID << " totalFlowIn: " << totalFlowIn << ", totalFlowOut: " << totalFlowOut << endl;
 
             double newLevel = clamp(tankLevel + totalFlow*dt / tankVolume, 0.0, 1.0);
             entity->set("level", toString(newLevel));
-            //double deltaMass = (newLevel - tankLevel)*tankVolume;
         }
 
         for (auto& s : segments) {
             auto& pipe = s.second;
             double flow = pipe->end1.lock()->flow + pipe->end2.lock()->flow; // positive flow is going out the pipe
             pipe->level = clamp(pipe->level - flow*dt / pipe->volume, 0.0, 1.0);
-            //cout << " pipe " << flow << ", " << pipe->volume << ", " << pipe->level << endl;
         }
     }
 }
@@ -957,9 +872,8 @@ void VRPipeSystem::update() {
     double dt = dT/subSteps;
 
     for (int i=0; i<subSteps; i++) {
-        computeHydrostaticGroups();
         assignBoundaryPressures();
-        computePipePressures(dt);
+        solveNodeHeads(dt);
         computePipeFlows(dt);
         updateLevels(dt);
     }
