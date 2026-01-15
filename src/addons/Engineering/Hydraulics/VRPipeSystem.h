@@ -17,10 +17,14 @@ class VRPipeEnd {
     public:
         VRPipeSegmentWeakPtr pipe;
         int nID = -1;
+
         double height = 0.0;
-        double flow = 0.0;
-        double pressure = 1.0;
+        double offsetHeight = 0.0; // used for tank offset
         Vec3d offset; // offset relative to node center
+
+        double flow = 0.0;
+        double hydraulicHead = 0.0;
+        double pressure = 1.0;
 
     public:
         VRPipeEnd(VRPipeSegmentPtr s, int nID, double height = 0.0);

@@ -21,7 +21,7 @@ double gasSpeed = 300;
 
 // Pipe End ----
 
-VRPipeEnd::VRPipeEnd(VRPipeSegmentPtr s, int n, double h) { pipe = s; nID = n; height = h; }
+VRPipeEnd::VRPipeEnd(VRPipeSegmentPtr s, int n, double h) { pipe = s; nID = n; offsetHeight = h; }
 VRPipeEnd::~VRPipeEnd() {}
 VRPipeEndPtr VRPipeEnd::create(VRPipeSegmentPtr s, int n, double h) { return VRPipeEndPtr( new VRPipeEnd(s,n,h) ); }
 
@@ -123,12 +123,19 @@ int VRPipeSystem::getSegment(int n1, int n2) { return graph->getEdgeID(n1, n2); 
 
 void VRPipeSystem::computeEndOffset(VRPipeEndPtr e) {
     auto entity = nodes[e->nID]->entity;
+
     if (entity->is_a("Tank")) {
         //double A = entity->getValue("area", 1.0);
         double H = entity->getValue("height", 1.0);
-        Vec3d o = Vec3d(0,(e->height-0.5)*H,0);
+        Vec3d o = Vec3d(0,(e->offsetHeight-0.5)*H,0);
         e->offset = o;
     }
+
+    auto P = graph->getPosition(e->nID);
+    e->height = (P->pos()+e->offset)[1];
+    e->hydraulicHead = e->height; // TODO: check if good initial value
+
+    cout << " ------ " << e->offset << endl;
 }
 
 int VRPipeSystem::addSegment(double radius, int n1, int n2, double level, double h1, double h2) {
@@ -725,24 +732,8 @@ void VRPipeSegment::handlePump(double performance, double maxPressure, bool isOp
 
 
 
-void VRPipeSystem::assignBoundaryPressures() {
-    for (auto n : nodes) {
-        auto node = n.second;
-        auto entity = node->entity;
-
-        if (entity->is_a("Outlet")) {
-            double outletRadius = entity->getValue("radius", 0.0);
-            if (outletRadius < 1e-6) continue; // closed
-
-            double outletPressure = entity->getValue("pressure", 1.0);
-            for (auto& e : node->pipes) e->pressure = outletPressure;
-            continue;
-        }
-    }
-}
 
 void VRPipeSystem::computeHydrostaticGroups() {
-    vector<Group> groups;
     map<int, bool> traversedNodes;
     map<int, bool> traversedSegments;
 
@@ -781,27 +772,65 @@ void VRPipeSystem::computeHydrostaticGroups() {
         }
     };
 
+    hydrostaticGroups.clear();
+
     for (auto& n : nodes) {
         if (traversedNodes.count(n.first)) continue;
-        groups.push_back(Group());
-        traverseNode(n.second, groups.back(), -1);
+        hydrostaticGroups.push_back(Group());
+        traverseNode(n.second, hydrostaticGroups.back(), -1);
     }
 
     for (auto& s : segments) {
         if (traversedSegments.count(s.first)) continue;
-        groups.push_back(Group());
-        traverseSegment(s.second, groups.back(), -1);
+        hydrostaticGroups.push_back(Group());
+        traverseSegment(s.second, hydrostaticGroups.back(), -1);
     }
+}
 
-    hydrostaticGroups = groups;
+void VRPipeSystem::assignBoundaryPressures() {
+    for (auto n : nodes) {
+        auto node = n.second;
+        auto entity = node->entity;
+
+        if (entity->is_a("Outlet")) {
+            double outletRadius = entity->getValue("radius", 0.0);
+            if (outletRadius < 1e-6) continue; // closed
+
+            double outletPressure = entity->getValue("pressure", atmosphericPressure);
+            for (auto& e : node->pipes) {
+                auto pipe = e->pipe.lock();
+                e->hydraulicHead = e->height + outletPressure/pipe->density/gravity;
+            }
+            continue;
+        }
+
+        if (entity->is_a("Tank")) {
+            double tankPressure = entity->getValue("pressure", atmosphericPressure);
+            double tankDensity = entity->getValue("density", atmosphericPressure);
+            double tankHeight = entity->getValue("height", atmosphericPressure);
+            double tankLevel = entity->getValue("level", atmosphericPressure);
+            bool tankOpen = entity->getValue("isOpen", false);
+            if (tankOpen) tankPressure = atmosphericPressure;
+
+            for (auto& e : node->pipes) {
+                double depth = max(0.0, tankLevel - e->offsetHeight) * tankHeight;
+                e->hydraulicHead = e->height + depth + tankPressure/tankDensity/gravity;
+            }
+        }
+    }
 }
 
 void VRPipeSystem::computePipePressures(double dt) {
     //auto clamp = [](double f, double a = -1, double b = 1) -> double { return f<a ? a : f>b ? b : f; };
 
-    auto computeHydraustaticPressure = [this](const double& height, const double& density) {
+    /*auto computeHydraustaticPressure = [this](const double& height, const double& density) {
         return height * density * gravity;
     };
+
+    for (auto& group : hydrostaticGroups) {
+
+        ;
+    }
 
     for (auto n : nodes) { // traverse nodes, change pressure in segments
         auto node = n.second;
@@ -816,11 +845,11 @@ void VRPipeSystem::computePipePressures(double dt) {
             bool tankOpen = entity->getValue("isOpen", false);
 
             for (auto& pEnd : node->pipes) {
-                double h = max(0.0, tankLevel - pEnd->height) * tankHeight;
+                double h = max(0.0, tankLevel - pEnd->offsetHeight) * tankHeight;
                 double hP = computeHydraustaticPressure(h, tankDensity);
                 if (tankOpen) pEnd->pressure = hP + atmosphericPressure;
                 else pEnd->pressure = hP + tankPressure;
-                //cout << " tank " << nID << ", " << tankLevel << ", " << pEnd->height << ", " << h << endl;
+                //cout << " tank " << nID << ", " << tankLevel << ", " << pEnd->offsetHeight << ", " << h << endl;
             }
         }
     }
@@ -838,7 +867,7 @@ void VRPipeSystem::computePipePressures(double dt) {
         e1->pressure = max(e1->pressure, hP1);
         e2->pressure = max(e2->pressure, hP2);
         cout << " pipe  " << hP1 << ", " << hP2 << ", " << e1->pressure << ", " << e2->pressure << endl;
-    }
+    }*/
 }
 
 void VRPipeSystem::computePipeFlows(double dt) {
@@ -848,8 +877,9 @@ void VRPipeSystem::computePipeFlows(double dt) {
         auto& pipe = s.second;
         auto e1 = pipe->end1.lock();
         auto e2 = pipe->end2.lock();
-        double dP = e2->pressure - e1->pressure; // compute pressure gradient
-        int dir = sign(dP);
+        double dH = e2->hydraulicHead - e1->hydraulicHead; // compute hydraulic gradient
+        double dP = dH * pipe->density * gravity;
+        int dir = sign(dH);
 
         // based on Darcy-Weisbach for turbulent flow
         double Rt = pipeFriction * pipe->length * pipe->density / ( 4 * pipe->radius * pow(pipe->area,2));
@@ -869,6 +899,15 @@ void VRPipeSystem::computePipeFlows(double dt) {
         }
 
         //cout << "pipe flow " << flow << ", delta P: " << dP << ", dir: " << dir << ", P1 " << e1->pressure << ", P2 " << e2->pressure << endl;
+    }
+
+    // update heads
+    for (auto& n : nodes) {
+        for (auto& e : n.second->pipes) {
+            auto pipe = e->pipe.lock();
+            e->hydraulicHead -= e->flow*dt / pipe->area;
+            e->pressure = e->hydraulicHead * pipe->density * gravity;
+        }
     }
 }
 
