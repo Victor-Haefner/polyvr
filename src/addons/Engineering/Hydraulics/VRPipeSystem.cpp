@@ -26,7 +26,6 @@ VRPipeEnd::~VRPipeEnd() {}
 VRPipeEndPtr VRPipeEnd::create(VRPipeSegmentPtr s, int n, double h) { return VRPipeEndPtr( new VRPipeEnd(s,n,h) ); }
 
 
-
 // Pipe Segment ----
 
 VRPipeSegment::VRPipeSegment(int eID, double radius, double length, double level) : eID(eID), radius(radius), length(length), level(level) {
@@ -824,12 +823,21 @@ void VRPipeSystem::computePipePressures(double dt) {
                 //cout << " tank " << nID << ", " << tankLevel << ", " << pEnd->height << ", " << h << endl;
             }
         }
-
-        for (auto& s : segments) {
-            auto& pipe = s.second;
-            auto e1 = pipe->end1.lock();
-            auto e2 = pipe->end2.lock();
-        }
+    }
+// TODO: doesnt work like this, needs to define highest point to reference pressure in hydro group!
+    for (auto& s : segments) {
+        auto& pipe = s.second;
+        auto level = pipe->level;
+        auto e1 = pipe->end1.lock();
+        auto e2 = pipe->end2.lock();
+        double h1 = getNodePose(e1->nID)->pos()[1] + e1->offset[1];
+        double h2 = getNodePose(e2->nID)->pos()[1] + e2->offset[1];
+        double hP1 = computeHydraustaticPressure(h1, pipe->density) + atmosphericPressure;
+        double hP2 = computeHydraustaticPressure(h2, pipe->density) + atmosphericPressure;
+        cout << " pipe  " << hP1 << ", " << hP2 << ", " << e1->pressure << ", " << e2->pressure << endl;
+        e1->pressure = max(e1->pressure, hP1);
+        e2->pressure = max(e2->pressure, hP2);
+        cout << " pipe  " << hP1 << ", " << hP2 << ", " << e1->pressure << ", " << e2->pressure << endl;
     }
 }
 
