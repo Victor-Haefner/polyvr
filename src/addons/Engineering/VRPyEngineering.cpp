@@ -79,6 +79,7 @@ PyMethodDef VRPyPipeSystem::methods[] = {
     {"setPipePressure", PyWrap( PipeSystem, setPipePressure, "Set pipe pressure, (pID, p1, p2)", void, int, double, double ) },
     {"setOutletDensity", PyWrap( PipeSystem, setOutletDensity, "Set outlet exterior density", void, string, double ) },
     {"setOutletPressure", PyWrap( PipeSystem, setOutletPressure, "Set outlet exterior pressure", void, string, double ) },
+    {"printSystem", PyWrap( PipeSystem, printSystem, "Print system state to console", void ) },
     {"updateInspection", PyWrap( PipeSystem, updateInspection, "Visualize node information", void, int ) },
     {"computeTotalMass", PyWrap( PipeSystem, computeTotalMass, "Compute and return the total mass in the system", double ) },
     {NULL}

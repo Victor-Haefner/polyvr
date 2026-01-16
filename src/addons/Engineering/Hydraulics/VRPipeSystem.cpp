@@ -707,41 +707,41 @@ void VRPipeSystem::computeDynamicPipeResistances() {
     }
 }
 
-void VRPipeSystem::solveNodeHeads(double dt) {
-    for (int it = 0; it < 10; ++it) {
-        for (auto& n : nodes) {
-            auto node = n.second;
-            auto entity = node->entity;
+void VRPipeSystem::solveNodeHeads() {
+    for (auto& n : nodes) {
+        auto node = n.second;
+        auto entity = node->entity;
 
-            if (entity->is_a("Tank") || entity->is_a("Outlet")) continue; // already prescribed
+        if (entity->is_a("Tank") || entity->is_a("Outlet")) continue; // already prescribed
 
-            double num = 0.0;
-            double den = 0.0;
+        double num = 0.0;
+        double den = 0.0;
 
-            for (auto& e : node->pipes) { // TODO: not a fan.. feels off to compute head from other heads like this
-                auto pipe = e->pipe.lock();
-                auto otherEnd = pipe->otherEnd(e);
-                double R = pipe->resistance + pipe->dynamicResistance; // or Rt-equivalent
+        for (auto& e : node->pipes) { // TODO: not a fan.. feels off to compute head from other heads like this
+            auto pipe = e->pipe.lock();
+            auto otherEnd = pipe->otherEnd(e);
+            double R = pipe->resistance + pipe->dynamicResistance; // or Rt-equivalent
+            if (pipe->level > 1.0-1e-6) {
                 num += otherEnd->hydraulicHead / R;
                 den += 1.0 / R;
             }
-
-            if (abs(den) < 1e-9) continue;
-            double newHead = num / den;
-            for (auto& e : node->pipes) e->hydraulicHead = newHead;
         }
 
-        for (auto& n : nodes) {
-            auto node = n.second;
-            auto entity = node->entity;
-            if (entity->is_a("Pump")) {
-                if (node->pipes.size() != 2) continue;
-                double pumpGain = entity->getValue("headGain", 0.0);
-                auto pEnd1 = node->pipes[0];
-                auto pEnd2 = node->pipes[1];
-                pEnd1->hydraulicHead -= pumpGain;
-                pEnd2->hydraulicHead += pumpGain;
-            }
+        if (abs(den) < 1e-9) continue;
+        double newHead = num / den;
+        for (auto& e : node->pipes) e->hydraulicHead = newHead;
+    }
+
+    for (auto& n : nodes) {
+        auto node = n.second;
+        auto entity = node->entity;
+        if (entity->is_a("Pump")) {
+            if (node->pipes.size() != 2) continue;
+            double pumpGain = entity->getValue("headGain", 0.0);
+            auto pEnd1 = node->pipes[0];
+            auto pEnd2 = node->pipes[1];
+            pEnd1->hydraulicHead -= pumpGain;
+            pEnd2->hydraulicHead += pumpGain;
         }
     }
 }
@@ -807,15 +807,14 @@ void VRPipeSystem::updateLevels(double dt) {
             double newLevel = clamp(tankLevel + totalFlow*dt / tankVolume, 0.0, 1.0);
             entity->set("level", toString(newLevel));
         }
+    }
 
-        for (auto& s : segments) {
-            auto& pipe = s.second;
-            double flow = pipe->end1.lock()->flow + pipe->end2.lock()->flow; // positive flow is going out the pipe
-            pipe->level = clamp(pipe->level - flow*dt / pipe->volume, 0.0, 1.0);
-        }
+    for (auto& s : segments) {
+        auto& pipe = s.second;
+        double flow = pipe->end1.lock()->flow + pipe->end2.lock()->flow; // positive flow is going out the pipe
+        pipe->level = clamp(pipe->level - flow*dt / pipe->volume, 0.0, 1.0);
     }
 }
-
 
 void VRPipeSystem::update() {
     int subSteps = 10;
@@ -825,7 +824,7 @@ void VRPipeSystem::update() {
     for (int i=0; i<subSteps; i++) {
         assignBoundaryPressures();
         computeDynamicPipeResistances();
-        solveNodeHeads(dt);
+        solveNodeHeads();
         computePipeFlows(dt);
         updateLevels(dt);
     }
@@ -833,3 +832,12 @@ void VRPipeSystem::update() {
     updateVisual();
 }
 
+void VRPipeSystem::printSystem() {
+    cout << "system:" << endl;
+    for (auto n : nodes) {
+        cout << " node " << n.second->name << endl;
+        for (auto e : n.second->pipes) {
+            cout << "  end head " << e->hydraulicHead << endl;
+        }
+    }
+}

@@ -115,7 +115,7 @@ class VRPipeSystem : public VRGeometry {
 
         void assignBoundaryPressures();
         void computeDynamicPipeResistances();
-        void solveNodeHeads(double dt);
+        void solveNodeHeads();
         void computePipeFlows(double dt);
         void updateLevels(double dt);
 
@@ -172,6 +172,7 @@ class VRPipeSystem : public VRGeometry {
 		void setPipePressure(int i, double p1, double p2);
 
 		double computeTotalMass();
+        void printSystem();
 };
 
 OSG_END_NAMESPACE;
