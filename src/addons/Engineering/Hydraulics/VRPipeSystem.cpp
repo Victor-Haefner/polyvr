@@ -49,7 +49,8 @@ void VRPipeSegment::setLength(double l) {
 void VRPipeSegment::computeGeometry() {
     area = Pi * pow(radius,2);
     volume = area * length;
-    resistance = 8 * viscosity * length / (Pi * pow(radius,4));
+    //resistance = 8 * viscosity * length / (Pi * pow(radius,4));
+    resistance = friction * length * density / ( 4 * radius * pow(area,2));
 }
 
 
@@ -240,14 +241,12 @@ void VRPipeSystem::initOntology() {
     Tank->addProperty("density", "double");
     Tank->addProperty("level", "double");
     Tank->addProperty("isOpen", "bool");
-    Pump->addProperty("performance", "double");
-    Pump->addProperty("maxPressure", "double");
+    Pump->addProperty("headGain", "double");
     Pump->addProperty("isOpen", "bool");
     Outlet->addProperty("radius", "double");
     Outlet->addProperty("pressure", "double");
     Outlet->addProperty("density", "double");
-    Valve->addProperty("state", "bool");
-    Valve->addProperty("radius", "double");
+    Valve->addProperty("state", "double");
 }
 
 void VRPipeSystem::setNodePose(int nID, PosePtr p) {
@@ -769,29 +768,77 @@ void VRPipeSystem::assignBoundaryPressures() {
     }
 }
 
+void VRPipeSystem::computeDynamicPipeResistances() {
+    for (auto& s : segments) s.second->dynamicResistance = 0.0;
+
+    for (auto& n : nodes) {
+        auto node = n.second;
+        auto entity = node->entity;
+
+        auto computeDynamicResistance = [](double opening, double Rmax) {
+            return Rmax * (1.0 - opening);
+        };
+
+        if (entity->is_a("Pump")) {
+            if (node->pipes.size() != 2) continue;
+            bool isOpen = entity->getValue("isOpen", 0.0);
+            bool headGain = entity->getValue("headGain", 0.0);
+
+            if (headGain < 1e-3) { // pump off
+                auto downstream = node->pipes[1];
+                auto pipe = downstream->pipe.lock();
+                if (!pipe) continue;
+                pipe->dynamicResistance += isOpen ? 0 : 1e11;
+            }
+        }
+
+        if (entity->is_a("Valve")) {
+            if (node->pipes.size() != 2) continue;
+            double state = entity->getValue("state", 1.0);
+            state = clamp(state, 0.0, 1.0);
+            auto downstream = node->pipes[1];
+            auto pipe = downstream->pipe.lock();
+            if (!pipe) continue;
+            pipe->dynamicResistance += computeDynamicResistance(state, 1e12);
+        }
+    }
+}
+
 void VRPipeSystem::solveNodeHeads(double dt) {
     for (int it = 0; it < 10; ++it) {
         for (auto& n : nodes) {
             auto node = n.second;
             auto entity = node->entity;
 
-            if (entity->is_a("Tank") || entity->is_a("Outlet"))
-                continue; // already prescribed
+            if (entity->is_a("Tank") || entity->is_a("Outlet")) continue; // already prescribed
 
             double num = 0.0;
             double den = 0.0;
 
-            for (auto& e : node->pipes) {
+            for (auto& e : node->pipes) { // TODO: not a fan.. feels off to compute head from other heads like this
                 auto pipe = e->pipe.lock();
                 auto otherEnd = pipe->otherEnd(e);
-                double R = pipe->resistance; // or Rt-equivalent
+                double R = pipe->resistance + pipe->dynamicResistance; // or Rt-equivalent
                 num += otherEnd->hydraulicHead / R;
                 den += 1.0 / R;
             }
 
-            if (den > 0)
-                for (auto& e : node->pipes)
-                    e->hydraulicHead = num / den;
+            if (abs(den) < 1e-9) continue;
+            double newHead = num / den;
+            for (auto& e : node->pipes) e->hydraulicHead = newHead;
+        }
+
+        for (auto& n : nodes) {
+            auto node = n.second;
+            auto entity = node->entity;
+            if (entity->is_a("Pump")) {
+                if (node->pipes.size() != 2) continue;
+                double pumpGain = entity->getValue("headGain", 0.0);
+                auto pEnd1 = node->pipes[0];
+                auto pEnd2 = node->pipes[1];
+                pEnd1->hydraulicHead -= pumpGain;
+                pEnd2->hydraulicHead += pumpGain;
+            }
         }
     }
 }
@@ -808,7 +855,8 @@ void VRPipeSystem::computePipeFlows(double dt) {
         int dir = sign(dH);
 
         // based on Darcy-Weisbach for turbulent flow
-        double Rt = pipeFriction * pipe->length * pipe->density / ( 4 * pipe->radius * pow(pipe->area,2));
+        //double Rt = pipeFriction * pipe->length * pipe->density / ( 4 * pipe->radius * pow(pipe->area,2));
+        double Rt = pipe->resistance + pipe->dynamicResistance;
         double flow = sqrt( abs(dP) / Rt ) * dir;
 
         if (pipe->level > 1.0-1e-6) { // full pipe
@@ -873,6 +921,7 @@ void VRPipeSystem::update() {
 
     for (int i=0; i<subSteps; i++) {
         assignBoundaryPressures();
+        computeDynamicPipeResistances();
         solveNodeHeads(dt);
         computePipeFlows(dt);
         updateLevels(dt);

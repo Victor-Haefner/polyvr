@@ -41,9 +41,11 @@ class VRPipeSegment {
         double area = 0.0;
         double volume = 0.0;
         double resistance = 0.0;
+        double dynamicResistance = 0.0; // set by valves and pumps
         double density = 1000.0; // kg / m3
         double viscosity = 1e-3; // Pa s
         double level = 0.0;
+        double friction = 0.02;
         bool flowBlocked = false;
 
         VRPipeEndWeakPtr end1;
@@ -99,7 +101,6 @@ class VRPipeSystem : public VRGeometry {
 
         double gravity = 9.81;
         double atmosphericPressure = 101325; // Pa at sea level (1 atm)
-        double pipeFriction = 0.02;
 
         map<int, VRPipeNodePtr> nodes;
         map<string, int> nodesByName;
@@ -119,6 +120,7 @@ class VRPipeSystem : public VRGeometry {
         void computeEndOffset(VRPipeEndPtr e);
 
         void assignBoundaryPressures();
+        void computeDynamicPipeResistances();
         void solveNodeHeads(double dt);
         void computePipeFlows(double dt);
         void updateLevels(double dt);
