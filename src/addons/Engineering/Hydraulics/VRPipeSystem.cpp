@@ -131,7 +131,6 @@ void VRPipeSystem::computeEndOffset(VRPipeEndPtr e) {
     auto entity = nodes[e->nID]->entity;
 
     if (entity->is_a("Tank")) {
-        //double A = entity->getValue("area", 1.0);
         double H = entity->getValue("height", 1.0);
         Vec3d o = Vec3d(0,(e->offsetHeight-0.5)*H,0);
         e->offset = o;
@@ -139,9 +138,7 @@ void VRPipeSystem::computeEndOffset(VRPipeEndPtr e) {
 
     auto P = graph->getPosition(e->nID);
     e->height = (P->pos()+e->offset)[1];
-    e->hydraulicHead = e->height; // TODO: check if good initial value
-
-    cout << " ------ " << e->offset << endl;
+    e->hydraulicHead = e->height;
 }
 
 int VRPipeSystem::addSegment(double radius, int n1, int n2, double level, double h1, double h2) {
@@ -199,32 +196,32 @@ vector<VRPipeSegmentPtr> VRPipeSystem::getOutPipes(int nID) {
     return res;
 }
 
-void VRPipeSystem::printSystem() {
-    double totalEnergy = 0;
-    for (auto n : nodes) { // print some stats
-        auto entity = n.second->entity;
-        double P = entity->getValue("pressure", 1.0);
+double VRPipeSystem::computeTotalMass() {
+    double totalMass = 0.0;
+
+    for (auto& n : nodes) { // mass in tanks
+        auto node = n.second;
+        auto entity = node->entity;
+
         if (entity->is_a("Tank")) {
-            double A = entity->getValue("area", 1.0);
-            double H = entity->getValue("height", 1.0);
-            cout << " tank (n" << n.first << "): P " << P << " V " << A*H << endl;
-            totalEnergy += P*A*H;
+            double tankArea = entity->getValue("area", 0.0);
+            double tankHeight = entity->getValue("height", 0.0);
+            double tankVolume = tankArea * tankHeight;
+            double tankLevel = entity->getValue("level", 0.0); // 0..1
+            double tankDensity = entity->getValue("density", 1000.0); // kg/m³
+            totalMass += tankDensity * tankVolume * tankLevel;
         }
-        else cout << " " << entity->getName() << " (n" << n.first << ")" << endl;
-        for (auto nIn : getInPipes (n.first)) cout << "  in  e" << nIn->eID << endl;
-        for (auto nOt : getOutPipes(n.first)) cout << "  out e" << nOt->eID << endl;
     }
 
-    for (auto s : segments) { // print some stats
-        auto e1 = s.second->end1.lock();
-        auto e2 = s.second->end2.lock();
-        double P1 = e1 ? e1->pressure : 0.0;
-        double P2 = e2 ? e2->pressure : 0.0;
-        double V = s.second->volume;
-        cout << " pipe (e" << s.second->eID << "): P " << P1 << "->" << P2 << " \tFl: " << e1->flow << endl;
-        totalEnergy += (P1+P2)*0.5*V;
+    for (auto& s : segments) { // mass in pipes
+        auto pipe = s.second;
+        double pipeLevel = pipe->level; // 0..1
+        double pipeDensity = pipe->density; // kg/m³
+        double pipeVolume = pipe->volume; // m³
+        totalMass += pipeDensity * pipeVolume * pipeLevel;
     }
-    cout << " total energy: " << totalEnergy << endl;
+
+    return totalMass;
 }
 
 void VRPipeSystem::initOntology() {
@@ -640,100 +637,6 @@ void VRPipeSystem::updateVisual() {
 
 
 /** ---- simulation ---- */
-
-
-
-void VRPipeSegment::addEnergy(double m, double d, bool p1, string hint) {
-    /*if (volume < 1e-9) return;
-
-    double pressure = p1 ? pressure1 : pressure2;
-
-    if (p1) pressure1 += m/volume;
-    else pressure2 += m/volume;
-
-    if (pressure1 < -1e-6 || pressure2 < -1e-6) {
-        cout << " hint: " << hint << ", m: " << m << ", mv: " << m/volume << ", p: " << pressure << " -> " << double(p1 ? pressure1 : pressure2) << endl;
-        printBacktrace();
-    }
-
-    if (m>0) { // only when adding material with different density
-        density = (density * volume + m*d) / (volume + m);
-    }*/
-}
-
-void VRPipeSegment::handleTank(double& otherPressure, double otherVolume, double& otherDensity, double dt, bool p1) {
-    /*if (otherVolume < 1e-9) return;
-
-    double pressure = p1 ? pressure1 : pressure2;
-    double dP = pressure - otherPressure;
-    double m = dP*area*dt*gasSpeed; // energy through the pipe section area
-
-    if (dP > 0) { // energy is going out of pipe
-        m = min(m, pressure*volume); // not more than available!
-    } else { // energy going out of tank
-        m = min(m, otherPressure*otherVolume); // not more than available!
-    }
-
-    addEnergy(-m, otherDensity, p1, "handleTank");
-    //if (pressure1 < -1e-6 || pressure2 < -1e-6) cout << "handleTank, m: " << m << " mv: " << m/volume << " dP: " << dP << " P: " << pressure << "->" << otherPressure ;
-    otherPressure += m/otherVolume;
-    if (m>0) otherDensity = (otherDensity * otherVolume + m*density) / (otherVolume + m); // only when adding material with different density
-    //cout << " ... " <<  " P: " << pressure << "->" << pressure1 << "->" << pressure2 << " pipe: " << this << endl;*/
-}
-
-double VRPipeSegment::computeExchange(double hole, VRPipeSegmentPtr other, double dt, bool p1, bool op1) {
-    /*double pressure = p1 ? pressure1 : pressure2;
-    double otherPressure = op1 ? other->pressure1 : other->pressure2;
-    double dP = pressure - otherPressure;
-    hole = min(hole, min(this->area, other->area));
-    double m = dP*hole*dt*gasSpeed; // energy through the opening
-
-    if (m > 0) { // energy is going out of pipe
-        m = min(m, pressure*volume); // not more than available!
-    } else { // energy going out of other
-        m = -min(-m, otherPressure*other->volume); // not more than available!
-    }
-
-    //cout << "computeExchange eID: " << eID << " (" << other->eID << ")" << ", dP: " << dP << ", m: " << m << " " << endl;
-    return m;*/
-    return 0;
-}
-
-void VRPipeSegment::handleValve(double area, VRPipeSegmentPtr other, double dt, bool p1, bool op1) {
-    /*double m = computeExchange(area, other, dt, p1, op1)*0.5;
-    //cout << "handleValve " << m << endl;
-    addEnergy(-m, other->density, p1, "handleValveSelf");
-    other->addEnergy(m, density, op1, "handleValveOther");*/
-}
-
-void VRPipeSegment::handleOutlet(double area, double extPressure, double extDensity, double dt, bool p1) {
-    /*double pressure = p1 ? pressure1 : pressure2;
-    area = min(area, this->area);
-    double dP = pressure - extPressure;
-    double m = dP*area*dt*gasSpeed; // energy through the opening
-    m = min(m, pressure*volume); // not more than available!
-    addEnergy(-m, extDensity, p1, "handleOutlet");*/
-}
-
-void VRPipeSegment::handlePump(double performance, double maxPressure, bool isOpen, VRPipeSegmentPtr other, double dt, bool p1, bool op1) {
-    /*double pressure = p1 ? pressure1 : pressure2;
-    double otherPressure = op1 ? other->pressure1 : other->pressure2;
-    if (pressure < 1e-6) return; // min pressure
-    if (otherPressure > maxPressure) return;
-
-    double mO = 0;
-    if (isOpen) mO = computeExchange(area*0.1, other, dt, p1, op1); // minimal exchange if pump is open
-
-    double v = 1.0 + otherPressure/pressure;
-    double m = performance*dt/exp(v);
-    m = max(m, mO);
-    //if (isOpen) m = max(m, computeExchange(area*0.1, other, dt, p1)); // minimal exchange if pump is open
-    m = min(m, pressure*volume); // pump out not more than available!
-    addEnergy(-m, other->density, p1, "handlePump");
-    other->addEnergy(m, density, op1, "handlePumpOther");
-    //cout << " pump " << performance << " m " << m << " v " << v << endl;*/
-}
-
 
 void VRPipeSystem::assignBoundaryPressures() {
     for (auto n : nodes) {

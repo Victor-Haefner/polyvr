@@ -60,12 +60,6 @@ class VRPipeSegment {
         static VRPipeSegmentPtr create(int eID, double radius, double length, double level);
         VRPipeEndPtr otherEnd(VRPipeEndPtr e);
 
-        void handleTank(double& pressure, double otherVolume, double& otherDensity, double dt, bool p1);
-        void handleValve(double area, VRPipeSegmentPtr other, double dt, bool p1, bool op1);
-        void handleOutlet(double area, double extPressure, double extDensity, double dt, bool p1);
-        void handlePump(double performance, double maxPressure, bool isOpen, VRPipeSegmentPtr other, double dt, bool p1, bool op1);
-
-        void addEnergy(double m, double d, bool p1, string hint);
         void setLength(double l);
         void computeGeometry();
 };
@@ -177,7 +171,7 @@ class VRPipeSystem : public VRGeometry {
 		void setPipeRadius(int i, double r);
 		void setPipePressure(int i, double p1, double p2);
 
-        void printSystem();
+		double computeTotalMass();
 };
 
 OSG_END_NAMESPACE;
