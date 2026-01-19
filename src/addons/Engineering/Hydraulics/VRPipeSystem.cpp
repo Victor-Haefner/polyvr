@@ -81,14 +81,18 @@ VRPipeSystemPtr VRPipeSystem::ptr() { return static_pointer_cast<VRPipeSystem>(s
 
 void VRPipeSystem::setupMaterial() {
     auto m = VRMaterial::create("pipes");
+
     m->setLineWidth(5);
     m->setLit(0);
     m->setFrontBackModes(GL_NONE, GL_FILL);
+    //m->setDepthTest(GL_ALWAYS);
 
     m->addPass();
     m->setPointSize(10);
     m->setLit(0);
     m->setFrontBackModes(GL_NONE, GL_FILL);
+    //m->setDepthTest(GL_ALWAYS);
+
     setMaterial(m);
 }
 
@@ -307,7 +311,7 @@ double VRPipeSystem::getSegmentFlow(int i) { auto e1 = segments[i]->end1.lock();
 double VRPipeSystem::getTankPressure(string n) { auto e = getEntity(n); return e ? e->getValue("pressure", 1.0) : 0.0; }
 double VRPipeSystem::getTankDensity(string n) { auto e = getEntity(n); return e ? e->getValue("density", 1000.0) : 0.0; }
 double VRPipeSystem::getTankLevel(string n) { auto e = getEntity(n); return e ? e->getValue("level", 1.0) : 0.0; }
-double VRPipeSystem::getPump(string n) { auto e = getEntity(n); return e ? e->getValue("performance", 0.0) : 0.0; }
+double VRPipeSystem::getPump(string n) { auto e = getEntity(n); return e ? e->getValue("headGain", 0.0) : 0.0; }
 bool VRPipeSystem::getValveState(string n) { auto e = getEntity(n); return e ? e->getValue("state", false) : false; }
 
 void VRPipeSystem::setValve(string n, bool b)  { auto e = getEntity(n); if (e) e->set("state", toString(b)); }
@@ -324,11 +328,11 @@ void VRPipeSystem::setPipePressure(int i, double p1, double p2) {
     if (e2) e2->pressure = p2;
 }
 
-void VRPipeSystem::setPump(string n, double p, double pmax) {
+void VRPipeSystem::setPump(string n, double h, bool isOpen) {
     auto e = getEntity(n);
     if (e) {
-        e->set("performance", toString(p));
-        e->set("maxPressure", toString(pmax));
+        e->set("headGain", toString(h));
+        e->set("isOpen", toString(isOpen));
     }
 }
 
@@ -484,6 +488,7 @@ void VRPipeSystem::updateVisual() {
                 double a = e->getValue("area", 0.0);
                 double h = e->getValue("height", 0.0);
                 double s = sqrt(a);
+
                 data.pushQuad(p->pos() - Vec3d(0,h*0.5,0), Vec3d(0,1,0), Vec3d(0,0,1), Vec2d(s,s), false);
                 data.pushQuad(p->pos() - Vec3d(0,h*0.5,0), Vec3d(0,1,0), Vec3d(0,0,1), Vec2d(s,s), true);
                 data.pushQuad(p->pos() + Vec3d(0,h*0.5,0), Vec3d(0,1,0), Vec3d(0,0,1), Vec2d(s,s), true);

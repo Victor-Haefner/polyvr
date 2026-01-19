@@ -227,6 +227,8 @@ vector<int> VRGeometry::intersectEdges(Line ray, double threshold) {
     };
 
     VRGeoData data(ptr());
+    if (!data.size()) return res;
+
     for (VRGeoData::Primitive& prim : data) {
         if (prim.type != 1) continue;
 
@@ -285,10 +287,10 @@ VRGeometry::~VRGeometry() {
     if (mesh) remGeometryAttachment(mesh->geo);
 }
 
-VRGeometryPtr VRGeometry::create(string name) { 
-	auto g = VRGeometryPtr(new VRGeometry(name) ); 
+VRGeometryPtr VRGeometry::create(string name) {
+	auto g = VRGeometryPtr(new VRGeometry(name) );
 	g->setMesh();
-	return g; 
+	return g;
 }
 
 VRGeometryPtr VRGeometry::create(string name, bool hidden) { auto g = VRGeometryPtr(new VRGeometry(name, hidden) ); g->setMesh(); return g; }

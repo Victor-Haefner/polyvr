@@ -31,7 +31,7 @@
 
 
 
-bool doPrintKeyEvents2 = true;
+bool doPrintKeyEvents2 = false;
 
 void checkKeysDownMap(string tag) {
     ImGuiIO& io = ImGui::GetIO();
