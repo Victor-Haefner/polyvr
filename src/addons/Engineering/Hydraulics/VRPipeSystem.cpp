@@ -471,48 +471,41 @@ void VRPipeSystem::updateVisual() {
             double hMax = p4[1];//max(p3[1], p4[1]);
             double hl = hMin+(hMax-hMin)*level;
 
-            std::array<double, 4> heights = {0, p2[1]-p1[1], p3[1]-p1[1], p4[1]-p1[1]};
+            std::array<double, 4> heights = {p1[1], p2[1], p3[1], p4[1]};
             //std::sort(heights.begin(), heights.end());
             bool cutFace1 = bool(hl < heights[1]);
-            bool cutFace2 = !cutFace1;
             bool cutFace3 = bool(hl < heights[2]);
-            bool cutFace4 = !cutFace3;
 
             bool face1Bellow = bool(hl >= heights[1]);
             bool face2Above  = bool(hl  < heights[1]);
             bool face3bellow = bool(hl >= heights[2]);
             bool face4Above  = bool(hl  < heights[2]);
 
-            /*if (cutFace1) { //
-                updateQuad(data, k0+2*4, i0, 0, 3, 5, 4, blue); // bottom1
-                updateQuad(data, k0+3*4, i0, 2, 1, 8, 9, white); // bottom2
-            } else {
+            if (cutFace1) {
+                updateQuad(data, k0+2*4, i0, 0, 3, 7, 6, blue); // bottom1
+                updateQuad(data, k0+3*4, i0, 2, 1, 10, 11, white); // bottom2
+                updateQuad(data, k0+4*4, i0, 1, 2, 14, 13, face2Above ? white : blue); // side
+            } else { // cutFace2
                 updateQuad(data, k0+2*4, i0, 3, 2, 1, 0, face1Bellow ? dblue : white); // bottom
-            }
-
-            if (cutFace2) { //
                 updateQuad(data, k0+3*4, i0, 1, 2, 7, 6, blue); // side1
                 updateQuad(data, k0+4*4, i0, 14, 13, 10, 11, white); // side2
-            } else {
-                updateQuad(data, k0+4*4, i0, 1, 2, 14, 13, face2Above ? white : blue); // side
             }
 
-            if (cutFace3) { //
+            if (cutFace3) {
                 updateQuad(data, k0+5*4, i0, 3, 0, 4, 5, blue); // side1
                 updateQuad(data, k0+6*4, i0, 12, 15, 9, 8, white); // side2
-            } else {
+                updateQuad(data, k0+7*4, i0, 12, 13, 14, 15, face4Above ? white : blue); // top
+            } else { // cutFace4
                 updateQuad(data, k0+5*4, i0, 3, 0, 12, 15, face3bellow ? blue : white); // side
+                updateQuad(data, k0+6*4, i0, 15, 12, 4, 5, blue); // top1
+                updateQuad(data, k0+7*4, i0, 13, 14, 9, 8, white); // top2
             }
 
-            if (cutFace4) { //
-                updateQuad(data, k0+6*4, i0, 15, 12, 6, 7, blue); // top1
-                updateQuad(data, k0+7*4, i0, 13, 14, 11, 10, white); // top2
-            } else {
-                updateQuad(data, k0+7*4, i0, 12, 13, 14, 15, face4Above ? white : blue); // top
-            }*/
-            //if (hl >= heights[1] && hl <);
-            cout << hl << ", h0: " << heights[0] << ", h1: "  << heights[1] << ", h2: "  << heights[2] << ", h3: "  << heights[3] << endl;
-            cout << cutFace1 << ", " << cutFace3 << endl;
+            data.setColor(i0+0, dblue);
+            data.setColor(i0+3, dblue);
+
+            //cout << hl << ", h0: " << heights[0] << ", h1: "  << heights[1] << ", h2: "  << heights[2] << ", h3: "  << heights[3] << endl;
+            //cout << cutFace1 << ", " << cutFace3 << endl;
         }
 
         /**
@@ -719,7 +712,7 @@ void VRPipeSystem::updateVisual() {
             }
         }
 
-        //updatePipeInds(data, l, i, k);
+        updatePipeInds(data, l, i, k);
 
         i += 16;
         k += 48;
