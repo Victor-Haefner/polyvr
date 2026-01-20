@@ -440,7 +440,7 @@ void VRPipeSystem::updateVisual() {
         Pnt3d p4 = data.getPosition(i0+13);
         Vec3d d = p3-p1; d.normalize();
 
-        if (abs(d[1]) < 1e-3) { // horizontal
+        if (abs(d[1]) < 1e-6) { // horizontal
             updateQuad(data, k0+12*4, i0, 0, 0, 0, 0, dblue);
             updateQuad(data, k0+13*4, i0, 0, 0, 0, 0, dblue);
 
@@ -456,7 +456,7 @@ void VRPipeSystem::updateVisual() {
 
             updateQuad(data, k0+3*4, i0, 3, 0, 12, 15, dblue); // bottom
             updateQuad(data, k0+2*4, i0, 1, 2, 14, 13, white); // top
-        } else if(abs(d[1]) > 1.0-1e-3) { // vertical
+        } else if(abs(d[1]) > 1.0-1e-6) { // vertical
             updateQuad(data, k0+12*4, i0, 0, 0, 0, 0, dblue);
             updateQuad(data, k0+13*4, i0, 0, 0, 0, 0, dblue);
 
@@ -646,6 +646,8 @@ void VRPipeSystem::updateVisual() {
 
     int i = 0;
     int k = 0;
+    static double F = 0; F += 0.01; // TOTEST
+
     for (auto& s : segments) {
         auto e1 = s.second->end1.lock();
         auto e2 = s.second->end2.lock();
@@ -702,7 +704,8 @@ void VRPipeSystem::updateVisual() {
 
         double l = s.second->level;
         //l = 0.5;
-        //static double F = 0; F += 0.01; l = 0.5+0.5*sin(F); // TOTEST
+        //l = 0.5+0.5*sin(F); // TOTEST
+        l = clamp(l, 1e-3, 1.0-1e-3);
         if (abs(l-s.second->lastVizLevel) > 1e-3) {
             s.second->lastVizLevel = l;
 
@@ -714,17 +717,21 @@ void VRPipeSystem::updateVisual() {
             std::sort(heights.begin(), heights.end());
             double h = heights[0] + l*(heights[3] - heights[0]);
 
+            cout << "I";
             vector<Pnt3d> intersections;
             auto intersectHz = [&](int a, int b) { // intersect edge (a,b) with horizontal plane at height h
                 Pnt3d p1 = data.getPosition(i+a);
                 Pnt3d p2 = data.getPosition(i+b);
                 if (abs(p2[1]-p1[1]) < 1e-6) return;
                 double k = (h-p1[1])/(p2[1]-p1[1]);
-                if (k < 0.0 || k > 1.0) return;
+                if (k < 1e-6 || k > 1.0-1e-6) return;
                 Pnt3d I = p1 + k*(p2-p1);
                 intersections.push_back(I);
+                cout << " (" << a << "," << b << "," << k << ")";
             };
+            cout << endl;
 
+            // TODO: some cases dont work out, intersection continuity!
             intersectHz(0, 12);
             intersectHz(12, 13);
             intersectHz(3, 15);
@@ -914,7 +921,7 @@ void VRPipeSystem::computePipeFlows(double dt) {
         if (pipe->level > 1.0-1e-6) { // full pipe
             e1->flow =  flow;
             e2->flow = -flow;
-        } else {
+        }/* else {
             if (dir < 0) { // filling towards e2
                 e1->flow =  flow;
                 e2->flow = -flow * pipe->level * 0;
@@ -922,7 +929,7 @@ void VRPipeSystem::computePipeFlows(double dt) {
                 e1->flow =  flow * pipe->level * 0;
                 e2->flow = -flow;
             }
-        }
+        }*/
     }
 
     // update heads
@@ -961,7 +968,7 @@ void VRPipeSystem::updateLevels(double dt) {
     for (auto& s : segments) {
         auto& pipe = s.second;
         double flow = pipe->end1.lock()->flow + pipe->end2.lock()->flow; // positive flow is going out the pipe
-        //pipe->level = clamp(pipe->level - flow*dt / pipe->volume, 0.0, 1.0);
+        pipe->level = clamp(pipe->level - flow*dt / pipe->volume, 0.0, 1.0);
     }
 }
 
