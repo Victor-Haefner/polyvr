@@ -45,6 +45,7 @@ class VRPipeSegment {
         double density = 1000.0; // kg / m3
         double viscosity = 1e-3; // Pa s
         double level = 0.0;
+        double lastVizLevel = -1.0;
         double friction = 0.02;
         bool flowBlocked = false;
 

@@ -441,19 +441,25 @@ void VRPipeSystem::updateVisual() {
         Vec3d d = p3-p1; d.normalize();
 
         if (abs(d[1]) < 1e-3) { // horizontal
-            updateQuad(data, k0+4*4, i0, 0, 3, 5, 4, blue); // sides bottom
-            updateQuad(data, k0+5*4, i0, 12, 0, 4, 6, blue);
-            updateQuad(data, k0+6*4, i0, 15, 12, 6, 7, blue);
-            updateQuad(data, k0+7*4, i0, 3, 15, 7, 5, blue);
+            updateQuad(data, k0+12*4, i0, 0, 0, 0, 0, dblue);
+            updateQuad(data, k0+13*4, i0, 0, 0, 0, 0, dblue);
 
-            updateQuad(data, k0+8*4, i0, 2, 1, 8, 9, white); // sides top
-            updateQuad(data, k0+9*4, i0, 14, 2, 9, 11, white);
-            updateQuad(data, k0+10*4, i0, 13, 14, 11, 10, white);
-            updateQuad(data, k0+11*4, i0, 1, 13, 10, 8, white);
+            updateQuad(data, k0+4*4, i0, 0, 3, 7, 6, blue); // sides bottom
+            updateQuad(data, k0+5*4, i0, 12, 0, 6, 4, blue);
+            updateQuad(data, k0+6*4, i0, 15, 12, 4, 5, blue);
+            updateQuad(data, k0+7*4, i0, 3, 15, 5, 7, blue);
+
+            updateQuad(data, k0+8*4, i0, 2, 1, 10, 11, white); // sides top
+            updateQuad(data, k0+9*4, i0, 14, 2, 11, 9, white);
+            updateQuad(data, k0+10*4, i0, 13, 14, 9, 8, white);
+            updateQuad(data, k0+11*4, i0, 1, 13, 8, 10, white);
 
             updateQuad(data, k0+3*4, i0, 3, 0, 12, 15, dblue); // bottom
             updateQuad(data, k0+2*4, i0, 1, 2, 14, 13, white); // top
         } else if(abs(d[1]) > 1.0-1e-3) { // vertical
+            updateQuad(data, k0+12*4, i0, 0, 0, 0, 0, dblue);
+            updateQuad(data, k0+13*4, i0, 0, 0, 0, 0, dblue);
+
             updateQuad(data, k0+4*4, i0, 5, 7, 2, 3, blue); // sides bottom
             updateQuad(data, k0+5*4, i0, 7, 6, 1, 2, blue);
             updateQuad(data, k0+6*4, i0, 6, 4, 0, 1, blue);
@@ -467,12 +473,8 @@ void VRPipeSystem::updateVisual() {
             updateQuad(data, k0+2*4, i0, 3, 2, 1, 0, dblue); // bottom
             updateQuad(data, k0+3*4, i0, 12, 13, 14, 15, white); // top
         } else { // inclined
-            double hMin = p1[1];//min(p1[1], p2[1]);
-            double hMax = p4[1];//max(p3[1], p4[1]);
-            double hl = hMin+(hMax-hMin)*level;
-
-            std::array<double, 4> heights = {p1[1], p2[1], p3[1], p4[1]};
-            //std::sort(heights.begin(), heights.end());
+            double hl = p1[1]+(p4[1]-p1[1])*level;
+            std::array<double, 4> heights = { p1[1], p2[1], p3[1], p4[1] };
             bool cutFace1 = bool(hl < heights[1]);
             bool cutFace3 = bool(hl < heights[2]);
 
@@ -501,18 +503,45 @@ void VRPipeSystem::updateVisual() {
                 updateQuad(data, k0+7*4, i0, 13, 14, 9, 8, white); // top2
             }
 
+            if (!cutFace1 && cutFace3) { // two sides cut
+                updateQuad(data, k0+12*4, i0, 0, 0, 0, 0, white);
+                updateQuad(data, k0+13*4, i0, 0, 0, 0, 0, white);
+                updateQuad(data, k0+ 8*4, i0, 0, 1, 6, 4, blue);
+                updateQuad(data, k0+ 9*4, i0, 13, 12, 8, 10, white);
+                updateQuad(data, k0+10*4, i0, 2, 3, 5, 7, blue);
+                updateQuad(data, k0+11*4, i0, 15, 14, 11, 9, white);
+            }
+
+            if (cutFace1 && !cutFace3) { // two caps cut
+                updateQuad(data, k0+12*4, i0, 0, 0, 0, 0, white);
+                updateQuad(data, k0+13*4, i0, 0, 0, 0, 0, white);
+                updateQuad(data, k0+ 8*4, i0, 12, 0, 6, 4, blue);
+                updateQuad(data, k0+ 9*4, i0, 1, 13, 8, 10, white);
+                updateQuad(data, k0+10*4, i0, 3, 15, 5, 7, blue);
+                updateQuad(data, k0+11*4, i0, 14, 2, 11, 9, white);
+            }
+
+            if (cutFace1 && cutFace3) { // level low
+                updateQuad(data, k0+ 8*4, i0, 0, 0, 6, 4, blue);
+                updateQuad(data, k0+ 9*4, i0, 13, 12, 8, 10, white);
+                updateQuad(data, k0+12*4, i0, 10, 1, 13, 13, white);
+                updateQuad(data, k0+10*4, i0, 3, 3, 5, 7, blue);
+                updateQuad(data, k0+11*4, i0, 15, 14, 11, 9, white);
+                updateQuad(data, k0+13*4, i0, 2, 11, 14, 14, white);
+            }
+
+            if (!cutFace1 && !cutFace3) { // level high
+                updateQuad(data, k0+ 8*4, i0, 0, 1, 6, 4, blue);
+                updateQuad(data, k0+12*4, i0, 0, 0, 4, 12, blue);
+                updateQuad(data, k0+ 9*4, i0, 13, 13, 8, 10, white);
+                updateQuad(data, k0+10*4, i0, 2, 3, 5, 7, blue);
+                updateQuad(data, k0+13*4, i0, 3, 3, 15, 5, blue);
+                updateQuad(data, k0+11*4, i0, 14, 14, 11, 9, white);
+            }
+
             data.setColor(i0+0, dblue);
             data.setColor(i0+3, dblue);
-
-            //cout << hl << ", h0: " << heights[0] << ", h1: "  << heights[1] << ", h2: "  << heights[2] << ", h3: "  << heights[3] << endl;
-            //cout << cutFace1 << ", " << cutFace3 << endl;
         }
-
-        /**
-        1) find die punkte über und unter dem level
-        2) seite: 2 Fälle, 1 3eck + 1 5eck, oder 2 4ecke
-        3) enden und top/bottom: 2 Fälle, 1 4eck oder 2 4ecke
-        **/
     };
 
     if (rebuildMesh) {
@@ -571,7 +600,7 @@ void VRPipeSystem::updateVisual() {
             for (int i=0; i<4; i++) data.pushColor(white);
 
             data.pushQuad(-9, -10, -11, -12); // mid but reversed
-            for (int i=0; i<10; i++) data.pushQuad(-1,-1,-1,-1); // placeholders
+            for (int i=0; i<12; i++) data.pushQuad(-1,-1,-1,-1); // placeholders
             updatePipeInds(data, 0.5, i0, k0);
         }
 
@@ -671,51 +700,52 @@ void VRPipeSystem::updateVisual() {
             k += 2;
         }
 
-
-        std::array<double, 4> heights;
-        heights[0] = data.getPosition(i+ 0)[1];
-        heights[1] = data.getPosition(i+ 2)[1];
-        heights[2] = data.getPosition(i+12)[1];
-        heights[3] = data.getPosition(i+14)[1];
-        std::sort(heights.begin(), heights.end());
         double l = s.second->level;
+        //l = 0.5;
+        //static double F = 0; F += 0.01; l = 0.5+0.5*sin(F); // TOTEST
+        if (abs(l-s.second->lastVizLevel) > 1e-3) {
+            s.second->lastVizLevel = l;
 
-        static double F = 0; F += 0.01; l = 0.5+0.5*sin(F); // TOTEST
+            std::array<double, 4> heights;
+            heights[0] = data.getPosition(i+ 0)[1];
+            heights[1] = data.getPosition(i+ 2)[1];
+            heights[2] = data.getPosition(i+12)[1];
+            heights[3] = data.getPosition(i+14)[1];
+            std::sort(heights.begin(), heights.end());
+            double h = heights[0] + l*(heights[3] - heights[0]);
 
-        double h = heights[0] + l*(heights[3] - heights[0]);
+            vector<Pnt3d> intersections;
+            auto intersectHz = [&](int a, int b) { // intersect edge (a,b) with horizontal plane at height h
+                Pnt3d p1 = data.getPosition(i+a);
+                Pnt3d p2 = data.getPosition(i+b);
+                if (abs(p2[1]-p1[1]) < 1e-6) return;
+                double k = (h-p1[1])/(p2[1]-p1[1]);
+                if (k < 0.0 || k > 1.0) return;
+                Pnt3d I = p1 + k*(p2-p1);
+                intersections.push_back(I);
+            };
 
+            intersectHz(0, 12);
+            intersectHz(12, 13);
+            intersectHz(3, 15);
+            intersectHz(15, 14);
+            intersectHz(0, 1);
+            intersectHz(1, 13);
+            intersectHz(3, 2);
+            intersectHz(2, 14);
 
-        vector<Pnt3d> intersections;
-        auto intersectHz = [&](int a, int b) { // intersect edge (a,b) with horizontal plane at height h
-            Pnt3d p1 = data.getPosition(i+a);
-            Pnt3d p2 = data.getPosition(i+b);
-            if (abs(p2[1]-p1[1]) < 1e-6) return;
-            double k = (h-p1[1])/(p2[1]-p1[1]);
-            if (k < 0.0 || k > 1.0) return;
-            Pnt3d I = p1 + k*(p2-p1);
-            intersections.push_back(I);
-        };
-
-        intersectHz(0, 12);
-        intersectHz(12, 13);
-        intersectHz(3, 15);
-        intersectHz(15, 14);
-        intersectHz(0, 1);
-        intersectHz(1, 13);
-        intersectHz(3, 2);
-        intersectHz(2, 14);
-
-        if (intersections.size() == 4) {
-            for (int j=0; j<4; j++) {
-                data.setPos(i+4+j, intersections[j]);
-                data.setPos(i+8+j, intersections[j]);
+            if (intersections.size() == 4) {
+                for (int j=0; j<4; j++) {
+                    data.setPos(i+4+j, intersections[j]);
+                    data.setPos(i+8+j, intersections[j]);
+                }
             }
+
+            updatePipeInds(data, l, i, k);
         }
 
-        updatePipeInds(data, l, i, k);
-
         i += 16;
-        k += 48;
+        k += 56;
     }
 
     for (auto& n : nodes) {
@@ -931,7 +961,7 @@ void VRPipeSystem::updateLevels(double dt) {
     for (auto& s : segments) {
         auto& pipe = s.second;
         double flow = pipe->end1.lock()->flow + pipe->end2.lock()->flow; // positive flow is going out the pipe
-        pipe->level = clamp(pipe->level - flow*dt / pipe->volume, 0.0, 1.0);
+        //pipe->level = clamp(pipe->level - flow*dt / pipe->volume, 0.0, 1.0);
     }
 }
 
