@@ -11,6 +11,7 @@
 #include "addons/Semantics/Reasoning/VROntology.h"
 
 #include <boost/algorithm/string/join.hpp>
+#include <ifcparse/Ifc4.h>
 #include <ifcparse/IfcFile.h>
 #include <ifcparse/IfcHierarchyHelper.h>
 #include <ifcgeom/IfcGeom.h>
@@ -197,7 +198,7 @@ class IFCLoader {
             bool r = kernel.convert_shape(s, shape);
             return convertSTEPShape(shape);
         }
-
+        
         void processConnects(IfcRelConnects* connects) {
             //cout << "processConnects " << Type::ToString(connects->type()) << endl;
 

@@ -2,7 +2,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "PolyVR"
-#define MyAppVersion "25.06_Win10_x64"
+#define MyAppVersion "25.07_Win10_x64"
 #define MyAppPublisher "Victor Haefner"
 #define MyAppExeName "startApp.bat"
 #define MyAppIcoName "engine\ressources\gui\logo_icon_win.ico"

@@ -54,24 +54,28 @@ void cleanupGlutExtensions() {
 Icon::Icon(int w, int h) : w(w), h(h) {
     data = (uint64_t*)malloc ((w*h) * sizeof(uint64_t));
 }
+Icon::~Icon() { if (data) free(data); }
+
+IconList::IconList() {}
+IconList::~IconList() { if (data) free(data); }
 
 uint64_t* IconList::add(int w, int h) {
-    images.push_back(Icon(w,h));
-    return images[images.size()-1].data;
+    images.push_back(shared_ptr<Icon>(new Icon(w, h)));
+    return images[images.size()-1]->data;
 }
 
 void IconList::compile() {
     size = 0;
-    for (auto& img : images) size += img.w*img.h + 2;
+    for (auto& img : images) size += img->w*img->h + 2;
     if (data) free(data);
     data = (uint64_t*)malloc (size * sizeof(uint64_t));
 
     int k=0;
     for (auto& img : images) {
-        data[k+0] = img.w;
-        data[k+1] = img.h;
-        for (int i=0; i<img.w*img.h; i++) data[k+i+2] = img.data[i];
-        k += img.w*img.h+2;
+        data[k+0] = img->w;
+        data[k+1] = img->h;
+        for (int i=0; i<img->w*img->h; i++) data[k+i+2] = img->data[i];
+        k += img->w*img->h+2;
     }
 }
 

@@ -1,6 +1,7 @@
 #ifndef VRPRIMITIVE_H_INCLUDED
 #define VRPRIMITIVE_H_INCLUDED
 
+#include "core/objects/VRObjectFwd.h"
 #include <string>
 #include <OpenSG/OSGSField.h>
 
@@ -15,9 +16,9 @@ struct VRPrimitive {
     string getType();
     void fromString(string s);
     string toString();
-    shared_ptr<VRPrimitive> copy();
+    VRPrimitivePtr copy();
 
-    static shared_ptr<VRPrimitive> create(string p);
+    static VRPrimitivePtr create(string p);
     static vector<string> getTypes();
     static vector<string> getTypeParameter(string type);
 

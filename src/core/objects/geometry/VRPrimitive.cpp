@@ -15,7 +15,7 @@ int VRPrimitive::getNParams() { return N; }
 string VRPrimitive::getType() { return type; }
 void VRPrimitive::fromString(string s) { stringstream ss(s); fromStream(ss); }
 string VRPrimitive::toString() { stringstream ss; toStream(ss); return ss.str(); }
-shared_ptr<VRPrimitive> VRPrimitive::create(string p) {
+VRPrimitivePtr VRPrimitive::create(string p) {
     if (p == "Plane") return shared_ptr<VRPrimitive>( new VRPlane() );
     if (p == "Box") return shared_ptr<VRPrimitive>( new VRBox() );
     if (p == "Sphere") return shared_ptr<VRPrimitive>( new VRSphere() );
@@ -32,7 +32,7 @@ shared_ptr<VRPrimitive> VRPrimitive::create(string p) {
     return 0;
 }
 
-shared_ptr<VRPrimitive> VRPrimitive::copy() {
+VRPrimitivePtr VRPrimitive::copy() {
     auto p = create(getType());
     p->fromString(toString());
     return p;

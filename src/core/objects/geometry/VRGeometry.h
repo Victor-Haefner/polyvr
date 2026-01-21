@@ -10,8 +10,6 @@
 
 #include <OpenSG/OSGSField.h>
 
-struct VRPrimitive;
-
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 

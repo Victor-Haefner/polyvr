@@ -75,7 +75,7 @@ vector<string> splitString(const string& s, const string& d) {
 }
 
 string subString(const string& s, int beg, int len) {
-    if (len < 0) len = s.size()-beg +len+1;
+    if (len < 0) len = (int)s.size()-beg +len+1;
     if (len < 0) return "";
     if (beg >= s.length()) return "";
     if (beg+len > s.length()) return "";
@@ -97,13 +97,13 @@ string to_lower_copy(const string& s) {
 }
 
 bool startsWith(const string& s, const string& s2, bool caseSensitive) {
-    string s1 = subString(s, 0, s2.size());
+    string s1 = subString(s, 0, (int)s2.size());
     if (caseSensitive) return bool(s1 == s2);
     else return bool(to_lower_copy(s1) == to_lower_copy(s2));
 }
 
 bool endsWith(const string& s, const string& s2, bool caseSensitive) {
-    string s1 = subString(s, s.size() - s2.size(), s2.size());
+    string s1 = subString(s, (int)(s.size() - s2.size()), (int)s2.size());
     if (caseSensitive) return bool(s1 == s2);
     else return bool(to_lower_copy(s1) == to_lower_copy(s2));
 }
@@ -139,9 +139,6 @@ template<> string toString(const size_t& i) { stringstream ss; ss << i; return s
 #endif
 template<> string toString(const unsigned int& i) { stringstream ss; ss << long(i); return ss.str(); }
 
-#ifdef _WIN32
-template<> string toString(const __int64& i) { stringstream ss; ss << i; return ss.str(); }
-#endif
 
 string toString(const float& f, int d) {
     stringstream ss;
@@ -314,8 +311,8 @@ template<> string typeName(const Line* t) { return "Line"; }
 string typeName(const std::shared_ptr<VRFunction<void>>* t) { return "callback()"; }
 
 template <typename T, typename O> int ssToVal(stringstream& ss, T& t, const O& o) {
-    t = o; // initialize to avoid undefined values
-    int N = ss.tellg();
+    t = (T)o; // initialize to avoid undefined values
+    int N = (int)ss.tellg();
     bool b = false;
     do {
         b = bool(ss >> t);
@@ -330,11 +327,11 @@ template <typename T, typename O> int ssToVal(stringstream& ss, T& t, const O& o
 
 template<> int toValue(string sIn, vector<string>& s) {
     s = splitString(sIn, ',');
-    int N = s.size();
+    int N = (int)s.size();
     if (N == 0) return true;
     s[0] = subString(s[0], 1);
     if (N == 0) return true;
-    s[N-1] = subString(s[N-1], 0, s[N-1].length()-1);
+    s[N-1] = subString(s[N-1], 0, (int)s[N-1].length()-1);
     for (int i=0; i<N; i++) s[i] = stripString(s[i]);
     return true;
 }
@@ -361,7 +358,7 @@ template<> int toValue(stringstream& ss, int& v) { return ssToVal(ss, v, 0); }
 template<> int toValue(stringstream& ss, unsigned int& v) { return ssToVal(ss, v, 0); }
 template<> int toValue(stringstream& ss, long& v) { return ssToVal(ss, v, 0); }
 template<> int toValue(stringstream& ss, unsigned long& v) { return ssToVal(ss, v, 0); }
-template<> int toValue(stringstream& ss, float& v) { double d; auto r = ssToVal(ss, d, 0); v = d; return r; } // use double because stringstreams may fail to convert scientific notations to float
+template<> int toValue(stringstream& ss, float& v) { double d; auto r = ssToVal(ss, d, 0); v = (float)d; return r; } // use double because stringstreams may fail to convert scientific notations to float
 template<> int toValue(stringstream& ss, double& v) { return ssToVal(ss, v, 0); }
 
 int    toInt   (string s) { return toValue<int   >(s); }

@@ -12,7 +12,7 @@ appFolder=$3
 pckFolder="packages/"$appName
 
 vcpkgLibs="/c/usr/vcpkg/installed/x64-windows/lib"
-pyPath="/c/usr/vcpkg/installed/x64-windows/share/python2/Lib"
+pyPath="/c/usr/vcpkg/installed/x64-windows/tools/python3/Lib"
 redistPath="/c/Program Files (x86)/Windows Kits/10/Redist/10.0.19041.0/ucrt/DLLs/x64"
 signtoolPath="/c/Program Files (x86)/Windows Kits/10/bin/10.0.19041.0/x64/signtool.exe"
 
