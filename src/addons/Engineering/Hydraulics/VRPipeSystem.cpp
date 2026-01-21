@@ -545,6 +545,13 @@ void VRPipeSystem::updateVisual() {
     };
 
     if (rebuildMesh) {
+        /*auto ann = dynamic_pointer_cast<VRAnnotationEngine>( findFirst("testInds") );
+        if (!ann) {
+            ann = VRAnnotationEngine::create("testInds");
+            ann->setSize(0.005);
+            addChild(ann);
+        }*/
+
         data.reset();
         rebuildMesh = false;
         Vec3d norm(0,1,0);
@@ -585,11 +592,12 @@ void VRPipeSystem::updateVisual() {
 
             double g = r*2;
             Vec3d u = Vec3d(1,0,0);
-            if (d[1] < 0.99) { u = d.cross(Vec3d(0,1,0)); u.normalize(); }
+            if (d[1] < 1.0-1e-6) { u = d.cross(Vec3d(0,1,0)); u.normalize(); }
             double a = d.enclosedAngle(Vec3d(0,1,0));
             double t = g*cos(a) + l*sin(a);
             int i0 = data.size();
             int k0 = data.getNIndices();
+
             data.pushQuad(p1, d, u, Vec2d(g,g), false);
             data.pushQuad(pm, Vec3d(0,1,0), u, Vec2d(t,g), true);
             data.pushQuad(pm, Vec3d(0,1,0), u, Vec2d(t,g), false);
@@ -648,6 +656,7 @@ void VRPipeSystem::updateVisual() {
     int k = 0;
     static double F = 0; F += 0.01; // TOTEST
 
+    //auto ann = dynamic_pointer_cast<VRAnnotationEngine>( findFirst("testInds") );
     for (auto& s : segments) {
         auto e1 = s.second->end1.lock();
         auto e2 = s.second->end2.lock();
@@ -703,8 +712,8 @@ void VRPipeSystem::updateVisual() {
         }
 
         double l = s.second->level;
-        //l = 0.5;
         //l = 0.5+0.5*sin(F); // TOTEST
+
         l = clamp(l, 1e-3, 1.0-1e-3);
         if (abs(l-s.second->lastVizLevel) > 1e-3) {
             s.second->lastVizLevel = l;
@@ -717,7 +726,6 @@ void VRPipeSystem::updateVisual() {
             std::sort(heights.begin(), heights.end());
             double h = heights[0] + l*(heights[3] - heights[0]);
 
-            cout << "I";
             vector<Pnt3d> intersections;
             auto intersectHz = [&](int a, int b) { // intersect edge (a,b) with horizontal plane at height h
                 Pnt3d p1 = data.getPosition(i+a);
@@ -727,19 +735,20 @@ void VRPipeSystem::updateVisual() {
                 if (k < 1e-6 || k > 1.0-1e-6) return;
                 Pnt3d I = p1 + k*(p2-p1);
                 intersections.push_back(I);
-                cout << " (" << a << "," << b << "," << k << ")";
+                //cout << " (" << a << "," << b << "," << k << ")";
             };
-            cout << endl;
 
-            // TODO: some cases dont work out, intersection continuity!
+            //cout << " I ";
+            // order important!
             intersectHz(0, 12);
             intersectHz(12, 13);
             intersectHz(3, 15);
             intersectHz(15, 14);
-            intersectHz(0, 1);
             intersectHz(1, 13);
-            intersectHz(3, 2);
             intersectHz(2, 14);
+            intersectHz(0, 1);
+            intersectHz(3, 2);
+            //cout << endl;
 
             if (intersections.size() == 4) {
                 for (int j=0; j<4; j++) {
@@ -750,6 +759,12 @@ void VRPipeSystem::updateVisual() {
 
             updatePipeInds(data, l, i, k);
         }
+
+        /*for (int j=0; j<16; j++) {
+            Vec3d p = Vec3d(data.getPosition(i+j));
+            p += Vec3d(j, j, j)*0.0005;
+            ann->set(j, p, toString(j));
+        }*/
 
         i += 16;
         k += 56;
