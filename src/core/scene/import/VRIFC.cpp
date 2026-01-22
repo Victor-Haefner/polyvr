@@ -198,7 +198,7 @@ class IFCLoader {
             bool r = kernel.convert_shape(s, shape);
             return convertSTEPShape(shape);
         }
-        
+
         void processConnects(IfcRelConnects* connects) {
             //cout << "processConnects " << Type::ToString(connects->type()) << endl;
 
@@ -262,7 +262,7 @@ class IFCLoader {
             if (obj) obj->setEntity(e);
             e->set("type", Type::ToString(element->type()));
             e->set("gID", element->GlobalId());
-            //cout << " " << Type::ToString(element->type()) << ", " << element->Name() << ", " << element->GlobalId() << endl;
+            //cout << " " << Type::ToString(element->type()) << ", " << getName(element) << ", " << element->GlobalId() << endl;
             return e;
         }
 
@@ -414,8 +414,19 @@ class IFCLoader {
             //Logger::Verbosity( Logger::LOG_WARNING );
             //Logger::Verbosity( Logger::LOG_ERROR );
 
+
             IfcParse::IfcFile file;
-            if ( !file.Init(path) ) { cout << "Unable to parse .ifc file: " << path << endl; return; }
+            try {
+                if (!file.Init(path)) { cout << "Unable to parse .ifc file: " << path << endl; return; }
+            } catch (const IfcParse::IfcInvalidTokenException& e) {
+                cerr << "IFC parse error (invalid token): " << e.what() << endl;
+            } catch (const IfcParse::IfcException& e) {
+                cerr << "IFC parse error: " << e.what() << endl;
+            } catch (const std::exception& e) {
+                cerr << "Standard exception: " << e.what() << endl;
+            } catch (...) {
+                cerr << "Unknown exception while parsing IFC file." << endl;
+            }
 
 
             // create objects

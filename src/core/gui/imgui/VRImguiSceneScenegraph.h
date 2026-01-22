@@ -24,6 +24,12 @@ class ImScenegraph {
         bool pickable = false;
         bool castShadow = true;
 
+        bool hasEntity = false;
+        string entityName;
+        string entityConcepts;
+        vector<string> entityParams;
+        vector<string> entityParamNames;
+
         Im_Vector position;
         Im_Vector atvector;
         Im_Vector direction;
@@ -87,6 +93,7 @@ class ImScenegraph {
         void treeAppend(string ID, string label, string parent, string type, string cla, string mod, string col);
 
         void setupObject(OSG::VRGuiSignals::Options o);
+        void setupEntity(OSG::VRGuiSignals::Options o);
         void setupTransform(OSG::VRGuiSignals::Options o);
         void setupCamera(OSG::VRGuiSignals::Options o);
         void setupLight(OSG::VRGuiSignals::Options o);

@@ -69,7 +69,8 @@ void VRGuiScene::setObject(VRObjectPtr o) {
         {"persistency", toString(o->getPersistency())},
         {"visible", toString(o->isVisible())},
         {"pickable", toString(o->isPickable())},
-        {"castShadow", toString(o->isVisible("SHADOW"))}
+        {"castShadow", toString(o->isVisible("SHADOW"))},
+        {"hasEntity", toString(bool(o->getEntity()))}
     } );
 }
 
@@ -292,22 +293,23 @@ void VRGuiScene::setLod(VRLodPtr lod) {
 }
 
 void VRGuiScene::setEntity(VREntityPtr e) {
-    /*setWidgetVisibility("expander27", true, true);
+    if (!e) return;
 
-    setLabel("label145", e->getConceptList());
+    vector<string> propNames;
+    vector<string> propValues;
+    for (auto& pvec : e->properties) {
+        string val;
+        for (auto& p : pvec.second) val += " " + p.second->value + " (" + p.second->type + ")";
+        propNames.push_back(pvec.first);
+        propValues.push_back(val);
+    }
 
-    auto store = (GtkListStore*)VRGuiBuilder::get()->get_object("properties");
-    gtk_list_store_clear(store);
-
-    for(auto pvec : e->properties) {
-        for (auto p : pvec.second) {
-            GtkTreeIter row;
-            gtk_list_store_append(store, &row);
-            gtk_list_store_set(store, &row, 0, pvec.first.c_str(), -1);
-            gtk_list_store_set(store, &row, 1, p.second->value.c_str(), -1);
-            gtk_list_store_set(store, &row, 2, p.second->type.c_str(), -1);
-        }
-    }*/
+    uiSignal( "on_sg_setup_entity", {
+        {"name", e->getName()},
+        {"concepts", e->getConceptList()},
+        {"propNames", toString(propNames)},
+        {"propValues", toString(propValues)},
+    } );
 }
 
 /*void setCSG(CSGGeometryPtr g) {

@@ -39,6 +39,7 @@ ImScenegraph::ImScenegraph() :  tree("scenegraph"),
 
     mgr->addCallback("on_sg_set_obj_type", [&](OSG::VRGuiSignals::Options o){ objType = o["objType"]; return true; } );
     mgr->addCallback("on_sg_setup_obj", [&](OSG::VRGuiSignals::Options o){ setupObject(o); return true; } );
+    mgr->addCallback("on_sg_setup_entity", [&](OSG::VRGuiSignals::Options o){ setupEntity(o); return true; } );
     mgr->addCallback("on_sg_setup_trans", [&](OSG::VRGuiSignals::Options o){ setupTransform(o); return true; } );
     mgr->addCallback("on_sg_setup_lod", [&](OSG::VRGuiSignals::Options o){ setupLod(o); return true; } );
     mgr->addCallback("on_sg_setup_cam", [&](OSG::VRGuiSignals::Options o){ setupCamera(o); return true; } );
@@ -234,7 +235,27 @@ void ImScenegraph::render() {
             ImGui::Unindent(10);
         }
 
+        if (hasEntity) {
+            ImGui::Separator();
+            string lbl = "Entity: " + entityName + " (" + entityConcepts + ")";
+            ImGui::TextUnformatted(lbl.c_str());
+            ImGui::Indent(10);
+            ImGui::TextUnformatted("Properties:");
+            for (int i=0; i<entityParams.size(); i++) {
+                if (i < entityParamNames.size())
+                    ImGui::TextUnformatted((" " + entityParamNames[i] + ": " + entityParams[i]).c_str());
+            }
+            ImGui::Unindent(10);
+        }
+
     ImGui::EndChild();
+}
+
+void ImScenegraph::setupEntity(OSG::VRGuiSignals::Options o) {
+    entityName = o["name"];
+    entityConcepts = o["concepts"];
+    toValue(o["propNames"], entityParamNames);
+    toValue(o["propValues"], entityParams);
 }
 
 void ImScenegraph::setupObject(OSG::VRGuiSignals::Options o) {
@@ -244,6 +265,7 @@ void ImScenegraph::setupObject(OSG::VRGuiSignals::Options o) {
     pickable = toBool(o["pickable"]);
     castShadow = toBool(o["castShadow"]);
     selected = o["name"];
+    hasEntity = toBool(o["hasEntity"]);
 }
 
 void ImScenegraph::setupTransform(OSG::VRGuiSignals::Options o) {
