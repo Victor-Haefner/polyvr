@@ -291,6 +291,7 @@ bool VREntity::is_a(string concept_) {
 }
 
 void VREntity::save(XMLElementPtr e, int p) {
+    if (!e) return;
     VRStorage::save(e,p);
     e = e->addChild("properties");
     for (auto p : properties) {
@@ -304,6 +305,7 @@ void VREntity::save(XMLElementPtr e, int p) {
 }
 
 void VREntity::load(XMLElementPtr e, VRStorageContextPtr context) {
+    if (!e) return;
     VRStorage::load(e, context);
     e = e->getChild("properties");
     for (auto el : e->getChildren()) {

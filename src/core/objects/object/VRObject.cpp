@@ -14,6 +14,7 @@
 #include "core/utils/VRStorage_template.h"
 #include "core/scene/import/VRExport.h"
 #include "core/gui/VRGuiConsole.h"
+#include "addons/Semantics/Reasoning/VREntity.h"
 
 #include <OpenSG/OSGGroup.h>
 #include <OpenSG/OSGTransform.h>
@@ -330,6 +331,16 @@ void VRObject::wrapOSG(OSGObjectPtr node) {
             if (tpair.size() == 2) setAttachmentFromString(tpair[0], tpair[1]);
             else addTag(tpair[0]);
         }
+    }
+
+    if (node->hasAttachment("entity")) {
+        string data = node->getAttachment("entity");
+        auto xml = XML::create();
+        xml->newRoot("root", "", "");
+        xml->parse(data);
+        auto e = VREntity::create();
+        e->load(xml->getRoot());
+        setEntity(e);
     }
 }
 

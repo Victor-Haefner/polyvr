@@ -20,7 +20,9 @@
 #include "core/objects/OSGObject.h"
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/VRPointCloud.h"
+#include "addons/Semantics/Reasoning/VREntity.h"
 #include "core/utils/system/VRSystem.h"
+#include "core/utils/xml.h"
 
 using namespace OSG;
 
@@ -43,8 +45,19 @@ void VRExport::write(VRObjectPtr obj, string path, map<string, string> options) 
     if (ext == ".e57") { writeE57(dynamic_pointer_cast<VRPointCloud>(obj), path); }
 #endif
 
-    if (ext == ".wrl" || ext == ".wrz" || ext == ".obj" || ext == ".osb" || ext == ".osg")
+    if (ext == ".wrl" || ext == ".wrz" || ext == ".obj" || ext == ".osb" || ext == ".osg") {
+        for (auto& c : obj->getChildren(true, "", true)) {
+            auto e = c->getEntity();
+            if (e) {
+                auto xml = XML::create();
+                xml->newRoot("root", "", "");
+                e->save(xml->getRoot(), 0);
+                string data = xml->toString();
+                c->getNode()->setAttachment("entity", data);
+            }
+        }
         SceneFileHandler::the()->write(obj->getNode()->node, path.c_str());
+    }
 
 #ifndef WITHOUT_COLLADA
     if (ext == ".dae") { writeCollada(obj, path, options); }
