@@ -303,9 +303,12 @@ VRGeometryPtr VRGeometry::create(string name, string primitive, string params) {
 VRGeometryPtr VRGeometry::ptr() { return static_pointer_cast<VRGeometry>( shared_from_this() ); }
 
 void VRGeometry::wrapOSG(OSGObjectPtr node, OSGObjectPtr geoNode) {
-    VRTransform::wrapOSG(node);
+    if (node) VRTransform::wrapOSG(node);
+    else VRObject::wrapOSG(geoNode); // TOCHECK
+
     mesh_node = geoNode;
     Geometry* geo = dynamic_cast<Geometry*>(geoNode->node->getCore());
+    if (!geo) { cout << "Error in VRGeometry::wrapOSG! geoNode not a geometry!" << endl; return; }
     mesh = OSGGeometry::create(geo);
     setGeometryAttachment(geo, this);
     meshSet = true;

@@ -332,7 +332,7 @@ void VRImport::LoadJob::load(VRThreadWeakPtr tw) {
     VRImport::get()->triggerCallbacks(params);
 }
 
-VRObjectPtr VRImport::OSGConstruct(NodeMTRecPtr n, VRObjectPtr parent, string name, string currentFile, NodeCore* geoTrans, NodeCore* geoObj, string geoTransName) {
+VRObjectPtr VRImport::OSGConstruct(NodeMTRecPtr n, VRObjectPtr parent, string name, string currentFile, NodeMTRecPtr geoTrans, NodeMTRecPtr geoObj, string geoTransName) {
     if (n == 0) return 0; // TODO add an osg wrap method for each object?
 
     VRObjectPtr tmp = 0;
@@ -354,7 +354,7 @@ VRObjectPtr VRImport::OSGConstruct(NodeMTRecPtr n, VRObjectPtr parent, string na
         if (n->getNChildren() == 1) { // try to optimize the tree by avoiding obsolete objects
             string tp = n->getChild(0)->getCore()->getTypeName();
             if (tp == "Geometry") {
-                geoObj = n->getCore();
+                geoObj = n;
                 geoTransName = name;
                 tmp = parent;
             }
@@ -379,7 +379,7 @@ VRObjectPtr VRImport::OSGConstruct(NodeMTRecPtr n, VRObjectPtr parent, string na
         if (n->getNChildren() == 1) { // try to optimize the tree by avoiding obsolete transforms
             string tp = n->getChild(0)->getCore()->getTypeName();
             if (tp == "Geometry") {
-                geoTrans = n->getCore();
+                geoTrans = n;
                 geoTransName = name;
                 tmp = parent;
             }
@@ -423,7 +423,7 @@ VRObjectPtr VRImport::OSGConstruct(NodeMTRecPtr n, VRObjectPtr parent, string na
         if (geoTrans) {
             tmp_g = VRGeometry::create(geoTransName); // more consistent with storing and loading to/from osb!
             tmp_g->addAttachment("collada_name", geoTransName);
-            tmp_g->setMatrix(toMatrix4d(dynamic_cast<Transform*>(geoTrans)->getMatrix()));
+            tmp_g->setMatrix(toMatrix4d(dynamic_cast<Transform*>(geoTrans->getCore())->getMatrix()));
             geoTrans = 0;
             geoTransName = "";
         } else if (geoObj) {

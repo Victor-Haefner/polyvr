@@ -15,6 +15,10 @@ class OSGObject {
         OSGObject(NodeMTRecPtr node = 0);
         ~OSGObject();
         static OSGObjectPtr create(NodeMTRecPtr node = 0);
+
+        bool hasAttachment(string name);
+        void setAttachment(string name, string value);
+        string getAttachment(string name);
 };
 
 OSG_END_NAMESPACE;

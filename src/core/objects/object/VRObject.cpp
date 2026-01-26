@@ -18,11 +18,11 @@
 #include <OpenSG/OSGGroup.h>
 #include <OpenSG/OSGTransform.h>
 #include <OpenSG/OSGNameAttachment.h>
-#include <OpenSG/OSGStringAttributeMap.h>
 #include <OpenSG/OSGVisitSubTree.h>
 #include <OpenSG/OSGSceneFileHandler.h>
 
 using namespace OSG;
+
 
 template<> string typeName(const VRObject* o) {
     VRObject* O = (VRObject*)o;
@@ -294,9 +294,16 @@ void VRObject::wrapOSG(OSGObjectPtr node) {
     if (!core || !node->node->getCore()) return;
     core->core = node->node->getCore();
 
-    Attachment* att = node->node->findAttachment( StringAttributeMap::getClassType().getGroupId());
-    StringAttributeMapUnrecPtr aMap = dynamic_cast<StringAttributeMap*>(att);
-    if (aMap && aMap->hasAttribute("pickable")) pickable = (aMap->getAttribute("pickable") == "yes");
+    type = core->core->getTypeName();
+    if (type == "ComponentTransform") type = "Transform";
+    if (type == "DistanceLOD") type = "Lod";
+
+    if (node->hasAttachment("pickable")) pickable = (node->getAttachment("pickable") == "yes");
+
+    if (node->hasAttachment("tags")) {
+        string tags = node->getAttachment("tags");
+        cout << "wrapOSG - found tags! " << tags << endl;
+    }
 }
 
 OSGObjectPtr VRObject::getNode() { return osg; }
@@ -671,7 +678,7 @@ string VRObject::printOSGTreeString(OSGObjectPtr o, string indent) {
         auto child = o->node->getChild(i);
         if (child) data += "\n" + printOSGTreeString(OSGObject::create(child), indent + " ");
     }
-    
+
     if (type == "VisitSubTree") {
         VisitSubTree* v = dynamic_cast<VisitSubTree*>(core);
     	auto n = v->getSubTreeRoot();
@@ -799,20 +806,7 @@ void VRObject::setPickable(int b, bool setAttachment) {
     if (pickable == b) return;
 
     pickable = b;
-    if (!setAttachment) return;
-
-    StringAttributeMapUnrecPtr aMap = 0;
-    Attachment* att = getNode()->node->findAttachment( StringAttributeMap::getClassType().getGroupId());
-
-    if (!att) {
-        aMap = StringAttributeMap::create();
-        getNode()->node->addAttachment(aMap);
-    } else aMap = dynamic_cast<StringAttributeMap*>(att);
-
-    if (aMap) {
-        if (b) aMap->setAttribute("pickable", "yes");
-        else   aMap->setAttribute("pickable", "no");
-    }
+    if (setAttachment) getNode()->setAttachment("pickable", b?"yes":"no");
 }
 
 string VRObject::getPath() {
