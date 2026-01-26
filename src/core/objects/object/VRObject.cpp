@@ -170,14 +170,29 @@ string VRObject::getType() { return type; }
 bool VRObject::hasTag(string name) { return attachments.count(name); }
 void VRObject::remTag(string name) { remAttachment(name); }
 
+string packObjectTags(map<string, VRAttachment*> attachments) {
+    string res = "{";
+    int i=0;
+    for (auto& a : attachments) {
+        if (i > 0) res += ",";
+        res += a.first+":"+a.second->asString();
+        i++;
+    }
+    return res + "}";
+}
+
 void VRObject::addTag(string name) {
-    if (!attachments.count(name)) attachments[name] = new VRAttachment(name);
+    if (!attachments.count(name)) {
+        attachments[name] = new VRAttachment(name);
+        getNode()->setAttachment("tags", packObjectTags(attachments));
+    }
 }
 
 void VRObject::remAttachment(string name) {
     if (attachments.count(name)) {
         delete attachments[name];
         attachments.erase(name);
+        getNode()->setAttachment("tags", packObjectTags(attachments));
     }
 }
 
@@ -189,10 +204,14 @@ string VRObject::getAttachmentAsString(string name) {
 }
 
 void VRObject::setAttachmentFromString(string name, string value) {
-    if (!hasTag(name)) addAttachment(name, value);
-    else {
-        if (!attachments[name]->fromString(value))
+    if (!hasTag(name)) {
+        addAttachment(name, value);
+        getNode()->setAttachment("tags", packObjectTags(attachments));
+    } else {
+        if (!attachments[name]->fromString(value)) {
             attachments[name]->set(value);
+            getNode()->setAttachment("tags", packObjectTags(attachments));
+        }
     }
 }
 
@@ -295,6 +314,7 @@ void VRObject::wrapOSG(OSGObjectPtr node) {
     core->core = node->node->getCore();
 
     type = core->core->getTypeName();
+    if (type == "Group") type = "Object";
     if (type == "ComponentTransform") type = "Transform";
     if (type == "DistanceLOD") type = "Lod";
 
@@ -302,7 +322,14 @@ void VRObject::wrapOSG(OSGObjectPtr node) {
 
     if (node->hasAttachment("tags")) {
         string tags = node->getAttachment("tags");
-        cout << "wrapOSG - found tags! " << tags << endl;
+        if (tags.size() < 2) return;
+        tags = subString(tags, 1, tags.size()-2);
+
+        for (auto& t : splitString(tags, ',')) {
+            auto tpair = splitString(t, ':');
+            if (tpair.size() == 2) setAttachmentFromString(tpair[0], tpair[1]);
+            else addTag(tpair[0]);
+        }
     }
 }
 
