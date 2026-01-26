@@ -332,7 +332,9 @@ void VRImport::LoadJob::load(VRThreadWeakPtr tw) {
     VRImport::get()->triggerCallbacks(params);
 }
 
+
 VRObjectPtr VRImport::OSGConstruct(NodeMTRecPtr n, VRObjectPtr parent, string name, string currentFile, NodeMTRecPtr geoTrans, NodeMTRecPtr geoObj, string geoTransName) {
+    //cout << "VRImport::OSGConstruct " << n << ", " << parent << ", " << name << endl;
     if (n == 0) return 0; // TODO add an osg wrap method for each object?
 
     VRObjectPtr tmp = 0;
@@ -362,7 +364,7 @@ VRObjectPtr VRImport::OSGConstruct(NodeMTRecPtr n, VRObjectPtr parent, string na
 
         if (tmp == 0) {
             tmp = VRObject::create(name);
-            tmp->setCore(OSGCore::create(core), "Object");
+            tmp->wrapOSG(OSGObject::create(n));
             tmp->addAttachment("collada_name", name);
         }
     }
@@ -370,7 +372,7 @@ VRObjectPtr VRImport::OSGConstruct(NodeMTRecPtr n, VRObjectPtr parent, string na
     else if (t_name == "ComponentTransform") {
         if (tmp == 0) {
             tmp_e = VRTransform::create(name);
-            tmp_e->setMatrix(toMatrix4d(dynamic_cast<ComponentTransform *>(n->getCore())->getMatrix()));
+            tmp_e->wrapOSG(OSGObject::create(n));
             tmp = tmp_e;
         }
     }
@@ -387,7 +389,7 @@ VRObjectPtr VRImport::OSGConstruct(NodeMTRecPtr n, VRObjectPtr parent, string na
 
         if (tmp == 0) {
             tmp_e = VRTransform::create(name);
-            tmp_e->setMatrix(toMatrix4d(dynamic_cast<Transform *>(n->getCore())->getMatrix()));
+            tmp_e->wrapOSG(OSGObject::create(n));
             tmp = tmp_e;
             tmp->addAttachment("collada_name", name);
         }
@@ -401,17 +403,14 @@ VRObjectPtr VRImport::OSGConstruct(NodeMTRecPtr n, VRObjectPtr parent, string na
     }
 
     else if (t_name == "DistanceLOD") {
-        DistanceLOD* lod = dynamic_cast<DistanceLOD*>(n->getCore());
         tmp_l = VRLod::create(name);
-        tmp_l->setCore(OSGCore::create(core), "Lod", true);
-        tmp_l->setCenter(Vec3d(lod->getCenter()));
-        auto dists = lod->getMFRange();
-        for (size_t i=0; i<dists->size(); i++) tmp_l->addDistance(lod->getRange(i));
+        tmp_l->wrapOSG(OSGObject::create(n));
         tmp = tmp_l;
     }
 
     else if (t_name == "PointCloud") {
         tmp_p = VRPointCloud::create(name);
+        tmp_p->wrapOSG(OSGObject::create(n));
         tmp_p->setCore(OSGCore::create(core), "PointCloud");
         tmp = tmp_p;
     }
@@ -422,34 +421,39 @@ VRObjectPtr VRImport::OSGConstruct(NodeMTRecPtr n, VRObjectPtr parent, string na
         if (osgGeo->getPositions()->size() == 0) return 0;
         if (geoTrans) {
             tmp_g = VRGeometry::create(geoTransName); // more consistent with storing and loading to/from osb!
+            tmp_g->wrapOSG(OSGObject::create(geoTrans), OSGObject::create(n));
             tmp_g->addAttachment("collada_name", geoTransName);
-            tmp_g->setMatrix(toMatrix4d(dynamic_cast<Transform*>(geoTrans->getCore())->getMatrix()));
             geoTrans = 0;
             geoTransName = "";
         } else if (geoObj) {
             tmp_g = VRGeometry::create(geoTransName); // more consistent with storing and loading to/from osb!
+            tmp_g->wrapOSG(OSGObject::create(geoObj), OSGObject::create(n));
             tmp_g->addAttachment("collada_name", geoTransName);
             geoObj = 0;
             geoTransName = "";
         } else {
             tmp_g = VRGeometry::create(name);
+            tmp_g->setMesh( OSGGeometry::create( osgGeo ), VRGeometry::Reference(), true);
+            parent->getNode()->node->addChild(tmp_g->getNode()->node); // insert node created above because it will not be inserted later.. UNTESTED!
+            tmp_g->getNode()->node->addChild(n);
         }
 
         VRGeometry::Reference ref;
         ref.type = VRGeometry::FILE;
         ref.parameter = currentFile + "|" + tmp_g->getName();
-        tmp_g->setMesh( OSGGeometry::create( osgGeo ), ref, true);
+        tmp_g->setReference(ref);
         tmp = tmp_g;
     }
 
     else {
         tmp = VRObject::create(name);
+        tmp->wrapOSG(OSGObject::create(n));
         tmp->setCore(OSGCore::create(core), t_name);
     }
 
     for (unsigned int i=0;i<n->getNChildren();i++) {
         auto obj = OSGConstruct(n->getChild(i), tmp, name, currentFile, geoTrans, geoObj, geoTransName);
-        if (obj) tmp->addChild(obj);
+        if (obj) tmp->addChild(obj, false);
     }
 
     return tmp;

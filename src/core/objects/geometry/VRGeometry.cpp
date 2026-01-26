@@ -304,7 +304,7 @@ VRGeometryPtr VRGeometry::ptr() { return static_pointer_cast<VRGeometry>( shared
 
 void VRGeometry::wrapOSG(OSGObjectPtr node, OSGObjectPtr geoNode) {
     if (node) VRTransform::wrapOSG(node);
-    else VRObject::wrapOSG(geoNode); // TOCHECK
+    //else VRObject::wrapOSG(geoNode); // TOCHECK
 
     mesh_node = geoNode;
     Geometry* geo = dynamic_cast<Geometry*>(geoNode->node->getCore());
