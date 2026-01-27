@@ -75,6 +75,7 @@ void ImScenegraph::render() {
         // object
         ImGui::TextUnformatted(("Object: " + selected).c_str());
         ImGui::Indent(10);
+            ImGui::TextUnformatted(("Type: " + objType).c_str());
             ImGui::TextUnformatted(("Parent: " + parent).c_str());
             ImGui::TextUnformatted(("Persistency: " + persistency).c_str());
 
