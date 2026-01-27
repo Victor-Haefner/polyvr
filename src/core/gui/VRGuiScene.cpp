@@ -58,6 +58,7 @@ VRObjectPtr VRGuiScene::getSelected() {
 }
 
 void VRGuiScene::setObject(VRObjectPtr o) {
+    if (!o) return;
     VRObjectPtr parent = o->getParent();
     string pName = parent ? parent->getName() : "";
 
@@ -75,6 +76,7 @@ void VRGuiScene::setObject(VRObjectPtr o) {
 }
 
 void VRGuiScene::setTransform(VRTransformPtr e) {
+    if (!e) return;
     Vec3d f,a,u,d,s;
     cout << "VRGuiScene::setTransform " << transformModeLocal << endl;
     if (transformModeLocal) {
@@ -127,6 +129,7 @@ void VRGuiScene::setTransform(VRTransformPtr e) {
 }
 
 void VRGuiScene::setMaterial(VRMaterialPtr mat) {
+    if (!mat) return;
     map<string, string> params;
 
     if (mat) {
@@ -166,6 +169,7 @@ void VRGuiScene::on_geo_menu_print() {
 }
 
 void VRGuiScene::setGeometry(VRGeometryPtr g) {
+    if (!g) return;
     VRMaterialPtr mat = g->getMaterial();
     setMaterial(mat);
 
@@ -207,6 +211,7 @@ void VRGuiScene::setGeometry(VRGeometryPtr g) {
 }
 
 void VRGuiScene::setLight(VRLightPtr l) {
+    if (!l) return;
     uiSignal( "on_sg_setup_light", {
         {"type", toString(l->getLightType())},
         {"shadowRes", toString(l->getShadowMapRes())},
@@ -245,6 +250,7 @@ void VRGuiScene::setLight(VRLightPtr l) {
 }
 
 void VRGuiScene::setCamera(VRCameraPtr c) {
+    if (!c) return;
     uiSignal( "on_sg_setup_cam", {
         {"acceptRoot", toString(c->getAcceptRoot())},
         {"aspect", toString(c->getAspect())},
@@ -256,6 +262,7 @@ void VRGuiScene::setCamera(VRCameraPtr c) {
 }
 
 void VRGuiScene::setGroup(VRGroupPtr g) {
+    if (!g) return;
     /*setWidgetVisibility("expander2", true, true);
     setWidgetVisibility("expander9", true, true);
     setToggleButton("checkbutton23", g->getActive() );
@@ -266,6 +273,7 @@ void VRGuiScene::setGroup(VRGroupPtr g) {
 }
 
 void VRGuiScene::setLod(VRLodPtr lod) {
+    if (!lod) return;
 
     uiSignal( "on_sg_setup_lod", {
         {"center", toString(lod->getCenter())},

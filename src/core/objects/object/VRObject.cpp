@@ -358,6 +358,7 @@ void VRObject::wrapOSG(OSGObjectPtr node) {
             for (auto cs : e->conceptNames)
                 if (auto c = ontology->getConcept(cs)) e->concepts.push_back(c);
         }
+        //cout << " -- found entity " << e->toString() << endl;
     }
 }
 

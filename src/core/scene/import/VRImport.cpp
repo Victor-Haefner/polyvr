@@ -1,4 +1,6 @@
 #include "VRImport.h"
+#include "VRExport.h"
+
 #ifndef WITHOUT_COLLADA
 #include "COLLADA/VRCOLLADA.h"
 #endif
@@ -323,7 +325,8 @@ void VRImport::LoadJob::load(VRThreadWeakPtr tw) {
     if (useBinaryCache && !loadedFromCache && res->getChild(0)) {
         for (auto c : res->getChildren(true)) { if (auto t = dynamic_pointer_cast<VRTransform>(c)) t->enableOptimization(false); }
         string osbPath = getFolderName(path) + "/." + getFileName(path) + ".osb";
-        SceneFileHandler::the()->write(res->getChild(0)->getNode()->node, osbPath.c_str());
+        //SceneFileHandler::the()->write(res->getChild(0)->getNode()->node, osbPath.c_str());
+        VRExport::get()->write(res->getChild(0), osbPath);
         for (auto c : res->getChildren(true)) { if (auto t = dynamic_pointer_cast<VRTransform>(c)) t->enableOptimization(true); }
         // TODO: create descriptive hash of file, store hash
         cout << "store in binary cache: " << path << " " << osbPath << endl;
@@ -364,7 +367,7 @@ VRObjectPtr VRImport::OSGConstruct(NodeMTRecPtr n, VRObjectPtr parent, string na
         return tmp;
     };
 
-    auto wrapGeometry = [&](string& name, NodeMTRecPtr& n) -> VRGeometryPtr {
+    auto wrapGeometry = [&](string& name, NodeMTRecPtr& n) -> VRGeometryPtr { // TODO: fix wrapOSG for this case!
         auto osgGeo = dynamic_cast<Geometry*>(n->getCore());
         if (!osgGeo->getPositions()) return 0;
         if (osgGeo->getPositions()->size() == 0) return 0;
@@ -375,7 +378,7 @@ VRObjectPtr VRImport::OSGConstruct(NodeMTRecPtr n, VRObjectPtr parent, string na
         VRGeometry::Reference ref;
         ref.type = VRGeometry::FILE;
         ref.parameter = currentFile + "|" + tmp->getName();
-        //tmp->setReference(ref);
+        tmp->setReference(ref);
 
         tmp->setMesh( OSGGeometry::create( osgGeo ), ref, true);
 

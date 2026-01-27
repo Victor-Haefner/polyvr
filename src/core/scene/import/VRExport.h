@@ -17,7 +17,7 @@ class VRExport {
     public:
         static VRExport* get();
 
-        void write(VRObjectPtr obj, string path, map<string, string> options);
+        void write(VRObjectPtr obj, string path, map<string, string> options = map<string, string>());
 };
 
 OSG_END_NAMESPACE;
