@@ -405,33 +405,46 @@ VRObjectPtr VRImport::OSGConstruct(NodeMTRecPtr n, VRObjectPtr parent, string na
         return tmp;
     };
 
-    if (t_name == "Group" || t_name == "Transform" || t_name == "ComponentTransform") { // resolve special case transform->geometry
-        if (n->getNChildren() == 1) {
-            NodeMTRecPtr nGeo = n->getChild(0);
-            string tp = nGeo->getCore()->getTypeName();
+    auto hasSingleGeometry = [](NodeMTRecPtr n) -> NodeMTRecPtr {
+        NodeMTRecPtr nGeo;
+        int N = 0;
+        for (unsigned int i=0; i<n->getNChildren(); i++) {
+            NodeMTRecPtr c = n->getChild(i);
+            string tp = c->getCore()->getTypeName();
             if (tp == "Geometry") {
-                auto tmp = wrapGeometry2(name, n, nGeo);
-                if (tmp) {
-                    tmp->addAttachment("collada_name", name);
-                    return tmp;
-                }
+                nGeo = c;
+                N++;
             }
         }
-    }
+        if (N == 1) return nGeo;
+        return 0;
+    };
 
-    if (t_name == "Group") tmp = wrapGroup(name, n);
-    if (t_name == "Transform") tmp = wrapTransform(name, n);
-    if (t_name == "ComponentTransform") tmp = wrapTransform(name, n);
-    if (t_name == "MaterialGroup") tmp = wrapGroup(name, n);
-    if (t_name == "DistanceLOD") tmp = wrapLoD(name, n);
-    if (t_name == "PointCloud") tmp = wrapPointcloud(name, n);
-    if (t_name == "Geometry") tmp = wrapGeometry(name, n);
-    if (!tmp) tmp = wrapGroup(name, n);
-
+    NodeMTRecPtr childToSkip = 0;
     vector<NodeMTRecPtr> children;
     for (unsigned int i=0; i<n->getNChildren(); i++) children.push_back(n->getChild(i));
 
+    if (t_name == "Group" || t_name == "Transform" || t_name == "ComponentTransform") { // resolve special case transform->geometry
+        if (NodeMTRecPtr nGeo = hasSingleGeometry(n)) {
+            tmp = wrapGeometry2(name, n, nGeo);
+            if (tmp) childToSkip = nGeo;
+        }
+    }
+
+    if (!tmp) {
+        if (t_name == "Group") tmp = wrapGroup(name, n);
+        if (t_name == "Transform") tmp = wrapTransform(name, n);
+        if (t_name == "ComponentTransform") tmp = wrapTransform(name, n);
+        if (t_name == "MaterialGroup") tmp = wrapGroup(name, n);
+        if (t_name == "DistanceLOD") tmp = wrapLoD(name, n);
+        if (t_name == "PointCloud") tmp = wrapPointcloud(name, n);
+        if (t_name == "Geometry") tmp = wrapGeometry(name, n);
+    }
+
+    if (!tmp) tmp = wrapGroup(name, n);
+
     for (auto& child : children) {
+        if (child == childToSkip) continue;
         auto obj = OSGConstruct(child, tmp, name, currentFile, geoTrans, geoObj, geoTransName);
         if (obj) tmp->addChild(obj, false);
     }
