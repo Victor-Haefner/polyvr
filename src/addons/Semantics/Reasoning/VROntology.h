@@ -85,6 +85,9 @@ struct VROntology : public std::enable_shared_from_this<VROntology>, public VRNa
     string getFlag();
 
     vector<VREntityPtr> process(string query, bool allowAssumptions = false);
+
+    void save(XMLElementPtr e, int p) override;
+    void load(XMLElementPtr e, VRStorageContextPtr context = 0) override;
 };
 
 OSG_END_NAMESPACE;

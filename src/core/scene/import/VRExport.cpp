@@ -21,6 +21,7 @@
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/VRPointCloud.h"
 #include "addons/Semantics/Reasoning/VREntity.h"
+#include "addons/Semantics/Reasoning/VROntology.h"
 #include "core/utils/system/VRSystem.h"
 #include "core/utils/xml.h"
 
@@ -45,6 +46,8 @@ void VRExport::write(VRObjectPtr obj, string path, map<string, string> options) 
     if (ext == ".e57") { writeE57(dynamic_pointer_cast<VRPointCloud>(obj), path); }
 #endif
 
+    map<VROntologyPtr, bool> exportedOntologies;
+
     if (ext == ".wrl" || ext == ".wrz" || ext == ".obj" || ext == ".osb" || ext == ".osg") {
         for (auto& c : obj->getChildren(true, "", true)) {
             auto e = c->getEntity();
@@ -54,6 +57,16 @@ void VRExport::write(VRObjectPtr obj, string path, map<string, string> options) 
                 e->save(xml->getRoot(), 0);
                 string data = xml->toString();
                 c->getNode()->setAttachment("entity", data);
+
+                auto o = e->getOntology();
+                if (o && !exportedOntologies.count(o)) {
+                    exportedOntologies[o] = true;
+                    auto xml = XML::create();
+                    xml->newRoot("root", "", "");
+                    o->save(xml->getRoot(), 0);
+                    string data = xml->toString();
+                    c->getNode()->setAttachment("ontology", data);
+                }
             }
         }
         SceneFileHandler::the()->write(obj->getNode()->node, path.c_str());

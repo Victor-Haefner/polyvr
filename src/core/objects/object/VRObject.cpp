@@ -15,6 +15,7 @@
 #include "core/scene/import/VRExport.h"
 #include "core/gui/VRGuiConsole.h"
 #include "addons/Semantics/Reasoning/VREntity.h"
+#include "addons/Semantics/Reasoning/VROntology.h"
 
 #include <OpenSG/OSGGroup.h>
 #include <OpenSG/OSGTransform.h>
@@ -333,14 +334,30 @@ void VRObject::wrapOSG(OSGObjectPtr node) {
         }
     }
 
+    VROntologyPtr ontology;
+    if (node->hasAttachment("ontology")) {
+        string data = node->getAttachment("ontology");
+        auto xml = XML::create();
+        xml->newRoot("root", "", "");
+        xml->parse(data);
+        ontology = VROntology::create();
+        ontology->load(xml->getRoot());
+    }
+
     if (node->hasAttachment("entity")) {
         string data = node->getAttachment("entity");
         auto xml = XML::create();
         xml->newRoot("root", "", "");
         xml->parse(data);
+
         auto e = VREntity::create();
         e->load(xml->getRoot());
         setEntity(e);
+        if (ontology) {
+            ontology->addEntity(e);
+            for (auto cs : e->conceptNames)
+                if (auto c = ontology->getConcept(cs)) e->concepts.push_back(c);
+        }
     }
 }
 

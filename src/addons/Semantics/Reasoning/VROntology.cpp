@@ -356,3 +356,42 @@ vector<VREntityPtr> VROntology::process(string query, bool allowAssumptions) {
 VREntityPtr VROntology::addVec3Entity(string name, string concept_, Vec3d v) {
     return addVectorEntity(name, concept_, {::toString(v[0]), ::toString(v[1]), ::toString(v[2])});
 }
+
+void VROntology::save(XMLElementPtr e, int p) {
+    if (!e) return;
+    VRStorage::save(e,p);
+    auto conceptsE = e->addChild("concepts");
+    if (!thing) return;
+
+    auto ontoE = e->addChild("ontology");
+    ontoE->setAttribute("name", getName());
+
+    for (auto wc : concepts) {
+        auto c = wc.second.lock();
+        auto x = conceptsE->addChild(c->getName());
+        c->save(x);
+    }
+}
+
+void VROntology::load(XMLElementPtr e, VRStorageContextPtr context) { // TODO
+    if (!e) return;
+    VRStorage::load(e, context);
+
+    auto conceptsE = e->getChild("concepts");
+    auto ontoE = e->getChild("ontology");
+
+    setName( ontoE->getAttribute("name"));
+
+    for (auto el : conceptsE->getChildren()) {
+        string n = el->getName();
+        auto c = addConcept(n);
+    }
+
+    for (auto el : conceptsE->getChildren()) { // second pass
+        string n = el->getName();
+        auto c = concepts[n].lock();
+        c->load(el);
+    }
+}
+
+
