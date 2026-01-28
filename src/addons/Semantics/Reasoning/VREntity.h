@@ -17,7 +17,7 @@ struct VRPropertyValue {// allows to cast type in py bindings
     VRPropertyValue() {}
 };
 
-struct VREntity : public VROntoID, public VRName {
+struct VREntity : public std::enable_shared_from_this<VREntity>, public VROntoID, public VRName {
     vector<VRConceptWeakPtr> concepts;
     vector<string> conceptNames;
     map<string, map<int, VRPropertyPtr> > properties;
@@ -28,6 +28,7 @@ struct VREntity : public VROntoID, public VRName {
     VREntity();
 
     static VREntityPtr create(string name = "none", VROntologyPtr o = 0, VRConceptPtr c = 0);
+    VREntityPtr ptr();
     VREntityPtr copy();
 
     VROntologyPtr getOntology();

@@ -48,25 +48,33 @@ void VRExport::write(VRObjectPtr obj, string path, map<string, string> options) 
 
     map<VROntologyPtr, bool> exportedOntologies;
 
+    auto attachOntology = [&](VRObjectPtr obj, VROntologyPtr onto) {
+        if (!onto || !obj) return;
+        if (exportedOntologies.count(onto)) return;
+        exportedOntologies[onto] = true;
+        auto xml = XML::create();
+        xml->newRoot("root", "", "");
+        onto->save(xml->getRoot(), 0);
+        string data = xml->toString();
+        obj->getNode()->setAttachment("ontology", data);
+    };
+
+    auto attachEntity = [&](VRObjectPtr obj, VREntityPtr ent) {
+        if (!ent || !obj) return;
+        auto xml = XML::create();
+        xml->newRoot("root", "", "");
+        ent->save(xml->getRoot(), 0);
+        string data = xml->toString();
+        obj->getNode()->setAttachment("entity", data);
+    };
+
     if (ext == ".wrl" || ext == ".wrz" || ext == ".obj" || ext == ".osb" || ext == ".osg") {
         for (auto& c : obj->getChildren(true, "", true)) {
             auto e = c->getEntity();
             if (e) {
-                auto xml = XML::create();
-                xml->newRoot("root", "", "");
-                e->save(xml->getRoot(), 0);
-                string data = xml->toString();
-                c->getNode()->setAttachment("entity", data);
-
+                attachEntity(c, e);
                 auto o = e->getOntology();
-                if (o && !exportedOntologies.count(o)) {
-                    exportedOntologies[o] = true;
-                    auto xml = XML::create();
-                    xml->newRoot("root", "", "");
-                    o->save(xml->getRoot(), 0);
-                    string data = xml->toString();
-                    c->getNode()->setAttachment("ontology", data);
-                }
+                if (o) attachOntology(c, o);
             }
         }
         SceneFileHandler::the()->write(obj->getNode()->node, path.c_str());

@@ -4,6 +4,8 @@
 #include "core/utils/VRStorage_template.h"
 #include "core/utils/VRTimer.h"
 #include "core/utils/toString.h"
+#include "core/scene/VRScene.h"
+#include "core/scene/VRSemanticManager.h"
 
 #include <iostream>
 #include <OpenSG/OSGVector.h>
@@ -35,6 +37,8 @@ VREntity::VREntity(string name, VROntologyPtr o, VRConceptPtr c) {
 }
 
 VREntityPtr VREntity::create(string name, VROntologyPtr o, VRConceptPtr c) { return VREntityPtr( new VREntity(name, o, c) ); }
+
+VREntityPtr VREntity::ptr() { return shared_from_this(); }
 
 void VREntity::setSGObject(VRObjectPtr o) { sgObject = o; }
 VRObjectPtr VREntity::getSGObject() { return sgObject.lock(); }
@@ -293,9 +297,12 @@ bool VREntity::is_a(string concept_) {
 void VREntity::save(XMLElementPtr e, int p) {
     if (!e) return;
     VRStorage::save(e,p);
-    e = e->addChild("properties");
+
+    if (auto o = getOntology()) e->setAttribute("ontology", o->getBaseName());
+
+    auto eP = e->addChild("properties");
     for (auto p : properties) {
-        auto e2 = e->addChild(p.first);
+        auto e2 = eP->addChild(p.first);
         for (auto sp : p.second) {
             auto e3 = e2->addChild(sp.second->getName());
             e3->setAttribute("value", sp.second->value);
@@ -307,8 +314,21 @@ void VREntity::save(XMLElementPtr e, int p) {
 void VREntity::load(XMLElementPtr e, VRStorageContextPtr context) {
     if (!e) return;
     VRStorage::load(e, context);
-    e = e->getChild("properties");
-    for (auto el : e->getChildren()) {
+
+    if (e->hasAttribute("ontology")) {
+        string oName = e->getAttribute("ontology");
+        auto mgr = VRScene::getCurrent()->getSemanticManager();
+        if (auto onto = mgr->getOntology(oName)) ontology = onto;
+    }
+
+    if (auto o = getOntology()) {
+        auto self = ptr();
+        o->addEntity(self);
+        for (auto cs : conceptNames) if (auto c = o->getConcept(cs)) concepts.push_back(c);
+    }
+
+    auto eP = e->getChild("properties");
+    for (auto el : eP->getChildren()) {
         for (auto el2 : el->getChildren()) {
             string n = el2->getName();
             auto p = VRProperty::create(n,"");

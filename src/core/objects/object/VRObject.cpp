@@ -13,6 +13,8 @@
 #include "core/utils/VRUndoInterfaceT.h"
 #include "core/utils/VRStorage_template.h"
 #include "core/scene/import/VRExport.h"
+#include "core/scene/VRScene.h"
+#include "core/scene/VRSemanticManager.h"
 #include "core/gui/VRGuiConsole.h"
 #include "addons/Semantics/Reasoning/VREntity.h"
 #include "addons/Semantics/Reasoning/VROntology.h"
@@ -334,13 +336,17 @@ void VRObject::wrapOSG(OSGObjectPtr node) {
         }
     }
 
-    VROntologyPtr ontology;
     if (node->hasAttachment("ontology")) {
         string data = node->getAttachment("ontology");
         auto xml = XML::create();
         xml->newRoot("root", "", "");
         xml->parse(data);
-        ontology = VROntology::create();
+        auto mgr = VRScene::getCurrent()->getSemanticManager();
+
+        auto ontoE = xml->getRoot()->getChild("ontology");
+        string oName = ontoE->getAttribute("name");
+
+        auto ontology = mgr->addOntology(oName);
         ontology->load(xml->getRoot());
     }
 
@@ -353,11 +359,7 @@ void VRObject::wrapOSG(OSGObjectPtr node) {
         auto e = VREntity::create();
         e->load(xml->getRoot());
         setEntity(e);
-        if (ontology) {
-            ontology->addEntity(e);
-            for (auto cs : e->conceptNames)
-                if (auto c = ontology->getConcept(cs)) e->concepts.push_back(c);
-        }
+        e->setSGObject(ptr());
         //cout << " -- found entity " << e->toString() << endl;
     }
 }

@@ -360,12 +360,12 @@ VREntityPtr VROntology::addVec3Entity(string name, string concept_, Vec3d v) {
 void VROntology::save(XMLElementPtr e, int p) {
     if (!e) return;
     VRStorage::save(e,p);
-    auto conceptsE = e->addChild("concepts");
     if (!thing) return;
 
     auto ontoE = e->addChild("ontology");
-    ontoE->setAttribute("name", getName());
+    ontoE->setAttribute("name", getBaseName());
 
+    auto conceptsE = e->addChild("concepts");
     for (auto wc : concepts) {
         auto c = wc.second.lock();
         auto x = conceptsE->addChild(c->getName());
