@@ -169,7 +169,8 @@ bool exists(string path) {
 	struct stat buffer;
 	return (stat (path.c_str(), &buffer) == 0);
 #else
-	return std::filesystem::exists(path);
+    try { return std::filesystem::exists(path); }
+    catch (...) { return false; }
 #endif
 }
 
@@ -177,8 +178,14 @@ bool exists(string path) {
 bool isFile(string path) { return false; }
 bool isFolder(string path) { return false; }
 #else
-bool isFile(string path) { return std::filesystem::is_regular_file(path); }
-bool isFolder(string path) { return std::filesystem::is_directory(path); }
+bool isFile(string path) { 
+    try { return std::filesystem::is_regular_file(path); }
+    catch (...) { return false; }
+}
+bool isFolder(string path) { 
+    try { return std::filesystem::is_directory(path); }
+    catch (...) { return false; }
+}
 #endif
 
 bool makedir(string path) {
@@ -209,7 +216,8 @@ bool removeFile(string path) {
 #ifdef WASM
     return bool(std::remove(path.c_str()) == 0);
 #else
-    return std::filesystem::remove(path);
+    try { return std::filesystem::remove(path); } 
+    catch (...) { return false; }
 #endif
 }
 
@@ -217,7 +225,8 @@ string canonical(string path) {
 #ifdef WASM
     return path;
 #else
-    return std::filesystem::canonical(path).string();
+    try { return std::filesystem::canonical(path).string(); }
+    catch (...) { return path; }
 #endif
 }
 
@@ -225,7 +234,8 @@ string absolute(string path) {
 #ifdef WASM
     return path;
 #else
-    return std::filesystem::absolute(path).string();
+    try { return std::filesystem::absolute(path).string(); }
+    catch (...) { return path; }
 #endif
 }
 
@@ -233,7 +243,9 @@ bool isSamePath(string path1, string path2) {
 #ifdef WASM
     return false;
 #else
-    return std::filesystem::equivalent(path1, path2);
+    if (!exists(path1) || !exists(path2)) return false;
+    try { return std::filesystem::equivalent(path1, path2); } 
+    catch (...) { return false; }
 #endif
 }
 
@@ -267,9 +279,12 @@ vector<string> openFolder(string folder) {
     if ( !isFolder( folder ) ) return res;
 
 #ifndef WASM
-    for (const auto& entry : std::filesystem::directory_iterator(folder)) {
-        res.push_back(entry.path().filename().string());
+    try {
+        for (const auto& entry : std::filesystem::directory_iterator(folder)) {
+            res.push_back(entry.path().filename().string());
+        }
     }
+    catch (...) { return res; }
 #endif
     return res;
 }
