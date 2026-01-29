@@ -400,9 +400,9 @@ void VRPipeSystem::updateInspection(int nID) {
 
     auto labels = inspectionTool->getAnnotationEngine();
     if (!labels) return;
-    string concept = "unknown";
-    if (auto c = node->entity->getConcept() ) concept = c->getName();
-    labels->add(pn, "Node "+toString(nID)+": "+concept);
+    string conceptName = "unknown";
+    if (auto c = node->entity->getConcept() ) conceptName = c->getName();
+    labels->add(pn, "Node "+toString(nID)+": "+conceptName);
 }
 
 void VRPipeSystem::updateVisual() {
@@ -610,6 +610,22 @@ void VRPipeSystem::updateVisual() {
             data.pushQuad(-9, -10, -11, -12); // mid but reversed
             for (int i=0; i<12; i++) data.pushQuad(-1,-1,-1,-1); // placeholders
             updatePipeInds(data, 0.5, i0, k0);
+
+            // flow visual
+            Vec3d u2 = d.cross(u) + u; u2.normalize();
+            float g2 = g*1.1;
+            float g3 = g2/sqrt(2);
+            data.pushQuad(pm, d, u, Vec2d(g2,g2), false);
+            data.pushQuad(pm, d, u2, Vec2d(g3,g3), false);
+            for (int i=0; i<8; i++) data.pushColor(white);
+            for (int i=0; i<4; i++) {
+                int k = (i+1)%4;
+                int i0 = -8;
+                int i1 = -4;
+                data.pushQuad(i1+i,i1+i,i0+k,i0+i);
+                data.pushQuad(i1+i,i1+i,i0+i,i0+k);
+                data.setNorm(i1+i, Vec3d(data.getPosition(i1+i))); // store p0
+            }
         }
 
         for (auto& n : nodes) {
@@ -760,14 +776,24 @@ void VRPipeSystem::updateVisual() {
             updatePipeInds(data, l, i, k);
         }
 
+        Vec3d sD = data.getPosition(i+12) - data.getPosition(i); sD.normalize();
+        Vec3d F = sD * -flow/s.second->area * 0.03;
+        for (int j=0; j<4; j++) {
+            int jj = i+20+j;
+            Vec3d p0 = data.getNormal(jj);
+            data.setPos(jj, p0 + F);
+            //data.setPos(jj, p0 + d*0.05);
+        }
+
         /*for (int j=0; j<16; j++) {
             Vec3d p = Vec3d(data.getPosition(i+j));
             p += Vec3d(j, j, j)*0.0005;
             ann->set(j, p, toString(j));
         }*/
 
-        i += 16;
-        k += 56;
+        // level + flow
+        i += 16 + 8;
+        k += 56 + 32;
     }
 
     for (auto& n : nodes) {
@@ -936,15 +962,15 @@ void VRPipeSystem::computePipeFlows(double dt) {
         if (pipe->level > 1.0-1e-6) { // full pipe
             e1->flow =  flow;
             e2->flow = -flow;
-        }/* else {
-            if (dir < 0) { // filling towards e2
+        } else {
+            if (dir < 0) { // filling from e1
                 e1->flow =  flow;
-                e2->flow = -flow * pipe->level * 0;
-            } else { // filling towards e1
-                e1->flow =  flow * pipe->level * 0;
+                e2->flow =  0; //-flow * pipe->level * 0;
+            } else { // filling from e2
+                e1->flow =  0; //flow * pipe->level * 0;
                 e2->flow = -flow;
             }
-        }*/
+        }
     }
 
     // update heads
@@ -982,9 +1008,39 @@ void VRPipeSystem::updateLevels(double dt) {
 
     for (auto& s : segments) {
         auto& pipe = s.second;
-        double flow = pipe->end1.lock()->flow + pipe->end2.lock()->flow; // positive flow is going out the pipe
+        auto e1 = pipe->end1.lock();
+        auto e2 = pipe->end2.lock();
+        double flow = e1->flow + e2->flow; // positive flow is going out the pipe
         pipe->level = clamp(pipe->level - flow*dt / pipe->volume, 0.0, 1.0);
+
+        /*double maxOutFlow = pipe->level * pipe->volume / dt;
+        double maxInFlow  = (1.0-pipe->level) * pipe->volume / dt;
+
+        double flowMax1 = clamp(e1->maxFlow, -maxInFlow, maxOutFlow);
+        double flowMax2 = clamp(e2->maxFlow, -maxInFlow, maxOutFlow);
+
+
+
+        double requestedFlow = flowMax1 + flowMax2; // positive flow is going out the pipe
+        double maxFlow = clamp(requestedFlow, -maxInFlow, maxOutFlow);
+        double scaleFlow = (abs(requestedFlow) > 1e-12) ? (maxFlow/requestedFlow) : 0.0;
+
+        pipe->level -= requestedFlow*dt / pipe->volume;
+
+        e1->flow = e1->maxFlow;
+        e2->flow = e2->maxFlow;
+
+        cout << pipe->eID << ", maxInFlow " << maxInFlow << ", maxOutFlow " << maxOutFlow;
+        cout << ", e1 " << e1->maxFlow << " -> " << e1->flow;
+        cout << ", e2 " << e2->maxFlow << " -> " << e2->flow;
+        cout << endl;
+
+        if (pipe->level < 0.0 || pipe->level > 1.0) cout << "AAAAAAAAAAAA???" << pipe->level << endl;
+        pipe->level = clamp(pipe->level, 0.0, 1.0);*/
     }
+
+        //e1->flow = flow * e1->maxFlow/maxFlow;
+        //e2->flow = flow * e2->maxFlow/maxFlow;
 }
 
 void VRPipeSystem::update() {

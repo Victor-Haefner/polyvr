@@ -22,6 +22,7 @@ class VRPipeEnd {
         double offsetHeight = 0.0; // used for tank offset
         Vec3d offset; // offset relative to node center
 
+        double maxFlow = 0.0;
         double flow = 0.0;
         double hydraulicHead = 0.0;
         double pressure = 1.0;

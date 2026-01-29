@@ -40,7 +40,7 @@ Add node (name, pose, type, params)\n\
   Tank: 'area', 'height', 'level', 'pressure', 'isOpen', 'density'\n\
   Valve: 'radius', 'state'\n\
   Outlet: 'radius'\n\
-  Pump: 'performance', 'maxPressure', 'isOpen'\
+  Pump: 'headGain', 'isOpen'\
 "
 
 PyMethodDef VRPyPipeSystem::methods[] = {
