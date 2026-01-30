@@ -567,6 +567,8 @@ void VRPipeSystem::updateVisual() {
             p1 += s.second->end1.lock()->offset;
             p2 += s.second->end2.lock()->offset;
 
+            Vec3d dPipe = (p2-p1); dPipe.normalize();
+
             Vec2d tcID1 = Vec2d(edge.from, 0);
             Vec2d tcID2 = Vec2d(edge.to, 0);
 
@@ -624,6 +626,7 @@ void VRPipeSystem::updateVisual() {
                 int i1 = -4;
                 data.pushQuad(i1+i,i1+i,i0+k,i0+i);
                 data.pushQuad(i1+i,i1+i,i0+i,i0+k);
+                data.setNorm(i0+i, dPipe); // store dPipe
                 data.setNorm(i1+i, Vec3d(data.getPosition(i1+i))); // store p0
             }
         }
@@ -776,13 +779,13 @@ void VRPipeSystem::updateVisual() {
             updatePipeInds(data, l, i, k);
         }
 
-        Vec3d sD = data.getPosition(i+12) - data.getPosition(i); sD.normalize();
-        Vec3d F = sD * -flow/s.second->area * 0.03;
+        double F = -flow/s.second->area * 0.03;
         for (int j=0; j<4; j++) {
-            int jj = i+20+j;
-            Vec3d p0 = data.getNormal(jj);
-            data.setPos(jj, p0 + F);
-            //data.setPos(jj, p0 + d*0.05);
+            int j1 = i+16+j;
+            int j2 = i+20+j;
+            Vec3d sD = data.getNormal(j1);
+            Vec3d p0 = data.getNormal(j2);
+            data.setPos(j2, p0 + F*sD);
         }
 
         /*for (int j=0; j<16; j++) {
