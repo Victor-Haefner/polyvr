@@ -957,18 +957,18 @@ void VRPipeSystem::computePipeFlows(double dt) {
         // based on Darcy-Weisbach for turbulent flow
         //double Rt = pipeFriction * pipe->length * pipe->density / ( 4 * pipe->radius * pow(pipe->area,2));
         double Rt = pipe->resistance + pipe->dynamicResistance;
-        double flow = sqrt( abs(dP) / Rt ) * dir;
+        double maxFlow = sqrt( abs(dP) / Rt ) * dir;
 
         if (pipe->level > 1.0-1e-6) { // full pipe
-            e1->flow =  flow;
-            e2->flow = -flow;
+            e1->maxFlow =  maxFlow;
+            e2->maxFlow = -maxFlow;
         } else {
             if (dir < 0) { // filling from e1
-                e1->flow =  flow;
-                e2->flow =  0; //-flow * pipe->level * 0;
+                e1->maxFlow =  maxFlow;
+                e2->maxFlow =  0; //-maxFlow * pipe->level * 0;
             } else { // filling from e2
-                e1->flow =  0; //flow * pipe->level * 0;
-                e2->flow = -flow;
+                e1->maxFlow =  0; //maxFlow * pipe->level * 0;
+                e2->maxFlow = -maxFlow;
             }
         }
     }
@@ -977,7 +977,7 @@ void VRPipeSystem::computePipeFlows(double dt) {
     for (auto& n : nodes) {
         for (auto& e : n.second->pipes) {
             auto pipe = e->pipe.lock();
-            e->hydraulicHead -= e->flow*dt / pipe->area;
+            e->hydraulicHead -= e->maxFlow*dt / pipe->area;
             e->pressure = e->hydraulicHead * pipe->density * gravity;
         }
     }
@@ -998,7 +998,7 @@ void VRPipeSystem::updateLevels(double dt) {
             for (auto& pEnd : node->pipes) {
                 auto pipe = pEnd->pipe.lock();
                 if (!pipe) continue;
-                totalFlow += pEnd->flow; // positive flow is defined as going out the pipe
+                totalFlow += pEnd->maxFlow; // positive flow is defined as going out the pipe
             }
 
             double newLevel = clamp(tankLevel + totalFlow*dt / tankVolume, 0.0, 1.0);
@@ -1010,7 +1010,7 @@ void VRPipeSystem::updateLevels(double dt) {
         auto& pipe = s.second;
         auto e1 = pipe->end1.lock();
         auto e2 = pipe->end2.lock();
-        double flow = e1->flow + e2->flow; // positive flow is going out the pipe
+        double flow = e1->maxFlow + e2->maxFlow; // positive flow is going out the pipe
         pipe->level = clamp(pipe->level - flow*dt / pipe->volume, 0.0, 1.0);
 
         /*double maxOutFlow = pipe->level * pipe->volume / dt;
