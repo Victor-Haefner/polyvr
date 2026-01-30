@@ -122,8 +122,8 @@ class VRPipeSystem : public VRGeometry {
         void solveNodeHeads();
         void computeHeadFlows(double dt);
         void computeMaxFlows(double dt);
-        void updateHydraulicHeads(double dt);
         void updateLevels(double dt);
+        void updatePressures(double dt);
 
 	public:
 		VRPipeSystem();
