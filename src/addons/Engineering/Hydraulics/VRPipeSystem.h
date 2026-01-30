@@ -22,8 +22,10 @@ class VRPipeEnd {
         double offsetHeight = 0.0; // used for tank offset
         Vec3d offset; // offset relative to node center
 
+        double headFlow = 0.0;
         double maxFlow = 0.0;
         double flow = 0.0;
+
         double hydraulicHead = 0.0;
         double pressure = 1.0;
 
@@ -118,7 +120,9 @@ class VRPipeSystem : public VRGeometry {
         void assignBoundaryPressures();
         void computeDynamicPipeResistances();
         void solveNodeHeads();
-        void computePipeFlows(double dt);
+        void computeHeadFlows(double dt);
+        void computeMaxFlows(double dt);
+        void updateHydraulicHeads(double dt);
         void updateLevels(double dt);
 
 	public:

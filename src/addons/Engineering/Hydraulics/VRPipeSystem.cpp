@@ -914,7 +914,7 @@ void VRPipeSystem::solveNodeHeads() {
         double num = 0.0;
         double den = 0.0;
 
-        for (auto& e : node->pipes) { // TODO: not a fan.. feels off to compute head from other heads like this
+        for (auto& e : node->pipes) {
             auto pipe = e->pipe.lock();
             auto otherEnd = pipe->otherEnd(e);
             double R = pipe->resistance + pipe->dynamicResistance; // or Rt-equivalent
@@ -943,7 +943,7 @@ void VRPipeSystem::solveNodeHeads() {
     }
 }
 
-void VRPipeSystem::computePipeFlows(double dt) {
+void VRPipeSystem::computeHeadFlows(double dt) {
     auto sign = [](double v) { return v < 0 ? -1 : 1; };
 
     for (auto& s : segments) {
@@ -957,27 +957,72 @@ void VRPipeSystem::computePipeFlows(double dt) {
         // based on Darcy-Weisbach for turbulent flow
         //double Rt = pipeFriction * pipe->length * pipe->density / ( 4 * pipe->radius * pow(pipe->area,2));
         double Rt = pipe->resistance + pipe->dynamicResistance;
-        double maxFlow = sqrt( abs(dP) / Rt ) * dir;
+        double headFlow = sqrt( abs(dP) / Rt ) * dir;
 
         if (pipe->level > 1.0-1e-6) { // full pipe
-            e1->maxFlow =  maxFlow;
-            e2->maxFlow = -maxFlow;
+            e1->headFlow =  headFlow;
+            e2->headFlow = -headFlow;
         } else {
             if (dir < 0) { // filling from e1
-                e1->maxFlow =  maxFlow;
-                e2->maxFlow =  0; //-maxFlow * pipe->level * 0;
+                e1->headFlow =  headFlow;
+                e2->headFlow =  0; //-headFlow * pipe->level * 0;
             } else { // filling from e2
-                e1->maxFlow =  0; //maxFlow * pipe->level * 0;
-                e2->maxFlow = -maxFlow;
+                e1->headFlow =  0; //headFlow * pipe->level * 0;
+                e2->headFlow = -headFlow;
             }
         }
     }
+}
 
-    // update heads
+void VRPipeSystem::computeMaxFlows(double dt) {
+    for (auto& n : nodes) {
+        auto node = n.second;
+        auto entity = node->entity;
+
+        double nodeAirVolume = 0;
+        double nodeWaterVolume = 0;
+        if (entity->is_a("Tank")) {
+            double tankArea = entity->getValue("area", 0.0);
+            double tankHeight = entity->getValue("height", 0.0);
+            double tankVolume = tankHeight * tankArea;
+            double tankLevel = entity->getValue("level", 1.0);
+            nodeAirVolume = tankVolume * (1.0-tankLevel);
+            nodeWaterVolume = tankVolume * tankLevel;
+        }
+
+        double totalFlowIn = 0;
+        double totalFlowOut = 0;
+        for (auto& e : n.second->pipes) {
+            auto f = e->headFlow;
+            if (f < 0) totalFlowOut += f;
+            else totalFlowIn += f;
+        }
+
+        double totalFlow = totalFlowIn + totalFlowOut;
+        double maxFlowIn = totalFlowIn;
+        double maxFlowOut = totalFlowOut;
+        if ( totalFlow*dt > nodeAirVolume) maxFlowIn = nodeAirVolume/dt - totalFlowOut; // node will fill up, clamp flow in
+        if (-totalFlow*dt > nodeWaterVolume) maxFlowOut = -nodeWaterVolume/dt - totalFlowIn; // node will fill up, clamp flow in
+
+        double scaleFlowIn = abs(totalFlowIn) > 1e-12 ? maxFlowIn / totalFlowIn : 1.0;
+        double scaleFlowOut = abs(totalFlowOut) > 1e-12 ? maxFlowOut / totalFlowOut : 1.0;
+        for (auto& e : n.second->pipes) {
+            auto f = e->headFlow;
+            if (f < 0) e->maxFlow = e->headFlow * scaleFlowOut;
+            else e->maxFlow = e->headFlow * scaleFlowIn;
+        }
+
+        for (auto& e : n.second->pipes) {
+            e->flow = e->maxFlow;
+        }
+    }
+}
+
+void VRPipeSystem::updateHydraulicHeads(double dt) {
     for (auto& n : nodes) {
         for (auto& e : n.second->pipes) {
             auto pipe = e->pipe.lock();
-            e->hydraulicHead -= e->maxFlow*dt / pipe->area;
+            e->hydraulicHead -= e->flow*dt / pipe->area;
             e->pressure = e->hydraulicHead * pipe->density * gravity;
         }
     }
@@ -998,7 +1043,7 @@ void VRPipeSystem::updateLevels(double dt) {
             for (auto& pEnd : node->pipes) {
                 auto pipe = pEnd->pipe.lock();
                 if (!pipe) continue;
-                totalFlow += pEnd->maxFlow; // positive flow is defined as going out the pipe
+                totalFlow += pEnd->flow; // positive flow is defined as going out the pipe
             }
 
             double newLevel = clamp(tankLevel + totalFlow*dt / tankVolume, 0.0, 1.0);
@@ -1010,37 +1055,9 @@ void VRPipeSystem::updateLevels(double dt) {
         auto& pipe = s.second;
         auto e1 = pipe->end1.lock();
         auto e2 = pipe->end2.lock();
-        double flow = e1->maxFlow + e2->maxFlow; // positive flow is going out the pipe
+        double flow = e1->flow + e2->flow; // positive flow is going out the pipe
         pipe->level = clamp(pipe->level - flow*dt / pipe->volume, 0.0, 1.0);
-
-        /*double maxOutFlow = pipe->level * pipe->volume / dt;
-        double maxInFlow  = (1.0-pipe->level) * pipe->volume / dt;
-
-        double flowMax1 = clamp(e1->maxFlow, -maxInFlow, maxOutFlow);
-        double flowMax2 = clamp(e2->maxFlow, -maxInFlow, maxOutFlow);
-
-
-
-        double requestedFlow = flowMax1 + flowMax2; // positive flow is going out the pipe
-        double maxFlow = clamp(requestedFlow, -maxInFlow, maxOutFlow);
-        double scaleFlow = (abs(requestedFlow) > 1e-12) ? (maxFlow/requestedFlow) : 0.0;
-
-        pipe->level -= requestedFlow*dt / pipe->volume;
-
-        e1->flow = e1->maxFlow;
-        e2->flow = e2->maxFlow;
-
-        cout << pipe->eID << ", maxInFlow " << maxInFlow << ", maxOutFlow " << maxOutFlow;
-        cout << ", e1 " << e1->maxFlow << " -> " << e1->flow;
-        cout << ", e2 " << e2->maxFlow << " -> " << e2->flow;
-        cout << endl;
-
-        if (pipe->level < 0.0 || pipe->level > 1.0) cout << "AAAAAAAAAAAA???" << pipe->level << endl;
-        pipe->level = clamp(pipe->level, 0.0, 1.0);*/
     }
-
-        //e1->flow = flow * e1->maxFlow/maxFlow;
-        //e2->flow = flow * e2->maxFlow/maxFlow;
 }
 
 void VRPipeSystem::update() {
@@ -1052,7 +1069,9 @@ void VRPipeSystem::update() {
         assignBoundaryPressures();
         computeDynamicPipeResistances();
         solveNodeHeads();
-        computePipeFlows(dt);
+        computeHeadFlows(dt);
+        computeMaxFlows(dt);
+        updateHydraulicHeads(dt);
         updateLevels(dt);
     }
 
