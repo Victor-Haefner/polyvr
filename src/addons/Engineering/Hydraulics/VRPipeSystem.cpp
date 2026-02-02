@@ -617,19 +617,28 @@ void VRPipeSystem::updateVisual() {
 
             // flow visual
             Vec3d u2 = d.cross(u) + u; u2.normalize();
-            float g2 = g*1.1;
-            float g3 = g2/sqrt(2);
-            data.pushQuad(pm, d, u, Vec2d(g2,g2), false);
-            data.pushQuad(pm, d, u2, Vec2d(g3,g3), false);
-            for (int i=0; i<8; i++) data.pushColor(white);
+            float g2 = g*1.05;
+            float g3 = g*0.5;
+            float g4 = g2/sqrt(2);
+            data.pushQuad(pm, d, u,  Vec2d(g3,g2), false);
+            data.pushQuad(pm, d, u,  Vec2d(g2,g3), false);
+            data.pushQuad(pm, d, u2, Vec2d(g4,g4), false);
+            for (int i=0; i<12; i++) data.pushColor(green);
             for (int i=0; i<4; i++) {
-                int k = (i+1)%4;
-                int i0 = -8;
-                int i1 = -4;
-                data.pushQuad(i1+i,i1+i,i0+k,i0+i);
-                data.pushQuad(i1+i,i1+i,i0+i,i0+k);
-                data.setNorm(i0+i, dPipe); // store dPipe
-                data.setNorm(i1+i, Vec3d(data.getPosition(i1+i))); // store p0
+                int a = 0;
+                int b = 1;
+                if (i == 0) { a = 0; b = 1; }
+                if (i == 1) { a = 5; b = 6; }
+                if (i == 2) { a = 2; b = 3; }
+                if (i == 3) { a = 7; b = 4; }
+
+                int i0 = -12;
+                int i1 = -8;
+                int i2 = -4;
+                data.pushQuad(i2+i,i2+i,i0+a,i0+b);
+                data.pushQuad(i2+i,i2+i,i0+b,i0+a);
+                data.setNorm(i1+i, dPipe); // store dPipe
+                data.setNorm(i2+i, Vec3d(data.getPosition(i2+i))); // store p0
             }
         }
 
@@ -781,10 +790,15 @@ void VRPipeSystem::updateVisual() {
             updatePipeInds(data, l, i, k);
         }
 
-        double F = -flow/s.second->area * 0.03;
+        double r = s.second->radius;
+        double v0 = 0.5; // m/s
+        double v_ref = 4.0; // m/s
+        double v = flow/s.second->area;
+        double F = 2.0*r*std::asinh(abs(v) / v0) / std::asinh(v_ref / v0);
+
         for (int j=0; j<4; j++) {
-            int j1 = i+16+j;
-            int j2 = i+20+j;
+            int j1 = i+20+j;
+            int j2 = i+24+j;
             Vec3d sD = data.getNormal(j1);
             Vec3d p0 = data.getNormal(j2);
             data.setPos(j2, p0 + F*sD);
@@ -797,7 +811,7 @@ void VRPipeSystem::updateVisual() {
         }*/
 
         // level + flow
-        i += 16 + 8;
+        i += 16 + 12;
         k += 56 + 32;
     }
 
