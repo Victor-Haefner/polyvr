@@ -20,7 +20,7 @@ template<> bool toValue(PyObject* o, VRObjectPtr& v) {
 }
 
 template<> PyTypeObject VRPyBaseT<OSG::VRObject>::type = {
-    PyObject_HEAD_INIT(NULL)
+    PyVarObject_HEAD_INIT(NULL, 0)
     "VR.Object",             /*tp_name*/
     sizeof(VRPyObject),             /*tp_basicsize*/
     0,                         /*tp_itemsize*/

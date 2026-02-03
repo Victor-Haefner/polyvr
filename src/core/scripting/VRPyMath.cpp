@@ -15,7 +15,7 @@ PyObject* VRPyMath::cos(VRPyMath* self, PyObject* args) { float v = VRPyBase::pa
 PyObject* VRPyMath::sin(VRPyMath* self, PyObject* args) { float v = VRPyBase::parseFloat(args); return PyFloat_FromDouble(::sin(v)); }
 
 template<> PyTypeObject VRPyBaseT<Vec2d>::type = {
-    PyObject_HEAD_INIT(NULL)
+    PyVarObject_HEAD_INIT(NULL, 0)
     "VR.Math.Vec2",             /*tp_name*/
     sizeof(VRPyVec2f),             /*tp_basicsize*/
     0,                         /*tp_itemsize*/
@@ -254,7 +254,7 @@ PyObject* VRPyVec2f::iternext(PyObject *self) {
 
 
 template<> PyTypeObject VRPyBaseT<Vec3d>::type = {
-    PyObject_HEAD_INIT(NULL)
+    PyVarObject_HEAD_INIT(NULL, 0)
     "VR.Math.Vec3",             /*tp_name*/
     sizeof(VRPyVec3f),             /*tp_basicsize*/
     0,                         /*tp_itemsize*/
@@ -501,7 +501,7 @@ int VRPyVec3f::setItem(PyObject* self, Py_ssize_t i, PyObject* val) {
 }*/
 
 template<> PyTypeObject VRPyBaseT<Line>::type = {
-    PyObject_HEAD_INIT(NULL)
+    PyVarObject_HEAD_INIT(NULL, 0)
     "VR.Math.Line",             /*tp_name*/
     sizeof(VRPyLine),             /*tp_basicsize*/
     0,                         /*tp_itemsize*/
@@ -618,7 +618,7 @@ simpleVRPyType(Spreadsheet, New_ptr);
 template<> string typeName(const Datarow* p) { return "Datarow"; }
 
 template<> PyTypeObject VRPyBaseT<Datarow>::type = {
-    PyObject_HEAD_INIT(NULL)
+    PyVarObject_HEAD_INIT(NULL, 0)
     "VR.Datarow",             /*tp_name*/
     sizeof(VRPyDatarow),             /*tp_basicsize*/
     0,                         /*tp_itemsize*/

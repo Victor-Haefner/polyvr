@@ -8,7 +8,7 @@
 
 #define newPyType( X, Y, NEWfkt ) \
 template<> PyTypeObject VRPyBaseT< X >::type = { \
-    PyObject_HEAD_INIT(NULL) \
+    PyVarObject_HEAD_INIT(NULL, 0) \
     "VR." #Y, \
     sizeof( VRPy ## Y ),0, \
     (destructor)dealloc, \

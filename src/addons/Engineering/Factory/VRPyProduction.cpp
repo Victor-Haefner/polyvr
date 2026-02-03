@@ -5,7 +5,7 @@
 using namespace OSG;
 
 template<> PyTypeObject VRPyBaseT<VRProduction>::type = {
-    PyObject_HEAD_INIT(NULL)
+    PyVarObject_HEAD_INIT(NULL, 0)
     "VR.Factory.Production",             /*tp_name*/
     sizeof(VRPyProduction),             /*tp_basicsize*/
     0,                         /*tp_itemsize*/

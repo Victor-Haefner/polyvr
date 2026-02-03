@@ -22,7 +22,7 @@ template<> bool toValue(PyObject* o, VRTexturePtr& v) {
 }
 
 template<> PyTypeObject VRPyBaseT<VRTexture>::type = {
-    PyObject_HEAD_INIT(NULL)
+    PyVarObject_HEAD_INIT(NULL, 0)
     "VR.Image",
     sizeof(VRPyTexture),
     0,
