@@ -859,9 +859,9 @@ void VRPipeSystem::updateVisual() {
         }
 
         // hydraulicHead headFlow maxFlow flow
-        //string data;
-        //for (auto& e : n.second->pipes) data += " " + toString(round(e->hydraulicHead*1000)*0.001);
-        //ann->set(n.first, getNodePose(n.first)->pos(), data);
+        string data;
+        for (auto& e : n.second->pipes) { data += " " + toString(round(e->hydraulicHead*100)*0.01); break; }
+        ann->set(n.first, getNodePose(n.first)->pos(), data);
     }
 }
 
@@ -873,6 +873,8 @@ void VRPipeSystem::assignBoundaryPressures() {
     for (auto n : nodes) {
         auto node = n.second;
         auto entity = node->entity;
+
+        for (auto& e : node->pipes) e->hydraulicHead = e->height;
 
         if (entity->is_a("Outlet")) {
             double outletRadius = entity->getValue("radius", 0.0);
@@ -950,7 +952,7 @@ void VRPipeSystem::computeDynamicPipeResistances() {
 }
 
 void VRPipeSystem::solveNodeHeads() {
-    for (int i=0; i<10; i++) {
+    for (int i=0; i<1000; i++) {
     for (auto& n : nodes) {
         auto node = n.second;
         auto entity = node->entity;
@@ -992,8 +994,8 @@ void VRPipeSystem::solveNodeHeads() {
             auto pEnd2 = node->pipes[1];
             double deltaHead = pEnd2->hydraulicHead - pEnd1->hydraulicHead;
             double mod = clamp(pumpGain - deltaHead, 0.0, pumpGain);
-            pEnd1->hydraulicHead -= mod*0.5;
-            pEnd2->hydraulicHead += mod*0.5;
+            //pEnd1->hydraulicHead -= mod*0.5;
+            pEnd2->hydraulicHead += mod;
             //pEnd2->hydraulicHead = pEnd1->hydraulicHead + pumpGain;
         }
     }
