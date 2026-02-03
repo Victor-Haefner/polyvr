@@ -549,7 +549,7 @@ void VRPipeSystem::updateVisual() {
         auto ann = dynamic_pointer_cast<VRAnnotationEngine>( findFirst("testInds") );
         if (!ann) {
             ann = VRAnnotationEngine::create("testInds");
-            ann->setSize(0.1);
+            ann->setSize(0.03);
             ann->setBillboard(true);
             ann->getMaterial()->setDepthTest(GL_ALWAYS);
             addChild(ann);
@@ -859,9 +859,9 @@ void VRPipeSystem::updateVisual() {
         }
 
         // hydraulicHead headFlow maxFlow flow
-        /*string data;
-        for (auto& e : n.second->pipes) data += " " + toString(round(e->hydraulicHead*1000)*0.001);
-        ann->set(n.first, getNodePose(n.first)->pos(), data);*/
+        //string data;
+        //for (auto& e : n.second->pipes) data += " " + toString(round(e->hydraulicHead*1000)*0.001);
+        //ann->set(n.first, getNodePose(n.first)->pos(), data);
     }
 }
 
@@ -903,8 +903,6 @@ void VRPipeSystem::assignBoundaryPressures() {
 
     for (auto& s : segments) {
         auto& pipe = s.second;
-        if (pipe->pressurized) continue;
-
         auto e1 = pipe->end1.lock();
         auto e2 = pipe->end2.lock();
         double h0 = min(e1->height, e2->height);
@@ -966,10 +964,11 @@ void VRPipeSystem::solveNodeHeads() {
             auto pipe = e->pipe.lock();
             auto otherEnd = pipe->otherEnd(e);
             double R = pipe->resistance + pipe->dynamicResistance; // or Rt-equivalent
-            //if (pipe->pressurized || otherEnd->hydraulicHead > pipe->liquidHead) {
+
             if (pipe->pressurized) {
-                num += otherEnd->hydraulicHead / R;
+                num += std::max(otherEnd->hydraulicHead, pipe->liquidHead) / R;
                 den += 1.0 / R;
+            //} else if (pipe->liquidHead > e->hydraulicHead) {
             } else {
                 num += pipe->liquidHead / R;
                 den += 1.0 / R;
@@ -1032,7 +1031,7 @@ void VRPipeSystem::computeHeadFlows(double dt) {
                 K = std::max(K, 1e-6); // numerical safety
                 double flow = A * sqrt(2.0 * gravity * dHfill / K);
 
-                //cout << " dHfill " << dHfill << endl;
+                //if (dHfill > 1e-3) cout << " dHfill: " << dHfill << ", flow: " << flow << endl;
 
                 if (up == e1) {
                     e1->headFlow = -flow;   // leaving node
@@ -1200,8 +1199,10 @@ void VRPipeSystem::updatePressures(double dt) {
 void VRPipeSystem::update() {
     int subSteps = 10;
     double dT = 1.0/60;
-    //dT *= 0.1; // for debugging
+    //dT *= 0.01; // for debugging
     double dt = dT/subSteps;
+
+    //sleep(1);
 
 
     for (int i=0; i<subSteps; i++) {
@@ -1217,6 +1218,8 @@ void VRPipeSystem::update() {
     }
 
     updateVisual();
+
+    //cout << "mass " << computeTotalMass() << endl;
 }
 
 void VRPipeSystem::printSystem() {
