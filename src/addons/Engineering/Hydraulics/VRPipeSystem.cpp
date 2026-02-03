@@ -874,8 +874,6 @@ void VRPipeSystem::assignBoundaryPressures() {
         auto node = n.second;
         auto entity = node->entity;
 
-        for (auto& e : node->pipes) e->hydraulicHead = e->height;
-
         if (entity->is_a("Outlet")) {
             double outletRadius = entity->getValue("radius", 0.0);
             if (outletRadius < 1e-6) continue; // closed
@@ -952,7 +950,7 @@ void VRPipeSystem::computeDynamicPipeResistances() {
 }
 
 void VRPipeSystem::solveNodeHeads() {
-    for (int i=0; i<1000; i++) {
+    for (int i=0; i<50; i++) { // TODO: introduce breaking condition
     for (auto& n : nodes) {
         auto node = n.second;
         auto entity = node->entity;
