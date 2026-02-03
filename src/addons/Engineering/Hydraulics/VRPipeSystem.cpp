@@ -950,6 +950,7 @@ void VRPipeSystem::computeDynamicPipeResistances() {
 }
 
 void VRPipeSystem::solveNodeHeads() {
+    for (int i=0; i<10; i++) {
     for (auto& n : nodes) {
         auto node = n.second;
         auto entity = node->entity;
@@ -995,6 +996,7 @@ void VRPipeSystem::solveNodeHeads() {
             pEnd2->hydraulicHead += mod*0.5;
             //pEnd2->hydraulicHead = pEnd1->hydraulicHead + pumpGain;
         }
+    }
     }
 }
 
