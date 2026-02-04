@@ -903,7 +903,6 @@ void VRPipeSystem::assignBoundaryPressures() {
                 double Pfluid = depth * tankDensity * gravity;
                 double Pgauge = tankPressure + Pfluid - atmosphericPressure;
                 e->hydraulicHead = e->height + Pgauge / (tankDensity * gravity);
-                e->hydraulicHead += 0.1; // hack to avoid unpressurized pump pipes..
             }
         }
     }
@@ -957,6 +956,52 @@ void VRPipeSystem::computeDynamicPipeResistances() {
 }
 
 void VRPipeSystem::solveNodeHeads() {
+
+    auto averageOverPipes = [](vector<VRPipeEndPtr> ends) {
+        double num = 0.0;
+        double den = 0.0;
+
+        for (auto& e : ends) {
+            auto pipe = e->pipe.lock();
+            auto otherEnd = pipe->otherEnd(e);
+            double R = pipe->resistance + pipe->dynamicResistance; // or Rt-equivalent
+
+            double head = std::max(otherEnd->hydraulicHead, pipe->liquidHead);
+            if (!pipe->pressurized) head = pipe->liquidHead;
+
+            num += head / R;
+            den += 1.0 / R;
+        }
+
+        if (abs(den) < 1e-9) return;
+        double newHead = num / den;
+        //cout << " solveNodeHeads " << node->name << "  " << newHead << endl;
+        for (auto& e : ends) e->hydraulicHead = newHead;
+    };
+
+    auto processPumpHeads = [](vector<VRPipeEndPtr> ends, double pumpGain) {
+        auto pEnd1 = ends[0];
+        auto pEnd2 = ends[1];
+
+        double deltaHead = pEnd2->hydraulicHead - pEnd1->hydraulicHead;
+        double mod = clamp(pumpGain - deltaHead, 0.0, pumpGain);
+
+        cout << " PUMP " << pEnd1->hydraulicHead << " - " << pEnd2->hydraulicHead << ", mod: " << mod << endl;
+
+        pEnd1->hydraulicHead -= mod;
+        pEnd2->hydraulicHead += mod;
+
+        //pEnd2->hydraulicHead += mod;
+
+        //pEnd1->hydraulicHead = pEnd1->height - pumpGain;
+        //pEnd2->hydraulicHead = pEnd2->height + pumpGain;
+
+        //pEnd1->hydraulicHead -= pumpGain;
+        //pEnd2->hydraulicHead += pumpGain;
+
+        //pEnd2->hydraulicHead = pEnd1->hydraulicHead + pumpGain;
+    };
+
     for (int i=0; i<50; i++) { // TODO: introduce breaking condition
         for (auto& n : nodes) {
             auto node = n.second;
@@ -964,42 +1009,8 @@ void VRPipeSystem::solveNodeHeads() {
             int Npipes = node->pipes.size();
 
             if (entity->is_a("Tank") || entity->is_a("Outlet")) continue; // already prescribed
-
-            if (entity->is_a("Pump") && Npipes == 2) {
-                double pumpGain = entity->getValue("headGain", 0.0);
-                auto pEnd1 = node->pipes[0];
-                auto pEnd2 = node->pipes[1];
-                double deltaHead = pEnd2->hydraulicHead - pEnd1->hydraulicHead;
-                double mod = clamp(pumpGain - deltaHead, 0.0, pumpGain);
-                //pEnd1->hydraulicHead -= mod*0.5;
-                pEnd2->hydraulicHead += mod;
-                //pEnd2->hydraulicHead = pEnd1->hydraulicHead + pumpGain;
-                //cout << " PUMP " << pEnd2->hydraulicHead-mod << ", -> " << pEnd2->hydraulicHead << endl;
-                continue;
-            }
-
-            double num = 0.0;
-            double den = 0.0;
-
-            for (auto& e : node->pipes) {
-                auto pipe = e->pipe.lock();
-                auto otherEnd = pipe->otherEnd(e);
-                double R = pipe->resistance + pipe->dynamicResistance; // or Rt-equivalent
-
-                if (pipe->pressurized) {
-                    num += std::max(otherEnd->hydraulicHead, pipe->liquidHead) / R;
-                    den += 1.0 / R;
-                //} else if (pipe->liquidHead > e->hydraulicHead) {
-                } else {
-                    num += pipe->liquidHead / R;
-                    den += 1.0 / R;
-                }
-            }
-
-            if (abs(den) < 1e-9) continue;
-            double newHead = num / den;
-            //cout << " solveNodeHeads " << node->name << "  " << newHead << endl;
-            for (auto& e : node->pipes) e->hydraulicHead = newHead;
+            if (entity->is_a("Pump") && Npipes == 2) processPumpHeads(node->pipes, entity->getValue("headGain", 0.0));
+            else averageOverPipes(node->pipes);
         }
     }
 }
