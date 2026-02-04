@@ -861,7 +861,10 @@ void VRPipeSystem::updateVisual() {
 
         // hydraulicHead headFlow maxFlow flow
         string data;
-        for (auto& e : n.second->pipes) { data += " " + toString(round(e->hydraulicHead*100)*0.01); break; }
+        double hMax = -1e6;
+        for (auto& e : n.second->pipes) hMax = max(hMax, e->hydraulicHead);
+        data += " " + toString(round(hMax*100)*0.01);
+        //for (auto& e : n.second->pipes) { data += " " + toString(round(e->hydraulicHead*100)*0.01); break; }
         ann->set(n.first, getNodePose(n.first)->pos(), data);
     }
 }
@@ -889,7 +892,7 @@ void VRPipeSystem::assignBoundaryPressures() {
 
         if (entity->is_a("Tank")) {
             double tankPressure = entity->getValue("pressure", atmosphericPressure);
-            double tankDensity = entity->getValue("density", atmosphericPressure);
+            double tankDensity = entity->getValue("density", waterDensity);
             double tankHeight = entity->getValue("height", 1.0);
             double tankLevel = entity->getValue("level", 1.0);
             bool tankOpen = entity->getValue("isOpen", false);
@@ -897,7 +900,10 @@ void VRPipeSystem::assignBoundaryPressures() {
 
             for (auto& e : node->pipes) {
                 double depth = max(0.0, tankLevel - e->offsetHeight) * tankHeight;
-                e->hydraulicHead = e->height + depth + tankPressure/tankDensity/gravity;
+                double Pfluid = depth * tankDensity * gravity;
+                double Pgauge = tankPressure + Pfluid - atmosphericPressure;
+                e->hydraulicHead = e->height + Pgauge / (tankDensity * gravity);
+                e->hydraulicHead += 0.1; // hack to avoid unpressurized pump pipes..
             }
         }
     }
@@ -952,52 +958,53 @@ void VRPipeSystem::computeDynamicPipeResistances() {
 
 void VRPipeSystem::solveNodeHeads() {
     for (int i=0; i<50; i++) { // TODO: introduce breaking condition
-    for (auto& n : nodes) {
-        auto node = n.second;
-        auto entity = node->entity;
+        for (auto& n : nodes) {
+            auto node = n.second;
+            auto entity = node->entity;
 
-        if (entity->is_a("Tank") || entity->is_a("Outlet")) continue; // already prescribed
-        if (entity->is_a("Pump")) continue; // done later
+            if (entity->is_a("Tank") || entity->is_a("Outlet")) continue; // already prescribed
+            if (entity->is_a("Pump")) continue; // done later
 
-        double num = 0.0;
-        double den = 0.0;
+            double num = 0.0;
+            double den = 0.0;
 
-        for (auto& e : node->pipes) {
-            auto pipe = e->pipe.lock();
-            auto otherEnd = pipe->otherEnd(e);
-            double R = pipe->resistance + pipe->dynamicResistance; // or Rt-equivalent
+            for (auto& e : node->pipes) {
+                auto pipe = e->pipe.lock();
+                auto otherEnd = pipe->otherEnd(e);
+                double R = pipe->resistance + pipe->dynamicResistance; // or Rt-equivalent
 
-            if (pipe->pressurized) {
-                num += std::max(otherEnd->hydraulicHead, pipe->liquidHead) / R;
-                den += 1.0 / R;
-            //} else if (pipe->liquidHead > e->hydraulicHead) {
-            } else {
-                num += pipe->liquidHead / R;
-                den += 1.0 / R;
+                if (pipe->pressurized) {
+                    num += std::max(otherEnd->hydraulicHead, pipe->liquidHead) / R;
+                    den += 1.0 / R;
+                //} else if (pipe->liquidHead > e->hydraulicHead) {
+                } else {
+                    num += pipe->liquidHead / R;
+                    den += 1.0 / R;
+                }
+            }
+
+            if (abs(den) < 1e-9) continue;
+            double newHead = num / den;
+            //cout << " solveNodeHeads " << node->name << "  " << newHead << endl;
+            for (auto& e : node->pipes) e->hydraulicHead = newHead;
+        }
+
+        for (auto& n : nodes) {
+            auto node = n.second;
+            auto entity = node->entity;
+            if (entity->is_a("Pump")) {
+                if (node->pipes.size() != 2) continue;
+                double pumpGain = entity->getValue("headGain", 0.0);
+                auto pEnd1 = node->pipes[0];
+                auto pEnd2 = node->pipes[1];
+                double deltaHead = pEnd2->hydraulicHead - pEnd1->hydraulicHead;
+                double mod = clamp(pumpGain - deltaHead, 0.0, pumpGain);
+                //pEnd1->hydraulicHead -= mod*0.5;
+                pEnd2->hydraulicHead += mod;
+                //pEnd2->hydraulicHead = pEnd1->hydraulicHead + pumpGain;
+                //cout << " PUMP " << pEnd2->hydraulicHead-mod << ", -> " << pEnd2->hydraulicHead << endl;
             }
         }
-
-        if (abs(den) < 1e-9) continue;
-        double newHead = num / den;
-        //cout << " solveNodeHeads " << node->name << "  " << newHead << endl;
-        for (auto& e : node->pipes) e->hydraulicHead = newHead;
-    }
-
-    for (auto& n : nodes) {
-        auto node = n.second;
-        auto entity = node->entity;
-        if (entity->is_a("Pump")) {
-            if (node->pipes.size() != 2) continue;
-            double pumpGain = entity->getValue("headGain", 0.0);
-            auto pEnd1 = node->pipes[0];
-            auto pEnd2 = node->pipes[1];
-            double deltaHead = pEnd2->hydraulicHead - pEnd1->hydraulicHead;
-            double mod = clamp(pumpGain - deltaHead, 0.0, pumpGain);
-            //pEnd1->hydraulicHead -= mod*0.5;
-            pEnd2->hydraulicHead += mod;
-            //pEnd2->hydraulicHead = pEnd1->hydraulicHead + pumpGain;
-        }
-    }
     }
 }
 
