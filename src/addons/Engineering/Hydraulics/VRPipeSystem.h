@@ -43,6 +43,9 @@ class VRPipeSegment {
         double length = 0.0;
         double area = 0.0;
         double volume = 0.0;
+        double liquidMin = 0.0;
+        double liquidMax = 0.0;
+
         double resistance = 0.0;
         double dynamicResistance = 0.0; // set by valves and pumps
         double density = 1000.0; // kg / m3

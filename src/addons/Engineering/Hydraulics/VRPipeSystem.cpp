@@ -155,13 +155,20 @@ int VRPipeSystem::addSegment(double radius, int n1, int n2, double level, double
     int sID = graph->connect(n1, n2);
     auto p1 = graph->getPosition(n1)->pos();
     auto p2 = graph->getPosition(n2)->pos();
-    double length = (p2-p1).length();
+    Vec3d d = p2-p1;
+    double length = d.length();
     auto s = VRPipeSegment::create(sID, radius, length, level);
     segments[sID] = s;
     auto e1 = VRPipeEnd::create(s, n1, h1);
     auto e2 = VRPipeEnd::create(s, n2, h2);
     s->end1 = e1;
     s->end2 = e2;
+
+    double nz = (d/length)[1];
+    double dz = radius * sqrt(1.0 - nz * nz);
+    s->liquidMin = min(p1[1], p2[1]) - dz;
+    s->liquidMax = max(p1[1], p2[1]) + dz;
+
     nodes[n1]->pipes.push_back(e1);
     nodes[n2]->pipes.push_back(e2);
     computeEndOffset(e1);
@@ -865,7 +872,7 @@ void VRPipeSystem::updateVisual() {
             /*double hMax = -1e6;
             for (auto& e : n.second->pipes) hMax = max(hMax, e->hydraulicHead);
             data += " " + toString(round(hMax*100)*0.01);*/
-            for (auto& e : n.second->pipes) { data += " " + toString(round(e->hydraulicHead*100)*0.01); break; }
+            for (auto& e : n.second->pipes) { data += " " + toString(round(e->hydraulicHead*100)*0.01); }
             ann->set(n.first, getNodePose(n.first)->pos(), data);
         }
     }
@@ -905,6 +912,8 @@ void VRPipeSystem::assignBoundaryPressures() {
                 double Pfluid = depth * tankDensity * gravity;
                 double Pgauge = tankPressure + Pfluid - atmosphericPressure;
                 e->hydraulicHead = e->height + Pgauge / (tankDensity * gravity);
+
+                cout << " tank boundary expr.: hH: " << e->hydraulicHead << ", h: " << e->height << ", d: " << depth << endl;
             }
         }
     }
@@ -913,8 +922,9 @@ void VRPipeSystem::assignBoundaryPressures() {
         auto& pipe = s.second;
         auto e1 = pipe->end1.lock();
         auto e2 = pipe->end2.lock();
-        double h0 = min(e1->height, e2->height);
-        pipe->liquidHead = h0 + pipe->level * pipe->radius * 2 - pipe->radius;
+
+        //pipe->liquidHead = pipe->liquidMin + pipe->level * (pipe->liquidMax - pipe->liquidMin);
+        pipe->liquidHead = min(e1->height, e2->height) + pipe->level * pipe->radius * 2 - pipe->radius;
         //cout << " liquidHead " << h0 << " " << pipe->level << " " << pipe->level * pipe->radius * 2 << endl;
     }
 }
@@ -1103,10 +1113,11 @@ void VRPipeSystem::computeMaxFlows(double dt) { // deprecated, used only to copy
         for (auto& n : nodes) {
             auto node = n.second;
             auto entity = node->entity;
+            bool isTank = entity->is_a("Tank");
 
             double nodeAirVolume = 0.0;
             double nodeWaterVolume = 0.0;
-            if (entity->is_a("Tank")) {
+            if (isTank) {
                 double tankArea = entity->getValue("area", 0.0);
                 double tankHeight = entity->getValue("height", 0.0);
                 double tankVolume = tankHeight * tankArea;
@@ -1171,7 +1182,19 @@ void VRPipeSystem::computeMaxFlows(double dt) { // deprecated, used only to copy
     };
 
     for (auto& n : nodes) {
+        auto node = n.second;
+        auto entity = node->entity;
+        bool isTank = entity->is_a("Tank");
+
         for (auto& e : n.second->pipes) {
+            if (isTank) {
+                double tankLevel = entity->getValue("level", 1.0);
+                if (e->offsetHeight > tankLevel && e->headFlow < 0) {
+                    e->maxFlow = 0;
+                    continue; // pipe end above water level cant drain tank!
+                }
+            }
+
             e->maxFlow = e->headFlow;
         }
     }
