@@ -790,13 +790,8 @@ void VRPipeSystem::updateVisual() {
             updatePipeInds(data, l, i, k);
 
             for (int j=0; j<4; j++) {
-                if (!s.second->pressurized) {
-                    data.setColor(i+4+j, green);
-                    data.setColor(i+8+j, green);
-                } else {
-                    data.setColor(i+4+j, blue);
-                    data.setColor(i+8+j, blue);
-                }
+                if (!s.second->pressurized) data.setColor(i+4+j, green);
+                else data.setColor(i+4+j, blue);
             }
         }
 
@@ -1103,6 +1098,7 @@ void VRPipeSystem::computeMaxFlows(double dt) { // deprecated, used only to copy
     };
 
     auto processSegments = [&](bool& needsIteration) {
+        //cout << "check pipes max flow" << endl;
         for (auto& s : segments) {
             auto& pipe = s.second;
             auto e1 = pipe->end1.lock();
@@ -1118,6 +1114,9 @@ void VRPipeSystem::computeMaxFlows(double dt) { // deprecated, used only to copy
                 if (f < 0) totalFlowIn += -f;
                 else totalFlowOut += f;
             }
+
+            //if ((totalFlowIn - totalFlowOut)*dt > pipeWaterVolume)
+            //    cout << " flow clamped, flow: " << totalFlowIn - totalFlowOut << ", water vol: " << pipeWaterVolume << ", dt: " << dt << endl;
 
             Vec2d scaleFlowInOut = computeContainerFlowScaling("seg"+toString(pipe->eID), pipeAirVolume, pipeWaterVolume, totalFlowIn, totalFlowOut);
             if (scaleFlowInOut[0] < 0.9) needsIteration = true;
@@ -1210,13 +1209,16 @@ void VRPipeSystem::update() {
     for (int i=0; i<subSteps; i++) {
         assignBoundaryPressures();
         computeDynamicPipeResistances();
+        auto t1 = VRTimer::create();
         solveNodeHeads();
+        auto T1 = t1->stop();
         computeHeadFlows(dt);
-            //auto t = VRTimer::create();
+        auto t2 = VRTimer::create();
         computeMaxFlows(dt); // most time spent
-            //cout << "t " << t->stop() << endl;
+        auto T2 = t2->stop();
         updateLevels(dt);
         updatePressures(dt);
+        //cout << " VRPipeSystem::update " << T1 << ", " << T2 << endl;
     }
 
     updateVisual();
