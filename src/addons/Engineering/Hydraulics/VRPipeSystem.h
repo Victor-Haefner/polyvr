@@ -101,6 +101,8 @@ class VRPipeSystem : public VRGeometry {
 
         double gravity = 9.81;
         double atmosphericPressure = 101325; // Pa at sea level (1 atm)
+        //double atmosphericPressure = 0.0; // set to 0 because its just a global offset
+        double waterDensity = 1000.0; // kg / m3
 
         map<int, VRPipeNodePtr> nodes;
         map<string, int> nodesByName;
@@ -118,6 +120,7 @@ class VRPipeSystem : public VRGeometry {
         void setupMaterial();
 
         void computeEndOffset(VRPipeEndPtr e);
+        void computeHydraulicHead(VRPipeEndPtr e);
 
         void assignBoundaryPressures();
         void computeDynamicPipeResistances();
@@ -168,9 +171,9 @@ class VRPipeSystem : public VRGeometry {
 		double getTankDensity(string n);
 		double getTankLevel(string n);
 		double getPump(string n);
-		bool getValveState(string n);
+		double getValveState(string n);
 
-		void setValve(string n, bool b);
+		void setValve(string n, double b);
 		void setPump(string n, double h, bool io);
 		void setTankPressure(string n, double p);
 		void setTankDensity(string n, double p);

@@ -52,6 +52,7 @@ void VRPipeSegment::computeGeometry() {
     volume = area * length;
     //resistance = 8 * viscosity * length / (Pi * pow(radius,4));
     resistance = friction * length * density / ( 4 * radius * pow(area,2));
+    if (resistance < 1e-9) resistance = 1.0;
 }
 
 
@@ -143,7 +144,10 @@ void VRPipeSystem::computeEndOffset(VRPipeEndPtr e) {
 
     auto P = graph->getPosition(e->nID);
     e->height = (P->pos()+e->offset)[1];
-    e->hydraulicHead = e->height;
+}
+
+void VRPipeSystem::computeHydraulicHead(VRPipeEndPtr e) { // initial guess
+    e->hydraulicHead = e->height;// + (Ppipe - atmosphericPressure) / (pipeDensity * gravity);
 }
 
 int VRPipeSystem::addSegment(double radius, int n1, int n2, double level, double h1, double h2) {
@@ -162,6 +166,8 @@ int VRPipeSystem::addSegment(double radius, int n1, int n2, double level, double
     nodes[n2]->pipes.push_back(e2);
     computeEndOffset(e1);
     computeEndOffset(e2);
+    computeHydraulicHead(e1);
+    computeHydraulicHead(e2);
     return sID;
 }
 
@@ -209,11 +215,11 @@ double VRPipeSystem::computeTotalMass() {
         auto entity = node->entity;
 
         if (entity->is_a("Tank")) {
-            double tankArea = entity->getValue("area", 0.0);
-            double tankHeight = entity->getValue("height", 0.0);
+            double tankArea = entity->getValue("area", 1.0);
+            double tankHeight = entity->getValue("height", 1.0);
             double tankVolume = tankArea * tankHeight;
-            double tankLevel = entity->getValue("level", 0.0); // 0..1
-            double tankDensity = entity->getValue("density", 1000.0); // kg/m³
+            double tankLevel = entity->getValue("level", 1.0); // 0..1
+            double tankDensity = entity->getValue("density", waterDensity); // kg/m³
             totalMass += tankDensity * tankVolume * tankLevel;
         }
     }
@@ -309,13 +315,13 @@ double VRPipeSystem::getSegmentPressure(int i) { auto e1 = segments[i]->end1.loc
 Vec2d VRPipeSystem::getSegmentGradient(int i) {  auto e1 = segments[i]->end1.lock(); auto e2 = segments[i]->end2.lock(); return e1 && e2 ? Vec2d(e1->pressure, e2->pressure) : Vec2d(); }
 double VRPipeSystem::getSegmentDensity(int i) { return segments[i]->density; }
 double VRPipeSystem::getSegmentFlow(int i) { auto e1 = segments[i]->end1.lock(); return e1 ? e1->flow : 0; }
-double VRPipeSystem::getTankPressure(string n) { auto e = getEntity(n); return e ? e->getValue("pressure", 1.0) : 0.0; }
-double VRPipeSystem::getTankDensity(string n) { auto e = getEntity(n); return e ? e->getValue("density", 1000.0) : 0.0; }
+double VRPipeSystem::getTankPressure(string n) { auto e = getEntity(n); return e ? e->getValue("pressure", atmosphericPressure) : 0.0; }
+double VRPipeSystem::getTankDensity(string n) { auto e = getEntity(n); return e ? e->getValue("density", waterDensity) : 0.0; }
 double VRPipeSystem::getTankLevel(string n) { auto e = getEntity(n); return e ? e->getValue("level", 1.0) : 0.0; }
 double VRPipeSystem::getPump(string n) { auto e = getEntity(n); return e ? e->getValue("headGain", 0.0) : 0.0; }
-bool VRPipeSystem::getValveState(string n) { auto e = getEntity(n); return e ? e->getValue("state", false) : false; }
+double VRPipeSystem::getValveState(string n) { auto e = getEntity(n); return e ? e->getValue("state", 1.0) : 1.0; }
 
-void VRPipeSystem::setValve(string n, bool b)  { auto e = getEntity(n); if (e) e->set("state", toString(b)); }
+void VRPipeSystem::setValve(string n, double b)  { auto e = getEntity(n); if (e) e->set("state", toString(b)); }
 void VRPipeSystem::setTankPressure(string n, double p) { auto e = getEntity(n); if (e) e->set("pressure", toString(p)); }
 void VRPipeSystem::setTankDensity(string n, double p) { auto e = getEntity(n); if (e) e->set("density", toString(p)); }
 void VRPipeSystem::setPipeRadius(int i, double r) { segments[i]->radius = r; segments[i]->computeGeometry(); }
@@ -647,8 +653,8 @@ void VRPipeSystem::updateVisual() {
             auto p = graph->getPosition(n.first);
             auto e = n.second->entity;
             if (e->is_a("Tank")) {
-                double a = e->getValue("area", 0.0);
-                double h = e->getValue("height", 0.0);
+                double a = e->getValue("area", 1.0);
+                double h = e->getValue("height", 1.0);
                 double s = sqrt(a);
 
                 data.pushQuad(p->pos() - Vec3d(0,h*0.5,0), Vec3d(0,1,0), Vec3d(0,0,1), Vec2d(s,s), false);
@@ -823,8 +829,8 @@ void VRPipeSystem::updateVisual() {
     for (auto& n : nodes) {
         auto e = n.second->entity;
         if (e->is_a("Tank")) {
-            double l = e->getValue("level", 0.0);
-            double h = e->getValue("height", 0.0);
+            double l = e->getValue("level", 1.0);
+            double h = e->getValue("height", 1.0);
             double s = h*l;
             for (int j=0; j<4; j++) {
                 Pnt3d p = data.getPosition(i+j);
@@ -837,15 +843,15 @@ void VRPipeSystem::updateVisual() {
         } else {
             Color3f c(0.4,0.4,0.4);
             if (e->is_a("Valve")) {
-                bool s = e->getValue("state", false);
-                c = s ? Color3f(0,1,0) : Color3f(1,0,0);
+                double s = e->getValue("state", 0.0);
+                c = s>0.9 ? Color3f(0,1,0) : Color3f(1,0,0);
             }
 
             if (e->is_a("Junction")) c = Color3f(0.2,0.4,1);
             if (e->is_a("Outlet"))   c = Color3f(0.1,0.2,0.8);
 
             if (e->is_a("Pump")) {
-                double p = e->getValue("performance", 0.0);
+                double p = e->getValue("headGain", 0.0);
                 c = p>1e-3 ? Color3f(1,1,0) : Color3f(1,0.5,0);
             }
 
@@ -884,8 +890,8 @@ void VRPipeSystem::assignBoundaryPressures() {
         if (entity->is_a("Tank")) {
             double tankPressure = entity->getValue("pressure", atmosphericPressure);
             double tankDensity = entity->getValue("density", atmosphericPressure);
-            double tankHeight = entity->getValue("height", atmosphericPressure);
-            double tankLevel = entity->getValue("level", atmosphericPressure);
+            double tankHeight = entity->getValue("height", 1.0);
+            double tankLevel = entity->getValue("level", 1.0);
             bool tankOpen = entity->getValue("isOpen", false);
             if (tankOpen) tankPressure = atmosphericPressure;
 
