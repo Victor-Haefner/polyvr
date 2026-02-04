@@ -862,11 +862,10 @@ void VRPipeSystem::updateVisual() {
         // hydraulicHead headFlow maxFlow flow
         if (n.second->pipes.size() > 0) {
             string data;
-            double hMax = -1e6;
+            /*double hMax = -1e6;
             for (auto& e : n.second->pipes) hMax = max(hMax, e->hydraulicHead);
-            data += " " + toString(round(hMax*100)*0.01);
-            cout << " " << n.first << " " << data << endl;
-            //for (auto& e : n.second->pipes) { data += " " + toString(round(e->hydraulicHead*100)*0.01); break; }
+            data += " " + toString(round(hMax*100)*0.01);*/
+            for (auto& e : n.second->pipes) { data += " " + toString(round(e->hydraulicHead*100)*0.01); break; }
             ann->set(n.first, getNodePose(n.first)->pos(), data);
         }
     }
@@ -1016,7 +1015,8 @@ void VRPipeSystem::solveNodeHeads() {
     };
 
     double maxHeadDelta = 1;
-    for (int i=0; maxHeadDelta>1e-3 && i<50; i++) { // TODO: introduce breaking condition
+    double eps = 0.01;
+    for (int i=0; maxHeadDelta>eps && i<50; i++) { // TODO: introduce breaking condition
         maxHeadDelta = 0;
 
         for (auto& n : nodes) {
@@ -1029,7 +1029,7 @@ void VRPipeSystem::solveNodeHeads() {
             averageOverPipes(node->pipes, maxHeadDelta);
         }
 
-        if (maxHeadDelta <= 1e-3) cout << " i " << i << endl;
+        //if (maxHeadDelta <= eps) cout << " solver itr: " << i << endl;
     }
 }
 
