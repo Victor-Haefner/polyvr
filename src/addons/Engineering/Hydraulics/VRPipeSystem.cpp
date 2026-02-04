@@ -914,7 +914,8 @@ void VRPipeSystem::assignBoundaryPressures() {
         auto e1 = pipe->end1.lock();
         auto e2 = pipe->end2.lock();
         double h0 = min(e1->height, e2->height);
-        pipe->liquidHead = h0 + pipe->level * pipe->radius * 2;
+        pipe->liquidHead = h0 + pipe->level * pipe->radius * 2 - pipe->radius;
+        //cout << " liquidHead " << h0 << " " << pipe->level << " " << pipe->level * pipe->radius * 2 << endl;
     }
 }
 
@@ -969,6 +970,7 @@ void VRPipeSystem::solveNodeHeads() {
 
             double head = std::max(otherEnd->hydraulicHead, pipe->liquidHead);
             if (!pipe->pressurized) head = pipe->liquidHead;
+            //cout << " solveNodeHeads " << "  " << head << " " << otherEnd->hydraulicHead << " " << pipe->liquidHead << endl;
 
             num += head / R;
             den += 1.0 / R;
@@ -976,7 +978,7 @@ void VRPipeSystem::solveNodeHeads() {
 
         if (abs(den) < 1e-9) return;
         double newHead = num / den;
-        //cout << " solveNodeHeads " << node->name << "  " << newHead << endl;
+        //cout << " solveNodeHeads " << "  " << newHead << endl;
         for (auto& e : ends) {
             maxHeadDelta = max(maxHeadDelta, abs(e->hydraulicHead-newHead));
             e->hydraulicHead = newHead;
@@ -1016,7 +1018,7 @@ void VRPipeSystem::solveNodeHeads() {
 
     double maxHeadDelta = 1;
     double eps = 0.01;
-    for (int i=0; maxHeadDelta>eps && i<50; i++) { // TODO: introduce breaking condition
+    for (int i=0; maxHeadDelta>eps && i<50; i++) {
         maxHeadDelta = 0;
 
         for (auto& n : nodes) {
