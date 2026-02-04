@@ -961,9 +961,22 @@ void VRPipeSystem::solveNodeHeads() {
         for (auto& n : nodes) {
             auto node = n.second;
             auto entity = node->entity;
+            int Npipes = node->pipes.size();
 
             if (entity->is_a("Tank") || entity->is_a("Outlet")) continue; // already prescribed
-            if (entity->is_a("Pump")) continue; // done later
+
+            if (entity->is_a("Pump") && Npipes == 2) {
+                double pumpGain = entity->getValue("headGain", 0.0);
+                auto pEnd1 = node->pipes[0];
+                auto pEnd2 = node->pipes[1];
+                double deltaHead = pEnd2->hydraulicHead - pEnd1->hydraulicHead;
+                double mod = clamp(pumpGain - deltaHead, 0.0, pumpGain);
+                //pEnd1->hydraulicHead -= mod*0.5;
+                pEnd2->hydraulicHead += mod;
+                //pEnd2->hydraulicHead = pEnd1->hydraulicHead + pumpGain;
+                //cout << " PUMP " << pEnd2->hydraulicHead-mod << ", -> " << pEnd2->hydraulicHead << endl;
+                continue;
+            }
 
             double num = 0.0;
             double den = 0.0;
@@ -987,23 +1000,6 @@ void VRPipeSystem::solveNodeHeads() {
             double newHead = num / den;
             //cout << " solveNodeHeads " << node->name << "  " << newHead << endl;
             for (auto& e : node->pipes) e->hydraulicHead = newHead;
-        }
-
-        for (auto& n : nodes) {
-            auto node = n.second;
-            auto entity = node->entity;
-            if (entity->is_a("Pump")) {
-                if (node->pipes.size() != 2) continue;
-                double pumpGain = entity->getValue("headGain", 0.0);
-                auto pEnd1 = node->pipes[0];
-                auto pEnd2 = node->pipes[1];
-                double deltaHead = pEnd2->hydraulicHead - pEnd1->hydraulicHead;
-                double mod = clamp(pumpGain - deltaHead, 0.0, pumpGain);
-                //pEnd1->hydraulicHead -= mod*0.5;
-                pEnd2->hydraulicHead += mod;
-                //pEnd2->hydraulicHead = pEnd1->hydraulicHead + pumpGain;
-                //cout << " PUMP " << pEnd2->hydraulicHead-mod << ", -> " << pEnd2->hydraulicHead << endl;
-            }
         }
     }
 }
