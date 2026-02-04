@@ -860,12 +860,15 @@ void VRPipeSystem::updateVisual() {
         }
 
         // hydraulicHead headFlow maxFlow flow
-        string data;
-        double hMax = -1e6;
-        for (auto& e : n.second->pipes) hMax = max(hMax, e->hydraulicHead);
-        data += " " + toString(round(hMax*100)*0.01);
-        //for (auto& e : n.second->pipes) { data += " " + toString(round(e->hydraulicHead*100)*0.01); break; }
-        ann->set(n.first, getNodePose(n.first)->pos(), data);
+        if (n.second->pipes.size() > 0) {
+            string data;
+            double hMax = -1e6;
+            for (auto& e : n.second->pipes) hMax = max(hMax, e->hydraulicHead);
+            data += " " + toString(round(hMax*100)*0.01);
+            cout << " " << n.first << " " << data << endl;
+            //for (auto& e : n.second->pipes) { data += " " + toString(round(e->hydraulicHead*100)*0.01); break; }
+            ann->set(n.first, getNodePose(n.first)->pos(), data);
+        }
     }
 }
 
@@ -956,8 +959,7 @@ void VRPipeSystem::computeDynamicPipeResistances() {
 }
 
 void VRPipeSystem::solveNodeHeads() {
-
-    auto averageOverPipes = [](vector<VRPipeEndPtr> ends) {
+    auto averageOverPipes = [&](vector<VRPipeEndPtr> ends, double& maxHeadDelta) {
         double num = 0.0;
         double den = 0.0;
 
@@ -976,17 +978,27 @@ void VRPipeSystem::solveNodeHeads() {
         if (abs(den) < 1e-9) return;
         double newHead = num / den;
         //cout << " solveNodeHeads " << node->name << "  " << newHead << endl;
-        for (auto& e : ends) e->hydraulicHead = newHead;
+        for (auto& e : ends) {
+            maxHeadDelta = max(maxHeadDelta, abs(e->hydraulicHead-newHead));
+            e->hydraulicHead = newHead;
+        }
     };
 
-    auto processPumpHeads = [](vector<VRPipeEndPtr> ends, double pumpGain) {
+    auto processPumpHeads = [&](vector<VRPipeEndPtr> ends, double pumpGain, double& maxHeadDelta) -> bool {
+        if (ends.size() != 2) return false;
+        if (pumpGain < 1e-3) return false;
+
         auto pEnd1 = ends[0];
         auto pEnd2 = ends[1];
 
+        averageOverPipes({pEnd1}, maxHeadDelta);
+        averageOverPipes({pEnd2}, maxHeadDelta);
+
         double deltaHead = pEnd2->hydraulicHead - pEnd1->hydraulicHead;
         double mod = clamp(pumpGain - deltaHead, 0.0, pumpGain);
+        maxHeadDelta = max(maxHeadDelta, abs(mod));
 
-        cout << " PUMP " << pEnd1->hydraulicHead << " - " << pEnd2->hydraulicHead << ", mod: " << mod << endl;
+        //cout << " PUMP " << pEnd1->hydraulicHead << " - " << pEnd2->hydraulicHead << ", mod: " << mod << endl;
 
         pEnd1->hydraulicHead -= mod;
         pEnd2->hydraulicHead += mod;
@@ -1000,18 +1012,24 @@ void VRPipeSystem::solveNodeHeads() {
         //pEnd2->hydraulicHead += pumpGain;
 
         //pEnd2->hydraulicHead = pEnd1->hydraulicHead + pumpGain;
+        return true;
     };
 
-    for (int i=0; i<50; i++) { // TODO: introduce breaking condition
+    double maxHeadDelta = 1;
+    for (int i=0; maxHeadDelta>1e-3 && i<50; i++) { // TODO: introduce breaking condition
+        maxHeadDelta = 0;
+
         for (auto& n : nodes) {
             auto node = n.second;
             auto entity = node->entity;
             int Npipes = node->pipes.size();
 
             if (entity->is_a("Tank") || entity->is_a("Outlet")) continue; // already prescribed
-            if (entity->is_a("Pump") && Npipes == 2) processPumpHeads(node->pipes, entity->getValue("headGain", 0.0));
-            else averageOverPipes(node->pipes);
+            if (entity->is_a("Pump") && processPumpHeads(node->pipes, entity->getValue("headGain", 0.0), maxHeadDelta)) continue;
+            averageOverPipes(node->pipes, maxHeadDelta);
         }
+
+        if (maxHeadDelta <= 1e-3) cout << " i " << i << endl;
     }
 }
 
