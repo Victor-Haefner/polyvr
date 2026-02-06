@@ -936,8 +936,7 @@ void VRPipeSystem::assignBoundaryPressures() {
                 double Pfluid = depth * tankDensity * gravity;
                 double Pgauge = tankPressure + Pfluid - atmosphericPressure;
                 e->hydraulicHead = e->height + Pgauge / (tankDensity * gravity);
-
-                cout << " tank boundary expr.: hH: " << e->hydraulicHead << ", h: " << e->height << ", d: " << depth << endl;
+                //cout << " tank boundary expr.: hH: " << e->hydraulicHead << ", h: " << e->height << ", d: " << depth << endl;
             }
         }
     }
@@ -949,8 +948,6 @@ void VRPipeSystem::assignBoundaryPressures() {
 
         if (!pipe->pressurized)
             pipe->hydraulicHead = pipe->liquidMin + pipe->level * (pipe->liquidMax - pipe->liquidMin);
-        //pipe->hydraulicHead = min(e1->height, e2->height) + pipe->level * pipe->radius * 2 - pipe->radius;
-        //cout << " hydraulicHead " << h0 << " " << pipe->level << " " << pipe->level * pipe->radius * 2 << endl;
     }
 }
 
@@ -1245,6 +1242,9 @@ void VRPipeSystem::computeMaxFlows(double dt) { // deprecated, used only to copy
         }
     };
 
+    auto processSegmentNeighbors = [&](bool& needsIteration) {
+    };
+
     for (auto& n : nodes) {
         auto node = n.second;
         auto entity = node->entity;
@@ -1253,7 +1253,10 @@ void VRPipeSystem::computeMaxFlows(double dt) { // deprecated, used only to copy
         for (auto& e : n.second->pipes) {
             if (isTank) {
                 double tankLevel = entity->getValue("level", 1.0);
-                if (e->offsetHeight > tankLevel && e->headFlow < 0) {
+                double tankHeight = entity->getValue("height", 1.0);
+                auto nPos = graph->getPosition(n.first)->pos();
+                double fluidHeight = (tankLevel-0.5)*tankHeight + nPos[1];
+                if (e->height > fluidHeight && e->headFlow < 0) {
                     e->maxFlow = 0;
                     continue; // pipe end above water level cant drain tank!
                 }
@@ -1268,6 +1271,7 @@ void VRPipeSystem::computeMaxFlows(double dt) { // deprecated, used only to copy
         needsIteration = false;
         processNodes();
         processSegments(needsIteration);
+        processSegmentNeighbors(needsIteration);
     }
 
     for (auto& n : nodes) {
