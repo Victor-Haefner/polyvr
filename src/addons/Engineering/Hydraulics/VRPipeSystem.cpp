@@ -142,6 +142,8 @@ void VRPipeSystem::computeEndOffset(VRPipeEndPtr e) {
         e->offset = o;
     }
 
+    auto pipe = e->pipe.lock();
+
     auto P = graph->getPosition(e->nID);
     e->height = (P->pos()+e->offset)[1];
 }
@@ -155,19 +157,13 @@ int VRPipeSystem::addSegment(double radius, int n1, int n2, double level, double
     int sID = graph->connect(n1, n2);
     auto p1 = graph->getPosition(n1)->pos();
     auto p2 = graph->getPosition(n2)->pos();
-    Vec3d d = p2-p1;
-    double length = d.length();
-    auto s = VRPipeSegment::create(sID, radius, length, level);
+
+    auto s = VRPipeSegment::create(sID, radius, 0.0, level);
     segments[sID] = s;
     auto e1 = VRPipeEnd::create(s, n1, h1);
     auto e2 = VRPipeEnd::create(s, n2, h2);
     s->end1 = e1;
     s->end2 = e2;
-
-    double nz = (d/length)[1];
-    double dz = radius * sqrt(1.0 - nz * nz);
-    s->liquidMin = min(p1[1], p2[1]) - dz;
-    s->liquidMax = max(p1[1], p2[1]) + dz;
 
     nodes[n1]->pipes.push_back(e1);
     nodes[n2]->pipes.push_back(e2);
@@ -175,6 +171,21 @@ int VRPipeSystem::addSegment(double radius, int n1, int n2, double level, double
     computeEndOffset(e2);
     computeHydraulicHead(e1);
     computeHydraulicHead(e2);
+
+    p1[1] = e1->height;
+    p2[1] = e2->height;
+    Vec3d d = p2-p1;
+    double length = d.length();
+    s->setLength(length);
+
+    double nz = (d/length)[1];
+    double dz = radius * sqrt(1.0 - nz * nz);
+    s->liquidMin = min(p1[1], p2[1]) - dz;
+    s->liquidMax = max(p1[1], p2[1]) + dz;
+
+    e1->height -= dz; // bottom of pipe
+    e2->height -= dz; // bottom of pipe
+
     return sID;
 }
 
@@ -746,7 +757,7 @@ void VRPipeSystem::updateVisual() {
 
         // hydraulic head
         double h1 = e1->hydraulicHead;
-        double h2 = s.second->liquidHead;
+        double h2 = s.second->hydraulicHead;
         double h3 = e2->hydraulicHead;
 
         // visuals
@@ -881,14 +892,11 @@ void VRPipeSystem::updateVisual() {
         }
 
         // hydraulicHead headFlow maxFlow flow
-        if (n.second->pipes.size() > 0) {
+        /*if (n.second->pipes.size() > 0) {
             string data;
-            /*double hMax = -1e6;
-            for (auto& e : n.second->pipes) hMax = max(hMax, e->hydraulicHead);
-            data += " " + toString(round(hMax*100)*0.01);*/
             for (auto& e : n.second->pipes) { data += " " + toString(round(e->hydraulicHead*100)*0.01); }
             ann->set(n.first, getNodePose(n.first)->pos(), data);
-        }
+        }*/
     }
 }
 
@@ -900,6 +908,7 @@ void VRPipeSystem::assignBoundaryPressures() {
     for (auto n : nodes) {
         auto node = n.second;
         auto entity = node->entity;
+        auto nPos = graph->getPosition(n.first)->pos();
 
         if (entity->is_a("Outlet")) {
             double outletRadius = entity->getValue("radius", 0.0);
@@ -922,7 +931,8 @@ void VRPipeSystem::assignBoundaryPressures() {
             if (tankOpen) tankPressure = atmosphericPressure;
 
             for (auto& e : node->pipes) {
-                double depth = max(0.0, tankLevel - e->offsetHeight) * tankHeight;
+                double fluidHeight = (tankLevel-0.5)*tankHeight + nPos[1];
+                double depth = max(0.0, fluidHeight - e->height);
                 double Pfluid = depth * tankDensity * gravity;
                 double Pgauge = tankPressure + Pfluid - atmosphericPressure;
                 e->hydraulicHead = e->height + Pgauge / (tankDensity * gravity);
@@ -937,9 +947,10 @@ void VRPipeSystem::assignBoundaryPressures() {
         auto e1 = pipe->end1.lock();
         auto e2 = pipe->end2.lock();
 
-        //pipe->liquidHead = pipe->liquidMin + pipe->level * (pipe->liquidMax - pipe->liquidMin);
-        pipe->liquidHead = min(e1->height, e2->height) + pipe->level * pipe->radius * 2 - pipe->radius;
-        //cout << " liquidHead " << h0 << " " << pipe->level << " " << pipe->level * pipe->radius * 2 << endl;
+        if (!pipe->pressurized)
+            pipe->hydraulicHead = pipe->liquidMin + pipe->level * (pipe->liquidMax - pipe->liquidMin);
+        //pipe->hydraulicHead = min(e1->height, e2->height) + pipe->level * pipe->radius * 2 - pipe->radius;
+        //cout << " hydraulicHead " << h0 << " " << pipe->level << " " << pipe->level * pipe->radius * 2 << endl;
     }
 }
 
@@ -983,6 +994,30 @@ void VRPipeSystem::computeDynamicPipeResistances() {
 }
 
 void VRPipeSystem::solveNodeHeads() {
+    auto averageOverNodes = [&](VRPipeSegmentPtr pipe, double& maxHeadDelta) {
+        auto e1 = pipe->end1.lock();
+        auto e2 = pipe->end2.lock();
+
+        double num = 0.0;
+        double den = 0.0;
+        for (auto& e : {e1,e2}) {
+            double R = pipe->resistance + pipe->dynamicResistance; // or Rt-equivalent
+            double head = e->hydraulicHead;
+            num += head / R;
+            den += 1.0 / R;
+        }
+
+        if (abs(den) < 1e-9) return;
+        double newHead = num / den;
+        maxHeadDelta = max(maxHeadDelta, abs(pipe->hydraulicHead-newHead));
+        pipe->hydraulicHead = newHead;
+        //cout << " solveNodeHeads " << "  " << newHead << endl;
+        /*for (auto& e : {e1,e2}) {
+            maxHeadDelta = max(maxHeadDelta, abs(e->hydraulicHead-newHead));
+            e->hydraulicHead = newHead;
+        }*/
+    };
+
     auto averageOverPipes = [&](vector<VRPipeEndPtr> ends, double& maxHeadDelta) {
         double num = 0.0;
         double den = 0.0;
@@ -992,9 +1027,11 @@ void VRPipeSystem::solveNodeHeads() {
             auto otherEnd = pipe->otherEnd(e);
             double R = pipe->resistance + pipe->dynamicResistance; // or Rt-equivalent
 
-            double head = std::max(otherEnd->hydraulicHead, pipe->liquidHead);
-            if (!pipe->pressurized) head = pipe->liquidHead;
-            //cout << " solveNodeHeads " << "  " << head << " " << otherEnd->hydraulicHead << " " << pipe->liquidHead << endl;
+            //double head = std::max(otherEnd->hydraulicHead, pipe->hydraulicHead);
+            //if (!pipe->pressurized) head = pipe->hydraulicHead;
+            //cout << " solveNodeHeads " << "  " << head << " " << otherEnd->hydraulicHead << " " << pipe->hydraulicHead << endl;
+
+            double head = pipe->hydraulicHead;
 
             num += head / R;
             den += 1.0 / R;
@@ -1040,7 +1077,7 @@ void VRPipeSystem::solveNodeHeads() {
         return true;
     };
 
-    double maxHeadDelta = 1;
+    double maxHeadDelta = 1; // convergence criteria
     double eps = 0.01;
     for (int i=0; maxHeadDelta>eps && i<50; i++) {
         maxHeadDelta = 0;
@@ -1055,6 +1092,10 @@ void VRPipeSystem::solveNodeHeads() {
             averageOverPipes(node->pipes, maxHeadDelta);
         }
 
+        for (auto& s : segments) {
+            auto& pipe = s.second;
+            if (pipe->pressurized) averageOverNodes(pipe, maxHeadDelta);
+        }
         //if (maxHeadDelta <= eps) cout << " solver itr: " << i << endl;
     }
 }
@@ -1067,29 +1108,30 @@ void VRPipeSystem::computeHeadFlows(double dt) {
         auto e1 = pipe->end1.lock();
         auto e2 = pipe->end2.lock();
 
+        // based on Darcy-Weisbach for turbulent flow
+        //double Rt = pipeFriction * pipe->length * pipe->density / ( 4 * pipe->radius * pow(pipe->area,2));
+        double Rt = pipe->resistance + pipe->dynamicResistance;
+
         if (pipe->pressurized) {
             double dH = e2->hydraulicHead - e1->hydraulicHead; // compute hydraulic gradient
             double dP = dH * pipe->density * gravity;
             int dir = sign(dH);
 
-            // based on Darcy-Weisbach for turbulent flow
-            //double Rt = pipeFriction * pipe->length * pipe->density / ( 4 * pipe->radius * pow(pipe->area,2));
-            double Rt = pipe->resistance + pipe->dynamicResistance;
             double flow = sqrt( abs(dP) / Rt ) * dir;
 
             e1->headFlow =  flow;
             e2->headFlow = -flow;
         } else {
-            // determine upstream end
-            auto up   = (e1->hydraulicHead > e2->hydraulicHead) ? e1 : e2;
+            double A = pipe->area;
+            double K = (2.0 * A * A * Rt) / pipe->density; // convert quadratic resistance to loss coefficient
+            K = std::max(K, 1e-6); // numerical safety
+
+
+            /*auto up   = (e1->hydraulicHead > e2->hydraulicHead) ? e1 : e2;
             auto down = (up == e1) ? e2 : e1;
-            double dHfill = up->hydraulicHead - pipe->liquidHead; // driving head relative to pipe liquid surface
+            double dHfill = up->hydraulicHead - pipe->hydraulicHead; // driving head relative to pipe liquid surface
 
             if (dHfill > 0.0) {
-                double A = pipe->area;
-                double Rt = pipe->resistance + pipe->dynamicResistance;
-                double K = (2.0 * A * A * Rt) / pipe->density; // convert quadratic resistance to loss coefficient
-                K = std::max(K, 1e-6); // numerical safety
                 double flow = A * sqrt(2.0 * gravity * dHfill / K);
 
                 //if (dHfill > 1e-3) cout << " dHfill: " << dHfill << ", flow: " << flow << endl;
@@ -1101,6 +1143,14 @@ void VRPipeSystem::computeHeadFlows(double dt) {
                     e1->headFlow =  0.0;
                     e2->headFlow = -flow;
                 }
+            }*/
+
+            for (auto& e : {e1,e2}) {
+                double dH = e->hydraulicHead - pipe->hydraulicHead;
+                double dP = dH * pipe->density * gravity;
+                int dir = sign(dH);
+                double flow = sqrt( abs(dP) / Rt ) * dir;
+                e->headFlow = -flow;
             }
         }
     }
