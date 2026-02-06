@@ -582,6 +582,7 @@ void VRPipeSystem::updateVisual() {
 
             p1 += s.second->end1.lock()->offset;
             p2 += s.second->end2.lock()->offset;
+            Vec3d pm = (p1+p2)*0.5;
 
             Vec3d dPipe = (p2-p1); dPipe.normalize();
 
@@ -596,16 +597,18 @@ void VRPipeSystem::updateVisual() {
                 else if (l == "d") { col1 = yellow; col2 = yellow; }
                 else if (l == "v") { col1 = blue; col2 = blue; }
                 else if (l == "n") { col1 = white; col2 = green; }
+                else if (l == "h") { col1 = green; col2 = green; }
                 else continue;
 
                 data.pushVert(p1+dO*k, norm, col1, tcID1);
+                if (l == "h") { data.pushVert(pm+dO*k, norm, col1, tcID1); data.pushLine(); }
                 data.pushVert(p2+dO*k, norm, col2, tcID2);
                 data.pushLine();
                 k++;
             }
 
             if (p2[1] < p1[1]) swap(p1,p2); // p2 always higher than p1
-            Vec3d pm = (p1+p2)*0.5;
+            pm = (p1+p2)*0.5;
             Vec3d d = (p2-p1); d.normalize();
 
             double g = r*2;
@@ -741,6 +744,11 @@ void VRPipeSystem::updateVisual() {
         double f = min(1.0, abs(flow)*100.0);
         if (f > 1e-3) cf = Color3f(0.3*f,0.7*f,0.5+0.5*f);
 
+        // hydraulic head
+        double h1 = e1->hydraulicHead;
+        double h2 = s.second->liquidHead;
+        double h3 = e2->hydraulicHead;
+
         // visuals
         Color3f col1, col2;
         for (auto l : layers) {
@@ -748,10 +756,16 @@ void VRPipeSystem::updateVisual() {
             else if (l == "d") { col1 = cd; col2 = cd; }
             else if (l == "v") { col1 = cf; col2 = cf; }
             else if (l == "n") { col1 = white; col2 = green; }
-            else continue;
+            else if (l == "h") {
+                col1 = green; col2 = green;
+                auto p1 = data.getPosition(i)  ; p1[1] = h1; data.setPos(i  , p1);
+                auto p2 = data.getPosition(i+1); p2[1] = h2; data.setPos(i+1, p2);
+                auto p3 = data.getPosition(i+2); p3[1] = h3; data.setPos(i+2, p3);
+            } else continue;
 
             data.setColor(i, col1); i++;
             data.setColor(i, col2); i++;
+            if (l == "h") { i++; k += 2; }
             k += 2;
         }
 
