@@ -28,6 +28,7 @@ class VRPipeEnd {
 
         double hydraulicHead = 0.0;
         double pressure = 1.0;
+        bool pressurized = false;
 
     public:
         VRPipeEnd(VRPipeSegmentPtr s, int nID, double height = 0.0);

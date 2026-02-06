@@ -1239,10 +1239,36 @@ void VRPipeSystem::computeMaxFlows(double dt) { // deprecated, used only to copy
                 if (f < 0) e->maxFlow = f * scaleFlowInOut[0];
                 else e->maxFlow = f * scaleFlowInOut[1];
             }
+
+            // forbid cavitations
+            if (e1->pressurized && e2->pressurized) {
+                double totalFlowIn = 0;
+                double totalFlowOut = 0;
+                for (auto& e : {e1, e2}) {
+                    auto f = e->maxFlow;
+                    if (f < 0) totalFlowIn += -f;
+                    else totalFlowOut += f;
+                }
+
+                if (totalFlowOut > totalFlowIn) {
+                    for (auto& e : {e1, e2}) {
+                        auto f = e->maxFlow;
+                        if (f > 0) e->maxFlow = totalFlowIn;
+                    }
+                    needsIteration = true;
+                }
+            }
         }
     };
 
     auto processSegmentNeighbors = [&](bool& needsIteration) {
+        /*for (auto& s : segments) {
+            auto& pipe = s.second;
+            auto e1 = pipe->end1.lock();
+            auto e2 = pipe->end2.lock();
+
+            if ()
+        }*/
     };
 
     for (auto& n : nodes) {
@@ -1250,7 +1276,7 @@ void VRPipeSystem::computeMaxFlows(double dt) { // deprecated, used only to copy
         auto entity = node->entity;
         bool isTank = entity->is_a("Tank");
 
-        for (auto& e : n.second->pipes) {
+        for (auto& e : node->pipes) {
             if (isTank) {
                 double tankLevel = entity->getValue("level", 1.0);
                 double tankHeight = entity->getValue("height", 1.0);
@@ -1286,6 +1312,8 @@ void VRPipeSystem::updateLevels(double dt) {
         auto node = n.second;
         auto entity = node->entity;
 
+        for (auto& pEnd : node->pipes) pEnd->pressurized = true;
+
         if (entity->is_a("Tank")) {
             double tankArea = entity->getValue("area", 0.0);
             double tankHeight = entity->getValue("height", 0.0);
@@ -1316,6 +1344,10 @@ void VRPipeSystem::updateLevels(double dt) {
         if (!pipe->pressurized && pipe->level > 0.98) pipe->pressurized = true;
         //pipe->pressurized = bool(pipe->level > 1.0-1e-6);
         //pipe->pressurized = true;
+
+        if (!pipe->pressurized) { // TODO: mostly works, except for pipe/tank ends
+            for (auto& e : {e1,e2}) e->pressurized = false;
+        }
     }
 }
 
