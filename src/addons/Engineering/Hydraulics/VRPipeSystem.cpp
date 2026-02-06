@@ -1307,8 +1307,8 @@ void VRPipeSystem::computeMaxFlows(double dt) { // deprecated, used only to copy
     }
 }
 
-void VRPipeSystem::updateLevels(double dt) {
-    for (auto n : nodes) { // traverse nodes, change pressure in segments
+void VRPipeSystem::updateLevels(double dt) { // TODO: split updatePressurized from updateLevels
+    for (auto n : nodes) {
         auto node = n.second;
         auto entity = node->entity;
 
@@ -1329,6 +1329,13 @@ void VRPipeSystem::updateLevels(double dt) {
 
             double newLevel = clamp(tankLevel + totalFlow*dt / tankVolume, 0.0, 1.0);
             entity->set("level", toString(newLevel));
+
+
+            auto nPos = graph->getPosition(n.first)->pos();
+            double fluidHeight = (tankLevel-0.5)*tankHeight + nPos[1];
+            for (auto& e : node->pipes) {
+                if (e->height > fluidHeight) e->pressurized = false;
+            }
         }
     }
 
@@ -1345,9 +1352,18 @@ void VRPipeSystem::updateLevels(double dt) {
         //pipe->pressurized = bool(pipe->level > 1.0-1e-6);
         //pipe->pressurized = true;
 
-        if (!pipe->pressurized) { // TODO: mostly works, except for pipe/tank ends
+        if (!pipe->pressurized) {
             for (auto& e : {e1,e2}) e->pressurized = false;
         }
+    }
+
+    for (auto n : nodes) {
+        auto node = n.second;
+        auto entity = node->entity;
+        if (entity->is_a("Tank")) continue;
+        bool isP = true;
+        for (auto& e : node->pipes) if (!e->pressurized) isP = false;
+        if (!isP) for (auto& e : node->pipes) e->pressurized = false;
     }
 }
 
