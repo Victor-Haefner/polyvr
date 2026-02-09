@@ -193,6 +193,17 @@ void VRPipeSystem::remSegment(int eID) {
     rebuildMesh = true;
     auto& e = graph->getEdge(eID);
     graph->disconnect(e.from, e.to);
+    auto& s = segments[eID];
+    auto e1 = s->end1.lock();
+    auto e2 = s->end2.lock();
+
+    for (auto e : {e1,e2}) {
+        if (!e) continue;
+        if (!nodes.count(e->nID)) continue;
+        auto node = nodes[e->nID];
+        node->pipes.erase(remove(node->pipes.begin(), node->pipes.end(), e), node->pipes.end());
+    }
+
     segments.erase(eID);
 }
 
