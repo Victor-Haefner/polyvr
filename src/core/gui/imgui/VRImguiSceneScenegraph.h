@@ -67,6 +67,7 @@ class ImScenegraph {
         vector<double> lodDistances;
 
         string geoOrigin;
+        bool meshVisible = true;
         vector<string> geoParams;
         vector<string> geoParamNames;
         vector<pair<string, int>> geoData;

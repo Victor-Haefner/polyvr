@@ -195,6 +195,7 @@ void VRGuiScene::setGeometry(VRGeometryPtr g) {
 
     params["origin"] = origin;
     params["originParams"] = g->getReference().parameter;
+    params["meshVisible"] = toString(g->getMeshVisibility());
 
     string geoData;
     VRGeoData data(g);
@@ -622,6 +623,11 @@ void VRGuiScene::on_constraint_set_dof(int dof, double min, double max) {
 }
 
 // geometry
+void VRGuiScene::on_toggle_mesh_visible(bool b) {
+    VRGeometryPtr obj = dynamic_pointer_cast<VRGeometry>( getSelected() );
+    obj->setMeshVisibility(b);
+}
+
 void VRGuiScene::on_change_primitive() {
     if(!trigger_cbs) return;
     /*string prim = getComboboxText("combobox21");
@@ -1282,6 +1288,8 @@ VRGuiScene::VRGuiScene() { // TODO: reduce callbacks with templated functions
     mgr->addCallback("sg_set_constraint_lock_rotation", [&](OSG::VRGuiSignals::Options o) { on_constraint_lock_rotation(1); return true; }, true );
     mgr->addCallback("sg_set_constraint_unlock_rotation", [&](OSG::VRGuiSignals::Options o) { on_constraint_lock_rotation(0); return true; }, true );
     mgr->addCallback("sg_set_constraint_dof", [&](OSG::VRGuiSignals::Options o) { on_constraint_set_dof(toInt(o["dof"]), toFloat(o["min"]), toFloat(o["max"])); return true; }, true );
+
+    mgr->addCallback("sg_toggle_mesh_visible", [&](OSG::VRGuiSignals::Options o) { on_toggle_mesh_visible(toBool(o["visible"])); return true; }, true );
 
     mgr->addCallback("sg_set_cam_accept_root", [&](OSG::VRGuiSignals::Options o) { on_toggle_camera_accept_realroot(toBool(o["value"])); return true; }, true );
     mgr->addCallback("sg_set_cam_aspect", [&](OSG::VRGuiSignals::Options o) { on_cam_aspect_changed(toFloat(o["value"])); return true; }, true );

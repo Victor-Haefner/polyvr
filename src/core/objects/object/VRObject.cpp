@@ -310,6 +310,15 @@ void VRObject::switchCore(OSGCorePtr c) {
 void VRObject::disableCore() { osg->node->setCore( Group::create() ); }
 void VRObject::enableCore() { osg->node->setCore( core->core ); }
 
+bool getBit(const unsigned int& mask, int bit) {
+    return (mask & 1UL << bit);
+}
+
+void setBit(unsigned int& mask, int bit, bool value) {
+    if (value) mask |= 1UL << bit;
+    else mask &= ~(1UL << bit);
+}
+
 void VRObject::wrapOSG(OSGObjectPtr node) {
     if (!node || !getNode()) return;
     if (!node->node) return;
@@ -321,6 +330,13 @@ void VRObject::wrapOSG(OSGObjectPtr node) {
     if (type == "Group") type = "Object";
     if (type == "ComponentTransform") type = "Transform";
     if (type == "DistanceLOD") type = "Lod";
+
+    // update own visibility bit mask
+    unsigned int mask = getTravMask();
+    bool showObj = getBit(mask, 0);
+    bool showShadow = getBit(mask, 4);
+    setBit(visibleMask, 0, showObj);
+    setBit(visibleMask, 1, showShadow);
 
     if (node->hasAttachment("pickable")) pickable = (node->getAttachment("pickable") == "yes");
 
@@ -805,15 +821,6 @@ void VRObject::show(string mode) { setVisible(true, mode); }
 
 void VRObject::setVisibleUndo(unsigned int b) {
     setVisibleMask(b);
-}
-
-bool getBit(const unsigned int& mask, int bit) {
-    return (mask & 1UL << bit);
-}
-
-void setBit(unsigned int& mask, int bit, bool value) {
-    if (value) mask |= 1UL << bit;
-    else mask &= ~(1UL << bit);
 }
 
 int getVisibleMaskBit(const string& mode) {

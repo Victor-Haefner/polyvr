@@ -77,6 +77,7 @@ class VRGuiScene {
         // ----------------------------------------------
 
         // ------------- geometry -----------------------
+        void on_toggle_mesh_visible(bool b);
         void setGeometry_gui();
         void setGeometry_material();
         void setGeometry_shadow_toggle();
