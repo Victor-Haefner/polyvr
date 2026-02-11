@@ -25,8 +25,8 @@ VRGizmoPtr VRGizmo::ptr() { return static_pointer_cast<VRGizmo>(shared_from_this
 
 void VRGizmo::setTarget(VRTransformPtr t) {
     target = t;
-    auto bb = target->getBoundingbox();
-    tOffset = bb->center();
+    auto bb = target->getWorldBoundingbox(true);
+    tOffset = bb->center() - target->getWorldPosition();
 }
 
 void VRGizmo::setup() {
