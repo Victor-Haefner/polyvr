@@ -123,6 +123,15 @@ void VRPipeSystem::remNode(int nID) {
     if (!nodes.count(nID)) return;
     rebuildMesh = true;
     auto& node = nodes[nID];
+
+    vector<int> eIDs;
+    for (auto& e : node->pipes) {
+        auto p = e->pipe.lock();
+        if (p) eIDs.push_back(p->eID);
+    }
+
+    for (auto& eID : eIDs) remSegment(eID);
+
     ontology->remEntity(node->entity);
     nodesByName.erase(node->name);
     nodes.erase(nID);
@@ -153,6 +162,9 @@ void VRPipeSystem::computeHydraulicHead(VRPipeEndPtr e) { // initial guess
 }
 
 int VRPipeSystem::addSegment(double radius, int n1, int n2, double level, double h1, double h2) {
+    if (!nodes.count(n1)) return -1;
+    if (!nodes.count(n2)) return -1;
+
     rebuildMesh = true;
     int sID = graph->connect(n1, n2);
     auto p1 = graph->getPosition(n1)->pos();
@@ -190,6 +202,7 @@ int VRPipeSystem::addSegment(double radius, int n1, int n2, double level, double
 }
 
 void VRPipeSystem::remSegment(int eID) {
+    if (!segments.count(eID)) return;
     rebuildMesh = true;
     auto& e = graph->getEdge(eID);
     graph->disconnect(e.from, e.to);
@@ -963,9 +976,6 @@ void VRPipeSystem::assignBoundaryPressures() {
 }
 
 void VRPipeSystem::computeDynamicPipeResistances() {
-    double RmaxPipe = 1e12;
-    double RmaxTank = 1e12;
-
     for (auto& s : segments) s.second->dynamicResistance = 0.0;
 
     for (auto& n : nodes) {
@@ -1093,8 +1103,6 @@ void VRPipeSystem::solveNodeHeads() {
         for (auto& n : nodes) {
             auto node = n.second;
             auto entity = node->entity;
-            int Npipes = node->pipes.size();
-
             if (entity->is_a("Tank") || entity->is_a("Outlet")) continue; // already prescribed
             if (entity->is_a("Pump") && processPumpHeads(node->pipes, entity->getValue("headGain", 0.0), maxHeadDelta)) continue;
             averageOverPipes(node->pipes, maxHeadDelta);

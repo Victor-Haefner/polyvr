@@ -38,8 +38,8 @@ Add node (name, pose, type, params)\n\
  type can be [Tank, Valve, Outlet, Pump, Junction]\n\
  params can be:\n\
   Tank: 'area', 'height', 'level', 'pressure', 'isOpen', 'density'\n\
-  Valve: 'radius', 'state'\n\
-  Outlet: 'radius'\n\
+  Valve: 'state'\n\
+  Outlet: 'radius', 'pressure', 'density'\n\
   Pump: 'headGain', 'isOpen'\
 "
 
