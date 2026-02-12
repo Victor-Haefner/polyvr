@@ -185,7 +185,7 @@ void VRGizmo::update() {
         Vec3d p;
         p[dof] = x;
         P->translate(p);
-        target->setPose(P);
+        target->setWorldPose(P);
     };
 
     auto processScale = [&](VRGeometryPtr t, int dof) {
