@@ -1308,7 +1308,7 @@ class GLTFLoader : public GLTFUtils {
             bool mtF = false;
             bool rfF = false;
             //bool emF = false;
-            bool alphaBlend = true;
+            bool alphaBlend = false;
             //bool alphaMask = false;
             //bool alphaOpaque = false;
             bool singleFace = false;
@@ -1333,8 +1333,10 @@ class GLTFLoader : public GLTFUtils {
                     //int tID = gltfMaterial.emissiveTexture.index;
                 }
                 if (content.first == "alphaMode") {
-                    //cout << "alhphaMODE " << gltfMaterial.alphaMode << endl;
-                    if (gltfMaterial.alphaMode != "BLEND") alphaBlend = false;
+                    cout << "alphaMode " << gltfMaterial.alphaMode << endl;
+                    if (gltfMaterial.alphaMode == "OPAQUE") alphaBlend = false;
+                    if (gltfMaterial.alphaMode == "BLEND") alphaBlend = true;
+                    if (gltfMaterial.alphaMode == "MASK") alphaBlend = true; // TODO
                 }
                 if (content.first == "doubleSided") {
                     if (!gltfMaterial.doubleSided) { singleFace = true; cout << "GLTFLOADER::WARNING IN MATERIAL " << gltfMaterial.name << " - SINGLE SIDE - ambient set to black" << endl; }
