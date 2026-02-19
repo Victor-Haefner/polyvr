@@ -91,6 +91,7 @@ void ImScenegraph::render() {
             ImGui::Separator();
             ImGui::TextUnformatted("Geometry:");
             ImGui::Indent(10);
+            if (ImGui::Checkbox("mesh visible", &meshVisible)) uiSignal( "sg_toggle_mesh_visible", {{"visible",toString(meshVisible)}} );
             ImGui::TextUnformatted(("Origin: " + geoOrigin).c_str());
             if (geoOrigin == "primitive") {
                 ImGui::TextUnformatted(("Primitive: " + geoParams[0]).c_str());
@@ -338,6 +339,7 @@ void ImScenegraph::setupLod(OSG::VRGuiSignals::Options o) {
 
 void ImScenegraph::setupGeometry(OSG::VRGuiSignals::Options o) {
     geoOrigin = o["origin"];
+    meshVisible = toBool(o["meshVisible"]);
     geoParams = splitString(o["originParams"]);
     toValue(o["paramNames"], geoParamNames);
 

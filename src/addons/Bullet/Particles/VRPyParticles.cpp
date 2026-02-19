@@ -3,7 +3,7 @@
 #include "core/scripting/VRPyBaseT.h"
 
 template<> PyTypeObject VRPyBaseT<OSG::VRParticles>::type = {
-    PyObject_HEAD_INIT(NULL)
+    PyVarObject_HEAD_INIT(NULL, 0)
     "VR.Particles",             /*tp_name*/
     sizeof(VRPyParticles),             /*tp_basicsize*/
     0,                         /*tp_itemsize*/

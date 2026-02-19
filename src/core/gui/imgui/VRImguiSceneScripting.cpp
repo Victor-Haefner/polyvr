@@ -507,12 +507,15 @@ void ImScripting::render() {
     };
 
     ImGuiIO& io = ImGui::GetIO();
-    if (io.KeyCtrl) {
-        if (imguiKeyPressed(ImGuiKey_S)) { uiSignal("scripts_toolbar_save"); }
-        if (imguiKeyPressed(ImGuiKey_E)) { uiSignal("scripts_toolbar_execute"); }
-        if (imguiKeyPressed(ImGuiKey_W)) { uiSignal("clearConsoles"); }
-        if (imguiKeyPressed(ImGuiKey_F)) { openSearch(); }
+
+    static bool ctrlFired = false;
+    if (io.KeyCtrl && !ctrlFired) {
+        if (imguiKeyPressed(ImGuiKey_S)) { uiSignal("scripts_toolbar_save"); ctrlFired = true; }
+        if (imguiKeyPressed(ImGuiKey_E)) { uiSignal("scripts_toolbar_execute"); ctrlFired = true; }
+        if (imguiKeyPressed(ImGuiKey_W)) { uiSignal("clearConsoles"); ctrlFired = true; }
+        if (imguiKeyPressed(ImGuiKey_F)) { openSearch(); ctrlFired = true; }
     }
+    if (!io.KeyCtrl) ctrlFired = false;
 
     // toolbar
     ImGui::Spacing();
@@ -569,9 +572,10 @@ void ImScripting::render() {
     ImGui::BeginGroup();
     ImGui::Spacing();
     ImGui::BeginChild("ScriptEditorPanel", ImVec2(w2, h), false, flags);
-    if (ImGui::IsWindowFocused(ImGuiFocusedFlags_ChildWindows) && io.KeyCtrl) {
-        if (imguiKeyPressed(ImGuiKey_T)) { uiSignal("editor_cmd", {{"cmd","toggleLine"}}); }
-        if (imguiKeyPressed(ImGuiKey_D)) { uiSignal("editor_cmd", {{"cmd","duplicateLine"}}); }
+    if (ImGui::IsWindowFocused(ImGuiFocusedFlags_ChildWindows) && io.KeyCtrl && !ctrlFired) {
+        if (imguiKeyPressed(ImGuiKey_T)) { uiSignal("editor_cmd", {{"cmd","toggleLine"}}); ctrlFired = true; }
+        if (imguiKeyPressed(ImGuiKey_D)) { uiSignal("editor_cmd", {{"cmd","duplicateLine"}}); ctrlFired = true; }
+        //else ctrlFired = false;
     }
 
     editor.render();

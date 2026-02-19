@@ -22,10 +22,13 @@ class VRPipeEnd {
         double offsetHeight = 0.0; // used for tank offset
         Vec3d offset; // offset relative to node center
 
+        double headFlow = 0.0;
         double maxFlow = 0.0;
         double flow = 0.0;
+
         double hydraulicHead = 0.0;
         double pressure = 1.0;
+        bool pressurized = false;
 
     public:
         VRPipeEnd(VRPipeSegmentPtr s, int nID, double height = 0.0);
@@ -41,13 +44,18 @@ class VRPipeSegment {
         double length = 0.0;
         double area = 0.0;
         double volume = 0.0;
+        double liquidMin = 0.0;
+        double liquidMax = 0.0;
+
         double resistance = 0.0;
         double dynamicResistance = 0.0; // set by valves and pumps
         double density = 1000.0; // kg / m3
         double viscosity = 1e-3; // Pa s
         double level = 0.0;
+        double hydraulicHead = 0.0;
         double lastVizLevel = -1.0;
         double friction = 0.02;
+        bool pressurized = false;
         bool flowBlocked = false;
 
         VRPipeEndWeakPtr end1;
@@ -97,6 +105,8 @@ class VRPipeSystem : public VRGeometry {
 
         double gravity = 9.81;
         double atmosphericPressure = 101325; // Pa at sea level (1 atm)
+        //double atmosphericPressure = 0.0; // set to 0 because its just a global offset
+        double waterDensity = 1000.0; // kg / m3
 
         map<int, VRPipeNodePtr> nodes;
         map<string, int> nodesByName;
@@ -114,12 +124,15 @@ class VRPipeSystem : public VRGeometry {
         void setupMaterial();
 
         void computeEndOffset(VRPipeEndPtr e);
+        void computeHydraulicHead(VRPipeEndPtr e);
 
         void assignBoundaryPressures();
         void computeDynamicPipeResistances();
         void solveNodeHeads();
-        void computePipeFlows(double dt);
+        void computeHeadFlows(double dt);
+        void computeMaxFlows(double dt);
         void updateLevels(double dt);
+        void updatePressures(double dt);
 
 	public:
 		VRPipeSystem();
@@ -162,9 +175,9 @@ class VRPipeSystem : public VRGeometry {
 		double getTankDensity(string n);
 		double getTankLevel(string n);
 		double getPump(string n);
-		bool getValveState(string n);
+		double getValveState(string n);
 
-		void setValve(string n, bool b);
+		void setValve(string n, double b);
 		void setPump(string n, double h, bool io);
 		void setTankPressure(string n, double p);
 		void setTankDensity(string n, double p);
