@@ -41,6 +41,8 @@ class GlutWindow : public std::enable_shared_from_this<GlutWindow> {
         void setCloseCb( GlutSignals::CloseCallback cb );
         void setReshapeCb( GlutSignals::ReshapeCallback cb );
         void setKeyboardCb( GlutSignals::KeyboardCallback cb );
+        void setMouseCb( GlutSignals::MouseCallback cb );
+        void setMotionCb( GlutSignals::MotionCallback cb );
 
         static int getActiveID();
         static Vec2i getScreenSize();

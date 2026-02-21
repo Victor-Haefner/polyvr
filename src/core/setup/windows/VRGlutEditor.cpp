@@ -45,10 +45,6 @@ VRGlutEditor* getCurrentEditor() {
     return glutEditors[gID];
 }
 
-// callbacks for GL view
-void glutEMouse(int b, int s, int x, int y) { auto e = getCurrentEditor(); if (e) e->onMouse(b ,s ,x ,y); }
-void glutEMotion(int x, int y) { auto e = getCurrentEditor(); if (e) e->onMotion(x, y); }
-
 void testGLCapabilities() {
     cout << "Check OpenGL capabilities:" << endl;
     cout << " OpenGL vendor: " << VRRenderManager::getGLVendor() << endl;
@@ -125,10 +121,9 @@ VRGlutEditor::VRGlutEditor() {
     winGL->setDisplayCb( [this](){ on_gl_display(); } );
     winGL->setReshapeCb( [this](int x, int y){ on_gl_resize(x,y); } );
     winGL->setKeyboardCb( [this](unsigned char k, bool d, bool s, int x, int y){ onKeyboard(k, d, s, x, y); } );
+    winGL->setMouseCb( [this](int k, int d, int x, int y){ onMouse(k, d, x, y); } );
+    winGL->setMotionCb( [this](int x, int y, bool p){ onMotion(x, y); } );
 
-    glutMotionFunc(glutEMotion);
-    glutPassiveMotionFunc(glutEMotion);
-    glutMouseFunc(glutEMouse);
     cout << " Glut window initiated" << endl;
 
     auto mgr = OSG::VRGuiSignals::get();

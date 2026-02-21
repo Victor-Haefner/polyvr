@@ -104,6 +104,8 @@ void GlutWindow::setDisplayCb( GlutSignals::DisplayCallback cb ) { signals->setD
 void GlutWindow::setCloseCb( GlutSignals::CloseCallback cb ) { signals->setCloseCb(cb); }
 void GlutWindow::setReshapeCb( GlutSignals::ReshapeCallback cb ) { signals->setReshapeCb(cb); }
 void GlutWindow::setKeyboardCb( GlutSignals::KeyboardCallback cb ) { signals->setKeyboardCb(cb); }
+void GlutWindow::setMouseCb( GlutSignals::MouseCallback cb ) { signals->setMouseCb(cb); }
+void GlutWindow::setMotionCb( GlutSignals::MotionCallback cb ) { signals->setMotionCb(cb); }
 
 void GlutWindow::activate() { glutSetWindow(winID); }
 
