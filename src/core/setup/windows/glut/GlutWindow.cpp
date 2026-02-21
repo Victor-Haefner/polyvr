@@ -88,6 +88,13 @@ GlutWindowPtr GlutWindow::createSubWindow(string name, int x0, int y0, int width
     return win;
 }
 
+void GlutWindow::setTitle(string title) {
+    int w = glutGetWindow();
+    activate();
+    glutSetWindowTitle(title.c_str());
+    glutSetWindow(w);
+}
+
 void GlutWindow::activate() { glutSetWindow(winID); }
 
 Vec2i GlutWindow::getScreenSize() { // static

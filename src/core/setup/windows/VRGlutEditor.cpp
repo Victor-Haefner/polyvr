@@ -190,10 +190,7 @@ VRGlutEditorPtr VRGlutEditor::create() { return VRGlutEditorPtr(new VRGlutEditor
 
 void VRGlutEditor::setTitle(string title) {
     VRWindow::setTitle(title);
-    int w = glutGetWindow();
-    winTop->activate();
-    glutSetWindowTitle(title.c_str());
-    glutSetWindow(w);
+    winTop->setTitle(title);
 }
 
 void VRGlutEditor::setIcon(string path) {

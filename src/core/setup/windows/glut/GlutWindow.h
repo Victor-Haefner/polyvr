@@ -31,6 +31,8 @@ class GlutWindow : public std::enable_shared_from_this<GlutWindow> {
         void activate();
         void enableVSync(bool b);
 
+        void setTitle(string title);
+
         static Vec2i getScreenSize();
         Vec2i getPosition();
         Vec2i getSize();
