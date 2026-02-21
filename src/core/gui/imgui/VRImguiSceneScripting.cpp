@@ -572,10 +572,9 @@ void ImScripting::render() {
     ImGui::BeginGroup();
     ImGui::Spacing();
     ImGui::BeginChild("ScriptEditorPanel", ImVec2(w2, h), false, flags);
-    if (ImGui::IsWindowFocused(ImGuiFocusedFlags_ChildWindows) && io.KeyCtrl && !ctrlFired) {
-        if (imguiKeyPressed(ImGuiKey_T)) { uiSignal("editor_cmd", {{"cmd","toggleLine"}}); ctrlFired = true; }
-        if (imguiKeyPressed(ImGuiKey_D)) { uiSignal("editor_cmd", {{"cmd","duplicateLine"}}); ctrlFired = true; }
-        //else ctrlFired = false;
+    if (ImGui::IsWindowFocused(ImGuiFocusedFlags_ChildWindows) && io.KeyCtrl) {
+        if (imguiKeyPressed(ImGuiKey_T)) { uiSignal("editor_cmd", {{"cmd","toggleLine"}}); }
+        if (imguiKeyPressed(ImGuiKey_D)) { uiSignal("editor_cmd", {{"cmd","duplicateLine"}}); }
     }
 
     editor.render();
