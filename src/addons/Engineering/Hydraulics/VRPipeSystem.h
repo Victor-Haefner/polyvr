@@ -26,6 +26,9 @@ class VRPipeEnd {
         double maxFlow = 0.0;
         double flow = 0.0;
 
+        double heatFlux = 0.0;
+        double temperature = 20.0;
+
         double hydraulicHead = 0.0;
         double pressure = 1.0;
         bool pressurized = false;
@@ -55,6 +58,7 @@ class VRPipeSegment {
         double hydraulicHead = 0.0;
         double lastVizLevel = -1.0;
         double friction = 0.02;
+        double thermalConductance = 1.0;
         bool pressurized = false;
         bool flowBlocked = false;
 
@@ -132,6 +136,7 @@ class VRPipeSystem : public VRGeometry {
         void computeHeadFlows(double dt);
         void computeMaxFlows(double dt);
         void updateLevels(double dt);
+        void computeAdvectiveHeatTransfer(double dt);
         void updatePressures(double dt);
 
 	public:

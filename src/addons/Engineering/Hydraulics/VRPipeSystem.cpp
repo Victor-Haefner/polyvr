@@ -284,11 +284,14 @@ void VRPipeSystem::initOntology() {
     auto Outlet = ontology->addConcept("Outlet");
     auto Junction = ontology->addConcept("Junction");
     auto Valve = ontology->addConcept("Valve");
+    auto CheckValve = ontology->addConcept("CheckValve", "Valve");
+    auto ReliefValve = ontology->addConcept("ReliefValve", "Valve");
 
     Tank->addProperty("pressure", "double");
     Tank->addProperty("area", "double");
     Tank->addProperty("height", "double");
     Tank->addProperty("density", "double");
+    Tank->addProperty("temperature", "double");
     Tank->addProperty("level", "double");
     Tank->addProperty("isOpen", "bool");
     Pump->addProperty("headGain", "double");
@@ -297,6 +300,9 @@ void VRPipeSystem::initOntology() {
     Outlet->addProperty("pressure", "double");
     Outlet->addProperty("density", "double");
     Valve->addProperty("state", "double");
+    CheckValve->addProperty("crackingPressure", "double");
+    ReliefValve->addProperty("thresholdPressure", "double");
+    ReliefValve->addProperty("reseatPressure", "double");
 }
 
 void VRPipeSystem::setNodePose(int nID, PosePtr p) {
@@ -466,6 +472,7 @@ void VRPipeSystem::updateVisual() {
 
     const Color3f white(1,1,1);
     const Color3f yellow(1,1,0);
+    const Color3f red(1,0,0);
     const Color3f blue(0.2,0.5,1);
     const Color3f dblue(0.1,0.4,0.7);
     const Color3f green(0.2,1.0,0.2);
@@ -473,6 +480,16 @@ void VRPipeSystem::updateVisual() {
     VRGeoData data(ptr());
 
     Vec3d dO = Vec3d(-spread,-spread,-spread);
+
+    auto mix = [](Color3f c1, Color3f c2, double t) {
+        return c1+(c2-c1)*t;
+    };
+
+    auto getTempColor = [&](float T) -> Color3f {
+        if (T <= 20) return mix(dblue, blue, T/20.0);
+        if (T <= 100) return mix(blue, red, (T-20.0)/80.0);
+        return red;
+    };
 
     auto updatePipeInds = [&](VRGeoData& data, double level, int i0, int k0) {
         auto updateQuad = [&](VRGeoData& data, int k, int i0, int a, int b, int c, int d, Color3f col) {
@@ -851,11 +868,22 @@ void VRPipeSystem::updateVisual() {
             }
             updatePipeInds(data, l, i, k);
 
-            for (int j=0; j<4; j++) {
+            /*for (int j=0; j<4; j++) {
                 if (!s.second->pressurized) data.setColor(i+4+j, green);
                 else data.setColor(i+4+j, blue);
-            }
+            }*/
         }
+
+        auto tmpCol1 = getTempColor(e1->temperature);
+        auto tmpCol2 = getTempColor(e2->temperature);
+        if (e1->temperature > 21 || e2->temperature > 21) cout << "T1 " << e1->temperature << ", T2 " << e2->temperature << endl;
+        //auto tmpCol1 = getTempColor(90.0);
+        //auto tmpCol2 = getTempColor(90.0);
+        data.setColor(i+4+0, tmpCol1);
+        data.setColor(i+4+1, tmpCol1);
+        data.setColor(i+4+2, tmpCol2);
+        data.setColor(i+4+3, tmpCol2);
+
 
         double r = s.second->radius;
         double v0 = 0.5; // m/s
@@ -887,13 +915,18 @@ void VRPipeSystem::updateVisual() {
         if (e->is_a("Tank")) {
             double l = e->getValue("level", 1.0);
             double h = e->getValue("height", 1.0);
+            double T = e->getValue("temperature", 20.0);
             double s = h*l;
+            auto tempCol = getTempColor(T);
+
             for (int j=0; j<4; j++) {
                 Pnt3d p = data.getPosition(i+j);
                 p[1] += s;
                 data.setPos(i+4+j, p);
                 data.setPos(i+8+j, p);
+                data.setColor(i+4+j, tempCol);
             }
+
             i += 16;
             k += 48;
         } else {
@@ -1395,6 +1428,64 @@ void VRPipeSystem::updatePressures(double dt) {
     }
 }
 
+void VRPipeSystem::computeAdvectiveHeatTransfer(double dt) {
+    for (auto& n : nodes) { // --- 1. Reset heat flux accumulator at nodes ---
+        auto e = n.second->entity;
+        for (auto pe : n.second->pipes) {
+            pe->heatFlux = 0.0;   // temporary accumulator (add this member)
+
+            if (e->is_a("Tank")) {
+                double T = e->getValue("temperature", 20.0);
+                pe->temperature = T;
+            }
+        }
+    }
+
+    for (auto& s : segments) { // --- 2. Compute advective heat transport through pipes ---
+        auto& pipe = s.second;
+        auto end1 = pipe->end1.lock();
+        auto end2 = pipe->end2.lock();
+
+        double Q = end1->flow;
+        // Convention: end1->flow = flow OUT of end1
+        // So Q > 0 means flow end1 → end2
+
+        if (Q < 0.0) { // comes inside the pipe from e1, goes to e2 (TODO: only if pipe is pressurized!)
+            // Flow from end1 to end2
+            double transportedHeat = abs(Q * end1->temperature);
+            end1->heatFlux -= transportedHeat;  // leaving
+            end2->heatFlux += transportedHeat;  // entering
+        } else { // Flow from end2 to end1
+            double transportedHeat = abs(Q * end2->temperature);
+            end2->heatFlux -= transportedHeat;
+            end1->heatFlux += transportedHeat;
+        }
+    }
+
+    //double thermalCapacity = 1.0; // for later
+    double thermalCapacity = 0.001; // for later
+
+    for (auto& n : nodes) { // --- 3. Update node temperatures ---
+        double heatFlux = 0.0;
+        double meanTemp = 0.0;
+
+        for (auto pe : n.second->pipes) {
+            heatFlux += pe->heatFlux;
+            meanTemp += pe->temperature;
+        }
+
+        meanTemp /= n.second->pipes.size();
+
+        double dT = (dt / thermalCapacity) * heatFlux;
+        meanTemp += dT;
+
+        for (auto pe : n.second->pipes) {
+            pe->temperature = meanTemp;
+            if (pe->temperature > 21) cout << n.second->nID << ", T " << pe->temperature << ", dT " << dT << endl;
+        }
+    }
+}
+
 void VRPipeSystem::update() {
     int subSteps = 10;
     double dT = 1.0/60;
@@ -1415,6 +1506,7 @@ void VRPipeSystem::update() {
         computeMaxFlows(dt); // most time spent
         auto T2 = t2->stop();
         updateLevels(dt);
+        computeAdvectiveHeatTransfer(dt);
         updatePressures(dt);
         //cout << " VRPipeSystem::update " << T1 << ", " << T2 << endl;
     }
