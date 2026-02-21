@@ -219,12 +219,11 @@ void VRGlutEditor::onMain_Keyboard_special(int k) {
 }
 
 void VRGlutEditor::setMaximized(bool b) {
-    int width = glutGet(GLUT_SCREEN_WIDTH);
-    int height = glutGet(GLUT_SCREEN_HEIGHT);
+    Vec2i screenSize = GlutWindow::getScreenSize();
 
     if (b && !fullscreen) {
         cout << " glut maximize!" << endl;
-        resizeGLWindow(0, 0, width, height);
+        resizeGLWindow(0, 0, screenSize[0], screenSize[1]);
         maximized = b;
 
         winUI->activate();
@@ -232,13 +231,13 @@ void VRGlutEditor::setMaximized(bool b) {
 
         winTop->activate();
         glutPositionWindow(0, 0);
-        glutReshapeWindow(width, height);
+        glutReshapeWindow(screenSize[0], screenSize[1]);
         maximizeWindow();
     }
     else {
         cout << " glut unmaximize!" << endl;
         maximized = b;
-        on_resize_window(width, height);
+        on_resize_window(screenSize[0], screenSize[1]);
 
         winUI->activate();
         glutShowWindow();
@@ -246,12 +245,11 @@ void VRGlutEditor::setMaximized(bool b) {
 }
 
 void VRGlutEditor::setFullscreen(bool b) {
-    int width = glutGet(GLUT_SCREEN_WIDTH);
-    int height = glutGet(GLUT_SCREEN_HEIGHT);
+    Vec2i screenSize = GlutWindow::getScreenSize();
 
     if (b && !maximized) {
         cout << " glut enter fullscreen!" << endl;
-        resizeGLWindow(0,0,width,height);
+        resizeGLWindow(0,0,screenSize[0], screenSize[1]);
         fullscreen = b;
 
         winUI->activate();
@@ -262,7 +260,7 @@ void VRGlutEditor::setFullscreen(bool b) {
     } else {
         cout << " glut exit fullscreen!" << endl;
         fullscreen = b;
-        on_resize_window(width, height);
+        on_resize_window(screenSize[0], screenSize[1]);
 
         winUI->activate();
         glutShowWindow();
@@ -302,15 +300,12 @@ void VRGlutEditor::openPopupWindow(string name, string title, int width, int hei
     if (winPopup) { closePopupWindow(); return; } // TODO
 
     cout << "open popup " << name << endl;
-    winTop->activate();
-    int mainX      = glutGet(GLUT_WINDOW_X);
-    int mainY      = glutGet(GLUT_WINDOW_Y);
-    int mainWidth  = glutGet(GLUT_WINDOW_WIDTH);
-    int mainHeight = glutGet(GLUT_WINDOW_HEIGHT);
-    int popupX = mainX + (mainWidth  - width)  / 2;
-    int popupY = mainY + (mainHeight - height) / 2;
 
-    winPopup = GlutWindow::create(name, popupX, popupY, width, height);
+    Vec2i pos  = winTop->getPosition();
+    Vec2i sizeMain = winTop->getSize();
+    Vec2i posPopup = pos + (sizeMain - Vec2i(width, height)) * 0.5;
+
+    winPopup = GlutWindow::create(name, posPopup[0], posPopup[1], width, height);
     initGlutDialogExtensions(title);
     winPopup->enableVSync(false);
     glutEditors[winPopup->winID] = this;
@@ -400,7 +395,6 @@ void VRGlutEditor::handleRelayedKey(int key, int state, bool special) {
 
 void VRGlutEditor::render(bool fromThread) {
     if (fromThread || doShutdown) return;
-    auto profiler = VRProfiler::get();
 
     glutMainLoopEvent();
     glutMainLoopEvent();
@@ -434,9 +428,7 @@ void VRGlutEditor::enableVSync(bool b) {
 void VRGlutEditor::on_gl_resize(int w, int h) {
     //cout << "  Glut::on_gl_resize " << w << ", " << h << endl;
     if (!winGL) return;
-    winGL->activate();
-    int ww = glutGet(GLUT_WINDOW_WIDTH); // calling glutGet somehow magically fixes the resize glitches..
-    int hh = glutGet(GLUT_WINDOW_HEIGHT);
+    winGL->getSize();// calling this somehow magically fixes the resize glitches..
     if (resizeSignal) resizeSignal( "glutResizeGL", 0,0,w,h ); // tell imgui the new size
 }
 
@@ -463,17 +455,17 @@ void VRGlutEditor::on_resize_window(int w, int h) { // resize top window
 
 void VRGlutEditor::saveSnapshot(string path) {
     if (!exists(getFolderName(path))) return;
+    if (!winGL) return;
     winGL->activate();
     int w = 400;
     int h = 300;
     float a = h/float(w);
 
-    int W = glutGet(GLUT_WINDOW_WIDTH);
-    int H = glutGet(GLUT_WINDOW_HEIGHT);
-    int S = min(W, H);
+    Vec2i s = winGL->getSize();
+    int S = min(s[0], s[1]);
     int Sa = S*a;
-    int u = max(0.0, W*0.5 - S*0.5);
-    int v = max(0.0, H*0.5 - Sa*0.5);
+    int u = max(0.0, s[0]*0.5 - S*0.5);
+    int v = max(0.0, s[1]*0.5 - Sa*0.5);
 
     int Nc = 3;
     VRImage img;
@@ -492,9 +484,7 @@ void VRGlutEditor::on_gl_display() {
     auto profiler = VRProfiler::get();
 
     int pID1 = profiler->regStart("glut editor gl display");
-    winGL->activate();
-    int w = glutGet(GLUT_WINDOW_WIDTH); // calling glutGet somehow magically fixes the resize glitches..
-    int h = glutGet(GLUT_WINDOW_HEIGHT);
+    winGL->getSize(); // calling this somehow magically fixes the resize glitches..
     //if (signal) signal( "glutRenderGL", {} );
 #ifndef WITHOUT_OPENVR
     if (hmd) {

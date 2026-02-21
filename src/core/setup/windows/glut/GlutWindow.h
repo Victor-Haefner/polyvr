@@ -4,6 +4,7 @@
 #include <string>
 
 #include <OpenSG/OSGConfig.h>
+#include <OpenSG/OSGVector.h>
 #include "core/setup/VRSetupFwd.h"
 
 using namespace std;
@@ -29,6 +30,10 @@ class GlutWindow : public std::enable_shared_from_this<GlutWindow> {
 
         void activate();
         void enableVSync(bool b);
+
+        static Vec2i getScreenSize();
+        Vec2i getPosition();
+        Vec2i getSize();
 };
 
 OSG_END_NAMESPACE;

@@ -73,8 +73,9 @@ GlutWindowPtr GlutWindow::create(string name, int x0, int y0, int width, int hei
 GlutWindowPtr GlutWindow::ptr() { return static_pointer_cast<GlutWindow>(shared_from_this()); }
 
 void GlutWindow::setupAsTop(int x0, int y0, int width, int height) {
-    if (width  < 0) width  = glutGet(GLUT_SCREEN_WIDTH );
-    if (height < 0) height = glutGet(GLUT_SCREEN_HEIGHT);
+    Vec2i screenSize = getScreenSize();
+    if (width  < 0) width  = screenSize[0];
+    if (height < 0) height = screenSize[1];
     glutInitWindowSize(width, height);
     glutInitWindowPosition(x0, y0);
     winID = glutCreateWindow(name.c_str());
@@ -88,6 +89,20 @@ GlutWindowPtr GlutWindow::createSubWindow(string name, int x0, int y0, int width
 }
 
 void GlutWindow::activate() { glutSetWindow(winID); }
+
+Vec2i GlutWindow::getScreenSize() { // static
+    return Vec2i(glutGet(GLUT_SCREEN_WIDTH), glutGet(GLUT_SCREEN_HEIGHT));
+}
+
+Vec2i GlutWindow::getPosition() {
+    activate();
+    return Vec2i(glutGet(GLUT_WINDOW_X), glutGet(GLUT_WINDOW_Y));
+}
+
+Vec2i GlutWindow::getSize() {
+    activate();
+    return Vec2i(glutGet(GLUT_WINDOW_WIDTH), glutGet(GLUT_WINDOW_HEIGHT));
+}
 
 void GlutWindow::enableVSync(bool b) {
     int swapInterval = b ? 1 : 0;
