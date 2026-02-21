@@ -277,8 +277,19 @@ void VRGlutEditor::setFullscreen(bool b) {
 }
 
 bool doShutdown = false;
-void VRGlutEditor::on_close_window() { doShutdown = true; signal("glutCloseWindow", {}); }
-void VRGlutEditor::on_popup_close() { winPopup.reset(); }
+
+void VRGlutEditor::on_close_window() {
+    if (winTop) winTop->winID = -1;
+    if (winUI) winUI->winID = -1;
+    if (winGL) winGL->winID = -1;
+    doShutdown = true;
+    signal("glutCloseWindow", {});
+}
+
+void VRGlutEditor::on_popup_close() {
+    if (winPopup) winPopup->winID = -1;
+    winPopup.reset();
+}
 
 void VRGlutEditor::togglePopupWindow(string name, string title, int width, int height) {
     if (winPopup && winPopup->name == name) closePopupWindow();

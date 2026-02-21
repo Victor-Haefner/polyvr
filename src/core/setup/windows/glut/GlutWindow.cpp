@@ -1,6 +1,7 @@
 #include "GlutWindow.h"
 
 #include <cstring>
+#include <iostream>
 #include <GL/freeglut.h>
 
 #ifdef WIN32
