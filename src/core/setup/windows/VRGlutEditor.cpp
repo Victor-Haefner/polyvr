@@ -79,43 +79,6 @@ void testGLCapabilities() {
     cout << " has tesselation shader: " << VRRenderManager::hasTessShader() << endl;
 }
 
-void setSwapInterval(int swapInterval) {
-#ifdef WIN32
-    PFNWGLSWAPINTERVALEXTPROC wglSwapIntervalEXT;
-    if (wglSwapIntervalEXT = (PFNWGLSWAPINTERVALEXTPROC)wglGetProcAddress("wglSwapIntervalEXT"))
-    {
-        // Enable V-Sync
-        wglSwapIntervalEXT(swapInterval); // 0 for off, 1 for on
-    };
-#else
-    Display *display = glXGetCurrentDisplay();
-    GLXDrawable drawable = glXGetCurrentDrawable();
-
-    const char *extensions = glXQueryExtensionsString(display, DefaultScreen(display));
-    bool extSupported = strstr(extensions, "GLX_EXT_swap_control") != nullptr;
-    bool sgiSupported = strstr(extensions, "GLX_SGI_swap_control") != nullptr;
-    bool mesaSupported = strstr(extensions, "GLX_MESA_swap_control") != nullptr;
-
-    if (extSupported) {
-        typedef void (*glXSwapIntervalEXTProc)(Display*, GLXDrawable, int);
-        glXSwapIntervalEXTProc glXSwapIntervalEXTptr = (glXSwapIntervalEXTProc)glXGetProcAddress((const GLubyte *)"glXSwapIntervalEXT");
-        if (glXSwapIntervalEXTptr) glXSwapIntervalEXTptr(display, drawable, swapInterval); // 0 for off, 1 for on
-    }
-
-    if (sgiSupported) {
-        typedef int (*glXSwapIntervalSGIProc)(int);
-        glXSwapIntervalSGIProc glXSwapIntervalSGIptr = (glXSwapIntervalSGIProc)glXGetProcAddress((const GLubyte *)"glXSwapIntervalSGI");
-        if (glXSwapIntervalSGIptr) glXSwapIntervalSGIptr(swapInterval); // 0 for off, 1 for on
-    }
-
-    if (mesaSupported) {
-        typedef int (*glXSwapIntervalMESAProc)(unsigned int);
-        glXSwapIntervalMESAProc glXSwapIntervalMESAptr = (glXSwapIntervalMESAProc)glXGetProcAddress((const GLubyte *)"glXSwapIntervalMESA");
-        if (glXSwapIntervalMESAptr) glXSwapIntervalMESAptr(swapInterval); // 0 for off, 1 for on
-    }
-#endif
-}
-
 VRGlutEditor::VRGlutEditor() {
     cout << "Glut: New Editor" << endl;
     type = "glutEditor";
@@ -155,7 +118,7 @@ VRGlutEditor::VRGlutEditor() {
 
     /** IDE Window **/
     winUI = winTop->createSubWindow("ui", 0, 0, width, height);
-    setSwapInterval(0);
+    winUI->enableVSync(false);
     glutEditors[winUI->winID] = this;
     glutDisplayFunc( onUIDisplay );
     glutReshapeFunc( onUIReshape );
@@ -348,7 +311,7 @@ void VRGlutEditor::openPopupWindow(string name, string title, int width, int hei
     glutInitWindowPosition(popupX, popupY);
     winPopup = GlutWindow::create(title);
     initGlutDialogExtensions(title);
-    setSwapInterval(0);
+    winPopup->enableVSync(false);
     glutEditors[winPopup->winID] = this;
 
     glutDisplayFunc( onPopupDisplay );
@@ -460,12 +423,10 @@ void VRGlutEditor::forceGLResize(int w, int h) { // TODO
 }
 
 void VRGlutEditor::enableVSync(bool b) {
-    int swapInterval = b ? 1 : 0;
-
     int current = glutGetWindow();
-    if (winGL) { winGL->activate(); setSwapInterval(swapInterval); }
-    if (winUI) { winUI->activate(); setSwapInterval(0); }
-    if (winPopup) { winPopup->activate(); setSwapInterval(0); }
+    if (winGL) { winGL->enableVSync(b); }
+    if (winUI) { winUI->enableVSync(false); }
+    if (winPopup) { winPopup->enableVSync(false); }
     glutSetWindow(current);
 }
 
