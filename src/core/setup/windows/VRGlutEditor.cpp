@@ -182,9 +182,9 @@ VRGlutEditor::VRGlutEditor() {
 
 VRGlutEditor::~VRGlutEditor() {
     cleanupGlutExtensions();
-    glutDestroyWindow(winGL->winID);
-    glutDestroyWindow(winUI->winID);
-    glutDestroyWindow(winTop->winID);
+    winGL.reset();
+    winUI.reset();
+    winTop.reset();
     win = NULL;
     glutEditors.clear();
 }
@@ -289,12 +289,11 @@ void VRGlutEditor::closePopupWindow() {
     if (!winPopup) return;
     cout << "close popup " << popup << " (" << winPopup->winID << ")" << endl;
     popup = "";
-    glutDestroyWindow(winPopup->winID);
     winPopup.reset();
 }
 
 void VRGlutEditor::openPopupWindow(string name, string title, int width, int height) {
-    cout << "open popup " << name << ", current popup: " << popup << " (" << winPopup->winID << ")" << endl;
+    cout << "open popup " << name << ", current popup: " << popup << endl;
     if (winPopup) { closePopupWindow(); return; } // TODO
 
     winTop->activate();

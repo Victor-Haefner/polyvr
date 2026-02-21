@@ -58,7 +58,10 @@ GlutWindow::GlutWindow(string name) : name(name) {
     ;
 }
 
-GlutWindow::~GlutWindow() {}
+GlutWindow::~GlutWindow() {
+    if (winID < 0) return;
+    glutDestroyWindow(winID);
+}
 
 GlutWindowPtr GlutWindow::create(string name) {
     auto win = GlutWindowPtr( new GlutWindow(name) );
