@@ -7,6 +7,8 @@
 #include <OpenSG/OSGVector.h>
 #include "core/setup/VRSetupFwd.h"
 
+#include "GlutSignals.h"
+
 using namespace std;
 OSG_BEGIN_NAMESPACE;
 
@@ -16,6 +18,7 @@ class GlutWindow : public std::enable_shared_from_this<GlutWindow> {
 	    string name = "unnamed";
 
     private:
+        GlutSignalsPtr signals;
 
         void setupAsTop(int x0, int y0, int width, int height);
 
@@ -28,12 +31,20 @@ class GlutWindow : public std::enable_shared_from_this<GlutWindow> {
 
         GlutWindowPtr createSubWindow(string name, int x0, int y0, int width, int height);
 
+        void connectSignals();
+
         void activate();
         void enableVSync(bool b);
 
         void setTitle(string title);
+        void setDisplayCb( GlutSignals::DisplayCallback cb );
+        void setCloseCb( GlutSignals::CloseCallback cb );
+        void setReshapeCb( GlutSignals::ReshapeCallback cb );
+        void setKeyboardCb( GlutSignals::KeyboardCallback cb );
 
+        static int getActiveID();
         static Vec2i getScreenSize();
+
         Vec2i getPosition();
         Vec2i getSize();
 };

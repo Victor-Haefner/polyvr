@@ -1,4 +1,5 @@
 #include "GlutWindow.h"
+#include "GlutSignals.h"
 
 #include <cstring>
 #include <iostream>
@@ -56,7 +57,7 @@ void setSwapInterval(int swapInterval) {
 
 
 GlutWindow::GlutWindow(string name) : name(name) {
-    ;
+    signals = GlutSignals::create();
 }
 
 GlutWindow::~GlutWindow() {
@@ -67,6 +68,7 @@ GlutWindow::~GlutWindow() {
 GlutWindowPtr GlutWindow::create(string name, int x0, int y0, int width, int height) {
     auto win = GlutWindowPtr( new GlutWindow(name) );
     win->setupAsTop(x0, y0, width, height);
+    win->signals->connect(win);
     return win;
 }
 
@@ -85,8 +87,11 @@ GlutWindowPtr GlutWindow::createSubWindow(string name, int x0, int y0, int width
     activate();
     auto win = GlutWindowPtr( new GlutWindow(name) );
     win->winID = glutCreateSubWindow(winID, x0, y0, width, height);
+    win->signals->connect(win);
     return win;
 }
+
+int GlutWindow::getActiveID() { return glutGetWindow(); }
 
 void GlutWindow::setTitle(string title) {
     int w = glutGetWindow();
@@ -94,6 +99,11 @@ void GlutWindow::setTitle(string title) {
     glutSetWindowTitle(title.c_str());
     glutSetWindow(w);
 }
+
+void GlutWindow::setDisplayCb( GlutSignals::DisplayCallback cb ) { signals->setDisplayCb(cb); }
+void GlutWindow::setCloseCb( GlutSignals::CloseCallback cb ) { signals->setCloseCb(cb); }
+void GlutWindow::setReshapeCb( GlutSignals::ReshapeCallback cb ) { signals->setReshapeCb(cb); }
+void GlutWindow::setKeyboardCb( GlutSignals::KeyboardCallback cb ) { signals->setKeyboardCb(cb); }
 
 void GlutWindow::activate() { glutSetWindow(winID); }
 

@@ -69,8 +69,7 @@ class VRGlutEditor: public VRWindow {
 
         void onMouse(int b, int s, int x, int y);
         void onMotion(int x, int y);
-        void onKeyboard(int k, int s, int x, int y);
-        void onKeyboard_special(int k, int s, int x, int y);
+        void onKeyboard(int k, bool d, bool s, int x, int y);
 
         void forceGLResize(int w, int h);
         void enableVSync(bool b);
