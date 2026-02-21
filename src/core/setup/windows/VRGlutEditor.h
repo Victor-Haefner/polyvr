@@ -25,10 +25,6 @@ class VRGlutEditor: public VRWindow {
         GlutWindowPtr winGL;
         GlutWindowPtr winUI;
         GlutWindowPtr winPopup;
-        /*int winTop = -1;
-        int winGL = -1;
-        int winUI = -1;
-        int winPopup = -1;*/
         VRHeadMountedDisplayPtr hmd;
         bool fullscreen = false;
         bool maximized = false;

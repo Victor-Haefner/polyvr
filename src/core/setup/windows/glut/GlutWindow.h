@@ -26,6 +26,8 @@ class GlutWindow : public std::enable_shared_from_this<GlutWindow> {
 		GlutWindowPtr ptr();
 
         GlutWindowPtr createSubWindow(string name, int x0, int y0, int width, int height);
+
+        void activate();
 };
 
 OSG_END_NAMESPACE;

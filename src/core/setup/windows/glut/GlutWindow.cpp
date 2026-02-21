@@ -31,8 +31,10 @@ void GlutWindow::setupAsTop() {
 }
 
 GlutWindowPtr GlutWindow::createSubWindow(string name, int x0, int y0, int width, int height) {
-    glutSetWindow(winID);
+    activate();
     auto win = GlutWindowPtr( new GlutWindow(name) );
     win->winID = glutCreateSubWindow(winID, x0, y0, width, height);
     return win;
 }
+
+void GlutWindow::activate() { glutSetWindow(winID); }
