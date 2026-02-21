@@ -179,10 +179,6 @@ int VRGlutEditor::getWinID(CONTEXT c) {
     return -1;
 }
 
-void VRGlutEditor::onMain_Keyboard_special(int k) {
-    //cout << " VRGlutEditor::onMain_Keyboard_special " << k << endl;
-}
-
 void VRGlutEditor::setMaximized(bool b) {
     Vec2i screenSize = GlutWindow::getScreenSize();
 
