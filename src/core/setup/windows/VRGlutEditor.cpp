@@ -92,12 +92,8 @@ VRGlutEditor::VRGlutEditor() {
 
     initGlut();
 
-    int width = glutGet(GLUT_SCREEN_WIDTH);
-    int height = glutGet(GLUT_SCREEN_HEIGHT);
-
     cout << " Glut create editor" << endl;
-    glutInitWindowSize(width, height);
-    winTop = GlutWindow::create("PolyVR");
+    winTop = GlutWindow::create("PolyVR", 0, 0, -1, -1);
     glutEditors[winTop->winID] = this;
     glutDisplayFunc( onMainDisplay );
     glutReshapeFunc( onMainReshape );
@@ -314,9 +310,7 @@ void VRGlutEditor::openPopupWindow(string name, string title, int width, int hei
     int popupX = mainX + (mainWidth  - width)  / 2;
     int popupY = mainY + (mainHeight - height) / 2;
 
-    glutInitWindowSize(width, height);
-    glutInitWindowPosition(popupX, popupY);
-    winPopup = GlutWindow::create(name);
+    winPopup = GlutWindow::create(name, popupX, popupY, width, height);
     initGlutDialogExtensions(title);
     winPopup->enableVSync(false);
     glutEditors[winPopup->winID] = this;

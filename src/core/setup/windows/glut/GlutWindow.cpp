@@ -64,15 +64,19 @@ GlutWindow::~GlutWindow() {
     glutDestroyWindow(winID);
 }
 
-GlutWindowPtr GlutWindow::create(string name) {
+GlutWindowPtr GlutWindow::create(string name, int x0, int y0, int width, int height) {
     auto win = GlutWindowPtr( new GlutWindow(name) );
-    win->setupAsTop();
+    win->setupAsTop(x0, y0, width, height);
     return win;
 }
 
 GlutWindowPtr GlutWindow::ptr() { return static_pointer_cast<GlutWindow>(shared_from_this()); }
 
-void GlutWindow::setupAsTop() {
+void GlutWindow::setupAsTop(int x0, int y0, int width, int height) {
+    if (width  < 0) width  = glutGet(GLUT_SCREEN_WIDTH );
+    if (height < 0) height = glutGet(GLUT_SCREEN_HEIGHT);
+    glutInitWindowSize(width, height);
+    glutInitWindowPosition(x0, y0);
     winID = glutCreateWindow(name.c_str());
 }
 

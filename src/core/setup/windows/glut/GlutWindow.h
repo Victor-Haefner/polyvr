@@ -16,13 +16,13 @@ class GlutWindow : public std::enable_shared_from_this<GlutWindow> {
 
     private:
 
-        void setupAsTop();
+        void setupAsTop(int x0, int y0, int width, int height);
 
 	public:
 		GlutWindow(string name);
 		~GlutWindow();
 
-		static GlutWindowPtr create(string name);
+		static GlutWindowPtr create(string name, int x0, int y0, int width, int height);
 		GlutWindowPtr ptr();
 
         GlutWindowPtr createSubWindow(string name, int x0, int y0, int width, int height);
