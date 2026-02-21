@@ -12,9 +12,9 @@ OSG_BEGIN_NAMESPACE;
 class GlutWindow : public std::enable_shared_from_this<GlutWindow> {
 	public:
 	    int winID = -1;
+	    string name = "unnamed";
 
     private:
-	    string name = "unnamed";
 
         void setupAsTop();
 

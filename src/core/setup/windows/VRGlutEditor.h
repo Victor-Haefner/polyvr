@@ -29,7 +29,6 @@ class VRGlutEditor: public VRWindow {
         bool fullscreen = false;
         bool maximized = false;
         int focusedWinID = -1;
-        string popup;
         string iconPath;
 
         typedef function<void(string, map<string, string>)> Signal;

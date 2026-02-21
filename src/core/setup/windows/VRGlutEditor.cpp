@@ -278,24 +278,23 @@ void VRGlutEditor::setFullscreen(bool b) {
 
 bool doShutdown = false;
 void VRGlutEditor::on_close_window() { doShutdown = true; signal("glutCloseWindow", {}); }
-void VRGlutEditor::on_popup_close() { popup = ""; winPopup.reset(); }
+void VRGlutEditor::on_popup_close() { winPopup.reset(); }
 
 void VRGlutEditor::togglePopupWindow(string name, string title, int width, int height) {
-    if (popup == name) closePopupWindow();
+    if (winPopup && winPopup->name == name) closePopupWindow();
     else openPopupWindow(name, title, width, height);
 }
 
 void VRGlutEditor::closePopupWindow() {
     if (!winPopup) return;
-    cout << "close popup " << popup << " (" << winPopup->winID << ")" << endl;
-    popup = "";
+    cout << "close popup " << winPopup->name << " (" << winPopup->winID << ")" << endl;
     winPopup.reset();
 }
 
 void VRGlutEditor::openPopupWindow(string name, string title, int width, int height) {
-    cout << "open popup " << name << ", current popup: " << popup << endl;
     if (winPopup) { closePopupWindow(); return; } // TODO
 
+    cout << "open popup " << name << endl;
     winTop->activate();
     int mainX      = glutGet(GLUT_WINDOW_X);
     int mainY      = glutGet(GLUT_WINDOW_Y);
@@ -304,11 +303,9 @@ void VRGlutEditor::openPopupWindow(string name, string title, int width, int hei
     int popupX = mainX + (mainWidth  - width)  / 2;
     int popupY = mainY + (mainHeight - height) / 2;
 
-    popup = name;
-
     glutInitWindowSize(width, height);
     glutInitWindowPosition(popupX, popupY);
-    winPopup = GlutWindow::create(title);
+    winPopup = GlutWindow::create(name);
     initGlutDialogExtensions(title);
     winPopup->enableVSync(false);
     glutEditors[winPopup->winID] = this;
@@ -536,7 +533,7 @@ void VRGlutEditor::on_popup_display() {
 
     int pID1 = profiler->regStart("glut editor ui dialog display");
     winPopup->activate();
-    if (signal) signal( "glutRenderPopup", {{"name",popup}} ); // may close window
+    if (signal) signal( "glutRenderPopup", {{"name",winPopup->name}} ); // may close window
     //if (winPopup) glutSwapBuffers();
     profiler->regStop(pID1);
 }
