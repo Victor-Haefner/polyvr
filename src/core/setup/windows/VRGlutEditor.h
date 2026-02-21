@@ -4,6 +4,7 @@
 
 #include "VRWindow.h"
 #include <OpenSG/OSGGLUTWindow.h>
+#include "glut/GlutWindow.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -20,10 +21,14 @@ class VRGlutEditor: public VRWindow {
 
     private:
         GLUTWindowMTRecPtr win;
-        int topWin = -1;
+        GlutWindowPtr winTop;
+        GlutWindowPtr winGL;
+        GlutWindowPtr winUI;
+        GlutWindowPtr winPopup;
+        /*int winTop = -1;
         int winGL = -1;
         int winUI = -1;
-        int winPopup = -1;
+        int winPopup = -1;*/
         VRHeadMountedDisplayPtr hmd;
         bool fullscreen = false;
         bool maximized = false;

@@ -134,8 +134,8 @@ VRGlutEditor::VRGlutEditor() {
 
     cout << " Glut create editor" << endl;
     glutInitWindowSize(width, height);
-    topWin = glutCreateWindow("PolyVR");
-    glutEditors[topWin] = this;
+    winTop = GlutWindow::create("PolyVR");
+    glutEditors[winTop->winID] = this;
     glutDisplayFunc( onMainDisplay );
     glutReshapeFunc( onMainReshape );
     glutCloseFunc( onMainClose );
@@ -154,9 +154,9 @@ VRGlutEditor::VRGlutEditor() {
     testGLCapabilities();
 
     /** IDE Window **/
-    winUI = glutCreateSubWindow(topWin, 0, 0, width, height);
+    winUI = winTop->createSubWindow("ui", 0, 0, width, height);
     setSwapInterval(0);
-    glutEditors[winUI] = this;
+    glutEditors[winUI->winID] = this;
     glutDisplayFunc( onUIDisplay );
     glutReshapeFunc( onUIReshape );
 
@@ -169,16 +169,15 @@ VRGlutEditor::VRGlutEditor() {
     startGrabShiftTab();
 
     /** OpenSG Window **/
-    glutSetWindow(topWin);
-    winGL = glutCreateSubWindow(topWin, 0,0,width*0.6, height*0.6);
+    winGL = winTop->createSubWindow("ugl", 0,0,width*0.6, height*0.6);
     glutPopWindow();
-    glutEditors[winGL] = this;
+    glutEditors[winGL->winID] = this;
 
     cout << " Glut create window" << endl;
-    cout << "  window ID: " << winGL << endl;
+    cout << "  window ID: " << winGL->winID << endl;
     GLUTWindowMTRecPtr win = GLUTWindow::create();
     _win = win;
-    win->setGlutId(winGL);
+    win->setGlutId(winGL->winID);
     win->setSize(width, height);
     cout << "  init OpenSG GLUT window" << endl;
     win->init();
@@ -205,7 +204,7 @@ VRGlutEditor::VRGlutEditor() {
     mgr->addCallback("ui_close_popup", [&](VRGuiSignals::Options o) { closePopupWindow(); return true; } );
     mgr->addCallback("ui_toggle_popup", [&](VRGuiSignals::Options o) { togglePopupWindow(o["name"], o["title"], toInt(o["width"]), toInt(o["height"])); return true; }, true );
     mgr->addCallback("set_editor_fullscreen", [&](VRGuiSignals::Options o) { setFullscreen(toBool(o["fullscreen"])); return true; }, true );
-    mgr->addCallback("uiGrabFocus", [&](VRGuiSignals::Options o) { getsFocus(winUI); return true; } );
+    mgr->addCallback("uiGrabFocus", [&](VRGuiSignals::Options o) { getsFocus(winUI->winID); return true; } );
     mgr->addCallback("ui_toggle_vsync", [&](VRGuiSignals::Options o) { enableVSync(toBool(o["active"])); return true; } );
     mgr->addCallback("relayedImguiKeySignal", [&](VRGuiSignals::Options o) { handleRelayedKey(toInt(o["key"]), toInt(o["state"]), false); return true; } );
     mgr->addCallback("relayedImguiSpecialKeySignal", [&](VRGuiSignals::Options o) { handleRelayedKey(toInt(o["key"]), toInt(o["state"]), true); return true; } );
@@ -220,9 +219,9 @@ VRGlutEditor::VRGlutEditor() {
 
 VRGlutEditor::~VRGlutEditor() {
     cleanupGlutExtensions();
-    glutDestroyWindow(winGL);
-    glutDestroyWindow(winUI);
-    glutDestroyWindow(topWin);
+    glutDestroyWindow(winGL->winID);
+    glutDestroyWindow(winUI->winID);
+    glutDestroyWindow(winTop->winID);
     win = NULL;
     glutEditors.clear();
 }
@@ -233,7 +232,7 @@ VRGlutEditorPtr VRGlutEditor::create() { return VRGlutEditorPtr(new VRGlutEditor
 void VRGlutEditor::setTitle(string title) {
     VRWindow::setTitle(title);
     int w = glutGetWindow();
-    glutSetWindow(topWin);
+    glutSetWindow(winTop->winID);
     glutSetWindowTitle(title.c_str());
     glutSetWindow(w);
 }
@@ -249,10 +248,10 @@ int VRGlutEditor::getCurrentWinID() { return glutGetWindow(); }
 void VRGlutEditor::setCurrentWinID(int i) { glutSetWindow(i); }
 
 int VRGlutEditor::getWinID(CONTEXT c) {
-    if (c == TOP) return topWin;
-    if (c == SCENE) return winGL;
-    if (c == IMGUI) return winUI;
-    if (c == POPUP) return winPopup;
+    if (c == TOP) return winTop->winID;
+    if (c == SCENE) return winGL->winID;
+    if (c == IMGUI) return winUI->winID;
+    if (c == POPUP) return winPopup->winID;
     return -1;
 }
 
@@ -269,10 +268,10 @@ void VRGlutEditor::setMaximized(bool b) {
         resizeGLWindow(0, 0, width, height);
         maximized = b;
 
-        glutSetWindow(winUI);
+        glutSetWindow(winUI->winID);
         glutHideWindow();
 
-        glutSetWindow(topWin);
+        glutSetWindow(winTop->winID);
         glutPositionWindow(0, 0);
         glutReshapeWindow(width, height);
         maximizeWindow();
@@ -282,7 +281,7 @@ void VRGlutEditor::setMaximized(bool b) {
         maximized = b;
         on_resize_window(width, height);
 
-        glutSetWindow(winUI);
+        glutSetWindow(winUI->winID);
         glutShowWindow();
     }
 }
@@ -296,27 +295,27 @@ void VRGlutEditor::setFullscreen(bool b) {
         resizeGLWindow(0,0,width,height);
         fullscreen = b;
 
-        glutSetWindow(winUI);
+        glutSetWindow(winUI->winID);
         glutHideWindow();
 
-        glutSetWindow(topWin);
+        glutSetWindow(winTop->winID);
         glutFullScreen(); // needs to go last to work
     } else {
         cout << " glut exit fullscreen!" << endl;
         fullscreen = b;
         on_resize_window(width, height);
 
-        glutSetWindow(winUI);
+        glutSetWindow(winUI->winID);
         glutShowWindow();
 
-        glutSetWindow(topWin);
+        glutSetWindow(winTop->winID);
         glutLeaveFullScreen(); // needs to go last to work
     }
 }
 
 bool doShutdown = false;
 void VRGlutEditor::on_close_window() { doShutdown = true; signal("glutCloseWindow", {}); }
-void VRGlutEditor::on_popup_close() { popup = ""; winPopup = -1; }
+void VRGlutEditor::on_popup_close() { popup = ""; winPopup.reset(); }
 
 void VRGlutEditor::togglePopupWindow(string name, string title, int width, int height) {
     if (popup == name) closePopupWindow();
@@ -324,14 +323,18 @@ void VRGlutEditor::togglePopupWindow(string name, string title, int width, int h
 }
 
 void VRGlutEditor::closePopupWindow() {
-    if (winPopup < 0) return;
+    if (!winPopup) return;
+    cout << "close popup " << popup << " (" << winPopup->winID << ")" << endl;
     popup = "";
-    glutDestroyWindow(winPopup);
-    winPopup = -1;
+    glutDestroyWindow(winPopup->winID);
+    winPopup.reset();
 }
 
 void VRGlutEditor::openPopupWindow(string name, string title, int width, int height) {
-    glutSetWindow(topWin);
+    cout << "open popup " << name << ", current popup: " << popup << " (" << winPopup->winID << ")" << endl;
+    if (winPopup) { closePopupWindow(); return; } // TODO
+
+    glutSetWindow(winTop->winID);
     int mainX      = glutGet(GLUT_WINDOW_X);
     int mainY      = glutGet(GLUT_WINDOW_Y);
     int mainWidth  = glutGet(GLUT_WINDOW_WIDTH);
@@ -343,10 +346,10 @@ void VRGlutEditor::openPopupWindow(string name, string title, int width, int hei
 
     glutInitWindowSize(width, height);
     glutInitWindowPosition(popupX, popupY);
-    winPopup = glutCreateWindow(title.c_str());
+    winPopup = GlutWindow::create(title);
     initGlutDialogExtensions(title);
     setSwapInterval(0);
-    glutEditors[winPopup] = this;
+    glutEditors[winPopup->winID] = this;
 
     glutDisplayFunc( onPopupDisplay );
     glutReshapeFunc( onPopupReshape );
@@ -385,14 +388,14 @@ void VRGlutEditor::load(XMLElementPtr node) { VRWindow::load(node); }
 void VRGlutEditor::getsFocus(int wID) {
     focusedWinID = wID;
     string winName = "Unknown";
-    if (wID == winGL) winName = "GL";
-    if (wID == winUI) winName = "uiMain";
-    if (wID == winPopup) winName = "uiPopup";
+    if (winGL && wID == winGL->winID) winName = "GL";
+    if (winUI && wID == winUI->winID) winName = "uiMain";
+    if (winPopup && wID == winPopup->winID) winName = "uiPopup";
     uiSignal("setWindowFocus", {{"winID",toString(wID)}, {"winName", winName}});
 }
 
 void VRGlutEditor::onMouse(int b, int s, int x, int y) {
-    getsFocus(winGL);
+    getsFocus(winGL->winID);
 
     // swap mouse wheel
     if (b == 3) b = 4;
@@ -411,20 +414,20 @@ void VRGlutEditor::onMotion(int x, int y) {
 void VRGlutEditor::onKeyboard(int c, int s, int x, int y) {
     //cout << " VRGlutEditor::onKeyboard " << c << " " << s << " " << x << " " << y << endl;
     if (s == 0 && c == 27) if (fullscreen) setFullscreen(false); // ESC
-    if (focusedWinID != winGL) { if (signal) signal("relayedKeySignal", {{"key",toString(c)},{"state",toString(s)}}); }
+    if (focusedWinID != winGL->winID) { if (signal) signal("relayedKeySignal", {{"key",toString(c)},{"state",toString(s)}}); }
     else if (auto k = getKeyboard()) k->keyboard(c, s, x, y, 1);
 }
 
 void VRGlutEditor::onKeyboard_special(int c, int s, int x, int y) {
     //cout << " VRGlutEditor::onKeyboard_special " << c << " " << s << " " << x << " " << y << endl;
     if (s == 0 && c == 11) setFullscreen(!fullscreen); // F11
-    if (focusedWinID != winGL) { if (signal) signal("relayedSpecialKeySignal", {{"key",toString(c)},{"state",toString(s)}}); }
+    if (focusedWinID != winGL->winID) { if (signal) signal("relayedSpecialKeySignal", {{"key",toString(c)},{"state",toString(s)}}); }
     else if (auto k = getKeyboard()) k->keyboard_special(c, s, x, y, 1);
 }
 
 void VRGlutEditor::handleRelayedKey(int key, int state, bool special) {
     //cout << "handleRelayedKey, spacial? " << special << ", key: " << key << ", state: " << state << ", has focus? " << glViewFocussed << endl;
-    if (focusedWinID != winGL) return;
+    if (focusedWinID != winGL->winID) return;
     auto k = getKeyboard();
     if (!k) return;
     if (special) k->keyboard_special(key, state, 0, 0, 1);
@@ -444,10 +447,10 @@ void VRGlutEditor::render(bool fromThread) {
     on_gl_display();
 
     // swap buffers
-    glutSetWindow(winUI);
+    glutSetWindow(winUI->winID);
     glutSwapBuffers();
-    if (winPopup >= 0) {
-        glutSetWindow(winPopup);
+    if (winPopup) {
+        glutSetWindow(winPopup->winID);
         glutSwapBuffers();
     }
 }
@@ -460,36 +463,36 @@ void VRGlutEditor::enableVSync(bool b) {
     int swapInterval = b ? 1 : 0;
 
     int current = glutGetWindow();
-    if (winGL >= 0) { glutSetWindow(winGL); setSwapInterval(swapInterval); }
-    if (winUI >= 0) { glutSetWindow(winUI); setSwapInterval(0); }
-    if (winPopup >= 0) { glutSetWindow(winPopup); setSwapInterval(0); }
+    if (winGL) { glutSetWindow(winGL->winID); setSwapInterval(swapInterval); }
+    if (winUI) { glutSetWindow(winUI->winID); setSwapInterval(0); }
+    if (winPopup) { glutSetWindow(winPopup->winID); setSwapInterval(0); }
     glutSetWindow(current);
 }
 
 void VRGlutEditor::on_gl_resize(int w, int h) {
     //cout << "  Glut::on_gl_resize " << w << ", " << h << endl;
-    if (winGL < 0) return;
-    glutSetWindow(winGL);
+    if (!winGL) return;
+    glutSetWindow(winGL->winID);
     int ww = glutGet(GLUT_WINDOW_WIDTH); // calling glutGet somehow magically fixes the resize glitches..
     int hh = glutGet(GLUT_WINDOW_HEIGHT);
     if (resizeSignal) resizeSignal( "glutResizeGL", 0,0,w,h ); // tell imgui the new size
 }
 
 void VRGlutEditor::resizeGLWindow(int x, int y, int w, int h) { // glArea.surface
-    if (fullscreen || maximized || winGL < 0) return;
+    if (fullscreen || maximized || !winGL) return;
     //cout << "     Glut::updateGLWindow " << x << ", " << y << ", " << w << ", " << h << endl;
-    glutSetWindow(winGL);
+    glutSetWindow(winGL->winID);
     glutPositionWindow(x, y);
     resize(w, h);
     glutReshapeWindow(w, h);
 }
 
 void VRGlutEditor::on_resize_window(int w, int h) { // resize top window
-    if (winUI < 0) return;
-    glutSetWindow(winUI);
+    if (!winUI) return;
+    glutSetWindow(winUI->winID);
     glutReshapeWindow(w,h);
     if (maximized) {
-        glutSetWindow(winGL);
+        glutSetWindow(winGL->winID);
         glutPositionWindow(0, 0);
         resize(w, h);
         glutReshapeWindow(w, h);
@@ -498,7 +501,7 @@ void VRGlutEditor::on_resize_window(int w, int h) { // resize top window
 
 void VRGlutEditor::saveSnapshot(string path) {
     if (!exists(getFolderName(path))) return;
-    glutSetWindow(winGL);
+    glutSetWindow(winGL->winID);
     int w = 400;
     int h = 300;
     float a = h/float(w);
@@ -522,12 +525,12 @@ void VRGlutEditor::saveSnapshot(string path) {
 
 void VRGlutEditor::on_gl_display() {
     //cout << "  Glut::on_gl_display " << endl;
-    if (winGL < 0) return;
+    if (!winGL) return;
     //if (VRGlobals::CURRENT_FRAME%20 != 0) return; // power saving mode
     auto profiler = VRProfiler::get();
 
     int pID1 = profiler->regStart("glut editor gl display");
-    glutSetWindow(winGL);
+    glutSetWindow(winGL->winID);
     int w = glutGet(GLUT_WINDOW_WIDTH); // calling glutGet somehow magically fixes the resize glitches..
     int h = glutGet(GLUT_WINDOW_HEIGHT);
     //if (signal) signal( "glutRenderGL", {} );
@@ -542,18 +545,18 @@ void VRGlutEditor::on_gl_display() {
 
 void VRGlutEditor::on_ui_display() {
     //cout << "  Glut::on_ui_display " << winUI << endl;
-    if (winUI < 0) return;
+    if (!winUI) return;
     auto profiler = VRProfiler::get();
 
     int pID1 = profiler->regStart("glut editor ui display");
     /*auto doRender = [&]() {
-        glutSetWindow(winUI);
+        glutSetWindow(winUI->winID);
         if (signal) signal( "glutRenderUI", {} );
         glutSwapBuffers();
     };
     thread t1(doRender);
     t1.join();*/
-    glutSetWindow(winUI);
+    glutSetWindow(winUI->winID);
     if (signal) signal( "glutRenderUI", {} );
     //glutSwapBuffers();
     profiler->regStop(pID1);
@@ -561,27 +564,27 @@ void VRGlutEditor::on_ui_display() {
 
 void VRGlutEditor::on_ui_resize(int w, int h) {
     cout << "  Glut::on_ui_resize " << w << ", " << h << endl;
-    if (winUI < 0) return;
-    glutSetWindow(winUI);
+    if (!winUI) return;
+    glutSetWindow(winUI->winID);
     if (resizeSignal) resizeSignal( "glutResize", 0,0,w,h );
 }
 
 void VRGlutEditor::on_popup_display() {
-    //cout << "  Glut::on_popup_display " << winUI << endl;
-    if (winPopup < 0) return;
+    //cout << "  Glut::on_popup_display " << winUI->winID << endl;
+    if (!winPopup) return;
     auto profiler = VRProfiler::get();
 
     int pID1 = profiler->regStart("glut editor ui dialog display");
-    glutSetWindow(winPopup);
+    glutSetWindow(winPopup->winID);
     if (signal) signal( "glutRenderPopup", {{"name",popup}} ); // may close window
-    //if (winPopup >= 0) glutSwapBuffers();
+    //if (winPopup) glutSwapBuffers();
     profiler->regStop(pID1);
 }
 
 void VRGlutEditor::on_popup_resize(int w, int h) {
     cout << "  Glut::on_ui_resize " << w << ", " << h << endl;
-    if (winPopup < 0) return;
-    glutSetWindow(winPopup);
+    if (!winPopup) return;
+    glutSetWindow(winPopup->winID);
     if (resizeSignal) resizeSignal( "glutResizePopup", 0,0,w,h );
 }
 
