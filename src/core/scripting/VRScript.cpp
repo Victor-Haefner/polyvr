@@ -365,7 +365,21 @@ void VRPyException::get() {
     PyErr_NormalizeException(&exc, &eval, &tbk);
     if (exc == NULL) return;
 
-    if (eval) toValue( PyObject_Str(eval), val );
+    if (eval) {
+        PyObject* excType = PyObject_Type(eval);           // type(eval)
+        PyObject* excName = PyObject_GetAttrString(excType, "__name__"); // "KeyError"
+        PyObject* excStr  = PyObject_Str(eval);             // "2"
+
+        std::string nameStr, msgStr;
+        if (excName) toValue(excName, nameStr);
+        if (excStr) toValue(excStr, msgStr);
+
+        val = nameStr + ": " + msgStr;
+
+        Py_XDECREF(excType);
+        Py_XDECREF(excName);
+        Py_XDECREF(excStr);
+    }
 
     if (PyObject_HasAttrString(eval, "print_file_and_line")) { // syntax error
         Frame f;
@@ -393,30 +407,27 @@ void VRPyException::get() {
         bt.push_back(f);
     }
 
-    auto getTracebackFrames = [](PyObject* tbo) {
-        vector<PyFrameObject*> frames;
-        if (!tbo || !PyTraceBack_Check(tbo)) return frames;
-        PyTracebackObject* tb = (PyTracebackObject*)tbo;
-        while (tb->tb_next) tb = tb->tb_next;
-        if (tb->tb_frame) frames.push_back(tb->tb_frame);
-        return frames;
-    };
+    if (tbk && PyTraceBack_Check(tbk)) {
+        PyTracebackObject* tb = (PyTracebackObject*)tbk;
 
-    vector<PyFrameObject*> frames = getTracebackFrames(tbk);
-    for (auto& frame : frames) {
-        if (frame) {
-            Frame f;
-            f.line = PyFrame_GetLineNumber(frame);
-            PyCodeObject* code = PyFrame_GetCode(frame);
-            if (code) {
-                const char* filename = PyUnicode_AsUTF8(code->co_filename);
-                const char* funcname = PyUnicode_AsUTF8(code->co_name);
-                if (funcname) f.funcname = string( funcname );
-                if (filename) f.filename = string( filename );
-                else f.filename = f.funcname;
-                Py_XDECREF(code);
+        while (tb) {
+            auto& frame = tb->tb_frame;
+            if (frame) {
+                Frame f;
+                //f.line = PyFrame_GetLineNumber(frame);
+                f.line = tb->tb_lineno;
+                PyCodeObject* code = PyFrame_GetCode(frame);
+                if (code) {
+                    const char* filename = PyUnicode_AsUTF8(code->co_filename);
+                    const char* funcname = PyUnicode_AsUTF8(code->co_name);
+                    if (funcname) f.funcname = string( funcname );
+                    if (filename) f.filename = string( filename );
+                    else f.filename = f.funcname;
+                    Py_XDECREF(code);
+                }
+                bt.push_back(f);
             }
-            bt.push_back(f);
+            tb = tb->tb_next;
         }
     }
 
@@ -443,6 +454,10 @@ void VRScript::pyErrPrint(string channel) {
 #ifndef WITHOUT_IMGUI
     VRConsoleWidget::get( channel )->addStyle( "redLink", "#ff3311", "#ffffff", false, false, true, false );
 #endif
+
+
+
+
 
     if (exc.bt.size() > 0) { // print trace back
         print( "Traceback (most recent call last):\n" );
@@ -739,10 +754,10 @@ string wrapTimeout(string code, string delay) {
 
 void VRScript::exportForWasm() {
 	if (getType() != "HTML") return;
-	
+
 	string pathOut = name+".html";
 	if (exists(pathOut)) return;
-	
+
 	string core = getCore();
 
 	string onOpen = "";
