@@ -24,6 +24,8 @@ struct VRPyException {
     struct Frame {
         int line = 0;
         int offset = -1;
+        int eline = 0;
+        int eoffset = -1;
         string message;
         string text;
         string filename;
@@ -183,7 +185,7 @@ class VRScript : public std::enable_shared_from_this<VRScript>, public VRName {
 
         void save(XMLElementPtr e, int p = 0) override;
         void load(XMLElementPtr e, VRStorageContextPtr context = 0) override;
-        
+
         void exportForWasm();
 };
 

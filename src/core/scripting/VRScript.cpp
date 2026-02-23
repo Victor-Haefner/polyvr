@@ -381,29 +381,34 @@ void VRPyException::get() {
         Py_XDECREF(excStr);
     }
 
-    if (PyObject_HasAttrString(eval, "print_file_and_line")) { // syntax error
+    if (PyObject_HasAttrString(eval, "msg")) { // syntax error
         Frame f;
-        if (PyTuple_Check(eval)) { // old style tuple errors
-            PyObject* message = 0;
-            char* text = 0;
-            char* filename = 0;
-            PyArg_ParseTuple(eval, "O(ziiz)", message, filename, f.line, f.offset, text);
-            f.filename = filename ? filename : "<script>";
-            val = string( PyUnicode_AsUTF8( PyObject_Str(message) ) );
-        } else { // new style errors, error is an instance
-            PyObject* message = PyObject_GetAttrString(eval, "msg");
-            PyObject* filename = PyObject_GetAttrString(eval, "filename");
-            PyObject* lineno = PyObject_GetAttrString(eval, "lineno");
-            PyObject* offset = PyObject_GetAttrString(eval, "offset");
-            PyObject* text = PyObject_GetAttrString(eval, "text");
 
-            if (message) toValue( PyObject_Str(message) , f.message);
-            if (filename) toValue(filename, f.filename);
-            else f.filename = "<script>";
-            if (lineno) toValue(lineno, f.line);
-            if (offset) toValue(offset, f.offset);
-            if (text) toValue(text, f.text);
-        }
+        PyObject* message  = PyObject_GetAttrString(eval, "msg");
+        PyObject* filename = PyObject_GetAttrString(eval, "filename");
+        PyObject* lineno   = PyObject_GetAttrString(eval, "lineno");
+        PyObject* offset   = PyObject_GetAttrString(eval, "offset");
+        PyObject* text     = PyObject_GetAttrString(eval, "text");
+        PyObject* elineno  = PyObject_GetAttrString(eval, "end_lineno");
+        PyObject* eoffset  = PyObject_GetAttrString(eval, "end_offset");
+
+        if (message) toValue( PyObject_Str(message) , f.message);
+        if (filename) toValue(filename, f.filename);
+        else f.filename = "<script>";
+        if (lineno) toValue(lineno, f.line);
+        if (offset) toValue(offset, f.offset);
+        if (text) toValue(text, f.text);
+        if (elineno) toValue(text, f.eline);
+        if (eoffset) toValue(text, f.eoffset);
+
+        Py_XDECREF(message);
+        Py_XDECREF(filename);
+        Py_XDECREF(lineno);
+        Py_XDECREF(offset);
+        Py_XDECREF(text);
+        Py_XDECREF(elineno);
+        Py_XDECREF(eoffset);
+
         bt.push_back(f);
     }
 
