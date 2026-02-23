@@ -13,6 +13,8 @@
 #include <GL/glxext.h>
 #endif
 
+#include "VRGlutExtensions.h"
+
 using namespace OSG;
 
 
@@ -110,7 +112,9 @@ void GlutWindow::setMotionCb( GlutSignals::MotionCallback cb ) { signals->setMot
 void GlutWindow::activate() { glutSetWindow(winID); }
 
 Vec2i GlutWindow::getScreenSize() { // static
-    return Vec2i(glutGet(GLUT_SCREEN_WIDTH), glutGet(GLUT_SCREEN_HEIGHT));
+    Vec2i S = Vec2i(glutGet(GLUT_SCREEN_WIDTH), glutGet(GLUT_SCREEN_HEIGHT));
+    //cout << " screen size " << S << endl;
+    return S;
 }
 
 Vec2i GlutWindow::getPosition() {
@@ -123,9 +127,47 @@ Vec2i GlutWindow::getSize() {
     return Vec2i(glutGet(GLUT_WINDOW_WIDTH), glutGet(GLUT_WINDOW_HEIGHT));
 }
 
+void GlutWindow::setPosition(Vec2i p) {
+    activate();
+    glutPositionWindow(p[0], p[1]);
+}
+
+void GlutWindow::setSize(Vec2i s) {
+    activate();
+    glutReshapeWindow(s[0], s[1]);
+}
+
 void GlutWindow::enableVSync(bool b) {
     int swapInterval = b ? 1 : 0;
     activate();
     setSwapInterval(swapInterval);
 }
+
+void GlutWindow::setVisible(bool b) {
+    activate();
+    if (b) glutShowWindow();
+    else glutHideWindow();
+}
+
+void GlutWindow::setFullscreen(bool b) {
+    activate();
+    if (b) glutFullScreen();
+    else glutLeaveFullScreen();
+}
+
+void GlutWindow::setMaximized(bool b) { // TODO: unmaximize doesnt work properly!
+    activate();
+
+    if (b) {
+        unMaximizedSize = getSize();
+        unMaximizedPosition = getPosition();
+        //setPosition(Vec2i(0,0));
+        //setSize( GlutWindow::getScreenSize() );
+        maximizeWindow();
+    } else {
+        setPosition(unMaximizedPosition);
+        setSize(unMaximizedSize);
+    }
+}
+
 

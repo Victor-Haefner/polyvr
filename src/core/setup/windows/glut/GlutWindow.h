@@ -16,6 +16,8 @@ class GlutWindow : public std::enable_shared_from_this<GlutWindow> {
 	public:
 	    int winID = -1;
 	    string name = "unnamed";
+	    Vec2i unMaximizedSize;
+	    Vec2i unMaximizedPosition;
 
     private:
         GlutSignalsPtr signals;
@@ -34,9 +36,15 @@ class GlutWindow : public std::enable_shared_from_this<GlutWindow> {
         void connectSignals();
 
         void activate();
+        void setVisible(bool b);
+        void setFullscreen(bool b);
+        void setMaximized(bool b);
         void enableVSync(bool b);
 
         void setTitle(string title);
+        void setPosition(Vec2i p);
+        void setSize(Vec2i s);
+
         void setDisplayCb( GlutSignals::DisplayCallback cb );
         void setCloseCb( GlutSignals::CloseCallback cb );
         void setReshapeCb( GlutSignals::ReshapeCallback cb );

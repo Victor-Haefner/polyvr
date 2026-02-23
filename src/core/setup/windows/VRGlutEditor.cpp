@@ -75,7 +75,7 @@ VRGlutEditor::VRGlutEditor() {
     winTop->setKeyboardCb( [this](unsigned char k, bool d, bool s, int x, int y){ onKeyboard(k, d, s, x, y); } );
 
     initGlutExtensions(); // just after top level window creation
-    maximizeWindow();
+    winTop->setMaximized(true);
 
     IconList iconList;
     iconList.load("ressources/gui/logo_icon.png");
@@ -180,55 +180,19 @@ int VRGlutEditor::getWinID(CONTEXT c) {
 }
 
 void VRGlutEditor::setMaximized(bool b) {
-    Vec2i screenSize = GlutWindow::getScreenSize();
-
-    if (b && !fullscreen) {
-        cout << " glut maximize!" << endl;
-        resizeGLWindow(0, 0, screenSize[0], screenSize[1]);
-        maximized = b;
-
-        winUI->activate();
-        glutHideWindow();
-
-        winTop->activate();
-        glutPositionWindow(0, 0);
-        glutReshapeWindow(screenSize[0], screenSize[1]);
-        maximizeWindow();
-    }
-    else {
-        cout << " glut unmaximize!" << endl;
-        maximized = b;
-        on_resize_window(screenSize[0], screenSize[1]);
-
-        winUI->activate();
-        glutShowWindow();
-    }
+    maximized = (b && !fullscreen);
+    fullscreen = false;
+    winUI->setVisible(!maximized);
+    Vec2i tmp = winTop->getSize();
+    winTop->setMaximized(maximized);
+    if (winTop->getSize() == tmp) on_resize_window(tmp[0], tmp[1]); // make sure
 }
 
 void VRGlutEditor::setFullscreen(bool b) {
-    Vec2i screenSize = GlutWindow::getScreenSize();
-
-    if (b && !maximized) {
-        cout << " glut enter fullscreen!" << endl;
-        resizeGLWindow(0,0,screenSize[0], screenSize[1]);
-        fullscreen = b;
-
-        winUI->activate();
-        glutHideWindow();
-
-        winTop->activate();
-        glutFullScreen(); // needs to go last to work
-    } else {
-        cout << " glut exit fullscreen!" << endl;
-        fullscreen = b;
-        on_resize_window(screenSize[0], screenSize[1]);
-
-        winUI->activate();
-        glutShowWindow();
-
-        winTop->activate();
-        glutLeaveFullScreen(); // needs to go last to work
-    }
+    fullscreen = (b && !maximized);
+    maximized = false;
+    winUI->setVisible(!fullscreen);
+    winTop->setFullscreen(fullscreen);
 }
 
 bool doShutdown = false;
@@ -334,7 +298,10 @@ void VRGlutEditor::onMotion(int x, int y) {
 
 void VRGlutEditor::onKeyboard(int c, bool d, bool s, int x, int y) {
     if (!s) {
-        if (!d && c == 27) if (fullscreen) setFullscreen(false); // ESC
+        if (!d && c == 27) {
+            if (fullscreen) setFullscreen(false); // ESC
+            if (maximized) setMaximized(false); // ESC
+        }
         if (focusedWinID != winGL->winID) { if (signal) signal("relayedKeySignal", {{"key",toString(c)},{"state",toString(s)}}); }
         else if (auto k = getKeyboard()) k->keyboard(c, d, x, y, 1);
     } else {
@@ -402,15 +369,19 @@ void VRGlutEditor::resizeGLWindow(int x, int y, int w, int h) { // glArea.surfac
 }
 
 void VRGlutEditor::on_resize_window(int w, int h) { // resize top window
-    if (!winUI) return;
-    winUI->activate();
-    glutReshapeWindow(w,h);
-    if (maximized) {
-        winGL->activate();
-        glutPositionWindow(0, 0);
-        resize(w, h);
-        glutReshapeWindow(w, h);
-    } else if (resizeSignal) resizeSignal("glutResize", 0,0,w,h);
+    if (winUI) {
+        winUI->activate();
+        glutReshapeWindow(w,h);
+    }
+
+    if (winGL) {
+        if (maximized || fullscreen) {
+            winGL->activate();
+            glutPositionWindow(0, 0);
+            resize(w, h);
+            glutReshapeWindow(w, h);
+        } else if (resizeSignal) resizeSignal("glutResize", 0,0,w,h);
+    }
 }
 
 void VRGlutEditor::saveSnapshot(string path) {
