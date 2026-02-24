@@ -419,8 +419,7 @@ void VRPyException::get() {
             auto& frame = tb->tb_frame;
             if (frame) {
                 Frame f;
-                //f.line = PyFrame_GetLineNumber(frame);
-                f.line = tb->tb_lineno;
+                f.line = PyFrame_GetLineNumber(frame); // tb->tb_lineno doesnt work in webassembly?
                 PyCodeObject* code = PyFrame_GetCode(frame);
                 if (code) {
                     const char* filename = PyUnicode_AsUTF8(code->co_filename);
