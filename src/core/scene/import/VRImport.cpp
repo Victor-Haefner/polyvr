@@ -269,14 +269,13 @@ void VRImport::LoadJob::load(VRThreadWeakPtr tw) {
             return;
         }
 #ifndef WITHOUT_IFC
-		if (ext == ".ifc") { loadIFC(path, res); return; }
+	if (ext == ".ifc") { loadIFC(path, res); return; }
 #endif
         if (preset == "PVR" || preset == "SOLIDWORKS-VRML2") {
             if (ext != ".wrl") preset = "OSG";
             if (ext == ".wrl" && preset == "SOLIDWORKS-VRML2") { VRFactory f; if (f.loadVRML(path, progress, res, thread)); else preset = "OSG"; }
             if (ext == ".wrl" && preset == "PVR") { loadVRML(path, res, progress, thread); }
         }
-#ifndef WASM
 #ifndef WITHOUT_VTK
         if (ext == ".vtk") { loadVTK(path, res); return; }
         if (ext == ".gz" && endsWith(path, ".vtk.gz")) { loadVTK(path, res); return; }
@@ -287,18 +286,19 @@ void VRImport::LoadJob::load(VRThreadWeakPtr tw) {
         if (ext == ".tiff" || ext == ".tif") { loadTIFF(path, res, options); return; }
         if (ext == ".hgt") { loadTIFF(path, res, options); return; }
 #endif
+#ifndef WASM
         if (preset == "DXF") {
             if (ext == ".dxf" || ext == ".DXF") {
                 loadDXF(path, res);
                 return;
             }
         }
+#endif
 #ifndef WITHOUT_DWG
         if (ext == ".dwg" || ext == ".dxf" || ext == ".DWG" || ext == ".DXF") {
             loadDWG(path, res, options);
             return;
         }
-#endif
 #endif
         if (ext == ".gltf" || ext == ".glb") { loadGLTF(path, res, progress, thread); return; }
         if (ext == ".osb" || ext == ".osg") { osgLoad(path, res); return; }

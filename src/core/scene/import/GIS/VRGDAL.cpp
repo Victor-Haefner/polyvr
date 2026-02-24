@@ -29,6 +29,7 @@
 #include "core/math/polygon.h"
 #include "core/math/triangulator.h"
 #include "core/utils/toString.h"
+#include "core/utils/system/VRSystem.h"
 #include "core/scene/VRScene.h"
 #include "core/scene/VRSemanticManager.h"
 #include "addons/Semantics/Reasoning/VREntity.h"
@@ -52,13 +53,24 @@ void loadPDF(string path, VRTransformPtr res, map<string, string> opts) {
 auto toVec3d = [](const OGRPoint& p) { return Vec3d( p.getX(), p.getZ(), -p.getY() ); };
 auto toOGRPoint = [](const Vec3d& p) { return OGRPoint( p[0], -p[2], p[1] ); };
 
+void GDALErrHandler(CPLErr eErrClass, int err_no, const char *msg) {
+    fprintf(stderr, "GDAL Error [%d]: %s\n", err_no, msg);
+}
+
 void loadSHP(string path, VRTransformPtr res, map<string, string> opts) {
+    CPLPushErrorHandler(GDALErrHandler);
+    GDALAllRegister();
     OGRRegisterAll();
+    
+    //cout << "SHP driver available: " << GetGDALDriverManager()->GetDriverByName("ESRI Shapefile") << endl;
+    //cout << " file exists? " << exists(path) << endl;
+    
 #if GDAL_VERSION_MAJOR < 2
  	OGRDataSource *poDS = OGRSFDriverRegistrar::Open(path.c_str(), false);
 #else
 	GDALDataset *poDS = (GDALDataset*) GDALOpenEx(path.c_str(), GDAL_OF_READONLY, NULL, NULL, NULL);
 #endif
+    CPLPopErrorHandler();
 
     if( poDS == NULL ) { printf( "Open failed.\n" ); return; }
 
@@ -158,6 +170,7 @@ void loadSHP(string path, VRTransformPtr res, map<string, string> opts) {
     };
 
     auto handlePolygon = [&](OGRGeometry* geo, VRGeoDataPtr data, size_t fI) { // TODO: will not work with export
+#ifndef WASM
         OGRPolygon* poly = (OGRPolygon*) geo;
         OGRLinearRing* ex = poly->getExteriorRing();
         Vec2d tc = Vec2d(fI, 1);
@@ -187,6 +200,7 @@ void loadSHP(string path, VRTransformPtr res, map<string, string> opts) {
         int n = t.append(data, false);
         for (auto i=0; i<n; i++) data->pushTexCoord(tc);
         for (auto i=0; i<n; i++) data->pushTexCoord(tc,1);
+#endif
     };
 
     auto handleMultiPolygon = [&](OGRGeometry* geo, VRGeoDataPtr data, size_t fI) {
