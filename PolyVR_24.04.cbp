@@ -4552,6 +4552,18 @@
 			<Option target="Release" />
 			<Option target="PVR-Setup-d" />
 		</Unit>
+		<Unit filename="src/core/setup/windows/glut/GlutSignals.cpp">
+			<Option target="PVR-Setup-d" />
+		</Unit>
+		<Unit filename="src/core/setup/windows/glut/GlutSignals.h">
+			<Option target="PVR-Setup-d" />
+		</Unit>
+		<Unit filename="src/core/setup/windows/glut/GlutWindow.cpp">
+			<Option target="PVR-Setup-d" />
+		</Unit>
+		<Unit filename="src/core/setup/windows/glut/GlutWindow.h">
+			<Option target="PVR-Setup-d" />
+		</Unit>
 		<Unit filename="src/core/setup/windows/glut/VRGlutExtensions.cpp">
 			<Option target="PVR-Gui-d" />
 		</Unit>
