@@ -231,6 +231,8 @@ PyObject* VRSceneGlobals::getPlatform(PyObject* self, PyObject* args) {
     return PyUnicode_FromString("linux");
 #elif __APPLE__
     return PyUnicode_FromString("mac");
+#elif __EMSCRIPTEN__
+    return PyUnicode_FromString("wasm");
 #endif
 }
 
