@@ -110,6 +110,7 @@ void initServer(int argc, char **argv) {
 	glutSetCursor(GLUT_CURSOR_NONE);
 
 	ract = OSG::RenderAction::create();
+	ract->setZWriteTrans(true);
 
 	window = OSG::GLUTWindow::create();
 	window->setGlutId(winid);
