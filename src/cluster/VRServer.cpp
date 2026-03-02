@@ -16,7 +16,11 @@
 #include <OpenSG/OSGClusterServer.h>
 #include <OpenSG/OSGGLUTWindow.h>
 #include <OpenSG/OSGRenderAction.h>
+#include <OpenSG/OSGRenderOptions.h>
 #include <OpenSG/OSGViewport.h>
+
+#include <fstream>
+#include <string>
 
 using namespace std;
 using namespace OSG;
@@ -24,6 +28,13 @@ using namespace OSG;
 GLUTWindowRefPtr    window;
 RenderActionRefPtr  ract;
 ClusterServer      *server;
+
+std::ofstream vrLog;
+
+void initVRLog() {
+    vrLog.open("slave.log", std::ios::out | std::ios::trunc); 
+    if (!vrLog.is_open()) { cerr << "Failed to open log file" << endl; }
+}
 
 void enableCoreDumps() {
     string file = boost::filesystem::current_path().string()+"/core";
@@ -61,6 +72,15 @@ void printBVolume() {
     cout << "\nRACT " << max-min << endl;
 }
 
+class MyRenderOptions : public OSG::RenderOptions {
+	public:
+		bool justChanged() {
+			if (!_changed) return false;
+			_changed = 0;
+			return true;
+		}
+};
+
 void display() {
 
     try {
@@ -84,6 +104,14 @@ void display() {
 
     //if (doPrint()) cout << "\nRACT " << ract->getFrustumCulling() << endl;
     //if (doPrint()) printBVolume();
+    
+    auto hostMultiWindow = server->getClusterWindow();
+    if (hostMultiWindow && ract) {
+    	auto ropts = (MyRenderOptions*)hostMultiWindow->getRenderOptions();
+    	if (ropts->justChanged()) {
+    		ract->setZWriteTrans(ropts->getZWriteTrans());
+    	}
+    }
 }
 
 void update(void) { glutPostRedisplay(); }
@@ -96,6 +124,8 @@ bool            active_stereo  = false;
 string          address        = "";
 
 void initServer(int argc, char **argv) {
+	//initVRLog();
+
 	OSG::osgInit(argc, argv);
 
 	int winid = glutCreateWindow(name);
@@ -110,8 +140,6 @@ void initServer(int argc, char **argv) {
 	glutSetCursor(GLUT_CURSOR_NONE);
 
 	ract = OSG::RenderAction::create();
-	ract->setZWriteTrans(true);
-
 	window = OSG::GLUTWindow::create();
 	window->setGlutId(winid);
 	window->init();
