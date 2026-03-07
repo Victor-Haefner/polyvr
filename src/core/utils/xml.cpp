@@ -4,6 +4,7 @@
 #include <iostream>
 #include <libxml/tree.h>
 #include <libxml/parser.h>
+#include <libxml/HTMLparser.h>
 
 using namespace OSG;
 
@@ -173,9 +174,15 @@ XML::~XML() {
 XMLPtr XML::create() { return XMLPtr( new XML() ); }
 
 void XML::read(string path, bool validate) {
+    auto isHTML = [&]() {
+        for (auto& e : {"htm", "HTM", "html", "HTML"}) if (endsWith(path, e)) return true;
+        return false;
+    };
+
     if (doc) xmlFreeDoc(doc);
     // parser.set_validate(false); // TODO!
-    doc = xmlParseFile(path.c_str());
+    if (isHTML()) doc = htmlParseFile(path.c_str(), NULL);
+    else doc = xmlParseFile(path.c_str());
     xmlNodePtr xmlRoot = xmlDocGetRootElement(doc);
     root = XMLElement::create(xmlRoot);
 }
