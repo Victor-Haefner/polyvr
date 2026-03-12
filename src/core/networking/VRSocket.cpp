@@ -203,19 +203,26 @@ class HTTPServer {
 };
 
 string processPHP(HTTP_args* sad) {
+    string path1 = sad->path;
+    string path2 = sad->path + "_tmp.php";
+    string folder = getFolderName(path2);
+    string file = getFileName(path2, true);
+
     // copy php file and prepend something to simulate GET/POST parameters
-    systemCall("cp "+sad->path+" "+sad->path+"_tmp.php" );
+    if (!exists(path1)) { cout << "Error in processPHP! no file " << path1 << endl; return "fail"; }
+    systemCall("cp "+path1+" "+path2 );
+    if (!exists(path2)) { cout << "Error in processPHP! no file " << path2 << ", copy probably failed!" << endl; return "fail"; }
+
     string toPrepend = "if (isset($argv[1])) { parse_str($argv[1], $_GET); parse_str($argv[1], $_POST); }";
-    systemCall("awk -i inplace 'NR==1{print; print \""+toPrepend+"\"} NR!=1' " + sad->path+"_tmp.php");
+    systemCall("awk -i inplace 'NR==1{print; print \""+toPrepend+"\"} NR!=1' " + path2);
 
     // execute php
-    string folder = getFolderName(sad->path);
-    string file = getFileName(sad->path, true) + "_tmp.php";
-    string cmd = "cd "+folder+" ; php "+file+" "+sad->paramsString;
+    string cmd = "cd "+folder+" ; php "+file+" \""+sad->paramsString+"\"";
     string res = systemCall(cmd);
-    //cout << "processPHP: " << cmd << endl << res << endl;
-    systemCall("rm "+sad->path+"_tmp.php" );
-    return subString( res, 0, res.size()-1 );
+    //res = subString( res, 0, res.size()-1 );
+    cout << "processPHP: " << cmd << endl << res.size() << endl;
+    //systemCall("rm "+path2 );
+    return res;
 }
 
 static void server_answer_to_connection_m(struct mg_connection *conn, int ev, void* ev_data, void* user_data) {
@@ -324,6 +331,9 @@ static void server_answer_to_connection_m(struct mg_connection *conn, int ev, vo
         if (v) sad->print();
 
         auto sendString = [&](string data, int code = 200) {
+            //cout << " monggosee server, send data: " << data.size() << endl;
+            //mg_http_reply(conn, code, "", "%.*s", (int)data.size(), data.data());
+            //mg_http_reply(conn, 200, "Content-Type: application/octet-stream\r\n", "%.*s", (int)data.size(), data.data());
             mg_http_reply(conn, code, "", data.c_str());
 
             //mg_http_reply(conn, code, "Transfer-Encoding: chunked", "");
@@ -374,6 +384,7 @@ static void server_answer_to_connection_m(struct mg_connection *conn, int ev, vo
                     if (endsWith(sad->path, ".php", false)) {
                         if (v) VRLog::log("net", "Serve PHP\n");
                         sendString( processPHP(sad) );
+                        return; // else hangs
                     } else {
                         if (v) VRLog::log("net", "Serve ressource "+sad->path+"\n");
                         if (!doRootSrv) mg_http_serve_file(conn, hm, sad->path.c_str(), &s_http_server_opts);

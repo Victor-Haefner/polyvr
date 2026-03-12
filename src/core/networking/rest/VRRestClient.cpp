@@ -60,8 +60,36 @@ void setupHeaders(CURL* curl, vector<string>& headers) {
 }
 #endif
 
+std::string sanitizeUrl(const std::string& url) {
+    auto pos = url.find('?');
+    if (pos == std::string::npos) return url; // no query string
+
+    std::string base = url.substr(0, pos);
+    std::string query = url.substr(pos + 1);
+
+    std::stringstream ss(query);
+    std::string pair;
+    std::string newQuery;
+    bool first = true;
+
+    while (std::getline(ss, pair, '&')) {
+        auto eq = pair.find('=');
+        if (eq == std::string::npos) continue; // skip invalid
+
+        std::string key = pair.substr(0, eq);
+        std::string value = pair.substr(eq + 1);
+
+        // encode the value
+        if (!first) newQuery += "&"; else first = false;
+        newQuery += key + "=" + VRRestResponse::uriEncode(value);
+    }
+
+    return base + "?" + newQuery;
+}
+
 VRRestResponsePtr VRRestClient::get(string uri, int timeoutSecs, vector<string> headers) {
     auto res = VRRestResponse::create();
+    uri = sanitizeUrl(uri);
 #ifdef __EMSCRIPTEN__
     char* data = (char*)EM_ASM_INT({
         var uri = Module.UTF8ToString($0);
