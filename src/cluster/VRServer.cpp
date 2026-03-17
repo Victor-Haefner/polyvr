@@ -1,5 +1,6 @@
 #include <iostream>
 #include <boost/filesystem.hpp>
+#include <GL/freeglut.h>
 
 #ifndef _WIN32
 #include <sys/resource.h>
@@ -25,9 +26,9 @@
 using namespace std;
 using namespace OSG;
 
-GLUTWindowRefPtr    window;
-RenderActionRefPtr  ract;
-ClusterServer      *server;
+GLUTWindowRefPtr    window = 0;
+RenderActionRefPtr  ract = 0;
+ClusterServer*      server = 0;
 
 std::ofstream vrLog;
 
@@ -82,7 +83,12 @@ class MyRenderOptions : public OSG::RenderOptions {
 };
 
 void display() {
-
+    glClearColor(0.2, 0.22, 0.3, 1);
+    glClear(GL_COLOR_BUFFER_BIT);
+    if (!server) glutSwapBuffers();
+    
+    if (!server) return;
+    
     try {
         server->render(ract);
         Thread::getCurrentChangeList()->clear();
@@ -93,6 +99,9 @@ void display() {
         window->clearPorts();
         server->stop();
         server->start();
+        int w = glutGet(GLUT_WINDOW_WIDTH);
+	int h = glutGet(GLUT_WINDOW_HEIGHT);
+	if (window) window->resize( w, h );
     }
 
     catch ( ... ) {
@@ -100,6 +109,9 @@ void display() {
         window->clearPorts();
         server->stop();
         server->start();
+        int w = glutGet(GLUT_WINDOW_WIDTH);
+	int h = glutGet(GLUT_WINDOW_HEIGHT);
+	if (window) window->resize( w, h );
     }
 
     //if (doPrint()) cout << "\nRACT " << ract->getFrustumCulling() << endl;
@@ -115,7 +127,7 @@ void display() {
 }
 
 void update(void) { glutPostRedisplay(); }
-void reshape( int width, int height ) { window->resize( width, height ); }
+void reshape( int width, int height ) { if (window) window->resize( width, height ); }
 
 const char     *name           = "ClusterServer";
 const char     *connectionType = "StreamSock";
@@ -123,10 +135,8 @@ bool            fullscreen     = true;
 bool            active_stereo  = false;
 string          address        = "";
 
-void initServer(int argc, char **argv) {
+int initGlutWindow() {
 	//initVRLog();
-
-	OSG::osgInit(argc, argv);
 
 	int winid = glutCreateWindow(name);
 	//if (argc>1) glutPositionWindow(atoi(argv[1]),0);
@@ -138,16 +148,27 @@ void initServer(int argc, char **argv) {
 	glEnable( GL_LIGHT0 );
 	glEnable( GL_NORMALIZE );
 	glutSetCursor(GLUT_CURSOR_NONE);
+	
+	glutPostRedisplay();
+	glutMainLoopEvent();
+	
+	return winid;
+}
 
+void initOSG(int argc, char **argv, int winID) {
+	OSG::osgInit(argc, argv);
+	
 	ract = OSG::RenderAction::create();
 	window = OSG::GLUTWindow::create();
-	window->setGlutId(winid);
+	window->setGlutId(winID);
 	window->init();
-
+	
 	server = new OSG::ClusterServer(window,name,connectionType,address);
 	server->start();
-
-	glutMainLoop();
+	
+        int w = glutGet(GLUT_WINDOW_WIDTH);
+	int h = glutGet(GLUT_WINDOW_HEIGHT);
+	if (window) window->resize( w, h );
 }
 
 void evalParams(int argc, char **argv) {
@@ -279,12 +300,15 @@ int main(int argc, char **argv) {
     OSG::preloadSharedObject("OSGFileIO");
     OSG::preloadSharedObject("OSGText");
 #endif
-
-    try { initServer(argc, argv); }
-    catch(OSG_STDEXCEPTION_NAMESPACE::exception &e) {
+    
+    try { 
+    	int winID = initGlutWindow(); 
+    	initOSG(argc, argv,winID);
+	glutMainLoop();
+    } catch (OSG_STDEXCEPTION_NAMESPACE::exception &e) {
         SLOG << e.what() << OSG::endLog;
 
-        delete server;
+        if (server) delete server;
         ract   = NULL;
         window = NULL;
         OSG::osgExit();
