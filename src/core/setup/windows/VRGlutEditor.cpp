@@ -120,7 +120,7 @@ VRGlutEditor::VRGlutEditor() {
 
     winGL->setDisplayCb( [this](){ on_gl_display(); } );
     winGL->setReshapeCb( [this](int x, int y){ on_gl_resize(x,y); } );
-    winGL->setKeyboardCb( [this](unsigned char k, bool d, bool s, int x, int y){ onKeyboard(k, d, s, x, y); } );
+    winGL->setKeyboardCb( [this](int k, bool d, bool s, int x, int y){ onKeyboard(k, d, s, x, y); } );
     winGL->setMouseCb( [this](int k, int d, int x, int y){ onMouse(k, d, x, y); } );
     winGL->setMotionCb( [this](int x, int y, bool p){ onMotion(x, y); } );
 

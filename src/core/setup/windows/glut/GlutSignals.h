@@ -3,6 +3,7 @@
 
 #include <OpenSG/OSGConfig.h>
 #include <functional>
+#include <string>
 #include "core/setup/VRSetupFwd.h"
 
 using namespace std;
@@ -18,6 +19,8 @@ class GlutSignals : public std::enable_shared_from_this<GlutSignals> {
         using MotionCallback = function<void(int,int,bool)>;
 
 	private:
+	    string name;
+
 	    DisplayCallback onDisplayCb;
 	    CloseCallback onCloseCb;
 	    ReshapeCallback onReshapeCb;
@@ -26,10 +29,10 @@ class GlutSignals : public std::enable_shared_from_this<GlutSignals> {
 	    MotionCallback onMotionCb;
 
 	public:
-		GlutSignals();
+		GlutSignals(string name);
 		~GlutSignals();
 
-		static GlutSignalsPtr create();
+		static GlutSignalsPtr create(string name);
 		GlutSignalsPtr ptr();
 
         void onDisplay();

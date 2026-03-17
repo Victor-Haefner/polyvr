@@ -1,6 +1,7 @@
 #include "GlutWindow.h"
 #include "GlutSignals.h"
 
+#include <map>
 #include <cstring>
 #include <iostream>
 #include <GL/freeglut.h>
@@ -16,8 +17,6 @@
 #include "VRGlutExtensions.h"
 
 using namespace OSG;
-
-
 
 
 void setSwapInterval(int swapInterval) {
@@ -58,8 +57,10 @@ void setSwapInterval(int swapInterval) {
 }
 
 
+map<int, GlutWindowWeakPtr> glutWindowsMap;
+
 GlutWindow::GlutWindow(string name) : name(name) {
-    signals = GlutSignals::create();
+    signals = GlutSignals::create(name+"-signals");
 }
 
 GlutWindow::~GlutWindow() {
@@ -76,6 +77,12 @@ GlutWindowPtr GlutWindow::create(string name, int x0, int y0, int width, int hei
 
 GlutWindowPtr GlutWindow::ptr() { return static_pointer_cast<GlutWindow>(shared_from_this()); }
 
+GlutWindowPtr GlutWindow::getActive() {
+    int winID = getActiveID();
+    if (!glutWindowsMap.count(winID)) return 0;
+    return glutWindowsMap[winID].lock();
+}
+
 void GlutWindow::setupAsTop(int x0, int y0, int width, int height) {
     Vec2i screenSize = getScreenSize();
     if (width  < 0) width  = screenSize[0];
@@ -83,6 +90,7 @@ void GlutWindow::setupAsTop(int x0, int y0, int width, int height) {
     glutInitWindowSize(width, height);
     glutInitWindowPosition(x0, y0);
     winID = glutCreateWindow(name.c_str());
+    glutWindowsMap[winID] = ptr();
 }
 
 GlutWindowPtr GlutWindow::createSubWindow(string name, int x0, int y0, int width, int height) {
@@ -90,6 +98,7 @@ GlutWindowPtr GlutWindow::createSubWindow(string name, int x0, int y0, int width
     auto win = GlutWindowPtr( new GlutWindow(name) );
     win->winID = glutCreateSubWindow(winID, x0, y0, width, height);
     win->signals->connect(win);
+    glutWindowsMap[win->winID] = win;
     return win;
 }
 

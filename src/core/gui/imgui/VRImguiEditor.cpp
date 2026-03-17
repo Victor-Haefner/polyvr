@@ -28,6 +28,7 @@
 #include "../clipboard/clip.h"
 #include "../VRGuiManager.h"
 #include "core/utils/VRTimer.h"
+#include "core/setup/windows/glut/GlutWindow.h"
 
 
 
@@ -657,25 +658,41 @@ void ImGui_ImplGLUT_MotionFunc_popup(int x, int y) {
 }
 
 void ImGui_ImplGLUT_InstallFuncs_main() {
-    glutReshapeFunc(ImGui_ImplGLUT_ReshapeFunc_main);
-    glutMotionFunc(ImGui_ImplGLUT_MotionFunc_main);
-    glutPassiveMotionFunc(ImGui_ImplGLUT_MotionFunc_main);
-    glutMouseFunc(ImGui_ImplGLUT_MouseFunc_main);
-    glutKeyboardFunc(ImGui_ImplGLUT_KeyboardFunc_main);
-    glutKeyboardUpFunc(ImGui_ImplGLUT_KeyboardUpFunc_main);
-    glutSpecialFunc(ImGui_ImplGLUT_SpecialFunc_main);
-    glutSpecialUpFunc(ImGui_ImplGLUT_SpecialUpFunc_main);
+    auto win = OSG::GlutWindow::getActive();
+    if (!win) return;
+
+    win->setReshapeCb( [&](int x, int y){ ImGui_ImplGLUT_ReshapeFunc_main(x,y); } );
+    win->setMouseCb( [&](int k, int d, int x, int y){ ImGui_ImplGLUT_MouseFunc_main(k, d, x, y); } );
+    win->setMotionCb( [&](int x, int y, bool p) { ImGui_ImplGLUT_MotionFunc_main(x, y); });
+
+    win->setKeyboardCb( [&](int k, bool d, bool s, int x, int y) {
+            if (s) {
+                if (d) ImGui_ImplGLUT_SpecialFunc_main(k, x, y);
+                else ImGui_ImplGLUT_SpecialUpFunc_main(k, x, y);
+            } else {
+                if (d) ImGui_ImplGLUT_KeyboardFunc_main(k, x, y);
+                else ImGui_ImplGLUT_KeyboardUpFunc_main(k, x, y);
+            }
+        } );
 }
 
 void ImGui_ImplGLUT_InstallFuncs_popup() {
-    //glutReshapeFunc(ImGui_ImplGLUT_ReshapeFunc_popup);
-    glutMotionFunc(ImGui_ImplGLUT_MotionFunc_popup);
-    glutPassiveMotionFunc(ImGui_ImplGLUT_MotionFunc_popup);
-    glutMouseFunc(ImGui_ImplGLUT_MouseFunc_popup);
-    glutKeyboardFunc(ImGui_ImplGLUT_KeyboardFunc_popup);
-    glutKeyboardUpFunc(ImGui_ImplGLUT_KeyboardUpFunc_popup);
-    glutSpecialFunc(ImGui_ImplGLUT_SpecialFunc_popup);
-    glutSpecialUpFunc(ImGui_ImplGLUT_SpecialUpFunc_popup);
+    auto win = OSG::GlutWindow::getActive();
+    if (!win) return;
+
+    //win->setReshapeCb( [&](int x, int y){ ImGui_ImplGLUT_ReshapeFunc_popup(x,y); } );
+    win->setMouseCb( [&](int k, int d, int x, int y){ ImGui_ImplGLUT_MouseFunc_popup(k, d, x, y); } );
+    win->setMotionCb( [&](int x, int y, bool p) { ImGui_ImplGLUT_MotionFunc_popup(x, y); });
+
+    win->setKeyboardCb( [&](int k, bool d, bool s, int x, int y) {
+            if (s) {
+                if (d) ImGui_ImplGLUT_SpecialFunc_popup(k, x, y);
+                else ImGui_ImplGLUT_SpecialUpFunc_popup(k, x, y);
+            } else {
+                if (d) ImGui_ImplGLUT_KeyboardFunc_popup(k, x, y);
+                else ImGui_ImplGLUT_KeyboardUpFunc_popup(k, x, y);
+            }
+        } );
 }
 
 void IMGUISetClipboardText(void* user_data, const char* text) {
@@ -778,6 +795,7 @@ void VRImguiEditor::initPopup() {
 
     ImGui_ImplGLUT_Init();
     ImGui_ImplGLUT_InstallFuncs_popup();
+
 
     ImGuiIO& io = ImGui::GetIO();
     io.SetClipboardTextFn = IMGUISetClipboardText;

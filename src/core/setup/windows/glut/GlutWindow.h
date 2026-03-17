@@ -53,6 +53,7 @@ class GlutWindow : public std::enable_shared_from_this<GlutWindow> {
         void setMotionCb( GlutSignals::MotionCallback cb );
 
         static int getActiveID();
+        static GlutWindowPtr getActive();
         static Vec2i getScreenSize();
 
         Vec2i getPosition();
