@@ -29,6 +29,8 @@ void VRGizmo::setTarget(VRTransformPtr t) {
     tOffset = bb->center() - target->getWorldPosition();
 }
 
+VRTransformPtr VRGizmo::getTarget() { return target; }
+
 void VRGizmo::setup() {
     auto setupMaterial = [&](string name, Color3f c) {
         auto m = VRMaterial::create(name);

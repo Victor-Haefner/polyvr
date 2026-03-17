@@ -43,6 +43,7 @@ class VRGizmo : public VRTransform {
 		VRGizmoPtr ptr();
 
         void setTarget(VRTransformPtr t);
+        VRTransformPtr getTarget();
 };
 
 OSG_END_NAMESPACE;

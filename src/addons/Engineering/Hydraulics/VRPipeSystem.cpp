@@ -492,6 +492,7 @@ void VRPipeSystem::updateVisual() {
     };
 
     auto updatePipeInds = [&](VRGeoData& data, double level, int i0, int k0) {
+        //cout << "updatePipeInds " << i0 << " " << k0 << endl;
         auto updateQuad = [&](VRGeoData& data, int k, int i0, int a, int b, int c, int d, Color3f col) {
             data.setIndex(k+0, i0+a);
             data.setIndex(k+1, i0+b);
@@ -611,6 +612,7 @@ void VRPipeSystem::updateVisual() {
     };
 
     if (rebuildMesh) {
+        //cout << "updateVisual - rebuildMesh" << endl;
         auto ann = dynamic_pointer_cast<VRAnnotationEngine>( findFirst("testInds") );
         if (!ann) {
             ann = VRAnnotationEngine::create("testInds");
@@ -625,6 +627,7 @@ void VRPipeSystem::updateVisual() {
         Vec3d norm(0,1,0);
 
         for (auto& s : segments) {
+            s.second->lastVizLevel = -1.0;
             auto edge = graph->getEdge(s.first);
             double r = s.second->radius;
             double l = s.second->length;
@@ -826,6 +829,7 @@ void VRPipeSystem::updateVisual() {
 
         l = clamp(l, 1e-3, 1.0-1e-3);
         if (abs(l-s.second->lastVizLevel) > 1e-3) {
+            //cout << "updateVisual - update segment level" << endl;
             s.second->lastVizLevel = l;
 
             std::array<double, 4> heights;

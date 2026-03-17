@@ -26,5 +26,6 @@ PyMethodDef VRPyTimeline::methods[] = {
 
 PyMethodDef VRPyGizmo::methods[] = {
     {"setTarget", PyWrap( Gizmo, setTarget, "Set transformation target", void, VRTransformPtr ) },
+    {"getTarget", PyWrap( Gizmo, getTarget, "Return transformation target", VRTransformPtr ) },
     {NULL}  /* Sentinel */
 };
