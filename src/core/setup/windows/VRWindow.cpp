@@ -64,7 +64,7 @@ Vec2i VRWindow::getSize() { return Vec2i(width, height); }
 void VRWindow::sync(bool fromThread) { ; }
 void VRWindow::clear(Color3f c) { ; }
 
-void VRWindow::render(bool fromThread) { 
+void VRWindow::render(bool fromThread) {
 	if (!_win) return;
 	_win->render(ract);
 }

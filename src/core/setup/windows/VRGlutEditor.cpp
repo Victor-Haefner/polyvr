@@ -416,6 +416,10 @@ void VRGlutEditor::on_gl_display() {
 
     int pID1 = profiler->regStart("glut editor gl display");
     winGL->getSize(); // calling this somehow magically fixes the resize glitches..
+
+    glClearColor(0.2, 0.22, 0.3, 1);
+    glClear(GL_COLOR_BUFFER_BIT);
+
     //if (signal) signal( "glutRenderGL", {} );
 #ifndef WITHOUT_OPENVR
     if (hmd) {
