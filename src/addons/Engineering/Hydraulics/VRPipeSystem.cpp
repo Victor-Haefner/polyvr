@@ -363,18 +363,18 @@ double VRPipeSystem::getSegmentPressure(int i) { auto e1 = segments[i]->end1.loc
 Vec2d VRPipeSystem::getSegmentGradient(int i) {  auto e1 = segments[i]->end1.lock(); auto e2 = segments[i]->end2.lock(); return e1 && e2 ? Vec2d(e1->pressure, e2->pressure) : Vec2d(); }
 double VRPipeSystem::getSegmentDensity(int i) { return segments[i]->density; }
 double VRPipeSystem::getSegmentFlow(int i) { auto e1 = segments[i]->end1.lock(); return e1 ? e1->flow : 0; }
-double VRPipeSystem::getTankPressure(string n) { auto e = getEntity(n); return e ? e->getValue("pressure", atmosphericPressure) : 0.0; }
-double VRPipeSystem::getTankDensity(string n) { auto e = getEntity(n); return e ? e->getValue("density", waterDensity) : 0.0; }
-double VRPipeSystem::getTankLevel(string n) { auto e = getEntity(n); return e ? e->getValue("level", 1.0) : 0.0; }
-double VRPipeSystem::getPump(string n) { auto e = getEntity(n); return e ? e->getValue("headGain", 0.0) : 0.0; }
-double VRPipeSystem::getValveState(string n) { auto e = getEntity(n); return e ? e->getValue("state", 1.0) : 1.0; }
+double VRPipeSystem::getTankPressure(int nID) { auto e = getNodeEntity(nID); return e ? e->getValue("pressure", atmosphericPressure) : 0.0; }
+double VRPipeSystem::getTankDensity(int nID) { auto e = getNodeEntity(nID); return e ? e->getValue("density", waterDensity) : 0.0; }
+double VRPipeSystem::getTankLevel(int nID) { auto e = getNodeEntity(nID); return e ? e->getValue("level", 1.0) : 0.0; }
+double VRPipeSystem::getPump(int nID) { auto e = getNodeEntity(nID); return e ? e->getValue("headGain", 0.0) : 0.0; }
+double VRPipeSystem::getValveState(int nID) { auto e = getNodeEntity(nID); return e ? e->getValue("state", 1.0) : 1.0; }
 
-void VRPipeSystem::setValve(string n, double b)  { auto e = getEntity(n); if (e) e->set("state", toString(b)); }
-void VRPipeSystem::setTankPressure(string n, double p) { auto e = getEntity(n); if (e) e->set("pressure", toString(p)); }
-void VRPipeSystem::setTankDensity(string n, double p) { auto e = getEntity(n); if (e) e->set("density", toString(p)); }
+void VRPipeSystem::setValve(int nID, double b)  { auto e = getNodeEntity(nID); if (e) e->set("state", toString(b)); }
+void VRPipeSystem::setTankPressure(int nID, double p) { auto e = getNodeEntity(nID); if (e) e->set("pressure", toString(p)); }
+void VRPipeSystem::setTankDensity(int nID, double p) { auto e = getNodeEntity(nID); if (e) e->set("density", toString(p)); }
 void VRPipeSystem::setPipeRadius(int i, double r) { segments[i]->radius = r; segments[i]->computeGeometry(); }
-void VRPipeSystem::setOutletDensity(string n, double p) { auto e = getEntity(n); if (e) e->set("density", toString(p)); }
-void VRPipeSystem::setOutletPressure(string n, double p) { auto e = getEntity(n); if (e) e->set("pressure", toString(p)); }
+void VRPipeSystem::setOutletDensity(int nID, double p) { auto e = getNodeEntity(nID); if (e) e->set("density", toString(p)); }
+void VRPipeSystem::setOutletPressure(int nID, double p) { auto e = getNodeEntity(nID); if (e) e->set("pressure", toString(p)); }
 
 void VRPipeSystem::setPipePressure(int i, double p1, double p2) {
     auto e1 = segments[i]->end1.lock();
@@ -383,8 +383,8 @@ void VRPipeSystem::setPipePressure(int i, double p1, double p2) {
     if (e2) e2->pressure = p2;
 }
 
-void VRPipeSystem::setPump(string n, double h, bool isOpen) {
-    auto e = getEntity(n);
+void VRPipeSystem::setPump(int nID, double h, bool isOpen) {
+    auto e = getNodeEntity(nID);
     if (e) {
         e->set("headGain", toString(h));
         e->set("isOpen", toString(isOpen));
@@ -880,7 +880,7 @@ void VRPipeSystem::updateVisual() {
 
         auto tmpCol1 = getTempColor(e1->temperature);
         auto tmpCol2 = getTempColor(e2->temperature);
-        if (e1->temperature > 21 || e2->temperature > 21) cout << "T1 " << e1->temperature << ", T2 " << e2->temperature << endl;
+        //if (e1->temperature > 21 || e2->temperature > 21) cout << "T1 " << e1->temperature << ", T2 " << e2->temperature << endl;
         //auto tmpCol1 = getTempColor(90.0);
         //auto tmpCol2 = getTempColor(90.0);
         data.setColor(i+4+0, tmpCol1);
@@ -1485,7 +1485,7 @@ void VRPipeSystem::computeAdvectiveHeatTransfer(double dt) {
 
         for (auto pe : n.second->pipes) {
             pe->temperature = meanTemp;
-            if (pe->temperature > 21) cout << n.second->nID << ", T " << pe->temperature << ", dT " << dT << endl;
+            //if (pe->temperature > 21) cout << n.second->nID << ", T " << pe->temperature << ", dT " << dT << endl;
         }
     }
 }

@@ -176,18 +176,18 @@ class VRPipeSystem : public VRGeometry {
 		Vec2d getSegmentGradient(int i);
 		double getSegmentDensity(int i);
 		double getSegmentFlow(int i);
-		double getTankPressure(string n);
-		double getTankDensity(string n);
-		double getTankLevel(string n);
-		double getPump(string n);
-		double getValveState(string n);
+		double getTankPressure(int nID);
+		double getTankDensity(int nID);
+		double getTankLevel(int nID);
+		double getPump(int nID);
+		double getValveState(int nID);
 
-		void setValve(string n, double b);
-		void setPump(string n, double h, bool io);
-		void setTankPressure(string n, double p);
-		void setTankDensity(string n, double p);
-		void setOutletDensity(string n, double p);
-		void setOutletPressure(string n, double p);
+		void setValve(int nID, double b);
+		void setPump(int nID, double h, bool io);
+		void setTankPressure(int nID, double p);
+		void setTankDensity(int nID, double p);
+		void setOutletDensity(int nID, double p);
+		void setOutletPressure(int nID, double p);
 		void setPipeRadius(int i, double r);
 		void setPipePressure(int i, double p1, double p2);
 
