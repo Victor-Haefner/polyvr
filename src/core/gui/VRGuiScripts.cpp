@@ -641,15 +641,15 @@ void VRGuiScripts::updateDocumentation() {
     }
 
     for (auto mod : filtered) {
-        string modname = (mod.first == "VR") ? "VR" : "VR."+mod.first;
-        string mID = modname;
+        string mID = mod.first;
+        string modname = (mID == "VR") ? "VR" : "VR."+mID;
         uiSignal("on_doc_filter_tree_append", {{"ID",mID}, {"parent",""}, {"label",modname}, {"type","module"}, {"cla",""}, {"mod",""}, {"col","#BBDDFF"}});
         for (auto typ : mod.second) {
             string cID = mID+":"+typ.first;
-            uiSignal("on_doc_filter_tree_append", {{"ID",cID}, {"parent",mID}, {"label",typ.first}, {"type","class"}, {"cla",typ.first}, {"mod",mod.first}, {"col","#FFFFFF"}});
+            uiSignal("on_doc_filter_tree_append", {{"ID",cID}, {"parent",mID}, {"label",typ.first}, {"type","class"}, {"cla",typ.first}, {"mod",mID}, {"col","#FFFFFF"}});
             for (auto fkt : typ.second) {
                 string fID = cID+":"+fkt.first;
-                uiSignal("on_doc_filter_tree_append", {{"ID",fID}, {"parent",cID}, {"label",fkt.first}, {"type","method"}, {"cla",typ.first}, {"mod",mod.first}, {"col","#FFFFFF"}});
+                uiSignal("on_doc_filter_tree_append", {{"ID",fID}, {"parent",cID}, {"label",fkt.first}, {"type","method"}, {"cla",typ.first}, {"mod",mID}, {"col","#FFFFFF"}});
             }
         }
     }

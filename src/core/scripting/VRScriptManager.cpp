@@ -439,7 +439,7 @@ vector<string> VRScriptManager::getPyVRModules() {
 
 vector<string> VRScriptManager::getPyVRTypes(string mod) {
     vector<string> res;
-    if (moduleTypes.count(mod) == 0) { cout << "Module " << mod << " not found\n"; return res; }
+    if (moduleTypes.count(mod) == 0) { cout << "VRScriptManager::getPyVRTypes - Module " << mod << " not found\n"; return res; }
     res.push_back("globals");
     for (auto m : moduleTypes[mod]) res.push_back(m.first);
     sort (res.begin()+1, res.end());
@@ -448,14 +448,14 @@ vector<string> VRScriptManager::getPyVRTypes(string mod) {
 
 string VRScriptManager::getPyVRDescription(string mod, string type) {
     if (type == "globals") return "";
-    if (moduleTypes.count(mod) == 0) { cout << "Module " << mod << " not found\n"; return ""; }
+    if (moduleTypes.count(mod) == 0) { cout << "VRScriptManager::getPyVRDescription - Module " << mod << " not found\n"; return ""; }
     if (moduleTypes[mod].count(type) == 0) { cout << "Method " << type << " not found\n"; return ""; }
     return moduleTypes[mod][type]->tp_doc;
 }
 
 vector<string> VRScriptManager::getPyVRMethods(string mod, string type) {
     vector<string> res;
-    if (moduleTypes.count(mod) == 0) { cout << "Module " << mod << " not found\n"; return res; }
+    if (moduleTypes.count(mod) == 0) { cout << "VRScriptManager::getPyVRMethods - Module " << mod << " not found\n"; return res; }
     if (moduleTypes[mod].count(type) == 0 && type != "globals") { cout << "Method " << type << " not found\n"; return res; }
     PyObject* dict = PyModule_GetDict(pModVR);
     PyObject *key, *value;
@@ -487,7 +487,7 @@ vector<string> VRScriptManager::getPyVRMethods(string mod, string type) {
 
 string VRScriptManager::getPyVRMethodDoc(string mod, string type, string method) {
     if (moduleTypes.count(mod) == 0) { cout << "Module " << mod << " not found\n"; return ""; }
-    if (moduleTypes[mod].count(type) == 0 && type != "globals") { cout << "Method " << type << " not found\n"; return ""; }
+    if (moduleTypes[mod].count(type) == 0 && type != "globals") { cout << "VRScriptManager::getPyVRMethodDoc - Method " << type << " not found\n"; return ""; }
     string res;
 
     PyObject* dict = PyModule_GetDict(pModVR);
