@@ -1375,6 +1375,8 @@ void VRPipeSystem::updateLevels(double dt) { // TODO: split updatePressurized fr
             double tankHeight = entity->getValue("height", 0.0);
             double tankVolume = tankHeight * tankArea;
             double tankLevel = entity->getValue("level", 1.0);
+            double tankPressure = entity->getValue("pressure", atmosphericPressure);
+            bool tankOpen = entity->getValue("isOpen", false);
 
             double totalFlow = 0;
             for (auto& pEnd : node->pipes) {
@@ -1383,10 +1385,23 @@ void VRPipeSystem::updateLevels(double dt) { // TODO: split updatePressurized fr
                 totalFlow += pEnd->flow; // positive flow is defined as going out the pipe
             }
 
-            double newLevel = clamp(tankLevel + totalFlow*dt / tankVolume, 0.0, 1.0);
+            double volDelta = totalFlow*dt;
+            double newLevel = clamp(tankLevel + volDelta / tankVolume, 0.0, 1.0);
+            volDelta = (newLevel - tankLevel)*tankVolume;
             entity->set("level", toString(newLevel));
 
+            // update pressurized tank
+            if (!tankOpen) {
+                double oldVolume = (1.0-tankLevel)*tankVolume;
+                double newVolume = (1.0-newLevel) *tankVolume;
+                double p = tankPressure * oldVolume / newVolume;
+                //cout << " tank: " << n.first << " p gauge: " << tankPressure-atmosphericPressure << " level: " << newLevel << " tV " << tankVolume << endl;
 
+                p = clamp(p, atmosphericPressure * 0.001, atmosphericPressure * 2000.0);
+                entity->set("pressure", toString(p));
+            }
+
+            // update pipes not submerged by fluid level
             auto nPos = graph->getPosition(n.first)->pos();
             double fluidHeight = (tankLevel-0.5)*tankHeight + nPos[1];
             for (auto& e : node->pipes) {

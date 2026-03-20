@@ -6,7 +6,7 @@
 
 using namespace OSG;
 
-bool verbose = true;
+bool verbose = false;
 
 map<int, GlutSignalsWeakPtr> glutSignalsMap;
 
@@ -59,7 +59,7 @@ void GlutSignals::setMotionCb( MotionCallback cb ) { onMotionCb = cb; }
 void GlutSignals::onDisplay() { if (onDisplayCb) onDisplayCb(); }
 void GlutSignals::onReshape(int w, int h) { if (onReshapeCb) onReshapeCb(w,h); }
 void GlutSignals::onClose() { if (onCloseCb) onCloseCb(); }
-void GlutSignals::onKeyboard(int k, bool d, bool s, int x, int y) { if (true) cout << "glut keyboard - sig " << name << ", " << k << ", " << d << ", " << s << endl; if (onKeyboardCb) onKeyboardCb(k,d,s,x,y); }
+void GlutSignals::onKeyboard(int k, bool d, bool s, int x, int y) { if (verbose) cout << "glut keyboard - sig " << name << ", " << k << ", " << d << ", " << s << endl; if (onKeyboardCb) onKeyboardCb(k,d,s,x,y); }
 void GlutSignals::onMouse(int b, int s, int x, int y) { if (onMouseCb) onMouseCb(b,s,x,y); }
 void GlutSignals::onMotion(int x, int y, bool p) { if (onMotionCb) onMotionCb(x,y,p); }
 
