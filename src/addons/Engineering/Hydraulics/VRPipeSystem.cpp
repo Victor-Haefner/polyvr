@@ -283,18 +283,25 @@ void VRPipeSystem::initOntology() {
     auto Pump = ontology->addConcept("Pump");
     auto Outlet = ontology->addConcept("Outlet");
     auto Junction = ontology->addConcept("Junction");
+    auto Gauge = ontology->addConcept("Gauge");
     auto Valve = ontology->addConcept("Valve");
     auto CheckValve = ontology->addConcept("CheckValve", "Valve");
     auto ReliefValve = ontology->addConcept("ReliefValve", "Valve");
 
     Tank->addProperty("pressure", "double");
+    Tank->addProperty("initialGasVolume", "double");
+    Tank->addProperty("initialGasPressure", "double");
     Tank->addProperty("area", "double");
     Tank->addProperty("height", "double");
     Tank->addProperty("density", "double");
     Tank->addProperty("temperature", "double");
     Tank->addProperty("level", "double");
     Tank->addProperty("isOpen", "bool");
-    Pump->addProperty("headGain", "double");
+    Gauge->addProperty("pressure", "double");
+    Gauge->addProperty("maxPressure", "double");
+    Gauge->addProperty("tank", Tank);
+    Pump->addProperty("maxHead", "double");
+    Pump->addProperty("control", "double");
     Pump->addProperty("isOpen", "bool");
     Outlet->addProperty("radius", "double");
     Outlet->addProperty("pressure", "double");
@@ -366,8 +373,9 @@ double VRPipeSystem::getSegmentFlow(int i) { auto e1 = segments[i]->end1.lock();
 double VRPipeSystem::getTankPressure(int nID) { auto e = getNodeEntity(nID); return e ? e->getValue("pressure", atmosphericPressure) : 0.0; }
 double VRPipeSystem::getTankDensity(int nID) { auto e = getNodeEntity(nID); return e ? e->getValue("density", waterDensity) : 0.0; }
 double VRPipeSystem::getTankLevel(int nID) { auto e = getNodeEntity(nID); return e ? e->getValue("level", 1.0) : 0.0; }
-double VRPipeSystem::getPump(int nID) { auto e = getNodeEntity(nID); return e ? e->getValue("headGain", 0.0) : 0.0; }
+double VRPipeSystem::getPump(int nID) { auto e = getNodeEntity(nID); return e ? e->getValue("control", 0.0) : 0.0; }
 double VRPipeSystem::getValveState(int nID) { auto e = getNodeEntity(nID); return e ? e->getValue("state", 1.0) : 1.0; }
+void VRPipeSystem::setGaugeCb(int i, VRAnimCbPtr cb) { if (!nodes.count(i)) return; nodes[i]->gaugeCb = cb; }
 
 void VRPipeSystem::setValve(int nID, double b)  { auto e = getNodeEntity(nID); if (e) e->set("state", toString(b)); }
 void VRPipeSystem::setTankPressure(int nID, double p) { auto e = getNodeEntity(nID); if (e) e->set("pressure", toString(p)); }
@@ -383,10 +391,10 @@ void VRPipeSystem::setPipePressure(int i, double p1, double p2) {
     if (e2) e2->pressure = p2;
 }
 
-void VRPipeSystem::setPump(int nID, double h, bool isOpen) {
+void VRPipeSystem::setPump(int nID, double c, bool isOpen) {
     auto e = getNodeEntity(nID);
     if (e) {
-        e->set("headGain", toString(h));
+        e->set("control", toString(c));
         e->set("isOpen", toString(isOpen));
     }
 }
@@ -944,7 +952,7 @@ void VRPipeSystem::updateVisual() {
             if (e->is_a("Outlet"))   c = Color3f(0.1,0.2,0.8);
 
             if (e->is_a("Pump")) {
-                double p = e->getValue("headGain", 0.0);
+                double p = e->getValue("control", 0.0);
                 c = p>1e-3 ? Color3f(1,1,0) : Color3f(1,0.5,0);
             }
 
@@ -1026,9 +1034,9 @@ void VRPipeSystem::computeDynamicPipeResistances() {
         if (entity->is_a("Pump")) {
             if (node->pipes.size() != 2) continue;
             bool isOpen = entity->getValue("isOpen", 0.0);
-            bool headGain = entity->getValue("headGain", 0.0);
+            double control = entity->getValue("control", 0.0);
 
-            if (headGain < 1e-3) { // pump off
+            if (control < 1e-3) { // pump off
                 auto downstream = node->pipes[1];
                 auto pipe = downstream->pipe.lock();
                 if (!pipe) continue;
@@ -1084,7 +1092,7 @@ void VRPipeSystem::solveNodeHeads() {
 
             //double head = std::max(otherEnd->hydraulicHead, pipe->hydraulicHead);
             //if (!pipe->pressurized) head = pipe->hydraulicHead;
-            //cout << " solveNodeHeads " << "  " << head << " " << otherEnd->hydraulicHead << " " << pipe->hydraulicHead << endl;
+            //cout << " solveNodeHeads oH: " << otherEnd->hydraulicHead << " pH: " << pipe->hydraulicHead << " R: " << R << endl;
 
             double head = pipe->hydraulicHead;
 
@@ -1094,16 +1102,16 @@ void VRPipeSystem::solveNodeHeads() {
 
         if (abs(den) < 1e-9) return;
         double newHead = num / den;
-        //cout << " solveNodeHeads " << "  " << newHead << endl;
+
         for (auto& e : ends) {
             maxHeadDelta = max(maxHeadDelta, abs(e->hydraulicHead-newHead));
             e->hydraulicHead = newHead;
         }
     };
 
-    auto processPumpHeads = [&](vector<VRPipeEndPtr> ends, double pumpGain, double& maxHeadDelta) -> bool {
+    auto processPumpHeads = [&](vector<VRPipeEndPtr> ends, double control, double maxHead, double& maxHeadDelta) -> bool {
         if (ends.size() != 2) return false;
-        if (pumpGain < 1e-3) return false;
+        if (control < 1e-3) return false;
 
         auto pEnd1 = ends[0];
         auto pEnd2 = ends[1];
@@ -1112,13 +1120,14 @@ void VRPipeSystem::solveNodeHeads() {
         averageOverPipes({pEnd2}, maxHeadDelta);
 
         double deltaHead = pEnd2->hydraulicHead - pEnd1->hydraulicHead;
+        double pumpGain = control * maxHead;
         double mod = clamp(pumpGain - deltaHead, 0.0, pumpGain);
         maxHeadDelta = max(maxHeadDelta, abs(mod));
 
-        //cout << " PUMP " << pEnd1->hydraulicHead << " - " << pEnd2->hydraulicHead << ", mod: " << mod << endl;
 
         pEnd1->hydraulicHead -= mod;
         pEnd2->hydraulicHead += mod;
+        //cout << " processPumpHeads " << mod << ", " << pEnd1->hydraulicHead << ", " << pEnd2->hydraulicHead << ", " << pumpGain << ", " << maxHead << endl;
 
         //pEnd2->hydraulicHead += mod;
 
@@ -1141,7 +1150,7 @@ void VRPipeSystem::solveNodeHeads() {
             auto node = n.second;
             auto entity = node->entity;
             if (entity->is_a("Tank") || entity->is_a("Outlet")) continue; // already prescribed
-            if (entity->is_a("Pump") && processPumpHeads(node->pipes, entity->getValue("headGain", 0.0), maxHeadDelta)) continue;
+            if (entity->is_a("Pump") && processPumpHeads(node->pipes, entity->getValue("control", 0.0), entity->getValue("maxHead", 0.0), maxHeadDelta)) continue;
             averageOverPipes(node->pipes, maxHeadDelta);
         }
 
@@ -1375,7 +1384,6 @@ void VRPipeSystem::updateLevels(double dt) { // TODO: split updatePressurized fr
             double tankHeight = entity->getValue("height", 0.0);
             double tankVolume = tankHeight * tankArea;
             double tankLevel = entity->getValue("level", 1.0);
-            double tankPressure = entity->getValue("pressure", atmosphericPressure);
             bool tankOpen = entity->getValue("isOpen", false);
 
             double totalFlow = 0;
@@ -1393,12 +1401,17 @@ void VRPipeSystem::updateLevels(double dt) { // TODO: split updatePressurized fr
             // update pressurized tank
             if (!tankOpen) {
                 double oldVolume = (1.0-tankLevel)*tankVolume;
+                double tankPressure = entity->getValue("pressure", atmosphericPressure);
+                double initialGasVolume = entity->getValue("initialGasVolume", oldVolume); // avoid drift
+                double initialGasPressure = entity->getValue("initialGasPressure", tankPressure); // avoid drift
+
                 double newVolume = (1.0-newLevel) *tankVolume;
-                double p = tankPressure * oldVolume / newVolume;
+                double p = initialGasPressure * initialGasVolume / newVolume;
                 //cout << " tank: " << n.first << " p gauge: " << tankPressure-atmosphericPressure << " level: " << newLevel << " tV " << tankVolume << endl;
 
                 p = clamp(p, atmosphericPressure * 0.001, atmosphericPressure * 2000.0);
                 entity->set("pressure", toString(p));
+                //cout << " new tank pressure: " << p << endl;
             }
 
             // update pipes not submerged by fluid level
@@ -1443,6 +1456,24 @@ void VRPipeSystem::updatePressures(double dt) {
         for (auto& e : n.second->pipes) {
             auto pipe = e->pipe.lock();
             e->pressure = e->hydraulicHead * pipe->density * gravity;
+        }
+
+        if (n.second->gaugeCb) {
+            auto e = n.second->entity;
+            if (e && e->is_a("Gauge")) {
+                auto t = e->getEntity("tank");
+                double maxPressure = e->getValue("maxPressure", 10*atmosphericPressure);
+                double pressure = e->getValue("pressure", 0.0) - atmosphericPressure;
+                if (t && maxPressure > 1e-3) {
+                    double pt = t->getValue("pressure", 0.0) - atmosphericPressure;
+                    double indicator = pt/maxPressure;
+                    if (abs(pt - pressure)>1e-3) {
+                        //cout << "updatePressures gauge " << pt << "/" << maxPressure << ", " << indicator << endl;
+                        e->set("pressure", toString(pt));
+                        (*n.second->gaugeCb)(indicator);
+                    }
+                }
+            }
         }
     }
 }

@@ -82,6 +82,7 @@ PyMethodDef VRPyPipeSystem::methods[] = {
     {"printSystem", PyWrap( PipeSystem, printSystem, "Print system state to console", void ) },
     {"updateInspection", PyWrap( PipeSystem, updateInspection, "Visualize node information", void, int ) },
     {"computeTotalMass", PyWrap( PipeSystem, computeTotalMass, "Compute and return the total mass in the system", double ) },
+    {"setGaugeCb", PyWrap( PipeSystem, setGaugeCb, "Set gauge callback, will trigger if pressure changes", void, int, VRAnimCbPtr ) },
     {NULL}
 };
 

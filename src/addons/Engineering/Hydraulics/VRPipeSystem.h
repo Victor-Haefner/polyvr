@@ -84,6 +84,7 @@ class VRPipeNode {
         VREntityPtr entity;
         string name;
         vector<VRPipeEndPtr> pipes;
+        VRAnimCbPtr gaugeCb;
 
     public:
         VRPipeNode(VREntityPtr entity);
@@ -190,6 +191,8 @@ class VRPipeSystem : public VRGeometry {
 		void setOutletPressure(int nID, double p);
 		void setPipeRadius(int i, double r);
 		void setPipePressure(int i, double p1, double p2);
+
+		void setGaugeCb(int i, VRAnimCbPtr cb);
 
 		double computeTotalMass();
         void printSystem();
