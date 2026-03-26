@@ -83,6 +83,7 @@ PyMethodDef VRPyPipeSystem::methods[] = {
     {"updateInspection", PyWrap( PipeSystem, updateInspection, "Visualize node information", void, int ) },
     {"computeTotalMass", PyWrap( PipeSystem, computeTotalMass, "Compute and return the total mass in the system", double ) },
     {"setGaugeCb", PyWrap( PipeSystem, setGaugeCb, "Set gauge callback, will trigger if pressure changes", void, int, VRAnimCbPtr ) },
+    {"addControlValvePath", PyWrap( PipeSystem, addControlValvePath, "Add control valve path, (valveID, A, B, x0, xs, K),\nwhere A and B are a pipe end index, x0 and xs are spool position and orifice size, and K is the resistance on that path", void, int, int, int, double, double, double ) },
     {NULL}
 };
 

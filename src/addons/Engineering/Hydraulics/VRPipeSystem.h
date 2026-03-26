@@ -192,6 +192,8 @@ class VRPipeSystem : public VRGeometry {
 		void setPipeRadius(int i, double r);
 		void setPipePressure(int i, double p1, double p2);
 
+		void addControlValvePath(int i, int A, int B, double x0, double xs, double K);
+
 		void setGaugeCb(int i, VRAnimCbPtr cb);
 
 		double computeTotalMass();
