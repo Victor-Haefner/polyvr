@@ -51,7 +51,6 @@ class VRPipeSegment {
         double liquidMax = 0.0;
 
         double resistance = 0.0;
-        double dynamicResistance = 0.0; // set by valves and pumps
         double density = 1000.0; // kg / m3
         double viscosity = 1e-3; // Pa s
         double level = 0.0;
@@ -132,7 +131,6 @@ class VRPipeSystem : public VRGeometry {
         void computeHydraulicHead(VRPipeEndPtr e);
 
         void assignBoundaryPressures();
-        void computeDynamicPipeResistances();
         void solveNodeHeads();
         void computeHeadFlows(double dt);
         void computeMaxFlows(double dt);

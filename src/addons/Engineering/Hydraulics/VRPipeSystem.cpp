@@ -1030,42 +1030,6 @@ void VRPipeSystem::assignBoundaryPressures() {
     }
 }
 
-void VRPipeSystem::computeDynamicPipeResistances() {
-    auto computeValveResistance = [](double opening, double Rmax) {
-        return Rmax * (1.0 - opening);
-    };
-
-    for (auto& s : segments) s.second->dynamicResistance = 0.0;
-
-    for (auto& n : nodes) {
-        auto node = n.second;
-        auto entity = node->entity;
-
-        if (entity->is_a("Pump")) {
-            if (node->pipes.size() != 2) continue;
-            bool isOpen = entity->getValue("isOpen", 0.0);
-            double control = entity->getValue("control", 0.0);
-
-            if (control < 1e-3) { // pump off
-                auto downstream = node->pipes[1];
-                auto pipe = downstream->pipe.lock();
-                if (!pipe) continue;
-                pipe->dynamicResistance += isOpen ? 0 : 1e11;
-            }
-        }
-
-        if (entity->is_a("Valve")) {
-            if (node->pipes.size() != 2) continue;
-            double state = entity->getValue("state", 1.0);
-            state = clamp(state, 0.0, 1.0);
-            auto downstream = node->pipes[1];
-            auto pipe = downstream->pipe.lock();
-            if (!pipe) continue;
-            pipe->dynamicResistance += computeValveResistance(state, 1e14);
-        }
-    }
-}
-
 void VRPipeSystem::solveNodeHeads() {
     auto computeValveResistance = [](double opening, double Rmax) {
         return Rmax * (1.0 - opening);
@@ -1087,7 +1051,7 @@ void VRPipeSystem::solveNodeHeads() {
         for (auto& e : ends) {
             auto pipe = e->pipe.lock();
             auto otherEnd = pipe->otherEnd(e);
-            double R = pipe->resistance + pipe->dynamicResistance + resistance; // or Rt-equivalent
+            double R = pipe->resistance + resistance; // or Rt-equivalent
             num += pipe->hydraulicHead / R;
             den += 1.0 / R;
         }
@@ -1102,14 +1066,21 @@ void VRPipeSystem::solveNodeHeads() {
     };
 
     auto processPumpHeads = [&](vector<VRPipeEndPtr> ends, VREntityPtr entity, double& maxHeadDelta) -> bool {
+        if (ends.size() != 2) return false;
+
         double control = entity->getValue("control", 0.0);
         double maxHead = entity->getValue("maxHead", 0.0);
-
-        if (ends.size() != 2) return false;
-        if (control < 1e-3) return false;
-
+        bool isOpen = entity->getValue("isOpen", 0.0);
         auto pEnd1 = ends[0];
         auto pEnd2 = ends[1];
+
+        if (control < 1e-3) { // pump off
+            if (!isOpen) {
+                averageOverPipes({pEnd1}, 0.0, maxHeadDelta);
+                averageOverPipes({pEnd2}, 0.0, maxHeadDelta);
+                return true;
+            } else return false;
+        }
 
         averageOverPipes({pEnd1}, 0.0, maxHeadDelta);
         averageOverPipes({pEnd2}, 0.0, maxHeadDelta);
@@ -1119,20 +1090,20 @@ void VRPipeSystem::solveNodeHeads() {
         double mod = clamp(pumpGain - deltaHead, 0.0, pumpGain);
         maxHeadDelta = max(maxHeadDelta, abs(mod));
 
-
         pEnd1->hydraulicHead -= mod;
         pEnd2->hydraulicHead += mod;
         //cout << " processPumpHeads " << mod << ", " << pEnd1->hydraulicHead << ", " << pEnd2->hydraulicHead << ", " << pumpGain << ", " << maxHead << endl;
+        return true;
+    };
 
-        //pEnd2->hydraulicHead += mod;
-
-        //pEnd1->hydraulicHead = pEnd1->height - pumpGain;
-        //pEnd2->hydraulicHead = pEnd2->height + pumpGain;
-
-        //pEnd1->hydraulicHead -= pumpGain;
-        //pEnd2->hydraulicHead += pumpGain;
-
-        //pEnd2->hydraulicHead = pEnd1->hydraulicHead + pumpGain;
+    auto processValve = [&](vector<VRPipeEndPtr> ends, VREntityPtr entity, double& maxHeadDelta) -> bool {
+        if (ends.size() != 2) return false;
+        double x = entity->getValue("state", 0.0);
+        double resistance = computeValveResistance(x, 1e14);
+        if (x < 1e-3) {
+            averageOverPipes({ends[0]}, 0.0, maxHeadDelta);
+            averageOverPipes({ends[1]}, 0.0, maxHeadDelta);
+        } else averageOverPipes({ends[0], ends[1]}, resistance, maxHeadDelta);
         return true;
     };
 
@@ -1147,12 +1118,20 @@ void VRPipeSystem::solveNodeHeads() {
             replace(p.begin(), p.end(), '_', '.');
             vector<double> v;
             toValue(p, v);
-            if (v.size() != 5) cout << "Error in processControlValve, wrong path definition: " << toString(v) << endl;
+            if (v.size() != 5) {
+                cout << "Error in processControlValve, wrong path definition: " << toString(v) << ", p: " << p << endl;
+                continue;
+            }
+
             int A = v[0];
             int B = v[1];
             double x0 = v[2];
             double xs = v[3];
             double K  = v[4];
+            if (A<0 || B<0 || A>=ends.size() || B>=ends.size()) {
+                cout << "Error in processControlValve, wrong ends indices: " << A << ", " << B << endl;
+                continue;
+            }
 
             double Q = K * max(0.0, 1.0-abs(x-x0)/xs); // tent function around x0
             double resistance = computeValveResistance(Q, 1e14);
@@ -1172,6 +1151,7 @@ void VRPipeSystem::solveNodeHeads() {
             auto entity = node->entity;
             if (entity->is_a("Tank") || entity->is_a("Outlet")) continue; // already prescribed
             if (entity->is_a("Pump") && processPumpHeads(node->pipes, entity, maxHeadDelta)) continue;
+            if (entity->is_a("Valve") && processValve(node->pipes, entity, maxHeadDelta)) continue;
             if (entity->is_a("ControlValve") && processControlValve(node->pipes, entity, maxHeadDelta)) continue;
             averageOverPipes(node->pipes, 0.0, maxHeadDelta);
         }
@@ -1190,10 +1170,7 @@ void VRPipeSystem::computeHeadFlows(double dt) {
         auto& pipe = s.second;
         auto e1 = pipe->end1.lock();
         auto e2 = pipe->end2.lock();
-
-        // based on Darcy-Weisbach for turbulent flow
-        //double Rt = pipeFriction * pipe->length * pipe->density / ( 4 * pipe->radius * pow(pipe->area,2));
-        double Rt = pipe->resistance + pipe->dynamicResistance;
+        double Rt = pipe->resistance;
 
         if (pipe->pressurized) {
             double dH = e2->hydraulicHead - e1->hydraulicHead; // compute hydraulic gradient
@@ -1209,25 +1186,6 @@ void VRPipeSystem::computeHeadFlows(double dt) {
             double K = (2.0 * A * A * Rt) / pipe->density; // convert quadratic resistance to loss coefficient
             K = std::max(K, 1e-6); // numerical safety
 
-
-            /*auto up   = (e1->hydraulicHead > e2->hydraulicHead) ? e1 : e2;
-            auto down = (up == e1) ? e2 : e1;
-            double dHfill = up->hydraulicHead - pipe->hydraulicHead; // driving head relative to pipe liquid surface
-
-            if (dHfill > 0.0) {
-                double flow = A * sqrt(2.0 * gravity * dHfill / K);
-
-                //if (dHfill > 1e-3) cout << " dHfill: " << dHfill << ", flow: " << flow << endl;
-
-                if (up == e1) {
-                    e1->headFlow = -flow;   // leaving node
-                    e2->headFlow =  0.0;    // no transmission yet
-                } else {
-                    e1->headFlow =  0.0;
-                    e2->headFlow = -flow;
-                }
-            }*/
-
             for (auto& e : {e1,e2}) {
                 double dH = e->hydraulicHead - pipe->hydraulicHead;
                 double dP = dH * pipe->density * gravity;
@@ -1239,7 +1197,7 @@ void VRPipeSystem::computeHeadFlows(double dt) {
     }
 }
 
-void VRPipeSystem::computeMaxFlows(double dt) { // deprecated, used only to copy from headFlow to flow..
+void VRPipeSystem::computeMaxFlows(double dt) {
     auto computeContainerFlowScaling = [&](string ID, double nodeAirVolume, double nodeWaterVolume, double flowIn, double flowOut) {
         double totalFlow = flowIn - flowOut;
         double maxFlowIn = flowIn;
@@ -1260,11 +1218,10 @@ void VRPipeSystem::computeMaxFlows(double dt) { // deprecated, used only to copy
         for (auto& n : nodes) {
             auto node = n.second;
             auto entity = node->entity;
-            bool isTank = entity->is_a("Tank");
 
             double nodeAirVolume = 0.0;
             double nodeWaterVolume = 0.0;
-            if (isTank) {
+            if (entity->is_a("Tank")) {
                 double tankArea = entity->getValue("area", 0.0);
                 double tankHeight = entity->getValue("height", 0.0);
                 double tankVolume = tankHeight * tankArea;
@@ -1360,10 +1317,9 @@ void VRPipeSystem::computeMaxFlows(double dt) { // deprecated, used only to copy
     for (auto& n : nodes) {
         auto node = n.second;
         auto entity = node->entity;
-        bool isTank = entity->is_a("Tank");
 
         for (auto& e : node->pipes) {
-            if (isTank) {
+            if (entity->is_a("Tank")) {
                 double tankLevel = entity->getValue("level", 1.0);
                 double tankHeight = entity->getValue("height", 1.0);
                 auto nPos = graph->getPosition(n.first)->pos();
@@ -1372,6 +1328,20 @@ void VRPipeSystem::computeMaxFlows(double dt) { // deprecated, used only to copy
                     e->maxFlow = 0;
                     continue; // pipe end above water level cant drain tank!
                 }
+            }
+
+            if (entity->is_a("Valve")) {
+                auto pipe = e->pipe.lock();
+                if (!pipe) continue;
+
+                double state = entity->getValue("state", 0.0);
+                double A = state * pipe->area;
+                double Cd = 0.7;
+                double dH = e->hydraulicHead - pipe->otherEnd(e)->hydraulicHead;
+
+                double Qmax = Cd * A * sqrt(2.0 * gravity * abs(dH));
+                e->maxFlow = clamp(e->headFlow, -Qmax, Qmax);
+                continue;
             }
 
             e->maxFlow = e->headFlow;
@@ -1568,7 +1538,6 @@ void VRPipeSystem::update() {
 
     for (int i=0; i<subSteps; i++) {
         assignBoundaryPressures();
-        computeDynamicPipeResistances();
         auto t1 = VRTimer::create();
         solveNodeHeads();
         auto T1 = t1->stop();
