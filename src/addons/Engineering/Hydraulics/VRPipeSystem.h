@@ -85,6 +85,10 @@ class VRPipeNode {
         vector<VRPipeEndPtr> pipes;
         VRAnimCbPtr gaugeCb;
 
+        // for control valves
+        map<int, int> endGroup;
+        map<int, double> pathOpenings;
+
     public:
         VRPipeNode(VREntityPtr entity);
         ~VRPipeNode();
