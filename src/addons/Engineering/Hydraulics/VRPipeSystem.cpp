@@ -289,6 +289,7 @@ void VRPipeSystem::initOntology() {
     auto ReliefValve = ontology->addConcept("ReliefValve", "Valve");
     auto ControlValve = ontology->addConcept("ControlValve", "Valve");
     auto ValvePath = ontology->addConcept("ValvePath");
+    auto Cylinder = ontology->addConcept("Cylinder");
 
     Tank->addProperty("pressure", "double");
     Tank->addProperty("initialGasVolume", "double");
@@ -313,6 +314,9 @@ void VRPipeSystem::initOntology() {
     ReliefValve->addProperty("thresholdPressure", "double");
     ReliefValve->addProperty("reseatPressure", "double");
     ControlValve->addProperty("paths", ValvePath);
+    Cylinder->addProperty("area", "double");
+    Cylinder->addProperty("length", "double");
+    Cylinder->addProperty("force", "double"); // external force
 
     // (A,B,x0,xs,K) where A and B are ports and x0 the spool/state position, xs the transition size and K the resistance
     ValvePath->addProperty("A", "int");
