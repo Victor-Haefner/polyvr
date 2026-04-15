@@ -317,6 +317,10 @@ void VRPipeSystem::initOntology() {
     Cylinder->addProperty("area", "double");
     Cylinder->addProperty("length", "double");
     Cylinder->addProperty("force", "double"); // external force
+    Cylinder->addProperty("resistance", "double"); // external resistance
+    Cylinder->addProperty("level1", "double");
+    Cylinder->addProperty("level2", "double");
+    Cylinder->addProperty("state", "double");
 
     // (A,B,x0,xs,K) where A and B are ports and x0 the spool/state position, xs the transition size and K the resistance
     ValvePath->addProperty("A", "int");
@@ -969,7 +973,10 @@ void VRPipeSystem::updateVisual() {
             k += 48;
         } else {
             Color3f c(0.4,0.4,0.4);
-            if (e->is_a("Valve")) {
+            if (e->is_a("ControlValve")) {
+                ; // TODO
+            }
+            else if (e->is_a("Valve")) {
                 double s = e->getValue("state", 0.0);
                 c = s>0.9 ? Color3f(0,1,0) : Color3f(1,0,0);
             }
@@ -1047,15 +1054,6 @@ void VRPipeSystem::assignBoundaryPressures() {
 }
 
 void VRPipeSystem::solveNodeHeads() {
-    auto averageOverNodes = [&](VRPipeSegmentPtr pipe, double& maxHeadDelta) {
-        auto e1 = pipe->end1.lock();
-        auto e2 = pipe->end2.lock();
-        double newHead = (e1->hydraulicHead + e2->hydraulicHead) / 2.0;
-
-        maxHeadDelta = max(maxHeadDelta, abs(pipe->hydraulicHead-newHead));
-        pipe->hydraulicHead = newHead;
-    };
-
     auto averageOverPipes = [&](vector<VRPipeEndPtr> ends, double& maxHeadDelta) {
         double num = 0.0;
         double den = 0.0;
@@ -1115,6 +1113,13 @@ void VRPipeSystem::solveNodeHeads() {
             averageOverPipes({ends[0]}, maxHeadDelta);
             averageOverPipes({ends[1]}, maxHeadDelta);
         } else averageOverPipes({ends[0], ends[1]}, maxHeadDelta);
+        return true;
+    };
+
+    auto processCylinder = [&](vector<VRPipeEndPtr> ends, VREntityPtr entity, double& maxHeadDelta) -> bool {
+        if (ends.size() != 2) return false;
+        averageOverPipes({ends[0]}, maxHeadDelta); // both sides are not connected!
+        averageOverPipes({ends[1]}, maxHeadDelta);
         return true;
     };
 
@@ -1187,13 +1192,23 @@ void VRPipeSystem::solveNodeHeads() {
             if (entity->is_a("Tank") || entity->is_a("Outlet")) continue; // already prescribed
             if (entity->is_a("Pump") && processPumpHeads(node->pipes, entity, maxHeadDelta)) continue;
             if (entity->is_a("ControlValve") && processControlValve(node, entity, maxHeadDelta)) continue;
-            if (entity->is_a("Valve") && processValve(node->pipes, entity, maxHeadDelta)) continue;
+            else if (entity->is_a("Valve") && processValve(node->pipes, entity, maxHeadDelta)) continue;
+            if (entity->is_a("Cylinder") && processCylinder(node->pipes, entity, maxHeadDelta)) continue;
             averageOverPipes(node->pipes, maxHeadDelta);
         }
 
         for (auto& s : segments) { // update head for each pipe
             auto& pipe = s.second;
-            if (pipe->pressurized) averageOverNodes(pipe, maxHeadDelta);
+            auto e1 = pipe->end1.lock();
+            auto e2 = pipe->end2.lock();
+
+            double h1 = pipe->liquidMin;
+            double h2 = pipe->liquidMax;
+            double newHead = min(h1, h2) + abs(h1 - h2) * pipe->level;
+            if (pipe->pressurized) newHead = (e1->hydraulicHead + e2->hydraulicHead) * 0.5;
+
+            maxHeadDelta = max(maxHeadDelta, abs(pipe->hydraulicHead-newHead));
+            pipe->hydraulicHead = newHead;
         }
     }
 }
@@ -1254,35 +1269,73 @@ void VRPipeSystem::computeMaxFlows(double dt) {
             auto node = n.second;
             auto entity = node->entity;
 
-            double nodeAirVolume = 0.0;
-            double nodeWaterVolume = 0.0;
-            if (entity->is_a("Tank")) {
-                double tankArea = entity->getValue("area", 0.0);
-                double tankHeight = entity->getValue("height", 0.0);
-                double tankVolume = tankHeight * tankArea;
-                double tankLevel = entity->getValue("level", 1.0);
-                nodeAirVolume = tankVolume * (1.0-tankLevel);
-                nodeWaterVolume = tankVolume * tankLevel;
-            }
+            if (entity->is_a("Cylinder")) {
+                if (n.second->pipes.size() != 2) continue;
 
-            double totalFlowIn = 0;
-            double totalFlowOut = 0;
-            for (auto& e : n.second->pipes) {
-                auto f = e->maxFlow;
-                if (f < 0) totalFlowOut += -f;
-                else totalFlowIn += f;
-            }
+                double cArea = entity->getValue("area", 1.0);
+                double cLength = entity->getValue("length", 1.0);
+                double cVolume = cArea * cLength;
 
-            Vec2d scaleFlowInOut = computeContainerFlowScaling(node->name, nodeAirVolume, nodeWaterVolume, totalFlowIn, totalFlowOut);
+                double cLevel1 = entity->getValue("level1", 1.0);
+                double cLevel2 = entity->getValue("level2", 1.0);
+                double cState = entity->getValue("state", 0.0);
+                double cVol1 = cVolume * cState;
+                double cVol2 = cVolume * cState;
 
-            for (auto& e : n.second->pipes) {
-                //bool verb = bool(abs(e->maxFlow) > 0);
-                //if (verb) cout << " Vair: " << nodeAirVolume << ", Vwater: " << nodeWaterVolume << ", fIn: " << totalFlowIn << ", fOut: " << totalFlowOut;
-                //if (verb) cout << ", maxFlow: " << e->maxFlow << " -> ";
-                auto f = e->maxFlow;
-                if (f < 0) e->maxFlow = f * scaleFlowInOut[1];
-                else e->maxFlow = f * scaleFlowInOut[0];
-                //if (verb) cout << e->maxFlow << endl;
+                double v1Air = cVol1 * (1.0-cLevel1);
+                double v1Wat = cVol1 * cLevel1;
+                double v2Air = cVol2 * (1.0-cLevel2);
+                double v2Wat = cVol2 * cLevel2;
+
+                auto& e1 = n.second->pipes[0];
+                auto& e2 = n.second->pipes[1];
+                double flow1 = e1->maxFlow;
+                double flow2 = e2->maxFlow;
+
+                if (flow1 < 0 && -flow1*dt > v1Wat) { // too much flow out
+                    e1->maxFlow = min(-flow1, v1Wat/dt + flow2); // problem: use flow2 here??
+                }
+
+                if (flow1 > 0 &&  flow1*dt > v1Air) { // too much flow in
+                    e1->maxFlow = min( flow1,  v1Air/dt + flow2);
+                }
+
+                if (flow2 < 0 && -flow2*dt > v2Wat) { // too much flow out
+                    e1->maxFlow = min(-flow2, v2Wat/dt + flow1); // problem: use flow1 here??
+                }
+
+                if (flow2 > 0 &&  flow2*dt > v2Air) { // too much flow in
+                    e1->maxFlow = min( flow2,  v2Air/dt + flow1);
+                }
+
+            } else {
+                double nodeAirVolume = 0.0;
+                double nodeWaterVolume = 0.0;
+
+                if (entity->is_a("Tank")) {
+                    double tankArea = entity->getValue("area", 0.0);
+                    double tankHeight = entity->getValue("height", 0.0);
+                    double tankVolume = tankHeight * tankArea;
+                    double tankLevel = entity->getValue("level", 1.0);
+                    nodeAirVolume = tankVolume * (1.0-tankLevel);
+                    nodeWaterVolume = tankVolume * tankLevel;
+                }
+
+                double totalFlowIn = 0;
+                double totalFlowOut = 0;
+                for (auto& e : n.second->pipes) {
+                    auto f = e->maxFlow;
+                    if (f < 0) totalFlowOut += -f;
+                    else totalFlowIn += f;
+                }
+
+                Vec2d scaleFlowInOut = computeContainerFlowScaling(node->name, nodeAirVolume, nodeWaterVolume, totalFlowIn, totalFlowOut);
+
+                for (auto& e : n.second->pipes) {
+                    auto f = e->maxFlow;
+                    if (f < 0) e->maxFlow = f * scaleFlowInOut[1];
+                    else e->maxFlow = f * scaleFlowInOut[0];
+                }
             }
         }
     };
@@ -1373,16 +1426,17 @@ void VRPipeSystem::computeMaxFlows(double dt) {
                 if (node->pathOpenings.count(i)) {
                     double state = node->pathOpenings[i];
                     double A = state * pipe->area;
-                    double Cd = 0.7;
                     double dH = e->hydraulicHead - pipe->otherEnd(e)->hydraulicHead;
 
-                    double Qmax = Cd * A * sqrt(2.0 * gravity * abs(dH));
+                    double Qmax = A * sqrt(2.0 * gravity * abs(dH));
                     e->maxFlow = clamp(e->headFlow, -Qmax, Qmax);
+
+                    //cout << "i: " << i << ", h " << e->headFlow << ", Qm " << Qmax << ", f " << e->maxFlow << ", state: " << state << endl;
                     continue;
                 }
             }
 
-            if (entity->is_a("Valve")) {
+            else if (entity->is_a("Valve")) {
                 auto pipe = e->pipe.lock();
                 if (!pipe) continue;
 
