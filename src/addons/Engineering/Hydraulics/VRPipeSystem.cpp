@@ -752,38 +752,53 @@ void VRPipeSystem::updateVisual() {
             }
         }
 
+        auto createWaterBox = [&](Vec3d p, double a, double b, double h) {
+            data.pushQuad(p - Vec3d(0,h*0.5,0), Vec3d(0,1,0), Vec3d(0,0,1), Vec2d(a,b), false);
+            data.pushQuad(p - Vec3d(0,h*0.5,0), Vec3d(0,1,0), Vec3d(0,0,1), Vec2d(a,b), true);
+            data.pushQuad(p - Vec3d(0,h*0.5,0), Vec3d(0,1,0), Vec3d(0,0,1), Vec2d(a,b), false);
+            data.pushQuad(p + Vec3d(0,h*0.5,0), Vec3d(0,1,0), Vec3d(0,0,1), Vec2d(a,b), true);
+            data.pushQuad(-13, -14, -15, -16); // bottom
+            data.pushQuad(-9, -10, -11, -12); // mid but reversed
+
+            data.pushQuad(-9, -10, -14,  -13); // sides bottom
+            data.pushQuad(-10, -11, -15, -14);
+            data.pushQuad(-11, -12, -16, -15);
+            data.pushQuad(-12, -9,  -13, -16);
+
+            data.pushQuad(-1, -2, -6,  -5); // sides top
+            data.pushQuad(-2, -3, -7, -6);
+            data.pushQuad(-3, -4, -8, -7);
+            data.pushQuad(-4, -1,  -5, -8);
+            for (int i=0; i<4; i++) data.pushColor(dblue);
+            for (int i=0; i<4; i++) data.pushColor(blue);
+            for (int i=0; i<4; i++) data.pushColor(white);
+            for (int i=0; i<4; i++) data.pushColor(white);
+        };
+
         for (auto& n : nodes) {
             auto p = graph->getPosition(n.first);
             auto e = n.second->entity;
+
             if (e->is_a("Tank")) {
                 double a = e->getValue("area", 1.0);
                 double h = e->getValue("height", 1.0);
                 double s = sqrt(a);
-
-                data.pushQuad(p->pos() - Vec3d(0,h*0.5,0), Vec3d(0,1,0), Vec3d(0,0,1), Vec2d(s,s), false);
-                data.pushQuad(p->pos() - Vec3d(0,h*0.5,0), Vec3d(0,1,0), Vec3d(0,0,1), Vec2d(s,s), true);
-                data.pushQuad(p->pos() - Vec3d(0,h*0.5,0), Vec3d(0,1,0), Vec3d(0,0,1), Vec2d(s,s), false);
-                data.pushQuad(p->pos() + Vec3d(0,h*0.5,0), Vec3d(0,1,0), Vec3d(0,0,1), Vec2d(s,s), true);
-                data.pushQuad(-13, -14, -15, -16); // bottom
-                data.pushQuad(-9, -10, -11, -12); // mid but reversed
-
-                data.pushQuad(-9, -10, -14,  -13); // sides bottom
-                data.pushQuad(-10, -11, -15, -14);
-                data.pushQuad(-11, -12, -16, -15);
-                data.pushQuad(-12, -9,  -13, -16);
-
-                data.pushQuad(-1, -2, -6,  -5); // sides top
-                data.pushQuad(-2, -3, -7, -6);
-                data.pushQuad(-3, -4, -8, -7);
-                data.pushQuad(-4, -1,  -5, -8);
-                for (int i=0; i<4; i++) data.pushColor(dblue);
-                for (int i=0; i<4; i++) data.pushColor(blue);
-                for (int i=0; i<4; i++) data.pushColor(white);
-                for (int i=0; i<4; i++) data.pushColor(white);
-            } else {
-                data.pushVert(p->pos(), norm, white, Vec2d());
-                data.pushPoint();
+                createWaterBox(p->pos(), s, s, h);
+                continue;
             }
+
+            if (e->is_a("Cylinder")) {
+                double a = e->getValue("area", 1.0);
+                double l = e->getValue("length", 1.0);
+                double h = sqrt(a);
+                double s = l*0.5;
+                createWaterBox(p->pos()-Vec3d(s*0.5,0,0), s, h, h);
+                createWaterBox(p->pos()+Vec3d(s*0.5,0,0), s, h, h);
+                continue;
+            }
+
+            data.pushVert(p->pos(), norm, white, Vec2d());
+            data.pushPoint();
         }
 
         //cout << "apply data: " << data.size() << endl;
@@ -952,53 +967,60 @@ void VRPipeSystem::updateVisual() {
         k += 56 + 32;
     }
 
+    auto updateWaterBox = [&](double lvl, Color3f col) {
+
+        for (int j=0; j<4; j++) {
+            Pnt3d p = data.getPosition(i+j);
+            p[1] += lvl;
+            data.setPos(i+4+j, p);
+            data.setPos(i+8+j, p);
+            data.setColor(i+4+j, col);
+        }
+
+        i += 16;
+        k += 48;
+    };
+
     for (auto& n : nodes) {
         auto e = n.second->entity;
         if (e->is_a("Tank")) {
             double l = e->getValue("level", 1.0);
             double h = e->getValue("height", 1.0);
             double T = e->getValue("temperature", 20.0);
-            double s = h*l;
             auto tempCol = getTempColor(T);
-
-            for (int j=0; j<4; j++) {
-                Pnt3d p = data.getPosition(i+j);
-                p[1] += s;
-                data.setPos(i+4+j, p);
-                data.setPos(i+8+j, p);
-                data.setColor(i+4+j, tempCol);
-            }
-
-            i += 16;
-            k += 48;
-        } else {
-            Color3f c(0.4,0.4,0.4);
-            if (e->is_a("ControlValve")) {
-                ; // TODO
-            }
-            else if (e->is_a("Valve")) {
-                double s = e->getValue("state", 0.0);
-                c = s>0.9 ? Color3f(0,1,0) : Color3f(1,0,0);
-            }
-
-            if (e->is_a("Junction")) c = Color3f(0.2,0.4,1);
-            if (e->is_a("Outlet"))   c = Color3f(0.1,0.2,0.8);
-
-            if (e->is_a("Pump")) {
-                double p = e->getValue("control", 0.0);
-                c = p>1e-3 ? Color3f(1,1,0) : Color3f(1,0.5,0);
-            }
-
-            data.setColor(i, c); i++;
-            k++;
+            updateWaterBox(h*l, tempCol);
+            continue;
         }
 
-        // hydraulicHead headFlow maxFlow flow
-        /*if (n.second->pipes.size() > 0) {
-            string data;
-            for (auto& e : n.second->pipes) { data += " " + toString(round(e->hydraulicHead*100)*0.01); }
-            ann->set(n.first, getNodePose(n.first)->pos(), data);
-        }*/
+        if (e->is_a("Cylinder")) {
+            double l1 = e->getValue("level1", 1.0);
+            double l2 = e->getValue("level2", 1.0);
+            double a = e->getValue("area", 1.0);
+            double h = sqrt(a);
+            updateWaterBox(l1*h, blue);
+            updateWaterBox(l2*h, blue);
+            continue;
+        }
+
+        Color3f c(0.4,0.4,0.4);
+        if (e->is_a("ControlValve")) {
+            ; // TODO
+        }
+        else if (e->is_a("Valve")) {
+            double s = e->getValue("state", 0.0);
+            c = s>0.9 ? Color3f(0,1,0) : Color3f(1,0,0);
+        }
+
+        if (e->is_a("Junction")) c = Color3f(0.2,0.4,1);
+        if (e->is_a("Outlet"))   c = Color3f(0.1,0.2,0.8);
+
+        if (e->is_a("Pump")) {
+            double p = e->getValue("control", 0.0);
+            c = p>1e-3 ? Color3f(1,1,0) : Color3f(1,0.5,0);
+        }
+
+        data.setColor(i, c); i++;
+        k++;
     }
 }
 
@@ -1040,6 +1062,21 @@ void VRPipeSystem::assignBoundaryPressures() {
                 e->hydraulicHead = e->height + Pgauge / (tankDensity * gravity);
                 //cout << " tank boundary expr.: hH: " << e->hydraulicHead << ", h: " << e->height << ", d: " << depth << endl;
             }
+        }
+
+        if (entity->is_a("Cylinder")) {
+            if (node->pipes.size() != 2) continue;
+            auto& e1 = node->pipes[0];
+            auto& e2 = node->pipes[1];
+
+            double l1 = entity->getValue("level1", 1.0);
+            double l2 = entity->getValue("level2", 1.0);
+            double a = entity->getValue("area", 1.0);
+            double h = sqrt(a);
+            double h1 = nPos[1] + h*(l1-0.5);
+            double h2 = nPos[1] + h*(l2-0.5);
+            if (l1 <= 0.99) e1->hydraulicHead = h1;
+            if (l2 <= 0.99) e2->hydraulicHead = h2;
         }
     }
 
@@ -1118,8 +1155,11 @@ void VRPipeSystem::solveNodeHeads() {
 
     auto processCylinder = [&](vector<VRPipeEndPtr> ends, VREntityPtr entity, double& maxHeadDelta) -> bool {
         if (ends.size() != 2) return false;
-        averageOverPipes({ends[0]}, maxHeadDelta); // both sides are not connected!
-        averageOverPipes({ends[1]}, maxHeadDelta);
+        double l1 = entity->getValue("level1", 1.0);
+        double l2 = entity->getValue("level2", 1.0);
+        if (l1 > 0.99) averageOverPipes({ends[0]}, maxHeadDelta); // both sides are not connected!
+        if (l2 > 0.99) averageOverPipes({ends[1]}, maxHeadDelta);
+        // TODO: take levels into account?
         return true;
     };
 
@@ -1513,10 +1553,44 @@ void VRPipeSystem::updateLevels(double dt) { // TODO: split updatePressurized fr
 
             // update pipes not submerged by fluid level
             auto nPos = graph->getPosition(n.first)->pos();
-            double fluidHeight = (tankLevel-0.5)*tankHeight + nPos[1];
+            double fluidHeight = (newLevel-0.5)*tankHeight + nPos[1];
             for (auto& e : node->pipes) {
                 if (e->height > fluidHeight) e->pressurized = false;
             }
+        }
+
+        if (entity->is_a("Cylinder")) {
+            if (node->pipes.size() != 2) continue;
+
+            double a = entity->getValue("area", 0.0);
+            double l = entity->getValue("length", 0.0);
+            double h = sqrt(a);
+            double vol = l*0.5*a;
+            double lvl1 = entity->getValue("level1", 1.0);
+            double lvl2 = entity->getValue("level2", 1.0);
+
+            auto& e1 = node->pipes[0];
+            auto& e2 = node->pipes[1];
+            double flow1 = e1->flow;
+            double flow2 = e2->flow;
+
+            double volDelta1 = flow1*dt;
+            double volDelta2 = flow2*dt;
+            double newLevel1 = clamp(lvl1 + volDelta1 / vol, 0.0, 1.0);
+            double newLevel2 = clamp(lvl2 + volDelta2 / vol, 0.0, 1.0);
+            volDelta1 = (newLevel1 - lvl1)*vol;
+            volDelta2 = (newLevel2 - lvl2)*vol;
+            entity->set("level1", toString(newLevel1));
+            entity->set("level2", toString(newLevel2));
+
+            // update pipes not submerged by fluid level
+            auto nPos = graph->getPosition(n.first)->pos();
+            double fluidHeight1 = (newLevel1-0.5)*h + nPos[1];
+            double fluidHeight2 = (newLevel2-0.5)*h + nPos[1];
+            if (e1->height > fluidHeight1) e1->pressurized = false;
+            if (e2->height > fluidHeight2) e2->pressurized = false;
+
+            // TODO: if the levels differ, then the piston should move?
         }
     }
 
