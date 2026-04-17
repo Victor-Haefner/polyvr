@@ -968,7 +968,6 @@ void VRPipeSystem::updateVisual() {
     }
 
     auto updateWaterBox = [&](double lvl, Color3f col) {
-
         for (int j=0; j<4; j++) {
             Pnt3d p = data.getPosition(i+j);
             p[1] += lvl;
@@ -993,6 +992,21 @@ void VRPipeSystem::updateVisual() {
         }
 
         if (e->is_a("Cylinder")) {
+            double state = e->getValue("state", 1.0);
+            double L = e->getValue("length", 1.0);
+            Pnt3d p1 = data.getPosition(i+1)    + Vec3d(L*state,0,0);
+            Pnt3d p2 = data.getPosition(i+2)    + Vec3d(L*state,0,0);
+            Pnt3d p3 = data.getPosition(i+12+1) + Vec3d(L*state,0,0);
+            Pnt3d p4 = data.getPosition(i+12+2) + Vec3d(L*state,0,0);
+            data.setPos(i+0,    p1);
+            data.setPos(i+3,    p2);
+            data.setPos(i+12+0, p3);
+            data.setPos(i+12+3, p4);
+            data.setPos(i+16+1, p1);
+            data.setPos(i+16+2, p2);
+            data.setPos(i+28+1, p3);
+            data.setPos(i+28+2, p4);
+
             double l1 = e->getValue("level1", 1.0);
             double l2 = e->getValue("level2", 1.0);
             double a = e->getValue("area", 1.0);
@@ -1561,36 +1575,54 @@ void VRPipeSystem::updateLevels(double dt) { // TODO: split updatePressurized fr
 
         if (entity->is_a("Cylinder")) {
             if (node->pipes.size() != 2) continue;
-
-            double a = entity->getValue("area", 0.0);
-            double l = entity->getValue("length", 0.0);
-            double h = sqrt(a);
-            double vol = l*0.5*a;
-            double lvl1 = entity->getValue("level1", 1.0);
-            double lvl2 = entity->getValue("level2", 1.0);
-
             auto& e1 = node->pipes[0];
             auto& e2 = node->pipes[1];
-            double flow1 = e1->flow;
-            double flow2 = e2->flow;
 
-            double volDelta1 = flow1*dt;
-            double volDelta2 = flow2*dt;
-            double newLevel1 = clamp(lvl1 + volDelta1 / vol, 0.0, 1.0);
-            double newLevel2 = clamp(lvl2 + volDelta2 / vol, 0.0, 1.0);
-            volDelta1 = (newLevel1 - lvl1)*vol;
-            volDelta2 = (newLevel2 - lvl2)*vol;
+            // compute piston movement
+            double Fext = entity->getValue("force", 0.0);
+            double R = entity->getValue("resistance", 10.0);
+            double x = entity->getValue("state", 0.0);
+            double L = entity->getValue("length", 0.0);
+            double a = entity->getValue("area", 0.0);
+            double p1 = e1->hydraulicHead;
+            double p2 = e2->hydraulicHead;
+            double Fhyd = -(p2 - p1) * a;
+            double v = (Fhyd - Fext) / max(R, 1e-6);
+
+            double dx = v * dt;
+            double x_new = clamp(x + dx/L, 0.001, 0.999);
+            dx = (x_new - x) * L;
+            entity->set("state", toString(x_new));
+
+            // piston volume transfer
+            double dflow = a*dx / dt;
+            e1->flow -= dflow;
+            e2->flow += dflow;
+
+            // compute new levels
+            double vol = L*0.5*a;
+            double lvl1 = entity->getValue("level1", 1.0);
+            double lvl2 = entity->getValue("level2", 1.0);
+            double vol1 = vol * x_new;
+            double vol2 = vol * (1.0-x_new);
+            double volDelta1 = e1->flow*dt;
+            double volDelta2 = e2->flow*dt;
+            double newLevel1 = clamp(lvl1 + volDelta1 / vol1, 0.0, 1.0);
+            double newLevel2 = clamp(lvl2 + volDelta2 / vol2, 0.0, 1.0);
+            volDelta1 = (newLevel1 - lvl1)*vol1;
+            volDelta2 = (newLevel2 - lvl2)*vol2;
             entity->set("level1", toString(newLevel1));
             entity->set("level2", toString(newLevel2));
 
             // update pipes not submerged by fluid level
+            double h = sqrt(a);
             auto nPos = graph->getPosition(n.first)->pos();
             double fluidHeight1 = (newLevel1-0.5)*h + nPos[1];
             double fluidHeight2 = (newLevel2-0.5)*h + nPos[1];
             if (e1->height > fluidHeight1) e1->pressurized = false;
             if (e2->height > fluidHeight2) e2->pressurized = false;
 
-            // TODO: if the levels differ, then the piston should move?
+            //cout << " cylinder Fhyd: " << Fhyd << " -> v: " << v << endl;
         }
     }
 
