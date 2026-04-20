@@ -321,6 +321,7 @@ void VRPipeSystem::initOntology() {
     Cylinder->addProperty("level1", "double");
     Cylinder->addProperty("level2", "double");
     Cylinder->addProperty("state", "double");
+    Cylinder->addProperty("headFlow", "double");
 
     // (A,B,x0,xs,K) where A and B are ports and x0 the spool/state position, xs the transition size and K the resistance
     ValvePath->addProperty("A", "int");
@@ -1089,8 +1090,8 @@ void VRPipeSystem::assignBoundaryPressures() {
             double h = sqrt(a);
             double h1 = nPos[1] + h*(l1-0.5);
             double h2 = nPos[1] + h*(l2-0.5);
-            if (l1 <= 0.99) e1->hydraulicHead = h1;
-            if (l2 <= 0.99) e2->hydraulicHead = h2;
+            if (!e1->pressurized) e1->hydraulicHead = h1;
+            if (!e1->pressurized) e2->hydraulicHead = h2;
         }
     }
 
@@ -1169,11 +1170,13 @@ void VRPipeSystem::solveNodeHeads() {
 
     auto processCylinder = [&](vector<VRPipeEndPtr> ends, VREntityPtr entity, double& maxHeadDelta) -> bool {
         if (ends.size() != 2) return false;
-        double l1 = entity->getValue("level1", 1.0);
-        double l2 = entity->getValue("level2", 1.0);
-        if (l1 > 0.99) averageOverPipes({ends[0]}, maxHeadDelta); // both sides are not connected!
-        if (l2 > 0.99) averageOverPipes({ends[1]}, maxHeadDelta);
-        // TODO: take levels into account?
+        auto& e1 = ends[0];
+        auto& e2 = ends[1];
+        if (e1->pressurized && e2->pressurized) averageOverPipes({e1, e2}, maxHeadDelta);
+        else if (e1->pressurized) averageOverPipes({e1}, maxHeadDelta);
+        else if (e2->pressurized) averageOverPipes({e2}, maxHeadDelta);
+        /*if (e1->pressurized) averageOverPipes({e1}, maxHeadDelta);
+        if (e2->pressurized) averageOverPipes({e2}, maxHeadDelta);*/
         return true;
     };
 
@@ -1299,6 +1302,33 @@ void VRPipeSystem::computeHeadFlows(double dt) {
             }
         }
     }
+
+    for (auto n : nodes) {
+        auto node = n.second;
+        auto entity = node->entity;
+        if (entity->is_a("Cylinder")) {
+            if (node->pipes.size() != 2) continue;
+            auto& e1 = node->pipes[0];
+            auto& e2 = node->pipes[1];
+
+            // compute piston movement and flow
+            double Fext = entity->getValue("force", 0.0);
+            double R = entity->getValue("resistance", 0.1);
+            double x = entity->getValue("state", 0.0);
+            double L = entity->getValue("length", 0.0);
+            double a = entity->getValue("area", 0.0);
+            double p1 = e1->hydraulicHead;
+            double p2 = e2->hydraulicHead;
+            double Fhyd = -(p2 - p1) * a;
+            double v = (Fhyd - Fext) / max(R, 1e-6);
+
+            double dx = v * dt;
+            double x_new = clamp(x + dx/L, 0.001, 0.999);
+            dx = (x_new - x) * L;
+            double dflow = a*dx / dt;
+            entity->set("headFlow", toString(dflow));
+        }
+    }
 }
 
 void VRPipeSystem::computeMaxFlows(double dt) {
@@ -1333,8 +1363,9 @@ void VRPipeSystem::computeMaxFlows(double dt) {
                 double cLevel1 = entity->getValue("level1", 1.0);
                 double cLevel2 = entity->getValue("level2", 1.0);
                 double cState = entity->getValue("state", 0.0);
+                double hflow = entity->getValue("headFlow", 0.0);
                 double cVol1 = cVolume * cState;
-                double cVol2 = cVolume * cState;
+                double cVol2 = cVolume * (1.0-cState);
 
                 double v1Air = cVol1 * (1.0-cLevel1);
                 double v1Wat = cVol1 * cLevel1;
@@ -1346,21 +1377,49 @@ void VRPipeSystem::computeMaxFlows(double dt) {
                 double flow1 = e1->maxFlow;
                 double flow2 = e2->maxFlow;
 
-                if (flow1 < 0 && -flow1*dt > v1Wat) { // too much flow out
-                    e1->maxFlow = min(-flow1, v1Wat/dt + flow2); // problem: use flow2 here??
+
+                //hflow = 0;
+                //cout << " cyl ";
+                double maxFlowIn1  = v1Air + max(hflow, 0.0);
+                double maxFlowOut1 = v1Wat - min(hflow, 0.0);
+                double maxFlowIn2  = v2Air - min(hflow, 0.0);
+                double maxFlowOut2 = v2Wat + max(hflow, 0.0);
+
+                if (flow1 < 0 && -flow1*dt > maxFlowOut1) { // too much flow out
+                    //cout << " 1 too much flow out " << abs(flow1*dt) << ">" << maxFlowOut1;
+                    flow1 = -min(-flow1, maxFlowOut1/dt);
+                    //cout << " --> dV: " << flow1*dt << endl;
                 }
 
-                if (flow1 > 0 &&  flow1*dt > v1Air) { // too much flow in
-                    e1->maxFlow = min( flow1,  v1Air/dt + flow2);
+                if (flow1 > 0 &&  flow1*dt > maxFlowIn1) { // too much flow in
+                    //cout << " 1 too much flow in " << abs(flow1*dt) << ">" << maxFlowIn1;
+                    flow1 =  min( flow1, maxFlowIn1/dt);
+                    //cout << " --> dV: " << flow1*dt << endl;
                 }
 
-                if (flow2 < 0 && -flow2*dt > v2Wat) { // too much flow out
-                    e1->maxFlow = min(-flow2, v2Wat/dt + flow1); // problem: use flow1 here??
+                if (flow2 < 0 && -flow2*dt > maxFlowOut2) { // too much flow out
+                    //cout << " 2 too much flow out " << abs(flow2*dt) << ">" << maxFlowOut2;
+                    flow2 = -min(-flow2, maxFlowOut2/dt);
+                    //cout << " --> dV: " << flow2*dt << endl;
                 }
 
-                if (flow2 > 0 &&  flow2*dt > v2Air) { // too much flow in
-                    e1->maxFlow = min( flow2,  v2Air/dt + flow1);
+                if (flow2 > 0 &&  flow2*dt > maxFlowIn2) { // too much flow in
+                    //cout << " 2 too much flow in " << abs(flow2*dt) << ">" << maxFlowIn2;
+                    flow2 =  min( flow2, maxFlowIn2/dt);
+                    //cout << " --> dV: " << flow2*dt << endl;
                 }
+                //cout << endl;
+
+                //cout << " cyl flow, f1: " << flow1 << ", f2: " << flow2 << ", hf: " << hflow << endl;
+                //cout << " maxFlowOut1: " << maxFlowOut1 << ", cLevel1 " << cLevel1 << endl;
+
+                e1->maxFlow = flow1;
+                e2->maxFlow = flow2;
+
+                if (hflow > 0 && e1->pressurized) hflow = min(flow1, hflow);
+                if (hflow < 0 && e2->pressurized) hflow =-min(flow2,-hflow);
+                //hflow = min( abs(flow2), min(abs(flow1), abs(hflow)) ) * (hflow < 0 ? -1 : 1);
+                entity->set("headFlow", toString(hflow));
 
             } else {
                 double nodeAirVolume = 0.0;
@@ -1509,6 +1568,7 @@ void VRPipeSystem::computeMaxFlows(double dt) {
     }
 
     bool needsIteration = true;
+    //cout << "itr max flow.." << endl;
     for (int i=0; needsIteration && i<100; i++) {
         needsIteration = false;
         processNodes();
@@ -1579,25 +1639,22 @@ void VRPipeSystem::updateLevels(double dt) { // TODO: split updatePressurized fr
             auto& e2 = node->pipes[1];
 
             // compute piston movement
-            double Fext = entity->getValue("force", 0.0);
-            double R = entity->getValue("resistance", 10.0);
             double x = entity->getValue("state", 0.0);
             double L = entity->getValue("length", 0.0);
             double a = entity->getValue("area", 0.0);
-            double p1 = e1->hydraulicHead;
-            double p2 = e2->hydraulicHead;
-            double Fhyd = -(p2 - p1) * a;
-            double v = (Fhyd - Fext) / max(R, 1e-6);
+            double dflow = entity->getValue("headFlow", 0.0);
+            double dx = dflow * dt / a;
 
-            double dx = v * dt;
-            double x_new = clamp(x + dx/L, 0.001, 0.999);
-            dx = (x_new - x) * L;
+            // TOTEST
+            //dx = 0;
+            //dflow = 0;
+
+            double x_new = dx + x;
             entity->set("state", toString(x_new));
 
             // piston volume transfer
-            double dflow = a*dx / dt;
-            e1->flow -= dflow;
-            e2->flow += dflow;
+            //e1->flow -= dflow;
+            //e2->flow += dflow;
 
             // compute new levels
             double vol = L*0.5*a;
@@ -1609,20 +1666,15 @@ void VRPipeSystem::updateLevels(double dt) { // TODO: split updatePressurized fr
             double volDelta2 = e2->flow*dt;
             double newLevel1 = clamp(lvl1 + volDelta1 / vol1, 0.0, 1.0);
             double newLevel2 = clamp(lvl2 + volDelta2 / vol2, 0.0, 1.0);
+
             volDelta1 = (newLevel1 - lvl1)*vol1;
             volDelta2 = (newLevel2 - lvl2)*vol2;
             entity->set("level1", toString(newLevel1));
             entity->set("level2", toString(newLevel2));
 
-            // update pipes not submerged by fluid level
-            double h = sqrt(a);
-            auto nPos = graph->getPosition(n.first)->pos();
-            double fluidHeight1 = (newLevel1-0.5)*h + nPos[1];
-            double fluidHeight2 = (newLevel2-0.5)*h + nPos[1];
-            if (e1->height > fluidHeight1) e1->pressurized = false;
-            if (e2->height > fluidHeight2) e2->pressurized = false;
-
-            //cout << " cylinder Fhyd: " << Fhyd << " -> v: " << v << endl;
+            // update pressurized
+            if (newLevel1 < 0.99) e1->pressurized = false;
+            if (newLevel2 < 0.99) e2->pressurized = false;
         }
     }
 
@@ -1648,6 +1700,7 @@ void VRPipeSystem::updateLevels(double dt) { // TODO: split updatePressurized fr
         auto node = n.second;
         auto entity = node->entity;
         if (entity->is_a("Tank")) continue;
+        if (entity->is_a("Cylinder")) continue;
         bool isP = true;
         for (auto& e : node->pipes) if (!e->pressurized) isP = false;
         if (!isP) for (auto& e : node->pipes) e->pressurized = false;
