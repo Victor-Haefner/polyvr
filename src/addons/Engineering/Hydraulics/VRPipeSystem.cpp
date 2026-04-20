@@ -1317,8 +1317,14 @@ void VRPipeSystem::computeHeadFlows(double dt) {
             double x = entity->getValue("state", 0.0);
             double L = entity->getValue("length", 0.0);
             double a = entity->getValue("area", 0.0);
+
             double p1 = e1->hydraulicHead;
             double p2 = e2->hydraulicHead;
+            /*if (abs(p2-p1) < 1e-3) {
+                p1 = e1->pipe.lock()->otherEnd(e1)->hydraulicHead;
+                p2 = e2->pipe.lock()->otherEnd(e2)->hydraulicHead;
+            }*/
+
             double Fhyd = -(p2 - p1) * a;
             double v = (Fhyd - Fext) / max(R, 1e-6);
 
@@ -1327,6 +1333,7 @@ void VRPipeSystem::computeHeadFlows(double dt) {
             dx = (x_new - x) * L;
             double dflow = a*dx / dt;
             entity->set("headFlow", toString(dflow));
+            //cout << " cylinder flow: " << dflow << endl;
         }
     }
 }
@@ -1413,13 +1420,30 @@ void VRPipeSystem::computeMaxFlows(double dt) {
                 //cout << " cyl flow, f1: " << flow1 << ", f2: " << flow2 << ", hf: " << hflow << endl;
                 //cout << " maxFlowOut1: " << maxFlowOut1 << ", cLevel1 " << cLevel1 << endl;
 
+                if (e1->pressurized) {
+                    if (hflow > 0) {
+                        hflow = min(flow1, hflow);
+                        flow1 = min(flow1, hflow);
+                    }
+                }
+
+                if (e2->pressurized) {
+                    if (hflow < 0) {
+                        hflow =-min(flow2,-hflow);
+                        flow2 = min(flow2,-hflow);
+                    }
+                }
+
+                //if (hflow > 0 && e1->pressurized) hflow = min(flow1, hflow);
+                //if (hflow < 0 && e2->pressurized) hflow =-min(flow2,-hflow);
+
                 e1->maxFlow = flow1;
                 e2->maxFlow = flow2;
 
-                if (hflow > 0 && e1->pressurized) hflow = min(flow1, hflow);
-                if (hflow < 0 && e2->pressurized) hflow =-min(flow2,-hflow);
                 //hflow = min( abs(flow2), min(abs(flow1), abs(hflow)) ) * (hflow < 0 ? -1 : 1);
                 entity->set("headFlow", toString(hflow));
+
+                // TODO: add checks to see if water is lost..
 
             } else {
                 double nodeAirVolume = 0.0;
