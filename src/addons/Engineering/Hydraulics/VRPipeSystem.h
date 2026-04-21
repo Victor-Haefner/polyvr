@@ -126,6 +126,8 @@ class VRPipeSystem : public VRGeometry {
         vector<VRPipeSegmentPtr> getInPipes(int nID);
         vector<VRPipeSegmentPtr> getOutPipes(int nID);
 
+        double clamp(double x, double a, double b, bool warn = false, string label = "");
+
         bool goesIn(VRPipeSegmentPtr s, int nID);
         bool goesOut(VRPipeSegmentPtr s, int nID);
         VREntityPtr getEntity(string name);
@@ -135,7 +137,7 @@ class VRPipeSystem : public VRGeometry {
         void computeHydraulicHead(VRPipeEndPtr e);
 
         void assignBoundaryPressures();
-        void solveNodeHeads();
+        void solveNodeHeads(double dt);
         void computeHeadFlows(double dt);
         void computeMaxFlows(double dt);
         void updateLevels(double dt);

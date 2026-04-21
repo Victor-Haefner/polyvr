@@ -1043,6 +1043,15 @@ void VRPipeSystem::updateVisual() {
 
 /** ---- simulation ---- */
 
+double VRPipeSystem::clamp(double x, double a, double b, bool warn, string lbl) {
+    if (warn) {
+        double eps = 1e-9;
+        if (x > b+eps) cout << "Warning in VRPipeSystem::clamp " << lbl << ": " << x << " > " << b << endl;
+        if (x < a-eps) cout << "Warning in VRPipeSystem::clamp " << lbl << ": " << x << " < " << a << endl;
+    }
+    return x<a ? a : x>b ? b : x;
+}
+
 void VRPipeSystem::assignBoundaryPressures() {
     for (auto n : nodes) {
         auto node = n.second;
@@ -1091,7 +1100,7 @@ void VRPipeSystem::assignBoundaryPressures() {
             double h1 = nPos[1] + h*(l1-0.5);
             double h2 = nPos[1] + h*(l2-0.5);
             if (!e1->pressurized) e1->hydraulicHead = h1;
-            if (!e1->pressurized) e2->hydraulicHead = h2;
+            if (!e2->pressurized) e2->hydraulicHead = h2;
         }
     }
 
@@ -1105,7 +1114,7 @@ void VRPipeSystem::assignBoundaryPressures() {
     }
 }
 
-void VRPipeSystem::solveNodeHeads() {
+void VRPipeSystem::solveNodeHeads(double dt) {
     auto averageOverPipes = [&](vector<VRPipeEndPtr> ends, double& maxHeadDelta) {
         double num = 0.0;
         double den = 0.0;
@@ -1172,11 +1181,59 @@ void VRPipeSystem::solveNodeHeads() {
         if (ends.size() != 2) return false;
         auto& e1 = ends[0];
         auto& e2 = ends[1];
+
         if (e1->pressurized && e2->pressurized) averageOverPipes({e1, e2}, maxHeadDelta);
         else if (e1->pressurized) averageOverPipes({e1}, maxHeadDelta);
         else if (e2->pressurized) averageOverPipes({e2}, maxHeadDelta);
+
         /*if (e1->pressurized) averageOverPipes({e1}, maxHeadDelta);
-        if (e2->pressurized) averageOverPipes({e2}, maxHeadDelta);*/
+        if (e2->pressurized) averageOverPipes({e2}, maxHeadDelta);
+        if (!e1->pressurized || !e2->pressurized) return true;
+
+        //double p1 = e1->hydraulicHead;
+        //double p2 = e2->hydraulicHead;
+
+        // compute piston movement and flow
+        double Fext = entity->getValue("force", 0.0);
+        double R = entity->getValue("resistance", 0.1);
+        double x = entity->getValue("state", 0.0);
+        double L = entity->getValue("length", 0.0);
+        double a = entity->getValue("area", 0.0);
+
+        double p1 = e1->hydraulicHead;
+        double p2 = e2->hydraulicHead;
+
+        double dH = p2 - p1; // compute hydraulic gradient
+        double dP = dH * pipe->density * gravity;
+        int dir = sign(dH);
+
+        double flow = sqrt( abs(dP) / Rt ) * dir;
+
+
+        double Fhyd = -(p2 - p1) * a;
+        double v = (Fhyd - Fext) / max(R, 1e-6);
+
+        double dx = v * dt;
+        double x_new = clamp(x + dx/L, 0.001, 0.999);
+        dx = (x_new - x) * L;
+        double hflow = a*dx / dt;
+        entity->set("headFlow", toString(hflow));
+
+
+
+        double A = entity->getValue("area", 1.0);
+        double R = entity->getValue("resistance", 0.1);
+        double Fext = entity->getValue("force", 0.0);
+
+        double Fhyd = (p1 - p2) * A;
+        double v = (Fhyd - Fext) / R;
+        double res = Fhyd - Fext - R * v; // residual of force balance
+
+        double dH = -res / max(A, 1e-6);
+        e1->hydraulicHead += 0.5 * dH;
+        e2->hydraulicHead -= 0.5 * dH;
+        maxHeadDelta = max(maxHeadDelta, abs(dH));*/
+
         return true;
     };
 
@@ -1320,10 +1377,6 @@ void VRPipeSystem::computeHeadFlows(double dt) {
 
             double p1 = e1->hydraulicHead;
             double p2 = e2->hydraulicHead;
-            /*if (abs(p2-p1) < 1e-3) {
-                p1 = e1->pipe.lock()->otherEnd(e1)->hydraulicHead;
-                p2 = e2->pipe.lock()->otherEnd(e2)->hydraulicHead;
-            }*/
 
             double Fhyd = -(p2 - p1) * a;
             double v = (Fhyd - Fext) / max(R, 1e-6);
@@ -1331,20 +1384,21 @@ void VRPipeSystem::computeHeadFlows(double dt) {
             double dx = v * dt;
             double x_new = clamp(x + dx/L, 0.001, 0.999);
             dx = (x_new - x) * L;
-            double dflow = a*dx / dt;
-            entity->set("headFlow", toString(dflow));
-            //cout << " cylinder flow: " << dflow << endl;
+            double hflow = a*dx / dt;
+            entity->set("headFlow", toString(hflow));
+            //cout << " cylinder flow: " << hflow << endl;
         }
     }
 }
 
 void VRPipeSystem::computeMaxFlows(double dt) {
+    cout << "computeMaxFlows" << endl;
     auto computeContainerFlowScaling = [&](string ID, double nodeAirVolume, double nodeWaterVolume, double flowIn, double flowOut) {
         double totalFlow = flowIn - flowOut;
         double maxFlowIn = flowIn;
         double maxFlowOut = flowOut;
-        if ( totalFlow*dt > nodeAirVolume)   maxFlowIn  =  min(flowIn,  nodeAirVolume/dt   + flowOut); // node will fill up, clamp flow in
-        if (-totalFlow*dt > nodeWaterVolume) maxFlowOut =  min(flowOut, nodeWaterVolume/dt + flowIn); // node will drain, clamp flow out
+        if ( totalFlow*dt > nodeAirVolume)   maxFlowIn  =  min(flowIn,  nodeAirVolume/dt   + flowOut); // node will fill up, limit flow in
+        if (-totalFlow*dt > nodeWaterVolume) maxFlowOut =  min(flowOut, nodeWaterVolume/dt + flowIn); // node will drain, limit flow out
 
         double scaleFlowIn  = abs(flowIn)  > 1e-12 ? maxFlowIn  / flowIn  : 1.0;
         double scaleFlowOut = abs(flowOut) > 1e-12 ? maxFlowOut / flowOut : 1.0;
@@ -1353,6 +1407,38 @@ void VRPipeSystem::computeMaxFlows(double dt) {
             cout << "AA " << ID << " " << Vec2d(scaleFlowIn, scaleFlowOut) << ", io: " << Vec2d(flowIn, flowOut) << ", mio: " << Vec2d(maxFlowIn, maxFlowOut) << ", dV: " << totalFlow*dt << endl;
         }*/
         return Vec2d(scaleFlowIn, scaleFlowOut);
+    };
+
+    auto clampCylinderFlows = [&](VRPipeEndPtr& e, double cVolume, double cLevel, double pistonFlow) {
+        //if (!e1->pressuri)
+        double vAir = cVolume * (1.0-cLevel);
+        double vWat = cVolume * cLevel;
+
+        double flow = e->maxFlow;
+        double deltaVol = flow*dt;
+        double maxFlowIn  = vAir + max( pistonFlow, 0.0);
+        double maxFlowOut = vWat + max(-pistonFlow, 0.0);
+
+        if (flow < 0 && -deltaVol > maxFlowOut) { // too much flow out
+            flow = -min(-flow, maxFlowOut/dt);
+        }
+
+        if (flow > 0 &&  deltaVol > maxFlowIn) { // too much flow in
+            flow =  min( flow, maxFlowIn/dt);
+        }
+
+        if (e->pressurized) {
+            if (pistonFlow > 0) {
+                pistonFlow = min(flow, pistonFlow);
+                flow = min(flow, pistonFlow);
+            }
+        }
+
+        //if (hflow > 0 && e1->pressurized) hflow = min(flow1, hflow);
+        //if (hflow < 0 && e2->pressurized) hflow =-min(flow2,-hflow);
+
+        e->maxFlow = flow;
+        return pistonFlow;
     };
 
     auto processNodes = [&]() {
@@ -1366,84 +1452,27 @@ void VRPipeSystem::computeMaxFlows(double dt) {
                 double cArea = entity->getValue("area", 1.0);
                 double cLength = entity->getValue("length", 1.0);
                 double cVolume = cArea * cLength;
-
                 double cLevel1 = entity->getValue("level1", 1.0);
                 double cLevel2 = entity->getValue("level2", 1.0);
-                double cState = entity->getValue("state", 0.0);
                 double hflow = entity->getValue("headFlow", 0.0);
+                double cState = entity->getValue("state", 0.0);
                 double cVol1 = cVolume * cState;
                 double cVol2 = cVolume * (1.0-cState);
 
-                double v1Air = cVol1 * (1.0-cLevel1);
-                double v1Wat = cVol1 * cLevel1;
-                double v2Air = cVol2 * (1.0-cLevel2);
-                double v2Wat = cVol2 * cLevel2;
-
                 auto& e1 = n.second->pipes[0];
                 auto& e2 = n.second->pipes[1];
-                double flow1 = e1->maxFlow;
-                double flow2 = e2->maxFlow;
 
-
-                //hflow = 0;
-                //cout << " cyl ";
-                double maxFlowIn1  = v1Air + max(hflow, 0.0);
-                double maxFlowOut1 = v1Wat - min(hflow, 0.0);
-                double maxFlowIn2  = v2Air - min(hflow, 0.0);
-                double maxFlowOut2 = v2Wat + max(hflow, 0.0);
-
-                if (flow1 < 0 && -flow1*dt > maxFlowOut1) { // too much flow out
-                    //cout << " 1 too much flow out " << abs(flow1*dt) << ">" << maxFlowOut1;
-                    flow1 = -min(-flow1, maxFlowOut1/dt);
-                    //cout << " --> dV: " << flow1*dt << endl;
+                for (int i=0; i<2; i++) {
+                    hflow =  clampCylinderFlows(e1, cVol1, cLevel1,  hflow);
+                    hflow = -clampCylinderFlows(e2, cVol2, cLevel2, -hflow);
                 }
 
-                if (flow1 > 0 &&  flow1*dt > maxFlowIn1) { // too much flow in
-                    //cout << " 1 too much flow in " << abs(flow1*dt) << ">" << maxFlowIn1;
-                    flow1 =  min( flow1, maxFlowIn1/dt);
-                    //cout << " --> dV: " << flow1*dt << endl;
-                }
-
-                if (flow2 < 0 && -flow2*dt > maxFlowOut2) { // too much flow out
-                    //cout << " 2 too much flow out " << abs(flow2*dt) << ">" << maxFlowOut2;
-                    flow2 = -min(-flow2, maxFlowOut2/dt);
-                    //cout << " --> dV: " << flow2*dt << endl;
-                }
-
-                if (flow2 > 0 &&  flow2*dt > maxFlowIn2) { // too much flow in
-                    //cout << " 2 too much flow in " << abs(flow2*dt) << ">" << maxFlowIn2;
-                    flow2 =  min( flow2, maxFlowIn2/dt);
-                    //cout << " --> dV: " << flow2*dt << endl;
-                }
-                //cout << endl;
-
-                //cout << " cyl flow, f1: " << flow1 << ", f2: " << flow2 << ", hf: " << hflow << endl;
-                //cout << " maxFlowOut1: " << maxFlowOut1 << ", cLevel1 " << cLevel1 << endl;
-
-                if (e1->pressurized) {
-                    if (hflow > 0) {
-                        hflow = min(flow1, hflow);
-                        flow1 = min(flow1, hflow);
-                    }
-                }
-
-                if (e2->pressurized) {
-                    if (hflow < 0) {
-                        hflow =-min(flow2,-hflow);
-                        flow2 = min(flow2,-hflow);
-                    }
-                }
-
-                //if (hflow > 0 && e1->pressurized) hflow = min(flow1, hflow);
-                //if (hflow < 0 && e2->pressurized) hflow =-min(flow2,-hflow);
-
-                e1->maxFlow = flow1;
-                e2->maxFlow = flow2;
+                //cout << " maxflow wV: " << cVol1*cLevel1 << " -> " << cVol1*cLevel1 + hflow*dt << ", " << (cVol1*cLevel1 + hflow*dt)/(cVol1+hflow*dt) << endl;
+                //cout << " cylinder cV1 " << cVol1 << ", cV: " << cVolume << ", x: " << cState << endl;
+                //cout << "  flows: " << e1->maxFlow << ", " << hflow << ", " << e2->maxFlow << endl;
 
                 //hflow = min( abs(flow2), min(abs(flow1), abs(hflow)) ) * (hflow < 0 ? -1 : 1);
                 entity->set("headFlow", toString(hflow));
-
-                // TODO: add checks to see if water is lost..
 
             } else {
                 double nodeAirVolume = 0.0;
@@ -1496,7 +1525,7 @@ void VRPipeSystem::computeMaxFlows(double dt) {
             }
 
             //if ((totalFlowIn - totalFlowOut)*dt > pipeWaterVolume)
-            //    cout << " flow clamped, flow: " << totalFlowIn - totalFlowOut << ", water vol: " << pipeWaterVolume << ", dt: " << dt << endl;
+            //    cout << " flow limited, flow: " << totalFlowIn - totalFlowOut << ", water vol: " << pipeWaterVolume << ", dt: " << dt << endl;
 
             Vec2d scaleFlowInOut = computeContainerFlowScaling("seg"+toString(pipe->eID), pipeAirVolume, pipeWaterVolume, totalFlowIn, totalFlowOut);
             if (scaleFlowInOut[0] < 0.9) needsIteration = true;
@@ -1608,6 +1637,7 @@ void VRPipeSystem::computeMaxFlows(double dt) {
 }
 
 void VRPipeSystem::updateLevels(double dt) { // TODO: split updatePressurized from updateLevels
+    cout << "updateLevels" << endl;
     for (auto n : nodes) {
         auto node = n.second;
         auto entity = node->entity;
@@ -1629,7 +1659,7 @@ void VRPipeSystem::updateLevels(double dt) { // TODO: split updatePressurized fr
             }
 
             double volDelta = totalFlow*dt;
-            double newLevel = clamp(tankLevel + volDelta / tankVolume, 0.0, 1.0);
+            double newLevel = clamp(tankLevel + volDelta / tankVolume, 0.0, 1.0, true, "tank lvl");
             volDelta = (newLevel - tankLevel)*tankVolume;
             entity->set("level", toString(newLevel));
 
@@ -1644,7 +1674,7 @@ void VRPipeSystem::updateLevels(double dt) { // TODO: split updatePressurized fr
                 double p = initialGasPressure * initialGasVolume / newVolume;
                 //cout << " tank: " << n.first << " p gauge: " << tankPressure-atmosphericPressure << " level: " << newLevel << " tV " << tankVolume << endl;
 
-                p = clamp(p, atmosphericPressure * 0.001, atmosphericPressure * 2000.0);
+                p = clamp(p, atmosphericPressure * 0.001, atmosphericPressure * 2000.0, true, "tank pressure");
                 entity->set("pressure", toString(p));
                 //cout << " new tank pressure: " << p << endl;
             }
@@ -1667,7 +1697,8 @@ void VRPipeSystem::updateLevels(double dt) { // TODO: split updatePressurized fr
             double L = entity->getValue("length", 0.0);
             double a = entity->getValue("area", 0.0);
             double dflow = entity->getValue("headFlow", 0.0);
-            double dx = dflow * dt / a;
+            double vol = L*a;
+            double dx = dflow * dt / vol;
 
             // TOTEST
             //dx = 0;
@@ -1681,24 +1712,28 @@ void VRPipeSystem::updateLevels(double dt) { // TODO: split updatePressurized fr
             //e2->flow += dflow;
 
             // compute new levels
-            double vol = L*0.5*a;
             double lvl1 = entity->getValue("level1", 1.0);
             double lvl2 = entity->getValue("level2", 1.0);
             double vol1 = vol * x_new;
             double vol2 = vol * (1.0-x_new);
-            double volDelta1 = e1->flow*dt;
-            double volDelta2 = e2->flow*dt;
-            double newLevel1 = clamp(lvl1 + volDelta1 / vol1, 0.0, 1.0);
-            double newLevel2 = clamp(lvl2 + volDelta2 / vol2, 0.0, 1.0);
+            double volWater1 = vol*x*lvl1 + e1->flow*dt;
+            double volWater2 = vol*(1.0-x)*lvl2 + e2->flow*dt;
+            double newLevel1 = clamp(volWater1 / vol1, 0.0, 1.0, true, "cylinder lvl1");
+            double newLevel2 = clamp(volWater2 / vol2, 0.0, 1.0, true, "cylinder lvl2");
 
-            volDelta1 = (newLevel1 - lvl1)*vol1;
-            volDelta2 = (newLevel2 - lvl2)*vol2;
             entity->set("level1", toString(newLevel1));
             entity->set("level2", toString(newLevel2));
 
+            //cout << " level V1old " << vol*x << ", V1new: " << vol*x+dflow*dt << " / " << vol1 << endl;
+            //cout << " level V1 " << vol*x << ", cV: " << vol << ", x: " << x << endl;
+            //cout << " level flows " << e1->flow << ", " << dflow << ", " << e2->flow << endl;
+            //cout << " level wV: " << vol*x*lvl1 << " -> " << vol*x*lvl1 + dflow*dt << ", " << (vol*x*lvl1 + dflow*dt)/vol1 << endl;
+            //cout << "  lvl1: " << (vol*x*lvl1 + e1->flow*dt)/vol1 << ",  lvl2: " << (vol*x*lvl2 + e2->flow*dt)/vol2 << endl;
+
             // update pressurized
-            if (newLevel1 < 0.99) e1->pressurized = false;
-            if (newLevel2 < 0.99) e2->pressurized = false;
+            if (newLevel1 < 0.995) e1->pressurized = false;
+            if (newLevel2 < 0.995) e2->pressurized = false;
+            // TODO: raising to 0.999 introduces volume issues..
         }
     }
 
@@ -1707,7 +1742,7 @@ void VRPipeSystem::updateLevels(double dt) { // TODO: split updatePressurized fr
         auto e1 = pipe->end1.lock();
         auto e2 = pipe->end2.lock();
         double flow = e1->flow + e2->flow; // positive flow is going out the pipe
-        pipe->level = clamp(pipe->level - flow*dt / pipe->volume, 0.0, 1.0);
+        pipe->level = clamp(pipe->level - flow*dt / pipe->volume, 0.0, 1.0, true);
 
         // hysteresis
         if ( pipe->pressurized && pipe->level < 0.95) pipe->pressurized = false;
@@ -1828,7 +1863,7 @@ void VRPipeSystem::update() {
     for (int i=0; i<subSteps; i++) {
         assignBoundaryPressures();
         auto t1 = VRTimer::create();
-        solveNodeHeads();
+        solveNodeHeads(dt);
         auto T1 = t1->stop();
         computeHeadFlows(dt);
         auto t2 = VRTimer::create();
