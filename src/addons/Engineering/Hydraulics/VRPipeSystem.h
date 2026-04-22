@@ -83,7 +83,7 @@ class VRPipeNode {
         VREntityPtr entity;
         string name;
         vector<VRPipeEndPtr> pipes;
-        VRAnimCbPtr gaugeCb;
+        VRAnimCbPtr userCb;
 
         // for control valves
         map<int, int> endGroup;
@@ -198,7 +198,7 @@ class VRPipeSystem : public VRGeometry {
 
 		void addControlValvePath(int i, int A, int B, double x0, double xs, double K);
 
-		void setGaugeCb(int i, VRAnimCbPtr cb);
+		void setNodeCb(int i, VRAnimCbPtr cb);
 
 		double computeTotalMass();
         void printSystem();

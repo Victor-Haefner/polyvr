@@ -406,7 +406,7 @@ double VRPipeSystem::getTankDensity(int nID) { auto e = getNodeEntity(nID); retu
 double VRPipeSystem::getTankLevel(int nID) { auto e = getNodeEntity(nID); return e ? e->getValue("level", 1.0) : 0.0; }
 double VRPipeSystem::getPump(int nID) { auto e = getNodeEntity(nID); return e ? e->getValue("control", 0.0) : 0.0; }
 double VRPipeSystem::getValveState(int nID) { auto e = getNodeEntity(nID); return e ? e->getValue("state", 1.0) : 1.0; }
-void VRPipeSystem::setGaugeCb(int i, VRAnimCbPtr cb) { if (!nodes.count(i)) return; nodes[i]->gaugeCb = cb; }
+void VRPipeSystem::setNodeCb(int i, VRAnimCbPtr cb) { if (!nodes.count(i)) return; nodes[i]->userCb = cb; }
 
 void VRPipeSystem::setValve(int nID, double b)  { auto e = getNodeEntity(nID); if (e) e->set("state", toString(b)); }
 void VRPipeSystem::setTankPressure(int nID, double p) { auto e = getNodeEntity(nID); if (e) e->set("pressure", toString(p)); }
@@ -1734,6 +1734,11 @@ void VRPipeSystem::updateLevels(double dt) { // TODO: split updatePressurized fr
             if (newLevel1 < 0.995) e1->pressurized = false;
             if (newLevel2 < 0.995) e2->pressurized = false;
             // TODO: raising to 0.999 introduces volume issues..
+
+
+            if (n.second->userCb) {
+                (*n.second->userCb)(x_new);
+            }
         }
     }
 
@@ -1773,7 +1778,7 @@ void VRPipeSystem::updatePressures(double dt) {
             e->pressure = e->hydraulicHead * pipe->density * gravity;
         }
 
-        if (n.second->gaugeCb) {
+        if (n.second->userCb) {
             auto e = n.second->entity;
             if (e && e->is_a("Gauge")) {
                 auto t = e->getEntity("tank");
@@ -1785,7 +1790,7 @@ void VRPipeSystem::updatePressures(double dt) {
                     if (abs(pt - pressure)>1e-3) {
                         //cout << "updatePressures gauge " << pt << "/" << maxPressure << ", " << indicator << endl;
                         e->set("pressure", toString(pt));
-                        (*n.second->gaugeCb)(indicator);
+                        (*n.second->userCb)(indicator);
                     }
                 }
             }
