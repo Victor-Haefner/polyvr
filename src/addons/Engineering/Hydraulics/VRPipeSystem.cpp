@@ -1182,57 +1182,14 @@ void VRPipeSystem::solveNodeHeads(double dt) {
         auto& e1 = ends[0];
         auto& e2 = ends[1];
 
-        if (e1->pressurized && e2->pressurized) averageOverPipes({e1, e2}, maxHeadDelta);
-        else if (e1->pressurized) averageOverPipes({e1}, maxHeadDelta);
-        else if (e2->pressurized) averageOverPipes({e2}, maxHeadDelta);
-
-        /*if (e1->pressurized) averageOverPipes({e1}, maxHeadDelta);
+        if (!e1->pressurized && !e2->pressurized) return true;
+        if (e1->pressurized) averageOverPipes({e1}, maxHeadDelta);
         if (e2->pressurized) averageOverPipes({e2}, maxHeadDelta);
-        if (!e1->pressurized || !e2->pressurized) return true;
 
-        //double p1 = e1->hydraulicHead;
-        //double p2 = e2->hydraulicHead;
-
-        // compute piston movement and flow
-        double Fext = entity->getValue("force", 0.0);
-        double R = entity->getValue("resistance", 0.1);
-        double x = entity->getValue("state", 0.0);
-        double L = entity->getValue("length", 0.0);
-        double a = entity->getValue("area", 0.0);
-
-        double p1 = e1->hydraulicHead;
-        double p2 = e2->hydraulicHead;
-
-        double dH = p2 - p1; // compute hydraulic gradient
-        double dP = dH * pipe->density * gravity;
-        int dir = sign(dH);
-
-        double flow = sqrt( abs(dP) / Rt ) * dir;
-
-
-        double Fhyd = -(p2 - p1) * a;
-        double v = (Fhyd - Fext) / max(R, 1e-6);
-
-        double dx = v * dt;
-        double x_new = clamp(x + dx/L, 0.001, 0.999);
-        dx = (x_new - x) * L;
-        double hflow = a*dx / dt;
-        entity->set("headFlow", toString(hflow));
-
-
-
-        double A = entity->getValue("area", 1.0);
-        double R = entity->getValue("resistance", 0.1);
-        double Fext = entity->getValue("force", 0.0);
-
-        double Fhyd = (p1 - p2) * A;
-        double v = (Fhyd - Fext) / R;
-        double res = Fhyd - Fext - R * v; // residual of force balance
-
-        double dH = -res / max(A, 1e-6);
-        e1->hydraulicHead += 0.5 * dH;
-        e2->hydraulicHead -= 0.5 * dH;
-        maxHeadDelta = max(maxHeadDelta, abs(dH));*/
+        // create step
+        double dh = e2->hydraulicHead - e1->hydraulicHead;
+        e1->hydraulicHead += dh*0.01;
+        e2->hydraulicHead -= dh*0.01;
 
         return true;
     };
@@ -1392,7 +1349,7 @@ void VRPipeSystem::computeHeadFlows(double dt) {
 }
 
 void VRPipeSystem::computeMaxFlows(double dt) {
-    cout << "computeMaxFlows" << endl;
+    //cout << "computeMaxFlows" << endl;
     auto computeContainerFlowScaling = [&](string ID, double nodeAirVolume, double nodeWaterVolume, double flowIn, double flowOut) {
         double totalFlow = flowIn - flowOut;
         double maxFlowIn = flowIn;
@@ -1637,7 +1594,6 @@ void VRPipeSystem::computeMaxFlows(double dt) {
 }
 
 void VRPipeSystem::updateLevels(double dt) { // TODO: split updatePressurized from updateLevels
-    cout << "updateLevels" << endl;
     for (auto n : nodes) {
         auto node = n.second;
         auto entity = node->entity;
