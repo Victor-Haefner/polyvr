@@ -1046,8 +1046,8 @@ void VRPipeSystem::updateVisual() {
 double VRPipeSystem::clamp(double x, double a, double b, bool warn, string lbl) {
     if (warn) {
         double eps = 1e-9;
-        if (x > b+eps) cout << "Warning in VRPipeSystem::clamp " << lbl << ": " << x << " > " << b << endl;
-        if (x < a-eps) cout << "Warning in VRPipeSystem::clamp " << lbl << ": " << x << " < " << a << endl;
+        if (x > b+eps) cout << "Warning in VRPipeSystem::clamp " << lbl << ": " << x << " > " << b << ", d: " << abs(x-b) << endl;
+        if (x < a-eps) cout << "Warning in VRPipeSystem::clamp " << lbl << ": " << x << " < " << a << ", d: " << abs(x-b) << endl;
     }
     return x<a ? a : x>b ? b : x;
 }
@@ -1372,25 +1372,38 @@ void VRPipeSystem::computeMaxFlows(double dt) {
         double vWat = cVolume * cLevel;
 
         double flow = e->maxFlow;
-        double deltaVol = flow*dt;
-        double maxFlowIn  = vAir + max( pistonFlow, 0.0);
-        double maxFlowOut = vWat + max(-pistonFlow, 0.0);
+        double deltaWaterVol = flow*dt;
+        double deltaPistonVol = pistonFlow*dt;
+        double maxDeltaVolIn  = vAir + max( deltaPistonVol, 0.0);
+        double maxDeltaVolOut = vWat + max(-deltaPistonVol, 0.0);
 
-        if (flow < 0 && -deltaVol > maxFlowOut) { // too much flow out
-            flow = -min(-flow, maxFlowOut/dt);
+        if (flow < 0 && -deltaWaterVol > maxDeltaVolOut) { // too much flow out
+            flow = -min(-flow, maxDeltaVolOut/dt);
         }
 
-        if (flow > 0 &&  deltaVol > maxFlowIn) { // too much flow in
-            flow =  min( flow, maxFlowIn/dt);
+        if (flow > 0 &&  deltaWaterVol > maxDeltaVolIn) { // too much flow in
+            flow =  min( flow, maxDeltaVolIn/dt);
         }
 
         if (e->pressurized) {
-            if (pistonFlow > 0) {
+            if (pistonFlow > 0 && flow > 0) {
                 pistonFlow = min(flow, pistonFlow);
                 flow = min(flow, pistonFlow);
             }
         }
 
+        double maxPistonFlow = (vAir - deltaWaterVol)/dt;
+
+
+        if (-pistonFlow > maxPistonFlow) pistonFlow = -maxPistonFlow;
+        deltaPistonVol = pistonFlow*dt;
+
+        double newVol = cVolume + deltaPistonVol;
+        double newVolWater = vWat + flow*dt;
+        double newLevel = newVolWater / newVol;
+        clamp(newLevel, 0.0, 1.0, true, " clampCylinderFlows lvl");
+
+        //cout << " clampCylinderFlows fc: " << pistonFlow << ", newLevel: " << newLevel << ", newVolWater: " << newVolWater << ", newVol: " << newVol << endl;
         //if (hflow > 0 && e1->pressurized) hflow = min(flow1, hflow);
         //if (hflow < 0 && e2->pressurized) hflow =-min(flow2,-hflow);
 
@@ -1668,27 +1681,41 @@ void VRPipeSystem::updateLevels(double dt) { // TODO: split updatePressurized fr
             //e2->flow += dflow;
 
             // compute new levels
-            double lvl1 = entity->getValue("level1", 1.0);
-            double lvl2 = entity->getValue("level2", 1.0);
+            double _lvl1 = entity->getValue("level1", 1.0);
+            double _lvl2 = entity->getValue("level2", 1.0);
+            double _vol1 = vol * x;
+            double _vol2 = vol * (1.0-x);
+            double _volWater1 = _vol1*_lvl1;
+            double _volWater2 = _vol2*_lvl2;
+
             double vol1 = vol * x_new;
             double vol2 = vol * (1.0-x_new);
-            double volWater1 = vol*x*lvl1 + e1->flow*dt;
-            double volWater2 = vol*(1.0-x)*lvl2 + e2->flow*dt;
-            double newLevel1 = clamp(volWater1 / vol1, 0.0, 1.0, true, "cylinder lvl1");
-            double newLevel2 = clamp(volWater2 / vol2, 0.0, 1.0, true, "cylinder lvl2");
+            double volWater1 = clamp(_volWater1 + e1->flow*dt, 0.0, vol1, true, "cylinder volWater1");
+            double volWater2 = clamp(_volWater2 + e2->flow*dt, 0.0, vol2, true, "cylinder volWater2");
+            double lvl1 = volWater1/vol1;
+            double lvl2 = volWater2/vol2;
+
+            /*cout << " level cV: " << vol << ", x: " << x << " -> " << x_new << endl;
+            cout << " level flows f1: " << e1->flow << ", fc: " << dflow << ", f2: " << e2->flow << endl;
+            cout << " level dVw1: " << e1->flow*dt << ", dVc: " << dflow*dt << ", dVw2: " << e2->flow*dt << endl;
+            cout << " level V1: " << _vol1 << " -> " << vol1 << ", V2: " << _vol2 << " -> " << vol2 << endl;
+            cout << " level wV1: " << _volWater1 << " -> " << volWater1 << ", wV2: " << _volWater2 << " -> " << volWater2 << endl;
+            cout << " level wV1+cf: " << _volWater1 << " -> " << _volWater1+dflow*dt << ", wV2-cf: " << _volWater2 << " -> " << _volWater2-dflow*dt << endl;
+            cout << " level lvl1: " << _lvl1 << " -> " << lvl1 << ",  lvl2: " << _lvl2 << " -> " << lvl2 << endl;
+            cout << " level lvl1-1: " << _lvl1-1.0 << " -> " << lvl1-1.0 << ",  lvl2-1: " << _lvl2-1.0 << " -> " << lvl2-1.0 << endl;
+            cout << " level max dflow: " << (_vol2*(1.0-_lvl2) - e2->flow*dt)/dt << ", dflow: " << dflow << endl;
+            cout << "    " << volWater2 / vol2 - 1.0 << " " << vol2 - volWater2 << endl;*/
+
+            double newLevel1 = clamp(lvl1, 0.0, 1.0, true, "cylinder lvl1");
+            double newLevel2 = clamp(lvl2, 0.0, 1.0, true, "cylinder lvl2");
 
             entity->set("level1", toString(newLevel1));
             entity->set("level2", toString(newLevel2));
 
-            //cout << " level V1old " << vol*x << ", V1new: " << vol*x+dflow*dt << " / " << vol1 << endl;
-            //cout << " level V1 " << vol*x << ", cV: " << vol << ", x: " << x << endl;
-            //cout << " level flows " << e1->flow << ", " << dflow << ", " << e2->flow << endl;
-            //cout << " level wV: " << vol*x*lvl1 << " -> " << vol*x*lvl1 + dflow*dt << ", " << (vol*x*lvl1 + dflow*dt)/vol1 << endl;
-            //cout << "  lvl1: " << (vol*x*lvl1 + e1->flow*dt)/vol1 << ",  lvl2: " << (vol*x*lvl2 + e2->flow*dt)/vol2 << endl;
 
             // update pressurized
-            if (newLevel1 < 0.995) e1->pressurized = false;
-            if (newLevel2 < 0.995) e2->pressurized = false;
+            if (newLevel1 < 0.999) e1->pressurized = false;
+            if (newLevel2 < 0.999) e2->pressurized = false;
             // TODO: raising to 0.999 introduces volume issues..
 
 
