@@ -4,6 +4,7 @@
 #include "core/objects/geometry/OSGGeometry.h"
 #include "core/scene/VRScene.h"
 #include "core/utils/toString.h"
+#include "core/math/partitioning/boundingbox.h"
 
 #include <OpenSG/OSGGeometry.h>
 #include <OpenSG/OSGGeoProperties.h>
@@ -16,11 +17,20 @@ template<> int toValue(stringstream& ss, VRSelector::VISUAL& e) {
     string s = ss.str();
     if (s == "OUTLINE") { e = VRSelector::OUTLINE; return true; }
     if (s == "OVERLAY") { e = VRSelector::OVERLAY; return true; }
+    if (s == "BOX") { e = VRSelector::BOX; return true; }
     return false;
 }
 
 VRSelector::VRSelector() {
     selection = VRSelection::create();
+    boxRoot = VRObject::create("boxRoot");
+
+    auto scene = VRScene::getCurrent();
+    if (scene) scene->getRoot()->addChild(boxRoot);
+}
+
+VRSelector::~VRSelector() {
+    boxRoot->destroy();
 }
 
 VRSelectorPtr VRSelector::create() { return VRSelectorPtr( new VRSelector() ); }
@@ -34,20 +44,37 @@ void VRSelector::update() {
     deselect();
     if (!selection) return;
 
-    // highlight selected objects
-    for (auto g : selection->getSelected()) {
-        auto geo = g.lock();
-        if (!geo) continue;
-        if (!geo->getMaterial()) continue;
-        orig_mats.push_back(MatStore(geo));
+    if (visual == BOX) {
+        boxRoot->show();
+        boxRoot->clearChildren();
 
-        VRMaterialPtr mat = getMat();
-        mat->prependPasses(geo->getMaterial());
-        if (visual == OUTLINE) {
-            mat->setActivePass(0);
-            mat->setStencilBuffer(true, 1,-1, GL_ALWAYS, GL_KEEP, GL_KEEP, GL_REPLACE);
+        for (auto g : selection->getSelected()) {
+            auto geo = g.lock();
+            if (!geo) continue;
+            cout << "VRSelector::update box " << geo->getName() << endl;
+
+            auto box = geo->getWorldBoundingbox(true)->asGeometry();
+            box->getMaterial()->setDiffuse(color);
+            boxRoot->addChild(box);
         }
-        geo->setMaterial(mat);
+    }
+
+    // highlight selected objects
+    if (visual == OUTLINE || visual == OVERLAY) {
+        for (auto g : selection->getSelected()) {
+            auto geo = g.lock();
+            if (!geo) continue;
+            if (!geo->getMaterial()) continue;
+            orig_mats.push_back(MatStore(geo));
+
+            VRMaterialPtr mat = getMat();
+            mat->prependPasses(geo->getMaterial());
+            if (visual == OUTLINE) {
+                mat->setActivePass(0);
+                mat->setStencilBuffer(true, 1,-1, GL_ALWAYS, GL_KEEP, GL_KEEP, GL_REPLACE);
+            }
+            geo->setMaterial(mat);
+        }
     }
 
     // visualise subselections
@@ -102,6 +129,7 @@ VRMaterialPtr VRSelector::getMat() {
 
     mat->setDiffuse(color);
     mat->setLineWidth(width, smooth);
+
     if (visual == OUTLINE) {
 #ifndef OSG_OGL_ES2
         mat->setFrontBackModes(GL_LINE, GL_LINE);
@@ -110,10 +138,15 @@ VRMaterialPtr VRSelector::getMat() {
         mat->setStencilBuffer(false, 1,-1, GL_NOTEQUAL, GL_KEEP, GL_KEEP, GL_REPLACE);
         mat->ignoreMeshColors(true);
     }
+
     if (visual == OVERLAY) {
         mat->setTransparency(transparency);
         mat->ignoreMeshColors(true);
         //mat->addPass();
+    }
+
+    if (visual == BOX) {
+        ;
     }
 
     return mat;
