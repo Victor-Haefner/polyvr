@@ -53,6 +53,7 @@ void VRPipeSegment::computeGeometry() {
     //resistance = 8 * viscosity * length / (Pi * pow(radius,4));
     resistance = friction * length * density / ( 4 * radius * pow(area,2));
     if (resistance < 1e-9) resistance = 1.0;
+    resistance = min(resistance, 1e12); // TODO: rework this clamp
 }
 
 
@@ -1060,7 +1061,7 @@ void VRPipeSystem::assignBoundaryPressures() {
 
         if (entity->is_a("Outlet")) {
             double outletRadius = entity->getValue("radius", 0.0);
-            if (outletRadius < 1e-6) continue; // closed
+            if (outletRadius < 1e-9) continue; // closed
 
             double outletPressure = entity->getValue("pressure", atmosphericPressure);
             for (auto& e : node->pipes) {
@@ -1127,7 +1128,7 @@ void VRPipeSystem::solveNodeHeads(double dt) {
             den += 1.0 / R;
         }
 
-        if (abs(den) < 1e-9) return;
+        if (abs(den) < 1e-13) return; // TODO: rework this eps
         double newHead = num / den;
 
         for (auto& e : ends) {
@@ -1305,7 +1306,7 @@ void VRPipeSystem::computeHeadFlows(double dt) {
         } else {
             double A = pipe->area;
             double K = (2.0 * A * A * Rt) / pipe->density; // convert quadratic resistance to loss coefficient
-            K = std::max(K, 1e-6); // numerical safety
+            K = std::max(K, 1e-8); // numerical safety
 
             for (auto& e : {e1,e2}) {
                 double dH = e->hydraulicHead - pipe->hydraulicHead;
@@ -1336,7 +1337,7 @@ void VRPipeSystem::computeHeadFlows(double dt) {
             double p2 = e2->hydraulicHead;
 
             double Fhyd = -(p2 - p1) * a;
-            double v = (Fhyd - Fext) / max(R, 1e-6);
+            double v = (Fhyd - Fext) / max(R, 1e-9);
 
             double dx = v * dt;
             double x_new = clamp(x + dx/L, 0.001, 0.999);
@@ -1594,7 +1595,7 @@ void VRPipeSystem::computeMaxFlows(double dt) {
 
     bool needsIteration = true;
     //cout << "itr max flow.." << endl;
-    for (int i=0; needsIteration && i<100; i++) {
+    for (int i=0; needsIteration && i<30; i++) {
         needsIteration = false;
         processNodes();
         processSegments(needsIteration);
