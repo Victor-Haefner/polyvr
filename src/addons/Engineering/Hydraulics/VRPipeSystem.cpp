@@ -50,10 +50,16 @@ void VRPipeSegment::setLength(double l) {
 void VRPipeSegment::computeGeometry() {
     area = Pi * pow(radius,2);
     volume = area * length;
-    //resistance = 8 * viscosity * length / (Pi * pow(radius,4));
-    resistance = friction * length * density / ( 4 * radius * pow(area,2));
-    if (resistance < 1e-9) resistance = 1.0;
-    resistance = min(resistance, 1e12); // TODO: rework this clamp
+    double fill = max(level, 0.05);
+    double rEff = radius * sqrt(fill);
+    resistanceLaminar = (8.0 * viscosity * length) / (Pi * pow(rEff, 4));
+    resistanceTurbulent = friction * length * density / ( 4 * radius * pow(area,2));
+    //cout << " resistance: " << resistance << ", L: " << length << ", f: " << friction << ", D: " << density << ", R: " << radius << ", A: " << area << endl;
+    if (resistanceLaminar < 1e-9) resistanceLaminar = 1.0;
+    if (resistanceTurbulent < 1e-9) resistanceTurbulent = 1.0;
+    resistanceLaminar = min(resistanceLaminar, 1e12); // TODO: rework this clamp
+    resistanceTurbulent = min(resistanceTurbulent, 1e12); // TODO: rework this clamp
+    resistance = max(resistanceLaminar, resistanceTurbulent);
 }
 
 
@@ -1288,31 +1294,51 @@ void VRPipeSystem::solveNodeHeads(double dt) {
 void VRPipeSystem::computeHeadFlows(double dt) {
     auto sign = [](double v) { return (v > 0) - (v < 0); };
 
+    auto computeLaminarFlow = [&](const double& dP, const VRPipeSegmentPtr& pipe) -> double {
+        double R = pipe->resistance; // Hagen–Poiseuille resistance
+        if (R < 1e-12) return 0.0;
+        return dP / R;
+    };
+
+    auto computeTurbulentFlow = [&](const double& dP, const VRPipeSegmentPtr& pipe) -> double {
+        double R = pipe->resistance;
+        if (R < 1e-12) return 0.0;
+        int dir = sign(dP);
+        return sqrt( abs(dP) / R ) * dir;
+    };
+
+    auto computeFlow = [&](const double& dH, const VRPipeSegmentPtr& pipe) -> double {
+        double dP = dH * pipe->density * gravity;
+        double k = pipe->regime;
+        if (k <= 0.0) return computeLaminarFlow(dP, pipe);
+        if (k >= 1.0) return computeTurbulentFlow(dP, pipe);
+        double Ql = computeLaminarFlow(dP, pipe);
+        double Qt = computeTurbulentFlow(dP, pipe);
+        return Ql*(1.0-k) + Qt*k;
+    };
+
     for (auto& s : segments) {
         auto& pipe = s.second;
+        double Rt = pipe->resistance;
         auto e1 = pipe->end1.lock();
         auto e2 = pipe->end2.lock();
-        double Rt = pipe->resistance;
+        // TODO: rework dynamics model, add flow inertia! (flow accelleration!)
 
         if (pipe->pressurized) {
             double dH = e2->hydraulicHead - e1->hydraulicHead; // compute hydraulic gradient
-            double dP = dH * pipe->density * gravity;
-            int dir = sign(dH);
+            double flow = computeFlow(dH, pipe);
 
-            double flow = sqrt( abs(dP) / Rt ) * dir;
+            if (abs(flow) > 1e-5) {
+                static int I = 0; I++;
+                if (I<10) cout << "Q: " << flow << ", dH: " << dH << ", H1: " << e1->hydraulicHead << ", H2: " << e2->hydraulicHead << ", regime: " << pipe->regime << ", R: " << pipe->resistance << endl;
+            }
 
             e1->headFlow =  flow;
             e2->headFlow = -flow;
         } else {
-            double A = pipe->area;
-            double K = (2.0 * A * A * Rt) / pipe->density; // convert quadratic resistance to loss coefficient
-            K = std::max(K, 1e-8); // numerical safety
-
             for (auto& e : {e1,e2}) {
                 double dH = e->hydraulicHead - pipe->hydraulicHead;
-                double dP = dH * pipe->density * gravity;
-                int dir = sign(dH);
-                double flow = sqrt( abs(dP) / Rt ) * dir;
+                double flow = computeFlow(dH, pipe);
                 e->headFlow = -flow;
             }
         }
@@ -1774,6 +1800,43 @@ void VRPipeSystem::updatePressures(double dt) {
     }
 }
 
+void VRPipeSystem::updateRegimes(double dt) {
+    auto computeReynoldsNumber = [](const VRPipeSegmentPtr& pipe) { // inertial forces / viscous forces
+        auto e1 = pipe->end1.lock();
+        auto e2 = pipe->end2.lock();
+        double D = 2*pipe->radius;
+        double fill = max(pipe->level, 0.05); // avoid singularity
+        double A = pipe->area * fill; // approximation of circular geometry
+        if (A < 1e-9) return 0.0;
+
+        double Q = max(abs(e1->flow), abs(e2->flow)); // pick active side
+        double v = Q/A;
+        double Re = pipe->density*v*D / pipe->viscosity;
+
+        static int I = 0; I++;
+        if (I<10) cout << "computeReynoldsNumber, Q: " << Q << ", v: " << v << ", A: " << A << ", Dens: " << pipe->density << ", vis: " << pipe->viscosity << ", Re: " << Re << endl;
+
+        return Re;
+    };
+
+    for (auto& s : segments) {
+        auto& pipe = s.second;
+        double Re = computeReynoldsNumber(pipe);
+        pipe->regime = clamp((Re - 2300) / (4000 - 2300), 0.0, 1.0); // normalize, <0 -> laminar, >1 -> turbulent
+
+        double fill = max(pipe->level, 0.05);
+        double r_eff = pipe->radius * sqrt(fill);
+        double mu = pipe->viscosity;
+        double L = pipe->length;
+        pipe->resistanceLaminar = (8.0 * mu * L) / (M_PI * pow(r_eff, 4));
+
+        double Rl = max(pipe->resistanceLaminar, pipe->resistanceTurbulent);
+        double Rt = pipe->resistanceTurbulent;
+        pipe->resistance = Rl*(1.0-pipe->regime) + Rt*pipe->regime;
+
+   }
+}
+
 void VRPipeSystem::computeAdvectiveHeatTransfer(double dt) {
     for (auto& n : nodes) { // --- 1. Reset heat flux accumulator at nodes ---
         auto e = n.second->entity;
@@ -1853,6 +1916,7 @@ void VRPipeSystem::update() {
         updateLevels(dt);
         computeAdvectiveHeatTransfer(dt);
         updatePressures(dt);
+        updateRegimes(dt);
         //cout << " VRPipeSystem::update " << T1 << ", " << T2 << endl;
     }
 

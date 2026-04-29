@@ -50,7 +50,10 @@ class VRPipeSegment {
         double liquidMin = 0.0;
         double liquidMax = 0.0;
 
+        double resistanceLaminar = 0.0;
+        double resistanceTurbulent = 0.0;
         double resistance = 0.0;
+        double regime = 0.0; // 0 laminar, 1 turbulent
         double density = 1000.0; // kg / m3
         double viscosity = 1e-3; // Pa s
         double level = 0.0;
@@ -143,6 +146,7 @@ class VRPipeSystem : public VRGeometry {
         void updateLevels(double dt);
         void computeAdvectiveHeatTransfer(double dt);
         void updatePressures(double dt);
+        void updateRegimes(double dt);
 
 	public:
 		VRPipeSystem();
