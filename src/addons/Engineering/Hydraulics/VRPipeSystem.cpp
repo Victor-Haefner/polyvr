@@ -82,6 +82,20 @@ void VRPipeSegment::updateResistance() {
     //resistance = resistanceTurbulent; //max(resistanceLaminar, resistanceTurbulent); // TODO
 }
 
+double VRPipeSegment::computeEffectiveResistance(const double& flow) {
+    double k = regime;
+    double rho_g = density * gravity;
+    double Rl = resistanceLaminar / rho_g;
+    if (k <= 0.0) return max( Rl, 1e-9 );
+
+    double Q = abs(flow);
+    if (Q < 1e-6) return max( Rl, 1e-9 );
+    double Rt = resistanceTurbulent * Q / rho_g;
+    if (k >= 1.0) return max( Rt, 1e-9 );
+
+    return max( Rl*(1.0-k) + Rt*k, 1e-9 );
+};
+
 // Pipe Node ----
 
 VRPipeNode::VRPipeNode(VREntityPtr entity) : entity(entity) {}
@@ -526,6 +540,8 @@ void VRPipeSystem::updateInspection(int nID) {
 }
 
 void VRPipeSystem::updateVisual() {
+    auto sign = [](double v) { return (v > 0) - (v < 0); };
+
     if (!doVisual) {
         VRGeoData data(ptr());
         if (data.size() > 0) {
@@ -973,7 +989,7 @@ void VRPipeSystem::updateVisual() {
         double v0 = 0.5; // m/s
         double v_ref = 4.0; // m/s
         double v = flow/s.second->area;
-        double F = 2.0*r*std::asinh(abs(v) / v0) / std::asinh(v_ref / v0);
+        double F = -sign(v) * 2.0*r*std::asinh(abs(v) / v0) / std::asinh(v_ref / v0);
 
         for (int j=0; j<4; j++) {
             int j1 = i+20+j;
@@ -1153,20 +1169,6 @@ void VRPipeSystem::solveNodeHeads(double dt) {
         return H / ends.size();
     };
 
-    auto computeEffectiveResistance = [&](const VRPipeSegmentPtr& pipe, const double& flow) -> double {
-        double k = pipe->regime;
-        double rho_g = pipe->density * gravity;
-        double Rl = pipe->resistanceLaminar / rho_g;
-        if (k <= 0.0) return max( Rl, 1e-9 );
-
-        double Q = abs(flow);
-        if (Q < 1e-6) return max( Rl, 1e-9 );
-        double Rt = pipe->resistanceTurbulent * Q / rho_g;
-        if (k >= 1.0) return max( Rt, 1e-9 );
-
-        return max( Rl*(1.0-k) + Rt*k, 1e-9 );
-    };
-
     auto computeAverage = [&](const vector<VRPipeEndPtr>& ends) -> double {
         if (ends.size() == 0) return 0;
         if (ends.size() == 1) return ends[0]->pipe.lock()->hydraulicHead;
@@ -1176,7 +1178,7 @@ void VRPipeSystem::solveNodeHeads(double dt) {
 
         for (auto& e : ends) {
             auto pipe = e->pipe.lock();
-            double R = computeEffectiveResistance(pipe, e->flow);
+            double R = pipe->computeEffectiveResistance(e->flow);
             double H = pipe->hydraulicHead;
             num += H / R;
             den += 1.0 / R;
@@ -1346,7 +1348,7 @@ void VRPipeSystem::solveNodeHeads(double dt) {
 void VRPipeSystem::computeHeadFlows(double dt) {
     auto sign = [](double v) { return (v > 0) - (v < 0); };
 
-    auto computeLaminarFlow = [&](const double& dP, const VRPipeSegmentPtr& pipe, bool halfLength) -> double {
+    /*auto computeLaminarFlow = [&](const double& dP, const VRPipeSegmentPtr& pipe, bool halfLength) -> double {
         double R = pipe->resistanceLaminar;
         if (R < 1e-12) return 0.0;
         if (halfLength) R *= 0.5;
@@ -1359,16 +1361,22 @@ void VRPipeSystem::computeHeadFlows(double dt) {
         if (halfLength) R *= 0.5;
         int dir = sign(dP);
         return sqrt( abs(dP) / R ) * dir;
-    };
+    };*/
 
-    auto computeFlow = [&](const double& dH, const VRPipeSegmentPtr& pipe, bool halfLength = false) -> double {
+    auto computeFlow = [&](const double& dH, const VRPipeSegmentPtr& pipe, const double& Q, bool halfLength = false) -> double {
         double dP = dH * pipe->density * gravity;
         double k = pipe->regime;
-        if (k <= 0.0) return computeLaminarFlow(dP, pipe, halfLength);
-        if (k >= 1.0) return computeTurbulentFlow(dP, pipe, halfLength);
-        double Ql = computeLaminarFlow(dP, pipe, halfLength);
-        double Qt = computeTurbulentFlow(dP, pipe, halfLength);
-        return Ql*(1.0-k) + Qt*k;
+
+        double L = pipe->density * pipe->length / max(pipe->area * max(pipe->level, 0.05), 1e-9); // inertance
+        double R = pipe->computeEffectiveResistance(Q);
+        if (halfLength) { R *= 0.5; L *= 0.5; }
+        double loss = R * Q * pipe->density * gravity;
+
+        double dQ = (dP-loss) / L;
+        double maxStep = 2.0 * abs(dP) / L;
+        dQ = clamp(dQ, -maxStep, maxStep); // stability
+
+        return Q + dQ*dt;
     };
 
     for (auto& s : segments) {
@@ -1379,7 +1387,7 @@ void VRPipeSystem::computeHeadFlows(double dt) {
 
         if (pipe->pressurized) {
             double dH = e2->hydraulicHead - e1->hydraulicHead; // compute hydraulic gradient
-            double flow = computeFlow(dH, pipe);
+            double flow = computeFlow(dH, pipe, e1->flow);
 
             if (abs(flow) > 1e-5) {
                 static int I = 0; I++;
@@ -1391,7 +1399,7 @@ void VRPipeSystem::computeHeadFlows(double dt) {
         } else {
             for (auto& e : {e1,e2}) {
                 double dH = e->hydraulicHead - pipe->hydraulicHead;
-                double flow = computeFlow(dH, pipe, true);
+                double flow = computeFlow(dH, pipe, -e->flow, true);
                 e->headFlow = -flow;
             }
         }

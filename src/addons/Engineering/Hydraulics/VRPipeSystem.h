@@ -50,6 +50,7 @@ class VRPipeSegment {
         double liquidMin = 0.0;
         double liquidMax = 0.0;
 
+        double gravity = 9.81;
         double resistanceLaminar = 0.0;
         double resistanceTurbulent = 0.0;
         //double resistance = 0.0;
@@ -80,6 +81,8 @@ class VRPipeSegment {
         void updateResistance();
         void setLength(double l);
         void computeGeometry();
+
+        double computeEffectiveResistance(const double& flow);
 };
 
 class VRPipeNode {
