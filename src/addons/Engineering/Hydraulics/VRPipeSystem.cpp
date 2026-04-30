@@ -1153,7 +1153,18 @@ void VRPipeSystem::solveNodeHeads(double dt) {
         return H / ends.size();
     };
 
-    auto computeLaminarAverage = [&](const vector<VRPipeEndPtr>& ends) -> double {
+    auto computeEffectiveResistance = [&](const VRPipeSegmentPtr& pipe, const double& flow) -> double {
+        double k = pipe->regime;
+        double Rl = max( pipe->resistanceLaminar / (pipe->density * gravity), 1e-9 );
+        if (k <= 0.0) return pipe->resistanceLaminar;
+
+        double Rt = pipe->resistanceTurbulent * abs(flow);
+        if (k >= 1.0) return max( Rt, 1e-9 );
+
+        return Rl*(1.0-k) + Rt*k;
+    };
+
+    auto computeAverage = [&](const vector<VRPipeEndPtr>& ends) -> double {
         if (ends.size() == 0) return 0;
         if (ends.size() == 1) return ends[0]->pipe.lock()->hydraulicHead;
 
@@ -1162,8 +1173,8 @@ void VRPipeSystem::solveNodeHeads(double dt) {
 
         for (auto& e : ends) {
             auto pipe = e->pipe.lock();
+            double R = computeEffectiveResistance(pipe, e->flow);
             double H = pipe->hydraulicHead;
-            double R = pipe->resistanceLaminar;
             num += H / R;
             den += 1.0 / R;
         }
@@ -1173,7 +1184,8 @@ void VRPipeSystem::solveNodeHeads(double dt) {
     };
 
     auto averageOverPipes = [&](vector<VRPipeEndPtr> ends, double& maxHeadDelta) {
-        double newHead = computeLaminarAverage(ends);
+        double newHead = computeAverage(ends);
+
         for (auto& e : ends) {
             maxHeadDelta = max(maxHeadDelta, abs(e->hydraulicHead-newHead));
             e->hydraulicHead = newHead;
