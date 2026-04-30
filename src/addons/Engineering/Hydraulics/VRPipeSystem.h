@@ -52,7 +52,7 @@ class VRPipeSegment {
 
         double resistanceLaminar = 0.0;
         double resistanceTurbulent = 0.0;
-        double resistance = 0.0;
+        //double resistance = 0.0;
         double regime = 0.0; // 0 laminar, 1 turbulent
         double density = 1000.0; // kg / m3
         double viscosity = 1e-3; // Pa s

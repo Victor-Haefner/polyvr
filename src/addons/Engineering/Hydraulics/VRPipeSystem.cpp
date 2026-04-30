@@ -72,14 +72,14 @@ void VRPipeSegment::updateRegime() {
 void VRPipeSegment::updateResistance() {
     double fill = max(level, 0.05);
     double rEff = radius * sqrt(fill);
-    resistanceLaminar = (8.0 * viscosity * length) / (Pi * pow(rEff, 4));
+    resistanceLaminar = (8.0 * viscosity * length) / (Pi * pow(rEff, 4)); // Hagen–Poiseuille resistance
     resistanceTurbulent = friction * length * density / ( 4 * radius * pow(area,2));
     //cout << " resistance: " << resistance << ", L: " << length << ", f: " << friction << ", D: " << density << ", R: " << radius << ", A: " << area << endl;
     if (resistanceLaminar < 1e-9) resistanceLaminar = 1.0;
     if (resistanceTurbulent < 1e-9) resistanceTurbulent = 1.0;
     resistanceLaminar = min(resistanceLaminar, 1e12); // TODO: rework this clamp
     resistanceTurbulent = min(resistanceTurbulent, 1e12); // TODO: rework this clamp
-    resistance = resistanceTurbulent; //max(resistanceLaminar, resistanceTurbulent); // TODO
+    //resistance = resistanceTurbulent; //max(resistanceLaminar, resistanceTurbulent); // TODO
 }
 
 // Pipe Node ----
@@ -1148,7 +1148,7 @@ void VRPipeSystem::solveNodeHeads(double dt) {
         for (auto& e : ends) {
             auto pipe = e->pipe.lock();
             auto otherEnd = pipe->otherEnd(e);
-            double R = pipe->resistance; // or Rt-equivalent
+            double R = pipe->resistanceLaminar;
             num += pipe->hydraulicHead / R;
             den += 1.0 / R;
         }
@@ -1313,35 +1313,33 @@ void VRPipeSystem::solveNodeHeads(double dt) {
 void VRPipeSystem::computeHeadFlows(double dt) {
     auto sign = [](double v) { return (v > 0) - (v < 0); };
 
-    auto computeLaminarFlow = [&](const double& dP, const VRPipeSegmentPtr& pipe) -> double {
-        double R = pipe->resistance; // Hagen–Poiseuille resistance
+    auto computeLaminarFlow = [&](const double& dP, const VRPipeSegmentPtr& pipe, bool halfLength) -> double {
+        double R = pipe->resistanceLaminar;
         if (R < 1e-12) return 0.0;
+        if (halfLength) R *= 0.5;
         return dP / R;
     };
 
-    auto computeTurbulentFlow = [&](const double& dP, const VRPipeSegmentPtr& pipe) -> double {
-        double R = pipe->resistance;
+    auto computeTurbulentFlow = [&](const double& dP, const VRPipeSegmentPtr& pipe, bool halfLength) -> double {
+        double R = pipe->resistanceTurbulent;
         if (R < 1e-12) return 0.0;
+        if (halfLength) R *= 0.5;
         int dir = sign(dP);
         return sqrt( abs(dP) / R ) * dir;
     };
 
-    auto computeFlow = [&](const double& dH, const VRPipeSegmentPtr& pipe) -> double {
+    auto computeFlow = [&](const double& dH, const VRPipeSegmentPtr& pipe, bool halfLength = false) -> double {
         double dP = dH * pipe->density * gravity;
-
-        return computeTurbulentFlow(dP, pipe);
-
         double k = pipe->regime;
-        if (k <= 0.0) return computeLaminarFlow(dP, pipe);
-        if (k >= 1.0) return computeTurbulentFlow(dP, pipe);
-        double Ql = computeLaminarFlow(dP, pipe);
-        double Qt = computeTurbulentFlow(dP, pipe);
+        if (k <= 0.0) return computeLaminarFlow(dP, pipe, halfLength);
+        if (k >= 1.0) return computeTurbulentFlow(dP, pipe, halfLength);
+        double Ql = computeLaminarFlow(dP, pipe, halfLength);
+        double Qt = computeTurbulentFlow(dP, pipe, halfLength);
         return Ql*(1.0-k) + Qt*k;
     };
 
     for (auto& s : segments) {
         auto& pipe = s.second;
-        double Rt = pipe->resistance;
         auto e1 = pipe->end1.lock();
         auto e2 = pipe->end2.lock();
         // TODO: rework dynamics model, add flow inertia! (flow accelleration!)
@@ -1352,7 +1350,7 @@ void VRPipeSystem::computeHeadFlows(double dt) {
 
             if (abs(flow) > 1e-5) {
                 static int I = 0; I++;
-                if (I<10) cout << "Q: " << flow << ", dH: " << dH << ", H1: " << e1->hydraulicHead << ", H2: " << e2->hydraulicHead << ", regime: " << pipe->regime << ", R: " << pipe->resistance << endl;
+                if (I<10) cout << "Q: " << flow << ", dH: " << dH << ", H1: " << e1->hydraulicHead << ", H2: " << e2->hydraulicHead << ", regime: " << pipe->regime << endl;
             }
 
             e1->headFlow =  flow;
@@ -1360,7 +1358,7 @@ void VRPipeSystem::computeHeadFlows(double dt) {
         } else {
             for (auto& e : {e1,e2}) {
                 double dH = e->hydraulicHead - pipe->hydraulicHead;
-                double flow = computeFlow(dH, pipe);
+                double flow = computeFlow(dH, pipe, true);
                 e->headFlow = -flow;
             }
         }
