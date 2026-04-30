@@ -1155,13 +1155,16 @@ void VRPipeSystem::solveNodeHeads(double dt) {
 
     auto computeEffectiveResistance = [&](const VRPipeSegmentPtr& pipe, const double& flow) -> double {
         double k = pipe->regime;
-        double Rl = max( pipe->resistanceLaminar / (pipe->density * gravity), 1e-9 );
-        if (k <= 0.0) return pipe->resistanceLaminar;
+        double rho_g = pipe->density * gravity;
+        double Rl = pipe->resistanceLaminar / rho_g;
+        if (k <= 0.0) return max( Rl, 1e-9 );
 
-        double Rt = pipe->resistanceTurbulent * abs(flow);
+        double Q = abs(flow);
+        if (Q < 1e-6) return max( Rl, 1e-9 );
+        double Rt = pipe->resistanceTurbulent * Q / rho_g;
         if (k >= 1.0) return max( Rt, 1e-9 );
 
-        return Rl*(1.0-k) + Rt*k;
+        return max( Rl*(1.0-k) + Rt*k, 1e-9 );
     };
 
     auto computeAverage = [&](const vector<VRPipeEndPtr>& ends) -> double {
@@ -1854,16 +1857,6 @@ void VRPipeSystem::updateRegimes(double dt) {
     for (auto& s : segments) {
         auto& pipe = s.second;
         pipe->updateRegime();
-
-        /*double fill = max(pipe->level, 0.05);
-        double r_eff = pipe->radius * sqrt(fill);
-        double mu = pipe->viscosity;
-        double L = pipe->length;
-        pipe->resistanceLaminar = (8.0 * mu * L) / (M_PI * pow(r_eff, 4));
-
-        double Rl = max(pipe->resistanceLaminar, pipe->resistanceTurbulent);
-        double Rt = pipe->resistanceTurbulent;
-        pipe->resistance = Rl*(1.0-pipe->regime) + Rt*pipe->regime;*/
         pipe->updateResistance();
    }
 }
