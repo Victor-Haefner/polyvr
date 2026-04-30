@@ -76,6 +76,8 @@ class VRPipeSegment {
         static VRPipeSegmentPtr create(int eID, double radius, double length, double level);
         VRPipeEndPtr otherEnd(VRPipeEndPtr e);
 
+        void updateRegime();
+        void updateResistance();
         void setLength(double l);
         void computeGeometry();
 };

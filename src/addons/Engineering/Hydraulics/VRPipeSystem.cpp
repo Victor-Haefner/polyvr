@@ -50,6 +50,26 @@ void VRPipeSegment::setLength(double l) {
 void VRPipeSegment::computeGeometry() {
     area = Pi * pow(radius,2);
     volume = area * length;
+    updateResistance();
+}
+
+void VRPipeSegment::updateRegime() {
+    // computeReynoldsNumber, inertial forces / viscous forces
+    auto e1 = end1.lock();
+    auto e2 = end2.lock();
+    double D = 2*radius;
+    double fill = max(level, 0.05); // avoid singularity
+    double A = area * fill; // approximation of circular geometry
+    if (A < 1e-9) return;
+
+    double Q = max(abs(e1->flow), abs(e2->flow)); // pick active side
+    double v = Q/A;
+    double Re = density*v*D / viscosity;
+
+    regime = clamp((Re - 2300) / (4000 - 2300), 0.0, 1.0); // normalize, <0 -> laminar, >1 -> turbulent
+}
+
+void VRPipeSegment::updateResistance() {
     double fill = max(level, 0.05);
     double rEff = radius * sqrt(fill);
     resistanceLaminar = (8.0 * viscosity * length) / (Pi * pow(rEff, 4));
@@ -59,9 +79,8 @@ void VRPipeSegment::computeGeometry() {
     if (resistanceTurbulent < 1e-9) resistanceTurbulent = 1.0;
     resistanceLaminar = min(resistanceLaminar, 1e12); // TODO: rework this clamp
     resistanceTurbulent = min(resistanceTurbulent, 1e12); // TODO: rework this clamp
-    resistance = max(resistanceLaminar, resistanceTurbulent);
+    resistance = resistanceTurbulent; //max(resistanceLaminar, resistanceTurbulent); // TODO
 }
-
 
 // Pipe Node ----
 
@@ -1309,6 +1328,9 @@ void VRPipeSystem::computeHeadFlows(double dt) {
 
     auto computeFlow = [&](const double& dH, const VRPipeSegmentPtr& pipe) -> double {
         double dP = dH * pipe->density * gravity;
+
+        return computeTurbulentFlow(dP, pipe);
+
         double k = pipe->regime;
         if (k <= 0.0) return computeLaminarFlow(dP, pipe);
         if (k >= 1.0) return computeTurbulentFlow(dP, pipe);
@@ -1801,30 +1823,11 @@ void VRPipeSystem::updatePressures(double dt) {
 }
 
 void VRPipeSystem::updateRegimes(double dt) {
-    auto computeReynoldsNumber = [](const VRPipeSegmentPtr& pipe) { // inertial forces / viscous forces
-        auto e1 = pipe->end1.lock();
-        auto e2 = pipe->end2.lock();
-        double D = 2*pipe->radius;
-        double fill = max(pipe->level, 0.05); // avoid singularity
-        double A = pipe->area * fill; // approximation of circular geometry
-        if (A < 1e-9) return 0.0;
-
-        double Q = max(abs(e1->flow), abs(e2->flow)); // pick active side
-        double v = Q/A;
-        double Re = pipe->density*v*D / pipe->viscosity;
-
-        static int I = 0; I++;
-        if (I<10) cout << "computeReynoldsNumber, Q: " << Q << ", v: " << v << ", A: " << A << ", Dens: " << pipe->density << ", vis: " << pipe->viscosity << ", Re: " << Re << endl;
-
-        return Re;
-    };
-
     for (auto& s : segments) {
         auto& pipe = s.second;
-        double Re = computeReynoldsNumber(pipe);
-        pipe->regime = clamp((Re - 2300) / (4000 - 2300), 0.0, 1.0); // normalize, <0 -> laminar, >1 -> turbulent
+        pipe->updateRegime();
 
-        double fill = max(pipe->level, 0.05);
+        /*double fill = max(pipe->level, 0.05);
         double r_eff = pipe->radius * sqrt(fill);
         double mu = pipe->viscosity;
         double L = pipe->length;
@@ -1832,8 +1835,8 @@ void VRPipeSystem::updateRegimes(double dt) {
 
         double Rl = max(pipe->resistanceLaminar, pipe->resistanceTurbulent);
         double Rt = pipe->resistanceTurbulent;
-        pipe->resistance = Rl*(1.0-pipe->regime) + Rt*pipe->regime;
-
+        pipe->resistance = Rl*(1.0-pipe->regime) + Rt*pipe->regime;*/
+        pipe->updateResistance();
    }
 }
 
