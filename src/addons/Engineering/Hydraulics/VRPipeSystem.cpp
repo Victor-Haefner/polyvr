@@ -1348,7 +1348,7 @@ void VRPipeSystem::solveNodeHeads(double dt) {
 void VRPipeSystem::computeHeadFlows(double dt) {
     auto sign = [](double v) { return (v > 0) - (v < 0); };
 
-    /*auto computeLaminarFlow = [&](const double& dP, const VRPipeSegmentPtr& pipe, bool halfLength) -> double {
+    auto computeLaminarFlow = [&](const double& dP, const VRPipeSegmentPtr& pipe, bool halfLength) -> double {
         double R = pipe->resistanceLaminar;
         if (R < 1e-12) return 0.0;
         if (halfLength) R *= 0.5;
@@ -1361,13 +1361,22 @@ void VRPipeSystem::computeHeadFlows(double dt) {
         if (halfLength) R *= 0.5;
         int dir = sign(dP);
         return sqrt( abs(dP) / R ) * dir;
-    };*/
+    };
 
     auto computeFlow = [&](const double& dH, const VRPipeSegmentPtr& pipe, const double& Q, bool halfLength = false) -> double {
         double dP = dH * pipe->density * gravity;
         double k = pipe->regime;
+        if (k <= 0.0) return computeLaminarFlow(dP, pipe, halfLength);
+        if (k >= 1.0) return computeTurbulentFlow(dP, pipe, halfLength);
+        double Ql = computeLaminarFlow(dP, pipe, halfLength);
+        double Qt = computeTurbulentFlow(dP, pipe, halfLength);
+        return Ql*(1.0-k) + Qt*k;
+    };
 
-        double L = pipe->density * pipe->length / max(pipe->area * max(pipe->level, 0.05), 1e-9); // inertance
+    auto accellerateFlow = [&](const double& dH, const VRPipeSegmentPtr& pipe, const double& Q, bool halfLength = false) -> double {
+        double dP = dH * pipe->density * gravity;
+        double Aeff = pipe->area * max(pipe->level, 0.01);
+        double L = pipe->density * pipe->length / max(Aeff, 1e-9); // inertance
         double R = pipe->computeEffectiveResistance(Q);
         if (halfLength) { R *= 0.5; L *= 0.5; }
         double loss = R * Q * pipe->density * gravity;
@@ -1383,11 +1392,10 @@ void VRPipeSystem::computeHeadFlows(double dt) {
         auto& pipe = s.second;
         auto e1 = pipe->end1.lock();
         auto e2 = pipe->end2.lock();
-        // TODO: rework dynamics model, add flow inertia! (flow accelleration!)
 
         if (pipe->pressurized) {
             double dH = e2->hydraulicHead - e1->hydraulicHead; // compute hydraulic gradient
-            double flow = computeFlow(dH, pipe, e1->flow);
+            double flow = accellerateFlow(dH, pipe, e1->flow);
 
             if (abs(flow) > 1e-5) {
                 static int I = 0; I++;
