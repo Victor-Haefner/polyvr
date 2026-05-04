@@ -49,6 +49,7 @@ class Path : public VRStorage {
         void setPointColor(int i, Color3f c);
         vector<PosePtr> getPoints();
         vector<Vec3d> getControlPoints();
+        Vec2i getSegmentIDs(double t);
 
         void invert();
         void close();

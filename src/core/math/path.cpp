@@ -305,6 +305,18 @@ PosePtr Path::getPoint(int i) {
     return points[i];
 }
 
+Vec2i Path::getSegmentIDs(double t) {
+    if (t <= 0.0) return Vec2i(0,0);
+    size_t N = points.size();
+    if (N == 0) return Vec2i(0,0);
+    if (t >= 1.0) return Vec2i(N-1,N-1);
+
+    float tN = t*(N-1);
+    int ti1 = floor(tN);
+    int ti2 = min((int)N-1, ti1+1);
+    return Vec2i(ti1, ti2);
+}
+
 Color3f Path::getPointColor(int i) { return point_colors[i]; }
 void Path::setPointColor(int i, Color3f c) { point_colors[i] = c; }
 
