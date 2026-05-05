@@ -553,10 +553,12 @@ void VRPipeSystem::updateVisual() {
     }
 
     const Color3f white(1,1,1);
+    const Color3f lgray(0.9,0.9,0.9);
     const Color3f yellow(1,1,0);
     const Color3f red(1,0,0);
     const Color3f blue(0.2,0.5,1);
     const Color3f dblue(0.1,0.4,0.7);
+    const Color3f lblue(0.3,0.7,1);
     const Color3f green(0.2,1.0,0.2);
 
     VRGeoData data(ptr());
@@ -717,8 +719,10 @@ void VRPipeSystem::updateVisual() {
             Vec3d p1 = graph->getPosition(edge.from)->pos();
             Vec3d p2 = graph->getPosition(edge.to)->pos();
 
-            p1 += s.second->end1.lock()->offset;
-            p2 += s.second->end2.lock()->offset;
+            auto e1 = s.second->end1.lock();
+            auto e2 = s.second->end2.lock();
+            p1 += e1->offset;
+            p2 += e2->offset;
             Vec3d pm = (p1+p2)*0.5;
 
             Vec3d dPipe = (p2-p1); dPipe.normalize();
@@ -744,6 +748,13 @@ void VRPipeSystem::updateVisual() {
                 k++;
             }
 
+            // pipe ends
+            data.pushVert(p1+dPipe*l*0.02, norm, e1->pressurized ? dblue : white, Vec2d());
+            data.pushPoint();
+            data.pushVert(p2-dPipe*l*0.02, norm, e2->pressurized ? dblue : white, Vec2d());
+            data.pushPoint();
+
+            // water box
             if (p2[1] < p1[1]) swap(p1,p2); // p2 always higher than p1
             pm = (p1+p2)*0.5;
             Vec3d d = (p2-p1); d.normalize();
@@ -921,6 +932,10 @@ void VRPipeSystem::updateVisual() {
             k += 2;
         }
 
+        data.setColor(i, e1->pressurized ? dblue : lgray); i++;
+        data.setColor(i, e2->pressurized ? dblue : lgray); i++;
+        k += 2;
+
         double l = s.second->level;
         //l = 0.5+0.5*sin(F); // TOTEST
 
@@ -980,6 +995,10 @@ void VRPipeSystem::updateVisual() {
         //if (e1->temperature > 21 || e2->temperature > 21) cout << "T1 " << e1->temperature << ", T2 " << e2->temperature << endl;
         //auto tmpCol1 = getTempColor(90.0);
         //auto tmpCol2 = getTempColor(90.0);
+
+        tmpCol1 = s.second->pressurized ? blue : lblue;
+        tmpCol2 = tmpCol1;
+
         data.setColor(i+4+0, tmpCol1);
         data.setColor(i+4+1, tmpCol1);
         data.setColor(i+4+2, tmpCol2);
@@ -1027,11 +1046,12 @@ void VRPipeSystem::updateVisual() {
     for (auto& n : nodes) {
         auto e = n.second->entity;
         if (e->is_a("Tank")) {
+            double T = e->getValue("temperature", 20.0);
+            auto col = getTempColor(T);
+
             double l = e->getValue("level", 1.0);
             double h = e->getValue("height", 1.0);
-            double T = e->getValue("temperature", 20.0);
-            auto tempCol = getTempColor(T);
-            updateWaterBox(h*l, tempCol);
+            updateWaterBox(h*l, col);
             continue;
         }
 
@@ -1151,9 +1171,11 @@ void VRPipeSystem::assignBoundaryPressures() {
         auto& pipe = s.second;
         auto e1 = pipe->end1.lock();
         auto e2 = pipe->end2.lock();
+        if (pipe->pressurized && e1->pressurized && e2->pressurized) continue;
 
-        if (!pipe->pressurized)
-            pipe->hydraulicHead = pipe->liquidMin + pipe->level * (pipe->liquidMax - pipe->liquidMin);
+        double waterHead = pipe->liquidMin + pipe->level * (pipe->liquidMax - pipe->liquidMin);
+        if (!pipe->pressurized) { pipe->hydraulicHead = waterHead; continue; }
+        pipe->hydraulicHead = max(pipe->hydraulicHead, waterHead);
     }
 }
 
@@ -1177,13 +1199,17 @@ void VRPipeSystem::solveNodeHeads(double dt) {
         double num = 0.0;
         double den = 0.0;
 
+        //cout << "computeAverage ";
+
         for (auto& e : ends) {
             auto pipe = e->pipe.lock();
             double R = pipe->computeEffectiveResistance(e->flow);
             double H = pipe->hydraulicHead;
             num += H / R;
             den += 1.0 / R;
+            //cout << " H/R: " << H << "/" << R;
         }
+        //cout << " -> new head: " << num / den << endl;
 
         if (abs(den) < 1e-13) return simpleAverage(ends);
         return num / den;
@@ -1394,14 +1420,9 @@ void VRPipeSystem::computeHeadFlows(double dt) {
         auto e1 = pipe->end1.lock();
         auto e2 = pipe->end2.lock();
 
-        if (pipe->pressurized) {
+        if (pipe->pressurized && e1->pressurized && e2->pressurized) {
             double dH = e2->hydraulicHead - e1->hydraulicHead; // compute hydraulic gradient
             double flow = accellerateFlow(dH, pipe, e1->flow);
-
-            if (abs(flow) > 1e-5) {
-                static int I = 0; I++;
-                if (I<10) cout << "Q: " << flow << ", dH: " << dH << ", H1: " << e1->hydraulicHead << ", H2: " << e2->hydraulicHead << ", regime: " << pipe->regime << endl;
-            }
 
             e1->headFlow =  flow;
             e2->headFlow = -flow;
