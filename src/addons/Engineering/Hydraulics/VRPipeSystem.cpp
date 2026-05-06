@@ -31,7 +31,6 @@ VRPipeEndPtr VRPipeEnd::create(VRPipeSegmentPtr s, int n, double h) { return VRP
 VRPipeSegment::VRPipeSegment(int eID, double radius, double length, double level) : eID(eID), radius(radius), length(length) {
     pressurized = bool(level > 1.0-1e-6);
     setLevel(level);
-    updateRegime();
     computeGeometry();
 }
 
@@ -63,20 +62,21 @@ void VRPipeSegment::setLevel(double lvl) {
     fluidLvl = min(h1, h2) + abs(h1 - h2) * level;
 }
 
-void VRPipeSegment::updateRegime() {
+double VRPipeSegment::computeRegime(double Q) {
     // computeReynoldsNumber, inertial forces / viscous forces
     auto e1 = end1.lock();
     auto e2 = end2.lock();
     double D = 2*radius;
     double fill = max(level, 0.05); // avoid singularity
     double A = area * fill; // approximation of circular geometry
-    if (A < 1e-9) return;
+    if (A < 1e-9) return 1.0;
 
-    double Q = max(abs(e1->flow), abs(e2->flow)); // pick active side
     double v = Q/A;
     double Re = density*v*D / viscosity;
 
-    regime = clamp((Re - 2300) / (4000 - 2300), 0.0, 1.0); // normalize, <0 -> laminar, >1 -> turbulent
+    double k = clamp((Re - 2300) / (4000 - 2300), 0.0, 1.0); // normalize, <0 -> laminar, >1 -> turbulent
+    //if (Q > 1e-3) cout << " -- computeRegime " << Q << ", " << v << ", " << Re << " -> " << k << endl;
+    return k;
 }
 
 void VRPipeSegment::updateResistance() {
@@ -438,6 +438,8 @@ void VRPipeSystem::setDoVisual(bool b, float s) {
     rebuildMesh = true;
     if (!b) updateInspection(0);
 }
+
+void VRPipeSystem::setTimeScale(double s) { timeScale = s; }
 
 void VRPipeSystem::setVisuals(vector<string> ls) { layers = ls; }
 
@@ -1407,16 +1409,25 @@ void VRPipeSystem::computeHeadFlows(double dt) {
 
     auto computeFlow = [&](const double& dH, const VRPipeSegmentPtr& pipe, bool halfLength = false) -> double {
         double dP = dH * pipe->density * gravity;
+
+        auto computeFlowByRegime = [&](double k) {
+            double Q = 0;
+            if (k <= 0.0) Q = computeLaminarFlow(dP, pipe, halfLength);
+            else if (k >= 1.0) Q = computeTurbulentFlow(dP, pipe, halfLength);
+            else {
+                double Ql = computeLaminarFlow(dP, pipe, halfLength);
+                double Qt = computeTurbulentFlow(dP, pipe, halfLength);
+                Q = Ql*(1.0-k) + Qt*k;
+            }
+            return Q;
+        };
+
         double k = pipe->regime;
-        double Q = 0;
-        if (k <= 0.0) Q = computeLaminarFlow(dP, pipe, halfLength);
-        else if (k >= 1.0) Q = computeTurbulentFlow(dP, pipe, halfLength);
-        else {
-            double Ql = computeLaminarFlow(dP, pipe, halfLength);
-            double Qt = computeTurbulentFlow(dP, pipe, halfLength);
-            Q = Ql*(1.0-k) + Qt*k;
-        }
-        //if (abs(Q)> 1e-3) cout << " computeFlow " << " Q: " << Q << ", k: " << k << ", dH: " << dH << ", dP: " << dP << endl;
+        double Q = computeFlowByRegime(k);
+        double k2 = pipe->computeRegime(abs(Q));
+        if (abs(k2-k) > 0.1) Q = computeFlowByRegime(k2); // avoid numeric worst cases, big regime switches!
+
+        //if (abs(Q)> 1e-3 && Q < 0.0) cout << " computeFlow " << " Q: " << Q << ", k: " << k << ", k2: " << k2 << ", dH: " << dH << ", dP: " << dP << endl;
         return Q;
     };
 
@@ -1722,6 +1733,7 @@ void VRPipeSystem::computeMaxFlows(double dt) {
 
                     double Qmax = Cd * A * sqrt(2.0 * gravity * abs(dH));
                     e->maxFlow = clamp(e->headFlow, -Qmax, Qmax);
+                    //e->maxFlow = e->headFlow;
                     continue;
                 }
 
@@ -1927,7 +1939,10 @@ void VRPipeSystem::updatePressures(double dt) {
 void VRPipeSystem::updateRegimes(double dt) {
     for (auto& s : segments) {
         auto& pipe = s.second;
-        pipe->updateRegime();
+        auto e1 = pipe->end1.lock();
+        auto e2 = pipe->end2.lock();
+        double Q = max(abs(e1->flow), abs(e2->flow)); // pick active side
+        pipe->regime = pipe->computeRegime(Q);
         pipe->updateResistance();
    }
 }
@@ -1993,7 +2008,7 @@ void VRPipeSystem::computeAdvectiveHeatTransfer(double dt) {
 void VRPipeSystem::update() {
     int subSteps = 10;
     double dT = 1.0/60;
-    //dT *= 0.01; // for debugging
+    dT *= timeScale;
     double dt = dT/subSteps;
 
     //sleep(1);

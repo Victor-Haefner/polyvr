@@ -79,7 +79,7 @@ class VRPipeSegment {
         static VRPipeSegmentPtr create(int eID, double radius, double length, double level);
         VRPipeEndPtr otherEnd(VRPipeEndPtr e);
 
-        void updateRegime();
+        double computeRegime(double Q);
         void updateResistance();
         void setLength(double l);
         void setLevel(double lvl);
@@ -122,6 +122,7 @@ class VRPipeSystem : public VRGeometry {
         double latency = 0.001;
         vector<string> layers = { "p", "d", "v", "n" };
 
+        double timeScale = 1.0;
         double gravity = 9.81;
         double atmosphericPressure = 101325; // Pa at sea level (1 atm)
         //double atmosphericPressure = 0.0; // set to 0 because its just a global offset
@@ -182,6 +183,7 @@ class VRPipeSystem : public VRGeometry {
 
 		void setDoVisual(bool b, float spread = 0.1);
 		void setVisuals(vector<string> layers);
+		void setTimeScale(double s);
 
 		void update();
 		void updateVisual();
