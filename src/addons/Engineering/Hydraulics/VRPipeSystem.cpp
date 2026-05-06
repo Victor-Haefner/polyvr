@@ -28,8 +28,10 @@ VRPipeEndPtr VRPipeEnd::create(VRPipeSegmentPtr s, int n, double h) { return VRP
 
 // Pipe Segment ----
 
-VRPipeSegment::VRPipeSegment(int eID, double radius, double length, double level) : eID(eID), radius(radius), length(length), level(level) {
+VRPipeSegment::VRPipeSegment(int eID, double radius, double length, double level) : eID(eID), radius(radius), length(length) {
     pressurized = bool(level > 1.0-1e-6);
+    setLevel(level);
+    updateRegime();
     computeGeometry();
 }
 
@@ -51,6 +53,14 @@ void VRPipeSegment::computeGeometry() {
     area = Pi * pow(radius,2);
     volume = area * length;
     updateResistance();
+}
+
+void VRPipeSegment::setLevel(double lvl) {
+    level = lvl;
+
+    double h1 = fluidMin;
+    double h2 = fluidMax;
+    fluidLvl = min(h1, h2) + abs(h1 - h2) * level;
 }
 
 void VRPipeSegment::updateRegime() {
@@ -232,11 +242,13 @@ int VRPipeSystem::addSegment(double radius, int n1, int n2, double level, double
 
     double nz = (d/length)[1];
     double dz = radius * sqrt(1.0 - nz * nz);
-    s->liquidMin = min(p1[1], p2[1]) - dz;
-    s->liquidMax = max(p1[1], p2[1]) + dz;
+    s->fluidMin = min(p1[1], p2[1]) - dz;
+    s->fluidMax = max(p1[1], p2[1]) + dz;
 
     e1->height -= dz; // bottom of pipe
     e2->height -= dz; // bottom of pipe
+    e1->heightMax = e1->height + 2*dz; // top of pipe
+    e2->heightMax = e2->height + 2*dz; // top of pipe
 
     return sID;
 }
@@ -442,6 +454,7 @@ Vec2d VRPipeSystem::getSegmentGradient(int i) {  auto e1 = segments[i]->end1.loc
 Vec2d VRPipeSystem::getSegmentHead(int i) {  auto e1 = segments[i]->end1.lock(); auto e2 = segments[i]->end2.lock(); return e1 && e2 ? Vec2d(e1->hydraulicHead, e2->hydraulicHead) : Vec2d(); }
 double VRPipeSystem::getSegmentDensity(int i) { return segments[i]->density; }
 Vec2d VRPipeSystem::getSegmentFlow(int i) { auto e1 = segments[i]->end1.lock(); auto e2 = segments[i]->end2.lock(); return e1 && e2 ? Vec2d(e1->flow, e2->flow) : Vec2d(); }
+Vec2d VRPipeSystem::getSegmentHeadFlow(int i) { auto e1 = segments[i]->end1.lock(); auto e2 = segments[i]->end2.lock(); return e1 && e2 ? Vec2d(e1->headFlow, e2->headFlow) : Vec2d(); }
 double VRPipeSystem::getTankPressure(int nID) { auto e = getNodeEntity(nID); return e ? e->getValue("pressure", atmosphericPressure) : 0.0; }
 double VRPipeSystem::getTankDensity(int nID) { auto e = getNodeEntity(nID); return e ? e->getValue("density", waterDensity) : 0.0; }
 double VRPipeSystem::getTankLevel(int nID) { auto e = getNodeEntity(nID); return e ? e->getValue("level", 1.0) : 0.0; }
@@ -1173,9 +1186,8 @@ void VRPipeSystem::assignBoundaryPressures() {
         auto e2 = pipe->end2.lock();
         if (pipe->pressurized && e1->pressurized && e2->pressurized) continue;
 
-        double waterHead = pipe->liquidMin + pipe->level * (pipe->liquidMax - pipe->liquidMin);
-        if (!pipe->pressurized) { pipe->hydraulicHead = waterHead; continue; }
-        pipe->hydraulicHead = max(pipe->hydraulicHead, waterHead);
+        if (!pipe->pressurized) { pipe->hydraulicHead = pipe->fluidLvl; continue; }
+        pipe->hydraulicHead = max(pipe->hydraulicHead, pipe->fluidLvl);
     }
 }
 
@@ -1298,8 +1310,9 @@ void VRPipeSystem::solveNodeHeads(double dt) {
             double x0 = p->getValue("x0", 0.0);
             double xs = p->getValue("xs", 0.0);
             double K  = p->getValue("K" , 0.0);
+            int Ne = (int)ends.size();
 
-            if (A<0 || B<0 || A>=ends.size() || B>=ends.size()) {
+            if (A<0 || B<0 || A>=Ne || B>=Ne) {
                 cout << "Error in processControlValve, wrong ends indices: " << A << ", " << B << endl;
                 continue;
             }
@@ -1322,7 +1335,7 @@ void VRPipeSystem::solveNodeHeads(double dt) {
             }
         }
 
-        for (int i=0; i<ends.size(); i++) { // handle ends without paths/groups
+        for (size_t i=0; i<ends.size(); i++) { // handle ends without paths/groups
             if (!endGroup.count(i)) averageOverPipes({ends[i]}, maxHeadDelta);
         }
 
@@ -1361,10 +1374,12 @@ void VRPipeSystem::solveNodeHeads(double dt) {
             auto e1 = pipe->end1.lock();
             auto e2 = pipe->end2.lock();
 
-            double h1 = pipe->liquidMin;
-            double h2 = pipe->liquidMax;
-            double newHead = min(h1, h2) + abs(h1 - h2) * pipe->level;
-            if (pipe->pressurized) newHead = (e1->hydraulicHead + e2->hydraulicHead) * 0.5;
+            double newHead = pipe->fluidLvl;
+            if (pipe->pressurized) {
+                if (e1->pressurized && e2->pressurized) newHead = (e1->hydraulicHead + e2->hydraulicHead) * 0.5;
+                else if (e1->pressurized) newHead = (e1->hydraulicHead + pipe->fluidLvl) * 0.5;
+                else if (e2->pressurized) newHead = (e2->hydraulicHead + pipe->fluidLvl) * 0.5;
+            }
 
             maxHeadDelta = max(maxHeadDelta, abs(pipe->hydraulicHead-newHead));
             pipe->hydraulicHead = newHead;
@@ -1390,14 +1405,19 @@ void VRPipeSystem::computeHeadFlows(double dt) {
         return sqrt( abs(dP) / R ) * dir;
     };
 
-    auto computeFlow = [&](const double& dH, const VRPipeSegmentPtr& pipe, const double& Q, bool halfLength = false) -> double {
+    auto computeFlow = [&](const double& dH, const VRPipeSegmentPtr& pipe, bool halfLength = false) -> double {
         double dP = dH * pipe->density * gravity;
         double k = pipe->regime;
-        if (k <= 0.0) return computeLaminarFlow(dP, pipe, halfLength);
-        if (k >= 1.0) return computeTurbulentFlow(dP, pipe, halfLength);
-        double Ql = computeLaminarFlow(dP, pipe, halfLength);
-        double Qt = computeTurbulentFlow(dP, pipe, halfLength);
-        return Ql*(1.0-k) + Qt*k;
+        double Q = 0;
+        if (k <= 0.0) Q = computeLaminarFlow(dP, pipe, halfLength);
+        else if (k >= 1.0) Q = computeTurbulentFlow(dP, pipe, halfLength);
+        else {
+            double Ql = computeLaminarFlow(dP, pipe, halfLength);
+            double Qt = computeTurbulentFlow(dP, pipe, halfLength);
+            Q = Ql*(1.0-k) + Qt*k;
+        }
+        //if (abs(Q)> 1e-3) cout << " computeFlow " << " Q: " << Q << ", k: " << k << ", dH: " << dH << ", dP: " << dP << endl;
+        return Q;
     };
 
     auto accellerateFlow = [&](const double& dH, const VRPipeSegmentPtr& pipe, const double& Q, bool halfLength = false) -> double {
@@ -1429,8 +1449,9 @@ void VRPipeSystem::computeHeadFlows(double dt) {
         } else {
             for (auto& e : {e1,e2}) {
                 double dH = e->hydraulicHead - pipe->hydraulicHead;
-                double flow = computeFlow(dH, pipe, -e->flow, true);
+                double flow = computeFlow(dH, pipe, true);
                 e->headFlow = -flow;
+                //if (abs(flow) > 1e-3) cout << " --- end " << e << ", flow: " << e->headFlow << endl;
             }
         }
     }
@@ -1660,7 +1681,7 @@ void VRPipeSystem::computeMaxFlows(double dt) {
             auto node = n.second;
             auto entity = node->entity;
 
-            for (int i=0; i<node->pipes.size(); i++) {
+            for (size_t i=0; i<node->pipes.size(); i++) {
                 auto& e = node->pipes[i];
 
                 if (entity->is_a("Tank")) {
@@ -1845,7 +1866,8 @@ void VRPipeSystem::updateLevels(double dt) { // TODO: split updatePressurized fr
         auto e1 = pipe->end1.lock();
         auto e2 = pipe->end2.lock();
         double flow = e1->flow + e2->flow; // positive flow is going out the pipe
-        pipe->level = clamp(pipe->level - flow*dt / pipe->volume, 0.0, 1.0, true);
+        double lvl = clamp(pipe->level - flow*dt / pipe->volume, 0.0, 1.0, true);
+        pipe->setLevel(lvl);
 
         // hysteresis
         if ( pipe->pressurized && pipe->level < 0.95) pipe->pressurized = false;
@@ -1854,7 +1876,13 @@ void VRPipeSystem::updateLevels(double dt) { // TODO: split updatePressurized fr
         //pipe->pressurized = true;
 
         if (!pipe->pressurized) {
-            for (auto& e : {e1,e2}) e->pressurized = false;
+            //if (pipe->eID == 24) cout << " -- pipe24, fLvl: " << pipe->fluidLvl << ", fluidMin: " << pipe->fluidMin;
+            for (auto& e : {e1,e2}) {
+                //if (pipe->eID == 24) cout << ", end ht: " << e->heightMax;
+                if (e->heightMax > pipe->fluidLvl) e->pressurized = false;
+                //if (pipe->eID == 24) cout << " pr: " << e->pressurized;
+            }
+            //if (pipe->eID == 24) cout << endl;
         }
     }
 
@@ -1973,13 +2001,13 @@ void VRPipeSystem::update() {
 
     for (int i=0; i<subSteps; i++) {
         assignBoundaryPressures();
-        auto t1 = VRTimer::create();
+        //auto t1 = VRTimer::create();
         solveNodeHeads(dt);
-        auto T1 = t1->stop();
+        //auto T1 = t1->stop();
         computeHeadFlows(dt);
-        auto t2 = VRTimer::create();
+        //auto t2 = VRTimer::create();
         computeMaxFlows(dt); // most time spent
-        auto T2 = t2->stop();
+        //auto T2 = t2->stop();
         updateLevels(dt);
         computeAdvectiveHeatTransfer(dt);
         updatePressures(dt);

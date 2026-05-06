@@ -19,6 +19,7 @@ class VRPipeEnd {
         int nID = -1;
 
         double height = 0.0;
+        double heightMax = 0.0;
         double offsetHeight = 0.0; // used for tank offset
         Vec3d offset; // offset relative to node center
 
@@ -47,14 +48,15 @@ class VRPipeSegment {
         double length = 0.0;
         double area = 0.0;
         double volume = 0.0;
-        double liquidMin = 0.0;
-        double liquidMax = 0.0;
+        double fluidMin = 0.0;
+        double fluidMax = 0.0;
+        double fluidLvl = 0.0;
 
         double gravity = 9.81;
         double resistanceLaminar = 0.0;
         double resistanceTurbulent = 0.0;
         //double resistance = 0.0;
-        double regime = 0.0; // 0 laminar, 1 turbulent
+        double regime = 1.0; // 0 laminar, 1 turbulent
         double density = 1000.0; // kg / m3
         double viscosity = 1e-3; // Pa s
         double level = 0.0;
@@ -80,6 +82,7 @@ class VRPipeSegment {
         void updateRegime();
         void updateResistance();
         void setLength(double l);
+        void setLevel(double lvl);
         void computeGeometry();
 
         double computeEffectiveResistance(const double& flow);
@@ -190,6 +193,7 @@ class VRPipeSystem : public VRGeometry {
 		Vec2d getSegmentGradient(int i);
 		double getSegmentDensity(int i);
 		Vec2d getSegmentFlow(int i);
+		Vec2d getSegmentHeadFlow(int i);
 		Vec2d getSegmentHead(int i);
 		double getTankPressure(int nID);
 		double getTankDensity(int nID);
