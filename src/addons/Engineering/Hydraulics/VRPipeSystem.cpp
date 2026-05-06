@@ -1904,6 +1904,40 @@ void VRPipeSystem::updateLevels(double dt) { // TODO: split updatePressurized fr
         auto entity = node->entity;
         if (entity->is_a("Tank")) continue;
         if (entity->is_a("Cylinder")) continue;
+
+        if (entity->is_a("ControlValve")) { // only unpressurize if connecting path
+
+            vector<VRPipeEndPtr>& ends = node->pipes;
+            auto paths = entity->getAllEntities("paths");
+            double x = entity->getValue("state", 0.0);
+
+            auto& endGroup = node->endGroup;
+            map<int, vector<int>> groups;
+            for (auto& eg : endGroup) {
+                if (!groups.count(eg.second)) groups[eg.second] = vector<int>();
+                groups[eg.second].push_back(eg.first);
+            }
+
+            for (auto& g : groups) {
+                vector<VRPipeEndPtr> gEnds;
+                for (auto& e : g.second) gEnds.push_back(ends[e]);
+                bool isP = true;
+                for (auto& e : gEnds) if (!e->pressurized) isP = false;
+                if (!isP) for (auto& e : gEnds) e->pressurized = false;
+            }
+            continue;
+        }
+
+        if (entity->is_a("Valve")) { // only unpressurize if state > 1e-3
+            double x = entity->getValue("state", 0.0);
+            if (x >= 1e-3) {
+                bool isP = true;
+                for (auto& e : node->pipes) if (!e->pressurized) isP = false;
+                if (!isP) for (auto& e : node->pipes) e->pressurized = false;
+            }
+            continue;
+        }
+
         bool isP = true;
         for (auto& e : node->pipes) if (!e->pressurized) isP = false;
         if (!isP) for (auto& e : node->pipes) e->pressurized = false;
