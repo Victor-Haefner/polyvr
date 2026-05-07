@@ -1458,6 +1458,12 @@ void VRPipeSystem::computeHeadFlows(double dt) {
         return Q + dQ*dt;
     };
 
+    auto forceFlow = [&](VRPipeEndPtr e, const VRPipeSegmentPtr& pipe) {
+        double dH = e->hydraulicHead - pipe->hydraulicHead;
+        double flow = computeFlow(dH, pipe, true);
+        e->headFlow = -flow;
+    };
+
     for (auto& s : segments) {
         auto& pipe = s.second;
         auto e1 = pipe->end1.lock();
@@ -1469,14 +1475,24 @@ void VRPipeSystem::computeHeadFlows(double dt) {
 
             e1->headFlow =  flow;
             e2->headFlow = -flow;
-        } else {
-            for (auto& e : {e1,e2}) {
-                double dH = e->hydraulicHead - pipe->hydraulicHead;
-                double flow = computeFlow(dH, pipe, true);
-                e->headFlow = -flow;
-                //if (abs(flow) > 1e-3) cout << " --- end " << e << ", flow: " << e->headFlow << endl;
-            }
+            continue;
         }
+
+        if (pipe->pressurized && e1->pressurized) {
+            double dH = e1->hydraulicHead - pipe->hydraulicHead;
+            e1->headFlow = accellerateFlow(dH, pipe, e1->flow, true);
+            forceFlow(e2, pipe);
+            continue;
+        }
+
+        if (pipe->pressurized && e2->pressurized) {
+            double dH = e2->hydraulicHead - pipe->hydraulicHead;
+            e2->headFlow = accellerateFlow(dH, pipe, e2->flow, true);
+            forceFlow(e1, pipe);
+            continue;
+        }
+
+        for (auto& e : {e1,e2}) forceFlow(e, pipe);
     }
 
     for (auto n : nodes) {
