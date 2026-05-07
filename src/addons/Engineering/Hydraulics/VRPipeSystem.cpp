@@ -1266,7 +1266,7 @@ void VRPipeSystem::solveNodeHeads(double dt) {
         double state = entity->getValue("state", 0.0);
         double rampTime = entity->getValue("rampTime", 0.5);
         double maxHead = entity->getValue("maxHead", 0.0);
-        bool isOpen = entity->getValue("isOpen", 0.0);
+        bool isOpen = entity->getValue("isOpen", false);
         auto pEnd1 = ends[0];
         auto pEnd2 = ends[1];
 
@@ -1701,9 +1701,17 @@ void VRPipeSystem::computeMaxFlows(double dt) {
             if (entity->is_a("Valve")) {
                 double state = entity->getValue("state", 0.0);
                 if (state < 1e-3) {
-                    for (auto& e : node->pipes) {
-                        e->maxFlow = 0;
-                    }
+                    for (auto& e : node->pipes) e->maxFlow = 0;
+                    continue;
+                }
+                // do not continue here, apply normal node method
+            }
+
+            if (entity->is_a("Pump")) {
+                double state = entity->getValue("state", 0.0);
+                bool isOpen = entity->getValue("isOpen", false);
+                if (!isOpen && state < 1e-3) {
+                    for (auto& e : node->pipes) e->maxFlow = 0;
                     continue;
                 }
                 // do not continue here, apply normal node method
@@ -1855,6 +1863,14 @@ void VRPipeSystem::computeMaxFlows(double dt) {
                     e->maxFlow = clamp(e->headFlow, -Qmax, Qmax);*/
                     e->maxFlow = e->headFlow * state;
                     continue;
+                }
+
+                else if (entity->is_a("Pump")) {
+                    double state = entity->getValue("state", 0.0);
+                    if (state < 1e-3) {
+                        e->maxFlow = 0;
+                        continue;
+                    }
                 }
 
                 e->maxFlow = e->headFlow;
@@ -2049,6 +2065,17 @@ void VRPipeSystem::updateLevels(double dt) { // TODO: split updatePressurized fr
         if (entity->is_a("Valve")) { // only unpressurize if state > 1e-3
             double x = entity->getValue("state", 0.0);
             if (x >= 1e-3) {
+                bool isP = true;
+                for (auto& e : node->pipes) if (!e->pressurized) isP = false;
+                if (!isP) for (auto& e : node->pipes) e->pressurized = false;
+            }
+            continue;
+        }
+
+        if (entity->is_a("Pump")) { // only unpressurize if state > 1e-3
+            bool isOpen = entity->getValue("isOpen", false);
+            double x = entity->getValue("state", 0.0);
+            if (isOpen && x >= 1e-3) {
                 bool isP = true;
                 for (auto& e : node->pipes) if (!e->pressurized) isP = false;
                 if (!isP) for (auto& e : node->pipes) e->pressurized = false;
