@@ -1628,7 +1628,7 @@ Rework cylinder, instead of using dH of the node, use gradients along in out pip
 
 void VRPipeSystem::computeMaxFlows(double dt) {
     //cout << "computeMaxFlows" << endl;
-    auto computeContainerFlowScaling = [&](string ID, double volAir, double volWater, double flowIn, double flowOut, bool pressurized) {
+    auto computeContainerFlowScaling = [&](double volAir, double volWater, double flowIn, double flowOut, bool pressurized) {
         double totalFlow = flowIn - flowOut;
         double volDelta  = totalFlow*dt;
         double maxFlowIn  = flowIn;
@@ -1697,6 +1697,24 @@ void VRPipeSystem::computeMaxFlows(double dt) {
         return pistonFlow;
     };
 
+    auto rebalanceEndsGroupFlow = [&](const vector<VRPipeEndPtr>& ends, double volAir, double volWater) {
+        double totalFlowIn = 0;
+        double totalFlowOut = 0;
+        for (auto& e : ends) {
+            auto f = e->maxFlow;
+            if (f < 0) totalFlowOut += -f;
+            else totalFlowIn += f;
+        }
+
+        Vec2d scaleFlowInOut = computeContainerFlowScaling(volAir, volWater, totalFlowIn, totalFlowOut, true);
+
+        for (auto& e : ends) {
+            auto f = e->maxFlow;
+            if (f < 0) e->maxFlow = f * scaleFlowInOut[1];
+            else e->maxFlow = f * scaleFlowInOut[0];
+        }
+    };
+
     auto processNodes = [&]() {
         for (auto& n : nodes) {
             auto node = n.second;
@@ -1732,56 +1750,6 @@ void VRPipeSystem::computeMaxFlows(double dt) {
                 continue;
             }
 
-            if (entity->is_a("ControlValve")) {
-                vector<VRPipeEndPtr>& ends = node->pipes;
-                auto paths = entity->getAllEntities("paths");
-                auto& endsGroup = node->endsGroup;
-                auto& endGroups = node->endGroups;
-
-                for (size_t i=0; i<ends.size(); i++) { // handle ends without paths/groups
-                    if (!endsGroup.count(i)) ends[i]->maxFlow = 0.0;
-                }
-
-                for (auto& g : endGroups) {
-                    double totalFlowIn = 0;
-                    double totalFlowOut = 0;
-                    for (auto& e : g.second) {
-                        auto f = e->maxFlow;
-                        if (f < 0) totalFlowOut += -f;
-                        else totalFlowIn += f;
-                    }
-
-                    Vec2d scaleFlowInOut = computeContainerFlowScaling(node->name, 0.0, 0.0, totalFlowIn, totalFlowOut, true);
-
-                    for (auto& e : g.second) {
-                        auto f = e->maxFlow;
-                        if (f < 0) e->maxFlow = f * scaleFlowInOut[1];
-                        else e->maxFlow = f * scaleFlowInOut[0];
-                    }
-                }
-
-                continue;
-            }
-
-            if (entity->is_a("Valve")) {
-                double state = entity->getValue("state", 0.0);
-                if (state < 1e-3) {
-                    for (auto& e : node->pipes) e->maxFlow = 0;
-                    continue;
-                }
-                // do not continue here, apply normal node method
-            }
-
-            if (entity->is_a("Pump")) {
-                double state = entity->getValue("state", 0.0);
-                bool isOpen = entity->getValue("isOpen", false);
-                if (!isOpen && state < 1e-3) {
-                    for (auto& e : node->pipes) e->maxFlow = 0;
-                    continue;
-                }
-                // do not continue here, apply normal node method
-            }
-
             if (entity->is_a("Tank")) {
                 double tankArea = entity->getValue("area", 0.0);
                 double tankHeight = entity->getValue("height", 0.0);
@@ -1789,40 +1757,27 @@ void VRPipeSystem::computeMaxFlows(double dt) {
                 double tankLevel = entity->getValue("level", 1.0);
                 double nodeAirVolume = tankVolume * (1.0-tankLevel);
                 double nodeWaterVolume = tankVolume * tankLevel;
+                rebalanceEndsGroupFlow(node->pipes, nodeAirVolume, nodeWaterVolume);
+                continue;
+            }
 
-                double totalFlowIn = 0;
-                double totalFlowOut = 0;
-                for (auto& e : node->pipes) {
-                    auto f = e->maxFlow;
-                    if (f < 0) totalFlowOut += -f;
-                    else totalFlowIn += f;
+            if (entity->is_a("Valve") || entity->is_a("Pump")) { // ControlValve is also a Valve
+                vector<VRPipeEndPtr>& ends = node->pipes;
+                auto& endsGroup = node->endsGroup;
+                auto& endGroups = node->endGroups;
+
+
+                for (size_t i=0; i<ends.size(); i++) { // handle ends without paths/groups
+                    if (!endsGroup.count(i)) ends[i]->maxFlow = 0.0;
                 }
 
-                Vec2d scaleFlowInOut = computeContainerFlowScaling(node->name, nodeAirVolume, nodeWaterVolume, totalFlowIn, totalFlowOut, true);
-
-                for (auto& e : node->pipes) {
-                    auto f = e->maxFlow;
-                    if (f < 0) e->maxFlow = f * scaleFlowInOut[1];
-                    else e->maxFlow = f * scaleFlowInOut[0];
+                for (auto& g : endGroups) {
+                    rebalanceEndsGroupFlow(g.second, 0.0, 0.0);
                 }
                 continue;
             }
 
-            double totalFlowIn = 0;
-            double totalFlowOut = 0;
-            for (auto& e : node->pipes) {
-                auto f = e->maxFlow;
-                if (f < 0) totalFlowOut += -f;
-                else totalFlowIn += f;
-            }
-
-            Vec2d scaleFlowInOut = computeContainerFlowScaling(node->name, 0.0, 0.0, totalFlowIn, totalFlowOut, true);
-
-            for (auto& e : node->pipes) {
-                auto f = e->maxFlow;
-                if (f < 0) e->maxFlow = f * scaleFlowInOut[1];
-                else e->maxFlow = f * scaleFlowInOut[0];
-            }
+            rebalanceEndsGroupFlow(node->pipes, 0.0, 0.0);
         }
     };
 
@@ -1848,7 +1803,7 @@ void VRPipeSystem::computeMaxFlows(double dt) {
             //if (totalFlowOut*dt > pipeWaterVolume && !pipe->pressurized)
             //    cout << " flow limited, flow: " << totalFlowIn - totalFlowOut << ", water vol: " << pipeWaterVolume << ", dt: " << dt << endl;
 
-            Vec2d scaleFlowInOut = computeContainerFlowScaling("seg"+toString(pipe->eID), pipeAirVolume, pipeWaterVolume, totalFlowIn, totalFlowOut, pipe->pressurized);
+            Vec2d scaleFlowInOut = computeContainerFlowScaling(pipeAirVolume, pipeWaterVolume, totalFlowIn, totalFlowOut, pipe->pressurized);
             if (scaleFlowInOut[0] < 0.9) needsIteration = true;
             if (scaleFlowInOut[1] < 0.9) needsIteration = true;
 
