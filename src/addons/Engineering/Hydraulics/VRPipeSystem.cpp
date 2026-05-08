@@ -1799,10 +1799,6 @@ void VRPipeSystem::computeMaxFlows(double dt) {
                 else totalFlowOut += f;
             }
 
-            //if ((totalFlowIn - totalFlowOut)*dt > pipeWaterVolume)
-            //if (totalFlowOut*dt > pipeWaterVolume && !pipe->pressurized)
-            //    cout << " flow limited, flow: " << totalFlowIn - totalFlowOut << ", water vol: " << pipeWaterVolume << ", dt: " << dt << endl;
-
             Vec2d scaleFlowInOut = computeContainerFlowScaling(pipeAirVolume, pipeWaterVolume, totalFlowIn, totalFlowOut, pipe->pressurized);
             if (scaleFlowInOut[0] < 0.9) needsIteration = true;
             if (scaleFlowInOut[1] < 0.9) needsIteration = true;
@@ -1834,13 +1830,6 @@ void VRPipeSystem::computeMaxFlows(double dt) {
         }
     };
 
-    auto computeMaxValveFlow = [&](double state, double A, double dH) { // TODO, doesnt work
-        double a = state * A;
-        double Qmax = a * sqrt(2.0 * gravity * abs(dH));
-        return Qmax;
-        //cout << "i: " << i << ", h " << e->headFlow << ", Qm " << Qmax << ", f " << e->maxFlow << ", state: " << state << endl;
-    };
-
     auto copyInitialMaxHead = [&]() {
         for (auto& n : nodes) {
             auto node = n.second;
@@ -1848,6 +1837,7 @@ void VRPipeSystem::computeMaxFlows(double dt) {
 
             for (size_t i=0; i<node->pipes.size(); i++) {
                 auto& e = node->pipes[i];
+                auto pipe = e->pipe.lock();
 
                 if (entity->is_a("Tank")) {
                     double tankLevel = entity->getValue("level", 1.0);
@@ -1860,35 +1850,10 @@ void VRPipeSystem::computeMaxFlows(double dt) {
                     }
                 }
 
-                if (entity->is_a("ControlValve")) {
-                    auto pipe = e->pipe.lock();
-                    if (!pipe) continue;
+                if (entity->is_a("Valve") || entity->is_a("Pump")) { // includes ControlValve
                     if (node->pathOpenings.count(i)) {
                         double state = node->pathOpenings[i];
-                        /*double dH = e->hydraulicHead - pipe->otherEnd(e)->hydraulicHead;
-                        double Qmax = computeMaxValveFlow(state, pipe->area, dH);
-                        e->maxFlow = clamp(e->headFlow, -Qmax, Qmax);*/
                         e->maxFlow = e->headFlow * state;
-                        continue;
-                    }
-                }
-
-                else if (entity->is_a("Valve")) {
-                    auto pipe = e->pipe.lock();
-                    if (!pipe) continue;
-
-                    double state = entity->getValue("state", 0.0);
-                    /*double dH = e->hydraulicHead - pipe->otherEnd(e)->hydraulicHead;
-                    double Qmax = computeMaxValveFlow(state, pipe->area, dH);
-                    e->maxFlow = clamp(e->headFlow, -Qmax, Qmax);*/
-                    e->maxFlow = e->headFlow * state;
-                    continue;
-                }
-
-                else if (entity->is_a("Pump")) {
-                    double state = entity->getValue("state", 0.0);
-                    if (state < 1e-3) {
-                        e->maxFlow = 0;
                         continue;
                     }
                 }
@@ -1910,7 +1875,6 @@ void VRPipeSystem::computeMaxFlows(double dt) {
     copyInitialMaxHead();
 
     bool needsIteration = true;
-    //cout << "itr max flow.." << endl;
     for (int i=0; needsIteration && i<30; i++) {
         needsIteration = false;
         processNodes();
