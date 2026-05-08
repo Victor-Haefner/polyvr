@@ -1148,6 +1148,55 @@ double VRPipeSystem::clamp(double x, double a, double b, bool warn, string lbl) 
     return x<a ? a : x>b ? b : x;
 }
 
+void VRPipeSystem::updateNodePaths() {
+    for (auto n : nodes) {
+        auto node = n.second;
+        auto entity = node->entity;
+        vector<VRPipeEndPtr>& ends = node->pipes;
+
+        if (entity->is_a("ControlValve")) {
+            auto paths = entity->getAllEntities("paths");
+            double x = entity->getValue("state", 0.0);
+
+            auto& endGroup = node->endGroup;
+            auto& pathOpenings = node->pathOpenings;
+            endGroup.clear();
+            pathOpenings.clear();
+
+            for (auto& p : paths) {
+                int A = p->getValue("A", -1);
+                int B = p->getValue("B", -1);
+                double x0 = p->getValue("x0", 0.0);
+                double xs = p->getValue("xs", 0.0);
+                double K  = p->getValue("K" , 0.0);
+                int Ne = (int)ends.size();
+
+                if (A<0 || B<0 || A>=Ne || B>=Ne) {
+                    cout << "Error in processControlValve, wrong ends indices: " << A << ", " << B << endl;
+                    continue;
+                }
+
+                double y = K * max(0.0, 1.0-abs(x-x0)/xs); // tent function around x0
+
+                if (y > 1e-3) { // connected
+                    if (endGroup.count(A)) endGroup[B] = endGroup[A];
+                    else if (endGroup.count(B)) endGroup[A] = endGroup[B];
+                    else {
+                        int g = endGroup.size();
+                        endGroup[A] = g;
+                        endGroup[B] = g;
+                    }
+
+                    if (!pathOpenings.count(A)) pathOpenings[A] = 0;
+                    if (!pathOpenings.count(B)) pathOpenings[B] = 0;
+                    pathOpenings[A] += y;
+                    pathOpenings[B] += y;
+                }
+            }
+        }
+    }
+}
+
 void VRPipeSystem::assignBoundaryPressures() {
     for (auto n : nodes) {
         auto node = n.second;
@@ -1174,8 +1223,8 @@ void VRPipeSystem::assignBoundaryPressures() {
             bool tankOpen = entity->getValue("isOpen", false);
             if (tankOpen) tankPressure = atmosphericPressure;
 
+            double fluidHeight = (tankLevel-0.5)*tankHeight + nPos[1];
             for (auto& e : node->pipes) {
-                double fluidHeight = (tankLevel-0.5)*tankHeight + nPos[1];
                 double depth = max(0.0, fluidHeight - e->height);
                 double Pfluid = depth * tankDensity * gravity;
                 double Pgauge = tankPressure + Pfluid - atmosphericPressure;
@@ -1308,6 +1357,22 @@ void VRPipeSystem::solveNodeHeads(double dt) {
     };
 
     auto processCylinder = [&](vector<VRPipeEndPtr> ends, VREntityPtr entity, double& maxHeadDelta) -> bool {
+        /*if (ends.size() != 2) return false;
+        auto& e1 = ends[0];
+        auto& e2 = ends[1];
+
+        if (!e1->pressurized && !e2->pressurized) return true;
+
+        if (e1->pressurized && e2->pressurized) {
+            averageOverPipes(ends, maxHeadDelta);
+            return true;
+        }
+
+        if (e1->pressurized) averageOverPipes({e1}, maxHeadDelta);
+        if (e2->pressurized) averageOverPipes({e2}, maxHeadDelta);
+        return true;*/
+
+
         if (ends.size() != 2) return false;
         auto& e1 = ends[0];
         auto& e2 = ends[1];
@@ -1326,44 +1391,8 @@ void VRPipeSystem::solveNodeHeads(double dt) {
 
     auto processControlValve = [&](VRPipeNodePtr node, VREntityPtr entity, double& maxHeadDelta) -> bool {
         vector<VRPipeEndPtr>& ends = node->pipes;
-        auto paths = entity->getAllEntities("paths");
-        double x = entity->getValue("state", 0.0);
-
         auto& endGroup = node->endGroup;
         auto& pathOpenings = node->pathOpenings;
-        endGroup.clear();
-        pathOpenings.clear();
-
-        for (auto& p : paths) {
-            int A = p->getValue("A", -1);
-            int B = p->getValue("B", -1);
-            double x0 = p->getValue("x0", 0.0);
-            double xs = p->getValue("xs", 0.0);
-            double K  = p->getValue("K" , 0.0);
-            int Ne = (int)ends.size();
-
-            if (A<0 || B<0 || A>=Ne || B>=Ne) {
-                cout << "Error in processControlValve, wrong ends indices: " << A << ", " << B << endl;
-                continue;
-            }
-
-            double y = K * max(0.0, 1.0-abs(x-x0)/xs); // tent function around x0
-
-            if (y > 1e-3) { // connected
-                if (endGroup.count(A)) endGroup[B] = endGroup[A];
-                else if (endGroup.count(B)) endGroup[A] = endGroup[B];
-                else {
-                    int g = endGroup.size();
-                    endGroup[A] = g;
-                    endGroup[B] = g;
-                }
-
-                if (!pathOpenings.count(A)) pathOpenings[A] = 0;
-                if (!pathOpenings.count(B)) pathOpenings[B] = 0;
-                pathOpenings[A] += y;
-                pathOpenings[B] += y;
-            }
-        }
 
         for (size_t i=0; i<ends.size(); i++) { // handle ends without paths/groups
             if (!endGroup.count(i)) averageOverPipes({ends[i]}, maxHeadDelta);
@@ -1530,6 +1559,16 @@ void VRPipeSystem::computeHeadFlows(double dt) {
             auto& e1 = node->pipes[0];
             auto& e2 = node->pipes[1];
 
+            auto pipe1 = e1->pipe.lock();
+            auto pipe2 = e2->pipe.lock();
+            auto e11 = pipe1->otherEnd(e1);
+            auto e22 = pipe2->otherEnd(e2);
+            //double dH = e22->hydraulicHead - e11->hydraulicHead;
+            double dH = e2->hydraulicHead - e1->hydraulicHead;
+            //cout << " cylinder: dH " << round(dH) << " - " << round(e11->hydraulicHead) << " " << round(e1->hydraulicHead) << " " << round(e2->hydraulicHead) << " " << round(e22->hydraulicHead);
+            //cout << " - L1: " << round(pipe1->length*1000) << " L2: " << round(pipe2->length*1000) << " -> " << (e22->hydraulicHead - e2->hydraulicHead) / pipe2->length << " " << (e11->hydraulicHead - e1->hydraulicHead) / pipe1->length;
+            //cout << endl;
+
             // compute piston movement and flow
             double Fext = entity->getValue("force", 0.0);
             double R = entity->getValue("resistance", 0.1);
@@ -1537,10 +1576,8 @@ void VRPipeSystem::computeHeadFlows(double dt) {
             double L = entity->getValue("length", 0.0);
             double a = entity->getValue("area", 0.0);
 
-            double p1 = e1->hydraulicHead;
-            double p2 = e2->hydraulicHead;
 
-            double Fhyd = -(p2 - p1) * a;
+            double Fhyd = -dH*a;
             double v = (Fhyd - Fext) / max(R, 1e-9);
 
             double dx = v * dt;
@@ -1552,6 +1589,15 @@ void VRPipeSystem::computeHeadFlows(double dt) {
         }
     }
 }
+
+/*** TODO
+With the bop attached, the pressure bottles dont fill anymore -> maybe some issue with the cylinder?
+In general, refactor code to use node paths, generalizing valves/closed pumps and such
+
+Add inspection infos for the control valves, its strange that open/close behaves differently!
+
+Rework cylinder, instead of using dH of the node, use gradients along in out pipes
+***/
 
 void VRPipeSystem::computeMaxFlows(double dt) {
     //cout << "computeMaxFlows" << endl;
@@ -2193,6 +2239,8 @@ void VRPipeSystem::update() {
 
     //sleep(1);
 
+
+    updateNodePaths();
 
     for (int i=0; i<subSteps; i++) {
         assignBoundaryPressures();
