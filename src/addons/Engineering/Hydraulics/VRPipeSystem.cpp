@@ -1884,12 +1884,10 @@ void VRPipeSystem::computeMaxFlows(double dt) {
     copyFinalMaxHead();
 }
 
-void VRPipeSystem::updateLevels(double dt) { // TODO: split updatePressurized from updateLevels
+void VRPipeSystem::updateLevels(double dt) {
     for (auto n : nodes) {
         auto node = n.second;
         auto entity = node->entity;
-
-        for (auto& pEnd : node->pipes) pEnd->pressurized = true;
 
         if (entity->is_a("Tank")) {
             double tankArea = entity->getValue("area", 0.0);
@@ -1924,13 +1922,6 @@ void VRPipeSystem::updateLevels(double dt) { // TODO: split updatePressurized fr
                 p = clamp(p, atmosphericPressure * 0.001, atmosphericPressure * 2000.0, true, "tank pressure");
                 entity->set("pressure", toString(p));
                 //cout << " new tank pressure: " << p << endl;
-            }
-
-            // update pipes not submerged by fluid level
-            auto nPos = graph->getPosition(n.first)->pos();
-            double fluidHeight = (newLevel-0.5)*tankHeight + nPos[1];
-            for (auto& e : node->pipes) {
-                if (e->height > fluidHeight) e->pressurized = false;
             }
         }
 
@@ -1982,11 +1973,6 @@ void VRPipeSystem::updateLevels(double dt) { // TODO: split updatePressurized fr
             entity->set("level1", toString(newLevel1));
             entity->set("level2", toString(newLevel2));
 
-
-            // update pressurized
-            if (newLevel1 < 0.999) e1->pressurized = false;
-            if (newLevel2 < 0.999) e2->pressurized = false;
-
             if (n.second->userCb) {
                 (*n.second->userCb)(x_new);
             }
@@ -2000,29 +1986,40 @@ void VRPipeSystem::updateLevels(double dt) { // TODO: split updatePressurized fr
         double flow = e1->flow + e2->flow; // positive flow is going out the pipe
         double lvl = clamp(pipe->level - flow*dt / pipe->volume, 0.0, 1.0, true);
         pipe->setLevel(lvl);
-
-        // hysteresis
-        if ( pipe->pressurized && pipe->level < 0.95) pipe->pressurized = false;
-        if (!pipe->pressurized && pipe->level > 0.98) pipe->pressurized = true;
-        //pipe->pressurized = bool(pipe->level > 1.0-1e-6);
-        //pipe->pressurized = true;
-
-        if (!pipe->pressurized) {
-            //if (pipe->eID == 24) cout << " -- pipe24, fLvl: " << pipe->fluidLvl << ", fluidMin: " << pipe->fluidMin;
-            for (auto& e : {e1,e2}) {
-                //if (pipe->eID == 24) cout << ", end ht: " << e->heightMax;
-                if (e->heightMax > pipe->fluidLvl) e->pressurized = false;
-                //if (pipe->eID == 24) cout << " pr: " << e->pressurized;
-            }
-            //if (pipe->eID == 24) cout << endl;
-        }
     }
+}
 
+void VRPipeSystem::updatePressurization(double dt) {
     for (auto n : nodes) {
         auto node = n.second;
         auto entity = node->entity;
-        if (entity->is_a("Tank")) continue;
-        if (entity->is_a("Cylinder")) continue;
+
+        for (auto& pEnd : node->pipes) pEnd->pressurized = true;
+
+        if (entity->is_a("Tank")) {
+            // update pipes not submerged by fluid level
+            double tankHeight = entity->getValue("height", 0.0);
+            double level = entity->getValue("level", 0.0);
+            auto nPos = graph->getPosition(n.first)->pos();
+            double fluidHeight = (level-0.5)*tankHeight + nPos[1];
+            for (auto& e : node->pipes) {
+                if (e->height > fluidHeight) e->pressurized = false;
+            }
+            continue;
+        }
+
+        if (entity->is_a("Cylinder")) {
+            if (node->pipes.size() != 2) continue;
+            auto& e1 = node->pipes[0];
+            auto& e2 = node->pipes[1];
+
+            double level1 = entity->getValue("level1", 0.0);
+            double level2 = entity->getValue("level2", 0.0);
+
+            if (level1 < 0.999) e1->pressurized = false;
+            if (level2 < 0.999) e2->pressurized = false;
+            continue;
+        }
 
         if (entity->is_a("ControlValve")) { // only unpressurize if connecting path
             for (auto& g : node->endGroups) {
@@ -2057,6 +2054,22 @@ void VRPipeSystem::updateLevels(double dt) { // TODO: split updatePressurized fr
         bool isP = true;
         for (auto& e : node->pipes) if (!e->pressurized) isP = false;
         if (!isP) for (auto& e : node->pipes) e->pressurized = false;
+    }
+
+    for (auto& s : segments) {
+        auto& pipe = s.second;
+        auto e1 = pipe->end1.lock();
+        auto e2 = pipe->end2.lock();
+
+        // hysteresis
+        if ( pipe->pressurized && pipe->level < 0.95) pipe->pressurized = false;
+        if (!pipe->pressurized && pipe->level > 0.98) pipe->pressurized = true;
+
+        if (!pipe->pressurized) {
+            for (auto& e : {e1,e2}) {
+                if (e->heightMax > pipe->fluidLvl) e->pressurized = false;
+            }
+        }
     }
 }
 
@@ -2177,6 +2190,7 @@ void VRPipeSystem::update() {
         computeMaxFlows(dt); // most time spent
         //auto T2 = t2->stop();
         updateLevels(dt);
+        updatePressurization(dt);
         computeAdvectiveHeatTransfer(dt);
         updatePressures(dt);
         updateRegimes(dt);

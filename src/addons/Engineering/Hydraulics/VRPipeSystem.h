@@ -155,6 +155,7 @@ class VRPipeSystem : public VRGeometry {
         void computeHeadFlows(double dt);
         void computeMaxFlows(double dt);
         void updateLevels(double dt);
+        void updatePressurization(double dt);
         void computeAdvectiveHeatTransfer(double dt);
         void updatePressures(double dt);
         void updateRegimes(double dt);
