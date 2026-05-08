@@ -97,7 +97,8 @@ class VRPipeNode {
         VRAnimCbPtr userCb;
 
         // for control valves
-        map<int, int> endGroup;
+        map<int, int> endsGroup; // key is pipe end i, value is group ID
+        map<int, vector<VRPipeEndPtr>> endGroups; // key is group ID
         map<int, double> pathOpenings;
 
     public:

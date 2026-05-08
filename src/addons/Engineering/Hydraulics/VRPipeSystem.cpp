@@ -1152,16 +1152,19 @@ void VRPipeSystem::updateNodePaths() {
     for (auto n : nodes) {
         auto node = n.second;
         auto entity = node->entity;
-        vector<VRPipeEndPtr>& ends = node->pipes;
+        if (entity->is_a("Junction")) continue;
+
+        auto& ends = node->pipes;
+        auto& endGroups = node->endGroups;
+        auto& endsGroup = node->endsGroup;
+        auto& pathOpenings = node->pathOpenings;
+        endGroups.clear();
+        endsGroup.clear();
+        pathOpenings.clear();
 
         if (entity->is_a("ControlValve")) {
             auto paths = entity->getAllEntities("paths");
             double x = entity->getValue("state", 0.0);
-
-            auto& endGroup = node->endGroup;
-            auto& pathOpenings = node->pathOpenings;
-            endGroup.clear();
-            pathOpenings.clear();
 
             for (auto& p : paths) {
                 int A = p->getValue("A", -1);
@@ -1179,12 +1182,12 @@ void VRPipeSystem::updateNodePaths() {
                 double y = K * max(0.0, 1.0-abs(x-x0)/xs); // tent function around x0
 
                 if (y > 1e-3) { // connected
-                    if (endGroup.count(A)) endGroup[B] = endGroup[A];
-                    else if (endGroup.count(B)) endGroup[A] = endGroup[B];
+                    if (endsGroup.count(A)) endsGroup[B] = endsGroup[A];
+                    else if (endsGroup.count(B)) endsGroup[A] = endsGroup[B];
                     else {
-                        int g = endGroup.size();
-                        endGroup[A] = g;
-                        endGroup[B] = g;
+                        int g = endsGroup.size();
+                        endsGroup[A] = g;
+                        endsGroup[B] = g;
                     }
 
                     if (!pathOpenings.count(A)) pathOpenings[A] = 0;
@@ -1193,8 +1196,40 @@ void VRPipeSystem::updateNodePaths() {
                     pathOpenings[B] += y;
                 }
             }
+        } else if (entity->is_a("Valve")) {
+            double x = entity->getValue("state", 0.0);
+
+            if (x > 1e-3) {
+                endsGroup[0] = 0;
+                endsGroup[1] = 0;
+                pathOpenings[0] = x;
+                pathOpenings[1] = x;
+            }
+        } else if (entity->is_a("Pump")) {
+            double x = entity->getValue("state", 0.0);
+            bool isOpen = entity->getValue("isOpen", false);
+
+            if (x > 1e-3) {
+                endsGroup[0] = 0;
+                endsGroup[1] = 0;
+                pathOpenings[0] = 1.0;
+                pathOpenings[1] = 1.0;
+            } else {
+                if (isOpen) {
+                    endsGroup[0] = 0;
+                    endsGroup[1] = 0;
+                    pathOpenings[0] = 0.5;
+                    pathOpenings[1] = 0.5;
+                }
+            }
+        }
+
+        for (auto& eg : endsGroup) {
+            if (!endGroups.count(eg.second)) endGroups[eg.second] = vector<VRPipeEndPtr>();
+            endGroups[eg.second].push_back(ends[eg.first]);
         }
     }
+
 }
 
 void VRPipeSystem::assignBoundaryPressures() {
@@ -1391,23 +1426,15 @@ void VRPipeSystem::solveNodeHeads(double dt) {
 
     auto processControlValve = [&](VRPipeNodePtr node, VREntityPtr entity, double& maxHeadDelta) -> bool {
         vector<VRPipeEndPtr>& ends = node->pipes;
-        auto& endGroup = node->endGroup;
-        auto& pathOpenings = node->pathOpenings;
+        auto& endsGroup = node->endsGroup;
+        auto& endGroups = node->endGroups;
 
         for (size_t i=0; i<ends.size(); i++) { // handle ends without paths/groups
-            if (!endGroup.count(i)) averageOverPipes({ends[i]}, maxHeadDelta);
+            if (!endsGroup.count(i)) averageOverPipes({ends[i]}, maxHeadDelta);
         }
 
-        map<int, vector<int>> groups;
-        for (auto& eg : endGroup) {
-            if (!groups.count(eg.second)) groups[eg.second] = vector<int>();
-            groups[eg.second].push_back(eg.first);
-        }
-
-        for (auto& g : groups) {
-            vector<VRPipeEndPtr> gEnds;
-            for (auto& e : g.second) gEnds.push_back(ends[e]);
-            averageOverPipes(gEnds, maxHeadDelta);
+        for (auto& g : endGroups) {
+            averageOverPipes(g.second, maxHeadDelta);
         }
         return true;
     };
@@ -1708,25 +1735,17 @@ void VRPipeSystem::computeMaxFlows(double dt) {
             if (entity->is_a("ControlValve")) {
                 vector<VRPipeEndPtr>& ends = node->pipes;
                 auto paths = entity->getAllEntities("paths");
-                auto& endGroup = node->endGroup;
+                auto& endsGroup = node->endsGroup;
+                auto& endGroups = node->endGroups;
 
                 for (size_t i=0; i<ends.size(); i++) { // handle ends without paths/groups
-                    if (!endGroup.count(i)) ends[i]->maxFlow = 0.0;
+                    if (!endsGroup.count(i)) ends[i]->maxFlow = 0.0;
                 }
 
-                map<int, vector<int>> groups;
-                for (auto& eg : endGroup) {
-                    if (!groups.count(eg.second)) groups[eg.second] = vector<int>();
-                    groups[eg.second].push_back(eg.first);
-                }
-
-                for (auto& g : groups) {
-                    vector<VRPipeEndPtr> gEnds;
-                    for (auto& e : g.second) gEnds.push_back(ends[e]);
-
+                for (auto& g : endGroups) {
                     double totalFlowIn = 0;
                     double totalFlowOut = 0;
-                    for (auto& e : gEnds) {
+                    for (auto& e : g.second) {
                         auto f = e->maxFlow;
                         if (f < 0) totalFlowOut += -f;
                         else totalFlowIn += f;
@@ -1734,7 +1753,7 @@ void VRPipeSystem::computeMaxFlows(double dt) {
 
                     Vec2d scaleFlowInOut = computeContainerFlowScaling(node->name, 0.0, 0.0, totalFlowIn, totalFlowOut, true);
 
-                    for (auto& e : gEnds) {
+                    for (auto& e : g.second) {
                         auto f = e->maxFlow;
                         if (f < 0) e->maxFlow = f * scaleFlowInOut[1];
                         else e->maxFlow = f * scaleFlowInOut[0];
@@ -2087,23 +2106,10 @@ void VRPipeSystem::updateLevels(double dt) { // TODO: split updatePressurized fr
         if (entity->is_a("Cylinder")) continue;
 
         if (entity->is_a("ControlValve")) { // only unpressurize if connecting path
-
-            vector<VRPipeEndPtr>& ends = node->pipes;
-            auto paths = entity->getAllEntities("paths");
-
-            auto& endGroup = node->endGroup;
-            map<int, vector<int>> groups;
-            for (auto& eg : endGroup) {
-                if (!groups.count(eg.second)) groups[eg.second] = vector<int>();
-                groups[eg.second].push_back(eg.first);
-            }
-
-            for (auto& g : groups) {
-                vector<VRPipeEndPtr> gEnds;
-                for (auto& e : g.second) gEnds.push_back(ends[e]);
+            for (auto& g : node->endGroups) {
                 bool isP = true;
-                for (auto& e : gEnds) if (!e->pressurized) isP = false;
-                if (!isP) for (auto& e : gEnds) e->pressurized = false;
+                for (auto& e : g.second) if (!e->pressurized) isP = false;
+                if (!isP) for (auto& e : g.second) e->pressurized = false;
             }
             continue;
         }
