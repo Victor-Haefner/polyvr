@@ -2012,41 +2012,18 @@ void VRPipeSystem::updatePressurization(double dt) {
             if (node->pipes.size() != 2) continue;
             auto& e1 = node->pipes[0];
             auto& e2 = node->pipes[1];
-
             double level1 = entity->getValue("level1", 0.0);
             double level2 = entity->getValue("level2", 0.0);
-
             if (level1 < 0.999) e1->pressurized = false;
             if (level2 < 0.999) e2->pressurized = false;
             continue;
         }
 
-        if (entity->is_a("ControlValve")) { // only unpressurize if connecting path
-            for (auto& g : node->endGroups) {
+        if (entity->is_a("Valve") || entity->is_a("Pump")) { // also applies to ControlValve
+            for (auto& g : node->endGroups) { // only unpressurize if connecting path
                 bool isP = true;
                 for (auto& e : g.second) if (!e->pressurized) isP = false;
                 if (!isP) for (auto& e : g.second) e->pressurized = false;
-            }
-            continue;
-        }
-
-        if (entity->is_a("Valve")) { // only unpressurize if state > 1e-3
-            double x = entity->getValue("state", 0.0);
-            if (x >= 1e-3) {
-                bool isP = true;
-                for (auto& e : node->pipes) if (!e->pressurized) isP = false;
-                if (!isP) for (auto& e : node->pipes) e->pressurized = false;
-            }
-            continue;
-        }
-
-        if (entity->is_a("Pump")) { // only unpressurize if state > 1e-3
-            bool isOpen = entity->getValue("isOpen", false);
-            double x = entity->getValue("state", 0.0);
-            if (isOpen && x >= 1e-3) {
-                bool isP = true;
-                for (auto& e : node->pipes) if (!e->pressurized) isP = false;
-                if (!isP) for (auto& e : node->pipes) e->pressurized = false;
             }
             continue;
         }
