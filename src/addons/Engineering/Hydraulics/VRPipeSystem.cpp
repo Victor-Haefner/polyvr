@@ -375,6 +375,8 @@ void VRPipeSystem::initOntology() {
     Cylinder->addProperty("resistance", "double"); // external resistance
     Cylinder->addProperty("level1", "double");
     Cylinder->addProperty("level2", "double");
+    Cylinder->addProperty("pressurized1", "bool");
+    Cylinder->addProperty("pressurized2", "bool");
     Cylinder->addProperty("state", "double");
     Cylinder->addProperty("headFlow", "double");
 
@@ -1106,10 +1108,19 @@ void VRPipeSystem::updateVisual() {
 
             double l1 = e->getValue("level1", 1.0);
             double l2 = e->getValue("level2", 1.0);
+            bool chamber1Pressurized = e->getValue("pressurized1", true);
+            bool chamber2Pressurized = e->getValue("pressurized2", true);
             double a = e->getValue("area", 1.0);
             double h = sqrt(a);
-            updateWaterBox(l1*h, blue);
-            updateWaterBox(l2*h, blue);
+
+            Color3f col1 = blue;
+            Color3f col2 = blue;
+            if (n.second->pipes.size() == 2) {
+                col1 = chamber1Pressurized ? blue : lblue;
+                col2 = chamber2Pressurized ? blue : lblue;
+            }
+            updateWaterBox(l1*h, col1);
+            updateWaterBox(l2*h, col2);
             continue;
         }
 
@@ -1275,12 +1286,14 @@ void VRPipeSystem::assignBoundaryPressures() {
 
             double l1 = entity->getValue("level1", 1.0);
             double l2 = entity->getValue("level2", 1.0);
+            bool chamber1Pressurized = entity->getValue("pressurized1", true);
+            bool chamber2Pressurized = entity->getValue("pressurized2", true);
             double a = entity->getValue("area", 1.0);
             double h = sqrt(a);
             double h1 = nPos[1] + h*(l1-0.5);
             double h2 = nPos[1] + h*(l2-0.5);
-            if (!e1->pressurized) e1->hydraulicHead = h1;
-            if (!e2->pressurized) e2->hydraulicHead = h2;
+            if (!chamber1Pressurized) e1->hydraulicHead = h1;
+            if (!chamber2Pressurized) e2->hydraulicHead = h2;
         }
     }
 
@@ -1392,35 +1405,55 @@ void VRPipeSystem::solveNodeHeads(double dt) {
     };
 
     auto processCylinder = [&](vector<VRPipeEndPtr> ends, VREntityPtr entity, double& maxHeadDelta) -> bool {
-        /*if (ends.size() != 2) return false;
-        auto& e1 = ends[0];
-        auto& e2 = ends[1];
-
-        if (!e1->pressurized && !e2->pressurized) return true;
-
-        if (e1->pressurized && e2->pressurized) {
-            averageOverPipes(ends, maxHeadDelta);
-            return true;
-        }
-
-        if (e1->pressurized) averageOverPipes({e1}, maxHeadDelta);
-        if (e2->pressurized) averageOverPipes({e2}, maxHeadDelta);
-        return true;*/
-
-
         if (ends.size() != 2) return false;
         auto& e1 = ends[0];
         auto& e2 = ends[1];
+        bool chamber1Pressurized = entity->getValue("pressurized1", true);
+        bool chamber2Pressurized = entity->getValue("pressurized2", true);
+        if (chamber1Pressurized) averageOverPipes({e1}, maxHeadDelta);
+        if (chamber2Pressurized) averageOverPipes({e2}, maxHeadDelta);
 
-        if (!e1->pressurized && !e2->pressurized) return true;
-        if (e1->pressurized) averageOverPipes({e1}, maxHeadDelta);
-        if (e2->pressurized) averageOverPipes({e2}, maxHeadDelta);
+        double dH = e2->hydraulicHead - e1->hydraulicHead;
+        //if (dH < 0.0 && !e1->pressurized) return true;
+        //if (dH > 0.0 && !e2->pressurized) return true;
 
-        // create step
-        double dh = e2->hydraulicHead - e1->hydraulicHead;
-        e1->hydraulicHead += dh*0.01;
-        e2->hydraulicHead -= dh*0.01;
+        // compute piston movement and flow
+        double Fext = entity->getValue("force", 0.0);
+        double R = entity->getValue("resistance", 1000);
+        double x = entity->getValue("state", 0.0);
+        double L = entity->getValue("length", 0.0);
+        double a = entity->getValue("area", 0.0);
 
+        auto p1 = e1->pipe.lock();
+        auto p2 = e2->pipe.lock();
+        double rho = p1->density;
+        double dP = dH * rho * gravity;
+        double Fhyd = -dP*a;
+        double v = (Fhyd - Fext) / max(R, 1e-9);
+        double dx = v * dt;
+        double x_new = clamp(x + dx/L, 0.001, 0.999);
+        dx = (x_new - x) * L;
+        double Q = dx * a / dt;
+
+        // compute head gain from headFlow
+        double Rpipes = p1->resistanceLaminar + p2->resistanceLaminar;
+        double headGain = -Q * Rpipes / (rho * gravity);
+        headGain = clamp(headGain, -abs(dH), abs(dH)); // ok?
+
+
+        if (entity->getName() == "cylinder") cout << " cyl Fext " << Fext << ", R " << R << ", x " << x << ", L " << L << ", a " << a << ", rho " << rho << ", dP " << dP << ", Fhyd " << Fhyd;
+        if (entity->getName() == "cylinder") cout << ", v " << v << ", dx " << dx << ", headGain " << headGain;
+        //headGain = -0.1 * sign(Q); // TOTEST
+        if (entity->getName() == "cylinder") cout << " -> " << headGain << ", dH " << dH << endl;
+
+        //double mod = clamp(headGain - dH, -headGain, headGain) * 0.5;
+        double mod = (headGain-dH)*0.5;
+        maxHeadDelta = max(maxHeadDelta, abs(mod));
+
+        //if (entity->getName() == "cylinder") cout << " cyl v " << v << ", dx " << dx << ", mod " << mod << endl;
+
+        e1->hydraulicHead -= mod;
+        e2->hydraulicHead += mod;
         return true;
     };
 
@@ -1476,6 +1509,7 @@ void VRPipeSystem::solveNodeHeads(double dt) {
                 if (e1->pressurized && e2->pressurized) newHead = (e1->hydraulicHead + e2->hydraulicHead) * 0.5;
                 else if (e1->pressurized) newHead = (e1->hydraulicHead + pipe->fluidLvl) * 0.5;
                 else if (e2->pressurized) newHead = (e2->hydraulicHead + pipe->fluidLvl) * 0.5;
+                //cout << "?? fH: " << fH << " H1: " << e1->hydraulicHead << " H2: " << e2->hydraulicHead << " nH: " << newHead;
             }
 
             maxHeadDelta = max(maxHeadDelta, abs(pipe->hydraulicHead-newHead));
@@ -1585,16 +1619,7 @@ void VRPipeSystem::computeHeadFlows(double dt) {
             if (node->pipes.size() != 2) continue;
             auto& e1 = node->pipes[0];
             auto& e2 = node->pipes[1];
-
-            auto pipe1 = e1->pipe.lock();
-            auto pipe2 = e2->pipe.lock();
-            auto e11 = pipe1->otherEnd(e1);
-            auto e22 = pipe2->otherEnd(e2);
-            //double dH = e22->hydraulicHead - e11->hydraulicHead;
             double dH = e2->hydraulicHead - e1->hydraulicHead;
-            //cout << " cylinder: dH " << round(dH) << " - " << round(e11->hydraulicHead) << " " << round(e1->hydraulicHead) << " " << round(e2->hydraulicHead) << " " << round(e22->hydraulicHead);
-            //cout << " - L1: " << round(pipe1->length*1000) << " L2: " << round(pipe2->length*1000) << " -> " << (e22->hydraulicHead - e2->hydraulicHead) / pipe2->length << " " << (e11->hydraulicHead - e1->hydraulicHead) / pipe1->length;
-            //cout << endl;
 
             // compute piston movement and flow
             double Fext = entity->getValue("force", 0.0);
@@ -1603,8 +1628,11 @@ void VRPipeSystem::computeHeadFlows(double dt) {
             double L = entity->getValue("length", 0.0);
             double a = entity->getValue("area", 0.0);
 
-
-            double Fhyd = -dH*a;
+            auto p1 = e1->pipe.lock();
+            auto p2 = e2->pipe.lock();
+            double rho = p1->density;
+            double dP = dH * rho * gravity;
+            double Fhyd = -dP*a;
             double v = (Fhyd - Fext) / max(R, 1e-9);
 
             double dx = v * dt;
@@ -1619,11 +1647,42 @@ void VRPipeSystem::computeHeadFlows(double dt) {
 
 /*** TODO
 With the bop attached, the pressure bottles dont fill anymore -> maybe some issue with the cylinder?
-In general, refactor code to use node paths, generalizing valves/closed pumps and such
 
 Add inspection infos for the control valves, its strange that open/close behaves differently!
 
-Rework cylinder, instead of using dH of the node, use gradients along in out pipes
+Gemini:
+To model this correctly, you should move away from "averaging heads" at the cylinder
+and instead treat it as a pressure-discontinuity element governed by Newton's second law.
+1. The Physical ModelA hydraulic cylinder converts hydraulic pressure into mechanical force
+and fluid flow into mechanical velocity.
+The fundamental equations are:
+    Force Balance: $F_{net} = (P_1 \cdot A_1) - (P_2 \cdot A_2) - F_{ext} - F_{friction} = m \cdot a$
+    Flow Coupling: $Q_1 = v \cdot A_1$ and $Q_2 = -v \cdot A_2$
+In your head-based simulation, pressure ($P$) is related to hydraulic head ($H$) by:$$P = \rho g (H - z)$$
+Where $z$ is the elevation.
+
+2. The Recommended Approach:
+The "Virtual Pump" AnalogyInstead of trying to calculate a single head for the node,
+think of the cylinder as a device that imposes a flow on the pipes connected to it based
+on its piston velocity.
+
+Step A: Calculate Piston Velocity
+At every timestep, calculate the pressure difference across the piston.
+Instead, take the heads from the two connected pipe ends H1 H2.
+The effective force driving the piston is
+    F = dH rho g A.
+Use your existing
+    v = (Fhyd - Fext) / R
+
+Step B: Treat the Cylinder as a Flow Boundary
+Once you have v, the cylinder acts as a Source for one pipe and a Sink for the other.
+For Pipe 1: The flow is  Q = v A
+For Pipe 2: The flow is -Q
+
+Step C: Solving for Head (The Correct Way)
+In your solveNodeHeads it should behave like a specified flow boundary condition (Neumann boundary).
+If you want the heads to react naturally to the cylinder moving, you must include
+the cylinder's flow in the Kirchhoff's Current Law (KCL) balance at those nodes.
 ***/
 
 void VRPipeSystem::computeMaxFlows(double dt) {
@@ -1650,7 +1709,7 @@ void VRPipeSystem::computeMaxFlows(double dt) {
         return Vec2d(scaleFlowIn, scaleFlowOut);
     };
 
-    auto clampCylinderFlows = [&](VRPipeEndPtr& e, double cVolume, double cLevel, double pistonFlow) {
+    auto clampCylinderFlows = [&](VRPipeEndPtr& e, double cVolume, double cLevel, double pistonFlow, bool chamberPressurized) {
         // pistonFlow < 0: piston makes chamber smaller
         // pistonFlow > 0: piston makes chamber bigger
 
@@ -1678,7 +1737,7 @@ void VRPipeSystem::computeMaxFlows(double dt) {
         }
         deltaWaterVol = flow*dt;
 
-        if (e->pressurized) {
+        if (chamberPressurized) {
             if (pistonFlow > 0 && flow > 0) {
                 pistonFlow = min(flow, pistonFlow);
                 flow = min(flow, pistonFlow);
@@ -1689,6 +1748,7 @@ void VRPipeSystem::computeMaxFlows(double dt) {
         double maxPistonFlow = (vAir - deltaWaterVol)/dt;
         if (-pistonFlow > maxPistonFlow) pistonFlow = -maxPistonFlow;
 
+        //cout << " clampCylinderFlows f0: " << e->maxFlow << " -> " << flow << endl;
         //cout << " clampCylinderFlows fc: " << pistonFlow << ", newLevel: " << newLevel << ", newVolWater: " << newVolWater << ", newVol: " << newVol << endl;
         //if (hflow > 0 && e1->pressurized) hflow = min(flow1, hflow);
         //if (hflow < 0 && e2->pressurized) hflow =-min(flow2,-hflow);
@@ -1728,6 +1788,8 @@ void VRPipeSystem::computeMaxFlows(double dt) {
                 double cVolume = cArea * cLength;
                 double cLevel1 = entity->getValue("level1", 1.0);
                 double cLevel2 = entity->getValue("level2", 1.0);
+                bool chamber1Pressurized = entity->getValue("pressurized1", true);
+                bool chamber2Pressurized = entity->getValue("pressurized2", true);
                 double hflow = entity->getValue("headFlow", 0.0);
                 double cState = entity->getValue("state", 0.0);
                 double cVol1 = cVolume * cState;
@@ -1736,14 +1798,19 @@ void VRPipeSystem::computeMaxFlows(double dt) {
                 auto& e1 = node->pipes[0];
                 auto& e2 = node->pipes[1];
 
-                for (int i=0; i<2; i++) {
-                    hflow =  clampCylinderFlows(e1, cVol1, cLevel1,  hflow);
-                    hflow = -clampCylinderFlows(e2, cVol2, cLevel2, -hflow);
-                }
 
-                //cout << " maxflow wV: " << cVol1*cLevel1 << " -> " << cVol1*cLevel1 + hflow*dt << ", " << (cVol1*cLevel1 + hflow*dt)/(cVol1+hflow*dt) << endl;
-                //cout << " cylinder cV1 " << cVol1 << ", cV: " << cVolume << ", x: " << cState << endl;
-                //cout << "  flows: " << e1->maxFlow << ", " << hflow << ", " << e2->maxFlow << endl;
+                //if (entity->getName() == "cylinder") cout << "clamp cylinder flow: " << hflow;
+                for (int i=0; i<2; i++) {
+                    hflow =  clampCylinderFlows(e1, cVol1, cLevel1,  hflow, chamber1Pressurized);
+                    hflow = -clampCylinderFlows(e2, cVol2, cLevel2, -hflow, chamber2Pressurized);
+                }
+                //if (entity->getName() == "cylinder") cout << " -> " << hflow << endl;
+
+                /*if (entity->getName() == "cylinder") {
+                    cout << " maxflow wV: " << cVol1*cLevel1 << " -> " << cVol1*cLevel1 + hflow*dt << ", " << (cVol1*cLevel1 + hflow*dt)/(cVol1+hflow*dt) << endl;
+                    cout << " cylinder cV1 " << cVol1 << ", cV: " << cVolume << ", x: " << cState << endl;
+                    cout << "  flows: " << e1->maxFlow << ", " << hflow << ", " << e2->maxFlow << endl;
+                }*/
 
                 //hflow = min( abs(flow2), min(abs(flow1), abs(hflow)) ) * (hflow < 0 ? -1 : 1);
                 entity->set("headFlow", toString(hflow));
@@ -1990,6 +2057,12 @@ void VRPipeSystem::updateLevels(double dt) {
 }
 
 void VRPipeSystem::updatePressurization(double dt) {
+    auto copyUnpressurized = [&](vector<VRPipeEndPtr>& ends) {
+        bool isP = true;
+        for (auto& e : ends) if (!e->pressurized) isP = false;
+        if (!isP) for (auto& e : ends) e->pressurized = false;
+    };
+
     for (auto n : nodes) {
         auto node = n.second;
         auto entity = node->entity;
@@ -2014,23 +2087,27 @@ void VRPipeSystem::updatePressurization(double dt) {
             auto& e2 = node->pipes[1];
             double level1 = entity->getValue("level1", 0.0);
             double level2 = entity->getValue("level2", 0.0);
-            if (level1 < 0.999) e1->pressurized = false;
-            if (level2 < 0.999) e2->pressurized = false;
+            auto nPos = graph->getPosition(n.first)->pos();
+            double a = entity->getValue("area", 0.0);
+            double chamberHeight = sqrt(a);
+            double fluidHeight1 = (level1-0.5)*chamberHeight + nPos[1];
+            double fluidHeight2 = (level1-0.5)*chamberHeight + nPos[1];
+
+            bool chamber1Pressurized = entity->getValue("pressurized1", true);
+            bool chamber2Pressurized = entity->getValue("pressurized2", true);
+
+            if ( chamber1Pressurized && level1 < 0.98) chamber1Pressurized = false;
+            if (!chamber1Pressurized && level1 > 0.99) chamber1Pressurized = true;
+            if ( chamber2Pressurized && level2 < 0.98) chamber2Pressurized = false;
+            if (!chamber2Pressurized && level2 > 0.99) chamber2Pressurized = true;
+
+            if (!chamber1Pressurized && e1->height > fluidHeight1) e1->pressurized = false;
+            if (!chamber2Pressurized && e2->height > fluidHeight1) e2->pressurized = false;
+
+            entity->set("pressurized1", toString(chamber1Pressurized));
+            entity->set("pressurized2", toString(chamber2Pressurized));
             continue;
         }
-
-        if (entity->is_a("Valve") || entity->is_a("Pump")) { // also applies to ControlValve
-            for (auto& g : node->endGroups) { // only unpressurize if connecting path
-                bool isP = true;
-                for (auto& e : g.second) if (!e->pressurized) isP = false;
-                if (!isP) for (auto& e : g.second) e->pressurized = false;
-            }
-            continue;
-        }
-
-        bool isP = true;
-        for (auto& e : node->pipes) if (!e->pressurized) isP = false;
-        if (!isP) for (auto& e : node->pipes) e->pressurized = false;
     }
 
     for (auto& s : segments) {
@@ -2044,9 +2121,37 @@ void VRPipeSystem::updatePressurization(double dt) {
 
         if (!pipe->pressurized) {
             for (auto& e : {e1,e2}) {
-                if (e->heightMax > pipe->fluidLvl) e->pressurized = false;
+                if (e->height > pipe->fluidLvl+1e-3) e->pressurized = false; //
+                //if (e->heightMax > pipe->fluidLvl) e->pressurized = false;
             }
         }
+    }
+
+    for (auto n : nodes) { // second pass for nodes
+        auto node = n.second;
+        auto entity = node->entity;
+
+        if (entity->is_a("Valve") || entity->is_a("Pump")) { // also applies to ControlValve
+            for (auto& g : node->endGroups) copyUnpressurized(g.second); // only unpressurize if connecting path
+            continue;
+        }
+
+        if (entity->is_a("Cylinder")) {
+            if (node->pipes.size() != 2) continue;
+            auto& e1 = node->pipes[0];
+            auto& e2 = node->pipes[1];
+
+            bool chamber1Pressurized = entity->getValue("pressurized1", true);
+            bool chamber2Pressurized = entity->getValue("pressurized2", true);
+            if (!e1->pressurized) chamber1Pressurized = false;
+            if (!e2->pressurized) chamber2Pressurized = false;
+            entity->set("pressurized1", toString(chamber1Pressurized));
+            entity->set("pressurized2", toString(chamber2Pressurized));
+            continue;
+        }
+
+        // junctions
+        copyUnpressurized(node->pipes);
     }
 }
 
