@@ -1418,6 +1418,7 @@ void VRPipeSystem::solveNodeHeads(double dt) {
         bool chamber2Pressurized = entity->getValue("pressurized2", true);
         if (chamber1Pressurized) averageOverPipes({e1}, maxHeadDelta);
         if (chamber2Pressurized) averageOverPipes({e2}, maxHeadDelta);
+        //return true; // TOTEST
 
         double dH = e2->hydraulicHead - e1->hydraulicHead;
         //if (dH < 0.0 && !e1->pressurized) return true;
@@ -2097,7 +2098,7 @@ void VRPipeSystem::updatePressurization(double dt) {
             double a = entity->getValue("area", 0.0);
             double chamberHeight = sqrt(a);
             double fluidHeight1 = (level1-0.5)*chamberHeight + nPos[1];
-            double fluidHeight2 = (level1-0.5)*chamberHeight + nPos[1];
+            double fluidHeight2 = (level2-0.5)*chamberHeight + nPos[1];
 
             bool chamber1Pressurized = entity->getValue("pressurized1", true);
             bool chamber2Pressurized = entity->getValue("pressurized2", true);
@@ -2108,7 +2109,8 @@ void VRPipeSystem::updatePressurization(double dt) {
             if (!chamber2Pressurized && level2 > 0.99) chamber2Pressurized = true;
 
             if (!chamber1Pressurized && e1->height > fluidHeight1) e1->pressurized = false;
-            if (!chamber2Pressurized && e2->height > fluidHeight1) e2->pressurized = false;
+            if (!chamber2Pressurized && e2->height > fluidHeight2) e2->pressurized = false;
+            //cout << "updatePressurization " << e1->height << " > " << fluidHeight1 << " -> " << e1->pressurized << ", " << e2->height << " > " << fluidHeight2 << " -> " << e2->pressurized << endl;
 
             entity->set("pressurized1", toString(chamber1Pressurized));
             entity->set("pressurized2", toString(chamber2Pressurized));
