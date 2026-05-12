@@ -149,8 +149,10 @@ class VRPipeSystem : public VRGeometry {
         void computeEndOffset(VRPipeEndPtr e);
         void computeHydraulicHead(VRPipeEndPtr e);
 
+        double computeCylinderAccelleration(VRPipeNodePtr node, double dt);
+
         void updateNodePaths();
-        void assignBoundaryPressures();
+        void assignBoundaryPressures(double dt);
         void solveNodeHeads(double dt);
         void computeHeadFlows(double dt);
         void computeMaxFlows(double dt);
