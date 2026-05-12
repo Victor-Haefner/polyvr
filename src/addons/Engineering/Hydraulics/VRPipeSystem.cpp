@@ -378,7 +378,8 @@ void VRPipeSystem::initOntology() {
     Cylinder->addProperty("area", "double");
     Cylinder->addProperty("length", "double");
     Cylinder->addProperty("force", "double"); // external force
-    Cylinder->addProperty("resistance", "double"); // external resistance
+    Cylinder->addProperty("damping", "double"); // damps velocity
+    Cylinder->addProperty("mass", "double"); // piston mass
     Cylinder->addProperty("level1", "double");
     Cylinder->addProperty("level2", "double");
     Cylinder->addProperty("pressurized1", "bool");
@@ -1178,7 +1179,8 @@ double VRPipeSystem::computeCylinderAccelleration(VRPipeNodePtr node, double dt)
 
     // compute piston movement and flow
     double Fext = entity->getValue("force", 0.0);
-    double R = entity->getValue("resistance", 50.0);
+    double d = entity->getValue("damping", 50.0);
+    double m = entity->getValue("mass", 10.0);
     double x = entity->getValue("state", 0.0);
     double L = entity->getValue("length", 0.0);
     double A = entity->getValue("area", 0.0);
@@ -1189,18 +1191,21 @@ double VRPipeSystem::computeCylinderAccelleration(VRPipeNodePtr node, double dt)
     auto p2 = e2->pipe.lock();
     double rho = p1->density;
     double dP = dH * rho * gravity;
-    double Fhyd = -dP*A;
-    a = (Fhyd - Fext) / max(R, 1e-9);
+    double Fhyd = -dP*A - v*d;
+    a = (Fhyd - Fext) / m;
     v += a*dt;
 
-    double dx = v * dt;
-    double x_new = clamp(x + dx/L, 0.001, 0.999);
-    dx = (x_new - x) * L;
-    v = dx/dt;
+    double dx = v * dt / L;
+    double x_new = clamp(x + dx, 0.001, 0.999);
+    dx = x_new - x;
+    v = dx*L/dt;
     entity->set("pistonSpeed", toString(v));
     //cout << "cyl speed " << v << endl;
 
-    if (entity->getName() == "cylinder") cout << "cyl acc, v " << v << ", dx " << dx << ", dH " << dH << endl;
+    //static int i=0; i++;
+    //if (i<50) cout << "cyl acc, v " << v << ", x " << x << ", dx " << dx << ", dH " << dH << ", h1 " << e1->hydraulicHead << ", h2 " << e2->hydraulicHead << endl;
+    //if (abs(v) > 1.0) cout << "cyl acc, v " << v << ", dx " << dx << ", dH " << dH << ", h1 " << e1->hydraulicHead << ", h2 " << e2->hydraulicHead << endl;
+    //if (entity->getName() == "cylinder") cout << "cyl acc, v " << v << ", dx " << dx << ", dH " << dH << endl;
 
 
     double hflow = A*v;
@@ -1462,10 +1467,10 @@ void VRPipeSystem::solveNodeHeads(double dt) {
         auto& e2 = node->pipes[1];
         bool chamber1Pressurized = entity->getValue("pressurized1", true);
         bool chamber2Pressurized = entity->getValue("pressurized2", true);
-        //if (chamber1Pressurized) averageOverPipes({e1}, maxHeadDelta);
-        //if (chamber2Pressurized) averageOverPipes({e2}, maxHeadDelta);
-        if (e1->pressurized) averageOverPipes({e1}, maxHeadDelta);
-        if (e2->pressurized) averageOverPipes({e2}, maxHeadDelta);
+        if (chamber1Pressurized) averageOverPipes({e1}, maxHeadDelta);
+        if (chamber2Pressurized) averageOverPipes({e2}, maxHeadDelta);
+        //if (e1->pressurized) averageOverPipes({e1}, maxHeadDelta);
+        //if (e2->pressurized) averageOverPipes({e2}, maxHeadDelta);
 
         double dH = e2->hydraulicHead - e1->hydraulicHead;
         //if (dH < 0.0 && !e1->pressurized) return true;
@@ -1489,8 +1494,7 @@ void VRPipeSystem::solveNodeHeads(double dt) {
         double mod = (headGain-dH)*0.5;
         mod = clamp(mod, -abs(headGain), abs(headGain));
 
-
-        if (entity->getName() == "cylinder") cout << "cyl head, v " << v << ", Q " << Q << ", headGain " << headGain << ", mod " << mod << ", dH " << dH << endl;
+        //if (entity->getName() == "cylinder") cout << "cyl head, v " << v << ", Q " << Q << ", headGain " << headGain << ", mod " << mod << ", dH " << dH << endl;
 
         e1->hydraulicHead -= mod;
         e2->hydraulicHead += mod;
@@ -2022,13 +2026,13 @@ void VRPipeSystem::updateLevels(double dt) {
             // compute piston movement
             double x = entity->getValue("state", 0.0);
             double L = entity->getValue("length", 0.0);
-            double a = entity->getValue("area", 0.0);
+            double A = entity->getValue("area", 0.0);
             double dflow = entity->getValue("headFlow", 0.0);
-            double vol = L*a;
+            double vol = L*A;
             double dx = dflow * dt / vol;
 
             double x_new = x + dx;
-            double v = dx/dt;
+            double v = dx*L/dt;
             entity->set("state", toString(x_new));
             entity->set("pistonSpeed", toString(v));
 
