@@ -201,6 +201,12 @@ void VRPipeSystem::computeEndOffset(VRPipeEndPtr e) {
         e->offset = o;
     }
 
+    if (entity->is_a("Cylinder")) {
+        double L = entity->getValue("length", 1.0);
+        Vec3d o = Vec3d((e->offsetHeight-0.5)*L,0,0);
+        e->offset = o;
+    }
+
     auto pipe = e->pipe.lock();
 
     auto P = graph->getPosition(e->nID);
@@ -762,7 +768,7 @@ void VRPipeSystem::updateVisual() {
                 else continue;
 
                 data.pushVert(p1+dO*k, norm, col1, tcID1);
-                if (l == "h") { data.pushVert(pm+dO*k, norm, col1, tcID1); data.pushLine(); }
+                if (l == "h") { data.pushVert(pm+dO*k, norm, col1, tcID1); data.pushLine(); } // mid segment
                 data.pushVert(p2+dO*k, norm, col2, tcID2);
                 data.pushLine();
                 k++;
@@ -1441,10 +1447,10 @@ void VRPipeSystem::solveNodeHeads(double dt) {
         headGain = clamp(headGain, -abs(dH), abs(dH)); // ok?
 
 
-        if (entity->getName() == "cylinder") cout << " cyl Fext " << Fext << ", R " << R << ", x " << x << ", L " << L << ", a " << a << ", rho " << rho << ", dP " << dP << ", Fhyd " << Fhyd;
-        if (entity->getName() == "cylinder") cout << ", v " << v << ", dx " << dx << ", headGain " << headGain;
+        //if (entity->getName() == "cylinder") cout << " cyl Fext " << Fext << ", R " << R << ", x " << x << ", L " << L << ", a " << a << ", rho " << rho << ", dP " << dP << ", Fhyd " << Fhyd;
+        //if (entity->getName() == "cylinder") cout << ", v " << v << ", dx " << dx << ", headGain " << headGain;
         //headGain = -0.1 * sign(Q); // TOTEST
-        if (entity->getName() == "cylinder") cout << " -> " << headGain << ", dH " << dH << endl;
+        //if (entity->getName() == "cylinder") cout << " -> " << headGain << ", dH " << dH << endl;
 
         //double mod = clamp(headGain - dH, -headGain, headGain) * 0.5;
         double mod = (headGain-dH)*0.5;
