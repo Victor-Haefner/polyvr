@@ -1848,7 +1848,7 @@ void VRPipeSystem::computeMaxFlows(double dt) {
                 }
 
                 // forbid cavitations
-                if (chamber1Pressurized && chamber2Pressurized) { // TODO: this doesnt allow the chambers to drain
+                if (chamber1Pressurized && chamber2Pressurized && false) { // TODO: this doesnt allow the chambers to drain
                     double Q1 = abs(e1->maxFlow);
                     double Q2 = abs(e2->maxFlow);
                     double Qp = abs(hflow);
@@ -2111,6 +2111,20 @@ void VRPipeSystem::updatePressurization(double dt) {
         if (!isP) for (auto& e : ends) e->pressurized = false;
     };
 
+    auto checkChamberPressure = [](VREntityPtr entity, double level, string attribute) {
+        bool cP = entity->getValue(attribute, true);
+        if ( cP && level < 0.98) cP = false;
+        if (!cP && level > 0.99) cP = true;
+        //cP = bool(level > 0.9999);
+        entity->set(attribute, toString(cP));
+    };
+
+    auto checkPipeEndPressure = [](VRPipeEndPtr e, VREntityPtr entity, double level, double y0, double H, string chamberPAttrib) {
+        bool cP = entity->getValue(chamberPAttrib, true);
+        double fluidHeight = (level-0.5)*H + y0;
+        if (!cP && e->height > fluidHeight) e->pressurized = false;
+    };
+
     for (auto n : nodes) {
         auto node = n.second;
         auto entity = node->entity;
@@ -2135,31 +2149,15 @@ void VRPipeSystem::updatePressurization(double dt) {
             auto& e2 = node->pipes[1];
             double level1 = entity->getValue("level1", 0.0);
             double level2 = entity->getValue("level2", 0.0);
+            double A = entity->getValue("area", 0.0);
+            double chamberHeight = sqrt(A);
             auto nPos = graph->getPosition(n.first)->pos();
-            double a = entity->getValue("area", 0.0);
-            double chamberHeight = sqrt(a);
-            double fluidHeight1 = (level1-0.5)*chamberHeight + nPos[1];
-            double fluidHeight2 = (level2-0.5)*chamberHeight + nPos[1];
 
-            bool chamber1Pressurized = entity->getValue("pressurized1", true);
-            bool chamber2Pressurized = entity->getValue("pressurized2", true);
+            checkChamberPressure(entity, level1, "pressurized1");
+            checkChamberPressure(entity, level2, "pressurized2");
 
-            if ( chamber1Pressurized && level1 < 0.98) chamber1Pressurized = false;
-            if (!chamber1Pressurized && level1 > 0.99) chamber1Pressurized = true;
-            if ( chamber2Pressurized && level2 < 0.98) chamber2Pressurized = false;
-            if (!chamber2Pressurized && level2 > 0.99) chamber2Pressurized = true;
-
-            if (!chamber1Pressurized && e1->height > fluidHeight1) e1->pressurized = false;
-            if (!chamber2Pressurized && e2->height > fluidHeight2) e2->pressurized = false;
-
-            /*auto pipe1 = e1->pipe.lock();
-            auto pipe2 = e2->pipe.lock();
-            if (!pipe1->pressurized && e1->height > fluidHeight1) e1->pressurized = false;
-            if (!pipe2->pressurized && e2->height > fluidHeight2) e2->pressurized = false;*/
-            //cout << "updatePressurization " << e1->height << " > " << fluidHeight1 << " -> " << e1->pressurized << ", " << e2->height << " > " << fluidHeight2 << " -> " << e2->pressurized << endl;
-
-            entity->set("pressurized1", toString(chamber1Pressurized));
-            entity->set("pressurized2", toString(chamber2Pressurized));
+            checkPipeEndPressure(e1, entity, level1, nPos[1], chamberHeight, "pressurized1");
+            checkPipeEndPressure(e2, entity, level2, nPos[1], chamberHeight, "pressurized2");
             continue;
         }
     }
