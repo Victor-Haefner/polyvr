@@ -1179,8 +1179,8 @@ double VRPipeSystem::computeCylinderAccelleration(VRPipeNodePtr node, double dt)
 
     // compute piston movement and flow
     double Fext = entity->getValue("force", 0.0);
-    double d = entity->getValue("damping", 50.0);
-    double m = entity->getValue("mass", 10.0);
+    double d = entity->getValue("damping", 500.0);
+    double m = entity->getValue("mass", 500.0);
     double x = entity->getValue("state", 0.0);
     double L = entity->getValue("length", 0.0);
     double A = entity->getValue("area", 0.0);
@@ -2062,6 +2062,7 @@ void VRPipeSystem::updateLevels(double dt) {
             double v = dx*L/dt;
             entity->set("state", toString(x_new));
             entity->set("pistonSpeed", toString(v));
+            //cout << " cyl speed " << v << endl;
 
             // compute new levels
             double _lvl1 = entity->getValue("level1", 1.0);
