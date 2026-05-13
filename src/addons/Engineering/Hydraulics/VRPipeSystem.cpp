@@ -1735,19 +1735,20 @@ void VRPipeSystem::computeMaxFlows(double dt) {
         return Vec2d(scaleFlowIn, scaleFlowOut);
     };
 
-    auto clampCylinderFlows = [&](VRPipeEndPtr& e, double cVolume, double cLevel, double pistonFlow, bool chamberPressurized) {
+    auto clampCylinderFlows = [&](VRPipeEndPtr& e, double cVolume, double cLevel, double& pistonFlow, int pfSign, bool chamberPressurized) {
+        bool pfChanged = false;
+        double eps = 1e-11;
         // pistonFlow < 0: piston makes chamber smaller
         // pistonFlow > 0: piston makes chamber bigger
 
         double vAir = cVolume * (1.0-cLevel);
         double vWat = cVolume * cLevel;
-
         double flow = e->maxFlow;
         // flow < 0: water leaves the chamber
         // flow > 0: water enters the chamber
 
         double deltaWaterVol = flow*dt;
-        double deltaPistonVol = pistonFlow*dt;
+        double deltaPistonVol = pfSign*pistonFlow*dt;
 
         double cVolume2 = cVolume + deltaPistonVol;
         double vWat2 = vWat + deltaWaterVol;
@@ -1764,15 +1765,15 @@ void VRPipeSystem::computeMaxFlows(double dt) {
         deltaWaterVol = flow*dt;
 
         if (chamberPressurized) {
-            if (pistonFlow > 0 && flow > 0) {
-                pistonFlow = min(flow, pistonFlow);
-                flow = min(flow, pistonFlow);
+            if (pfSign*pistonFlow > 0 && flow > 0) { // chamber grows, flow pushes
+                if (flow+eps < pfSign*pistonFlow) { pistonFlow = pfSign*flow; pfChanged = true; } // piston too fast
+                if (flow > pistonFlow) flow = pfSign*pistonFlow; // too much flow in
             }
         }
 
         // test too much push out
         double maxPistonFlow = (vAir - deltaWaterVol)/dt;
-        if (-pistonFlow > maxPistonFlow) pistonFlow = -maxPistonFlow;
+        if (-pfSign*pistonFlow > maxPistonFlow+eps) { pistonFlow = -pfSign*maxPistonFlow; pfChanged = true; }
 
         //cout << " clampCylinderFlows f0: " << e->maxFlow << " -> " << flow << endl;
         //cout << " clampCylinderFlows fc: " << pistonFlow << ", newLevel: " << newLevel << ", newVolWater: " << newVolWater << ", newVol: " << newVol << endl;
@@ -1780,7 +1781,7 @@ void VRPipeSystem::computeMaxFlows(double dt) {
         //if (hflow < 0 && e2->pressurized) hflow =-min(flow2,-hflow);
 
         e->maxFlow = flow;
-        return pistonFlow;
+        return pfChanged;
     };
 
     auto rebalanceEndsGroupFlow = [&](const vector<VRPipeEndPtr>& ends, double volAir, double volWater) {
@@ -1824,21 +1825,31 @@ void VRPipeSystem::computeMaxFlows(double dt) {
                 auto& e1 = node->pipes[0];
                 auto& e2 = node->pipes[1];
 
-
-                //if (entity->getName() == "cylinder") cout << "clamp cylinder flow: " << hflow;
-                for (int i=0; i<2; i++) {
-                    hflow =  clampCylinderFlows(e1, cVol1, cLevel1,  hflow, chamber1Pressurized);
-                    hflow = -clampCylinderFlows(e2, cVol2, cLevel2, -hflow, chamber2Pressurized);
+                bool changed1 = true;
+                bool changed2 = true;
+                for (int i=0; (changed1 || changed2) && i < 10; i++) {
+                    changed1 = clampCylinderFlows(e1, cVol1, cLevel1, hflow,  1, chamber1Pressurized);
+                    changed2 = clampCylinderFlows(e2, cVol2, cLevel2, hflow, -1, chamber2Pressurized);
                 }
-                //if (entity->getName() == "cylinder") cout << " -> " << hflow << endl;
 
-                /*if (entity->getName() == "cylinder") {
-                    cout << " maxflow wV: " << cVol1*cLevel1 << " -> " << cVol1*cLevel1 + hflow*dt << ", " << (cVol1*cLevel1 + hflow*dt)/(cVol1+hflow*dt) << endl;
-                    cout << " cylinder cV1 " << cVol1 << ", cV: " << cVolume << ", x: " << cState << endl;
-                    cout << "  flows: " << e1->maxFlow << ", " << hflow << ", " << e2->maxFlow << endl;
-                }*/
+                // forbid cavitations
+                if (chamber1Pressurized && chamber2Pressurized) {
+                    double totalFlowIn = 0;
+                    double totalFlowOut = 0;
+                    for (auto& e : {e1, e2}) {
+                        auto f = e->maxFlow;
+                        if (f < 0) totalFlowIn += -f;
+                        else totalFlowOut += f;
+                    }
 
-                //hflow = min( abs(flow2), min(abs(flow1), abs(hflow)) ) * (hflow < 0 ? -1 : 1);
+                    if (totalFlowOut > hflow) {
+                        for (auto& e : {e1, e2}) {
+                            auto f = e->maxFlow;
+                            if (f > 0) e->maxFlow = totalFlowIn;
+                        }
+                    }
+                }
+
                 entity->set("headFlow", toString(hflow));
                 continue;
             }
