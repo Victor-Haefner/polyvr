@@ -1848,15 +1848,22 @@ void VRPipeSystem::computeMaxFlows(double dt) {
                 }
 
                 // forbid cavitations
-                if (chamber1Pressurized && chamber2Pressurized && false) { // TODO: this doesnt allow the chambers to drain
-                    double Q1 = abs(e1->maxFlow);
-                    double Q2 = abs(e2->maxFlow);
+                if (chamber1Pressurized && chamber2Pressurized) {
                     double Qp = abs(hflow);
-                    double Q = min(Q1, min(Q2, Qp));
+                    double totalFlowIn = 0;
+                    double totalFlowOut = 0;
+                    for (auto& e : {e1, e2}) {
+                        auto f = e->maxFlow;
+                        if (f < 0) totalFlowOut += -f;
+                        else totalFlowIn += f;
+                    }
 
-                    e1->maxFlow = Q * sign(e1->maxFlow);
-                    e2->maxFlow = Q * sign(e2->maxFlow);
-                    hflow       = Q * sign(hflow);
+                    if (totalFlowOut > Qp) { // more flow out than piston flow, clamp flow out!
+                        for (auto& e : {e1, e2}) {
+                            auto f = e->maxFlow;
+                            if (f < 0) e->maxFlow = -Qp;
+                        }
+                    }
                 }
 
                 entity->set("headFlow", toString(hflow));
@@ -2070,20 +2077,22 @@ void VRPipeSystem::updateLevels(double dt) {
             double volWater2 = clamp(_volWater2 + e2->flow*dt, 0.0, vol2, true, "cylinder volWater2");
             double lvl1 = volWater1/vol1;
             double lvl2 = volWater2/vol2;
-
-            /*cout << " level cV: " << vol << ", x: " << x << " -> " << x_new << endl;
-            cout << " level flows f1: " << e1->flow << ", fc: " << dflow << ", f2: " << e2->flow << endl;
-            cout << " level dVw1: " << e1->flow*dt << ", dVc: " << dflow*dt << ", dVw2: " << e2->flow*dt << endl;
-            cout << " level V1: " << _vol1 << " -> " << vol1 << ", V2: " << _vol2 << " -> " << vol2 << endl;
-            cout << " level wV1: " << _volWater1 << " -> " << volWater1 << ", wV2: " << _volWater2 << " -> " << volWater2 << endl;
-            cout << " level wV1+cf: " << _volWater1 << " -> " << _volWater1+dflow*dt << ", wV2-cf: " << _volWater2 << " -> " << _volWater2-dflow*dt << endl;
-            cout << " level lvl1: " << _lvl1 << " -> " << lvl1 << ",  lvl2: " << _lvl2 << " -> " << lvl2 << endl;
-            cout << " level lvl1-1: " << _lvl1-1.0 << " -> " << lvl1-1.0 << ",  lvl2-1: " << _lvl2-1.0 << " -> " << lvl2-1.0 << endl;
-            cout << " level max dflow: " << (_vol2*(1.0-_lvl2) - e2->flow*dt)/dt << ", dflow: " << dflow << endl;*/
-            //cout << "    " << volWater2 / vol2 - 1.0 << " " << vol2 - volWater2 << endl;
-
             double newLevel1 = clamp(lvl1, 0.0, 1.0, true, "cylinder lvl1");
             double newLevel2 = clamp(lvl2, 0.0, 1.0, true, "cylinder lvl2");
+
+            /*if (newLevel2 < 0.9 && x < 0.9 && x > 0.1) {
+                cout << endl;
+                cout << " level cV: " << vol << ", x: " << x << " -> " << x_new << endl;
+                cout << " level flows f1: " << e1->flow << ", fc: " << dflow << ", f2: " << e2->flow << endl;
+                cout << " level dVw1: " << e1->flow*dt << ", dVc: " << dflow*dt << ", dVw2: " << e2->flow*dt << endl;
+                cout << " level V1: " << _vol1 << " -> " << vol1 << ", V2: " << _vol2 << " -> " << vol2 << endl;
+                cout << " level wV1: " << _volWater1 << " -> " << volWater1 << ", wV2: " << _volWater2 << " -> " << volWater2 << endl;
+                cout << " level wV1+cf: " << _volWater1 << " -> " << _volWater1+dflow*dt << ", wV2-cf: " << _volWater2 << " -> " << _volWater2-dflow*dt << endl;
+                cout << " level lvl1: " << _lvl1 << " -> " << lvl1 << ",  lvl2: " << _lvl2 << " -> " << lvl2 << endl;
+                cout << " level lvl1-1: " << _lvl1-1.0 << " -> " << lvl1-1.0 << ",  lvl2-1: " << _lvl2-1.0 << " -> " << lvl2-1.0 << endl;
+                cout << " level max dflow: " << (_vol2*(1.0-_lvl2) - e2->flow*dt)/dt << ", dflow: " << dflow << endl;
+                //cout << "    " << volWater2 / vol2 - 1.0 << " " << vol2 - volWater2 << endl;
+            }*/
 
             entity->set("level1", toString(newLevel1));
             entity->set("level2", toString(newLevel2));
