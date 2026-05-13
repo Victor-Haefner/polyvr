@@ -1712,6 +1712,9 @@ the cylinder's flow in the Kirchhoff's Current Law (KCL) balance at those nodes.
 ***/
 
 void VRPipeSystem::computeMaxFlows(double dt) {
+    double eps = 1e-11;
+    auto sign = [](double v) { return (v > 0) - (v < 0); };
+
     //cout << "computeMaxFlows" << endl;
     auto computeContainerFlowScaling = [&](double volAir, double volWater, double flowIn, double flowOut, bool pressurized) {
         double totalFlow = flowIn - flowOut;
@@ -1737,7 +1740,6 @@ void VRPipeSystem::computeMaxFlows(double dt) {
 
     auto clampCylinderFlows = [&](VRPipeEndPtr& e, double cVolume, double cLevel, double& pistonFlow, int pfSign, bool chamberPressurized) {
         bool pfChanged = false;
-        double eps = 1e-11;
         // pistonFlow < 0: piston makes chamber smaller
         // pistonFlow > 0: piston makes chamber bigger
 
@@ -1748,7 +1750,8 @@ void VRPipeSystem::computeMaxFlows(double dt) {
         // flow > 0: water enters the chamber
 
         double deltaWaterVol = flow*dt;
-        double deltaPistonVol = pfSign*pistonFlow*dt;
+        double relPistonFlow = pfSign*pistonFlow;
+        double deltaPistonVol = relPistonFlow*dt;
 
         double cVolume2 = cVolume + deltaPistonVol;
         double vWat2 = vWat + deltaWaterVol;
@@ -1765,10 +1768,22 @@ void VRPipeSystem::computeMaxFlows(double dt) {
         deltaWaterVol = flow*dt;
 
         if (chamberPressurized) {
-            if (pfSign*pistonFlow > 0 && flow > 0) { // chamber grows, flow pushes
-                if (flow+eps < pfSign*pistonFlow) { pistonFlow = pfSign*flow; pfChanged = true; } // piston too fast
-                if (flow > pistonFlow) flow = pfSign*pistonFlow; // too much flow in
+            if (relPistonFlow > 0) { // chamber grows
+                if (flow > 0) { // flow pushes, should be same as pistonflow
+                    if (flow+eps < relPistonFlow) { pistonFlow = pfSign*flow; pfChanged = true; } // piston too fast
+                    if (flow > pistonFlow) flow = relPistonFlow; // too much flow in
+                }
             }
+
+            if (relPistonFlow < 0) { // chamber shrinks
+                if (flow > 0) { // flow pushes against
+                    flow = 0;
+                    pistonFlow = 0;
+                    pfChanged = true;
+                }
+            }
+
+            // shrinking + flowing out more
         }
 
         // test too much push out
@@ -1833,21 +1848,15 @@ void VRPipeSystem::computeMaxFlows(double dt) {
                 }
 
                 // forbid cavitations
-                if (chamber1Pressurized && chamber2Pressurized) {
-                    double totalFlowIn = 0;
-                    double totalFlowOut = 0;
-                    for (auto& e : {e1, e2}) {
-                        auto f = e->maxFlow;
-                        if (f < 0) totalFlowIn += -f;
-                        else totalFlowOut += f;
-                    }
+                if (chamber1Pressurized && chamber2Pressurized) { // TODO: this doesnt allow the chambers to drain
+                    double Q1 = abs(e1->maxFlow);
+                    double Q2 = abs(e2->maxFlow);
+                    double Qp = abs(hflow);
+                    double Q = min(Q1, min(Q2, Qp));
 
-                    if (totalFlowOut > hflow) {
-                        for (auto& e : {e1, e2}) {
-                            auto f = e->maxFlow;
-                            if (f > 0) e->maxFlow = totalFlowIn;
-                        }
-                    }
+                    e1->maxFlow = Q * sign(e1->maxFlow);
+                    e2->maxFlow = Q * sign(e2->maxFlow);
+                    hflow       = Q * sign(hflow);
                 }
 
                 entity->set("headFlow", toString(hflow));
@@ -2185,13 +2194,8 @@ void VRPipeSystem::updatePressurization(double dt) {
             if (node->pipes.size() != 2) continue;
             auto& e1 = node->pipes[0];
             auto& e2 = node->pipes[1];
-
-            bool chamber1Pressurized = entity->getValue("pressurized1", true);
-            bool chamber2Pressurized = entity->getValue("pressurized2", true);
-            if (!e1->pressurized) chamber1Pressurized = false;
-            if (!e2->pressurized) chamber2Pressurized = false;
-            entity->set("pressurized1", toString(chamber1Pressurized));
-            entity->set("pressurized2", toString(chamber2Pressurized));
+            if (!e1->pressurized) entity->set("pressurized1", toString(false));
+            if (!e2->pressurized) entity->set("pressurized2", toString(false));
             continue;
         }
 
