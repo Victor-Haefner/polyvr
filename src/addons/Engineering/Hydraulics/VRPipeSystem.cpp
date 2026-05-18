@@ -1225,6 +1225,7 @@ void VRPipeSystem::updateNodePaths() {
         endGroups.clear();
         endsGroup.clear();
         pathOpenings.clear();
+        int Ne = (int)ends.size();
 
         if (entity->is_a("ControlValve")) {
             auto paths = entity->getAllEntities("paths");
@@ -1236,7 +1237,6 @@ void VRPipeSystem::updateNodePaths() {
                 double x0 = p->getValue("x0", 0.0);
                 double xs = p->getValue("xs", 0.0);
                 double K  = p->getValue("K" , 0.0);
-                int Ne = (int)ends.size();
 
                 if (A<0 || B<0 || A>=Ne || B>=Ne) {
                     cout << "Error in processControlValve, wrong ends indices: " << A << ", " << B << endl;
@@ -1261,6 +1261,7 @@ void VRPipeSystem::updateNodePaths() {
                 }
             }
         } else if (entity->is_a("Valve")) {
+            if (Ne < 2) continue;
             double x = entity->getValue("state", 0.0);
 
             if (x > 1e-3) {
@@ -1270,6 +1271,7 @@ void VRPipeSystem::updateNodePaths() {
                 pathOpenings[1] = x;
             }
         } else if (entity->is_a("Pump")) {
+            if (Ne < 2) continue;
             double x = entity->getValue("state", 0.0);
             bool isOpen = entity->getValue("isOpen", false);
 
