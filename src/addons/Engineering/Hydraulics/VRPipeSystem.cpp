@@ -1385,6 +1385,8 @@ void VRPipeSystem::solveNodeHeads(double dt) {
         if (ends.size() == 0) return 0;
         if (ends.size() == 1) return ends[0]->pipe.lock()->hydraulicHead;
 
+        //return simpleAverage(ends); // TOTEST
+
         double num = 0.0;
         double den = 0.0;
 
@@ -1571,7 +1573,6 @@ void VRPipeSystem::solveNodeHeads(double dt) {
         if (entity->is_a("Pump")) {
             double ns = entity->getValue("newState", 0.0);
             entity->set("state", toString(ns));
-            double c = entity->getValue("control", 0.0);
             //cout << " pump state " << ns << ", ctrol " << c << " dt " << dt << endl;
         }
     }
@@ -1670,46 +1671,6 @@ void VRPipeSystem::computeHeadFlows(double dt) {
         }
     }
 }
-
-/*** TODO
-With the bop attached, the pressure bottles dont fill anymore -> maybe some issue with the cylinder?
-
-Add inspection infos for the control valves, its strange that open/close behaves differently!
-
-Gemini:
-To model this correctly, you should move away from "averaging heads" at the cylinder
-and instead treat it as a pressure-discontinuity element governed by Newton's second law.
-1. The Physical ModelA hydraulic cylinder converts hydraulic pressure into mechanical force
-and fluid flow into mechanical velocity.
-The fundamental equations are:
-    Force Balance: $F_{net} = (P_1 \cdot A_1) - (P_2 \cdot A_2) - F_{ext} - F_{friction} = m \cdot a$
-    Flow Coupling: $Q_1 = v \cdot A_1$ and $Q_2 = -v \cdot A_2$
-In your head-based simulation, pressure ($P$) is related to hydraulic head ($H$) by:$$P = \rho g (H - z)$$
-Where $z$ is the elevation.
-
-2. The Recommended Approach:
-The "Virtual Pump" AnalogyInstead of trying to calculate a single head for the node,
-think of the cylinder as a device that imposes a flow on the pipes connected to it based
-on its piston velocity.
-
-Step A: Calculate Piston Velocity
-At every timestep, calculate the pressure difference across the piston.
-Instead, take the heads from the two connected pipe ends H1 H2.
-The effective force driving the piston is
-    F = dH rho g A.
-Use your existing
-    v = (Fhyd - Fext) / R
-
-Step B: Treat the Cylinder as a Flow Boundary
-Once you have v, the cylinder acts as a Source for one pipe and a Sink for the other.
-For Pipe 1: The flow is  Q = v A
-For Pipe 2: The flow is -Q
-
-Step C: Solving for Head (The Correct Way)
-In your solveNodeHeads it should behave like a specified flow boundary condition (Neumann boundary).
-If you want the heads to react naturally to the cylinder moving, you must include
-the cylinder's flow in the Kirchhoff's Current Law (KCL) balance at those nodes.
-***/
 
 void VRPipeSystem::computeMaxFlows(double dt) {
     double eps = 1e-11;
@@ -1920,13 +1881,12 @@ void VRPipeSystem::computeMaxFlows(double dt) {
             }
 
             Vec2d scaleFlowInOut = computeContainerFlowScaling(pipeAirVolume, pipeWaterVolume, totalFlowIn, totalFlowOut, pipe->pressurized);
-            if (scaleFlowInOut[0] < 0.9) needsIteration = true;
-            if (scaleFlowInOut[1] < 0.9) needsIteration = true;
 
             for (auto& e : {e1, e2}) {
                 auto f = e->maxFlow;
                 if (f < 0) e->maxFlow = f * scaleFlowInOut[0];
                 else e->maxFlow = f * scaleFlowInOut[1];
+                if (abs(e->maxFlow-f) > 1e-7) needsIteration = true;
             }
 
             // forbid cavitations
@@ -1941,8 +1901,7 @@ void VRPipeSystem::computeMaxFlows(double dt) {
 
                 if (totalFlowOut > totalFlowIn) {
                     for (auto& e : {e1, e2}) {
-                        auto f = e->maxFlow;
-                        if (f > 0) e->maxFlow = totalFlowIn;
+                        if (e->maxFlow > 0) e->maxFlow = totalFlowIn;
                     }
                     needsIteration = true;
                 }
@@ -1991,17 +1950,45 @@ void VRPipeSystem::computeMaxFlows(double dt) {
         }
     };
 
+    auto checkNodeFlows = [&]() {
+        for (auto& n : nodes) {
+            auto e = n.second->entity;
+            if (e->is_a("Tank")) continue;
+            if (e->is_a("Cylinder")) continue;
+
+            //double eps = 1e-15;
+            double eps = 1e-4;
+
+            double Q = 0;
+            for (auto& e : n.second->pipes) Q += e->maxFlow;
+            if (abs(Q) > eps) {
+                cout << " junction flow: " << Q << ", " << n.first << ", " << e->getConceptList() << endl;
+                for (auto& e : n.second->pipes) {
+                    auto p = e->pipe.lock();
+                    cout << "  e: " << e->maxFlow << ", R: " << p->radius << ", h: " << e->hydraulicHead << endl;
+                }
+            }
+        }
+    };
+
 
     copyInitialMaxHead();
 
     bool needsIteration = true;
-    for (int i=0; needsIteration && i<30; i++) {
+    int Nitr = 30;
+    for (int i=0; needsIteration && i<Nitr; i++) {
         needsIteration = false;
         processNodes();
         processSegments(needsIteration);
+
+        if (i >= Nitr-1 && needsIteration) {
+            //cout << "Warning, not enought iterations: " << i << ", ni " << needsIteration << endl;
+            //checkNodeFlows();
+        }
     }
 
     copyFinalMaxHead();
+    //checkNodeFlows();
 }
 
 void VRPipeSystem::updateLevels(double dt) {
