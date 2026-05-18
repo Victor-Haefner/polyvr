@@ -1496,7 +1496,8 @@ void VRPipeSystem::solveNodeHeads(double dt) {
         double mod = (headGain-dH)*0.5;
         mod = clamp(mod, -abs(headGain), abs(headGain));
 
-        //if (entity->getName() == "cylinder") cout << "cyl head, v " << v << ", Q " << Q << ", headGain " << headGain << ", mod " << mod << ", dH " << dH << endl;
+        //if (entity->getName() == "cylinder_1")
+        //    cout << "cyl head, v " << v << ", Q " << Q << ", ent: " << entity->getName() << ", headGain " << headGain << ", mod " << mod << ", dH " << dH << endl;
 
         e1->hydraulicHead -= mod;
         e2->hydraulicHead += mod;
@@ -2105,7 +2106,18 @@ void VRPipeSystem::updatePressurization(double dt) {
     auto copyUnpressurized = [&](vector<VRPipeEndPtr>& ends) {
         bool isP = true;
         for (auto& e : ends) if (!e->pressurized) isP = false;
-        if (!isP) for (auto& e : ends) e->pressurized = false;
+
+        if (!isP) {
+            double fluidLvlMin = 1e6;
+            for (auto& e : ends) {
+                auto p = e->pipe.lock();
+                fluidLvlMin = min(fluidLvlMin, p->fluidLvl);
+            }
+
+            for (auto& e : ends) {
+                if (e->heightMax > fluidLvlMin) e->pressurized = false;
+            }
+        }
     };
 
     auto checkChamberPressure = [](VREntityPtr entity, double level, string attribute) {
@@ -2163,6 +2175,7 @@ void VRPipeSystem::updatePressurization(double dt) {
         auto& pipe = s.second;
         auto e1 = pipe->end1.lock();
         auto e2 = pipe->end2.lock();
+        //cout << " updatePressurization pipe " << s.first << endl;
 
         // hysteresis
         if ( pipe->pressurized && pipe->level < 0.95) pipe->pressurized = false;
@@ -2170,8 +2183,8 @@ void VRPipeSystem::updatePressurization(double dt) {
 
         if (!pipe->pressurized) {
             for (auto& e : {e1,e2}) {
-                if (e->height > pipe->fluidLvl+1e-3) e->pressurized = false; //
-                //if (e->heightMax > pipe->fluidLvl) e->pressurized = false;
+                if (e->heightMax > pipe->fluidLvl) e->pressurized = false;
+                //cout << "  end " << e->nID << " P: " << e->pressurized << " eH " << e->height << ", fL " << pipe->fluidLvl << endl;
             }
         }
     }
