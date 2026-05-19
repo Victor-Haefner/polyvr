@@ -809,34 +809,40 @@ void VRPipeSystem::updateVisual() {
             for (int i=0; i<12; i++) data.pushQuad(-1,-1,-1,-1); // placeholders
             updatePipeInds(data, 0.5, i0, k0);
 
-            // flow visual
+            // flow arrows
             Vec3d u2 = d.cross(u) + u; u2.normalize();
             float g2 = g*1.05;
             float g3 = g*0.5;
             float g4 = g2/sqrt(2);
-            for (int t = 0; t<2; t++) { // 2 triangles
+            for (int t = 0; t<2; t++) { // 2x2 triangles
                 Vec3d pt = (p1+pm)*0.5;
                 if (t == 1) pt = (pm+p2)*0.5;
 
-                data.pushQuad(pt, d, u,  Vec2d(g3,g2), false);
-                data.pushQuad(pt, d, u,  Vec2d(g2,g3), false);
-                data.pushQuad(pt, d, u2, Vec2d(g4,g4), false);
-                for (int i=0; i<12; i++) data.pushColor(green);
-                for (int i=0; i<4; i++) {
-                    int a = 0;
-                    int b = 1;
-                    if (i == 0) { a = 0; b = 1; }
-                    if (i == 1) { a = 5; b = 6; }
-                    if (i == 2) { a = 2; b = 3; }
-                    if (i == 3) { a = 7; b = 4; }
+                for (int t = 0; t<2; t++) { // 2 triangles
+                    auto col = green;
+                    if (t == 1) { g2 *= 0.98; g3 *= 0.98; g4 *= 0.98; col = red; }
 
-                    int i0 = -12;
-                    int i1 = -8;
-                    int i2 = -4;
-                    data.pushQuad(i2+i,i2+i,i0+a,i0+b);
-                    data.pushQuad(i2+i,i2+i,i0+b,i0+a);
-                    data.setNorm(i1+i, dPipe); // store dPipe
-                    data.setNorm(i2+i, Vec3d(data.getPosition(i2+i))); // store p0
+                    data.pushQuad(pt, d, u,  Vec2d(g3,g2), false);
+                    data.pushQuad(pt, d, u,  Vec2d(g2,g3), false);
+                    data.pushQuad(pt, d, u2, Vec2d(g4,g4), false);
+
+                    for (int i=0; i<12; i++) data.pushColor(col);
+                    for (int i=0; i<4; i++) {
+                        int a = 0;
+                        int b = 1;
+                        if (i == 0) { a = 0; b = 1; }
+                        if (i == 1) { a = 5; b = 6; }
+                        if (i == 2) { a = 2; b = 3; }
+                        if (i == 3) { a = 7; b = 4; }
+
+                        int i0 = -12;
+                        int i1 = -8;
+                        int i2 = -4;
+                        data.pushQuad(i2+i,i2+i,i0+a,i0+b);
+                        data.pushQuad(i2+i,i2+i,i0+b,i0+a);
+                        data.setNorm(i1+i, dPipe); // store dPipe
+                        data.setNorm(i2+i, Vec3d(data.getPosition(i2+i))); // store p0
+                    }
                 }
             }
         }
@@ -899,6 +905,12 @@ void VRPipeSystem::updateVisual() {
     int i = 0;
     int k = 0;
     static double F = 0; F += 0.01; // TOTEST
+
+    auto flowToArrowLength = [sign](double f, double r, double A, double v0, double v_ref) {
+        double v = f/A;
+        double F = -sign(v) * 2.0*r*std::asinh(abs(v) / v0) / std::asinh(v_ref / v0);
+        return F;
+    };
 
     auto ann = dynamic_pointer_cast<VRAnnotationEngine>( findFirst("testInds") );
     for (auto& s : segments) {
@@ -1038,29 +1050,34 @@ void VRPipeSystem::updateVisual() {
         data.setColor(i+4+2, tmpCol2);
         data.setColor(i+4+3, tmpCol2);
 
-
+        // flow arrows
         double r = s.second->radius;
+        double A = s.second->area;
         double v0 = 0.5; // m/s
         double v_ref = 4.0; // m/s
-        double v1 = e1->flow/s.second->area;
-        double v2 = e2->flow/s.second->area;
-        double F1 = -sign(v1) * 2.0*r*std::asinh(abs(v1) / v0) / std::asinh(v_ref / v0);
-        double F2 =  sign(v2) * 2.0*r*std::asinh(abs(v2) / v0) / std::asinh(v_ref / v0);
+        double F1 = flowToArrowLength( e1->flow, r, A, v0, v_ref);
+        double F2 = flowToArrowLength(-e2->flow, r, A, v0, v_ref);
+        double H1 = flowToArrowLength( e1->headFlow, r, A, v0, v_ref);
+        double H2 = flowToArrowLength(-e2->headFlow, r, A, v0, v_ref);
 
         for (int j=0; j<4; j++) {
             int j1 = i+20+j;
-            int j2 = i+24+j;
+            int j2 = j1+4;
+            int j3 = j2+12;
             Vec3d sD = data.getNormal(j1);
             Vec3d p0 = data.getNormal(j2);
             data.setPos(j2, p0 + F1*sD);
+            data.setPos(j3, p0 + H1*sD);
         }
 
         for (int j=0; j<4; j++) {
-            int j1 = i+32+j;
-            int j2 = i+36+j;
+            int j1 = i+44+j;
+            int j2 = j1+4;
+            int j3 = j2+12;
             Vec3d sD = data.getNormal(j1);
             Vec3d p0 = data.getNormal(j2);
             data.setPos(j2, p0 + F2*sD);
+            data.setPos(j3, p0 + H2*sD);
         }
 
         /*for (int j=0; j<16; j++) {
@@ -1070,8 +1087,8 @@ void VRPipeSystem::updateVisual() {
         }*/
 
         // level + flow
-        i += 16 + 12*2;
-        k += 56 + 32*2;
+        i += 16 + 12*4;
+        k += 56 + 32*4;
     }
 
     auto updateWaterBox = [&](double lvl, Color3f col) {
@@ -2185,7 +2202,8 @@ void VRPipeSystem::updatePressurization(double dt) {
 
         if (!pipe->pressurized) {
             for (auto& e : {e1,e2}) {
-                if (e->heightMax > pipe->fluidLvl) e->pressurized = false;
+                if (e->heightMax > pipe->fluidLvl) e->pressurized = false; // ISSUE: accumulator doesnt work anymore..
+                //if (e->height > pipe->fluidLvl+1e-3) e->pressurized = false; // old
                 //cout << "  end " << e->nID << " P: " << e->pressurized << " eH " << e->height << ", fL " << pipe->fluidLvl << endl;
             }
         }
