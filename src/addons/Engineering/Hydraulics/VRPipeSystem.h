@@ -38,6 +38,9 @@ class VRPipeEnd {
         VRPipeEnd(VRPipeSegmentPtr s, int nID, double height = 0.0);
         ~VRPipeEnd();
 
+        void updateGeometry(GraphPtr graph);
+        void setInitialHead();
+
         static VRPipeEndPtr create(VRPipeSegmentPtr s, int nID, double height = 0.0);
 };
 
@@ -51,6 +54,7 @@ class VRPipeSegment {
         double fluidMin = 0.0;
         double fluidMax = 0.0;
         double fluidLvl = 0.0;
+        double zRadius = 0.0;
 
         double gravity = 9.81;
         double resistanceLaminar = 0.0;
@@ -80,10 +84,9 @@ class VRPipeSegment {
         VRPipeEndPtr otherEnd(VRPipeEndPtr e);
 
         double computeRegime(double Q);
-        void updateResistance();
-        void setLength(double l);
         void setLevel(double lvl);
-        void computeGeometry();
+        void updateResistance();
+        void updateGeometry(GraphPtr graph);
 
         double computeEffectiveResistance(const double& flow);
 };
@@ -147,7 +150,6 @@ class VRPipeSystem : public VRGeometry {
         void setupMaterial();
 
         void computeEndOffset(VRPipeEndPtr e);
-        void computeHydraulicHead(VRPipeEndPtr e);
 
         double computeCylinderAccelleration(VRPipeNodePtr node, double dt);
 
