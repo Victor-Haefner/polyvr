@@ -906,7 +906,6 @@ void VRPipeSystem::updateVisual() {
 
     int i = 0;
     int k = 0;
-    static double F = 0; F += 0.01; // TOTEST
 
     auto flowToArrowLength = [sign](double f, double r, double A, double v0, double v_ref) {
         double v = f/A;
@@ -1040,12 +1039,10 @@ void VRPipeSystem::updateVisual() {
 
         auto tmpCol1 = getTempColor(e1->temperature);
         auto tmpCol2 = getTempColor(e2->temperature);
-        //if (e1->temperature > 21 || e2->temperature > 21) cout << "T1 " << e1->temperature << ", T2 " << e2->temperature << endl;
-        //auto tmpCol1 = getTempColor(90.0);
-        //auto tmpCol2 = getTempColor(90.0);
 
-        tmpCol1 = s.second->pressurized ? blue : lblue;
-        tmpCol2 = tmpCol1;
+        // color pressurization
+        //tmpCol1 = s.second->pressurized ? blue : lblue;
+        //tmpCol2 = tmpCol1;
 
         data.setColor(i+4+0, tmpCol1);
         data.setColor(i+4+1, tmpCol1);
@@ -2286,39 +2283,74 @@ void VRPipeSystem::updateRegimes(double dt) {
 void VRPipeSystem::computeAdvectiveHeatTransfer(double dt) {
     for (auto& n : nodes) { // --- 1. Reset heat flux accumulator at nodes ---
         auto e = n.second->entity;
-        for (auto pe : n.second->pipes) {
-            pe->heatFlux = 0.0;   // temporary accumulator (add this member)
 
-            if (e->is_a("Tank")) {
-                double T = e->getValue("temperature", 20.0);
-                pe->temperature = T;
+        if (e->is_a("Tank")) {
+            double tankArea = e->getValue("area", 0.0);
+            double tankHeight = e->getValue("height", 0.0);
+            double tankLevel = e->getValue("level", 1.0);
+            double tankVolume = tankHeight * tankArea;
+
+            double V0 = tankVolume * tankLevel;
+            double T0 = e->getValue("temperature", 20.0);
+
+            double _V0 = V0;
+            double Ft = 0;
+            for (auto e : n.second->pipes) {
+                /*double Ve = e->flow * dt;
+                double Te = e->temperature;
+                _V0 -= Ve;
+                Ft += max(Te*Ve,0.0);*/
+                Ft += e->flow*dt*e->temperature;
+            }
+            double T = (T0*_V0 + Ft)/V0; // mix everything
+            e->set("temperature", toString(T));
+
+            for (auto e : n.second->pipes) {
+                e->temperature = T;
             }
         }
+
+        // TODO: handle other nodes with volumes
     }
 
-    for (auto& s : segments) { // --- 2. Compute advective heat transport through pipes ---
+    for (auto& s : segments) { // mix in pipes
         auto& pipe = s.second;
         auto end1 = pipe->end1.lock();
         auto end2 = pipe->end2.lock();
 
-        double Q = end1->flow;
-        // Convention: end1->flow = flow OUT of end1
-        // So Q > 0 means flow end1 → end2
+        double T0 = pipe->temperature;
+        double T1 = end1->temperature;
+        double T2 = end2->temperature;
 
-        if (Q < 0.0) { // comes inside the pipe from e1, goes to e2 (TODO: only if pipe is pressurized!)
-            // Flow from end1 to end2
-            double transportedHeat = abs(Q * end1->temperature);
-            end1->heatFlux -= transportedHeat;  // leaving
-            end2->heatFlux += transportedHeat;  // entering
-        } else { // Flow from end2 to end1
-            double transportedHeat = abs(Q * end2->temperature);
-            end2->heatFlux -= transportedHeat;
-            end1->heatFlux += transportedHeat;
+        double V0 = pipe->level * pipe->volume;
+        double V1 = end1->flow * dt;
+        double V2 = end2->flow * dt;
+
+        double _V0 = V0+V1+V2;
+        double Ft = 0;
+        for (auto e : {end1, end2}) {
+            if (e->flow < 0) Ft += e->flow*dt*e->temperature; // flow out at end temp, or pipe temp? does it matter?
+            else Ft += e->flow*dt*e->temperature; // flow in at end temperature
+        }
+        double T = (T0*_V0 + Ft)/V0; // mix everything
+        cout << " T0 " << T0 << " -> " << T << endl;
+        pipe->temperature = T;
+    }
+
+    for (auto& n : nodes) { // TODO: check paths groups
+        double T = 0;
+        for (auto& e : n.second->pipes) {
+            auto p = e->pipe.lock();
+            T += p->temperature;
+        }
+        T /= n.second->pipes.size();
+        for (auto& e : n.second->pipes) {
+            e->temperature = T;
         }
     }
 
     //double thermalCapacity = 1.0; // for later
-    double thermalCapacity = 0.001; // for later
+    /*double thermalCapacity = 0.001; // for later
 
     for (auto& n : nodes) { // --- 3. Update node temperatures ---
         double heatFlux = 0.0;
@@ -2338,7 +2370,9 @@ void VRPipeSystem::computeAdvectiveHeatTransfer(double dt) {
             pe->temperature = meanTemp;
             //if (pe->temperature > 21) cout << n.second->nID << ", T " << pe->temperature << ", dT " << dT << endl;
         }
-    }
+    }*/
+
+    ;
 }
 
 void VRPipeSystem::update() {

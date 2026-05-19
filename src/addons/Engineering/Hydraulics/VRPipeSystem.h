@@ -63,6 +63,7 @@ class VRPipeSegment {
         double regime = 1.0; // 0 laminar, 1 turbulent
         double density = 1000.0; // kg / m3
         double viscosity = 1e-3; // Pa s
+        double temperature = 20.0;
         double level = 0.0;
         double hydraulicHead = 0.0;
         double lastVizLevel = -1.0;
