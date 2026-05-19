@@ -1339,14 +1339,20 @@ void VRPipeSystem::assignBoundaryPressures(double dt) {
             double tankHeight = entity->getValue("height", 1.0);
             double tankLevel = entity->getValue("level", 1.0);
             bool tankOpen = entity->getValue("isOpen", false);
+
+            double fluidEffect = 1.0; // used to remove effect of emtpy pressurized tanks
             if (tankOpen) tankPressure = atmosphericPressure;
+            else {
+                double eps = 1e-3;
+                if (tankLevel < eps) fluidEffect = tankLevel/eps;
+            }
 
             double fluidHeight = (tankLevel-0.5)*tankHeight + nPos[1];
             for (auto& e : node->pipes) {
                 double depth = max(0.0, fluidHeight - e->height);
                 double Pfluid = depth * tankDensity * gravity;
                 double Pgauge = tankPressure + Pfluid - atmosphericPressure;
-                e->hydraulicHead = e->height + Pgauge / (tankDensity * gravity);
+                e->hydraulicHead = e->height + fluidEffect * Pgauge / (tankDensity * gravity);
                 //cout << " tank boundary expr.: hH: " << e->hydraulicHead << ", h: " << e->height << ", d: " << depth << endl;
             }
         }
