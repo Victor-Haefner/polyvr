@@ -84,8 +84,8 @@ class VRPipeSegment {
         VRPipeEndPtr otherEnd(VRPipeEndPtr e);
 
         double computeRegime(double Q);
-        void setLevel(double lvl);
         void updateResistance();
+        void setLevel(double lvl);
         void updateGeometry(GraphPtr graph);
 
         double computeEffectiveResistance(const double& flow);

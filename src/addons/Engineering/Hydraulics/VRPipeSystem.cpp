@@ -59,6 +59,27 @@ void VRPipeSegment::setLevel(double lvl) {
     fluidLvl = min(h1, h2) + abs(h1 - h2) * level;
 }
 
+void VRPipeSegment::updateGeometry(GraphPtr graph) {
+    auto e1 = end1.lock();
+    auto e2 = end2.lock();
+    auto p1 = graph->getPosition(e1->nID)->pos();
+    auto p2 = graph->getPosition(e2->nID)->pos();
+
+    p1[1] += e1->offset[1];
+    p2[1] += e2->offset[1];
+    Vec3d d = p2-p1;
+
+    length = d.length();
+    area = Pi * pow(radius,2);
+    volume = area * length;
+    updateResistance();
+
+    double nz = (d/length)[1];
+    zRadius = radius * sqrt(1.0 - nz * nz);
+    fluidMin = min(p1[1], p2[1]) - zRadius;
+    fluidMax = max(p1[1], p2[1]) + zRadius;
+}
+
 double VRPipeSegment::computeRegime(double Q) {
     // computeReynoldsNumber, inertial forces / viscous forces
     auto e1 = end1.lock();
@@ -223,7 +244,6 @@ int VRPipeSystem::addSegment(double radius, int n1, int n2, double level, double
 
     nodes[n1]->pipes.push_back(e1);
     nodes[n2]->pipes.push_back(e2);
-
     computeEndOffset(e1);
     computeEndOffset(e2);
 
@@ -233,27 +253,6 @@ int VRPipeSystem::addSegment(double radius, int n1, int n2, double level, double
     e1->setInitialHead();
     e2->setInitialHead();
     return sID;
-}
-
-void VRPipeSegment::updateGeometry(GraphPtr graph) {
-    auto e1 = end1.lock();
-    auto e2 = end2.lock();
-    auto p1 = graph->getPosition(e1->nID)->pos();
-    auto p2 = graph->getPosition(e2->nID)->pos();
-
-    p1[1] += e1->offset[1];
-    p2[1] += e2->offset[1];
-    Vec3d d = p2-p1;
-
-    length = d.length();
-    area = Pi * pow(radius,2);
-    volume = area * length;
-    updateResistance();
-
-    double nz = (d/length)[1];
-    zRadius = radius * sqrt(1.0 - nz * nz);
-    fluidMin = min(p1[1], p2[1]) - zRadius;
-    fluidMax = max(p1[1], p2[1]) + zRadius;
 }
 
 void VRPipeSystem::remSegment(int eID) {
@@ -407,15 +406,16 @@ void VRPipeSystem::addControlValvePath(int i, int A, int B, double x0, double xs
 }
 
 void VRPipeSystem::setNodePose(int nID, PosePtr p) {
-    graph->setPosition(nID, p);
-    for (auto& e : nodes[nID]->pipes) e->updateGeometry(graph);
-
     auto handlePipe = [&](int eID) {
         auto pipe = segments[eID];
         pipe->updateGeometry(graph);
+        auto e1 = pipe->end1.lock();
+        auto e2 = pipe->end2.lock();
+        e1->updateGeometry(graph);
+        e2->updateGeometry(graph);
     };
 
-    // update pipe lengths
+    graph->setPosition(nID, p);
     for (auto e : graph->getInEdges(nID)  ) handlePipe(e.ID);
     for (auto e : graph->getOutEdges(nID) ) handlePipe(e.ID);
     rebuildMesh = true;
@@ -475,9 +475,17 @@ void VRPipeSystem::setNodeCb(int i, VRAnimCbPtr cb) { if (!nodes.count(i)) retur
 void VRPipeSystem::setValve(int nID, double b)  { auto e = getNodeEntity(nID); if (e) e->set("state", toString(b)); }
 void VRPipeSystem::setTankPressure(int nID, double p) { auto e = getNodeEntity(nID); if (e) e->set("pressure", toString(p)); }
 void VRPipeSystem::setTankDensity(int nID, double p) { auto e = getNodeEntity(nID); if (e) e->set("density", toString(p)); }
-void VRPipeSystem::setPipeRadius(int i, double r) { segments[i]->radius = r; segments[i]->updateGeometry(graph); }
 void VRPipeSystem::setOutletDensity(int nID, double p) { auto e = getNodeEntity(nID); if (e) e->set("density", toString(p)); }
 void VRPipeSystem::setOutletPressure(int nID, double p) { auto e = getNodeEntity(nID); if (e) e->set("pressure", toString(p)); }
+
+void VRPipeSystem::setPipeRadius(int i, double r) {
+    segments[i]->radius = r;
+    segments[i]->updateGeometry(graph);
+    auto e1 = segments[i]->end1.lock();
+    auto e2 = segments[i]->end2.lock();
+    if (e1) e1->updateGeometry(graph);
+    if (e2) e2->updateGeometry(graph);
+}
 
 void VRPipeSystem::setPipePressure(int i, double p1, double p2) {
     auto e1 = segments[i]->end1.lock();
