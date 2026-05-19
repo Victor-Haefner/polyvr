@@ -2221,7 +2221,12 @@ void VRPipeSystem::updatePressurization(double dt) {
         auto node = n.second;
         auto entity = node->entity;
 
-        if (entity->is_a("Valve") || entity->is_a("Pump")) { // also applies to ControlValve
+        if (entity->is_a("Pump")) { // TODO: this is disabled to avoid draining the feed line
+            //for (auto& g : node->endGroups) copyUnpressurized(g.second); // only unpressurize if connecting path
+            continue;
+        }
+
+        if (entity->is_a("Valve")) { // also applies to ControlValve
             for (auto& g : node->endGroups) copyUnpressurized(g.second); // only unpressurize if connecting path
             continue;
         }
