@@ -1352,7 +1352,7 @@ void VRPipeSystem::assignBoundaryPressures(double dt) {
                 double Pfluid = depth * tankDensity * gravity;
                 double Pgauge = tankPressure + Pfluid - atmosphericPressure;
                 e->hydraulicHead = e->height + fluidEffect * Pgauge / (tankDensity * gravity);
-                //cout << " tank boundary expr.: hH: " << e->hydraulicHead << ", h: " << e->height << ", d: " << depth << endl;
+                //cout << " tank boundary expr.: hH: " << e->hydraulicHead << ", tankOpen: " << tankOpen << ", d: " << depth << ", tP " << tankPressure << ", fP " << Pfluid << ", gP " << Pgauge << endl;
             }
         }
 
@@ -2297,6 +2297,25 @@ void VRPipeSystem::computeAdvectiveHeatTransfer(double dt) {
         return T;
     };
 
+    auto mixNodeFlows = [](vector<VRPipeEndPtr> ends) {
+        int N = ends.size();
+        if (N == 0) return;
+
+        double Qin = 0;
+        for (auto e : ends) if (e->flow >= 0.0) Qin += e->flow;
+
+        double Tj = 0;
+        for (auto e : ends) {
+            if (e->flow < 0.0) continue; // ignore outgoing flows, only mix whats coming in
+            double k = e->flow / Qin;
+            auto pipe = e->pipe.lock();
+            double T = pipe->temperature;
+            Tj += T * k;
+        }
+
+        for (auto e : ends) if (e->flow < 0.0) e->temperature = Tj;
+    };
+
     auto mixAtNode = [&](VRPipeNodePtr node) {
         auto e = node->entity;
 
@@ -2322,34 +2341,19 @@ void VRPipeSystem::computeAdvectiveHeatTransfer(double dt) {
 
             double T = mixVolumeFlows(V0, T0, flows);
             e->set("temperature", toString(T));
-            cout << " tank T: " << T << endl;
+            //cout << " tank T: " << T << endl;
 
             for (auto e : node->pipes) if (e->flow < 0.0) e->temperature = T;
             return;
         }
 
-        if (e->is_a("Valve")) {
+        if (e->is_a("Valve") || e->is_a("Pump")) {
+            auto& endGroups = node->endGroups;
+            for (auto& g : endGroups) mixNodeFlows(g.second);
             return;
         }
 
-        if (e->is_a("Junction")) {
-            int N = node->pipes.size();
-            if (N == 0) return;
-
-            double Qin = 0;
-            for (auto e : node->pipes) if (e->flow >= 0.0) Qin += e->flow;
-
-            double Tj = 0;
-            for (auto e : node->pipes) {
-                if (e->flow < 0.0) continue; // ignore outgoing flows, only mix whats coming in
-                double k = e->flow / Qin;
-                auto pipe = e->pipe.lock();
-                double T = pipe->temperature;
-                Tj += T * k;
-            }
-
-            for (auto e : node->pipes) if (e->flow < 0.0) e->temperature = Tj;
-        }
+        if (e->is_a("Junction")) mixNodeFlows(node->pipes);
 
         // TODO: handle other nodes
     };
