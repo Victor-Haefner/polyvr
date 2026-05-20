@@ -1044,10 +1044,10 @@ void VRPipeSystem::updateVisual() {
         //tmpCol1 = s.second->pressurized ? blue : lblue;
         //tmpCol2 = tmpCol1;
 
-        data.setColor(i+4+0, tmpCol1);
-        data.setColor(i+4+1, tmpCol1);
-        data.setColor(i+4+2, tmpCol2);
-        data.setColor(i+4+3, tmpCol2);
+        data.setColor(i+4+0, tmpCol2);
+        data.setColor(i+4+1, tmpCol2);
+        data.setColor(i+4+2, tmpCol1);
+        data.setColor(i+4+3, tmpCol1);
 
         // flow arrows
         double r = s.second->radius;
@@ -2281,8 +2281,24 @@ void VRPipeSystem::updateRegimes(double dt) {
 }
 
 void VRPipeSystem::computeAdvectiveHeatTransfer(double dt) {
-    for (auto& n : nodes) { // --- 1. Reset heat flux accumulator at nodes ---
-        auto e = n.second->entity;
+    auto mixVolumeFlows = [](double V0, double T0, vector<Vec2d> flows) {
+        if (flows.size() == 0) return T0;
+        if (abs(V0) < 1e-6) return 0.0;
+
+        double _V0 = V0;
+        double Ft = 0;
+        for (auto f : flows) {
+            double V = f[0];
+            double T = f[1];
+            _V0 -= V;
+            Ft += V*T;
+        }
+        double T = (T0*_V0 + Ft)/V0; // mix everything
+        return T;
+    };
+
+    auto mixAtNode = [&](VRPipeNodePtr node) {
+        auto e = node->entity;
 
         if (e->is_a("Tank")) {
             double tankArea = e->getValue("area", 0.0);
@@ -2293,86 +2309,85 @@ void VRPipeSystem::computeAdvectiveHeatTransfer(double dt) {
             double V0 = tankVolume * tankLevel;
             double T0 = e->getValue("temperature", 20.0);
 
-            double _V0 = V0;
-            double Ft = 0;
-            for (auto e : n.second->pipes) {
-                /*double Ve = e->flow * dt;
-                double Te = e->temperature;
-                _V0 -= Ve;
-                Ft += max(Te*Ve,0.0);*/
-                Ft += e->flow*dt*e->temperature;
-            }
-            double T = (T0*_V0 + Ft)/V0; // mix everything
-            e->set("temperature", toString(T));
+            vector<Vec2d> flows;
+            for (auto e : node->pipes) {
+                double V = e->flow * dt;
+                if (abs(V) < 1e-9) continue;
 
-            for (auto e : n.second->pipes) {
-                e->temperature = T;
+                auto pipe = e->pipe.lock();
+                double T = pipe->temperature;
+                if (e->flow < 0.0) T = T0;
+                flows.push_back(Vec2d(V, T));
             }
+
+            double T = mixVolumeFlows(V0, T0, flows);
+            e->set("temperature", toString(T));
+            cout << " tank T: " << T << endl;
+
+            for (auto e : node->pipes) if (e->flow < 0.0) e->temperature = T;
+            return;
         }
 
-        // TODO: handle other nodes with volumes
-    }
+        if (e->is_a("Valve")) {
+            return;
+        }
 
-    for (auto& s : segments) { // mix in pipes
-        auto& pipe = s.second;
+        if (e->is_a("Junction")) {
+            int N = node->pipes.size();
+            if (N == 0) return;
+
+            double Qin = 0;
+            for (auto e : node->pipes) if (e->flow >= 0.0) Qin += e->flow;
+
+            double Tj = 0;
+            for (auto e : node->pipes) {
+                if (e->flow < 0.0) continue; // ignore outgoing flows, only mix whats coming in
+                double k = e->flow / Qin;
+                auto pipe = e->pipe.lock();
+                double T = pipe->temperature;
+                Tj += T * k;
+            }
+
+            for (auto e : node->pipes) if (e->flow < 0.0) e->temperature = Tj;
+        }
+
+        // TODO: handle other nodes
+    };
+
+    auto mixPipeSegment = [&](VRPipeSegmentPtr pipe) {
+        //cout << "segment" << endl;
         auto end1 = pipe->end1.lock();
         auto end2 = pipe->end2.lock();
 
         double T0 = pipe->temperature;
-        double T1 = end1->temperature;
-        double T2 = end2->temperature;
-
         double V0 = pipe->level * pipe->volume;
-        double V1 = end1->flow * dt;
-        double V2 = end2->flow * dt;
 
-        double _V0 = V0+V1+V2;
-        double Ft = 0;
+        vector<Vec2d> flows;
         for (auto e : {end1, end2}) {
-            if (e->flow < 0) Ft += e->flow*dt*e->temperature; // flow out at end temp, or pipe temp? does it matter?
-            else Ft += e->flow*dt*e->temperature; // flow in at end temperature
+            double V = -e->flow * dt;
+            if (abs(V) < 1e-9) continue;
+
+            auto pipe = e->pipe.lock();
+            double T = e->temperature;
+            if (e->flow >= 0.0) T = T0;
+            flows.push_back(Vec2d(V, T));
+            //cout << " V " << V << ", T " << T << endl;
         }
-        double T = (T0*_V0 + Ft)/V0; // mix everything
-        cout << " T0 " << T0 << " -> " << T << endl;
+
+        double T = mixVolumeFlows(V0, T0, flows);
         pipe->temperature = T;
+        for (auto e : {end1, end2}) if (e->flow >= 0.0) e->temperature = T;
+        //cout << " T0 " << T0 << " -> " << T << endl;
+    };
+
+
+    for (auto& n : nodes) {
+        mixAtNode( n.second );
     }
 
-    for (auto& n : nodes) { // TODO: check paths groups
-        double T = 0;
-        for (auto& e : n.second->pipes) {
-            auto p = e->pipe.lock();
-            T += p->temperature;
-        }
-        T /= n.second->pipes.size();
-        for (auto& e : n.second->pipes) {
-            e->temperature = T;
-        }
+    for (auto& s : segments) {
+        mixPipeSegment( s.second );
     }
-
-    //double thermalCapacity = 1.0; // for later
-    /*double thermalCapacity = 0.001; // for later
-
-    for (auto& n : nodes) { // --- 3. Update node temperatures ---
-        double heatFlux = 0.0;
-        double meanTemp = 0.0;
-
-        for (auto pe : n.second->pipes) {
-            heatFlux += pe->heatFlux;
-            meanTemp += pe->temperature;
-        }
-
-        meanTemp /= n.second->pipes.size();
-
-        double dT = (dt / thermalCapacity) * heatFlux;
-        meanTemp += dT;
-
-        for (auto pe : n.second->pipes) {
-            pe->temperature = meanTemp;
-            //if (pe->temperature > 21) cout << n.second->nID << ", T " << pe->temperature << ", dT " << dT << endl;
-        }
-    }*/
-
-    ;
 }
 
 void VRPipeSystem::update() {
