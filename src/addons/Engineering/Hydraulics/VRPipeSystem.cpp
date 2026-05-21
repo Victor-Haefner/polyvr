@@ -1215,7 +1215,7 @@ double VRPipeSystem::computeCylinderAccelleration(VRPipeNodePtr node, double dt)
     double x_new = clamp(x + dx, 0.001, 0.999);
     dx = x_new - x;
     v = dx*L/dt;
-    entity->set("pistonSpeed", toString(v));
+    entity->set("pistonSpeed", toString(v,12));
     //cout << "cyl speed " << v << endl;
 
     //static int i=0; i++;
@@ -1453,7 +1453,7 @@ void VRPipeSystem::solveNodeHeads(double dt) {
         double alpha = clamp(dt / rampTime, 0.0, 1.0);
         state += sign(control - state) * alpha;
         state = clamp(state, 0.0, 1.0);
-        entity->set("newState", toString(state));
+        entity->set("newState", toString(state,12));
 
         if (state < 1e-3) { // pump off
             if (!isOpen) {
@@ -1597,7 +1597,7 @@ void VRPipeSystem::solveNodeHeads(double dt) {
 
         if (entity->is_a("Pump")) {
             double ns = entity->getValue("newState", 0.0);
-            entity->set("state", toString(ns));
+            entity->set("state", toString(ns,12));
             //cout << " pump state " << ns << ", ctrol " << c << " dt " << dt << endl;
         }
     }
@@ -1691,7 +1691,7 @@ void VRPipeSystem::computeHeadFlows(double dt) {
             double v = entity->getValue("pistonSpeed", 0.0);
             double A = entity->getValue("area", 0.0);
             double hflow = A*v;
-            entity->set("headFlow", toString(hflow));
+            entity->set("headFlow", toString(hflow,12));
             //cout << " cylinder flow: " << hflow << endl;
         }
     }
@@ -1852,7 +1852,7 @@ void VRPipeSystem::computeMaxFlows(double dt) {
                     }
                 }
 
-                entity->set("headFlow", toString(hflow));
+                entity->set("headFlow", toString(hflow,12));
                 continue;
             }
 
@@ -2038,7 +2038,7 @@ void VRPipeSystem::updateLevels(double dt) {
             double volDelta = totalFlow*dt;
             double newLevel = clamp(tankLevel + volDelta / tankVolume, 0.0, 1.0, true, "tank lvl");
             volDelta = (newLevel - tankLevel)*tankVolume;
-            entity->set("level", toString(newLevel));
+            entity->set("level", toString(newLevel,12));
 
             // update pressurized tank
             if (!tankOpen) {
@@ -2052,7 +2052,7 @@ void VRPipeSystem::updateLevels(double dt) {
                 //cout << " tank: " << n.first << " p gauge: " << tankPressure-atmosphericPressure << " level: " << newLevel << " tV " << tankVolume << endl;
 
                 p = clamp(p, atmosphericPressure * 0.001, atmosphericPressure * 2000.0, true, "tank pressure");
-                entity->set("pressure", toString(p));
+                entity->set("pressure", toString(p, 12));
                 //cout << " new tank pressure: " << p << endl;
             }
         }
@@ -2072,8 +2072,8 @@ void VRPipeSystem::updateLevels(double dt) {
 
             double x_new = x + dx;
             double v = dx*L/dt;
-            entity->set("state", toString(x_new));
-            entity->set("pistonSpeed", toString(v));
+            entity->set("state", toString(x_new,12));
+            entity->set("pistonSpeed", toString(v,12));
             //cout << " cyl speed " << v << endl;
 
             // compute new levels
@@ -2107,8 +2107,8 @@ void VRPipeSystem::updateLevels(double dt) {
                 //cout << "    " << volWater2 / vol2 - 1.0 << " " << vol2 - volWater2 << endl;
             }*/
 
-            entity->set("level1", toString(newLevel1));
-            entity->set("level2", toString(newLevel2));
+            entity->set("level1", toString(newLevel1,12));
+            entity->set("level2", toString(newLevel2,12));
 
             if (n.second->userCb) {
                 (*n.second->userCb)(x_new);
@@ -2121,7 +2121,8 @@ void VRPipeSystem::updateLevels(double dt) {
         auto e1 = pipe->end1.lock();
         auto e2 = pipe->end2.lock();
         double flow = e1->flow + e2->flow; // positive flow is going out the pipe
-        double lvl = clamp(pipe->level - flow*dt / pipe->volume, 0.0, 1.0, true);
+        double volDelta = flow*dt;
+        double lvl = clamp(pipe->level -  volDelta / pipe->volume, 0.0, 1.0, true);
         pipe->setLevel(lvl);
     }
 }
@@ -2260,7 +2261,7 @@ void VRPipeSystem::updatePressures(double dt) {
                     double indicator = pt/maxPressure;
                     if (abs(pt - pressure)>1e-3) {
                         //cout << "updatePressures gauge " << pt << "/" << maxPressure << ", " << indicator << endl;
-                        e->set("pressure", toString(pt));
+                        e->set("pressure", toString(pt,12));
                         (*n.second->userCb)(indicator);
                     }
                 }
@@ -2340,7 +2341,7 @@ void VRPipeSystem::computeAdvectiveHeatTransfer(double dt) {
             }
 
             double T = mixVolumeFlows(V0, T0, flows);
-            e->set("temperature", toString(T));
+            e->set("temperature", toString(T,12));
             //cout << " tank T: " << T << endl;
 
             for (auto e : node->pipes) if (e->flow < 0.0) e->temperature = T;
