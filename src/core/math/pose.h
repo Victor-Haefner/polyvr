@@ -25,6 +25,8 @@ class Pose {
         static PosePtr create(const Pose& p);
         static PosePtr create(const Vec3d& p, const Vec3d& d = DIR(), const Vec3d& u = UP(), const Vec3d& s = SCALE());
 
+        PosePtr copy();
+
         void setPos(const Vec3d& p);
         void setDir(const Vec3d& d);
         void setUp(const Vec3d& u);

@@ -36,6 +36,8 @@ PosePtr Pose::create(const Vec3d& p, const Vec3d& d, const Vec3d& u, const Vec3d
     return PosePtr( new Pose(p,d,u,s) );
 }
 
+PosePtr Pose::copy() { return Pose::create(*this); }
+
 void Pose::set(const Vec3d& p, const Vec3d& d, const Vec3d& u, const Vec3d& s) {
     data.resize(4);
     data[0] = p;
