@@ -456,7 +456,7 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
 
     auto wayToPolygon = [&](OSMWayPtr& way) {
         auto poly = VRPolygon::create();
-        for (auto ps : way->polygon.get()) {
+        for (auto ps : way->polygon.getPoints()) {
             auto p = planet->fromLatLongPosition(ps[1], ps[0], true);
             poly->addPoint( Vec2d(p[0], p[2]) );
         }

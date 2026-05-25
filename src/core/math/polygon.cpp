@@ -22,19 +22,19 @@ using namespace OSG;
 template<> int toValue(stringstream& ss, VRPolygon& p) { return 0; }
 
 #ifndef WITHOUT_CGAL
-CGALPolygon toCGALVRPolygon(VRPolygon p) {
+CGALPolygon toCGALVRPolygon(VRPolygonPtr p) {
     vector<CGALPoint> pnts;
-    for (auto v : p.get()) pnts.push_back(CGALPoint(v[0], v[1]));
+    for (auto v : p->getPoints()) pnts.push_back(CGALPoint(v[0], v[1]));
     return CGALPolygon( &pnts[0], &pnts[pnts.size()-1] );
 }
 
-VRPolygon fromCGALPolygon(CGALPolygon cp) {
-    VRPolygon p;
+VRPolygonPtr fromCGALPolygon(CGALPolygon cp) {
+    auto p = VRPolygon::create();
     for (auto itr = cp.vertices_begin(); itr != cp.vertices_end(); itr++) {
         CGALPoint k = *itr;
     //for (int i=0; i<cp.size(); i++) {
         //CGALPoint k = cp[i];
-        p.addPoint( Vec2d(k[0], k[1]) );
+        p->addPoint( Vec2d(k[0], k[1]) );
     }
     return p;
 }
@@ -118,7 +118,7 @@ void VRPolygon::runTest() {
     //cout << hull.toString() << endl;
 
     auto res = poly.getConvexDecomposition();
-    for (auto poly : res) cout << "convex " << poly.toString() << endl;
+    for (auto poly : res) cout << "convex " << poly->toString() << endl;
 }
 
 void VRPolygon::addPoint(Vec2d p) { if (!closed) points.push_back(p); }
@@ -130,7 +130,8 @@ int VRPolygon::size2() { return points.size(); }
 int VRPolygon::size3() { return points3.size(); }
 void VRPolygon::set(vector<Vec2d> vec) { for (auto v : vec) addPoint(v); }
 
-std::shared_ptr<VRPolygon> VRPolygon::create() { return std::shared_ptr<VRPolygon>( new VRPolygon() ); }
+VRPolygonPtr VRPolygon::create() { return VRPolygonPtr( new VRPolygon() ); }
+VRPolygonPtr VRPolygon::ptr() { return static_pointer_cast<VRPolygon>( shared_from_this() ); }
 
 void VRPolygon::translate(Vec3d v) {
     for (auto& p : points) p += Vec2d(v[0], v[2]);
@@ -657,8 +658,8 @@ Boundingbox VRPolygon::getBoundingBox() {
     return bb;
 }
 
-VRPolygon VRPolygon::sort() {
-    if (points.size() == 0) return VRPolygon();
+VRPolygonPtr VRPolygon::sort() {
+    if (points.size() == 0) return VRPolygon::create();
     Vec2d p0 = points[0]; // rightmost lowest point
     for (unsigned int i=0; i<points.size(); i++) {
         Vec2d p = points[i];
@@ -667,25 +668,25 @@ VRPolygon VRPolygon::sort() {
     }
 
     // sort fan
-    VRPolygon radial_sort;
-    radial_sort.addPoint(p0);
-    for (auto p : points) if (p != p0) radial_sort.addPoint(p);
+    auto radial_sort = VRPolygon::create();
+    radial_sort->addPoint(p0);
+    for (auto p : points) if (p != p0) radial_sort->addPoint(p);
 
     auto getSortTurn = [&](const Vec2d& p1, const Vec2d& p2) -> bool {
         return (p1[1]-p0[1])*(p2[0]-p0[0]) < (p1[0]-p0[0])*(p2[1]-p0[1]);
     };
 
-    auto& vec = radial_sort.points;
+    auto& vec = radial_sort->points;
     //std::sort(vec.begin(), vec.end(), getSortTurn);
     std::stable_sort(vec.begin(), vec.end(), getSortTurn);
     std::unique(vec.begin(), vec.end());
     return radial_sort;
 }
 
-vector<Vec2d>& VRPolygon::get() { return points; }
-vector<Vec3d>& VRPolygon::get3() { return points3; }
+vector<Vec2d>& VRPolygon::getPoints() { return points; }
+vector<Vec3d>& VRPolygon::getPoints3() { return points3; }
 
-VRPolygon VRPolygon::getConvexHull() { // graham scan algorithm TODO: TOO FUCKING UNRELIABLE!!!
+VRPolygonPtr VRPolygon::getConvexHull() { // graham scan algorithm TODO: TOO FUCKING UNRELIABLE!!!
     /*auto radial_sort = sort();
     if (radial_sort.size() < 3) return VRPolygon();
     //cout << " VRPolygon::getConvexHull points " << toString() << endl;
@@ -737,14 +738,14 @@ VRPolygon VRPolygon::getConvexHull() { // graham scan algorithm TODO: TOO FUCKIN
     std::istream_iterator< Point_2 >  in_end;
     std::ostream_iterator< Point_2 >  out( std::cout, "\n" );*/
 
-    VRPolygon res;
+    auto res = VRPolygon::create();
 #ifndef WITHOUT_CGAL
     vector<Kernel::Point_2> pIn; for (auto p : points) pIn.push_back(Kernel::Point_2(p[0],p[1]));
     vector<Kernel::Point_2> pOut; for (auto p : points) pOut.push_back(Kernel::Point_2());
     auto pOutEnd = CGAL::ch_graham_andrew( pIn.begin(), pIn.end(), pOut.begin() );
     for (auto pItr = pOut.begin(); pItr != pOutEnd; pItr++) {
         auto p = *pItr;
-        res.addPoint(Vec2d(p[0],p[2]));
+        res->addPoint(Vec2d(p[0],p[2]));
     }
 #endif
     return res;
@@ -769,18 +770,18 @@ bool VRPolygon::isConvex() {
     return true;
 }
 
-vector< VRPolygon > VRPolygon::getConvexDecomposition() {
-    vector< VRPolygon > res;
+vector< VRPolygonPtr > VRPolygon::getConvexDecomposition() {
+    vector< VRPolygonPtr > res;
 
-    if (isConvex()) { // allready convex?
-        res.push_back(*this);
+    if (isConvex()) { // already convex?
+        res.push_back( ptr() );
         return res;
     }
 
 #ifndef WITHOUT_CGAL
     CGALPolygon cgalpoly;
     if (!isCCW()) reverseOrder();
-    cgalpoly = toCGALVRPolygon(*this);
+    cgalpoly = toCGALVRPolygon( ptr() );
     CGALPolyList partitions;
     CGALTraits traits;
     CGAL::optimal_convex_partition_2(cgalpoly.vertices_begin(), cgalpoly.vertices_end(), std::back_inserter(partitions), traits);

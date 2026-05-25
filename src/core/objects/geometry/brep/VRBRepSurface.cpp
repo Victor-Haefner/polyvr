@@ -333,7 +333,7 @@ VRGeometryPtr VRBRepSurface::build(bool flat) {
     // TODO: this may fail if inner polygons are not moved accordingly
     //  maybe it would be better to make a border instead of moving points
     auto fixPolyJump = [&](VRPolygon& poly) {
-        auto& points = poly.get();
+        auto& points = poly.getPoints();
         for (int i=1; i<points.size(); i++) {
             Vec2d& p1 = points[i-1];
             Vec2d& p2 = points[i];
@@ -345,7 +345,7 @@ VRGeometryPtr VRBRepSurface::build(bool flat) {
     };
 
     auto checkPolyIntegrety = [&](VRPolygon& poly) { // for cylinder
-        auto& points = poly.get();
+        auto& points = poly.getPoints();
         for (int i=1; i<points.size(); i++) {
             Vec2d p1 = points[i-1];
             Vec2d p2 = points[i];

@@ -18,15 +18,16 @@ PyMethodDef VRPyFrustum::methods[] = {
 };
 
 PyMethodDef VRPyPolygon::methods[] = {
-    {"addPoint", (PyCFunction)VRPyPolygon::addPoint, METH_VARARGS, "Add a point - addPoint([x,y])" },
-    {"getPoint", (PyCFunction)VRPyPolygon::getPoint, METH_VARARGS, "Get a point - [x,y] getPoint( int i )" },
-    {"getPoints", (PyCFunction)VRPyPolygon::getPoints, METH_NOARGS, "Get the list of points - [[x,y]] getPoints()" },
-    {"getConvexHull", (PyCFunction)VRPyPolygon::getConvexHull, METH_NOARGS, "Get the convex hull - VRPolygon getConvexHull()" },
-    {"close", (PyCFunction)VRPyPolygon::close, METH_NOARGS, "Close the VRPolygon - close()" },
-    {"size", (PyCFunction)VRPyPolygon::size, METH_NOARGS, "Get the number of points - int size()" },
-    {"set", (PyCFunction)VRPyPolygon::set, METH_VARARGS, "Set the VRPolygon from a list of points - set( [[x,y]] )" },
-    {"clear", (PyCFunction)VRPyPolygon::clear, METH_NOARGS, "Clear all points - clear()" },
-    {"getRandomPoints", (PyCFunction)VRPyPolygon::getRandomPoints, METH_VARARGS, "Clear all points - getRandomPoints( | float density, float padding)" },
+    {"addPoint", PyWrap(Polygon, addPoint, "Add a point - addPoint([x,y])", void, Vec2d ) },
+    {"getPoint", PyWrap(Polygon, getPoint, "Get a point - [x,y] getPoint( int i )", Vec2d, int ) },
+    {"getPoints", PyWrap(Polygon, getPoints, "Get the list of points - [[x,y]] getPoints()", vector<Vec2d>& ) },
+    {"getPoints3", PyWrap(Polygon, getPoints3, "Get the list of points - [[x,y,z]] getPoints3()", vector<Vec3d>& ) },
+    {"getConvexHull", PyWrap(Polygon, getConvexHull, "Get the convex hull - VRPolygon getConvexHull()", VRPolygonPtr ) },
+    {"close", PyWrap(Polygon, close, "Close the VRPolygon - close()", void ) },
+    {"size", PyWrap(Polygon, size, "Get the number of points - int size()", int ) },
+    {"set", PyWrap(Polygon, set, "Set the VRPolygon from a list of points - set( [[x,y]] )", void, vector<Vec2d> ) },
+    {"clear", PyWrap(Polygon, clear, "Clear all points - clear()", void ) },
+    {"getRandomPoints", PyWrapOpt(Polygon, getRandomPoints, "Clear all points - getRandomPoints( | float density, float padding, float spread)", "10|0|0.5", vector<Vec3d>, double, double, double ) },
     {"isInside", PyWrap(Polygon, isInside, "Check if point is inside polygon", bool, Vec2d) },
     {"gridSplit", PyWrap(Polygon, gridSplit, "Split the polygon using a virtual grid layout", vector< VRPolygonPtr >, double) },
     {"reverseOrder", PyWrap(Polygon, reverseOrder, "Reverse the order of the points", void) },
@@ -38,72 +39,5 @@ PyMethodDef VRPyPolygon::methods[] = {
     {"reorder", PyWrap(Polygon, reorder, "Reorder the points to set the rotation direction around the bb center, 'CW' or 'CCW'", void, string) },
     {NULL}  /* Sentinel */
 };
-
-PyObject* VRPyPolygon::getConvexHull(VRPyPolygon* self) {
-    if (!self->valid()) return NULL;
-    return VRPyPolygon::fromObject( self->objPtr->getConvexHull() );
-}
-
-PyObject* VRPyPolygon::addPoint(VRPyPolygon* self, PyObject* args) {
-    if (!self->valid()) return NULL;
-    PyObject* v;
-    if (! PyArg_ParseTuple(args, "O", &v)) return NULL;
-    self->objPtr->addPoint( parseVec2dList(v) );
-    Py_RETURN_TRUE;
-}
-
-PyObject* VRPyPolygon::getPoint(VRPyPolygon* self, PyObject* args) {
-    if (!self->valid()) return NULL;
-    int i = 0;
-    if (! PyArg_ParseTuple(args, "i", &i)) return NULL;
-    return toPyObject( self->objPtr->getPoint(i) );
-}
-
-PyObject* VRPyPolygon::getRandomPoints(VRPyPolygon* self, PyObject* args) {
-    if (!self->valid()) return NULL;
-    float d = 10;
-    float p = 0;
-    float s = 0.5;
-    if (! PyArg_ParseTuple(args, "|fff", &d, &p, &s)) return NULL;
-    auto vec = self->objPtr->getRandomPoints(d,p,s);
-    PyObject* res = PyList_New(vec.size());
-    for (unsigned int i=0; i<vec.size(); i++) PyList_SetItem(res, i, toPyObject(vec[i]));
-    return res;
-}
-
-PyObject* VRPyPolygon::getPoints(VRPyPolygon* self) {
-    if (!self->valid()) return NULL;
-    auto vec = self->objPtr->get();
-    PyObject* res = PyList_New(vec.size());
-    for (unsigned int i=0; i<vec.size(); i++) PyList_SetItem(res, i, toPyObject(vec[i]));
-    return res;
-}
-
-PyObject* VRPyPolygon::close(VRPyPolygon* self) {
-    if (!self->valid()) return NULL;
-    self->objPtr->close();
-    Py_RETURN_TRUE;
-}
-
-PyObject* VRPyPolygon::size(VRPyPolygon* self) {
-    if (!self->valid()) return NULL;
-    return PyLong_FromLong( self->objPtr->size() );
-}
-
-PyObject* VRPyPolygon::set(VRPyPolygon* self, PyObject* args) {
-    if (!self->valid()) return NULL;
-    PyObject* v;
-    if (! PyArg_ParseTuple(args, "O", &v)) return NULL;
-    vector<OSG::Vec2d> vec;
-    for (int i=0; i<pySize(v); i++) vec.push_back( parseVec2dList( PyList_GetItem(v,i) ) );
-    self->objPtr->set(vec);
-    Py_RETURN_TRUE;
-}
-
-PyObject* VRPyPolygon::clear(VRPyPolygon* self) {
-    if (!self->valid()) return NULL;
-    self->objPtr->clear();
-    Py_RETURN_TRUE;
-}
 
 

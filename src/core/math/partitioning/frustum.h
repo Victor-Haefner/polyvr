@@ -1,8 +1,6 @@
 #ifndef FRUSTUM_H_INCLUDED
 #define FRUSTUM_H_INCLUDED
 
-#include "core/math/polygon.h"
-#include "core/math/pose.h"
 #include "core/math/VRMathFwd.h"
 #include <OpenSG/OSGLine.h>
 #include <OpenSG/OSGPlane.h>
@@ -12,14 +10,14 @@ using namespace std;
 
 class Frustum {
     private:
-        Pose trans;
+        PosePtr trans;
         vector<Vec3d> directions;
-        VRPolygon profile;
+        VRPolygonPtr profile;
         bool convex = false;
         Vec2d near_far;
 
         void computeProfile();
-        Frustum fromProfile(VRPolygon p, Pose t);
+        FrustumPtr fromProfile(VRPolygonPtr p, PosePtr t);
 
         bool inFrustumPlanes(Vec3f p);
 
@@ -29,16 +27,16 @@ class Frustum {
 
         static FrustumPtr create();
 
-        void setPose(Pose trans);
-        Pose getPose();
+        void setPose(PosePtr trans);
+        PosePtr getPose();
         void setNearFar(Vec2d near_far);
         void addEdge(Vec3d dir);
         void close();
         int size();
         void clear();
 
-        Frustum getConvexHull();
-        vector< Frustum > getConvexDecomposition();
+        FrustumPtr getConvexHull();
+        vector< FrustumPtr > getConvexDecomposition();
         vector< Plane > getPlanes();
         vector< Plane > getNearFarPlanes();
         vector< Vec3d > getEdges();

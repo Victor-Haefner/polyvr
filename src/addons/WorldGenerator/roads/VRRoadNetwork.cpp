@@ -447,7 +447,7 @@ void VRRoadNetwork::addKirb( VRPolygonPtr perimeter, float h ) {
     if (auto t = terrain.lock()) t->elevatePolygon(perimeter);
     Vec3d median = perimeter->getBoundingBox().center();
     perimeter->translate(-median);
-    auto points = perimeter->get3();
+    auto points = perimeter->getPoints3();
     int N = points.size();
 
     for (int i=0; i<N; i++) {

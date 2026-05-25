@@ -715,12 +715,12 @@ void VRTerrain::elevateVertices(VRGeometryPtr geo, float offset) {
 }
 
 void VRTerrain::elevatePolygon(VRPolygonPtr poly, float offset, bool useEmbankments) {
-    for (auto p2 : poly->get()) {
+    for (auto p2 : poly->getPoints()) {
         Vec3d p3(p2[0], 0, p2[1]);
         p3 = elevatePoint(p3, offset, useEmbankments);
         poly->addPoint(p3);
     }
-    poly->get().clear();
+    poly->getPoints().clear();
 }
 
 void VRTerrain::projectTangent( Vec3d& t, Vec3d p) {

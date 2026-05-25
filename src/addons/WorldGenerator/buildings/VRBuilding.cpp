@@ -29,7 +29,7 @@ VRGeometryPtr VRBuilding::getCollisionShape() {
     if (perimeter.size() <= 1) return 0;
 
     auto path = Path::create();
-    for (auto p : perimeter.get()) {
+    for (auto p : perimeter.getPoints()) {
         Vec3d p3 = Vec3d(p[0], ground, p[1]);
         path->addPoint( Pose::create(p3) );
     }
