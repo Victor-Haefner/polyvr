@@ -44,7 +44,7 @@ class VRConstructionKit {
 
         int addAnchorType(float size, Color3f color);
         void addObject(VRTransformPtr t);
-        VRGeometryPtr addObjectAnchor(VRTransformPtr t, int a, Vec3d pos, float radius);
+        VRGeometryPtr addObjectAnchor(VRTransformPtr t, int a, PosePtr pose, float radius);
 
         void remObject(VRTransformPtr t);
 
