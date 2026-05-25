@@ -511,6 +511,7 @@ void CEF::initiate() {
 #else
     internals->browser = CefBrowserHost::CreateBrowserSync(win, internals->client, "", browser_settings, 0);
 #endif
+    cout << "CEF::initiate " << site << ", " << internals->browser << endl;
 }
 
 void CEF::setMaterial(VRMaterialPtr mat) {

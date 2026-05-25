@@ -36,6 +36,10 @@
 #include "core/objects/VRTransform.h"
 #include "core/setup/VRSetup.h"
 
+#ifndef WITHOUT_CEF
+#include "addons/CEF/CEF.h"
+#endif
+
 #ifndef _WIN32
 #include <unistd.h>
 #include <termios.h>
@@ -116,6 +120,10 @@ PolyVR::~PolyVR() {
         *i = 0;
     }
     catch (...) {}
+#endif
+
+#ifndef WITHOUT_CEF
+    CEF::shutdown();
 #endif
 
     pvr = 0;
