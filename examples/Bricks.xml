@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Scene base_name="Bricks" name_space="Scene" name_suffix="0" persistency="666">
+<Scene base_name="Bricks" name_space="Scene" name_suffix="2" persistency="666">
   <Objects>
-    <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" visible="1">
-      <Object ambient="0.3 0.3 0.3 1" base_name="Headlight" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" name_space="__global__" name_suffix="0" on="1" persistency="666" photometricMap="" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" shadowVolume="1e+06 1e+06 1e+06 -1e+06 -1e+06 -1e+06 1" specular="0.1 0.1 0.1 1" type="Light" visible="1">
-        <Object accept_root="1" aspect="1" at="23.1295 24.7481 2.22396" at_dir="0" base_name="Default" far="250" fov="1.0472" from="25.3748 25.4489 2.00067" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
+    <Object base_name="Root" name_space="__global__" name_suffix="3" persistency="666" pickable="0" type="Object" visible="1">
+      <Object ambient="0.3 0.3 0.3 1" base_name="Headlight" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" name_space="__global__" name_suffix="0" on="1" persistency="666" photometricMap="" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" shadowVolume="1.79769e+308 1.79769e+308 1.79769e+308 -1.79769e+308 -1.79769e+308 -1.79769e+308 1" specular="0.1 0.1 0.1 1" type="Light" visible="1">
+        <Object accept_root="1" aspect="1" at="23.1295 24.7481 2.22396" at_dir="0" base_name="Default" camType="perspective" far="250" fov="1.0472" from="25.6861 25.4659 1.66016" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
           <attachments>
             <Node base_name="transform" name_space="VRAttachment" name_suffix="0" persistency="666" value=""/>
           </attachments>
@@ -16,33 +16,23 @@
           <constraint persistency="666"/>
         </Object>
       </Object>
+      <Object base_name="boxRoot" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" visible="4294967295"/>
+      <Object base_name="boxRoot" name_space="__global__" name_suffix="2" persistency="666" pickable="0" type="Object" visible="4294967295"/>
     </Object>
   </Objects>
   <Cameras activeCam="Default" persistency="666"/>
   <Rendering deferred_rendering="0" fogColor="0.5 0.5 0.5 1" fogParams="0 0 100 0.1" frustum_culling="1" fxaa="0" hmdd="0" marker="0" occlusion_culling="0" persistency="666" ssao="0" ssao_kernel="4" ssao_noise="4" ssao_radius="0.02" two_sided="1"/>
   <Scripts persistency="666">
-    <Script base_name="addBrick" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+    <Script base_name="addBrick" group="no group" name_space="__script__" name_suffix="0" persistency="666" pyVersion="3.10.12" server="server1" type="Python">
       <core>
 	import VR
-	
-	if not hasattr(VR, 'bmat'):
-		VR.bmat = VR.Material('bricks')
-		VR.bmat.setDiffuse(0,0.5,1)
-		VR.bmat.setVertexProgram('shdr_v')
-		VR.bmat.setFragmentProgram('shdr_f')
-		
-	if not hasattr(VR, 'kit'):
-		VR.kit = VR.ConstructionKit()
-		VR.a1_ID = VR.kit.addAnchorType(s*0.1, [1,1,1])
-		se = VR.kit.getSnappingEngine()
-		se.enableGhosts(True)
 	
 	# create brick
 	g = VR.Geometry('brick')
 	g.setPrimitive('Box '+str(X)+' '+str(Y)+' '+str(Z)+' 1 1 1')
 	g.setMaterial(VR.bmat)
 	g.setPickable(1)
-	VR.find('Headlight').addChild(g)
+	VR.scene.addChild(g)
 	
 	# add brick anchor points
 	h = Y*0.5
@@ -70,7 +60,7 @@
       <arg type="float" value="1" base_name="Z" name_space="addBrick" name_suffix="0" persistency="666"/>
       <arg type="float" value="0.1" base_name="s" name_space="addBrick" name_suffix="0" persistency="666"/>
     </Script>
-    <Script base_name="gui" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="HTML">
+    <Script base_name="gui" group="no group" name_space="__script__" name_suffix="0" persistency="666" pyVersion="2.7.18" server="server1" type="HTML">
       <core>
 &lt;!DOCTYPE html&gt;
 &lt;html&gt;
@@ -224,7 +214,7 @@
 &lt;/body&gt;&lt;/html&gt;
 </core>
     </Script>
-    <Script base_name="handler" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+    <Script base_name="handler" group="no group" name_space="__script__" name_suffix="0" persistency="666" pyVersion="3.10.12" server="server1" type="Python">
       <core>
 	import VR
 	
@@ -242,27 +232,40 @@
 </core>
       <arg type="VRPyDeviceType" value="flystick" base_name="flystick" name_space="handler" name_suffix="0" persistency="666"/>
       <arg type="VRPyDeviceType" value="mouse" base_name="mouse" name_space="handler" name_suffix="0" persistency="666"/>
-      <trig type="on_device" dev="server1" state="Released" param="" key="-1" base_name="trigger" name_space="__global__" name_suffix="1" persistency="666"/>
+      <trig type="on_device" dev="server1" state="Released" param="" key="-1" base_name="trigger" name_space="__global__" name_suffix="4" persistency="666"/>
     </Script>
-    <Script base_name="init" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+    <Script base_name="init" group="no group" name_space="__script__" name_suffix="0" persistency="666" pyVersion="3.10.12" server="server1" type="Python">
       <core>
 	import VR
 	
-	gui = VR.Sprite('gui')
-	gui.setSize(0.5, 0.65)
-	gui.webOpen('http://localhost:5500/gui', 200, 0.769)
-	gui.setFrom([-0.5,0,-1])
+	if hasattr(VR, 'uiWidget'): VR.uiWidget.destroy()
+	if hasattr(VR, 'scene'): VR.scene.destroy()
+	VR.scene = VR.Object('blocks', 'Headlight')
+	
+	VR.uiWidget = VR.Sprite('gui')
+	VR.uiWidget.setSize(0.5, 0.65)
+	VR.uiWidget.webOpen('http://localhost:5500/gui', 200, 0.769)
+	VR.uiWidget.setFrom([-0.5,0,-1])
 	
 	cam = VR.find('Default')
-	cam.addChild(gui)
+	cam.addChild(VR.uiWidget)
 	
+	VR.bmat = VR.Material('bricks')
+	VR.bmat.setDiffuse(0,0.5,1)
+	VR.bmat.setVertexProgram('shdr_v')
+	VR.bmat.setFragmentProgram('shdr_f')
+	
+	VR.kit = VR.ConstructionKit()
+	VR.a1_ID = VR.kit.addAnchorType(0.01, [1,1,1])
+	se = VR.kit.getSnappingEngine()
+	se.enableGhosts(True)
 </core>
       <arg type="VRPyDeviceType" value="flystick" base_name="flystick" name_space="init" name_suffix="0" persistency="666"/>
       <arg type="VRPyDeviceType" value="keyboard" base_name="keyboard" name_space="init" name_suffix="0" persistency="666"/>
       <arg type="VRPyDeviceType" value="mouse" base_name="mouse" name_space="init" name_suffix="0" persistency="666"/>
-      <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" base_name="trigger" name_space="__global__" name_suffix="0" persistency="666"/>
+      <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" base_name="trigger" name_space="__global__" name_suffix="8" persistency="666"/>
     </Script>
-    <Script base_name="kit_break" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+    <Script base_name="kit_break" group="no group" name_space="__script__" name_suffix="0" persistency="666" pyVersion="3.10.12" server="server1" type="Python">
       <core>
 	import VR
 	
@@ -271,11 +274,12 @@
 	VR.kit.breakup(i)
 	dev.drag(i)
 	
+
 </core>
-      <trig type="on_device" dev="mouse" state="Pressed" param="" key="2" base_name="trigger" name_space="__global__" name_suffix="2" persistency="666"/>
-      <trig type="on_device" dev="flystick" state="Pressed" param="" key="3" base_name="trigger" name_space="__global__" name_suffix="3" persistency="666"/>
+      <trig type="on_device" dev="mouse" state="Pressed" param="" key="2" base_name="trigger" name_space="__global__" name_suffix="10" persistency="666"/>
+      <trig type="on_device" dev="flystick" state="Pressed" param="" key="3" base_name="trigger" name_space="__global__" name_suffix="12" persistency="666"/>
     </Script>
-    <Script base_name="shdr_f" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="GLSL">
+    <Script base_name="shdr_f" group="no group" name_space="__script__" name_suffix="0" persistency="666" pyVersion="2.7.18" server="server1" type="GLSL">
       <core>
 varying vec3 norm;
 varying vec3 pos;
@@ -297,7 +301,7 @@ void main() {
 }
 </core>
     </Script>
-    <Script base_name="shdr_v" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="GLSL">
+    <Script base_name="shdr_v" group="no group" name_space="__script__" name_suffix="0" persistency="666" pyVersion="2.7.18" server="server1" type="GLSL">
       <core>
 varying vec3 norm;
 varying vec3 pos;
@@ -320,8 +324,12 @@ void main() {
     </Script>
   </Scripts>
   <Sockets persistency="666"/>
-  <Background color="0.6 0.6 0.6" format=".png" path="" persistency="666" type="0"/>
-  <Navigation active="FlyWalk" persistency="666"/>
+  <Background color="0.6 0.6 0.6" format=".png" path="" persistency="666" showSplash="0" splashPath="" type="0"/>
+  <Navigation persistency="666">
+    <presetStates>
+      <Orbit>1</Orbit>
+    </presetStates>
+  </Navigation>
   <Materials persistency="666"/>
   <Semantics persistency="666"/>
 </Scene>
