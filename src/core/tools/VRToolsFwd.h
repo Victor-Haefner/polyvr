@@ -11,6 +11,7 @@ ptrFwd(VRAnalyticGeometry);
 ptrFwd(VRClipPlane);
 ptrFwd(VRColorChooser);
 ptrFwd(VRMenu);
+ptrFctFwd( VRMenu, VRMenuPtr );
 ptrFwd(VRWaypoint);
 ptrFwd(VRMeasure);
 ptrFwd(VRTextureRenderer);

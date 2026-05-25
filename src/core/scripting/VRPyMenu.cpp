@@ -3,95 +3,24 @@
 
 using namespace OSG;
 
+template<> bool toValue(PyObject* obj, VRMenu::TYPE& e) {
+    return toValue( PyUnicode_AsUTF8(obj) , e);
+}
+
+template<> bool toValue(PyObject* obj, VRMenu::LAYOUT& e) {
+    return toValue( PyUnicode_AsUTF8(obj) , e);
+}
+
 simpleVRPyType(Menu, New_VRObjects_ptr);
 
 PyMethodDef VRPyMenu::methods[] = {
-    {"append", (PyCFunction)VRPyMenu::append, METH_VARARGS, "Append a child menu - append(str texture_path)" },
-    {"setLeafType", (PyCFunction)VRPyMenu::setLeafType, METH_VARARGS, "Set menu layout - setLeafType(str type, vec2f scale)\n\ttype : ['SPRITE'], scale is the size of the sprite" },
-    {"setLayout", (PyCFunction)VRPyMenu::setLayout, METH_VARARGS, "Set menu layout - setLayout(str layout, float param)\n\tlayout : ['LINEAR', 'CIRCULAR'], param is the distance between leafs" },
-    {"open", (PyCFunction)VRPyMenu::open, METH_NOARGS, "Open menu" },
-    {"close", (PyCFunction)VRPyMenu::close, METH_NOARGS, "Close menu" },
-    {"setCallback", (PyCFunction)VRPyMenu::setCallback, METH_VARARGS, "Set a menu callback - setCallback(fkt, [params])" },
-    {"trigger", (PyCFunction)VRPyMenu::trigger, METH_NOARGS, "Trigger menu or enter next layer if no callback is set" },
-    {"move", (PyCFunction)VRPyMenu::setCallback, METH_VARARGS, "Move the cursor - move(int dir)\n\tleft: dir=-1, right: dir=1" },
+    {"append", PyWrap( Menu, append, "Append a child menu - append(str texture_path)", VRMenuPtr, string ) },
+    {"setLeafType", PyWrap( Menu, setLeafType, "Set menu layout - setLeafType(str type, vec2f scale)\n\ttype : ['SPRITE'], scale is the size of the sprite", void, VRMenu::TYPE, Vec2d ) },
+    {"setLayout", PyWrap( Menu, setLayout, "Set menu layout - setLayout(str layout, float param)\n\tlayout : ['LINEAR', 'CIRCULAR'], param is the distance between leafs", void, VRMenu::LAYOUT, float ) },
+    {"open", PyWrap( Menu, open, "Open menu", void ) },
+    {"close", PyWrap( Menu, close, "Close menu", void ) },
+    {"setCallback", PyWrap( Menu, setCallback, "Set a menu callback - setCallback(fkt, [params])", void, VRMenuCbPtr ) },
+    {"trigger", PyWrap( Menu, trigger, "Trigger menu or enter next layer if no callback is set", void ) },
+    {"move", PyWrap( Menu, move, "Move the cursor - move(int dir)\n\tleft: dir=-1, right: dir=1", void, int ) },
     {NULL}  /* Sentinel */
 };
-
-PyObject* VRPyMenu::trigger(VRPyMenu* self) {
-    if (self->objPtr == 0) { PyErr_SetString(err, "VRPyMenu::trigger - Object is invalid"); return NULL; }
-    self->objPtr->trigger();
-    Py_RETURN_TRUE;
-}
-
-PyObject* VRPyMenu::move(VRPyMenu* self, PyObject *args) {
-    if (self->objPtr == 0) { PyErr_SetString(err, "VRPyMenu::move - Object is invalid"); return NULL; }
-    self->objPtr->move( parseInt(args) );
-    Py_RETURN_TRUE;
-}
-
-void execCall(PyObject* pyFkt, PyObject* pArgs, OSG::VRMenuPtr menu) {
-    if (pyFkt == 0) return;
-    VRPyGilGuard gilGuard;
-    if (PyErr_Occurred() != NULL) PyErr_Print();
-
-    if (pArgs == 0) pArgs = PyTuple_New(0);
-    PyObject_CallObject(pyFkt, pArgs);
-
-    if (PyErr_Occurred() != NULL) PyErr_Print();
-}
-
-PyObject* VRPyMenu::setCallback(VRPyMenu* self, PyObject *args) {
-    PyObject *pyFkt, *pArgs = 0;
-    if (PyTuple_Size(args) == 1) { if (! PyArg_ParseTuple(args, "O", &pyFkt)) return NULL; }
-    else if (! PyArg_ParseTuple(args, "OO", &pyFkt, &pArgs)) return NULL;
-    Py_IncRef(pyFkt);
-
-    if (pArgs != 0) {
-        std::string type = pArgs->ob_type->tp_name;
-        if (type == "list") pArgs = PyList_AsTuple(pArgs);
-    }
-
-    Py_IncRef(pArgs);
-    self->objPtr->setCallback(new VRFunction<OSG::VRMenuPtr>( "pyMenuCB", bind(execCall, pyFkt, pArgs, placeholders::_1) ));
-    Py_RETURN_TRUE;
-}
-
-PyObject* VRPyMenu::open(VRPyMenu* self) {
-    if (self->objPtr == 0) { PyErr_SetString(err, "VRPyMenu::open - Object is invalid"); return NULL; }
-    self->objPtr->open();
-    Py_RETURN_TRUE;
-}
-
-PyObject* VRPyMenu::close(VRPyMenu* self) {
-    if (self->objPtr == 0) { PyErr_SetString(err, "VRPyMenu::close - Object is invalid"); return NULL; }
-    self->objPtr->close();
-    Py_RETURN_TRUE;
-}
-
-PyObject* VRPyMenu::setLeafType(VRPyMenu* self, PyObject* args) {
-    if (self->objPtr == 0) { PyErr_SetString(err, "VRPyMenu::append - Object is invalid"); return NULL; }
-    PyObject *t, *s;
-    if (!PyArg_ParseTuple(args, "OO", &t, &s)) return NULL;
-    string ts = PyUnicode_AsUTF8(t);
-    OSG::VRMenu::TYPE type;
-    if (ts == "SPRITE") type = OSG::VRMenu::SPRITE;
-    self->objPtr->setLeafType( type, parseVec2dList(s));
-    Py_RETURN_TRUE;
-}
-
-PyObject* VRPyMenu::setLayout(VRPyMenu* self, PyObject* args) {
-    if (self->objPtr == 0) { PyErr_SetString(err, "VRPyMenu::append - Object is invalid"); return NULL; }
-    PyObject* l; float p;
-    if (!PyArg_ParseTuple(args, "Of", &l, &p)) return NULL;
-    string ls = PyUnicode_AsUTF8(l);
-    OSG::VRMenu::LAYOUT layout;
-    if (ls == "LINEAR") layout = OSG::VRMenu::LINEAR;
-    if (ls == "CIRCULAR") layout = OSG::VRMenu::CIRCULAR;
-    self->objPtr->setLayout( layout, p );
-    Py_RETURN_TRUE;
-}
-
-PyObject* VRPyMenu::append(VRPyMenu* self, PyObject* args) {
-    if (self->objPtr == 0) { PyErr_SetString(err, "VRPyMenu::append - Object is invalid"); return NULL; }
-    return fromSharedPtr( self->objPtr->append( parseString(args) ) );
-}
