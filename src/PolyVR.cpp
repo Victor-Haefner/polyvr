@@ -122,16 +122,17 @@ PolyVR::~PolyVR() {
     catch (...) {}
 #endif
 
-#ifndef WITHOUT_CEF
-    CEF::shutdown();
-#endif
-
     pvr = 0;
 
 #ifndef WITHOUT_IMGUI
     VRGuiSignals::get()->clear();
 #endif
     if (scene_mgr) scene_mgr->closeScene();
+
+#ifndef WITHOUT_CEF
+    CEF::shutdown();
+#endif
+
     if (auto setup = VRSetup::getCurrent()) setup->stopWindows();
     if (scene_mgr) scene_mgr->stopAllThreads();
     if (setup_mgr) setup_mgr->closeSetup();
