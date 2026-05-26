@@ -74,8 +74,13 @@ void VRPipeSegment::updateGeometry(GraphPtr graph) {
     volume = area * length;
     updateResistance();
 
-    double nz = (d/length)[1];
-    zRadius = radius * sqrt(1.0 - nz * nz);
+    if (length < 1e-6) {
+        zRadius = radius;
+    } else {
+        double nz = (d/length)[1];
+        zRadius = radius * sqrt(1.0 - nz * nz);
+    }
+
     fluidMin = min(p1[1], p2[1]) - zRadius;
     fluidMax = max(p1[1], p2[1]) + zRadius;
 }
@@ -2136,11 +2141,12 @@ void VRPipeSystem::updatePressurization(double dt) {
             double fluidLvlMin = 1e6;
             for (auto& e : ends) {
                 auto p = e->pipe.lock();
-                fluidLvlMin = min(fluidLvlMin, p->fluidLvl);
+                if (p->pressurized) fluidLvlMin = min(fluidLvlMin, p->fluidMax);
+                else fluidLvlMin = min(fluidLvlMin, p->fluidLvl);
             }
 
-            for (auto& e : ends) {
-                if (e->heightMax > fluidLvlMin) e->pressurized = false;
+            for (auto& e : ends) { // TODO: do I realy need this??
+                //if (e->heightMax > fluidLvlMin + 1e-6) e->pressurized = false;
             }
         }
     };
