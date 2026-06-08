@@ -93,7 +93,7 @@ VRVideoStream::VRVideoStream(AVStream* avStream, AVCodecContext* avContext) {
 
 VRVideoStream::~VRVideoStream() {
     cout << " VRVideoStream::~VRVideoStream " << endl;
-    if (vCodec) avcodec_close(vCodec); // Close the codec
+    if (vCodec) avcodec_free_context(&vCodec); // Close the codec
     if (vFrame) av_frame_free(&vFrame);
     if (nFrame) av_frame_free(&nFrame);
     vCodec = 0;

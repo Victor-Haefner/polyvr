@@ -161,12 +161,12 @@ bool Compare<std::vector<OpcUa::ExtensionObject>>(const Variant & lhs, const Var
 
 bool Variant::operator== (const Variant & var) const
 {
-  if (Value.empty() ^ var.Value.empty())
+  if (!Value.has_value() ^ var.Value.has_value())
     {
       return false;
     }
 
-  if (Value.empty() && var.Value.empty())
+  if (!Value.has_value() && !var.Value.has_value())
     {
       return true;
     }
@@ -176,7 +176,7 @@ bool Variant::operator== (const Variant & var) const
       return false;
     }
 
-  using namespace boost;
+  using namespace std;
   const std::type_info & t = Value.type();
 
   if (t == typeid(bool))
@@ -327,7 +327,7 @@ bool Variant::IsScalar() const
 
 bool Variant::IsNul() const
 {
-  return Value.empty();
+  return !Value.has_value();
 }
 
 bool Variant::IsArray() const
@@ -360,7 +360,7 @@ bool Variant::IsArray() const
 
 VariantType Variant::Type() const
 {
-  if (Value.empty())
+  if (!Value.has_value())
     { return VariantType::NUL; }
 
   const std::type_info & t = Value.type();
@@ -441,7 +441,7 @@ VariantType Variant::Type() const
 
 void Variant::Visit(VariantVisitor & visitor) const
 {
-  using namespace boost;
+  using namespace std;
   const std::type_info & t = Value.type();
 
   if (t == typeid(bool))
@@ -781,55 +781,55 @@ std::string Variant::ToString() const
       switch (Type())
         {
         case VariantType::DATE_TIME:
-          str << OpcUa::ToString(boost::any_cast<DateTime> (Value)); //As<DateTime>());
+          str << OpcUa::ToString(std::any_cast<DateTime> (Value)); //As<DateTime>());
           break;
 
         case VariantType::STRING:
-          str << boost::any_cast<std::string> (Value);
+          str << std::any_cast<std::string> (Value);
           break;
 
         case VariantType::BOOLEAN:
-          str << ((boost::any_cast<bool> (Value)) ? "true" : "false");
+          str << ((std::any_cast<bool> (Value)) ? "true" : "false");
           break;
 
         case VariantType::BYTE:
-          str << boost::any_cast<unsigned char> (Value);
+          str << std::any_cast<unsigned char> (Value);
           break;
 
         case VariantType::SBYTE:
-          str << boost::any_cast<char> (Value);
+          str << std::any_cast<char> (Value);
           break;
 
         case VariantType::DOUBLE:
-          str << boost::any_cast<double> (Value);
+          str << std::any_cast<double> (Value);
           break;
 
         case VariantType::FLOAT:
-          str << boost::any_cast<float> (Value);
+          str << std::any_cast<float> (Value);
           break;
 
         case VariantType::INT16:
-          str << boost::any_cast<int16_t> (Value);
+          str << std::any_cast<int16_t> (Value);
           break;
 
         case VariantType::INT32:
-          str << boost::any_cast<int32_t> (Value);
+          str << std::any_cast<int32_t> (Value);
           break;
 
         case VariantType::INT64:
-          str << boost::any_cast<int64_t> (Value);
+          str << std::any_cast<int64_t> (Value);
           break;
 
         case VariantType::UINT16:
-          str << boost::any_cast<uint16_t> (Value);
+          str << std::any_cast<uint16_t> (Value);
           break;
 
         case VariantType::UINT32:
-          str << boost::any_cast<uint32_t> (Value);
+          str << std::any_cast<uint32_t> (Value);
           break;
 
         case VariantType::UINT64:
-          str << boost::any_cast<uint64_t> (Value);
+          str << std::any_cast<uint64_t> (Value);
           break;
 
         default:

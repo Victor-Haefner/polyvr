@@ -2288,38 +2288,48 @@ void VRPipeSystem::updateRegimes(double dt) {
 }
 
 void VRPipeSystem::computeAdvectiveHeatTransfer(double dt) {
-    auto mixVolumeFlows = [](double V0, double T0, vector<Vec2d> flows) {
+    auto mixVolumeFlows = [&](double V0, double T0, vector<Vec2d> flows) {
         if (flows.size() == 0) return T0;
         if (abs(V0) < 1e-6) return 0.0;
 
+        double Tmin = 1e6;
+        double Tmax =-1e6;
         double _V0 = V0;
         double Ft = 0;
         for (auto f : flows) {
             double V = f[0];
             double T = f[1];
+            Tmin = min(Tmin, T);
+            Tmax = max(Tmax, T);
             _V0 -= V;
             Ft += V*T;
         }
         double T = (T0*_V0 + Ft)/V0; // mix everything
+        T = clamp(T, Tmin, Tmax); // TODO: check why needed
         return T;
     };
 
-    auto mixNodeFlows = [](vector<VRPipeEndPtr> ends) {
+    auto mixNodeFlows = [&](vector<VRPipeEndPtr> ends) {
         int N = ends.size();
         if (N == 0) return;
 
         double Qin = 0;
         for (auto e : ends) if (e->flow >= 0.0) Qin += e->flow;
 
+        double Tmin = 1e6;
+        double Tmax =-1e6;
         double Tj = 0;
-        for (auto e : ends) {
+        for (auto e : ends) { // TODO: check if no contributions here?
             if (e->flow < 0.0) continue; // ignore outgoing flows, only mix whats coming in
             double k = e->flow / Qin;
             auto pipe = e->pipe.lock();
             double T = pipe->temperature;
+            Tmin = min(Tmin, T);
+            Tmax = max(Tmax, T);
             Tj += T * k;
         }
 
+        Tj = clamp(Tj, Tmin, Tmax); // TODO: check why needed
         for (auto e : ends) if (e->flow < 0.0) e->temperature = Tj;
     };
 

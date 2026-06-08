@@ -34,10 +34,10 @@
 
 bool doPrintKeyEvents2 = false;
 
-void checkKeysDownMap(string tag) {
+/*void checkKeysDownMap(string tag) {
     ImGuiIO& io = ImGui::GetIO();
     for (int i=0; i<512; i++) if (io.KeysDown[i]) cout << " AAAAAAAAAA " << i << " " << tag << endl;
-}
+}*/
 
 
 void updateGlutCursor() {
@@ -417,9 +417,9 @@ static void ImGui_ImplGLUT_ReleaseAllKeys() {
     for (int k = 0; k < ImGuiKey_COUNT; k++) {
         ImGuiKey key = (ImGuiKey)k;
 
-        if (io.KeysDown[k]) {
+        /*if (io.KeysDown[k]) {
             ImGui_ImplGLUT_AddKeyEvent(key, false, 0);  // release it
-        }
+        }*/
     }
 
 #if IMGUI_VERSION_NUM > 18600

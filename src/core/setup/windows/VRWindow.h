@@ -14,7 +14,7 @@ using namespace std;
 
 class VRWindow;
 class VRThread;
-typedef boost::function<void (VRWindowPtr, int, int, int, int, int)> VRWindowCallback; // params: device, button, state, mouse x, mouse y
+typedef std::function<void (VRWindowPtr, int, int, int, int, int)> VRWindowCallback; // params: device, button, state, mouse x, mouse y
 
 class VRWindow : public std::enable_shared_from_this<VRWindow>, public VRName {
     protected:

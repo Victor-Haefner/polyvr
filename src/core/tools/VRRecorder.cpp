@@ -239,8 +239,8 @@ void VRRecorder::initCodec() {
 }
 
 void VRRecorder::closeCodec() {
-    avcodec_close(codec_context);
-    av_free(codec_context);
+    avcodec_free_context(&codec_context);
+    codec_context = 0;
 }
 
 void VRRecorder::initFrame() {

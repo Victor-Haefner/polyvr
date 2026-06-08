@@ -3,6 +3,7 @@
 #include <stack>
 #include <iostream>
 #include <algorithm>
+#include <functional>
 #include <OpenSG/OSGVector.h>
 
 using namespace OSG;
