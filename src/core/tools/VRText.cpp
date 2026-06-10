@@ -114,6 +114,7 @@ class FTRenderer {
             data.width = layoutWidth + 2*style.padding + 2*style.outline;
             data.height = layoutHeight + 2*style.padding + 2*style.outline;
             data.lineOffset = maxO;
+            clearImg();
         }
 
         void drawOutline(vector<pair<unsigned long, string>>& graphemes) {
@@ -142,12 +143,9 @@ class FTRenderer {
                 int X = bmGlyph->left + style.padding + style.outline + n*style.charspread;
                 int Y = data.height - data.lineOffset - bmGlyph->top - style.padding - style.outline;
                 draw_bitmap( &bmGlyph->bitmap, X, Y, style.outlineColor );
-                //pen.x += bmGlyph->bitmap.width*64;
-                //pen.y += bmGlyph->bitmap.rows*64;
-
                 pen.x += slot->advance.x;
                 pen.y += slot->advance.y;
-                //cout << " pen " << Vec2i(pen.x, pen.y) << endl;
+                //cout << " pen " << Vec2i(pen.x, pen.y) << ", XY " << Vec2i(X,Y) << endl;
                 FT_Done_Glyph(glyph);
             }
 
@@ -158,31 +156,27 @@ class FTRenderer {
             pen.x = 0;
             pen.y = 0;
 
-            cout << "drawGraphemes " << endl;
+            //cout << "drawGraphemes " << endl;
             for ( size_t n = 0; n < graphemes.size(); n++ ) {
                 FT_ULong cUL = graphemes[n].first; // load glyph image into the slot (erase previous one)
                 FT_Set_Transform( face, &matrix, &pen );
-                cout << " draw graphem " << n << endl;
 
                 FT_UInt glyphIndex = FT_Get_Char_Index(face, cUL);
                 if (glyphIndex == 0) continue;
 
-                error = FT_Load_Char( face, cUL, FT_LOAD_RENDER );
-                if (error) {
-                    cout << "FT_Load_Char " << cUL << " failed! " << error << endl;
-                    auto eStr = FT_Error_String(error);
-                    cout << "  error: " << string(eStr ? eStr : "") << endl;
+                FT_Load_Glyph(face, glyphIndex, FT_LOAD_DEFAULT);
+                FT_Glyph glyph;
+                FT_Get_Glyph(face->glyph, &glyph);
+                FT_Glyph_To_Bitmap(&glyph, FT_RENDER_MODE_NORMAL, nullptr, true);
+                FT_BitmapGlyph bmGlyph = reinterpret_cast<FT_BitmapGlyph>(glyph);
 
-                    cout << "  char=" << cUL << " glyph=" << glyphIndex << endl;
-                    continue;
-                } // ignore errors
-
-                int X = slot->bitmap_left + style.padding + style.outline + n*style.charspread;
-                int Y = data.height - data.lineOffset - slot->bitmap_top - style.padding - style.outline;
-                draw_bitmap( &slot->bitmap, X, Y, style.foreground );
+                //continue;
+                int X = bmGlyph->left + style.padding + style.outline + n*style.charspread;
+                int Y = data.height - data.lineOffset - bmGlyph->top - style.padding - style.outline;
+                draw_bitmap( &bmGlyph->bitmap, X, Y, style.foreground );
                 pen.x += slot->advance.x;
                 pen.y += slot->advance.y;
-                //cout << " pen " << Vec2i(pen.x, pen.y) << "  slot: " << Vec2i(slot->bitmap_left, slot->bitmap_top) << endl;
+                //cout << " pen " << Vec2i(pen.x, pen.y) << "  slot: " << Vec2i(slot->bitmap_left, slot->bitmap_top) << ", XY " << Vec2i(X,Y) << endl;
             }
         }
 
@@ -197,28 +191,19 @@ class FTRenderer {
         };
 
         void render(string text) {
-            cout << "RENDER TEXT " << text << endl;
+            //cout << "RENDER TEXT " << text << endl;
+            auto graphemes = getGraphemes(text); // TODO: use this for countGraphemes!
+
             error = FT_Init_FreeType( &library );
             if (error) cout << "FT_Init_FreeType failed!" << endl;
-
             setFont(style.font);
+
             setupFace();
-
-            auto graphemes = getGraphemes(text); // TODO: use this for countGraphemes!
             computeLayout(graphemes);
-            clearImg();
-            //FT_Done_Face(face);
-
-            if (style.outline > 0) {
-                //setupFace();
-                drawOutline(graphemes);
-                //FT_Done_Face(face);
-            }
-
-            //setupFace();
+            if (style.outline > 0) drawOutline(graphemes);
             drawGraphemes(graphemes);
-            FT_Done_Face    ( face );
 
+            FT_Done_Face    ( face );
             FT_Done_FreeType( library );
             if (debugLayout) draw_padding();
         }
