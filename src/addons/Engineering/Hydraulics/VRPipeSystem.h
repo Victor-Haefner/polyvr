@@ -205,6 +205,7 @@ class VRPipeSystem : public VRGeometry {
 		Vec2d getSegmentFlow(int i);
 		Vec2d getSegmentHeadFlow(int i);
 		Vec2d getSegmentHead(int i);
+		Vec2d getSegmentTemperature(int i);
 		double getTankPressure(int nID);
 		double getTankDensity(int nID);
 		double getTankLevel(int nID);

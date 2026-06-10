@@ -359,23 +359,37 @@ void VRPipeSystem::initOntology() {
     Tank->addProperty("temperature", "double");
     Tank->addProperty("level", "double");
     Tank->addProperty("isOpen", "bool");
+
     Gauge->addProperty("pressure", "double");
     Gauge->addProperty("maxPressure", "double");
     Gauge->addProperty("tank", Tank);
+
     Pump->addProperty("maxHead", "double");
+    Pump->addProperty("maxFlow", "double");
+    Pump->addProperty("curveExponent", "double");
     Pump->addProperty("rampTime", "double");
     Pump->addProperty("control", "double");
     Pump->addProperty("state", "double");
     Pump->addProperty("newState", "double");
     Pump->addProperty("isOpen", "bool");
+
     Outlet->addProperty("radius", "double");
     Outlet->addProperty("pressure", "double");
     Outlet->addProperty("density", "double");
+
     Valve->addProperty("state", "double");
     CheckValve->addProperty("crackingPressure", "double");
     ReliefValve->addProperty("thresholdPressure", "double");
     ReliefValve->addProperty("reseatPressure", "double");
     ControlValve->addProperty("paths", ValvePath);
+
+    // (A,B,x0,xs,K) where A and B are ports and x0 the spool/state position, xs the transition size and K the resistance
+    ValvePath->addProperty("A", "int");
+    ValvePath->addProperty("B", "int");
+    ValvePath->addProperty("x0", "double");
+    ValvePath->addProperty("xs", "double");
+    ValvePath->addProperty("K", "double");
+
     Cylinder->addProperty("area", "double");
     Cylinder->addProperty("length", "double");
     Cylinder->addProperty("force", "double"); // external force
@@ -389,13 +403,6 @@ void VRPipeSystem::initOntology() {
     Cylinder->addProperty("headFlow", "double");
     Cylinder->addProperty("pistonAcceleration", "double");
     Cylinder->addProperty("pistonSpeed", "double");
-
-    // (A,B,x0,xs,K) where A and B are ports and x0 the spool/state position, xs the transition size and K the resistance
-    ValvePath->addProperty("A", "int");
-    ValvePath->addProperty("B", "int");
-    ValvePath->addProperty("x0", "double");
-    ValvePath->addProperty("xs", "double");
-    ValvePath->addProperty("K", "double");
 }
 
 void VRPipeSystem::addControlValvePath(int i, int A, int B, double x0, double xs, double K) {
@@ -470,6 +477,7 @@ Vec2d VRPipeSystem::getSegmentHead(int i) {  auto e1 = segments[i]->end1.lock();
 double VRPipeSystem::getSegmentDensity(int i) { return segments[i]->density; }
 Vec2d VRPipeSystem::getSegmentFlow(int i) { auto e1 = segments[i]->end1.lock(); auto e2 = segments[i]->end2.lock(); return e1 && e2 ? Vec2d(e1->flow, e2->flow) : Vec2d(); }
 Vec2d VRPipeSystem::getSegmentHeadFlow(int i) { auto e1 = segments[i]->end1.lock(); auto e2 = segments[i]->end2.lock(); return e1 && e2 ? Vec2d(e1->headFlow, e2->headFlow) : Vec2d(); }
+Vec2d VRPipeSystem::getSegmentTemperature(int i) { auto e1 = segments[i]->end1.lock(); auto e2 = segments[i]->end2.lock(); return e1 && e2 ? Vec2d(e1->temperature, e2->temperature) : Vec2d(); }
 double VRPipeSystem::getTankPressure(int nID) { auto e = getNodeEntity(nID); return e ? e->getValue("pressure", atmosphericPressure) : 0.0; }
 double VRPipeSystem::getTankDensity(int nID) { auto e = getNodeEntity(nID); return e ? e->getValue("density", waterDensity) : 0.0; }
 double VRPipeSystem::getTankLevel(int nID) { auto e = getNodeEntity(nID); return e ? e->getValue("level", 1.0) : 0.0; }
@@ -1444,16 +1452,25 @@ void VRPipeSystem::solveNodeHeads(double dt) {
         }
     };
 
+    auto computePumpHead = [&](VREntityPtr entity, double flow) {
+        double mH = entity->getValue("maxHead", 0.0);
+        double mQ = entity->getValue("maxFlow", 1.0);
+        double e = entity->getValue("curveExponent", 2.0);
+        double H = mH * ( 1.0 - pow(flow / mQ,e) );
+        cout << "computePumpHead Q: " << flow << ", H " << H << ", e " << e << endl;
+        return H;
+    };
+
     auto processPumpHeads = [&](vector<VRPipeEndPtr> ends, VREntityPtr entity, double& maxHeadDelta) -> bool {
         if (ends.size() != 2) return false;
 
         double control = entity->getValue("control", 0.0);
         double state = entity->getValue("state", 0.0);
         double rampTime = entity->getValue("rampTime", 0.5);
-        double maxHead = entity->getValue("maxHead", 0.0);
         bool isOpen = entity->getValue("isOpen", false);
         auto pEnd1 = ends[0];
         auto pEnd2 = ends[1];
+        double pumpHead = computePumpHead(entity, pEnd1->flow);
 
         double alpha = clamp(dt / rampTime, 0.0, 1.0);
         state += sign(control - state) * alpha;
@@ -1472,7 +1489,7 @@ void VRPipeSystem::solveNodeHeads(double dt) {
         averageOverPipes({pEnd2}, maxHeadDelta);
 
         double deltaHead = pEnd2->hydraulicHead - pEnd1->hydraulicHead;
-        double pumpGain = state * maxHead;
+        double pumpGain = state * pumpHead;
         double mod = clamp(pumpGain - deltaHead, 0.0, pumpGain);
         maxHeadDelta = max(maxHeadDelta, abs(mod));
 
