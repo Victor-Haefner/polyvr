@@ -396,7 +396,7 @@ void VRAnnotationEngine::addGrapheme(string g) {
 
 void VRAnnotationEngine::updateTexture() {
     int cN = VRText::countGraphemes(characters);
-		if (cN == 0) return;
+    if (cN == 0) return;
     int padding = 3;
     int spread = 6;
 		//cout << "VRAnnotationEngine::updateTexture " << characters << ", " << cN << endl;

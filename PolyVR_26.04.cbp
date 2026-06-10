@@ -5446,6 +5446,12 @@
 			<Option target="Release" />
 			<Option target="Debug" />
 		</Unit>
-		<Extensions />
+		<Extensions>
+			<debugger>
+				<remote_debugging target="Debug">
+					<options conn_type="0" additional_shell_cmds_before="export __NV_PRIME_RENDER_OFFLOAD=1&#x0A;export __GLX_VENDOR_LIBRARY_NAME=nvidia" />
+				</remote_debugging>
+			</debugger>
+		</Extensions>
 	</Project>
 </CodeBlocks_project_file>

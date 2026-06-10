@@ -1457,7 +1457,7 @@ void VRPipeSystem::solveNodeHeads(double dt) {
         double mQ = entity->getValue("maxFlow", 1.0);
         double e = entity->getValue("curveExponent", 2.0);
         double H = mH * ( 1.0 - pow(flow / mQ,e) );
-        cout << "computePumpHead Q: " << flow << ", H " << H << ", e " << e << endl;
+        //cout << "computePumpHead Q: " << flow << ", H " << H << ", e " << e << endl;
         return H;
     };
 
