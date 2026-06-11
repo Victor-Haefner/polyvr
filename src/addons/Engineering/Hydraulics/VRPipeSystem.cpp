@@ -2371,21 +2371,18 @@ void VRPipeSystem::computeFlowMixing(double dt) {
         if (flows.size() == 0) return f0.fluid.temperature;
         if (abs(f0.V) < 1e-6) return 0.0;
 
-        double Tmin =  1e6;
-        double Tmax = -1e6;
-        double _V0 = f0.V;
-        double Ft = 0;
-        for (auto f : flows) {
-            double V = f.V;
-            double T = f.fluid.temperature;
-            Tmin = min(Tmin, T);
-            Tmax = max(Tmax, T);
-            _V0 -= V;
-            Ft += V*T;
+        double VtotalIn = 0.0;
+        for (auto f : flows) VtotalIn += f.V;
+        double Vremain = f0.V - VtotalIn;
+
+        VRFluidComposition fluid0 = f0.fluid;
+        double K = Vremain;
+        for (auto& f : flows) {
+            K += f.V;
+            fluid0.mixIn(f.fluid, f.V/K);
         }
-        double T = (f0.fluid.temperature*_V0 + Ft)/f0.V; // mix everything
-        T = clamp(T, Tmin, Tmax); // TODO: check why needed
-        return T;
+
+        return fluid0.temperature;
     };
 
     auto mixAtNode = [&](VRPipeNodePtr node) {
