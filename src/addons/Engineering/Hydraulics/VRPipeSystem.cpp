@@ -2368,8 +2368,8 @@ void VRPipeSystem::computeFlowMixing(double dt) {
     };
 
     auto mixVolumeFlows = [&](FluidVolume f0, vector<FluidVolume> flows) {
-        if (flows.size() == 0) return f0.fluid.temperature;
-        if (abs(f0.V) < 1e-6) return 0.0;
+        if (flows.size() == 0) return f0.fluid;
+        //if (abs(f0.V) < 1e-6) return f0.fluid; // is this correct?
 
         double VtotalIn = 0.0;
         for (auto f : flows) VtotalIn += f.V;
@@ -2379,10 +2379,10 @@ void VRPipeSystem::computeFlowMixing(double dt) {
         double K = Vremain;
         for (auto& f : flows) {
             K += f.V;
-            fluid0.mixIn(f.fluid, f.V/K);
+            fluid0.mixIn(f.fluid, f.V/K); // TODO: guard for K == 0
         }
 
-        return fluid0.temperature;
+        return fluid0;
     };
 
     auto mixAtNode = [&](VRPipeNodePtr node) {
@@ -2410,11 +2410,9 @@ void VRPipeSystem::computeFlowMixing(double dt) {
                 else flows.push_back({V, pipe->fluid});
             }
 
-            double T = mixVolumeFlows({V0, tFluid}, flows);
-            e->set("temperature", toString(T,12));
-            //cout << " tank T: " << T << endl;
-
-            for (auto e : node->pipes) if (e->flow < 0.0) e->fluid.temperature = T;
+            tFluid = mixVolumeFlows({V0, tFluid}, flows);
+            e->set("temperature", toString(tFluid.temperature, 12));
+            for (auto e : node->pipes) if (e->flow < 0.0) e->fluid = tFluid;
             return;
         }
 
@@ -2445,10 +2443,8 @@ void VRPipeSystem::computeFlowMixing(double dt) {
             else flows.push_back({V, e->fluid});
         }
 
-        double T = mixVolumeFlows({V0, pipe->fluid}, flows);
-        pipe->fluid.temperature = T;
-        for (auto e : {end1, end2}) if (e->flow >= 0.0) e->fluid.temperature = T;
-        //cout << " T0 " << T0 << " -> " << T << endl;
+        pipe->fluid = mixVolumeFlows({V0, pipe->fluid}, flows);
+        for (auto e : {end1, end2}) if (e->flow >= 0.0) e->fluid = pipe->fluid;
     };
 
 
