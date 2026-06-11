@@ -13,6 +13,25 @@
 using namespace std;
 OSG_BEGIN_NAMESPACE;
 
+class VRFluidComposition {
+    public:
+        struct ParticleBin {
+            string ID;
+            double sizeMin;
+            double sizeMax;
+            double density;
+        };
+
+        double temperature = 20.0;
+        double pressure = 1.0;
+        double density = 1000.0; // kg / m3
+        double viscosity = 1e-3; // Pa s
+
+        map<string, ParticleBin> particles;
+
+        void mixIn(const VRFluidComposition& fluid, const double& percentage);
+};
+
 class VRPipeEnd {
     public:
         VRPipeSegmentWeakPtr pipe;
@@ -23,16 +42,14 @@ class VRPipeEnd {
         double offsetHeight = 0.0; // used for tank offset
         Vec3d offset; // offset relative to node center
 
+        double hydraulicHead = 0.0;
+        bool pressurized = false;
+
         double headFlow = 0.0;
         double maxFlow = 0.0;
         double flow = 0.0;
 
-        double heatFlux = 0.0;
-        double temperature = 20.0;
-
-        double hydraulicHead = 0.0;
-        double pressure = 1.0;
-        bool pressurized = false;
+        VRFluidComposition fluid;
 
     public:
         VRPipeEnd(VRPipeSegmentPtr s, int nID, double height = 0.0);
@@ -61,9 +78,6 @@ class VRPipeSegment {
         double resistanceTurbulent = 0.0;
         //double resistance = 0.0;
         double regime = 1.0; // 0 laminar, 1 turbulent
-        double density = 1000.0; // kg / m3
-        double viscosity = 1e-3; // Pa s
-        double temperature = 20.0;
         double level = 0.0;
         double hydraulicHead = 0.0;
         double lastVizLevel = -1.0;
@@ -71,6 +85,8 @@ class VRPipeSegment {
         double thermalConductance = 1.0;
         bool pressurized = false;
         bool flowBlocked = false;
+
+        VRFluidComposition fluid;
 
         VRPipeEndWeakPtr end1;
         VRPipeEndWeakPtr end2;
@@ -161,7 +177,7 @@ class VRPipeSystem : public VRGeometry {
         void computeMaxFlows(double dt);
         void updateLevels(double dt);
         void updatePressurization(double dt);
-        void computeAdvectiveHeatTransfer(double dt);
+        void computeFlowMixing(double dt);
         void updatePressures(double dt);
         void updateRegimes(double dt);
 

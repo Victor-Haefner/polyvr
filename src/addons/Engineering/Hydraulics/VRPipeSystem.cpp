@@ -18,6 +18,29 @@ using namespace OSG;
 
 double gasSpeed = 300;
 
+// fluid composition
+
+void VRFluidComposition::mixIn(const VRFluidComposition& fluid, const double& percentage) {
+    double k = percentage;
+    double _k = 1.0-k;
+
+    auto mixLin = [&](double& a, double b) {
+        double m = a * _k + b * k;
+        m = clamp(m, min(a, b), max(a,b));
+        a = m;
+    };
+
+    auto mixLog = [&](double& a, double b) {
+        double m = log(a) * _k + log(b) * k;
+        m = clamp(m, min(a, b), max(a,b));
+        a = m;
+    };
+
+    mixLin(temperature, fluid.temperature);
+    //mixLin(density, fluid.density);
+    //mixLog(viscosity, fluid.viscosity);
+}
+
 
 // Pipe End ----
 
@@ -95,7 +118,7 @@ double VRPipeSegment::computeRegime(double Q) {
     if (A < 1e-9) return 1.0;
 
     double v = Q/A;
-    double Re = density*v*D / viscosity;
+    double Re = fluid.density*v*D / fluid.viscosity;
 
     double k = clamp((Re - 2300) / (4000 - 2300), 0.0, 1.0); // normalize, <0 -> laminar, >1 -> turbulent
     //if (Q > 1e-3) cout << " -- computeRegime " << Q << ", " << v << ", " << Re << " -> " << k << endl;
@@ -105,8 +128,8 @@ double VRPipeSegment::computeRegime(double Q) {
 void VRPipeSegment::updateResistance() {
     double fill = max(level, 0.05);
     double rEff = radius * sqrt(fill);
-    resistanceLaminar = (8.0 * viscosity * length) / (Pi * pow(rEff, 4)); // Hagen–Poiseuille resistance
-    resistanceTurbulent = friction * length * density / ( 4 * radius * pow(area,2));
+    resistanceLaminar = (8.0 * fluid.viscosity * length) / (Pi * pow(rEff, 4)); // Hagen–Poiseuille resistance
+    resistanceTurbulent = friction * length * fluid.density / ( 4 * radius * pow(area,2));
     //cout << " resistance: " << resistance << ", L: " << length << ", f: " << friction << ", D: " << density << ", R: " << radius << ", A: " << area << endl;
     if (resistanceLaminar < 1e-9) resistanceLaminar = 1.0;
     if (resistanceTurbulent < 1e-9) resistanceTurbulent = 1.0;
@@ -117,7 +140,7 @@ void VRPipeSegment::updateResistance() {
 
 double VRPipeSegment::computeEffectiveResistance(const double& flow) {
     double k = regime;
-    double rho_g = density * gravity;
+    double rho_g = fluid.density * gravity;
     double Rl = resistanceLaminar / rho_g;
     if (k <= 0.0) return max( Rl, 1e-9 );
 
@@ -328,7 +351,7 @@ double VRPipeSystem::computeTotalMass() {
     for (auto& s : segments) { // mass in pipes
         auto pipe = s.second;
         double pipeLevel = pipe->level; // 0..1
-        double pipeDensity = pipe->density; // kg/m³
+        double pipeDensity = pipe->fluid.density; // kg/m³
         double pipeVolume = pipe->volume; // m³
         totalMass += pipeDensity * pipeVolume * pipeLevel;
     }
@@ -349,6 +372,7 @@ void VRPipeSystem::initOntology() {
     auto ControlValve = ontology->addConcept("ControlValve", "Valve");
     auto ValvePath = ontology->addConcept("ValvePath");
     auto Cylinder = ontology->addConcept("Cylinder");
+    auto ParticleBin = ontology->addConcept("ParticleBin");
 
     Tank->addProperty("pressure", "double");
     Tank->addProperty("initialGasVolume", "double");
@@ -403,6 +427,15 @@ void VRPipeSystem::initOntology() {
     Cylinder->addProperty("headFlow", "double");
     Cylinder->addProperty("pistonAcceleration", "double");
     Cylinder->addProperty("pistonSpeed", "double");
+
+    ParticleBin->addProperty("type", "string");
+    ParticleBin->addProperty("sizeMin", "double");
+    ParticleBin->addProperty("sizeMax", "double");
+    ParticleBin->addProperty("density", "double");
+
+    ParticleBin->addProperty("volumeFraction", "double");
+
+
 }
 
 void VRPipeSystem::addControlValvePath(int i, int A, int B, double x0, double xs, double K) {
@@ -471,13 +504,13 @@ VREntityPtr VRPipeSystem::getEntity(string name) {
 
 PosePtr VRPipeSystem::getNodePose(int i) { return graph->getPosition(i); }
 double VRPipeSystem::getPipeRadius(int i) { return segments[i]->radius; }
-double VRPipeSystem::getSegmentPressure(int i) { auto e1 = segments[i]->end1.lock(); auto e2 = segments[i]->end2.lock(); return e1 && e2 ? (e1->pressure+e2->pressure)*0.5   : 0; }
-Vec2d VRPipeSystem::getSegmentGradient(int i) {  auto e1 = segments[i]->end1.lock(); auto e2 = segments[i]->end2.lock(); return e1 && e2 ? Vec2d(e1->pressure, e2->pressure) : Vec2d(); }
+double VRPipeSystem::getSegmentPressure(int i) { auto e1 = segments[i]->end1.lock(); auto e2 = segments[i]->end2.lock(); return e1 && e2 ? (e1->fluid.pressure+e2->fluid.pressure)*0.5   : 0; }
+Vec2d VRPipeSystem::getSegmentGradient(int i) {  auto e1 = segments[i]->end1.lock(); auto e2 = segments[i]->end2.lock(); return e1 && e2 ? Vec2d(e1->fluid.pressure, e2->fluid.pressure) : Vec2d(); }
 Vec2d VRPipeSystem::getSegmentHead(int i) {  auto e1 = segments[i]->end1.lock(); auto e2 = segments[i]->end2.lock(); return e1 && e2 ? Vec2d(e1->hydraulicHead, e2->hydraulicHead) : Vec2d(); }
-double VRPipeSystem::getSegmentDensity(int i) { return segments[i]->density; }
+double VRPipeSystem::getSegmentDensity(int i) { return segments[i]->fluid.density; }
 Vec2d VRPipeSystem::getSegmentFlow(int i) { auto e1 = segments[i]->end1.lock(); auto e2 = segments[i]->end2.lock(); return e1 && e2 ? Vec2d(e1->flow, e2->flow) : Vec2d(); }
 Vec2d VRPipeSystem::getSegmentHeadFlow(int i) { auto e1 = segments[i]->end1.lock(); auto e2 = segments[i]->end2.lock(); return e1 && e2 ? Vec2d(e1->headFlow, e2->headFlow) : Vec2d(); }
-Vec2d VRPipeSystem::getSegmentTemperature(int i) { auto e1 = segments[i]->end1.lock(); auto e2 = segments[i]->end2.lock(); return e1 && e2 ? Vec2d(e1->temperature, e2->temperature) : Vec2d(); }
+Vec2d VRPipeSystem::getSegmentTemperature(int i) { auto e1 = segments[i]->end1.lock(); auto e2 = segments[i]->end2.lock(); return e1 && e2 ? Vec2d(e1->fluid.temperature, e2->fluid.temperature) : Vec2d(); }
 double VRPipeSystem::getTankPressure(int nID) { auto e = getNodeEntity(nID); return e ? e->getValue("pressure", atmosphericPressure) : 0.0; }
 double VRPipeSystem::getTankDensity(int nID) { auto e = getNodeEntity(nID); return e ? e->getValue("density", waterDensity) : 0.0; }
 double VRPipeSystem::getTankLevel(int nID) { auto e = getNodeEntity(nID); return e ? e->getValue("level", 1.0) : 0.0; }
@@ -503,8 +536,8 @@ void VRPipeSystem::setPipeRadius(int i, double r) {
 void VRPipeSystem::setPipePressure(int i, double p1, double p2) {
     auto e1 = segments[i]->end1.lock();
     auto e2 = segments[i]->end2.lock();
-    if (e1) e1->pressure = p1;
-    if (e2) e2->pressure = p2;
+    if (e1) e1->fluid.pressure = p1;
+    if (e2) e2->fluid.pressure = p2;
 }
 
 void VRPipeSystem::setPump(int nID, double c, bool isOpen) {
@@ -553,8 +586,8 @@ void VRPipeSystem::updateInspection(int nID) {
     for (auto pIn : getInPipes(nID)) {
         auto e1 = pIn->end1.lock();
         auto e2 = pIn->end2.lock();
-        double p1 = e1->pressure;
-        double p2 = e2->pressure;
+        double p1 = e1->fluid.pressure;
+        double p2 = e2->fluid.pressure;
         double v = e1->flow;
         auto e = graph->getEdge(pIn->eID);
         Vec3d pn2 = getNodePose(e.from)->pos();
@@ -567,8 +600,8 @@ void VRPipeSystem::updateInspection(int nID) {
     for (auto pOut : getOutPipes(nID)) {
         auto e1 = pOut->end1.lock();
         auto e2 = pOut->end2.lock();
-        double p1 = e1->pressure;
-        double p2 = e2->pressure;
+        double p1 = e1->fluid.pressure;
+        double p2 = e2->fluid.pressure;
         double v = e1->flow;
         auto e = graph->getEdge(pOut->eID);
         Vec3d pn2 = getNodePose(e.to)->pos();
@@ -931,9 +964,9 @@ void VRPipeSystem::updateVisual() {
         auto e1 = s.second->end1.lock();
         auto e2 = s.second->end2.lock();
         //float pdelta = s.second->lastPressureDelta; // last written delta, not the correct one
-        float pressure1 = e1->pressure;
-        float pressure2 = e2->pressure;
-        float density = s.second->density;
+        float pressure1 = e1->fluid.pressure;
+        float pressure2 = e2->fluid.pressure;
+        float density = s.second->fluid.density;
         float flow = e1->flow;
 
         // show pdelta
@@ -1050,8 +1083,8 @@ void VRPipeSystem::updateVisual() {
             }*/
         }
 
-        auto tmpCol1 = getTempColor(e1->temperature);
-        auto tmpCol2 = getTempColor(e2->temperature);
+        auto tmpCol1 = getTempColor(e1->fluid.temperature);
+        auto tmpCol2 = getTempColor(e2->fluid.temperature);
 
         // color pressurization
         //tmpCol1 = s.second->pressurized ? blue : lblue;
@@ -1218,7 +1251,7 @@ double VRPipeSystem::computeCylinderAccelleration(VRPipeNodePtr node, double dt)
 
     auto p1 = e1->pipe.lock();
     auto p2 = e2->pipe.lock();
-    double rho = p1->density;
+    double rho = p1->fluid.density;
     double dP = dH * rho * gravity;
     double Fhyd = -dP*A - v*d;
     a = (Fhyd - Fext) / m;
@@ -1340,7 +1373,7 @@ void VRPipeSystem::assignBoundaryPressures(double dt) {
             double outletPressure = entity->getValue("pressure", atmosphericPressure);
             for (auto& e : node->pipes) {
                 auto pipe = e->pipe.lock();
-                e->hydraulicHead = e->height + outletPressure/pipe->density/gravity;
+                e->hydraulicHead = e->height + outletPressure/pipe->fluid.density/gravity;
             }
             continue;
         }
@@ -1531,7 +1564,7 @@ void VRPipeSystem::solveNodeHeads(double dt) {
         // compute head gain from headFlow
         auto p1 = e1->pipe.lock();
         auto p2 = e2->pipe.lock();
-        double rho = p1->density;
+        double rho = p1->fluid.density;
         double Rpipes = p1->resistanceLaminar + p2->resistanceLaminar;
         double headGain = -Q * Rpipes / (rho * gravity);
 
@@ -1644,7 +1677,7 @@ void VRPipeSystem::computeHeadFlows(double dt) {
     };
 
     auto computeFlow = [&](const double& dH, const VRPipeSegmentPtr& pipe, bool halfLength = false) -> double {
-        double dP = dH * pipe->density * gravity;
+        double dP = dH * pipe->fluid.density * gravity;
 
         auto computeFlowByRegime = [&](double k) {
             double Q = 0;
@@ -1668,12 +1701,12 @@ void VRPipeSystem::computeHeadFlows(double dt) {
     };
 
     auto accellerateFlow = [&](const double& dH, const VRPipeSegmentPtr& pipe, const double& Q, bool halfLength = false) -> double {
-        double dP = dH * pipe->density * gravity;
+        double dP = dH * pipe->fluid.density * gravity;
         double Aeff = pipe->area * max(pipe->level, 0.01);
-        double L = pipe->density * pipe->length / max(Aeff, 1e-9); // inertance
+        double L = pipe->fluid.density * pipe->length / max(Aeff, 1e-9); // inertance
         double R = pipe->computeEffectiveResistance(Q);
         if (halfLength) { R *= 0.5; L *= 0.5; }
-        double loss = R * Q * pipe->density * gravity;
+        double loss = R * Q * pipe->fluid.density * gravity;
 
         double dQ = (dP-loss) / L;
         double maxStep = 2.0 * abs(dP) / L;
@@ -2270,7 +2303,7 @@ void VRPipeSystem::updatePressures(double dt) {
     for (auto& n : nodes) {
         for (auto& e : n.second->pipes) {
             auto pipe = e->pipe.lock();
-            e->pressure = e->hydraulicHead * pipe->density * gravity;
+            e->fluid.pressure = e->hydraulicHead * pipe->fluid.density * gravity;
         }
 
         if (n.second->userCb) {
@@ -2304,7 +2337,7 @@ void VRPipeSystem::updateRegimes(double dt) {
    }
 }
 
-void VRPipeSystem::computeAdvectiveHeatTransfer(double dt) {
+void VRPipeSystem::computeFlowMixing(double dt) {
     auto mixVolumeFlows = [&](double V0, double T0, vector<Vec2d> flows) {
         if (flows.size() == 0) return T0;
         if (abs(V0) < 1e-6) return 0.0;
@@ -2330,24 +2363,24 @@ void VRPipeSystem::computeAdvectiveHeatTransfer(double dt) {
         int N = ends.size();
         if (N == 0) return;
 
-        double Qin = 0;
-        for (auto e : ends) if (e->flow >= 0.0) Qin += e->flow;
+        const double eps = 1e-15;
 
-        double Tmin = 1e6;
-        double Tmax =-1e6;
-        double Tj = 0;
-        for (auto e : ends) { // TODO: check if no contributions here?
-            if (e->flow < 0.0) continue; // ignore outgoing flows, only mix whats coming in
-            double k = e->flow / Qin;
+        double Qin = 0;
+        for (auto e : ends) if (e->flow >= eps) Qin += e->flow;
+        if (abs(Qin) < eps) return;
+
+        VRFluidComposition fluid;
+        double K = 0.0;
+
+        for (auto& e : ends) {
+            if (e->flow < eps) continue; // ignore outgoing flows, only mix whats coming in
             auto pipe = e->pipe.lock();
-            double T = pipe->temperature;
-            Tmin = min(Tmin, T);
-            Tmax = max(Tmax, T);
-            Tj += T * k;
+            double k = e->flow / Qin;
+            K += k;
+            fluid.mixIn(pipe->fluid, k/K);
         }
 
-        Tj = clamp(Tj, Tmin, Tmax); // TODO: check why needed
-        for (auto e : ends) if (e->flow < 0.0) e->temperature = Tj;
+        for (auto& e : ends) if (e->flow < 0.0) e->fluid = fluid;
     };
 
     auto mixAtNode = [&](VRPipeNodePtr node) {
@@ -2368,7 +2401,7 @@ void VRPipeSystem::computeAdvectiveHeatTransfer(double dt) {
                 if (abs(V) < 1e-9) continue;
 
                 auto pipe = e->pipe.lock();
-                double T = pipe->temperature;
+                double T = pipe->fluid.temperature;
                 if (e->flow < 0.0) T = T0;
                 flows.push_back(Vec2d(V, T));
             }
@@ -2377,7 +2410,7 @@ void VRPipeSystem::computeAdvectiveHeatTransfer(double dt) {
             e->set("temperature", toString(T,12));
             //cout << " tank T: " << T << endl;
 
-            for (auto e : node->pipes) if (e->flow < 0.0) e->temperature = T;
+            for (auto e : node->pipes) if (e->flow < 0.0) e->fluid.temperature = T;
             return;
         }
 
@@ -2397,7 +2430,7 @@ void VRPipeSystem::computeAdvectiveHeatTransfer(double dt) {
         auto end1 = pipe->end1.lock();
         auto end2 = pipe->end2.lock();
 
-        double T0 = pipe->temperature;
+        double T0 = pipe->fluid.temperature;
         double V0 = pipe->level * pipe->volume;
 
         vector<Vec2d> flows;
@@ -2406,15 +2439,15 @@ void VRPipeSystem::computeAdvectiveHeatTransfer(double dt) {
             if (abs(V) < 1e-9) continue;
 
             auto pipe = e->pipe.lock();
-            double T = e->temperature;
+            double T = e->fluid.temperature;
             if (e->flow >= 0.0) T = T0;
             flows.push_back(Vec2d(V, T));
             //cout << " V " << V << ", T " << T << endl;
         }
 
         double T = mixVolumeFlows(V0, T0, flows);
-        pipe->temperature = T;
-        for (auto e : {end1, end2}) if (e->flow >= 0.0) e->temperature = T;
+        pipe->fluid.temperature = T;
+        for (auto e : {end1, end2}) if (e->flow >= 0.0) e->fluid.temperature = T;
         //cout << " T0 " << T0 << " -> " << T << endl;
     };
 
@@ -2450,8 +2483,8 @@ void VRPipeSystem::update() {
         //auto T2 = t2->stop();
         updateLevels(dt);
         updatePressurization(dt);
-        computeAdvectiveHeatTransfer(dt);
         updatePressures(dt);
+        computeFlowMixing(dt);
         updateRegimes(dt);
         //cout << " VRPipeSystem::update " << T1 << ", " << T2 << endl;
     }
