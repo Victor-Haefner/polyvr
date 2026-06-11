@@ -2409,9 +2409,8 @@ void VRPipeSystem::computeFlowMixing(double dt) {
                 if (abs(V) < 1e-9) continue;
 
                 auto pipe = e->pipe.lock();
-                auto fluid = pipe->fluid;
-                if (e->flow < 0.0) fluid.temperature = T0;
-                flows.push_back({V, fluid});
+                if (e->flow < 0.0) flows.push_back({V, tFluid});
+                else flows.push_back({V, pipe->fluid});
             }
 
             double T = mixVolumeFlows({V0, tFluid}, flows);
@@ -2438,7 +2437,6 @@ void VRPipeSystem::computeFlowMixing(double dt) {
         auto end1 = pipe->end1.lock();
         auto end2 = pipe->end2.lock();
 
-        double T0 = pipe->fluid.temperature;
         double V0 = pipe->level * pipe->volume;
 
         vector<FluidVolume> flows;
@@ -2446,9 +2444,8 @@ void VRPipeSystem::computeFlowMixing(double dt) {
             double V = -e->flow * dt;
             if (abs(V) < 1e-9) continue;
 
-            auto fluid = e->fluid;
-            if (e->flow >= 0.0) fluid.temperature = T0;
-            flows.push_back({V, fluid});
+            if (e->flow >= 0.0) flows.push_back({V, pipe->fluid});
+            else flows.push_back({V, e->fluid});
         }
 
         double T = mixVolumeFlows({V0, pipe->fluid}, flows);
