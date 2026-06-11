@@ -31,14 +31,14 @@ void VRFluidComposition::mixIn(const VRFluidComposition& fluid, const double& pe
     };
 
     auto mixLog = [&](double& a, double b) {
-        double m = log(a) * _k + log(b) * k;
+        double m = exp( log(a) * _k + log(b) * k );
         m = clamp(m, min(a, b), max(a,b));
         a = m;
     };
 
     mixLin(temperature, fluid.temperature);
-    //mixLin(density, fluid.density);
-    //mixLog(viscosity, fluid.viscosity);
+    mixLin(density, fluid.density);
+    mixLog(viscosity, fluid.viscosity);
 }
 
 
@@ -2338,27 +2338,6 @@ void VRPipeSystem::updateRegimes(double dt) {
 }
 
 void VRPipeSystem::computeFlowMixing(double dt) {
-    auto mixVolumeFlows = [&](double V0, double T0, vector<Vec2d> flows) {
-        if (flows.size() == 0) return T0;
-        if (abs(V0) < 1e-6) return 0.0;
-
-        double Tmin = 1e6;
-        double Tmax =-1e6;
-        double _V0 = V0;
-        double Ft = 0;
-        for (auto f : flows) {
-            double V = f[0];
-            double T = f[1];
-            Tmin = min(Tmin, T);
-            Tmax = max(Tmax, T);
-            _V0 -= V;
-            Ft += V*T;
-        }
-        double T = (T0*_V0 + Ft)/V0; // mix everything
-        T = clamp(T, Tmin, Tmax); // TODO: check why needed
-        return T;
-    };
-
     auto mixNodeFlows = [&](vector<VRPipeEndPtr> ends) {
         int N = ends.size();
         if (N == 0) return;
@@ -2383,6 +2362,32 @@ void VRPipeSystem::computeFlowMixing(double dt) {
         for (auto& e : ends) if (e->flow < 0.0) e->fluid = fluid;
     };
 
+    struct FluidVolume {
+        double V;
+        VRFluidComposition fluid;
+    };
+
+    auto mixVolumeFlows = [&](FluidVolume f0, vector<FluidVolume> flows) {
+        if (flows.size() == 0) return f0.fluid.temperature;
+        if (abs(f0.V) < 1e-6) return 0.0;
+
+        double Tmin =  1e6;
+        double Tmax = -1e6;
+        double _V0 = f0.V;
+        double Ft = 0;
+        for (auto f : flows) {
+            double V = f.V;
+            double T = f.fluid.temperature;
+            Tmin = min(Tmin, T);
+            Tmax = max(Tmax, T);
+            _V0 -= V;
+            Ft += V*T;
+        }
+        double T = (f0.fluid.temperature*_V0 + Ft)/f0.V; // mix everything
+        T = clamp(T, Tmin, Tmax); // TODO: check why needed
+        return T;
+    };
+
     auto mixAtNode = [&](VRPipeNodePtr node) {
         auto e = node->entity;
 
@@ -2391,22 +2396,25 @@ void VRPipeSystem::computeFlowMixing(double dt) {
             double tankHeight = e->getValue("height", 0.0);
             double tankLevel = e->getValue("level", 1.0);
             double tankVolume = tankHeight * tankArea;
-
-            double V0 = tankVolume * tankLevel;
             double T0 = e->getValue("temperature", 20.0);
 
-            vector<Vec2d> flows;
+            VRFluidComposition tFluid;
+            tFluid.temperature = T0;
+
+            double V0 = tankVolume * tankLevel;
+
+            vector<FluidVolume> flows;
             for (auto e : node->pipes) {
                 double V = e->flow * dt;
                 if (abs(V) < 1e-9) continue;
 
                 auto pipe = e->pipe.lock();
-                double T = pipe->fluid.temperature;
-                if (e->flow < 0.0) T = T0;
-                flows.push_back(Vec2d(V, T));
+                auto fluid = pipe->fluid;
+                if (e->flow < 0.0) fluid.temperature = T0;
+                flows.push_back({V, fluid});
             }
 
-            double T = mixVolumeFlows(V0, T0, flows);
+            double T = mixVolumeFlows({V0, tFluid}, flows);
             e->set("temperature", toString(T,12));
             //cout << " tank T: " << T << endl;
 
@@ -2433,19 +2441,17 @@ void VRPipeSystem::computeFlowMixing(double dt) {
         double T0 = pipe->fluid.temperature;
         double V0 = pipe->level * pipe->volume;
 
-        vector<Vec2d> flows;
+        vector<FluidVolume> flows;
         for (auto e : {end1, end2}) {
             double V = -e->flow * dt;
             if (abs(V) < 1e-9) continue;
 
-            auto pipe = e->pipe.lock();
-            double T = e->fluid.temperature;
-            if (e->flow >= 0.0) T = T0;
-            flows.push_back(Vec2d(V, T));
-            //cout << " V " << V << ", T " << T << endl;
+            auto fluid = e->fluid;
+            if (e->flow >= 0.0) fluid.temperature = T0;
+            flows.push_back({V, fluid});
         }
 
-        double T = mixVolumeFlows(V0, T0, flows);
+        double T = mixVolumeFlows({V0, pipe->fluid}, flows);
         pipe->fluid.temperature = T;
         for (auto e : {end1, end2}) if (e->flow >= 0.0) e->fluid.temperature = T;
         //cout << " T0 " << T0 << " -> " << T << endl;
