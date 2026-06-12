@@ -53,12 +53,59 @@ void VRFluidComposition::fromEntity(VREntityPtr e) {
     temperature = e->getValue("temperature", 20.0);
     density = e->getValue("density", 1000.0);
     viscosity = e->getValue("viscosity", 1e-3);
+
+    map<string, VREntityPtr> eParts;
+    for (auto& pe : e->getAllEntities("particles")) {
+        string t = pe->getValue<string>("type", "");
+        eParts[t] = pe;
+    }
+
+    for (auto& p : particles) p.second.volumeFraction = 0.0;
+
+    for (auto& pe : eParts) {
+        string type = pe.first;
+
+        if (!particles.count(type)) {
+            particles[type] = ParticleBin();
+            particles[type].ID = type;
+        }
+
+        auto& pb = particles[type];
+        pb.sizeMin = pe.second->getValue("sizeMin", 0.0);
+        pb.sizeMax = pe.second->getValue("sizeMax", 0.0);
+        pb.density = pe.second->getValue("density", 1.0);
+        pb.volumeFraction = pe.second->getValue("volumeFraction", 0.0);
+    }
 }
 
 void VRFluidComposition::toEntity(VREntityPtr e) {
     e->set("temperature", toString(temperature, 12));
     e->set("density", toString(density, 12));
     e->set("viscosity", toString(viscosity, 12));
+    auto ontology = e->getOntology();
+
+    map<string, VREntityPtr> eParts;
+    for (auto& pe : e->getAllEntities("particles")) {
+        string t = pe->getValue<string>("type", "");
+        eParts[t] = pe;
+        pe->set("volumeFraction", "0.0");
+    }
+
+    for (auto& p : particles) {
+        string type = p.second.ID;
+
+        VREntityPtr pe = 0;
+        if (!eParts.count(type)) {
+            pe = ontology->addEntity(type, "ParticleBin");
+            e->add("particles", pe->getName());
+        } else pe = eParts[type];
+
+        pe->set("type", type);
+        pe->set("sizeMin", toString(p.second.sizeMin));
+        pe->set("sizeMax", toString(p.second.sizeMax));
+        pe->set("density", toString(p.second.density, 12));
+        pe->set("volumeFraction", toString(p.second.volumeFraction, 12));
+    }
 }
 
 // Pipe End ----
