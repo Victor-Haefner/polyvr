@@ -78,6 +78,7 @@ PyMethodDef VRPyPipeSystem::methods[] = {
     {"setPump", PyWrap( PipeSystem, setPump, "Set pump head gain [m] and isOpen props", void, int, double, bool ) },
     {"setValve", PyWrap( PipeSystem, setValve, "Set valve state", void, int, double ) },
     {"setTankPressure", PyWrap( PipeSystem, setTankPressure, "Set tank pressure", void, int, double ) },
+    {"setTankTemperature", PyWrap( PipeSystem, setTankTemperature, "Set tank temperature", void, int, double ) },
     {"setTankDensity", PyWrap( PipeSystem, setTankDensity, "Set tank density", void, int, double ) },
     {"setPipeRadius", PyWrap( PipeSystem, setPipeRadius, "Set pipe radius, set to 0 to simulate blocked pipe", void, int, double ) },
     {"setPipePressure", PyWrap( PipeSystem, setPipePressure, "Set pipe pressure, (pID, p1, p2)", void, int, double, double ) },

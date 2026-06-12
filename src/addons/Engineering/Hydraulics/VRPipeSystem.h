@@ -20,16 +20,18 @@ class VRFluidComposition {
             double sizeMin;
             double sizeMax;
             double density;
+            double volumeFraction;
         };
 
         double temperature = 20.0;
-        double pressure = 1.0;
         double density = 1000.0; // kg / m3
         double viscosity = 1e-3; // Pa s
 
         map<string, ParticleBin> particles;
 
         void mixIn(const VRFluidComposition& fluid, const double& percentage);
+        void fromEntity(VREntityPtr e);
+        void toEntity(VREntityPtr e);
 };
 
 class VRPipeEnd {
@@ -42,6 +44,7 @@ class VRPipeEnd {
         double offsetHeight = 0.0; // used for tank offset
         Vec3d offset; // offset relative to node center
 
+        double pressure = 0.0;
         double hydraulicHead = 0.0;
         bool pressurized = false;
 
@@ -231,6 +234,7 @@ class VRPipeSystem : public VRGeometry {
 		void setValve(int nID, double b);
 		void setPump(int nID, double h, bool io);
 		void setTankPressure(int nID, double p);
+		void setTankTemperature(int nID, double p);
 		void setTankDensity(int nID, double p);
 		void setOutletDensity(int nID, double p);
 		void setOutletPressure(int nID, double p);

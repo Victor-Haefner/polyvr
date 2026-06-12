@@ -39,8 +39,27 @@ void VRFluidComposition::mixIn(const VRFluidComposition& fluid, const double& pe
     mixLin(temperature, fluid.temperature);
     mixLin(density, fluid.density);
     mixLog(viscosity, fluid.viscosity);
+
+    for (auto& p : fluid.particles) {
+        if (!particles.count( p.first )) {
+            particles[p.first] = p.second;
+            particles[p.first].volumeFraction = 0.0;
+        }
+        mixLin(particles[p.first].volumeFraction, p.second.volumeFraction);
+    }
 }
 
+void VRFluidComposition::fromEntity(VREntityPtr e) {
+    temperature = e->getValue("temperature", 20.0);
+    density = e->getValue("density", 1000.0);
+    viscosity = e->getValue("viscosity", 1e-3);
+}
+
+void VRFluidComposition::toEntity(VREntityPtr e) {
+    e->set("temperature", toString(temperature, 12));
+    e->set("density", toString(density, 12));
+    e->set("viscosity", toString(viscosity, 12));
+}
 
 // Pipe End ----
 
@@ -212,6 +231,12 @@ int VRPipeSystem::addNode(string name, PosePtr pos, string type, map<string, str
     n->nID = nID;
     nodes[nID] = n;
     nodesByName[name] = nID;
+
+    if (type == "Tank") {
+        auto fe = ontology->addEntity("fluid", "FluidComposition");
+        e->set("fluid", fe->getName());
+    }
+
     return nID;
 }
 
@@ -343,7 +368,7 @@ double VRPipeSystem::computeTotalMass() {
             double tankHeight = entity->getValue("height", 1.0);
             double tankVolume = tankArea * tankHeight;
             double tankLevel = entity->getValue("level", 1.0); // 0..1
-            double tankDensity = entity->getValue("density", waterDensity); // kg/m³
+            double tankDensity = entity->getEntity("fluid")->getValue("density", waterDensity);
             totalMass += tankDensity * tankVolume * tankLevel;
         }
     }
@@ -372,15 +397,26 @@ void VRPipeSystem::initOntology() {
     auto ControlValve = ontology->addConcept("ControlValve", "Valve");
     auto ValvePath = ontology->addConcept("ValvePath");
     auto Cylinder = ontology->addConcept("Cylinder");
+    auto FluidComposition = ontology->addConcept("FluidComposition");
     auto ParticleBin = ontology->addConcept("ParticleBin");
 
+    FluidComposition->addProperty("density", "double");
+    FluidComposition->addProperty("temperature", "double");
+    FluidComposition->addProperty("viscosity", "double");
+    FluidComposition->addProperty("particles", ParticleBin);
+
+    ParticleBin->addProperty("type", "string");
+    ParticleBin->addProperty("sizeMin", "double");
+    ParticleBin->addProperty("sizeMax", "double");
+    ParticleBin->addProperty("density", "double");
+    ParticleBin->addProperty("volumeFraction", "double");
+
+    Tank->addProperty("fluid", FluidComposition);
     Tank->addProperty("pressure", "double");
     Tank->addProperty("initialGasVolume", "double");
     Tank->addProperty("initialGasPressure", "double");
     Tank->addProperty("area", "double");
     Tank->addProperty("height", "double");
-    Tank->addProperty("density", "double");
-    Tank->addProperty("temperature", "double");
     Tank->addProperty("level", "double");
     Tank->addProperty("isOpen", "bool");
 
@@ -427,15 +463,6 @@ void VRPipeSystem::initOntology() {
     Cylinder->addProperty("headFlow", "double");
     Cylinder->addProperty("pistonAcceleration", "double");
     Cylinder->addProperty("pistonSpeed", "double");
-
-    ParticleBin->addProperty("type", "string");
-    ParticleBin->addProperty("sizeMin", "double");
-    ParticleBin->addProperty("sizeMax", "double");
-    ParticleBin->addProperty("density", "double");
-
-    ParticleBin->addProperty("volumeFraction", "double");
-
-
 }
 
 void VRPipeSystem::addControlValvePath(int i, int A, int B, double x0, double xs, double K) {
@@ -504,25 +531,46 @@ VREntityPtr VRPipeSystem::getEntity(string name) {
 
 PosePtr VRPipeSystem::getNodePose(int i) { return graph->getPosition(i); }
 double VRPipeSystem::getPipeRadius(int i) { return segments[i]->radius; }
-double VRPipeSystem::getSegmentPressure(int i) { auto e1 = segments[i]->end1.lock(); auto e2 = segments[i]->end2.lock(); return e1 && e2 ? (e1->fluid.pressure+e2->fluid.pressure)*0.5   : 0; }
-Vec2d VRPipeSystem::getSegmentGradient(int i) {  auto e1 = segments[i]->end1.lock(); auto e2 = segments[i]->end2.lock(); return e1 && e2 ? Vec2d(e1->fluid.pressure, e2->fluid.pressure) : Vec2d(); }
+double VRPipeSystem::getSegmentPressure(int i) { auto e1 = segments[i]->end1.lock(); auto e2 = segments[i]->end2.lock(); return e1 && e2 ? (e1->pressure+e2->pressure)*0.5 : 0.0; }
+Vec2d VRPipeSystem::getSegmentGradient(int i) {  auto e1 = segments[i]->end1.lock(); auto e2 = segments[i]->end2.lock(); return e1 && e2 ? Vec2d(e1->pressure, e2->pressure) : Vec2d(); }
 Vec2d VRPipeSystem::getSegmentHead(int i) {  auto e1 = segments[i]->end1.lock(); auto e2 = segments[i]->end2.lock(); return e1 && e2 ? Vec2d(e1->hydraulicHead, e2->hydraulicHead) : Vec2d(); }
 double VRPipeSystem::getSegmentDensity(int i) { return segments[i]->fluid.density; }
 Vec2d VRPipeSystem::getSegmentFlow(int i) { auto e1 = segments[i]->end1.lock(); auto e2 = segments[i]->end2.lock(); return e1 && e2 ? Vec2d(e1->flow, e2->flow) : Vec2d(); }
 Vec2d VRPipeSystem::getSegmentHeadFlow(int i) { auto e1 = segments[i]->end1.lock(); auto e2 = segments[i]->end2.lock(); return e1 && e2 ? Vec2d(e1->headFlow, e2->headFlow) : Vec2d(); }
 Vec2d VRPipeSystem::getSegmentTemperature(int i) { auto e1 = segments[i]->end1.lock(); auto e2 = segments[i]->end2.lock(); return e1 && e2 ? Vec2d(e1->fluid.temperature, e2->fluid.temperature) : Vec2d(); }
-double VRPipeSystem::getTankPressure(int nID) { auto e = getNodeEntity(nID); return e ? e->getValue("pressure", atmosphericPressure) : 0.0; }
-double VRPipeSystem::getTankDensity(int nID) { auto e = getNodeEntity(nID); return e ? e->getValue("density", waterDensity) : 0.0; }
 double VRPipeSystem::getTankLevel(int nID) { auto e = getNodeEntity(nID); return e ? e->getValue("level", 1.0) : 0.0; }
 double VRPipeSystem::getPump(int nID) { auto e = getNodeEntity(nID); return e ? e->getValue("control", 0.0) : 0.0; }
 double VRPipeSystem::getValveState(int nID) { auto e = getNodeEntity(nID); return e ? e->getValue("state", 1.0) : 1.0; }
 void VRPipeSystem::setNodeCb(int i, VRAnimCbPtr cb) { if (!nodes.count(i)) return; nodes[i]->userCb = cb; }
 
 void VRPipeSystem::setValve(int nID, double b)  { auto e = getNodeEntity(nID); if (e) e->set("state", toString(b)); }
-void VRPipeSystem::setTankPressure(int nID, double p) { auto e = getNodeEntity(nID); if (e) e->set("pressure", toString(p)); }
-void VRPipeSystem::setTankDensity(int nID, double p) { auto e = getNodeEntity(nID); if (e) e->set("density", toString(p)); }
 void VRPipeSystem::setOutletDensity(int nID, double p) { auto e = getNodeEntity(nID); if (e) e->set("density", toString(p)); }
 void VRPipeSystem::setOutletPressure(int nID, double p) { auto e = getNodeEntity(nID); if (e) e->set("pressure", toString(p)); }
+
+void VRPipeSystem::setTankPressure(int nID, double p) {
+    auto e = getNodeEntity(nID);
+    if (e) e->getEntity("fluid")->set("pressure", toString(p));
+}
+
+void VRPipeSystem::setTankTemperature(int nID, double p) {
+    auto e = getNodeEntity(nID);
+    if (e) e->getEntity("fluid")->set("temperature", toString(p));
+}
+
+void VRPipeSystem::setTankDensity(int nID, double p) {
+    auto e = getNodeEntity(nID);
+    if (e) e->getEntity("fluid")->set("density", toString(p));
+}
+
+double VRPipeSystem::getTankPressure(int nID) {
+    auto e = getNodeEntity(nID);
+    return e ? e->getEntity("fluid")->getValue("pressure", atmosphericPressure) : 0.0;
+}
+
+double VRPipeSystem::getTankDensity(int nID) {
+    auto e = getNodeEntity(nID);
+    return e ? e->getEntity("fluid")->getValue("density", waterDensity) : 0.0;
+}
 
 void VRPipeSystem::setPipeRadius(int i, double r) {
     segments[i]->radius = r;
@@ -536,8 +584,8 @@ void VRPipeSystem::setPipeRadius(int i, double r) {
 void VRPipeSystem::setPipePressure(int i, double p1, double p2) {
     auto e1 = segments[i]->end1.lock();
     auto e2 = segments[i]->end2.lock();
-    if (e1) e1->fluid.pressure = p1;
-    if (e2) e2->fluid.pressure = p2;
+    if (e1) e1->pressure = p1;
+    if (e2) e2->pressure = p2;
 }
 
 void VRPipeSystem::setPump(int nID, double c, bool isOpen) {
@@ -586,8 +634,8 @@ void VRPipeSystem::updateInspection(int nID) {
     for (auto pIn : getInPipes(nID)) {
         auto e1 = pIn->end1.lock();
         auto e2 = pIn->end2.lock();
-        double p1 = e1->fluid.pressure;
-        double p2 = e2->fluid.pressure;
+        double p1 = e1->pressure;
+        double p2 = e2->pressure;
         double v = e1->flow;
         auto e = graph->getEdge(pIn->eID);
         Vec3d pn2 = getNodePose(e.from)->pos();
@@ -600,8 +648,8 @@ void VRPipeSystem::updateInspection(int nID) {
     for (auto pOut : getOutPipes(nID)) {
         auto e1 = pOut->end1.lock();
         auto e2 = pOut->end2.lock();
-        double p1 = e1->fluid.pressure;
-        double p2 = e2->fluid.pressure;
+        double p1 = e1->pressure;
+        double p2 = e2->pressure;
         double v = e1->flow;
         auto e = graph->getEdge(pOut->eID);
         Vec3d pn2 = getNodePose(e.to)->pos();
@@ -964,8 +1012,8 @@ void VRPipeSystem::updateVisual() {
         auto e1 = s.second->end1.lock();
         auto e2 = s.second->end2.lock();
         //float pdelta = s.second->lastPressureDelta; // last written delta, not the correct one
-        float pressure1 = e1->fluid.pressure;
-        float pressure2 = e2->fluid.pressure;
+        float pressure1 = e1->pressure;
+        float pressure2 = e2->pressure;
         float density = s.second->fluid.density;
         float flow = e1->flow;
 
@@ -1152,7 +1200,8 @@ void VRPipeSystem::updateVisual() {
     for (auto& n : nodes) {
         auto e = n.second->entity;
         if (e->is_a("Tank")) {
-            double T = e->getValue("temperature", 20.0);
+            VREntityPtr fluid = e->getEntity("fluid");
+            double T = fluid->getValue("temperature", 20.0);
             auto col = getTempColor(T);
 
             double l = e->getValue("level", 1.0);
@@ -1379,10 +1428,10 @@ void VRPipeSystem::assignBoundaryPressures(double dt) {
         }
 
         if (entity->is_a("Tank")) {
-            double tankPressure = entity->getValue("pressure", atmosphericPressure);
-            double tankDensity = entity->getValue("density", waterDensity);
             double tankHeight = entity->getValue("height", 1.0);
             double tankLevel = entity->getValue("level", 1.0);
+            double tankPressure = entity->getValue("pressure", atmosphericPressure);
+            double tankDensity = entity->getEntity("fluid")->getValue("density", waterDensity);
             bool tankOpen = entity->getValue("isOpen", false);
 
             double fluidEffect = 1.0; // used to remove effect of emtpy pressurized tanks
@@ -2303,17 +2352,17 @@ void VRPipeSystem::updatePressures(double dt) {
     for (auto& n : nodes) {
         for (auto& e : n.second->pipes) {
             auto pipe = e->pipe.lock();
-            e->fluid.pressure = e->hydraulicHead * pipe->fluid.density * gravity;
+            e->pressure = e->hydraulicHead * pipe->fluid.density * gravity;
         }
 
         if (n.second->userCb) {
             auto e = n.second->entity;
             if (e && e->is_a("Gauge")) {
-                auto t = e->getEntity("tank");
+                auto te = e->getEntity("tank");
                 double maxPressure = e->getValue("maxPressure", 10*atmosphericPressure);
                 double pressure = e->getValue("pressure", 0.0) - atmosphericPressure;
                 if (t && maxPressure > 1e-3) {
-                    double pt = t->getValue("pressure", 0.0) - atmosphericPressure;
+                    double pt = te->getValue("pressure", atmosphericPressure) - atmosphericPressure;
                     double indicator = pt/maxPressure;
                     if (abs(pt - pressure)>1e-3) {
                         //cout << "updatePressures gauge " << pt << "/" << maxPressure << ", " << indicator << endl;
@@ -2393,12 +2442,11 @@ void VRPipeSystem::computeFlowMixing(double dt) {
             double tankHeight = e->getValue("height", 0.0);
             double tankLevel = e->getValue("level", 1.0);
             double tankVolume = tankHeight * tankArea;
-            double T0 = e->getValue("temperature", 20.0);
+            double V0 = tankVolume * tankLevel;
+            VREntityPtr fe = e->getEntity("fluid");
 
             VRFluidComposition tFluid;
-            tFluid.temperature = T0;
-
-            double V0 = tankVolume * tankLevel;
+            tFluid.fromEntity( fe );
 
             vector<FluidVolume> flows;
             for (auto e : node->pipes) {
@@ -2411,7 +2459,7 @@ void VRPipeSystem::computeFlowMixing(double dt) {
             }
 
             tFluid = mixVolumeFlows({V0, tFluid}, flows);
-            e->set("temperature", toString(tFluid.temperature, 12));
+            tFluid.toEntity( fe );
             for (auto e : node->pipes) if (e->flow < 0.0) e->fluid = tFluid;
             return;
         }
