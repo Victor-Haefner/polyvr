@@ -111,6 +111,8 @@ void VRFluidComposition::toEntity(VREntityPtr e) {
 double VRPipeSystem::getTankParticles(int nID, string type) {
     auto e = getNodeEntity(nID);
     if (!e) return 0.0;
+    e = e->getEntity("fluid");
+    if (!e) return 0.0;
     for (auto& pe : e->getAllEntities("particles")) {
         string t = pe->getValue<string>("type", "");
         if (type == t) return pe->getValue("volumeFraction", 0.0);
@@ -119,6 +121,8 @@ double VRPipeSystem::getTankParticles(int nID, string type) {
 
 void VRPipeSystem::setTankParticles(int nID, string type, double volFrac) {
     auto e = getNodeEntity(nID);
+    if (!e) return;
+    e = e->getEntity("fluid");
     if (!e) return;
     for (auto& pe : e->getAllEntities("particles")) {
         string t = pe->getValue<string>("type", "");
@@ -132,11 +136,13 @@ void VRPipeSystem::setTankParticles(int nID, string type, double volFrac) {
 void VRPipeSystem::addTankParticles(int nID, string type, double mass) {
     auto e = getNodeEntity(nID);
     if (!e) return;
+    e = e->getEntity("fluid");
+    if (!e) return;
 
-    double tankArea = entity->getValue("area", 0.0);
-    double tankHeight = entity->getValue("height", 0.0);
+    double tankArea = e->getValue("area", 0.0);
+    double tankHeight = e->getValue("height", 0.0);
     double tankVolume = tankHeight * tankArea;
-    double tankLevel = entity->getValue("level", 1.0);
+    double tankLevel = e->getValue("level", 1.0);
     double fluidVolume = tankVolume * tankLevel;
 
     for (auto& pe : e->getAllEntities("particles")) {
@@ -153,6 +159,8 @@ void VRPipeSystem::addTankParticles(int nID, string type, double mass) {
 
 void VRPipeSystem::addTankParticleBin(int nID, string type, Vec2d sizeRange, double density) {
     auto e = getNodeEntity(nID);
+    if (!e) return;
+    e = e->getEntity("fluid");
     if (!e) return;
 
     VREntityPtr be = 0;
