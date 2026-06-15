@@ -31,7 +31,7 @@ class VRFluidComposition {
 
         void mixIn(const VRFluidComposition& fluid, const double& percentage);
         void fromEntity(VREntityPtr e);
-        void toEntity(VREntityPtr e);
+        bool toEntity(VREntityPtr e);
 };
 
 class VRPipeEnd {

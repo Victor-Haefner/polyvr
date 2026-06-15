@@ -58,6 +58,7 @@ void VRFluidComposition::fromEntity(VREntityPtr e) {
     for (auto& pe : e->getAllEntities("particles")) {
         string t = pe->getValue<string>("type", "");
         eParts[t] = pe;
+        auto te = pe->getStringValue("type").p;
     }
 
     for (auto& p : particles) p.second.volumeFraction = 0.0;
@@ -78,7 +79,8 @@ void VRFluidComposition::fromEntity(VREntityPtr e) {
     }
 }
 
-void VRFluidComposition::toEntity(VREntityPtr e) {
+bool VRFluidComposition::toEntity(VREntityPtr e) {
+    bool addedBin = false;
     e->set("temperature", toString(temperature, 12));
     e->set("density", toString(density, 12));
     e->set("viscosity", toString(viscosity, 12));
@@ -98,6 +100,7 @@ void VRFluidComposition::toEntity(VREntityPtr e) {
         if (!eParts.count(type)) {
             pe = ontology->addEntity(type, "ParticleBin");
             e->add("particles", pe->getName());
+            addedBin = true;
         } else pe = eParts[type];
 
         pe->set("type", type);
@@ -106,6 +109,7 @@ void VRFluidComposition::toEntity(VREntityPtr e) {
         pe->set("density", toString(p.second.density, 12));
         pe->set("volumeFraction", toString(p.second.volumeFraction, 12));
     }
+    return addedBin;
 }
 
 double VRPipeSystem::getTankParticles(int nID, string type) {
@@ -117,6 +121,7 @@ double VRPipeSystem::getTankParticles(int nID, string type) {
         string t = pe->getValue<string>("type", "");
         if (type == t) return pe->getValue("volumeFraction", 0.0);
     }
+    return 0.0;
 }
 
 void VRPipeSystem::setTankParticles(int nID, string type, double volFrac) {
@@ -136,20 +141,22 @@ void VRPipeSystem::setTankParticles(int nID, string type, double volFrac) {
 void VRPipeSystem::addTankParticles(int nID, string type, double mass) {
     auto e = getNodeEntity(nID);
     if (!e) return;
-    e = e->getEntity("fluid");
-    if (!e) return;
+    auto fe = e->getEntity("fluid");
+    if (!fe) return;
 
-    double tankArea = e->getValue("area", 0.0);
-    double tankHeight = e->getValue("height", 0.0);
+    double tankArea = e->getValue("area", 1.0);
+    double tankHeight = e->getValue("height", 1.0);
     double tankVolume = tankHeight * tankArea;
     double tankLevel = e->getValue("level", 1.0);
     double fluidVolume = tankVolume * tankLevel;
+    if (tankLevel < 1e-3) return;
 
-    for (auto& pe : e->getAllEntities("particles")) {
+    for (auto& pe : fe->getAllEntities("particles")) {
         string t = pe->getValue<string>("type", "");
         if (type == t) {
             double d = pe->getValue("density", 1.0);
-            double vol = mass / d;
+            double volOld = fluidVolume * pe->getValue("volumeFraction", 1.0);
+            double vol = volOld + mass / d;
             double volFrac = vol / fluidVolume;
             pe->set("volumeFraction", toString(volFrac, 12));
             return;
@@ -171,7 +178,9 @@ void VRPipeSystem::addTankParticleBin(int nID, string type, Vec2d sizeRange, dou
 
     if (!be) { // add new bin
         be = ontology->addEntity(type, "ParticleBin");
+        be->set("type", type);
         e->add("particles", be->getName());
+        rebuildMesh = true;
     }
 
     be->set("sizeMin", toString(sizeRange[0]));
@@ -809,6 +818,7 @@ void VRPipeSystem::updateVisual() {
         addVisual("segmentVisuals");
         addVisual("volumeVisuals");
         addVisual("arrowVisuals");
+        addVisual("particlesVisuals");
     }
 
     auto cv = visuals->getChildren();
@@ -816,6 +826,7 @@ void VRPipeSystem::updateVisual() {
     VRGeoData dataSegments( dynamic_pointer_cast<VRGeometry>(cv[1]) );
     VRGeoData dataVolumes( dynamic_pointer_cast<VRGeometry>(cv[2]) );
     VRGeoData dataArrows( dynamic_pointer_cast<VRGeometry>(cv[3]) );
+    VRGeoData dataParticles( dynamic_pointer_cast<VRGeometry>(cv[4]) );
 
     const Color3f white(1,1,1);
     const Color3f lgray(0.9,0.9,0.9);
@@ -825,6 +836,7 @@ void VRPipeSystem::updateVisual() {
     const Color3f dblue(0.1,0.4,0.7);
     const Color3f lblue(0.3,0.7,1);
     const Color3f green(0.2,1.0,0.2);
+    const Color3f brown(0.4,0.2,0.1);
 
 
     Vec3d dO = Vec3d(-spread,-spread,-spread);
@@ -974,6 +986,7 @@ void VRPipeSystem::updateVisual() {
         dataSegments.reset();
         dataVolumes.reset();
         dataArrows.reset();
+        dataParticles.reset();
         rebuildMesh = false;
         Vec3d norm(0,1,0);
 
@@ -1111,6 +1124,12 @@ void VRPipeSystem::updateVisual() {
             for (int i=0; i<4; i++) dataVolumes.pushColor(white);
         };
 
+        auto addParticleBoxVisual = [&](Vec3d p, double a, double h) {
+            dataParticles.pushQuad(p, Vec3d(1,0,0), Vec3d(0,1,0), Vec2d(a,h), true);
+            for (int i=0; i<4; i++) dataParticles.pushColor(brown);
+            dataParticles.pushQuad(-1, -2, -3, -4); // double side
+        };
+
         for (auto& n : nodes) {
             auto p = graph->getPosition(n.first);
             auto e = n.second->entity;
@@ -1120,6 +1139,15 @@ void VRPipeSystem::updateVisual() {
                 double h = e->getValue("height", 1.0);
                 double s = sqrt(a);
                 createWaterBox(p->pos(), s, s, h);
+
+                VRFluidComposition tFluid;
+                tFluid.fromEntity( e->getEntity("fluid") );
+                int N = tFluid.particles.size();
+
+                double k = s/(N+1);
+                for (int i = 1; i <= N; i++) {
+                    addParticleBoxVisual(p->pos()+ Vec3d(i*k-s*0.5,0,0), s*0.5, h);
+                }
                 continue;
             }
 
@@ -1142,18 +1170,17 @@ void VRPipeSystem::updateVisual() {
         dataSegments.apply( dataSegments.getGeometry() );
         dataVolumes.apply( dataVolumes.getGeometry() );
         dataArrows.apply( dataArrows.getGeometry() );
+        dataParticles.apply( dataParticles.getGeometry() );
     }
 
     // update system state
 
     int iNodes = 0;
-    int kNodes = 0;
     int iSegments = 0;
-    int kSegments = 0;
     int iVolumes = 0;
     int kVolumes = 0;
     int iArrows = 0;
-    int kArrows = 0;
+    int iParticles = 0;
 
     auto flowToArrowLength = [sign](double f, double r, double A, double v0, double v_ref) {
         double v = f/A;
@@ -1223,13 +1250,11 @@ void VRPipeSystem::updateVisual() {
 
             dataSegments.setColor(iSegments, col1); iSegments++;
             dataSegments.setColor(iSegments, col2); iSegments++;
-            if (l == "h") { iSegments++; kSegments += 2; }
-            kSegments += 2;
+            if (l == "h") iSegments++;
         }
 
         dataNodes.setColor(iNodes, e1->pressurized ? dblue : lgray); iNodes++;
         dataNodes.setColor(iNodes, e2->pressurized ? dblue : lgray); iNodes++;
-        kNodes += 2;
 
         double l = s.second->level;
         //l = 0.5+0.5*sin(F); // TOTEST
@@ -1337,7 +1362,6 @@ void VRPipeSystem::updateVisual() {
         }*/
 
         iArrows += 12*4;
-        kArrows += 32*4;
     }
 
     auto updateWaterBox = [&](double lvl, Color3f col) {
@@ -1353,16 +1377,32 @@ void VRPipeSystem::updateVisual() {
         kVolumes += 48;
     };
 
+    auto updateParticleBox = [&](double h) {
+        auto p1 = dataParticles.getPosition(iParticles+0);
+        auto p2 = dataParticles.getPosition(iParticles+1);
+        dataParticles.setPos(iParticles+2, p1 + Vec3d(0,h,0));
+        dataParticles.setPos(iParticles+3, p2 + Vec3d(0,h,0));
+        iParticles += 4;
+    };
+
     for (auto& n : nodes) {
         auto e = n.second->entity;
         if (e->is_a("Tank")) {
-            VREntityPtr fluid = e->getEntity("fluid");
-            double T = fluid->getValue("temperature", 20.0);
-            auto col = getTempColor(T);
+            VRFluidComposition tFluid;
+            tFluid.fromEntity( e->getEntity("fluid") );
+            auto col = getTempColor(tFluid.temperature);
 
             double l = e->getValue("level", 1.0);
             double h = e->getValue("height", 1.0);
             updateWaterBox(h*l, col);
+
+            for (auto& p : tFluid.particles) {
+                double sMin = p.second.sizeMin;
+                double sMax = p.second.sizeMax;
+                double d = p.second.density;
+                double vol = p.second.volumeFraction;
+                updateParticleBox(vol*l);
+            }
             continue;
         }
 
@@ -1418,7 +1458,6 @@ void VRPipeSystem::updateVisual() {
         }
 
         dataNodes.setColor(iNodes, c); iNodes++;
-        kNodes++;
     }
 }
 
@@ -2314,7 +2353,7 @@ void VRPipeSystem::updateLevels(double dt) {
                 double p = initialGasPressure * initialGasVolume / newVolume;
                 //cout << " tank: " << n.first << " p gauge: " << tankPressure-atmosphericPressure << " level: " << newLevel << " tV " << tankVolume << endl;
 
-                p = clamp(p, atmosphericPressure * 0.001, atmosphericPressure * 2000.0, true, "tank pressure");
+                p = clamp(p, atmosphericPressure * 0.001, atmosphericPressure * 2000.0, false, "tank pressure");
                 entity->set("pressure", toString(p, 12));
                 //cout << " new tank pressure: " << p << endl;
             }
@@ -2618,7 +2657,8 @@ void VRPipeSystem::computeFlowMixing(double dt) {
             }
 
             tFluid = mixVolumeFlows({V0, tFluid}, flows);
-            tFluid.toEntity( fe );
+            bool addedBin = tFluid.toEntity( fe );
+            if (addedBin) rebuildMesh = true;
             for (auto e : node->pipes) if (e->flow < 0.0) e->fluid = tFluid;
             return;
         }
