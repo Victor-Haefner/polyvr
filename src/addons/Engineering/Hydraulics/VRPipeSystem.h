@@ -241,6 +241,11 @@ class VRPipeSystem : public VRGeometry {
 		void setPipeRadius(int i, double r);
 		void setPipePressure(int i, double p1, double p2);
 
+		double getTankParticles(int i, string type);
+		void setTankParticles(int i, string type, double volFrac);
+		void addTankParticles(int i, string type, double mass);
+		void addTankParticleBin(int i, string type, Vec2d sizeRange, double density);
+
 		void addControlValvePath(int i, int A, int B, double x0, double xs, double K);
 
 		void setNodeCb(int i, VRAnimCbPtr cb);

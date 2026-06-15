@@ -108,6 +108,69 @@ void VRFluidComposition::toEntity(VREntityPtr e) {
     }
 }
 
+double VRPipeSystem::getTankParticles(int nID, string type) {
+    auto e = getNodeEntity(nID);
+    if (!e) return 0.0;
+    for (auto& pe : e->getAllEntities("particles")) {
+        string t = pe->getValue<string>("type", "");
+        if (type == t) return pe->getValue("volumeFraction", 0.0);
+    }
+}
+
+void VRPipeSystem::setTankParticles(int nID, string type, double volFrac) {
+    auto e = getNodeEntity(nID);
+    if (!e) return;
+    for (auto& pe : e->getAllEntities("particles")) {
+        string t = pe->getValue<string>("type", "");
+        if (type == t) {
+            pe->set("volumeFraction", toString(volFrac, 12));
+            return;
+        }
+    }
+}
+
+void VRPipeSystem::addTankParticles(int nID, string type, double mass) {
+    auto e = getNodeEntity(nID);
+    if (!e) return;
+
+    double tankArea = entity->getValue("area", 0.0);
+    double tankHeight = entity->getValue("height", 0.0);
+    double tankVolume = tankHeight * tankArea;
+    double tankLevel = entity->getValue("level", 1.0);
+    double fluidVolume = tankVolume * tankLevel;
+
+    for (auto& pe : e->getAllEntities("particles")) {
+        string t = pe->getValue<string>("type", "");
+        if (type == t) {
+            double d = pe->getValue("density", 1.0);
+            double vol = mass / d;
+            double volFrac = vol / fluidVolume;
+            pe->set("volumeFraction", toString(volFrac, 12));
+            return;
+        }
+    }
+}
+
+void VRPipeSystem::addTankParticleBin(int nID, string type, Vec2d sizeRange, double density) {
+    auto e = getNodeEntity(nID);
+    if (!e) return;
+
+    VREntityPtr be = 0;
+    for (auto& pe : e->getAllEntities("particles")) {
+        string t = pe->getValue<string>("type", "");
+        if (type == t) { be = pe; break; }
+    }
+
+    if (!be) { // add new bin
+        be = ontology->addEntity(type, "ParticleBin");
+        e->add("particles", be->getName());
+    }
+
+    be->set("sizeMin", toString(sizeRange[0]));
+    be->set("sizeMax", toString(sizeRange[1]));
+    be->set("density", toString(density,  12));
+}
+
 // Pipe End ----
 
 VRPipeEnd::VRPipeEnd(VRPipeSegmentPtr s, int n, double h) { pipe = s; nID = n; offsetHeight = h; }

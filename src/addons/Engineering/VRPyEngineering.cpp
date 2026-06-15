@@ -89,6 +89,10 @@ PyMethodDef VRPyPipeSystem::methods[] = {
     {"computeTotalMass", PyWrap( PipeSystem, computeTotalMass, "Compute and return the total mass in the system", double ) },
     {"setNodeCb", PyWrap( PipeSystem, setNodeCb, "Set node callback, for gauge or cylinder, will trigger if main parameter changes", void, int, VRAnimCbPtr ) },
     {"addControlValvePath", PyWrap( PipeSystem, addControlValvePath, "Add control valve path, (valveID, A, B, x0, xs, K),\nwhere A and B are a pipe end index, x0 and xs are spool position and orifice size, and K is the resistance on that path", void, int, int, int, double, double, double ) },
+    {"getTankParticles", PyWrap( PipeSystem, getTankParticles, "Return volume fraction of a type of particles (tankID, particleType)", double, int, string ) },
+    {"setTankParticles", PyWrap( PipeSystem, setTankParticles, "Set volume fraction of a type of particles (tankID, particleType, volumeFraction)", void, int, string, double ) },
+    {"addTankParticles", PyWrap( PipeSystem, addTankParticles, "Add a type of particles by mass (tankID, particleType, mass)", void, int, string, double ) },
+    {"addTankParticleBin", PyWrap( PipeSystem, addTankParticleBin, "Add a type of particles (tankID, particleType, sizeRange, density)", void, int, string, Vec2d, double ) },
     {NULL}
 };
 
