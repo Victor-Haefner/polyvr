@@ -131,12 +131,13 @@ class VRPipeNode {
         static VRPipeNodePtr create(VREntityPtr entity);
 };
 
-class VRPipeSystem : public VRGeometry {
+class VRPipeSystem : public VRTransform {
 	private:
         GraphPtr graph;
         VROntologyPtr ontology;
 
         VRUpdateCbPtr updateCb;
+        VRObjectPtr visuals;
         VRAnalyticGeometryPtr inspectionTool;
         int inspected = -1;
 
@@ -167,7 +168,7 @@ class VRPipeSystem : public VRGeometry {
         bool goesIn(VRPipeSegmentPtr s, int nID);
         bool goesOut(VRPipeSegmentPtr s, int nID);
         VREntityPtr getEntity(string name);
-        void setupMaterial();
+        VRMaterialPtr setupMaterial();
 
         void computeEndOffset(VRPipeEndPtr e);
 

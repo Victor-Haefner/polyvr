@@ -142,6 +142,8 @@ VRGeoData::VRGeoData(VRGeometryPtr geo) : pend(this, 0) {
 
 VRGeoDataPtr VRGeoData::create() { return VRGeoDataPtr( new VRGeoData() ); }
 
+VRGeometryPtr VRGeoData::getGeometry() { return geo; }
+
 void VRGeoData::clear() {
     if (data->types) data->types->clear();
     if (data->lengths) data->lengths->clear();

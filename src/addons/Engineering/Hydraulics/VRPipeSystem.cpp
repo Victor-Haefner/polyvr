@@ -299,14 +299,12 @@ VRPipeNodePtr VRPipeNode::create(VREntityPtr entity) { return VRPipeNodePtr( new
 
 // Pipe System ----
 
-VRPipeSystem::VRPipeSystem() : VRGeometry("pipeSystem") {
+VRPipeSystem::VRPipeSystem() : VRTransform("pipeSystem") {
     graph = Graph::create();
     initOntology();
 
     updateCb = VRUpdateCb::create("pipesSimUpdate", bind(&VRPipeSystem::update, this) );
     VRScene::getCurrent()->addUpdateFkt(updateCb);
-
-    setupMaterial();
 }
 
 VRPipeSystem::~VRPipeSystem() {}
@@ -314,7 +312,7 @@ VRPipeSystem::~VRPipeSystem() {}
 VRPipeSystemPtr VRPipeSystem::create() { return VRPipeSystemPtr( new VRPipeSystem() ); }
 VRPipeSystemPtr VRPipeSystem::ptr() { return static_pointer_cast<VRPipeSystem>(shared_from_this()); }
 
-void VRPipeSystem::setupMaterial() {
+VRMaterialPtr VRPipeSystem::setupMaterial() {
     auto m = VRMaterial::create("pipes");
 
     m->setLineWidth(5);
@@ -328,7 +326,7 @@ void VRPipeSystem::setupMaterial() {
     m->setFrontBackModes(GL_NONE, GL_FILL);
     //m->setDepthTest(GL_ALWAYS);
 
-    setMaterial(m);
+    return m;
 }
 
 GraphPtr VRPipeSystem::getGraph() { return graph; }
@@ -786,14 +784,38 @@ void VRPipeSystem::updateInspection(int nID) {
 void VRPipeSystem::updateVisual() {
     auto sign = [](double v) { return (v > 0) - (v < 0); };
 
+    if (!doVisual && !visuals) return;
+
     if (!doVisual) {
-        VRGeoData data(ptr());
-        if (data.size() > 0) {
-            data.reset();
-            data.apply(ptr());
-        }
+        visuals->destroy();
+        visuals = 0;
         return;
     }
+
+    if (!visuals) {
+        visuals = VRObject::create("visuals");
+        addChild(visuals);
+
+        auto m = setupMaterial();
+
+        auto addVisual = [&](string name) {
+            auto v = VRGeometry::create(name);
+            v->setMaterial(m);
+            visuals->addChild(v);
+            return v;
+        };
+
+        addVisual("nodeVisuals");
+        addVisual("segmentVisuals");
+        addVisual("volumeVisuals");
+        addVisual("arrowVisuals");
+    }
+
+    auto cv = visuals->getChildren();
+    VRGeoData dataNodes( dynamic_pointer_cast<VRGeometry>(cv[0]) );
+    VRGeoData dataSegments( dynamic_pointer_cast<VRGeometry>(cv[1]) );
+    VRGeoData dataVolumes( dynamic_pointer_cast<VRGeometry>(cv[2]) );
+    VRGeoData dataArrows( dynamic_pointer_cast<VRGeometry>(cv[3]) );
 
     const Color3f white(1,1,1);
     const Color3f lgray(0.9,0.9,0.9);
@@ -804,7 +826,6 @@ void VRPipeSystem::updateVisual() {
     const Color3f lblue(0.3,0.7,1);
     const Color3f green(0.2,1.0,0.2);
 
-    VRGeoData data(ptr());
 
     Vec3d dO = Vec3d(-spread,-spread,-spread);
 
@@ -949,7 +970,10 @@ void VRPipeSystem::updateVisual() {
             addChild(ann);
         }
 
-        data.reset();
+        dataNodes.reset();
+        dataSegments.reset();
+        dataVolumes.reset();
+        dataArrows.reset();
         rebuildMesh = false;
         Vec3d norm(0,1,0);
 
@@ -984,18 +1008,18 @@ void VRPipeSystem::updateVisual() {
                 else if (l == "h") { col1 = green; col2 = green; }
                 else continue;
 
-                data.pushVert(p1+dO*k, norm, col1, tcID1);
-                if (l == "h") { data.pushVert(pm+dO*k, norm, col1, tcID1); data.pushLine(); } // mid segment
-                data.pushVert(p2+dO*k, norm, col2, tcID2);
-                data.pushLine();
+                dataSegments.pushVert(p1+dO*k, norm, col1, tcID1);
+                if (l == "h") { dataSegments.pushVert(pm+dO*k, norm, col1, tcID1); dataSegments.pushLine(); } // mid segment
+                dataSegments.pushVert(p2+dO*k, norm, col2, tcID2);
+                dataSegments.pushLine();
                 k++;
             }
 
             // pipe ends
-            data.pushVert(p1+dPipe*l*0.02, norm, e1->pressurized ? dblue : white, Vec2d());
-            data.pushPoint();
-            data.pushVert(p2-dPipe*l*0.02, norm, e2->pressurized ? dblue : white, Vec2d());
-            data.pushPoint();
+            dataNodes.pushVert(p1+dPipe*l*0.02, norm, e1->pressurized ? dblue : white, Vec2d());
+            dataNodes.pushPoint();
+            dataNodes.pushVert(p2-dPipe*l*0.02, norm, e2->pressurized ? dblue : white, Vec2d());
+            dataNodes.pushPoint();
 
             // water box
             if (p2[1] < p1[1]) swap(p1,p2); // p2 always higher than p1
@@ -1007,23 +1031,26 @@ void VRPipeSystem::updateVisual() {
             if (d[1] < 1.0-1e-6) { u = d.cross(Vec3d(0,1,0)); u.normalize(); }
             double a = d.enclosedAngle(Vec3d(0,1,0));
             double t = g*cos(a) + l*sin(a);
-            int i0 = data.size();
-            int k0 = data.getNIndices();
+            int i0 = dataVolumes.size();
+            int k0 = dataVolumes.getNIndices();
 
-            data.pushQuad(p1, d, u, Vec2d(g,g), false);
-            data.pushQuad(pm, Vec3d(0,1,0), u, Vec2d(t,g), true);
-            data.pushQuad(pm, Vec3d(0,1,0), u, Vec2d(t,g), false);
-            data.pushQuad(p2, d, u, Vec2d(g,g), false);
-            for (int i=0; i<4; i++) data.pushColor(dblue);
-            for (int i=0; i<4; i++) data.pushColor(blue);
-            for (int i=0; i<4; i++) data.pushColor(white);
-            for (int i=0; i<4; i++) data.pushColor(white);
+            dataVolumes.pushQuad(p1, d, u, Vec2d(g,g), false);
+            dataVolumes.pushQuad(pm, Vec3d(0,1,0), u, Vec2d(t,g), true);
+            dataVolumes.pushQuad(pm, Vec3d(0,1,0), u, Vec2d(t,g), false);
+            dataVolumes.pushQuad(p2, d, u, Vec2d(g,g), false);
+            for (int i=0; i<4; i++) dataVolumes.pushColor(dblue);
+            for (int i=0; i<4; i++) dataVolumes.pushColor(blue);
+            for (int i=0; i<4; i++) dataVolumes.pushColor(white);
+            for (int i=0; i<4; i++) dataVolumes.pushColor(white);
 
-            data.pushQuad(-9, -10, -11, -12); // mid but reversed
-            for (int i=0; i<12; i++) data.pushQuad(-1,-1,-1,-1); // placeholders
-            updatePipeInds(data, 0.5, i0, k0);
+            dataVolumes.pushQuad(-9, -10, -11, -12); // mid but reversed
+            for (int i=0; i<12; i++) dataVolumes.pushQuad(-1,-1,-1,-1); // placeholders
+            updatePipeInds(dataVolumes, 0.5, i0, k0);
 
             // flow arrows
+            i0 = dataArrows.size();
+            k0 = dataArrows.getNIndices();
+
             Vec3d u2 = d.cross(u) + u; u2.normalize();
             float g2 = g*1.05;
             float g3 = g*0.5;
@@ -1036,11 +1063,11 @@ void VRPipeSystem::updateVisual() {
                     auto col = green;
                     if (t == 1) { g2 *= 0.98; g3 *= 0.98; g4 *= 0.98; col = red; }
 
-                    data.pushQuad(pt, d, u,  Vec2d(g3,g2), false);
-                    data.pushQuad(pt, d, u,  Vec2d(g2,g3), false);
-                    data.pushQuad(pt, d, u2, Vec2d(g4,g4), false);
+                    dataArrows.pushQuad(pt, d, u,  Vec2d(g3,g2), false);
+                    dataArrows.pushQuad(pt, d, u,  Vec2d(g2,g3), false);
+                    dataArrows.pushQuad(pt, d, u2, Vec2d(g4,g4), false);
 
-                    for (int i=0; i<12; i++) data.pushColor(col);
+                    for (int i=0; i<12; i++) dataArrows.pushColor(col);
                     for (int i=0; i<4; i++) {
                         int a = 0;
                         int b = 1;
@@ -1052,36 +1079,36 @@ void VRPipeSystem::updateVisual() {
                         int i0 = -12;
                         int i1 = -8;
                         int i2 = -4;
-                        data.pushQuad(i2+i,i2+i,i0+a,i0+b);
-                        data.pushQuad(i2+i,i2+i,i0+b,i0+a);
-                        data.setNorm(i1+i, dPipe); // store dPipe
-                        data.setNorm(i2+i, Vec3d(data.getPosition(i2+i))); // store p0
+                        dataArrows.pushQuad(i2+i,i2+i,i0+a,i0+b);
+                        dataArrows.pushQuad(i2+i,i2+i,i0+b,i0+a);
+                        dataArrows.setNorm(i1+i, dPipe); // store dPipe
+                        dataArrows.setNorm(i2+i, Vec3d(dataArrows.getPosition(i2+i))); // store p0
                     }
                 }
             }
         }
 
         auto createWaterBox = [&](Vec3d p, double a, double b, double h) {
-            data.pushQuad(p - Vec3d(0,h*0.5,0), Vec3d(0,1,0), Vec3d(0,0,1), Vec2d(a,b), false);
-            data.pushQuad(p - Vec3d(0,h*0.5,0), Vec3d(0,1,0), Vec3d(0,0,1), Vec2d(a,b), true);
-            data.pushQuad(p - Vec3d(0,h*0.5,0), Vec3d(0,1,0), Vec3d(0,0,1), Vec2d(a,b), false);
-            data.pushQuad(p + Vec3d(0,h*0.5,0), Vec3d(0,1,0), Vec3d(0,0,1), Vec2d(a,b), true);
-            data.pushQuad(-13, -14, -15, -16); // bottom
-            data.pushQuad(-9, -10, -11, -12); // mid but reversed
+            dataVolumes.pushQuad(p - Vec3d(0,h*0.5,0), Vec3d(0,1,0), Vec3d(0,0,1), Vec2d(a,b), false);
+            dataVolumes.pushQuad(p - Vec3d(0,h*0.5,0), Vec3d(0,1,0), Vec3d(0,0,1), Vec2d(a,b), true);
+            dataVolumes.pushQuad(p - Vec3d(0,h*0.5,0), Vec3d(0,1,0), Vec3d(0,0,1), Vec2d(a,b), false);
+            dataVolumes.pushQuad(p + Vec3d(0,h*0.5,0), Vec3d(0,1,0), Vec3d(0,0,1), Vec2d(a,b), true);
+            dataVolumes.pushQuad(-13, -14, -15, -16); // bottom
+            dataVolumes.pushQuad(-9, -10, -11, -12); // mid but reversed
 
-            data.pushQuad(-9, -10, -14,  -13); // sides bottom
-            data.pushQuad(-10, -11, -15, -14);
-            data.pushQuad(-11, -12, -16, -15);
-            data.pushQuad(-12, -9,  -13, -16);
+            dataVolumes.pushQuad(-9, -10, -14,  -13); // sides bottom
+            dataVolumes.pushQuad(-10, -11, -15, -14);
+            dataVolumes.pushQuad(-11, -12, -16, -15);
+            dataVolumes.pushQuad(-12, -9,  -13, -16);
 
-            data.pushQuad(-1, -2, -6,  -5); // sides top
-            data.pushQuad(-2, -3, -7, -6);
-            data.pushQuad(-3, -4, -8, -7);
-            data.pushQuad(-4, -1,  -5, -8);
-            for (int i=0; i<4; i++) data.pushColor(dblue);
-            for (int i=0; i<4; i++) data.pushColor(blue);
-            for (int i=0; i<4; i++) data.pushColor(white);
-            for (int i=0; i<4; i++) data.pushColor(white);
+            dataVolumes.pushQuad(-1, -2, -6,  -5); // sides top
+            dataVolumes.pushQuad(-2, -3, -7, -6);
+            dataVolumes.pushQuad(-3, -4, -8, -7);
+            dataVolumes.pushQuad(-4, -1,  -5, -8);
+            for (int i=0; i<4; i++) dataVolumes.pushColor(dblue);
+            for (int i=0; i<4; i++) dataVolumes.pushColor(blue);
+            for (int i=0; i<4; i++) dataVolumes.pushColor(white);
+            for (int i=0; i<4; i++) dataVolumes.pushColor(white);
         };
 
         for (auto& n : nodes) {
@@ -1106,18 +1133,27 @@ void VRPipeSystem::updateVisual() {
                 continue;
             }
 
-            data.pushVert(p->pos(), norm, white, Vec2d());
-            data.pushPoint();
+            dataNodes.pushVert(p->pos(), norm, white, Vec2d());
+            dataNodes.pushPoint();
         }
 
         //cout << "apply data: " << data.size() << endl;
-        data.apply(ptr());
+        dataNodes.apply( dataNodes.getGeometry() );
+        dataSegments.apply( dataSegments.getGeometry() );
+        dataVolumes.apply( dataVolumes.getGeometry() );
+        dataArrows.apply( dataArrows.getGeometry() );
     }
 
     // update system state
 
-    int i = 0;
-    int k = 0;
+    int iNodes = 0;
+    int kNodes = 0;
+    int iSegments = 0;
+    int kSegments = 0;
+    int iVolumes = 0;
+    int kVolumes = 0;
+    int iArrows = 0;
+    int kArrows = 0;
 
     auto flowToArrowLength = [sign](double f, double r, double A, double v0, double v_ref) {
         double v = f/A;
@@ -1180,20 +1216,20 @@ void VRPipeSystem::updateVisual() {
             else if (l == "n") { col1 = white; col2 = green; }
             else if (l == "h") {
                 col1 = green; col2 = green;
-                auto p1 = data.getPosition(i)  ; p1[1] = h1; data.setPos(i  , p1);
-                auto p2 = data.getPosition(i+1); p2[1] = h2; data.setPos(i+1, p2);
-                auto p3 = data.getPosition(i+2); p3[1] = h3; data.setPos(i+2, p3);
+                auto p1 = dataSegments.getPosition(iSegments)  ; p1[1] = h1; dataSegments.setPos(iSegments  , p1);
+                auto p2 = dataSegments.getPosition(iSegments+1); p2[1] = h2; dataSegments.setPos(iSegments+1, p2);
+                auto p3 = dataSegments.getPosition(iSegments+2); p3[1] = h3; dataSegments.setPos(iSegments+2, p3);
             } else continue;
 
-            data.setColor(i, col1); i++;
-            data.setColor(i, col2); i++;
-            if (l == "h") { i++; k += 2; }
-            k += 2;
+            dataSegments.setColor(iSegments, col1); iSegments++;
+            dataSegments.setColor(iSegments, col2); iSegments++;
+            if (l == "h") { iSegments++; kSegments += 2; }
+            kSegments += 2;
         }
 
-        data.setColor(i, e1->pressurized ? dblue : lgray); i++;
-        data.setColor(i, e2->pressurized ? dblue : lgray); i++;
-        k += 2;
+        dataNodes.setColor(iNodes, e1->pressurized ? dblue : lgray); iNodes++;
+        dataNodes.setColor(iNodes, e2->pressurized ? dblue : lgray); iNodes++;
+        kNodes += 2;
 
         double l = s.second->level;
         //l = 0.5+0.5*sin(F); // TOTEST
@@ -1204,17 +1240,17 @@ void VRPipeSystem::updateVisual() {
             s.second->lastVizLevel = l;
 
             std::array<double, 4> heights;
-            heights[0] = data.getPosition(i+ 0)[1];
-            heights[1] = data.getPosition(i+ 2)[1];
-            heights[2] = data.getPosition(i+12)[1];
-            heights[3] = data.getPosition(i+14)[1];
+            heights[0] = dataVolumes.getPosition(iVolumes+ 0)[1];
+            heights[1] = dataVolumes.getPosition(iVolumes+ 2)[1];
+            heights[2] = dataVolumes.getPosition(iVolumes+12)[1];
+            heights[3] = dataVolumes.getPosition(iVolumes+14)[1];
             std::sort(heights.begin(), heights.end());
             double h = heights[0] + l*(heights[3] - heights[0]);
 
             vector<Pnt3d> intersections;
             auto intersectHz = [&](int a, int b) { // intersect edge (a,b) with horizontal plane at height h
-                Pnt3d p1 = data.getPosition(i+a);
-                Pnt3d p2 = data.getPosition(i+b);
+                Pnt3d p1 = dataVolumes.getPosition(iVolumes+a);
+                Pnt3d p2 = dataVolumes.getPosition(iVolumes+b);
                 if (abs(p2[1]-p1[1]) < 1e-6) return;
                 double k = (h-p1[1])/(p2[1]-p1[1]);
                 if (k < 1e-6 || k > 1.0-1e-6) return;
@@ -1237,15 +1273,15 @@ void VRPipeSystem::updateVisual() {
 
             if (intersections.size() == 4) {
                 for (int j=0; j<4; j++) {
-                    data.setPos(i+4+j, intersections[j]);
-                    data.setPos(i+8+j, intersections[j]);
+                    dataVolumes.setPos(iVolumes+4+j, intersections[j]);
+                    dataVolumes.setPos(iVolumes+8+j, intersections[j]);
                 }
             }
-            updatePipeInds(data, l, i, k);
+            updatePipeInds(dataVolumes, l, iVolumes, kVolumes);
 
             /*for (int j=0; j<4; j++) {
-                if (!s.second->pressurized) data.setColor(i+4+j, green);
-                else data.setColor(i+4+j, blue);
+                if (!s.second->pressurized) dataVolumes.setColor(i+4+j, green);
+                else dataVolumes.setColor(i+4+j, blue);
             }*/
         }
 
@@ -1256,12 +1292,15 @@ void VRPipeSystem::updateVisual() {
         //tmpCol1 = s.second->pressurized ? blue : lblue;
         //tmpCol2 = tmpCol1;
 
-        data.setColor(i+4+0, tmpCol2);
-        data.setColor(i+4+1, tmpCol2);
-        data.setColor(i+4+2, tmpCol1);
-        data.setColor(i+4+3, tmpCol1);
+        dataVolumes.setColor(iVolumes+4+0, tmpCol2);
+        dataVolumes.setColor(iVolumes+4+1, tmpCol2);
+        dataVolumes.setColor(iVolumes+4+2, tmpCol1);
+        dataVolumes.setColor(iVolumes+4+3, tmpCol1);
 
-        // flow arrows
+        iVolumes += 16;
+        kVolumes += 56;
+
+        // --------- flow arrows -------------
         double r = s.second->radius;
         double A = s.second->area;
         double v0 = 0.5; // m/s
@@ -1272,47 +1311,46 @@ void VRPipeSystem::updateVisual() {
         double H2 = flowToArrowLength(-e2->headFlow, r, A, v0, v_ref);
 
         for (int j=0; j<4; j++) {
-            int j1 = i+20+j;
+            int j1 = iArrows+4+j;
             int j2 = j1+4;
             int j3 = j2+12;
-            Vec3d sD = data.getNormal(j1);
-            Vec3d p0 = data.getNormal(j2);
-            data.setPos(j2, p0 + F1*sD);
-            data.setPos(j3, p0 + H1*sD);
+            Vec3d sD = dataArrows.getNormal(j1);
+            Vec3d p0 = dataArrows.getNormal(j2);
+            dataArrows.setPos(j2, p0 + F1*sD);
+            dataArrows.setPos(j3, p0 + H1*sD);
         }
 
         for (int j=0; j<4; j++) {
-            int j1 = i+44+j;
+            int j1 = iArrows+28+j;
             int j2 = j1+4;
             int j3 = j2+12;
-            Vec3d sD = data.getNormal(j1);
-            Vec3d p0 = data.getNormal(j2);
-            data.setPos(j2, p0 + F2*sD);
-            data.setPos(j3, p0 + H2*sD);
+            Vec3d sD = dataArrows.getNormal(j1);
+            Vec3d p0 = dataArrows.getNormal(j2);
+            dataArrows.setPos(j2, p0 + F2*sD);
+            dataArrows.setPos(j3, p0 + H2*sD);
         }
 
         /*for (int j=0; j<16; j++) {
-            Vec3d p = Vec3d(data.getPosition(i+j));
+            Vec3d p = Vec3d(dataVolumes.getPosition(i+j));
             p += Vec3d(j, j, j)*0.0005;
             ann->set(j, p, toString(j));
         }*/
 
-        // level + flow
-        i += 16 + 12*4;
-        k += 56 + 32*4;
+        iArrows += 12*4;
+        kArrows += 32*4;
     }
 
     auto updateWaterBox = [&](double lvl, Color3f col) {
         for (int j=0; j<4; j++) {
-            Pnt3d p = data.getPosition(i+j);
+            Pnt3d p = dataVolumes.getPosition(iVolumes+j);
             p[1] += lvl;
-            data.setPos(i+4+j, p);
-            data.setPos(i+8+j, p);
-            data.setColor(i+4+j, col);
+            dataVolumes.setPos(iVolumes+4+j, p);
+            dataVolumes.setPos(iVolumes+8+j, p);
+            dataVolumes.setColor(iVolumes+4+j, col);
         }
 
-        i += 16;
-        k += 48;
+        iVolumes += 16;
+        kVolumes += 48;
     };
 
     for (auto& n : nodes) {
@@ -1331,18 +1369,18 @@ void VRPipeSystem::updateVisual() {
         if (e->is_a("Cylinder")) {
             double state = e->getValue("state", 1.0);
             double L = e->getValue("length", 1.0);
-            Pnt3d p1 = data.getPosition(i+1)    + Vec3d(L*state,0,0);
-            Pnt3d p2 = data.getPosition(i+2)    + Vec3d(L*state,0,0);
-            Pnt3d p3 = data.getPosition(i+12+1) + Vec3d(L*state,0,0);
-            Pnt3d p4 = data.getPosition(i+12+2) + Vec3d(L*state,0,0);
-            data.setPos(i+0,    p1);
-            data.setPos(i+3,    p2);
-            data.setPos(i+12+0, p3);
-            data.setPos(i+12+3, p4);
-            data.setPos(i+16+1, p1);
-            data.setPos(i+16+2, p2);
-            data.setPos(i+28+1, p3);
-            data.setPos(i+28+2, p4);
+            Pnt3d p1 = dataVolumes.getPosition(iVolumes+1)    + Vec3d(L*state,0,0);
+            Pnt3d p2 = dataVolumes.getPosition(iVolumes+2)    + Vec3d(L*state,0,0);
+            Pnt3d p3 = dataVolumes.getPosition(iVolumes+12+1) + Vec3d(L*state,0,0);
+            Pnt3d p4 = dataVolumes.getPosition(iVolumes+12+2) + Vec3d(L*state,0,0);
+            dataVolumes.setPos(iVolumes+0,    p1);
+            dataVolumes.setPos(iVolumes+3,    p2);
+            dataVolumes.setPos(iVolumes+12+0, p3);
+            dataVolumes.setPos(iVolumes+12+3, p4);
+            dataVolumes.setPos(iVolumes+16+1, p1);
+            dataVolumes.setPos(iVolumes+16+2, p2);
+            dataVolumes.setPos(iVolumes+28+1, p3);
+            dataVolumes.setPos(iVolumes+28+2, p4);
 
             double l1 = e->getValue("level1", 1.0);
             double l2 = e->getValue("level2", 1.0);
@@ -1379,8 +1417,8 @@ void VRPipeSystem::updateVisual() {
             c = p>1e-3 ? Color3f(1,1,0) : Color3f(1,0.5,0);
         }
 
-        data.setColor(i, c); i++;
-        k++;
+        dataNodes.setColor(iNodes, c); iNodes++;
+        kNodes++;
     }
 }
 

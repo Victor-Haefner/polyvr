@@ -41,6 +41,7 @@ class VRGeoData {
         VRGeoData(VRGeometryPtr geo);
 
         static VRGeoDataPtr create();
+        VRGeometryPtr getGeometry();
 
         int size() const;
         int sizeNormals() const;
