@@ -1540,23 +1540,23 @@ void VRPipeSystem::assignBoundaryPressures(double dt) {
         if (entity->is_a("Tank")) {
             double tankHeight = entity->getValue("height", 1.0);
             double tankLevel = entity->getValue("level", 1.0);
-            double tankPressure = entity->getValue("pressure", atmosphericPressure);
             double tankDensity = entity->getEntity("fluid")->getValue("density", waterDensity);
             bool tankOpen = entity->getValue("isOpen", false);
 
-            double fluidEffect = 1.0; // used to remove effect of emtpy pressurized tanks
+            double tankPressure = entity->getValue("pressure", atmosphericPressure);
             if (tankOpen) tankPressure = atmosphericPressure;
-            else {
-                double eps = 1e-3;
-                if (tankLevel < eps) fluidEffect = tankLevel/eps;
-            }
+
+            double fluidEffect = 1.0; // used to remove numerical artifacts of empty tanks
+            double eps = 1e-3;
+            if (tankLevel < eps) fluidEffect = tankLevel/eps;
 
             double fluidHeight = (tankLevel-0.5)*tankHeight + nPos[1];
             for (auto& e : node->pipes) {
                 double depth = max(0.0, fluidHeight - e->height);
                 double Pfluid = depth * tankDensity * gravity;
                 double Pgauge = tankPressure + Pfluid - atmosphericPressure;
-                e->hydraulicHead = e->height + fluidEffect * Pgauge / (tankDensity * gravity);
+                double hydrHead = e->height + fluidEffect * Pgauge / (tankDensity * gravity);
+                e->hydraulicHead = hydrHead;
                 //cout << " tank boundary expr.: hH: " << e->hydraulicHead << ", tankOpen: " << tankOpen << ", d: " << depth << ", tP " << tankPressure << ", fP " << Pfluid << ", gP " << Pgauge << endl;
             }
         }
@@ -1766,7 +1766,10 @@ void VRPipeSystem::solveNodeHeads(double dt) {
         for (auto& n : nodes) { // update pipe-end heads for each node
             auto node = n.second;
             auto entity = node->entity;
-            if (entity->is_a("Tank") || entity->is_a("Outlet")) continue; // already prescribed
+
+            if (entity->is_a("Outlet")) continue; // already prescribed
+            if (entity->is_a("Tank") && entity->getValue("isOpen", false)) continue; // already prescribed
+
             if (entity->is_a("Pump") && processPumpHeads(node->pipes, entity, maxHeadDelta)) continue;
             if (entity->is_a("ControlValve") && processControlValve(node, entity, maxHeadDelta)) continue;
             else if (entity->is_a("Valve") && processValve(node->pipes, entity, maxHeadDelta)) continue;
