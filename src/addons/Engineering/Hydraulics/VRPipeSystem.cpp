@@ -112,6 +112,14 @@ bool VRFluidComposition::toEntity(VREntityPtr e) {
     return addedBin;
 }
 
+double VRFluidComposition::computeParticlesMass(double Volume) {
+    double m = 0;
+    for (auto& p : particles) {
+        m += p.second.density * p.second.volumeFraction * Volume;
+    }
+    return m;
+}
+
 double VRPipeSystem::getTankParticles(int nID, string type) {
     auto e = getNodeEntity(nID);
     if (!e) return 0.0;
@@ -155,10 +163,16 @@ void VRPipeSystem::addTankParticles(int nID, string type, double mass) {
         string t = pe->getValue<string>("type", "");
         if (type == t) {
             double d = pe->getValue("density", 1.0);
-            double volOld = fluidVolume * pe->getValue("volumeFraction", 1.0);
-            double vol = volOld + mass / d;
-            double volFrac = vol / fluidVolume;
+            double volDelta = mass / d;
+            double volOld = fluidVolume * pe->getValue("volumeFraction", 0.0);
+            fluidVolume += volDelta;
+
+            double volFrac = (volOld + volDelta) / fluidVolume;
             pe->set("volumeFraction", toString(volFrac, 12));
+
+            // update tank level
+            tankLevel = fluidVolume / tankVolume;
+            e->set("level", toString(tankLevel,12));
             return;
         }
     }
@@ -186,6 +200,7 @@ void VRPipeSystem::addTankParticleBin(int nID, string type, Vec2d sizeRange, dou
     be->set("sizeMin", toString(sizeRange[0]));
     be->set("sizeMax", toString(sizeRange[1]));
     be->set("density", toString(density,  12));
+    be->set("volumeFraction", "0.0");
 }
 
 // Pipe End ----
@@ -481,8 +496,9 @@ vector<VRPipeSegmentPtr> VRPipeSystem::getOutPipes(int nID) {
     return res;
 }
 
-double VRPipeSystem::computeTotalMass() {
+Vec2d VRPipeSystem::computeTotalMass() {
     double totalMass = 0.0;
+    double totalParticlesMass = 0.0;
 
     for (auto& n : nodes) { // mass in tanks
         auto node = n.second;
@@ -494,7 +510,12 @@ double VRPipeSystem::computeTotalMass() {
             double tankVolume = tankArea * tankHeight;
             double tankLevel = entity->getValue("level", 1.0); // 0..1
             double tankDensity = entity->getEntity("fluid")->getValue("density", waterDensity);
-            totalMass += tankDensity * tankVolume * tankLevel;
+            double fluidVolume = tankVolume * tankLevel;
+            totalMass += tankDensity * fluidVolume;
+
+            VRFluidComposition tFluid;
+            tFluid.fromEntity( entity->getEntity("fluid") );
+            totalParticlesMass += tFluid.computeParticlesMass(fluidVolume);
         }
     }
 
@@ -503,10 +524,12 @@ double VRPipeSystem::computeTotalMass() {
         double pipeLevel = pipe->level; // 0..1
         double pipeDensity = pipe->fluid.density; // kg/m³
         double pipeVolume = pipe->volume; // m³
-        totalMass += pipeDensity * pipeVolume * pipeLevel;
+        double fluidVolume = pipeVolume * pipeLevel;
+        totalMass += pipeDensity * fluidVolume;
+        totalParticlesMass += pipe->fluid.computeParticlesMass(fluidVolume);
     }
 
-    return totalMass;
+    return Vec2d( totalMass, totalParticlesMass );
 }
 
 void VRPipeSystem::initOntology() {
@@ -2338,7 +2361,9 @@ void VRPipeSystem::updateLevels(double dt) {
             }
 
             double volDelta = totalFlow*dt;
-            double newLevel = clamp(tankLevel + volDelta / tankVolume, 0.0, 1.0, true, "tank lvl");
+            double newLevel = tankLevel + volDelta / tankVolume;
+
+            newLevel = clamp(newLevel, 0.0, 1.0, true, "tank lvl");
             volDelta = (newLevel - tankLevel)*tankVolume;
             entity->set("level", toString(newLevel,12));
 

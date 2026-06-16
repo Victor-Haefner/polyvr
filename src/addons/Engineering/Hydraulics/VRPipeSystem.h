@@ -32,6 +32,8 @@ class VRFluidComposition {
         void mixIn(const VRFluidComposition& fluid, const double& percentage);
         void fromEntity(VREntityPtr e);
         bool toEntity(VREntityPtr e);
+
+        double computeParticlesMass(double Volume);
 };
 
 class VRPipeEnd {
@@ -251,7 +253,7 @@ class VRPipeSystem : public VRTransform {
 
 		void setNodeCb(int i, VRAnimCbPtr cb);
 
-		double computeTotalMass();
+		Vec2d computeTotalMass();
         void printSystem();
 };
 
