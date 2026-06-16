@@ -1989,6 +1989,7 @@ void VRPipeSystem::computeHeadFlows(double dt) {
         double dH = pipe->hydraulicHead - e->hydraulicHead;
         double flow = computeFlow(dH, pipe, true);
         e->headFlow = flow;
+        cout << "force flow " << flow << endl;
     };
 
     for (auto& s : segments) {
@@ -2001,6 +2002,7 @@ void VRPipeSystem::computeHeadFlows(double dt) {
             double flow = accellerateFlow(dH, pipe, e1->flow);
             e1->headFlow =  flow;
             e2->headFlow = -flow;
+            //cout << "accellerate dH " << dH << endl;
             continue;
         }
 
@@ -2610,6 +2612,7 @@ void VRPipeSystem::updateRegimes(double dt) {
 }
 
 void VRPipeSystem::computeFlowMixing(double dt) {
+
     auto mixNodeFlows = [&](vector<VRPipeEndPtr> ends) {
         int N = ends.size();
         if (N == 0) return;
@@ -2641,17 +2644,18 @@ void VRPipeSystem::computeFlowMixing(double dt) {
 
     auto mixVolumeFlows = [&](FluidVolume f0, vector<FluidVolume> flows) {
         if (flows.size() == 0) return f0.fluid;
-        //if (abs(f0.V) < 1e-6) return f0.fluid; // is this correct?
+        if (abs(f0.V) < 1e-12) return f0.fluid; // empty volume has no fl. comp.
 
-        double VtotalIn = 0.0;
-        for (auto f : flows) VtotalIn += f.V;
-        double Vremain = f0.V - VtotalIn;
+        double Vdelta = 0.0;
+        for (auto f : flows) Vdelta += f.V;
+        double Vbefore = f0.V - Vdelta;
 
         VRFluidComposition fluid0 = f0.fluid;
-        double K = Vremain;
+        double K = Vbefore;
         for (auto& f : flows) {
             K += f.V;
-            fluid0.mixIn(f.fluid, f.V/K); // TODO: guard for K == 0
+            if (abs(K) < 1e-12) continue;
+            fluid0.mixIn(f.fluid, f.V/K);
         }
 
         return fluid0;
@@ -2741,6 +2745,7 @@ void VRPipeSystem::update() {
     updateNodePaths();
 
     for (int i=0; i<subSteps; i++) {
+        updatePressurization(dt);
         assignBoundaryPressures(dt);
         //auto t1 = VRTimer::create();
         solveNodeHeads(dt);
@@ -2750,7 +2755,6 @@ void VRPipeSystem::update() {
         computeMaxFlows(dt); // most time spent
         //auto T2 = t2->stop();
         updateLevels(dt);
-        updatePressurization(dt);
         updatePressures(dt);
         computeFlowMixing(dt);
         updateRegimes(dt);
