@@ -33,6 +33,7 @@ class VRFluidComposition {
         void fromEntity(VREntityPtr e);
         bool toEntity(VREntityPtr e);
 
+        double computeFluidMass(double Volume);
         double computeParticlesMass(double Volume);
 };
 

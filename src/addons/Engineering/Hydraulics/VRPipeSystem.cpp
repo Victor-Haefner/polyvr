@@ -120,6 +120,12 @@ double VRFluidComposition::computeParticlesMass(double Volume) {
     return m;
 }
 
+double VRFluidComposition::computeFluidMass(double Volume) {
+    double volFluid = Volume;
+    for (auto& p : particles) volFluid -= p.second.volumeFraction * Volume;
+    return density * volFluid;
+}
+
 double VRPipeSystem::getTankParticles(int nID, string type) {
     auto e = getNodeEntity(nID);
     if (!e) return 0.0;
@@ -159,23 +165,25 @@ void VRPipeSystem::addTankParticles(int nID, string type, double mass) {
     double fluidVolume = tankVolume * tankLevel;
     if (tankLevel < 1e-3) return;
 
-    for (auto& pe : fe->getAllEntities("particles")) {
-        string t = pe->getValue<string>("type", "");
-        if (type == t) {
-            double d = pe->getValue("density", 1.0);
-            double volDelta = mass / d;
-            double volOld = fluidVolume * pe->getValue("volumeFraction", 0.0);
-            fluidVolume += volDelta;
-
-            double volFrac = (volOld + volDelta) / fluidVolume;
-            pe->set("volumeFraction", toString(volFrac, 12));
-
-            // update tank level
-            tankLevel = fluidVolume / tankVolume;
-            e->set("level", toString(tankLevel,12));
-            return;
-        }
+    VREntityPtr pe = 0;
+    for (auto& p : fe->getAllEntities("particles")) {
+        string t = p->getValue<string>("type", "");
+        if (type == t) { pe = p; break; }
     }
+    if (!pe) return;
+
+    double d = pe->getValue("density", 1.0);
+    double volDelta = mass / d;
+    double volOld = fluidVolume * pe->getValue("volumeFraction", 0.0);
+    volDelta = clamp(volDelta, 0.0, tankVolume-fluidVolume, true, "tank particles volume");
+    fluidVolume += volDelta;
+
+    double volFrac = (volOld + volDelta) / fluidVolume;
+    pe->set("volumeFraction", toString(volFrac, 12));
+
+    // update tank level
+    tankLevel = fluidVolume / tankVolume;
+    e->set("level", toString(tankLevel,12));
 }
 
 void VRPipeSystem::addTankParticleBin(int nID, string type, Vec2d sizeRange, double density) {
@@ -497,10 +505,10 @@ vector<VRPipeSegmentPtr> VRPipeSystem::getOutPipes(int nID) {
 }
 
 Vec2d VRPipeSystem::computeTotalMass() {
-    double totalMass = 0.0;
+    double totalFluidMass = 0.0;
     double totalParticlesMass = 0.0;
 
-    for (auto& n : nodes) { // mass in tanks
+    for (auto& n : nodes) { // mass in tanks and cylinders
         auto node = n.second;
         auto entity = node->entity;
 
@@ -509,13 +517,29 @@ Vec2d VRPipeSystem::computeTotalMass() {
             double tankHeight = entity->getValue("height", 1.0);
             double tankVolume = tankArea * tankHeight;
             double tankLevel = entity->getValue("level", 1.0); // 0..1
-            double tankDensity = entity->getEntity("fluid")->getValue("density", waterDensity);
             double fluidVolume = tankVolume * tankLevel;
-            totalMass += tankDensity * fluidVolume;
 
             VRFluidComposition tFluid;
             tFluid.fromEntity( entity->getEntity("fluid") );
+            totalFluidMass += tFluid.computeFluidMass(fluidVolume);
             totalParticlesMass += tFluid.computeParticlesMass(fluidVolume);
+        }
+
+        if (entity->is_a("Cylinder")) {
+            double lvl1 = entity->getValue("level1", 1.0);
+            double lvl2 = entity->getValue("level2", 1.0);
+            double a = entity->getValue("area", 1.0);
+            double l = entity->getValue("length", 1.0);
+            double cState = entity->getValue("state", 0.0);
+            double cVolume = a * l;
+            double cVol1 = cVolume * cState;
+            double cVol2 = cVolume * (1.0-cState);
+            double cFluidVol1 = cVol1 * lvl1;
+            double cFluidVol2 = cVol2 * lvl2;
+
+            // TODO: there is currently no fluid composition in cylinder chambers yet
+            totalFluidMass += cFluidVol1 * waterDensity;
+            totalFluidMass += cFluidVol2 * waterDensity;
         }
     }
 
@@ -525,11 +549,11 @@ Vec2d VRPipeSystem::computeTotalMass() {
         double pipeDensity = pipe->fluid.density; // kg/m³
         double pipeVolume = pipe->volume; // m³
         double fluidVolume = pipeVolume * pipeLevel;
-        totalMass += pipeDensity * fluidVolume;
+        totalFluidMass += pipe->fluid.computeFluidMass(fluidVolume);
         totalParticlesMass += pipe->fluid.computeParticlesMass(fluidVolume);
     }
 
-    return Vec2d( totalMass, totalParticlesMass );
+    return Vec2d( totalFluidMass, totalParticlesMass );
 }
 
 void VRPipeSystem::initOntology() {
@@ -1189,11 +1213,11 @@ void VRPipeSystem::updateVisual() {
         }
 
         //cout << "apply data: " << data.size() << endl;
-        dataNodes.apply( dataNodes.getGeometry() );
-        dataSegments.apply( dataSegments.getGeometry() );
-        dataVolumes.apply( dataVolumes.getGeometry() );
-        dataArrows.apply( dataArrows.getGeometry() );
-        dataParticles.apply( dataParticles.getGeometry() );
+        if (dataNodes.size() > 0) dataNodes.apply( dataNodes.getGeometry() );
+        if (dataSegments.size() > 0) dataSegments.apply( dataSegments.getGeometry() );
+        if (dataVolumes.size() > 0) dataVolumes.apply( dataVolumes.getGeometry() );
+        if (dataArrows.size() > 0) dataArrows.apply( dataArrows.getGeometry() );
+        if (dataParticles.size() > 0) dataParticles.apply( dataParticles.getGeometry() );
     }
 
     // update system state
@@ -1989,7 +2013,6 @@ void VRPipeSystem::computeHeadFlows(double dt) {
         double dH = pipe->hydraulicHead - e->hydraulicHead;
         double flow = computeFlow(dH, pipe, true);
         e->headFlow = flow;
-        cout << "force flow " << flow << endl;
     };
 
     for (auto& s : segments) {
