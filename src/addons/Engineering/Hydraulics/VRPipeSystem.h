@@ -117,6 +117,7 @@ class VRPipeSegment {
 class VRPipeNode {
     public:
         int nID = 0;
+        int environmentID = 0;
         VREntityPtr entity;
         string name;
         vector<VRPipeEndPtr> pipes;
@@ -135,6 +136,14 @@ class VRPipeNode {
 };
 
 class VRPipeSystem : public VRTransform {
+    public:
+        struct Environment {
+            double temperature = 20.0;
+            double volume = 100.0;
+        };
+
+        using EnvironmentPtr = shared_ptr<Environment>;
+
 	private:
         GraphPtr graph;
         VROntologyPtr ontology;
@@ -159,6 +168,7 @@ class VRPipeSystem : public VRTransform {
         map<int, VRPipeNodePtr> nodes;
         map<string, int> nodesByName;
         map<int, VRPipeSegmentPtr> segments;
+        vector<EnvironmentPtr> environments;
 
         void initOntology();
 
@@ -185,6 +195,7 @@ class VRPipeSystem : public VRTransform {
         void updateLevels(double dt);
         void updatePressurization(double dt);
         void computeFlowMixing(double dt);
+        void radiateHeat(double dt);
         void updatePressures(double dt);
         void updateRegimes(double dt);
 
@@ -251,6 +262,12 @@ class VRPipeSystem : public VRTransform {
 		void addTankParticleBin(int i, string type, Vec2d sizeRange, double density);
 
 		void addControlValvePath(int i, int A, int B, double x0, double xs, double K);
+
+		int addEnvironment();
+		void setEnvironmentVolume(int eID, double V);
+		void setEnvironmentTemperature(int eID, double T);
+		double getEnvironmentTemperature(int eID);
+
 
 		void setNodeCb(int i, VRAnimCbPtr cb);
 

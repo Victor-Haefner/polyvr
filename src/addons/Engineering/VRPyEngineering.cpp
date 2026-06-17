@@ -93,6 +93,10 @@ PyMethodDef VRPyPipeSystem::methods[] = {
     {"setTankParticles", PyWrap( PipeSystem, setTankParticles, "Set volume fraction of a type of particles (tankID, particleType, volumeFraction)", void, int, string, double ) },
     {"addTankParticles", PyWrap( PipeSystem, addTankParticles, "Add a type of particles by mass (tankID, particleType, mass)", void, int, string, double ) },
     {"addTankParticleBin", PyWrap( PipeSystem, addTankParticleBin, "Add a type of particles (tankID, particleType, sizeRange, density)", void, int, string, Vec2d, double ) },
+    {"addEnvironment", PyWrap( PipeSystem, addEnvironment, "Add a new environment", int ) },
+    {"setEnvironmentVolume", PyWrap( PipeSystem, setEnvironmentVolume, "Set environment volume", void, int, double ) },
+    {"setEnvironmentTemperature", PyWrap( PipeSystem, setEnvironmentTemperature, "Set environment temperature", void, int, double ) },
+    {"getEnvironmentTemperature", PyWrap( PipeSystem, getEnvironmentTemperature, "Get environment temperature", double, int ) },
     {NULL}
 };
 

@@ -332,6 +332,8 @@ VRPipeNodePtr VRPipeNode::create(VREntityPtr entity) { return VRPipeNodePtr( new
 // Pipe System ----
 
 VRPipeSystem::VRPipeSystem() : VRTransform("pipeSystem") {
+    addEnvironment();
+
     graph = Graph::create();
     initOntology();
 
@@ -771,6 +773,11 @@ void VRPipeSystem::setPump(int nID, double c, bool isOpen) {
 void VRPipeSystem::setFlowParameters(float l) {
     latency = l;
 }
+
+int VRPipeSystem::addEnvironment() { environments.push_back( EnvironmentPtr(new Environment()) ); return environments.size()-1; }
+void VRPipeSystem::setEnvironmentVolume(int eID, double v) { environments[eID]->volume = v; }
+void VRPipeSystem::setEnvironmentTemperature(int eID, double t) { environments[eID]->temperature = t; }
+double VRPipeSystem::getEnvironmentTemperature(int eID) { return environments[eID]->temperature; }
 
 void VRPipeSystem::updateInspection(int nID) {
     if (!doVisual) {
@@ -2756,6 +2763,35 @@ void VRPipeSystem::computeFlowMixing(double dt) {
     }
 }
 
+void VRPipeSystem::radiateHeat(double dt) {
+    for (auto s : segments) {
+        auto& pipe = s.second;
+        auto e1 = pipe->end1.lock();
+        auto n = nodes[e1->nID];
+        auto envID = n->environmentID;
+        auto env = environments[envID];
+
+        double A = 2*Pi*pipe->radius*pipe->length;
+        double V = pipe->volume*pipe->level;
+        double mWtr = pipe->fluid.density * V;
+
+        double cWtr = 4200.0;
+        double cAir = 1000.0;
+        double U = 10.0; // steel
+
+        double Tenv = env->temperature;
+        double mAir = env->volume * 1.2;
+        double T = pipe->fluid.temperature;
+        double Q = U * A * (Tenv - T) * dt;
+
+        if (mWtr < 1e-6) continue;
+        if (mAir < 1e-6) continue;
+
+        pipe->fluid.temperature += Q/mWtr/cWtr;
+        env->temperature -= Q/mAir/cAir;
+    }
+}
+
 void VRPipeSystem::update() {
     int subSteps = 10;
     double dT = 1.0/60;
@@ -2780,6 +2816,7 @@ void VRPipeSystem::update() {
         updateLevels(dt);
         updatePressures(dt);
         computeFlowMixing(dt);
+        radiateHeat(dt);
         updateRegimes(dt);
         //cout << " VRPipeSystem::update " << T1 << ", " << T2 << endl;
     }
