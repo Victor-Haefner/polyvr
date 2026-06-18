@@ -81,9 +81,9 @@ struct VRSnappingEngine::Rule {
         }
 
         if (translation == PLANE) {
-            Plane pl(Vec3f(prim_t->pos()), Vec3f(prim_t->dir()));
-            float d = pl.distance(Pnt3f(p)); // project on plane
-            snapP = p + Vec3d(d*pl.getNormal());
+            Plane pl(Vec3f(prim_t->dir()), Pnt3f(prim_t->pos())); // first n, then p
+            float d = pl.distance(Pnt3f(p)); // project on plane, d is signed
+            snapP = p - Vec3d(d*pl.getNormal());
         }
 
         return snapP;
