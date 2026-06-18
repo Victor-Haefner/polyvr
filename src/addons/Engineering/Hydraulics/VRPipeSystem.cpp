@@ -251,7 +251,7 @@ void VRPipeSegment::setLevel(double lvl) {
     fluidLvl = min(h1, h2) + abs(h1 - h2) * level;
 }
 
-void VRPipeSegment::updateGeometry(GraphPtr graph) {
+void VRPipeSegment::updateGeometry(GraphPtr graph, double friction) {
     auto e1 = end1.lock();
     auto e2 = end2.lock();
     auto p1 = graph->getPosition(e1->nID)->pos();
@@ -264,7 +264,8 @@ void VRPipeSegment::updateGeometry(GraphPtr graph) {
     length = d.length();
     area = Pi * pow(radius,2);
     volume = area * length;
-    updateResistance();
+
+    updateResistance(friction);
 
     if (length < 1e-6) {
         zRadius = radius;
@@ -294,7 +295,7 @@ double VRPipeSegment::computeRegime(double Q) {
     return k;
 }
 
-void VRPipeSegment::updateResistance() {
+void VRPipeSegment::updateResistance(double friction) {
     double fill = max(level, 0.05);
     double rEff = radius * sqrt(fill);
     resistanceLaminar = (8.0 * fluid.viscosity * length) / (Pi * pow(rEff, 4)); // Hagen–Poiseuille resistance
@@ -332,6 +333,7 @@ VRPipeNodePtr VRPipeNode::create(VREntityPtr entity) { return VRPipeNodePtr( new
 // Pipe System ----
 
 VRPipeSystem::VRPipeSystem() : VRTransform("pipeSystem") {
+    addMaterial();
     addEnvironment();
 
     graph = Graph::create();
@@ -450,7 +452,8 @@ int VRPipeSystem::addSegment(double radius, int n1, int n2, double level, double
     computeEndOffset(e1);
     computeEndOffset(e2);
 
-    s->updateGeometry(graph);
+    auto mat = materials[s->materialID];
+    s->updateGeometry(graph, mat->friction);
     e1->updateGeometry(graph);
     e2->updateGeometry(graph);
     e1->setInitialHead();
@@ -654,7 +657,8 @@ void VRPipeSystem::addControlValvePath(int i, int A, int B, double x0, double xs
 void VRPipeSystem::setNodePose(int nID, PosePtr p) {
     auto handlePipe = [&](int eID) {
         auto pipe = segments[eID];
-        pipe->updateGeometry(graph);
+        auto mat = materials[pipe->materialID];
+        pipe->updateGeometry(graph, mat->friction);
         auto e1 = pipe->end1.lock();
         auto e2 = pipe->end2.lock();
         e1->updateGeometry(graph);
@@ -747,8 +751,9 @@ double VRPipeSystem::getTankDensity(int nID) {
 }
 
 void VRPipeSystem::setPipeRadius(int i, double r) {
+    auto mat = materials[segments[i]->materialID];
     segments[i]->radius = r;
-    segments[i]->updateGeometry(graph);
+    segments[i]->updateGeometry(graph, mat->friction);
     auto e1 = segments[i]->end1.lock();
     auto e2 = segments[i]->end2.lock();
     if (e1) e1->updateGeometry(graph);
@@ -774,6 +779,12 @@ void VRPipeSystem::setFlowParameters(float l) {
     latency = l;
 }
 
+void VRPipeSystem::setSegmentMaterial(int sID, int mID) { segments[sID]->materialID = mID; }
+int VRPipeSystem::addMaterial() { materials.push_back( MaterialPtr(new Material()) ); return materials.size()-1; }
+void VRPipeSystem::setMaterialFriction(int eID, double f) { materials[eID]->friction = f; }
+void VRPipeSystem::setMaterialThermalConductivity(int eID, double c) { materials[eID]->thermalConductance = c; }
+
+void VRPipeSystem::setSegmentEnvironment(int sID, int mID) { segments[sID]->environmentID = mID; }
 int VRPipeSystem::addEnvironment() { environments.push_back( EnvironmentPtr(new Environment()) ); return environments.size()-1; }
 void VRPipeSystem::setEnvironmentVolume(int eID, double v) { environments[eID]->volume = v; }
 void VRPipeSystem::setEnvironmentTemperature(int eID, double t) { environments[eID]->temperature = t; }
@@ -2636,8 +2647,9 @@ void VRPipeSystem::updateRegimes(double dt) {
         auto e1 = pipe->end1.lock();
         auto e2 = pipe->end2.lock();
         double Q = max(abs(e1->flow), abs(e2->flow)); // pick active side
+        auto mat = materials[pipe->materialID];
         pipe->regime = pipe->computeRegime(Q);
-        pipe->updateResistance();
+        pipe->updateResistance(mat->friction);
    }
 }
 
@@ -2766,9 +2778,7 @@ void VRPipeSystem::computeFlowMixing(double dt) {
 void VRPipeSystem::radiateHeat(double dt) {
     for (auto s : segments) {
         auto& pipe = s.second;
-        auto e1 = pipe->end1.lock();
-        auto n = nodes[e1->nID];
-        auto envID = n->environmentID;
+        auto envID = pipe->environmentID;
         auto env = environments[envID];
 
         double A = 2*Pi*pipe->radius*pipe->length;

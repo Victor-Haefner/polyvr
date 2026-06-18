@@ -87,10 +87,11 @@ class VRPipeSegment {
         double level = 0.0;
         double hydraulicHead = 0.0;
         double lastVizLevel = -1.0;
-        double friction = 0.02;
-        double thermalConductance = 1.0;
         bool pressurized = false;
         bool flowBlocked = false;
+
+        int materialID = 0;
+        int environmentID = 0;
 
         VRFluidComposition fluid;
 
@@ -107,9 +108,9 @@ class VRPipeSegment {
         VRPipeEndPtr otherEnd(VRPipeEndPtr e);
 
         double computeRegime(double Q);
-        void updateResistance();
+        void updateResistance(double friction);
         void setLevel(double lvl);
-        void updateGeometry(GraphPtr graph);
+        void updateGeometry(GraphPtr graph, double friction);
 
         double computeEffectiveResistance(const double& flow);
 };
@@ -117,7 +118,6 @@ class VRPipeSegment {
 class VRPipeNode {
     public:
         int nID = 0;
-        int environmentID = 0;
         VREntityPtr entity;
         string name;
         vector<VRPipeEndPtr> pipes;
@@ -142,7 +142,13 @@ class VRPipeSystem : public VRTransform {
             double volume = 100.0;
         };
 
+        struct Material {
+            double thermalConductance = 10.0;
+            double friction = 0.02;
+        };
+
         using EnvironmentPtr = shared_ptr<Environment>;
+        using MaterialPtr = shared_ptr<Material>;
 
 	private:
         GraphPtr graph;
@@ -169,6 +175,7 @@ class VRPipeSystem : public VRTransform {
         map<string, int> nodesByName;
         map<int, VRPipeSegmentPtr> segments;
         vector<EnvironmentPtr> environments;
+        vector<MaterialPtr> materials;
 
         void initOntology();
 
@@ -263,7 +270,13 @@ class VRPipeSystem : public VRTransform {
 
 		void addControlValvePath(int i, int A, int B, double x0, double xs, double K);
 
+		int addMaterial();
+		void setSegmentMaterial(int sID, int mID);
+		void setMaterialFriction(int mID, double f);
+		void setMaterialThermalConductivity(int mID, double c);
+
 		int addEnvironment();
+		void setSegmentEnvironment(int sID, int eID);
 		void setEnvironmentVolume(int eID, double V);
 		void setEnvironmentTemperature(int eID, double T);
 		double getEnvironmentTemperature(int eID);

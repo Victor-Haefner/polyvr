@@ -100,8 +100,8 @@ vector<Plane> Frustum::getNearFarPlanes() {
     Pnt3f Pf = Pnt3f(trans->pos() + trans->dir()*near_far[1]);
     Vec3f Nn = Vec3f(-trans->dir());
     Vec3f Nf = Vec3f( trans->dir());
-    res.push_back( Plane(Nn, Pn); // Near plane
-    res.push_back( Plane(Nf, Pf); // far plane
+    res.push_back( Plane(Nn, Pn) ); // Near plane
+    res.push_back( Plane(Nf, Pf) ); // far plane
     return res;
 }
 
