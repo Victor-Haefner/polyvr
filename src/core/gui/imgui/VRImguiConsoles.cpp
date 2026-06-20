@@ -234,27 +234,10 @@ void ImViewControls::render() {
     if (ImGui::Button("Fullscreen")) uiSignal("toolbar_fullscreen");
     ImGui::SameLine();
     if (ImGui::Button("See All")) uiSignal("toolbar_seeall");
-
-
-    ImGui::SameLine(ImGui::GetWindowWidth()-250*io.FontGlobalScale);
-    ImGui::SetNextItemWidth(100*io.FontGlobalScale);
-    if (ImGui::BeginCombo("##UItheme", "Theme", 0)) {
-        if (ImGui::RadioButton("Light", &uiTheme, 0)) { ImGui::StyleColorsLight(); uiStoreParameter("uiTheme", "light"); }
-        if (ImGui::RadioButton("Dark", &uiTheme, 1)) { ImGui::StyleColorsDark(); uiStoreParameter("uiTheme", "dark"); }
-        if (ImGui::RadioButton("Classic", &uiTheme, 2)) { ImGui::StyleColorsClassic(); uiStoreParameter("uiTheme", "classic"); }
-        ImGui::EndCombo();
-    }
-    ImGui::SameLine();
-
-    ImGui::TextUnformatted("Font size:"); ImGui::SameLine();
-    //io.FontAllowUserScaling = false;
-    if (ImGui::Button("+##FontSizeP")) { io.FontGlobalScale += 0.1; uiStoreParameter("fontScale", toString(io.FontGlobalScale)); } ImGui::SameLine();
-    if (ImGui::Button("-##FontSizeM")) { io.FontGlobalScale -= 0.1; uiStoreParameter("fontScale", toString(io.FontGlobalScale)); } ImGui::SameLine();
-    if (ImGui::Button("1##FontSize1")) { io.FontGlobalScale = 1.0;  uiStoreParameter("fontScale", toString(io.FontGlobalScale)); }
-
 }
 
 void ImConsoles::begin() {
+    ImGuiIO& io = ImGui::GetIO();
     viewControls.render();
     ImGui::Separator();
 
@@ -266,7 +249,11 @@ void ImConsoles::begin() {
         ImGui::EndTabBar();
     }
 
-    ImGui::SameLine(ImGui::GetWindowWidth()-280);
+    ImGui::SameLine();
+    double x1 = ImGui::GetCursorPosX();
+    double x2 = ImGui::GetWindowWidth()-130*io.FontGlobalScale;
+
+    ImGui::SameLine(max(x1,x2));
     if (ImGui::Button("clear")) uiSignal("clearConsoles");
 
     ImGui::SameLine();

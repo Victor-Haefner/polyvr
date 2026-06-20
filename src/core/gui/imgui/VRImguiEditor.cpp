@@ -174,6 +174,7 @@ ImConsolesSection::ImConsolesSection(ImRectangle r) : ImSection("Consoles", r) {
 }
 
 void ImToolbar::begin() {
+    ImGuiIO& io = ImGui::GetIO();
     ImSection::begin();
 
     if (ImGui::Button("New")) {
@@ -215,6 +216,26 @@ void ImToolbar::begin() {
     ImGui::SameLine(); if (ImGui::Button("Profiler")) uiSignal("ui_toggle_popup", {{"name","profiler"},{"title","Profiler"}, {"width","600"}, {"height","500"}});
     ImGui::SameLine(); if (ImGui::Button("Recorder")) uiSignal("ui_toggle_popup", {{"name","recorder"},{"title","Recorder"}, {"width","400"}, {"height","200"}});
     ImGui::SameLine(); if (ImGui::Checkbox("Fotomode", &fotomode)) uiSignal("ui_toggle_fotomode", {{"active",toString(fotomode)}});
+
+    ImGui::SameLine();
+    double x1 = ImGui::GetCursorPosX();
+    double x2 = ImGui::GetWindowWidth()-250*io.FontGlobalScale;
+
+    ImGui::SameLine(max(x1,x2));
+    ImGui::SetNextItemWidth(100*io.FontGlobalScale);
+    if (ImGui::BeginCombo("##UItheme", "Theme", 0)) {
+        if (ImGui::RadioButton("Light", &uiTheme, 0)) { ImGui::StyleColorsLight(); uiStoreParameter("uiTheme", "light"); }
+        if (ImGui::RadioButton("Dark", &uiTheme, 1)) { ImGui::StyleColorsDark(); uiStoreParameter("uiTheme", "dark"); }
+        if (ImGui::RadioButton("Classic", &uiTheme, 2)) { ImGui::StyleColorsClassic(); uiStoreParameter("uiTheme", "classic"); }
+        ImGui::EndCombo();
+    }
+    ImGui::SameLine();
+
+    ImGui::TextUnformatted("Font size:"); ImGui::SameLine();
+    //io.FontAllowUserScaling = false;
+    if (ImGui::Button("+##FontSizeP")) { io.FontGlobalScale += 0.1; uiStoreParameter("fontScale", toString(io.FontGlobalScale)); } ImGui::SameLine();
+    if (ImGui::Button("-##FontSizeM")) { io.FontGlobalScale -= 0.1; uiStoreParameter("fontScale", toString(io.FontGlobalScale)); } ImGui::SameLine();
+    if (ImGui::Button("1##FontSize1")) { io.FontGlobalScale = 1.0;  uiStoreParameter("fontScale", toString(io.FontGlobalScale)); }
 }
 
 void ImConsolesSection::begin() {

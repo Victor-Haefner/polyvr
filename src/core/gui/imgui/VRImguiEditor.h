@@ -35,6 +35,9 @@ class ImSection : public ImWidget {
 
 class ImToolbar : public ImSection {
     public:
+        int uiTheme = 1;
+        int uiFont = 0;
+
         ImToolbar(ImRectangle r);
         void begin() override;
 };

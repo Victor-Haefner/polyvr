@@ -10,8 +10,6 @@ using namespace std;
 class ImViewControls {
     public:
         ImCombo cameras;
-        int uiTheme = 1;
-        int uiFont = 0;
 
         map<string, bool> navigations;
 
