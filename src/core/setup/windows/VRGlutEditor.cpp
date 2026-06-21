@@ -138,10 +138,9 @@ VRGlutEditor::VRGlutEditor() {
     mgr->addCallback("onSaveSnapshot", [&](VRGuiSignals::Options o) { saveSnapshot(o["path"]); return true; } );
 
     bool fullscreen = VROptions::get()->getOption<bool>("fullscreen");
+    bool maximized  = VROptions::get()->getOption<bool>("maximized");
     if (fullscreen) setFullscreen(true);
-
-    bool maximized = VROptions::get()->getOption<bool>("maximized");
-    if (maximized) setMaximized(true);
+    if (maximized)  setMaximized(true);
 }
 
 VRGlutEditor::~VRGlutEditor() {
