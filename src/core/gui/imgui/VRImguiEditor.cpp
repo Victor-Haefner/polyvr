@@ -235,7 +235,7 @@ void ImToolbar::begin() {
     //io.FontAllowUserScaling = false;
     if (ImGui::Button("+##FontSizeP")) { io.FontGlobalScale += 0.1; uiStoreParameter("fontScale", toString(io.FontGlobalScale)); } ImGui::SameLine();
     if (ImGui::Button("-##FontSizeM")) { io.FontGlobalScale -= 0.1; uiStoreParameter("fontScale", toString(io.FontGlobalScale)); } ImGui::SameLine();
-    if (ImGui::Button("1##FontSize1")) { io.FontGlobalScale = 1.0;  uiStoreParameter("fontScale", toString(io.FontGlobalScale)); }
+    if (ImGui::Button("1##FontSize1")) { io.FontGlobalScale  = 1.0; uiStoreParameter("fontScale", toString(io.FontGlobalScale)); }
 }
 
 void ImConsolesSection::begin() {
@@ -712,6 +712,21 @@ void VRImguiEditor::handleRelayedKey(int key, int state, bool special) {
 }
 
 void VRImguiEditor::init(Signal signal, ResizeSignal resizeSignal) {
+    uiInitStore();
+
+    double hSlider = 0.3;
+    double vSlider = 0.3;
+    toValue(uiGetParameter("hPanelSlider", "0.3"), hSlider);
+    toValue(uiGetParameter("vPanelSlider", "0.3"), vSlider);
+    clamp(hSlider, 0.05, 0.95);
+    clamp(vSlider, 0.05, 0.95);
+
+    sidePanel.layout.right = hSlider;
+    consoles.layout.left = hSlider;
+    glArea.layout.left = hSlider;
+    consoles.layout.top = vSlider;
+    glArea.layout.bottom = vSlider;
+
     this->signal = signal;
     this->resizeSignal = resizeSignal;
     focusTimer = OSG::VRTimer::create();
@@ -749,7 +764,6 @@ void VRImguiEditor::init(Signal signal, ResizeSignal resizeSignal) {
     mgr->addCallback("setWindowFocus", [&](OSG::VRGuiSignals::Options o){ if (o["winName"] != "uiMain") onLooseFocus(); return true; } );
     mgr->addCallback("uiKeyEvent", [&](OSG::VRGuiSignals::Options o){ onAnyKey(); return true; } );
 
-    uiInitStore();
     toValue(uiGetParameter("fontScale", "1.0"), io.FontGlobalScale);
 
     string theme;
@@ -806,6 +820,7 @@ void VRImguiEditor::resolveResize(const string& name, const ResizeEvent& resizer
         glArea.layout.top = sidePanel.layout.top;
         glArea.resize(glArea.parentSurface);
         resizeSignal("glAreaResize", glArea.surface);
+        uiStoreParameter("hPanelSlider", toString(sidePanel.layout.right));
     }
 
     if (name == "Consoles") {
@@ -816,6 +831,8 @@ void VRImguiEditor::resolveResize(const string& name, const ResizeEvent& resizer
         glArea.layout.bottom = consoles.layout.top;
         glArea.resize(glArea.parentSurface);
         resizeSignal("glAreaResize", glArea.surface);
+        uiStoreParameter("hPanelSlider", toString(consoles.layout.left));
+        uiStoreParameter("vPanelSlider", toString(consoles.layout.top));
     }
 }
 
