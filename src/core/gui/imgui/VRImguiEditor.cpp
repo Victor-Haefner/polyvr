@@ -219,17 +219,23 @@ void ImToolbar::begin() {
 
     ImGui::SameLine();
     double x1 = ImGui::GetCursorPosX();
-    double x2 = ImGui::GetWindowWidth()-250*io.FontGlobalScale;
+    double x2 = ImGui::GetWindowWidth()-310*io.FontGlobalScale;
 
     ImGui::SameLine(max(x1,x2));
-    ImGui::SetNextItemWidth(100*io.FontGlobalScale);
+
+    ImGui::TextUnformatted("Theme:"); ImGui::SameLine();
+    if (ImGui::RadioButton("Light", &uiTheme, 0)) { ImGui::StyleColorsLight(); uiStoreParameter("uiTheme", "light"); } ImGui::SameLine();
+    if (ImGui::RadioButton("Dark" , &uiTheme, 1)) { ImGui::StyleColorsDark();  uiStoreParameter("uiTheme", "dark");  } ImGui::SameLine();
+    //if (ImGui::RadioButton("Classic", &uiTheme, 2)) { ImGui::StyleColorsClassic(); uiStoreParameter("uiTheme", "classic"); } ImGui::SameLine();
+
+    /*ImGui::SetNextItemWidth(100*io.FontGlobalScale);
     if (ImGui::BeginCombo("##UItheme", "Theme", 0)) {
         if (ImGui::RadioButton("Light", &uiTheme, 0)) { ImGui::StyleColorsLight(); uiStoreParameter("uiTheme", "light"); }
         if (ImGui::RadioButton("Dark", &uiTheme, 1)) { ImGui::StyleColorsDark(); uiStoreParameter("uiTheme", "dark"); }
         if (ImGui::RadioButton("Classic", &uiTheme, 2)) { ImGui::StyleColorsClassic(); uiStoreParameter("uiTheme", "classic"); }
         ImGui::EndCombo();
     }
-    ImGui::SameLine();
+    ImGui::SameLine();*/
 
     ImGui::TextUnformatted("Font size:"); ImGui::SameLine();
     //io.FontAllowUserScaling = false;
