@@ -465,6 +465,12 @@ void VRGuiScene::on_toggle_visible(bool b) { getSelected()->setVisible(b); }
 void VRGuiScene::on_toggle_throw_shadow(bool b) { getSelected()->setVisible(b, "SHADOW"); }
 void VRGuiScene::on_toggle_pickable(bool b) { getSelected()->setPickable(b); }
 
+void VRGuiScene::on_select_parent() {
+    auto parent = getSelected()->getParent();
+    uiSignal("treeview_select", {{"treeview","scenegraph"}, {"node",toString(parent->getID())}});
+    //on_treeview_select( toString(parent->getID()) );
+}
+
 // VRGroup
 void VRGuiScene::on_groupsync_clicked() {
     if(!trigger_cbs) return;
@@ -1271,6 +1277,7 @@ VRGuiScene::VRGuiScene() { // TODO: reduce callbacks with templated functions
     mgr->addCallback("sg_menu_newLight", [&](OSG::VRGuiSignals::Options o) { on_menu_add_light( o["ID"] ); return true; }, true );
     mgr->addCallback("sg_menu_newGeometry", [&](OSG::VRGuiSignals::Options o) { on_menu_add<VRGeometry>( o["ID"] ); return true; }, true );
 
+    mgr->addCallback("sg_select_parent", [&](OSG::VRGuiSignals::Options o) { on_select_parent(); return true; }, true );
     mgr->addCallback("sg_toggle_visible", [&](OSG::VRGuiSignals::Options o) { on_toggle_visible(toBool(o["visible"])); return true; }, true );
     mgr->addCallback("sg_toggle_pickable", [&](OSG::VRGuiSignals::Options o) { on_toggle_pickable(toBool(o["pickable"])); return true; }, true );
     mgr->addCallback("sg_toggle_cast_shadow", [&](OSG::VRGuiSignals::Options o) { on_toggle_throw_shadow(toBool(o["castShadow"])); return true; }, true );

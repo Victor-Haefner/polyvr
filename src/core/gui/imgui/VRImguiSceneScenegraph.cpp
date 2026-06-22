@@ -76,7 +76,12 @@ void ImScenegraph::render() {
         ImGui::TextUnformatted(("Object: " + selected).c_str());
         ImGui::Indent(10);
             ImGui::TextUnformatted(("Type: " + objType).c_str());
-            ImGui::TextUnformatted(("Parent: " + parent).c_str());
+            if (parent.size() > 0) {
+                ImGui::AlignTextToFramePadding();
+                ImGui::TextUnformatted("Parent: ");
+                ImGui::SameLine();
+                if (ImGui::Button(parent.c_str())) uiSignal( "sg_select_parent");
+            }
             ImGui::TextUnformatted(("Persistency: " + persistency).c_str());
 
             if (ImGui::Checkbox("visible", &visible)) uiSignal( "sg_toggle_visible", {{"visible",toString(visible)}} );

@@ -168,6 +168,7 @@ class VRGuiScene {
         void on_change_primitive();
         void on_change_group();
 
+        void on_select_parent();
         void on_toggle_liveupdate();
         void on_toggle_visible(bool b);
         void on_toggle_pickable(bool b);

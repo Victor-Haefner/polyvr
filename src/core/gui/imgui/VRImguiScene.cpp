@@ -53,23 +53,23 @@ void ImSceneEditor::begin() {
             setCurrentTab("Scripting");
         }
 
-        if (ImGui::BeginTabItem("Navigation", NULL, flags4)) {
+        /*if (ImGui::BeginTabItem("Navigation", NULL, flags4)) {
             ImGui::Spacing();
             ImGui::BeginChild("NavigationPanel", ImGui::GetContentRegionAvail(), false, flags);
             navigation.render();
             ImGui::EndChild();
             ImGui::EndTabItem();
             setCurrentTab("Navigation");
-        }
+        }*/
 
-        if (ImGui::BeginTabItem("Semantics", NULL, flags5)) {
+        /*if (ImGui::BeginTabItem("Semantics", NULL, flags5)) {
             ImGui::Spacing();
             ImGui::BeginChild("SemanticsPanel", ImGui::GetContentRegionAvail(), false, flags);
             semantics.render();
             ImGui::EndChild();
             ImGui::EndTabItem();
             setCurrentTab("Semantics");
-        }
+        }*/
 
         if (ImGui::BeginTabItem("Network", NULL, flags6)) {
             ImGui::Spacing();
