@@ -299,7 +299,7 @@ void VRPipeSegment::updateResistance(double friction) {
     double fill = max(level, 0.05);
     double rEff = radius * sqrt(fill);
     resistanceLaminar = (8.0 * fluid.viscosity * length) / (Pi * pow(rEff, 4)); // Hagen–Poiseuille resistance
-    resistanceTurbulent = friction * length * fluid.density / ( 4 * radius * pow(area,2));
+    resistanceTurbulent = friction * length * fluid.density / ( 4 * rEff * pow(area,2));
     //cout << " resistance: " << resistance << ", L: " << length << ", f: " << friction << ", D: " << density << ", R: " << radius << ", A: " << area << endl;
     if (resistanceLaminar < 1e-9) resistanceLaminar = 1.0;
     if (resistanceTurbulent < 1e-9) resistanceTurbulent = 1.0;
@@ -2013,17 +2013,18 @@ void VRPipeSystem::computeHeadFlows(double dt) {
     };
 
     auto accellerateFlow = [&](const double& dH, const VRPipeSegmentPtr& pipe, const double& Q, bool halfLength = false) -> double {
-        double dP = dH * pipe->fluid.density * gravity;
         double Aeff = pipe->area * max(pipe->level, 0.01);
         double L = pipe->fluid.density * pipe->length / max(Aeff, 1e-9); // inertance
         double R = pipe->computeEffectiveResistance(Q);
         if (halfLength) { R *= 0.5; L *= 0.5; }
-        double loss = R * Q * pipe->fluid.density * gravity;
 
-        double dQ = (dP-loss) / L;
+        double dP = dH * pipe->fluid.density * gravity;
+        double a = dP/L;
+        double loss = R * Q * pipe->fluid.density * gravity / L;
+
+        double dQ = a-loss;
         double maxStep = 2.0 * abs(dP) / L;
         dQ = clamp(dQ, -maxStep, maxStep); // stability
-
         return Q + dQ*dt;
     };
 
@@ -2302,6 +2303,11 @@ void VRPipeSystem::computeMaxFlows(double dt) {
         }
     };
 
+    auto computeOrificePressureLoss = [&](double A, double Q, double rho) {
+        double v = Q/max(A, 1e-12);
+        return 0.5 * rho * v*v * sign(Q);
+    };
+
     auto copyInitialMaxHead = [&]() {
         for (auto& n : nodes) {
             auto node = n.second;
@@ -2323,9 +2329,29 @@ void VRPipeSystem::computeMaxFlows(double dt) {
                 }
 
                 if (entity->is_a("Valve") || entity->is_a("Pump")) { // includes ControlValve
+                    if (!node->pathOpenings.count(i)) {
+                        e->maxFlow = 0;
+                        continue;
+                    }
+
                     if (node->pathOpenings.count(i)) {
                         double state = node->pathOpenings[i];
-                        e->maxFlow = e->headFlow * state;
+                        double Q = e->flow;
+                        double rho = pipe->fluid.density;
+
+                        double Apipe = pipe->area * max(pipe->level, 0.01);
+                        double Avalve = pipe->area * max(min(pipe->level,state), 0.01);
+
+                        double dPvalve = computeOrificePressureLoss(Avalve, Q, rho);
+                        double dPopen  = computeOrificePressureLoss(Apipe,  Q, rho);
+
+                        double L = rho * pipe->length / max(Apipe, 1e-9);
+                        double valveAccel = (dPvalve - dPopen) / L;
+
+                        double dQ = (e->headFlow - Q)/dt;
+                        dQ -= valveAccel;
+
+                        e->maxFlow = Q + dQ*dt;
                         continue;
                     }
                 }
@@ -2787,7 +2813,9 @@ void VRPipeSystem::radiateHeat(double dt) {
 
         double cWtr = 4200.0;
         double cAir = 1000.0;
-        double U = 10.0; // steel
+
+        auto mat = materials[pipe->materialID];
+        double U = mat->thermalConductance;
 
         double Tenv = env->temperature;
         double mAir = env->volume * 1.2;
