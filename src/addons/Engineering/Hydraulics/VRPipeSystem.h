@@ -24,10 +24,15 @@ class VRFluidComposition {
         };
 
         double temperature = 20.0;
-        double density = 1000.0; // kg / m3
-        double viscosity = 1e-3; // Pa s
+        double effectiveDensity = 1000.0; // kg / m3
+        double effectiveViscosity = 1e-3; // Pa s
+
+        double baseDensity = 1000.0; // kg / m3 at 20 C
+        double baseViscosity = 1e-3; // Pa s at 20 C
 
         map<string, ParticleBin> particles;
+
+        void updateThermalDependencies();
 
         void mixIn(const VRFluidComposition& fluid, const double& percentage);
         void fromEntity(VREntityPtr e);
@@ -203,6 +208,7 @@ class VRPipeSystem : public VRTransform {
         void updatePressurization(double dt);
         void computeFlowMixing(double dt);
         void radiateHeat(double dt);
+        void updateThermalDependencies(double dt);
         void updatePressures(double dt);
         void updateRegimes(double dt);
 
