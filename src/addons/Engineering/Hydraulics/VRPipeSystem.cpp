@@ -589,6 +589,8 @@ void VRPipeSystem::initOntology() {
     ParticleBin->addProperty("volumeFraction", "double");
 
     Tank->addProperty("fluid", FluidComposition);
+    Tank->addProperty("environmentID", "int");
+    Tank->addProperty("materialID", "int");
     Tank->addProperty("pressure", "double");
     Tank->addProperty("initialGasVolume", "double");
     Tank->addProperty("initialGasPressure", "double");
@@ -2802,6 +2804,10 @@ void VRPipeSystem::computeFlowMixing(double dt) {
 }
 
 void VRPipeSystem::radiateHeat(double dt) {
+    double cWtr = 4200.0;
+    double cAir = 1000.0;
+    double rhoAir = 1.2; // kg/m3
+
     for (auto s : segments) {
         auto& pipe = s.second;
         auto envID = pipe->environmentID;
@@ -2811,14 +2817,11 @@ void VRPipeSystem::radiateHeat(double dt) {
         double V = pipe->volume*pipe->level;
         double mWtr = pipe->fluid.density * V;
 
-        double cWtr = 4200.0;
-        double cAir = 1000.0;
-
         auto mat = materials[pipe->materialID];
         double U = mat->thermalConductance;
 
         double Tenv = env->temperature;
-        double mAir = env->volume * 1.2;
+        double mAir = env->volume * rhoAir;
         double T = pipe->fluid.temperature;
         double Q = U * A * (Tenv - T) * dt;
 
@@ -2827,6 +2830,47 @@ void VRPipeSystem::radiateHeat(double dt) {
 
         pipe->fluid.temperature += Q/mWtr/cWtr;
         env->temperature -= Q/mAir/cAir;
+    }
+
+    for (auto& n : nodes) {
+        auto node = n.second;
+        auto entity = node->entity;
+        if (!entity || !entity->is_a("Tank")) continue;
+
+        VREntityPtr fe = entity->getEntity("fluid");
+        if (!fe) continue;
+
+        VRFluidComposition fluid;
+        fluid.fromEntity(fe);
+
+        double tankArea   = entity->getValue("area", 0.0);
+        double tankHeight = entity->getValue("height", 0.0);
+        double tankLevel  = entity->getValue("level", 1.0);
+        double tankOpen   = entity->getValue("isOpen", 1.0);
+        double envID      = entity->getValue("environmentID", 0);
+        double matID      = entity->getValue("materialID", 0);
+
+        auto env = environments[envID];
+        auto mat = materials[matID];
+
+        double V = tankArea * tankHeight * tankLevel;
+        double mWtr = fluid.density * V;
+        double mAir = env->volume * rhoAir;
+        if (mAir < 1e-6) continue;
+        if (mWtr < 1e-6) continue;
+
+        double perimeter = 4 * sqrt(max(tankArea, 0.0));
+        double hWet = tankHeight * tankLevel;
+        double A = perimeter * hWet + tankArea;
+        if (!tankOpen && tankLevel > 0.99) A += tankArea; // add top if tank closed and full
+
+
+        double U = mat->thermalConductance;
+        double Q = U * A * (env->temperature - fluid.temperature) * dt;
+
+        fluid.temperature += Q / (mWtr * cWtr);
+        env->temperature  -= Q / (mAir * cAir);
+        fluid.toEntity(fe);
     }
 }
 
