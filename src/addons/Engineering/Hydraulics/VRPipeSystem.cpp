@@ -1109,6 +1109,7 @@ void VRPipeSystem::updateVisual() {
                 else if (l == "d") { col1 = yellow; col2 = yellow; }
                 else if (l == "v") { col1 = blue; col2 = blue; }
                 else if (l == "n") { col1 = white; col2 = green; }
+                else if (l == "c") { col1 = green; col2 = green; }
                 else if (l == "h") { col1 = green; col2 = green; }
                 else continue;
 
@@ -1308,6 +1309,11 @@ void VRPipeSystem::updateVisual() {
         if (t2 > 0) c2 = Color3f(0, 0, 1-t2); // below 1 bar
         else c2 = Color3f(-t2*S, 0, 1+t2*S);
 
+        float cl1 = e1->flowClamp;
+        float cl2 = e2->flowClamp;
+        Color3f cc1 = Color3f(cl1, 1.0-cl1, 0);
+        Color3f cc2 = Color3f(cl2, 1.0-cl2, 0);
+
         // density
         float D = 1.0; // color scale above 1
         Color3f cd;
@@ -1332,6 +1338,7 @@ void VRPipeSystem::updateVisual() {
             else if (l == "d") { col1 = cd; col2 = cd; }
             else if (l == "v") { col1 = cf; col2 = cf; }
             else if (l == "n") { col1 = white; col2 = green; }
+            else if (l == "c") { col1 = cc1; col2 = cc2; }
             else if (l == "h") {
                 col1 = green; col2 = green;
                 auto p1 = dataSegments.getPosition(iSegments)  ; p1[1] = h1; dataSegments.setPos(iSegments  , p1);
@@ -2124,11 +2131,13 @@ void VRPipeSystem::computeMaxFlows(double dt) {
     double eps = 1e-11;
     auto sign = [](double v) { return (v > 0) - (v < 0); };
 
-    auto clampFlow = [&](double& flow, double c) -> double {
-        double f = abs(flow);
-        flow = c;
-        if (f > 1e-9) return clamp(1.0 - abs(c) / f, 0.0, 1.0);
-        return 0.0;
+    //auto clampFlow = [&](double& flow, double c) -> double {
+    auto clampFlow = [&](const VRPipeEndPtr& e, double flow) {
+        double f = abs(e->maxFlow);
+        e->maxFlow = flow;
+        double c = 0.0;
+        if (f > 1e-6) c = clamp(1.0 - abs(flow) / f, 0.0, 1.0);
+        e->flowClamp = max(c, e->flowClamp);
     };
 
     //cout << "computeMaxFlows" << endl;
@@ -2211,8 +2220,7 @@ void VRPipeSystem::computeMaxFlows(double dt) {
         //if (hflow > 0 && e1->pressurized) hflow = min(flow1, hflow);
         //if (hflow < 0 && e2->pressurized) hflow =-min(flow2,-hflow);
 
-        e->maxFlow = flow;
-        e->flowClamp = clampFlow(e->maxFlow, flow);
+        clampFlow(e, flow);
         return pfChanged;
     };
 
@@ -2229,8 +2237,8 @@ void VRPipeSystem::computeMaxFlows(double dt) {
 
         for (auto& e : ends) {
             auto f = e->maxFlow;
-            if (f < 0) e->flowClamp = clampFlow(e->maxFlow, f * scaleFlowInOut[1]);
-            else e->flowClamp = clampFlow(e->maxFlow, f * scaleFlowInOut[0]);
+            if (f < 0) clampFlow(e, f * scaleFlowInOut[1]);
+            else clampFlow(e, f * scaleFlowInOut[0]);
         }
     };
 
@@ -2278,7 +2286,7 @@ void VRPipeSystem::computeMaxFlows(double dt) {
                     if (totalFlowOut > Qp) { // more flow out than piston flow, clamp flow out!
                         for (auto& e : {e1, e2}) {
                             auto f = e->maxFlow;
-                            if (f < 0) e->flowClamp = clampFlow(e->maxFlow, -Qp);
+                            if (f < 0) clampFlow(e, -Qp);
                         }
                     }
                 }
@@ -2310,7 +2318,7 @@ void VRPipeSystem::computeMaxFlows(double dt) {
                         double s = abs(totalFlowIn) / totalFlowOut;
                         for (auto& e : node->pipes) {
                             auto f = e->maxFlow;
-                            if (f < 0) e->flowClamp = clampFlow(e->maxFlow, e->maxFlow*s);
+                            if (f < 0) clampFlow(e, f*s);
                         }
                     }
                 }
@@ -2326,7 +2334,7 @@ void VRPipeSystem::computeMaxFlows(double dt) {
                 for (size_t i=0; i<ends.size(); i++) { // handle ends without paths/groups
                     if (!endsGroup.count(i)) {
                         auto& e = ends[i];
-                        e->flowClamp = clampFlow(e->maxFlow, 0.0);
+                        clampFlow(e, 0.0);
                     }
                 }
 
@@ -2362,8 +2370,8 @@ void VRPipeSystem::computeMaxFlows(double dt) {
 
             for (auto& e : {e1, e2}) {
                 auto f = e->maxFlow;
-                if (f < 0) e->flowClamp = clampFlow(e->maxFlow, f * scaleFlowInOut[0]);
-                else e->flowClamp = clampFlow(e->maxFlow, f * scaleFlowInOut[1]);
+                if (f < 0) clampFlow(e, f * scaleFlowInOut[0]);
+                else clampFlow(e, f * scaleFlowInOut[1]);
                 if (abs(e->maxFlow-f) > 1e-7) needsIteration = true;
             }
 
@@ -2379,10 +2387,7 @@ void VRPipeSystem::computeMaxFlows(double dt) {
 
                 if (totalFlowOut > totalFlowIn) {
                     for (auto& e : {e1, e2}) {
-                        if (e->maxFlow > 0) {
-                            e->maxFlow = totalFlowIn;
-                            e->flowClamp = clampFlow(e->maxFlow, totalFlowIn);
-                        }
+                        if (e->maxFlow > 0) clampFlow(e, totalFlowIn);
                     }
                     needsIteration = true;
                 }
@@ -2412,14 +2417,14 @@ void VRPipeSystem::computeMaxFlows(double dt) {
                     auto nPos = graph->getPosition(n.first)->pos();
                     double fluidHeight = (tankLevel-0.5)*tankHeight + nPos[1];
                     if (e->height > fluidHeight && e->headFlow < 0) {
-                        e->flowClamp = clampFlow(e->maxFlow, 0);
+                        clampFlow(e, 0);
                         continue; // pipe end above water level cant drain tank!
                     }
                 }
 
                 if (entity->is_a("Valve") || entity->is_a("Pump")) { // includes ControlValve
                     if (!node->pathOpenings.count(i)) {
-                        e->flowClamp = clampFlow(e->maxFlow, 0);
+                        clampFlow(e, 0);
                         continue;
                     }
 
@@ -2440,7 +2445,7 @@ void VRPipeSystem::computeMaxFlows(double dt) {
                         double dQ = (e->headFlow - Q)/dt;
                         dQ -= valveAccel;
 
-                        e->flowClamp = clampFlow(e->maxFlow, Q + dQ*dt);
+                        clampFlow(e, Q + dQ*dt);
                         continue;
                     }
                 }
@@ -2452,6 +2457,20 @@ void VRPipeSystem::computeMaxFlows(double dt) {
         for (auto& n : nodes) {
             for (auto& e : n.second->pipes) {
                 e->flow = e->maxFlow;
+            }
+        }
+    };
+
+    auto rescaleFlowClamp = [&]() {
+        double mfc = 0.0;
+        for (auto& n : nodes) {
+            for (auto& e : n.second->pipes) {
+                mfc = max(mfc, e->flowClamp);
+            }
+        }
+        for (auto& n : nodes) {
+            for (auto& e : n.second->pipes) {
+                e->flowClamp /= mfc;
             }
         }
     };
@@ -2494,6 +2513,7 @@ void VRPipeSystem::computeMaxFlows(double dt) {
     }
 
     copyFinalMaxHead();
+    rescaleFlowClamp();
     //checkNodeFlows();
 }
 
