@@ -615,6 +615,7 @@ void VRPipeSystem::initOntology() {
     Tank->addProperty("environmentID", "int");
     Tank->addProperty("materialID", "int");
     Tank->addProperty("pressure", "double");
+    Tank->addProperty("pressurized", "double");
     Tank->addProperty("initialGasVolume", "double");
     Tank->addProperty("initialGasPressure", "double");
     Tank->addProperty("area", "double");
@@ -1720,6 +1721,8 @@ void VRPipeSystem::assignBoundaryPressures(double dt) {
             double tankLevel = entity->getValue("level", 1.0);
             double tankDensity = tFluid.effectiveDensity;
             bool tankOpen = entity->getValue("isOpen", false);
+            bool tankPressurized = entity->getValue("pressurized", false);
+            if (tankPressurized) continue; // just a full tank
 
             double tankPressure = entity->getValue("pressure", atmosphericPressure);
             if (tankOpen) tankPressure = atmosphericPressure;
@@ -1767,9 +1770,17 @@ void VRPipeSystem::assignBoundaryPressures(double dt) {
         auto e2 = pipe->end2.lock();
         if (pipe->pressurized && e1->pressurized && e2->pressurized) continue;
 
-        if (!pipe->pressurized) { pipe->hydraulicHead = pipe->fluidLvl; continue; }
+        if (!pipe->pressurized) {
+            //cout << " set unpressurized pipe head to " << pipe->fluidLvl << endl;
+            pipe->hydraulicHead = pipe->fluidLvl;
+            continue;
+        }
         //if (pipe->eID == 48) cout << " pipe48 fluidLvl: " << pipe->fluidLvl << ", head: " << pipe->hydraulicHead << endl;
-        pipe->hydraulicHead = max(pipe->hydraulicHead, pipe->fluidLvl);
+
+        if (pipe->fluidLvl > pipe->hydraulicHead) {
+            //cout << " set pressurized pipe head to " << pipe->fluidLvl << endl;
+            pipe->hydraulicHead = pipe->fluidLvl;
+        }
     }
 }
 
@@ -1936,6 +1947,22 @@ void VRPipeSystem::solveNodeHeads(double dt) {
         return true;
     };
 
+    auto processTank = [&](VRPipeNodePtr node, VREntityPtr entity, double& maxHeadDelta) -> bool {
+        bool io = entity->getValue("isOpen", false);
+        bool tankPressurized = entity->getValue("pressurized", false);
+        if ( io ) return true; // open to atmosphere
+        if ( !tankPressurized ) return true; // pressure tank with gas pocket
+        /*cout << " averageOverPipes tank node " << node->nID;
+        for (auto e : node->pipes) {
+            if (!e) continue;
+            auto pipe = e->pipe.lock();
+            if (!pipe) continue;
+            cout << ", eH: " << e->hydraulicHead << " pH: " << pipe->hydraulicHead;
+        }*/
+        averageOverPipes(node->pipes, maxHeadDelta);
+        return true;
+    };
+
     double maxHeadDelta = 1; // convergence criteria
     double eps = 0.01;
     for (int i=0; maxHeadDelta>eps && i<50; i++) {
@@ -1945,9 +1972,8 @@ void VRPipeSystem::solveNodeHeads(double dt) {
             auto node = n.second;
             auto entity = node->entity;
 
-            if (entity->is_a("Outlet")) continue; // already prescribed
-            if (entity->is_a("Tank") && entity->getValue("isOpen", false)) continue; // already prescribed
-
+            if (entity->is_a("Outlet")) continue; // open to atmosphere
+            if (entity->is_a("Tank") && processTank(node, entity, maxHeadDelta)) continue;
             if (entity->is_a("Pump") && processPumpHeads(node->pipes, entity, maxHeadDelta)) continue;
             if (entity->is_a("ControlValve") && processControlValve(node, entity, maxHeadDelta)) continue;
             else if (entity->is_a("Valve") && processValve(node->pipes, entity, maxHeadDelta)) continue;
@@ -2098,6 +2124,13 @@ void VRPipeSystem::computeMaxFlows(double dt) {
     double eps = 1e-11;
     auto sign = [](double v) { return (v > 0) - (v < 0); };
 
+    auto clampFlow = [&](double& flow, double c) -> double {
+        double f = abs(flow);
+        flow = c;
+        if (f > 1e-9) return clamp(1.0 - abs(c) / f, 0.0, 1.0);
+        return 0.0;
+    };
+
     //cout << "computeMaxFlows" << endl;
     auto computeContainerFlowScaling = [&](double volAir, double volWater, double flowIn, double flowOut, bool pressurized) {
         double totalFlow = flowIn - flowOut;
@@ -2179,6 +2212,7 @@ void VRPipeSystem::computeMaxFlows(double dt) {
         //if (hflow < 0 && e2->pressurized) hflow =-min(flow2,-hflow);
 
         e->maxFlow = flow;
+        e->flowClamp = clampFlow(e->maxFlow, flow);
         return pfChanged;
     };
 
@@ -2195,8 +2229,8 @@ void VRPipeSystem::computeMaxFlows(double dt) {
 
         for (auto& e : ends) {
             auto f = e->maxFlow;
-            if (f < 0) e->maxFlow = f * scaleFlowInOut[1];
-            else e->maxFlow = f * scaleFlowInOut[0];
+            if (f < 0) e->flowClamp = clampFlow(e->maxFlow, f * scaleFlowInOut[1]);
+            else e->flowClamp = clampFlow(e->maxFlow, f * scaleFlowInOut[0]);
         }
     };
 
@@ -2244,7 +2278,7 @@ void VRPipeSystem::computeMaxFlows(double dt) {
                     if (totalFlowOut > Qp) { // more flow out than piston flow, clamp flow out!
                         for (auto& e : {e1, e2}) {
                             auto f = e->maxFlow;
-                            if (f < 0) e->maxFlow = -Qp;
+                            if (f < 0) e->flowClamp = clampFlow(e->maxFlow, -Qp);
                         }
                     }
                 }
@@ -2261,6 +2295,25 @@ void VRPipeSystem::computeMaxFlows(double dt) {
                 double nodeAirVolume = tankVolume * (1.0-tankLevel);
                 double nodeWaterVolume = tankVolume * tankLevel;
                 rebalanceEndsGroupFlow(node->pipes, nodeAirVolume, nodeWaterVolume);
+
+                bool tankPressurized = entity->getValue("pressurized", false);
+                if (tankPressurized) {
+                    double totalFlowIn = 0;
+                    double totalFlowOut = 0;
+                    for (auto& e : node->pipes) {
+                        auto f = e->maxFlow;
+                        if (f < 0) totalFlowOut += -f;
+                        else totalFlowIn += f;
+                    }
+
+                    if (totalFlowOut > abs(totalFlowIn)) { // more flow out than flow in, clamp flow out!
+                        double s = abs(totalFlowIn) / totalFlowOut;
+                        for (auto& e : node->pipes) {
+                            auto f = e->maxFlow;
+                            if (f < 0) e->flowClamp = clampFlow(e->maxFlow, e->maxFlow*s);
+                        }
+                    }
+                }
                 continue;
             }
 
@@ -2271,7 +2324,10 @@ void VRPipeSystem::computeMaxFlows(double dt) {
 
 
                 for (size_t i=0; i<ends.size(); i++) { // handle ends without paths/groups
-                    if (!endsGroup.count(i)) ends[i]->maxFlow = 0.0;
+                    if (!endsGroup.count(i)) {
+                        auto& e = ends[i];
+                        e->flowClamp = clampFlow(e->maxFlow, 0.0);
+                    }
                 }
 
                 for (auto& g : endGroups) {
@@ -2306,8 +2362,8 @@ void VRPipeSystem::computeMaxFlows(double dt) {
 
             for (auto& e : {e1, e2}) {
                 auto f = e->maxFlow;
-                if (f < 0) e->maxFlow = f * scaleFlowInOut[0];
-                else e->maxFlow = f * scaleFlowInOut[1];
+                if (f < 0) e->flowClamp = clampFlow(e->maxFlow, f * scaleFlowInOut[0]);
+                else e->flowClamp = clampFlow(e->maxFlow, f * scaleFlowInOut[1]);
                 if (abs(e->maxFlow-f) > 1e-7) needsIteration = true;
             }
 
@@ -2323,7 +2379,10 @@ void VRPipeSystem::computeMaxFlows(double dt) {
 
                 if (totalFlowOut > totalFlowIn) {
                     for (auto& e : {e1, e2}) {
-                        if (e->maxFlow > 0) e->maxFlow = totalFlowIn;
+                        if (e->maxFlow > 0) {
+                            e->maxFlow = totalFlowIn;
+                            e->flowClamp = clampFlow(e->maxFlow, totalFlowIn);
+                        }
                     }
                     needsIteration = true;
                 }
@@ -2344,6 +2403,8 @@ void VRPipeSystem::computeMaxFlows(double dt) {
             for (size_t i=0; i<node->pipes.size(); i++) {
                 auto& e = node->pipes[i];
                 auto pipe = e->pipe.lock();
+                e->flowClamp = 0.0;
+                e->maxFlow = e->headFlow;
 
                 if (entity->is_a("Tank")) {
                     double tankLevel = entity->getValue("level", 1.0);
@@ -2351,14 +2412,14 @@ void VRPipeSystem::computeMaxFlows(double dt) {
                     auto nPos = graph->getPosition(n.first)->pos();
                     double fluidHeight = (tankLevel-0.5)*tankHeight + nPos[1];
                     if (e->height > fluidHeight && e->headFlow < 0) {
-                        e->maxFlow = 0;
+                        e->flowClamp = clampFlow(e->maxFlow, 0);
                         continue; // pipe end above water level cant drain tank!
                     }
                 }
 
                 if (entity->is_a("Valve") || entity->is_a("Pump")) { // includes ControlValve
                     if (!node->pathOpenings.count(i)) {
-                        e->maxFlow = 0;
+                        e->flowClamp = clampFlow(e->maxFlow, 0);
                         continue;
                     }
 
@@ -2379,12 +2440,10 @@ void VRPipeSystem::computeMaxFlows(double dt) {
                         double dQ = (e->headFlow - Q)/dt;
                         dQ -= valveAccel;
 
-                        e->maxFlow = Q + dQ*dt;
+                        e->flowClamp = clampFlow(e->maxFlow, Q + dQ*dt);
                         continue;
                     }
                 }
-
-                e->maxFlow = e->headFlow;
             }
         }
     };
@@ -2594,8 +2653,13 @@ void VRPipeSystem::updatePressurization(double dt) {
             // update pipes not submerged by fluid level
             double tankHeight = entity->getValue("height", 0.0);
             double level = entity->getValue("level", 0.0);
+            bool tankOpen = entity->getValue("isOpen", false);
             auto nPos = graph->getPosition(n.first)->pos();
             double fluidHeight = (level-0.5)*tankHeight + nPos[1];
+
+            if (tankOpen) entity->set("pressurized", toString(false));
+            else checkChamberPressure(entity, level, "pressurized");
+
             for (auto& e : node->pipes) {
                 if (e->height > fluidHeight) e->pressurized = false;
             }

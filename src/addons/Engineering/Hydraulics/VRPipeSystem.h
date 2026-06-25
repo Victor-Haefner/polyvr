@@ -59,6 +59,7 @@ class VRPipeEnd {
         double headFlow = 0.0;
         double maxFlow = 0.0;
         double flow = 0.0;
+        double flowClamp = 0.0;
 
         VRFluidComposition fluid;
 
