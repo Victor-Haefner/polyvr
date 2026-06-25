@@ -1971,7 +1971,8 @@ void VRPipeSystem::solveNodeHeads(double dt) {
     };
 
     double maxHeadDelta = 1; // convergence criteria
-    double eps = 0.01;
+    double eps = 1e-6;
+    int i=0;
     for (int i=0; maxHeadDelta>eps && i<50; i++) {
         maxHeadDelta = 0;
 
@@ -2016,6 +2017,8 @@ void VRPipeSystem::solveNodeHeads(double dt) {
             pipe->hydraulicHead = newHead;
         }
     }
+
+    //cout << i << ", " << eps << endl;
 
     // copy state vars
     for (auto& n : nodes) {
@@ -2468,6 +2471,8 @@ void VRPipeSystem::computeMaxFlows(double dt) {
                 mfc = max(mfc, e->flowClamp);
             }
         }
+        if (mfc < 1e-12) return;
+
         for (auto& n : nodes) {
             for (auto& e : n.second->pipes) {
                 e->flowClamp /= mfc;
