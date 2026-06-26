@@ -54,6 +54,7 @@ class VRPipeEnd {
 
         double pressure = 0.0;
         double hydraulicHead = 0.0;
+        int stateID = -1;
         bool pressurized = false;
 
         double headFlow = 0.0;
@@ -92,6 +93,7 @@ class VRPipeSegment {
         double regime = 1.0; // 0 laminar, 1 turbulent
         double level = 0.0;
         double hydraulicHead = 0.0;
+        int stateID = -1;
         double lastVizLevel = -1.0;
         bool pressurized = false;
         bool flowBlocked = false;
@@ -202,6 +204,7 @@ class VRPipeSystem : public VRTransform {
 
         void updateNodePaths();
         void assignBoundaryPressures(double dt);
+        void solveNodeHeadsOld(double dt);
         void solveNodeHeads(double dt);
         void computeHeadFlows(double dt);
         void computeMaxFlows(double dt);

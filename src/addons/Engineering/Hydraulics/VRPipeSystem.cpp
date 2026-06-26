@@ -1792,6 +1792,401 @@ void VRPipeSystem::assignBoundaryPressures(double dt) {
 }
 
 void VRPipeSystem::solveNodeHeads(double dt) {
+    struct Solver {
+        int N = 0;
+        vector<vector<double>>  A;
+        vector<double>          x;
+        vector<double>          b;
+
+        Solver(int n)
+            : N(n)
+            , A(n, vector<double>(n, 0.0))
+            , x(n)
+            , b(n, 0.0)
+        {}
+    };
+
+    auto solveLinearSystem = [](vector<vector<double>> A, vector<double> b, vector<double>& x) -> bool {
+        int N = b.size();
+        x.assign(N, 0.0);
+
+        double eps = 1e-12;
+
+        for (int i = 0; i < N; i++) {
+            // Find best pivot row.
+            int pivot = i;
+            double maxAbs = abs(A[i][i]);
+
+            for (int r = i + 1; r < N; r++) {
+                double v = abs(A[r][i]);
+                if (v > maxAbs) {
+                    maxAbs = v;
+                    pivot = r;
+                }
+            }
+
+            // Singular / underconstrained system.
+            if (maxAbs < eps) {
+                cout << "solveLinearSystem failed, singular at row " << i << endl;
+                return false;
+            }
+
+            // Move pivot row to current row.
+            if (pivot != i) {
+                swap(A[i], A[pivot]);
+                swap(b[i], b[pivot]);
+            }
+
+            // Normalize pivot row.
+            double div = A[i][i];
+            for (int c = i; c < N; c++) A[i][c] /= div;
+            b[i] /= div;
+
+            // Eliminate this variable from all other rows.
+            for (int r = 0; r < N; r++) {
+                if (r == i) continue;
+
+                double f = A[r][i];
+                if (abs(f) < eps) continue;
+
+                for (int c = i; c < N; c++) {
+                    A[r][c] -= f * A[i][c];
+                }
+
+                b[r] -= f * b[i];
+            }
+        }
+
+        // After Gauss-Jordan, A is identity, so b is the solution.
+        x = b;
+        return true;
+    };
+
+    auto distributeStateIDs = [&]() {
+        int i = 0;
+        for (auto& s : segments) { // set state IDs
+            auto& pipe = s.second;
+            auto e1 = pipe->end1.lock();
+            auto e2 = pipe->end2.lock();
+            pipe->stateID = i+0;
+            e1->stateID   = i+1;
+            e2->stateID   = i+2;
+            i += 3;
+        }
+    };
+
+    auto buildStateVector = [&](vector<double>& x) {
+        for (auto& s : segments) { // build state vector
+            auto& pipe = s.second;
+            auto e1 = pipe->end1.lock();
+            auto e2 = pipe->end2.lock();
+            x[pipe->stateID] = pipe->hydraulicHead;
+            x[e1->stateID]   = e1->hydraulicHead;
+            x[e2->stateID]   = e2->hydraulicHead;
+        }
+    };
+
+    auto updateHeads = [&](vector<double>& x) {
+        for (auto& s : segments)  { // update heads
+            auto& pipe = s.second;
+            auto e1 = pipe->end1.lock();
+            auto e2 = pipe->end2.lock();
+            pipe->hydraulicHead = x[pipe->stateID];
+            e1->hydraulicHead   = x[e1->stateID];
+            e2->hydraulicHead   = x[e2->stateID];
+        }
+    };
+
+    auto computePumpHead = [&](VREntityPtr entity, double flow) {
+        double mH = entity->getValue("maxHead", 0.0);
+        double mQ = entity->getValue("maxFlow", 1.0);
+        double e = entity->getValue("curveExponent", 2.0);
+        double H = mH * ( 1.0 - pow(flow / mQ,e) );
+        //cout << "computePumpHead Q: " << flow << ", H " << H << ", e " << e << endl;
+        return H;
+    };
+
+    auto setDirichlet = [&](Solver& solver, int i, double H) {
+        for (int j = 0; j < solver.N; j++) solver.A[i][j] = 0.0;
+        solver.A[i][i] = 1.0;
+        solver.b[i] = H;
+    };
+
+    auto addFlowBalance = [&](Solver& solver, vector<VRPipeEndPtr> ends) { // sum(Qi) = 0
+        vector<pair<int,double>> links;
+        double Gsum = 0.0;
+
+        for (auto e : ends) {
+            auto pipe = e->pipe.lock();
+            double R = pipe->computeEffectiveResistance(e->flow);
+            double G = 2.0 / max(R, 1e-9);
+            Gsum += G;
+            links.push_back({ pipe->stateID, G });
+        }
+
+        for (auto e : ends) {
+            int i = e->stateID;
+            solver.A[i][i] += Gsum;
+            solver.b[i] = 0.0;
+            for (auto& l : links) solver.A[i][l.first] -= l.second;
+        }
+    };
+
+    auto balancePipeFlow = [&](Solver& solver, int centerID, vector<pair<int,double>> links) { // sum(Qi) = 0
+        // links: {neighborStateID, conductance}
+
+        double Gsum = 0.0;
+
+        for (auto& l : links) {
+            int j = l.first;
+            double G = l.second;
+
+            Gsum += G;
+            solver.A[centerID][j] -= G;
+        }
+
+        solver.A[centerID][centerID] += Gsum;
+        solver.b[centerID] = 0.0;
+    };
+
+    auto addDeadEnd = [&](Solver& solver, VRPipeEndPtr e) {
+        auto pipe = e->pipe.lock();
+        int i = e->stateID;
+        int pi = pipe->stateID;
+
+        solver.A[i][i]  =  1.0;
+        solver.A[i][pi] = -1.0;
+    };
+
+    auto addChamberFlow = [&](Solver& solver, VRPipeEndPtr e, double Qdes) {
+        auto pipe = e->pipe.lock();
+
+        int i  = e->stateID;
+        int pi = pipe->stateID;
+
+        double R = pipe->computeEffectiveResistance(e->flow);
+        double G = 2.0 / max(R, 1e-9); // half-pipe conductance
+
+        // Desired flow:
+        //
+        //   Qdes = G * (Hpipe - Hend)
+        //
+        // Therefore:
+        //
+        //   Hend - Hpipe = -Qdes / G
+
+        solver.A[i][i]  =  1.0;
+        solver.A[i][pi] = -1.0;
+        solver.b[i]     = -Qdes / G;
+    };
+
+    Solver solver(segments.size()*3);
+
+    distributeStateIDs();
+    buildStateVector(solver.x);
+
+    for (auto& s : segments) {
+        auto& pipe = s.second;
+        auto e1 = pipe->end1.lock();
+        auto e2 = pipe->end2.lock();
+
+        int p  = pipe->stateID;
+        int i1 = e1->stateID;
+        int i2 = e2->stateID;
+
+        double R = pipe->computeEffectiveResistance(e1->flow);
+        double G = 2.0 / max(R, 1e-9);
+
+        if (pipe->pressurized) { // Q1 + Q2 = 0 -> G(Hpipe - H1) + G(Hpipe - H2) = 0
+            balancePipeFlow(solver, p, { { i1, G }, { i2, G } });
+        } else {
+            setDirichlet(solver, p,pipe->fluidLvl);
+        }
+    }
+
+    for (auto& n : nodes) {
+        auto node = n.second;
+        auto entity = node->entity;
+        if (!entity) continue;
+        auto& ends = node->pipes;
+
+        if (entity->is_a("Outlet")) {
+            for (auto e : node->pipes) setDirichlet(solver, e->stateID, e->hydraulicHead);
+            continue;
+        }
+
+        if (entity->is_a("Tank")) {
+            bool io = entity->getValue("isOpen", false);
+            bool tankPressurized = entity->getValue("pressurized", false);
+
+            if (io || !tankPressurized) {
+                for (auto e : ends) {
+                     setDirichlet(solver, e->stateID, e->hydraulicHead);
+                }
+                continue;
+            }
+
+            addFlowBalance(solver, ends);
+            continue;
+        }
+
+        if (entity->is_a("Pump")) {
+            if (ends.size() == 2) {
+                auto e1 = ends[0]; // suction
+                auto e2 = ends[1]; // discharge
+
+                auto pS = e1->pipe.lock();
+                auto pD = e2->pipe.lock();
+
+                int s  = e1->stateID;
+                int d  = e2->stateID;
+                int ps = pS->stateID;
+                int pd = pD->stateID;
+
+                double RS = pS->computeEffectiveResistance(e1->flow);
+                double RD = pD->computeEffectiveResistance(e2->flow);
+
+                double GS = 2.0 / max(RS, 1e-9); // half-pipe conductance
+                double GD = 2.0 / max(RD, 1e-9);
+
+                double control  = entity->getValue("control", 0.0);
+                double state    = entity->getValue("state", 0.0);
+                double rampTime = entity->getValue("rampTime", 0.5);
+                bool   isOpen   = entity->getValue("isOpen", false);
+
+                double alpha = clamp(dt / max(rampTime, 1e-9), 0.0, 1.0);
+                state += ((control > state) - (control < state)) * alpha;
+                state = clamp(state, 0.0, 1.0);
+                entity->set("newState", toString(state, 12));
+
+                if (state < 1e-3 && !isOpen) {
+                    // Pump closed: no flow through either pump port.
+                    //
+                    // QS = 0 -> HS = HpipeS
+                    // QD = 0 -> HD = HpipeD
+                    addDeadEnd(solver, e1);
+                    addDeadEnd(solver, e2);
+                    continue;
+                }
+
+                double pumpGain = 0.0;
+
+                if (state >= 1e-3) {
+                    // For now, use previous timestep flow for pump curve.
+                    // This matches your old solver behavior.
+                    double qPump = max(0.0, e1->flow);
+
+                    double pumpHead = computePumpHead(entity, qPump);
+                    pumpGain = state * max(0.0, pumpHead);
+                }
+
+                // Equation 1: pump continuity
+                //
+                // GS(HS - HpipeS) + GD(HD - HpipeD) = 0
+                solver.A[s][s]  += GS;
+                solver.A[s][ps] -= GS;
+                solver.A[s][d]  += GD;
+                solver.A[s][pd] -= GD;
+
+                // Equation 2: pump head jump
+                //
+                // HD - HS = pumpGain
+                //
+                // If pump is off but open, pumpGain = 0, so this becomes HD = HS.
+                solver.A[d][d] =  1.0;
+                solver.A[d][s] = -1.0;
+                solver.b[d] = pumpGain;
+
+                continue;
+            }
+        }
+
+        if (entity->is_a("Cylinder")) {
+            if (ends.size() == 2) {
+                auto& e1 = ends[0];
+                auto& e2 = ends[1];
+                bool chamber1Pressurized = entity->getValue("pressurized1", true);
+                bool chamber2Pressurized = entity->getValue("pressurized2", true);
+
+                double v = entity->getValue("pistonSpeed", 0.0);
+                double A = entity->getValue("area", 0.0);
+                double Q = v*A;
+
+                if (chamber1Pressurized) {
+                    addChamberFlow(solver, e1,  Q);
+                } else {
+                    // assignBoundaryPressures() already set this to the free-surface head.
+                    setDirichlet(solver, e1->stateID, e1->hydraulicHead);
+                }
+
+                if (chamber2Pressurized) {
+                    addChamberFlow(solver, e2, -Q);
+                } else {
+                    // assignBoundaryPressures() already set this to the free-surface head.
+                    setDirichlet(solver, e2->stateID, e2->hydraulicHead);
+                }
+                continue;
+            }
+
+            addFlowBalance(solver, ends);
+            continue;
+        }
+
+        if (entity->is_a("ControlValve")) {
+            auto& endsGroup = node->endsGroup;
+            auto& endGroups = node->endGroups;
+
+            for (size_t i=0; i<ends.size(); i++) { // handle ends without paths/groups
+                if (!endsGroup.count(i)) addDeadEnd(solver, ends[i]);
+            }
+
+            for (auto& g : endGroups) {
+                addFlowBalance(solver, g.second);
+            }
+            continue;
+        }
+
+        if (entity->is_a("Valve")) {
+            if (ends.size() == 2) {
+                double x = entity->getValue("state", 0.0);
+                if (x < 1e-3) {
+                    addDeadEnd(solver, ends[0]);
+                    addDeadEnd(solver, ends[1]);
+                    continue;
+                }
+            }
+
+            addFlowBalance(solver, ends);
+            continue;
+        }
+
+        if (entity->is_a("Junction")) {
+            addFlowBalance(solver, ends);
+            continue;
+        }
+
+        cout << "Warning: unhandled node in solve heads: " << entity->toString() << endl;
+        addFlowBalance(solver, ends);
+    }
+
+    bool ok = solveLinearSystem(solver.A,solver.b,solver.x);
+    if (!ok) cout << " Error, solveNodeHeads::solveLinearSystem failed!" << endl;
+    updateHeads(solver.x);
+
+    for (auto& n : nodes) {
+        auto node = n.second;
+        auto entity = node->entity;
+        if (!entity) continue;
+
+        if (entity->is_a("Pump")) {
+            double ns = entity->getValue("newState", 0.0);
+            entity->set("state", toString(ns,12));
+            //cout << " pump state " << ns << ", ctrol " << c << " dt " << dt << endl;
+        }
+    }
+}
+
+void VRPipeSystem::solveNodeHeadsOld(double dt) {
     auto sign = [](double v) { return (v > 0) - (v < 0); };
 
     auto simpleAverage = [&](const vector<VRPipeEndPtr>& ends) -> double {
