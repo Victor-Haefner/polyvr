@@ -1806,7 +1806,11 @@ void VRPipeSystem::solveNodeHeads(double dt) {
         {}
     };
 
-    auto solveLinearSystem = [](vector<vector<double>> A, vector<double> b, vector<double>& x) -> bool {
+    auto solveLinearSystem = [](Solver& solver) -> bool {
+        auto& A = solver.A;
+        auto& b = solver.b;
+        auto& x = solver.x;
+
         int N = b.size();
         x.assign(N, 0.0);
 
@@ -1978,6 +1982,70 @@ void VRPipeSystem::solveNodeHeads(double dt) {
         solver.A[i][i]  =  1.0;
         solver.A[i][pi] = -1.0;
         solver.b[i]     = -Qdes / G;
+    };
+
+    auto detectHydraulicIslands = [&](Solver& solver) {
+        double eps = 1e-12;
+        auto& N = solver.N;
+
+        vector<vector<int>> adj(N);
+
+        for (int i = 0; i < N; i++) {
+            for (int j = 0; j < N; j++) {
+                if (i == j) continue;
+                if (abs(solver.A[i][j]) > eps) {
+                    adj[i].push_back(j);
+                    adj[j].push_back(i);
+                }
+            }
+        }
+
+        auto isPinnedRow = [&](int i) {
+            int nz = 0;
+            for (int j = 0; j < N; j++) {
+                if (abs(solver.A[i][j]) > eps) nz++;
+            }
+            return nz == 1 && abs(solver.A[i][i]) > eps;
+        };
+
+        vector<int> nodeGroup(solver.N, -1);
+        int Ngroups = 0;
+
+        for (int i = 0; i < N; i++) {
+            if (nodeGroup[i] >= 0) continue;
+
+            vector<int> stack = { i };
+            nodeGroup[i] = Ngroups;
+
+            while (!stack.empty()) {
+                int k = stack.back();
+                stack.pop_back();
+
+                for (int j : adj[k]) {
+                    if (nodeGroup[j] >= 0) continue;
+                    nodeGroup[j] = Ngroups;
+                    stack.push_back(j);
+                }
+            }
+
+            Ngroups++;
+        }
+
+        vector<bool> hasPin(Ngroups, false);
+        vector<int> firstGroupNode(Ngroups, -1);
+
+        for (int i = 0; i < N; i++) {
+            int g = nodeGroup[i];
+            if (firstGroupNode[g] < 0) firstGroupNode[g] = i;
+            if (isPinnedRow(i)) hasPin[g] = true;
+        }
+
+        for (int g = 0; g < Ngroups; g++) {
+            if (hasPin[g]) continue;
+            int i = firstGroupNode[g];
+            if (i < 0) continue;
+            setDirichlet(solver, i, solver.x[i]);
+        }
     };
 
     Solver solver(segments.size()*3);
@@ -2169,7 +2237,8 @@ void VRPipeSystem::solveNodeHeads(double dt) {
         addFlowBalance(solver, ends);
     }
 
-    bool ok = solveLinearSystem(solver.A,solver.b,solver.x);
+    detectHydraulicIslands(solver);
+    bool ok = solveLinearSystem(solver);
     if (!ok) cout << " Error, solveNodeHeads::solveLinearSystem failed!" << endl;
     updateHeads(solver.x);
 
