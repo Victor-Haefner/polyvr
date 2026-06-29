@@ -2048,10 +2048,14 @@ void VRPipeSystem::solveNodeHeads(double dt) {
         }
     };
 
+    auto timer = VRTimer::create();
     Solver solver(segments.size()*3);
+    auto T1 = timer->stop();
 
     distributeStateIDs();
+    auto T2 = timer->stop();
     buildStateVector(solver.x);
+    auto T3 = timer->stop();
 
     for (auto& s : segments) {
         auto& pipe = s.second;
@@ -2072,6 +2076,7 @@ void VRPipeSystem::solveNodeHeads(double dt) {
         }
     }
 
+    auto T4 = timer->stop();
     for (auto& n : nodes) {
         auto node = n.second;
         auto entity = node->entity;
@@ -2237,10 +2242,14 @@ void VRPipeSystem::solveNodeHeads(double dt) {
         addFlowBalance(solver, ends);
     }
 
-    detectHydraulicIslands(solver);
-    bool ok = solveLinearSystem(solver);
+    auto T5 = timer->stop();
+    detectHydraulicIslands(solver); // 8%
+    auto T6 = timer->stop();
+    bool ok = solveLinearSystem(solver); // 90%
+    auto T7 = timer->stop();
     if (!ok) cout << " Error, solveNodeHeads::solveLinearSystem failed!" << endl;
     updateHeads(solver.x);
+    auto T8 = timer->stop();
 
     for (auto& n : nodes) {
         auto node = n.second;
@@ -2253,6 +2262,19 @@ void VRPipeSystem::solveNodeHeads(double dt) {
             //cout << " pump state " << ns << ", ctrol " << c << " dt " << dt << endl;
         }
     }
+
+    auto T9 = timer->stop();
+
+    /*cout << " VRPipeSystem::update " << T1
+            << ", " << T2-T1
+            << ", " << T3-T2
+            << ", " << T4-T3
+            << ", " << T5-T4
+            << ", " << T6-T5
+            << ", " << T7-T6
+            << ", " << T8-T7
+            << ", " << T9-T8
+            << endl;*/
 }
 
 void VRPipeSystem::solveNodeHeadsOld(double dt) {
@@ -3461,7 +3483,7 @@ void VRPipeSystem::updateThermalDependencies(double dt) {
 }
 
 void VRPipeSystem::update() {
-    int subSteps = 10;
+    int subSteps = 4;
     double dT = 1.0/60;
     dT *= timeScale;
     double dt = dT/subSteps;
@@ -3472,22 +3494,41 @@ void VRPipeSystem::update() {
     updateNodePaths();
 
     for (int i=0; i<subSteps; i++) {
+        auto t1 = VRTimer::create();
         updatePressurization(dt);
+        auto T1 = t1->stop();
         assignBoundaryPressures(dt);
-        //auto t1 = VRTimer::create();
-        solveNodeHeads(dt);
-        //auto T1 = t1->stop();
+        auto T2 = t1->stop();
+        solveNodeHeads(dt); // 80%
+        auto T3 = t1->stop();
         computeHeadFlows(dt);
-        //auto t2 = VRTimer::create();
-        computeMaxFlows(dt); // most time spent
-        //auto T2 = t2->stop();
+        auto T4 = t1->stop();
+        computeMaxFlows(dt); // 15%
+        auto T5 = t1->stop();
         updateLevels(dt);
+        auto T6 = t1->stop();
         updatePressures(dt);
-        computeFlowMixing(dt);
+        auto T7 = t1->stop();
+        computeFlowMixing(dt); // 1%
+        auto T8 = t1->stop();
         radiateHeat(dt);
+        auto T9 = t1->stop();
         updateThermalDependencies(dt);
+        auto T10 = t1->stop();
         updateRegimes(dt);
-        //cout << " VRPipeSystem::update " << T1 << ", " << T2 << endl;
+        auto T11 = t1->stop();
+        /*cout << " VRPipeSystem::update " << T1
+            << ", " << T2-T1
+            << ", " << T3-T2
+            << ", " << T4-T3
+            << ", " << T5-T4
+            << ", " << T6-T5
+            << ", " << T7-T6
+            << ", " << T8-T7
+            << ", " << T9-T8
+            << ", " << T10-T9
+            << ", " << T11-T10
+            << endl;*/
     }
 
     updateVisual();
