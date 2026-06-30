@@ -1840,119 +1840,300 @@ void VRPipeSystem::solveNodeHeads(double dt) {
         auto& x = solver.x;
 
         const int N = solver.N;
-        const double tol = 1e-10;
+        const double tol = 1e-8;
         const double eps = 1e-30;
         const int maxIter = max(50, N);
 
+        if ((int)x.size() != N) x.assign(N, 0.0);
+
+        vector<double> Ax(N), r(N), r0(N);
+        vector<double> p(N), phat(N);
+        vector<double> v(N);
+        vector<double> s(N), shat(N);
+        vector<double> t(N);
+        vector<double> Minv(N, 1.0);
+
+        double rhoOld = 1.0;
+        double rhoNew = 1.0;
+        double alpha  = 1.0;
+        double omega  = 1.0;
+        double beta   = 0.0;
+        double normB  = 1.0;
+        double res    = 1e30;
+
+        int restartEvery = 50;
+
         auto dot = [&](const vector<double>& a, const vector<double>& b) {
-            double s = 0.0;
-            for (int i = 0; i < N; ++i) s += a[i] * b[i];
-            return s;
+            double sum = 0.0;
+            for (int i = 0; i < N; ++i) sum += a[i] * b[i];
+            return sum;
         };
 
         auto norm = [&](const vector<double>& a) {
             return sqrt(dot(a, a));
         };
 
-        auto multiply = [&](const vector<double>& v, vector<double>& y) {
-            y.assign(N, 0.0);
+        auto multiply = [&](const vector<double>& in, vector<double>& out) {
+            out.assign(N, 0.0);
 
             for (int i = 0; i < N; ++i) {
-                double s = 0.0;
-                for (auto& c : A[i].cells) s += c.second * v[c.first];
-                y[i] = s;
+                double sum = 0.0;
+
+                for (auto& c : A[i].cells) {
+                    int j = c.first;
+                    double aij = c.second;
+                    sum += aij * in[j];
+                }
+
+                out[i] = sum;
             }
         };
 
-        auto axpy = [&](vector<double>& y, double a, const vector<double>& v) {
-            for (int i = 0; i < N; ++i) y[i] += a * v[i];
+        auto applyPreconditioner = [&](const vector<double>& in, vector<double>& out) {
+            out.resize(N);
+
+            for (int i = 0; i < N; ++i) {
+                out[i] = Minv[i] * in[i];
+            }
         };
 
-        // Use current x as initial guess.
-        // Important: do not assign x = 0 here if you want timestep coherence.
-        if ((int)x.size() != N) x.assign(N, 0.0);
+        auto scaleRows = [&]() {
+            for (int i = 0; i < solver.N; ++i) {
+                double m = 0.0;
 
-        vector<double> Ax(N), r(N), r0(N), p(N), v(N), s(N), t(N);
+                for (auto& c : solver.A[i].cells) {
+                    m = max(m, abs(c.second));
+                }
 
-        multiply(x, Ax);
+                if (m < 1e-30) continue;
 
-        for (int i = 0; i < N; ++i) {
-            r[i] = b[i] - Ax[i];
-        }
+                double s = 1.0 / m;
 
-        r0 = r;
+                for (auto& c : solver.A[i].cells) {
+                    c.second *= s;
+                }
 
-        double normB = max(norm(b), 1.0);
-        double res = norm(r) / normB;
+                solver.b[i] *= s;
+            }
+        };
 
-        if (res < tol) return true;
+        auto buildPreconditioner = [&]() {
+            for (int i = 0; i < N; ++i) {
+                double d = A[i].get(i);
 
-        double rhoOld = 1.0;
-        double alpha = 1.0;
-        double omega = 1.0;
+                if (abs(d) > 1e-20) {
+                    Minv[i] = 1.0 / d;
+                } else {
+                    Minv[i] = 1.0;
+                }
+            }
+        };
 
-        p.assign(N, 0.0);
-        v.assign(N, 0.0);
+        auto computeInitialResidual = [&]() {
+            multiply(x, Ax);
 
-        for (int iter = 0; iter < maxIter; ++iter) {
-            double rhoNew = dot(r0, r);
+            for (int i = 0; i < N; ++i) {
+                r[i] = b[i] - Ax[i];
+            }
+
+            r0 = r;
+
+            normB = max(norm(b), 1.0);
+            res = norm(r) / normB;
+
+            p.assign(N, 0.0);
+            v.assign(N, 0.0);
+
+            rhoOld = 1.0;
+            alpha  = 1.0;
+            omega  = 1.0;
+        };
+
+        auto updateSearchDirection = [&](int iter) -> bool {
+            rhoNew = dot(r0, r);
 
             if (abs(rhoNew) < eps) {
                 cout << "BiCGSTAB failed: rho breakdown at iter " << iter << endl;
                 return false;
             }
 
-            double beta = (rhoNew / rhoOld) * (alpha / omega);
+            if (abs(omega) < eps) {
+                cout << "BiCGSTAB failed: omega breakdown before beta at iter " << iter << endl;
+                return false;
+            }
+
+            beta = (rhoNew / rhoOld) * (alpha / omega);
 
             for (int i = 0; i < N; ++i) {
                 p[i] = r[i] + beta * (p[i] - omega * v[i]);
             }
 
-            multiply(p, v);
+            return true;
+        };
+
+        auto solveSearchDirection = [&]() -> bool {
+            applyPreconditioner(p, phat);
+            multiply(phat, v);
 
             double r0v = dot(r0, v);
+
             if (abs(r0v) < eps) {
-                cout << "BiCGSTAB failed: alpha breakdown at iter " << iter << endl;
+                cout << "BiCGSTAB failed: alpha breakdown" << endl;
                 return false;
             }
 
             alpha = rhoNew / r0v;
+            return true;
+        };
 
+        auto computeIntermediateResidual = [&]() {
             for (int i = 0; i < N; ++i) {
                 s[i] = r[i] - alpha * v[i];
             }
+        };
 
+        auto acceptIntermediateSolution = [&]() -> bool {
             double sRes = norm(s) / normB;
-            if (sRes < tol) {
-                axpy(x, alpha, p);
-                return true;
+
+            if (sRes >= tol)
+                return false;
+
+            for (int i = 0; i < N; ++i) {
+                x[i] += alpha * phat[i];
             }
 
-            multiply(s, t);
+            return true;
+        };
+
+        auto solveIntermediateDirection = [&]() -> bool {
+            applyPreconditioner(s, shat);
+            multiply(shat, t);
 
             double tt = dot(t, t);
+
             if (abs(tt) < eps) {
-                cout << "BiCGSTAB failed: omega breakdown at iter " << iter << endl;
+                cout << "BiCGSTAB failed: omega denominator breakdown" << endl;
                 return false;
             }
 
             omega = dot(t, s) / tt;
 
             if (abs(omega) < eps) {
-                cout << "BiCGSTAB failed: omega zero at iter " << iter << endl;
+                cout << "BiCGSTAB failed: omega zero" << endl;
                 return false;
             }
 
+            return true;
+        };
+
+        auto updateSolution = [&]() {
             for (int i = 0; i < N; ++i) {
-                x[i] += alpha * p[i] + omega * s[i];
-                r[i] = s[i] - omega * t[i];
+                x[i] += alpha * phat[i] + omega * shat[i];
+                r[i]  = s[i] - omega * t[i];
             }
 
             res = norm(r) / normB;
-            if (res < tol) return true;
-
             rhoOld = rhoNew;
+        };
+
+        auto computeMaxResidual = [&]() {
+            multiply(x, Ax);
+
+            double maxR = 0.0;
+            int maxRow = -1;
+
+            for (int i = 0; i < N; ++i) {
+                double ri = abs(b[i] - Ax[i]);
+                if (ri > maxR) {
+                    maxR = ri;
+                    maxRow = i;
+                }
+            }
+
+            return pair<double,int>(maxR, maxRow);
+        };
+
+        auto computeMaxCorrection = [&](const vector<double>& xOld) {
+            double maxDx = 0.0;
+            int maxI = -1;
+
+            for (int i = 0; i < N; ++i) {
+                double dx = abs(x[i] - xOld[i]);
+                if (dx > maxDx) {
+                    maxDx = dx;
+                    maxI = i;
+                }
+            }
+
+            return pair<double,int>(maxDx, maxI);
+        };
+
+        vector<double> xStart = x;
+        scaleRows();
+        buildPreconditioner();
+        computeInitialResidual();
+        double resStart = res;
+        if (res < tol) return true;
+
+        int iter;
+        for (iter = 0; iter < maxIter; ++iter) {
+            if (iter > 0 && iter % restartEvery == 0) {
+                r0 = r;
+                rhoOld = 1.0;
+                alpha = 1.0;
+                omega = 1.0;
+                fill(p.begin(), p.end(), 0.0);
+                fill(v.begin(), v.end(), 0.0);
+            }
+
+            if (!updateSearchDirection(iter)) return false;
+            if (!solveSearchDirection()) return false;
+            computeIntermediateResidual();
+            if (acceptIntermediateSolution()) return true;
+            if (!solveIntermediateDirection()) return false;
+            updateSolution();
+            if (res < tol) return true;
         }
+
+        auto [maxR, maxRow] = computeMaxResidual();
+        auto [maxDx, maxDxID] = computeMaxCorrection(xStart);
+
+        cout << "BiCGSTAB"
+             << " iter " << iter
+             << " res " << resStart << " -> " << res
+             << " maxR " << maxR << " row " << maxRow
+             << " maxDx " << maxDx << " id " << maxDxID
+             << endl;
+
+        double minDiag = 1e300;
+        double maxDiag = 0.0;
+        double maxCoeff = 0.0;
+        double minCoeff = 1e300;
+        int zeroDiag = 0;
+
+        for (int i = 0; i < N; ++i) {
+            double d = abs(A[i].get(i));
+            if (d < 1e-30) zeroDiag++;
+            else {
+                minDiag = min(minDiag, d);
+                maxDiag = max(maxDiag, d);
+            }
+
+            for (auto& c : A[i].cells) {
+                double a = abs(c.second);
+                if (a < 1e-30) continue;
+                minCoeff = min(minCoeff, a);
+                maxCoeff = max(maxCoeff, a);
+            }
+        }
+
+        cout << "A stats"
+             << " minDiag " << minDiag
+             << " maxDiag " << maxDiag
+             << " zeroDiag " << zeroDiag
+             << " minCoeff " << minCoeff
+             << " maxCoeff " << maxCoeff
+             << endl;
 
         cout << "BiCGSTAB failed: no convergence, residual " << res << endl;
         return false;
@@ -2036,6 +2217,275 @@ void VRPipeSystem::solveNodeHeads(double dt) {
         }
 
         return true;
+    };
+
+    auto solveLinearSystem3 = [](Solver& solver) -> bool {
+        auto& A = solver.A;
+        auto& b = solver.b;
+        auto& x = solver.x;
+
+        const int N = solver.N;
+        //const double tol = 1e-8;
+        const double eps = 1e-30;
+        //const int restart = 40;        // GMRES(m)
+        //const int maxCycles = max(5, N / restart + 2);
+
+        const int restart = 10;
+        const int maxCycles = 10;
+        const double tol = 1e-10;
+
+        if ((int)x.size() != N) x.assign(N, 0.0);
+
+        vector<double> Ax(N), r(N), w(N);
+        vector<double> Minv(N, 1.0);
+
+        auto dot = [&](const vector<double>& a, const vector<double>& b) {
+            double s = 0.0;
+            for (int i = 0; i < N; ++i) s += a[i] * b[i];
+            return s;
+        };
+
+        auto norm = [&](const vector<double>& a) {
+            return sqrt(dot(a, a));
+        };
+
+        auto multiply = [&](const vector<double>& in, vector<double>& out) {
+            out.assign(N, 0.0);
+
+            for (int i = 0; i < N; ++i) {
+                double s = 0.0;
+                for (auto& c : A[i].cells) {
+                    s += c.second * in[c.first];
+                }
+                out[i] = s;
+            }
+        };
+
+        auto buildPreconditioner = [&]() {
+            for (int i = 0; i < N; ++i) {
+                double d = A[i].get(i);
+                Minv[i] = abs(d) > 1e-20 ? 1.0 / d : 1.0;
+            }
+        };
+
+        auto applyPreconditioner = [&](const vector<double>& in, vector<double>& out) {
+            out.resize(N);
+            for (int i = 0; i < N; ++i) out[i] = Minv[i] * in[i];
+        };
+
+        auto computeResidual = [&]() {
+            multiply(x, Ax);
+            for (int i = 0; i < N; ++i) r[i] = b[i] - Ax[i];
+        };
+
+        auto applyApreconditioned = [&](const vector<double>& in, vector<double>& out) {
+            // right-preconditioned GMRES:
+            // Krylov basis is built for A * M^-1.
+            vector<double> z(N);
+            applyPreconditioner(in, z);
+            multiply(z, out);
+        };
+
+        auto solveSmallLeastSquares = [&](int k,
+                                          vector<vector<double>>& H,
+                                          vector<double>& g,
+                                          vector<double>& y) {
+            // Solve min || g - H y || using normal equations.
+            // Size is small: k <= restart.
+            y.assign(k, 0.0);
+
+            vector<vector<double>> B(k, vector<double>(k, 0.0));
+            vector<double> rhs(k, 0.0);
+
+            for (int i = 0; i < k; ++i) {
+                for (int row = 0; row <= k; ++row) {
+                    rhs[i] += H[row][i] * g[row];
+
+                    for (int j = 0; j < k; ++j) {
+                        B[i][j] += H[row][i] * H[row][j];
+                    }
+                }
+            }
+
+            // Dense Gaussian solve for tiny k x k system.
+            for (int i = 0; i < k; ++i) {
+                int pivot = i;
+                double maxAbs = abs(B[i][i]);
+
+                for (int r = i + 1; r < k; ++r) {
+                    double v = abs(B[r][i]);
+                    if (v > maxAbs) {
+                        maxAbs = v;
+                        pivot = r;
+                    }
+                }
+
+                if (maxAbs < eps) return false;
+
+                if (pivot != i) {
+                    swap(B[i], B[pivot]);
+                    swap(rhs[i], rhs[pivot]);
+                }
+
+                double div = B[i][i];
+                for (int c = i; c < k; ++c) B[i][c] /= div;
+                rhs[i] /= div;
+
+                for (int r = i + 1; r < k; ++r) {
+                    double f = B[r][i];
+                    if (abs(f) < eps) continue;
+
+                    for (int c = i; c < k; ++c) {
+                        B[r][c] -= f * B[i][c];
+                    }
+
+                    rhs[r] -= f * rhs[i];
+                }
+            }
+
+            for (int i = k - 1; i >= 0; --i) {
+                double v = rhs[i];
+
+                for (int j = i + 1; j < k; ++j) {
+                    v -= B[i][j] * y[j];
+                }
+
+                if (abs(B[i][i]) < eps) return false;
+                y[i] = v / B[i][i];
+            }
+
+            return true;
+        };
+
+        auto updateSolution = [&](int k,
+                                  vector<vector<double>>& V,
+                                  vector<double>& y) {
+            // x += M^-1 * V*y
+            vector<double> dx(N, 0.0);
+            vector<double> z(N);
+
+            for (int j = 0; j < k; ++j) {
+                applyPreconditioner(V[j], z);
+
+                for (int i = 0; i < N; ++i) {
+                    dx[i] += y[j] * z[i];
+                }
+            }
+
+            for (int i = 0; i < N; ++i) {
+                x[i] += dx[i];
+            }
+        };
+
+        auto computeMaxCorrection = [&](const vector<double>& xOld) {
+            double maxDx = 0.0;
+            int maxI = -1;
+
+            for (int i = 0; i < N; ++i) {
+                double dx = abs(x[i] - xOld[i]);
+                if (dx > maxDx) {
+                    maxDx = dx;
+                    maxI = i;
+                }
+            }
+
+            return pair<double,int>(maxDx, maxI);
+        };
+
+        buildPreconditioner();
+
+        double normB = max(norm(b), 1.0);
+
+        computeResidual();
+        double beta = norm(r);
+        double res = beta / normB;
+
+        if (res < tol) return true;
+        vector<double> xStart = x;
+
+        for (int cycle = 0; cycle < maxCycles; ++cycle) {
+            vector<vector<double>> V(restart + 1, vector<double>(N, 0.0));
+            vector<vector<double>> H(restart + 1, vector<double>(restart, 0.0));
+            vector<double> g(restart + 1, 0.0);
+            vector<double> y;
+
+            beta = norm(r);
+            if (beta < eps) return true;
+
+            for (int i = 0; i < N; ++i) {
+                V[0][i] = r[i] / beta;
+            }
+
+            g[0] = beta;
+
+            int usedK = 0;
+
+            for (int k = 0; k < restart; ++k) {
+                applyApreconditioned(V[k], w);
+
+                // Arnoldi orthogonalization
+                for (int j = 0; j <= k; ++j) {
+                    H[j][k] = dot(w, V[j]);
+
+                    for (int i = 0; i < N; ++i) {
+                        w[i] -= H[j][k] * V[j][i];
+                    }
+                }
+
+                // Re-orthogonalization, improves stability.
+                for (int j = 0; j <= k; ++j) {
+                    double h2 = dot(w, V[j]);
+                    H[j][k] += h2;
+
+                    for (int i = 0; i < N; ++i) {
+                        w[i] -= h2 * V[j][i];
+                    }
+                }
+
+                H[k + 1][k] = norm(w);
+                usedK = k + 1;
+
+                if (H[k + 1][k] > eps) {
+                    for (int i = 0; i < N; ++i) {
+                        V[k + 1][i] = w[i] / H[k + 1][k];
+                    }
+                }
+
+                if (!solveSmallLeastSquares(usedK, H, g, y)) {
+                    cout << "GMRES failed: small least-squares solve failed" << endl;
+                    return false;
+                }
+
+                // Cheap enough for debugging: form tentative x and compute true residual.
+                vector<double> xOld = x;
+                updateSolution(usedK, V, y);
+
+                computeResidual();
+                res = norm(r) / normB;
+                if (res < tol) return true;
+
+                x = xOld;
+                if (H[k + 1][k] <= eps) break;
+            }
+
+            if (!solveSmallLeastSquares(usedK, H, g, y)) {
+                cout << "GMRES failed: final least-squares solve failed" << endl;
+                return false;
+            }
+
+            updateSolution(usedK, V, y);
+            computeResidual();
+            res = norm(r) / normB;
+            if (res < tol) return true;
+
+            auto [maxDx, maxDxID] = computeMaxCorrection(xStart);
+            cout << "cycle: " << cycle << " -> maxDx: " << maxDx << endl;
+            if (maxDx < 2e-3) return true;
+            xStart = x;
+        }
+
+        cout << "GMRES failed: no convergence, residual " << res << endl;
+        return false;
     };
 
     auto distributeStateIDs = [&]() {
@@ -2427,8 +2877,10 @@ void VRPipeSystem::solveNodeHeads(double dt) {
     auto T5 = timer->stop();
     detectHydraulicIslands(solver); // 8%
     auto T6 = timer->stop();
-    bool ok = solveLinearSystem(solver); // 90%
-    //bool ok = solveLinearSystem2(solver); // 91%
+    bool ok = solveLinearSystem(solver); // 88% best
+    //bool ok = solveLinearSystem2(solver); // 91% bad, not stable
+    //bool ok = solveLinearSystem3(solver); // promising, but not good enough
+    //if (!ok) solveLinearSystem(solver); // test as fallback
     auto T7 = timer->stop();
     //if (!ok) cout << " Error, solveNodeHeads::solveLinearSystem failed!" << endl;
     updateHeads(solver.x);
