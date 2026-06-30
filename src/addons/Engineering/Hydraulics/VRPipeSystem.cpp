@@ -1791,19 +1791,171 @@ void VRPipeSystem::assignBoundaryPressures(double dt) {
     }
 }
 
+class SparseMatrix {
+    public:
+        struct Row {
+            vector<pair<int, double>> cells;
+
+            double& operator[](int i) {
+                for (auto& c : cells) if(i == c.first) return c.second;
+                cells.push_back(make_pair(i,0.0));
+                return cells.back().second;
+            }
+
+            double get(int i) const {
+                for (auto& c : cells) if (c.first == i) return c.second;
+                return 0.0;
+            };
+        };
+
+    public:
+        vector<Row> rows;
+
+    public:
+        SparseMatrix(int Nrows) : rows(Nrows) {}
+
+        Row& operator[](int i) {
+            return rows[i];
+        }
+};
+
 void VRPipeSystem::solveNodeHeads(double dt) {
     struct Solver {
         int N = 0;
-        vector<vector<double>>  A;
-        vector<double>          x;
-        vector<double>          b;
+        SparseMatrix   A;
+        vector<double> x;
+        vector<double> b;
 
         Solver(int n)
             : N(n)
-            , A(n, vector<double>(n, 0.0))
+            , A(n)
             , x(n)
             , b(n, 0.0)
         {}
+    };
+
+    auto solveLinearSystem2 = [](Solver& solver) -> bool {
+        auto& A = solver.A;
+        auto& b = solver.b;
+        auto& x = solver.x;
+
+        const int N = solver.N;
+        const double tol = 1e-10;
+        const double eps = 1e-30;
+        const int maxIter = max(50, N);
+
+        auto dot = [&](const vector<double>& a, const vector<double>& b) {
+            double s = 0.0;
+            for (int i = 0; i < N; ++i) s += a[i] * b[i];
+            return s;
+        };
+
+        auto norm = [&](const vector<double>& a) {
+            return sqrt(dot(a, a));
+        };
+
+        auto multiply = [&](const vector<double>& v, vector<double>& y) {
+            y.assign(N, 0.0);
+
+            for (int i = 0; i < N; ++i) {
+                double s = 0.0;
+                for (auto& c : A[i].cells) s += c.second * v[c.first];
+                y[i] = s;
+            }
+        };
+
+        auto axpy = [&](vector<double>& y, double a, const vector<double>& v) {
+            for (int i = 0; i < N; ++i) y[i] += a * v[i];
+        };
+
+        // Use current x as initial guess.
+        // Important: do not assign x = 0 here if you want timestep coherence.
+        if ((int)x.size() != N) x.assign(N, 0.0);
+
+        vector<double> Ax(N), r(N), r0(N), p(N), v(N), s(N), t(N);
+
+        multiply(x, Ax);
+
+        for (int i = 0; i < N; ++i) {
+            r[i] = b[i] - Ax[i];
+        }
+
+        r0 = r;
+
+        double normB = max(norm(b), 1.0);
+        double res = norm(r) / normB;
+
+        if (res < tol) return true;
+
+        double rhoOld = 1.0;
+        double alpha = 1.0;
+        double omega = 1.0;
+
+        p.assign(N, 0.0);
+        v.assign(N, 0.0);
+
+        for (int iter = 0; iter < maxIter; ++iter) {
+            double rhoNew = dot(r0, r);
+
+            if (abs(rhoNew) < eps) {
+                cout << "BiCGSTAB failed: rho breakdown at iter " << iter << endl;
+                return false;
+            }
+
+            double beta = (rhoNew / rhoOld) * (alpha / omega);
+
+            for (int i = 0; i < N; ++i) {
+                p[i] = r[i] + beta * (p[i] - omega * v[i]);
+            }
+
+            multiply(p, v);
+
+            double r0v = dot(r0, v);
+            if (abs(r0v) < eps) {
+                cout << "BiCGSTAB failed: alpha breakdown at iter " << iter << endl;
+                return false;
+            }
+
+            alpha = rhoNew / r0v;
+
+            for (int i = 0; i < N; ++i) {
+                s[i] = r[i] - alpha * v[i];
+            }
+
+            double sRes = norm(s) / normB;
+            if (sRes < tol) {
+                axpy(x, alpha, p);
+                return true;
+            }
+
+            multiply(s, t);
+
+            double tt = dot(t, t);
+            if (abs(tt) < eps) {
+                cout << "BiCGSTAB failed: omega breakdown at iter " << iter << endl;
+                return false;
+            }
+
+            omega = dot(t, s) / tt;
+
+            if (abs(omega) < eps) {
+                cout << "BiCGSTAB failed: omega zero at iter " << iter << endl;
+                return false;
+            }
+
+            for (int i = 0; i < N; ++i) {
+                x[i] += alpha * p[i] + omega * s[i];
+                r[i] = s[i] - omega * t[i];
+            }
+
+            res = norm(r) / normB;
+            if (res < tol) return true;
+
+            rhoOld = rhoNew;
+        }
+
+        cout << "BiCGSTAB failed: no convergence, residual " << res << endl;
+        return false;
     };
 
     auto solveLinearSystem = [](Solver& solver) -> bool {
@@ -1814,55 +1966,75 @@ void VRPipeSystem::solveNodeHeads(double dt) {
         int N = b.size();
         x.assign(N, 0.0);
 
-        double eps = 1e-12;
+        const double eps = 1e-12;
 
+        // Forward elimination: convert A to upper triangular form.
         for (int i = 0; i < N; i++) {
-            // Find best pivot row.
             int pivot = i;
-            double maxAbs = abs(A[i][i]);
+            double maxAbs = abs(A[i].get(i));
 
             for (int r = i + 1; r < N; r++) {
-                double v = abs(A[r][i]);
+                double v = abs(A[r].get(i));
                 if (v > maxAbs) {
                     maxAbs = v;
                     pivot = r;
                 }
             }
 
-            // Singular / underconstrained system.
             if (maxAbs < eps) {
                 cout << "solveLinearSystem failed, singular at row " << i << endl;
                 return false;
             }
 
-            // Move pivot row to current row.
             if (pivot != i) {
                 swap(A[i], A[pivot]);
                 swap(b[i], b[pivot]);
             }
 
-            // Normalize pivot row.
-            double div = A[i][i];
-            for (int c = i; c < N; c++) A[i][c] /= div;
+            double div = A[i].get(i);
+
+            for (auto& c : A[i].cells) {
+                c.second /= div;
+            }
             b[i] /= div;
 
-            // Eliminate this variable from all other rows.
-            for (int r = 0; r < N; r++) {
-                if (r == i) continue;
-
-                double f = A[r][i];
+            // Only eliminate below the pivot.
+            for (int r = i + 1; r < N; r++) {
+                double f = A[r].get(i);
                 if (abs(f) < eps) continue;
 
-                for (int c = i; c < N; c++) {
-                    A[r][c] -= f * A[i][c];
+                for (auto& cell : A[i].cells) {
+                    int c = cell.first;
+                    if (c < i) continue;
+                    A[r][c] -= f * cell.second;
                 }
 
                 b[r] -= f * b[i];
+
+                // Keep the pivot column explicitly zero.
+                A[r][i] = 0.0;
             }
         }
 
-        // After Gauss-Jordan, A is identity, so b is the solution.
-        x = b;
+        // Back substitution.
+        for (int i = N - 1; i >= 0; i--) {
+            double rhs = b[i];
+
+            for (auto& cell : A[i].cells) {
+                int c = cell.first;
+                if (c <= i) continue;
+                rhs -= cell.second * x[c];
+            }
+
+            double div = A[i].get(i);
+            if (abs(div) < eps) {
+                cout << "solveLinearSystem failed during back substitution at row " << i << endl;
+                return false;
+            }
+
+            x[i] = rhs / div;
+        }
+
         return true;
     };
 
@@ -1911,7 +2083,7 @@ void VRPipeSystem::solveNodeHeads(double dt) {
     };
 
     auto setDirichlet = [&](Solver& solver, int i, double H) {
-        for (int j = 0; j < solver.N; j++) solver.A[i][j] = 0.0;
+        solver.A[i].cells.clear();
         solver.A[i][i] = 1.0;
         solver.b[i] = H;
     };
@@ -1991,9 +2163,12 @@ void VRPipeSystem::solveNodeHeads(double dt) {
         vector<vector<int>> adj(N);
 
         for (int i = 0; i < N; i++) {
-            for (int j = 0; j < N; j++) {
+            for (auto& c : solver.A[i].cells) {
+                int j = c.first;
+                double v = c.second;
+
                 if (i == j) continue;
-                if (abs(solver.A[i][j]) > eps) {
+                if (abs(v) > eps) {
                     adj[i].push_back(j);
                     adj[j].push_back(i);
                 }
@@ -2002,10 +2177,17 @@ void VRPipeSystem::solveNodeHeads(double dt) {
 
         auto isPinnedRow = [&](int i) {
             int nz = 0;
-            for (int j = 0; j < N; j++) {
-                if (abs(solver.A[i][j]) > eps) nz++;
+            bool hasDiag = false;
+
+            for (auto& c : solver.A[i].cells) {
+                int j = c.first;
+                double v = c.second;
+                if (abs(v) <= eps) continue;
+                nz++;
+                if (j == i) hasDiag = true;
             }
-            return nz == 1 && abs(solver.A[i][i]) > eps;
+
+            return nz == 1 && hasDiag;
         };
 
         vector<int> nodeGroup(solver.N, -1);
@@ -2072,7 +2254,7 @@ void VRPipeSystem::solveNodeHeads(double dt) {
         if (pipe->pressurized) { // Q1 + Q2 = 0 -> G(Hpipe - H1) + G(Hpipe - H2) = 0
             balancePipeFlow(solver, p, { { i1, G }, { i2, G } });
         } else {
-            setDirichlet(solver, p,pipe->fluidLvl);
+            setDirichlet(solver, p, pipe->fluidLvl);
         }
     }
 
@@ -2246,8 +2428,9 @@ void VRPipeSystem::solveNodeHeads(double dt) {
     detectHydraulicIslands(solver); // 8%
     auto T6 = timer->stop();
     bool ok = solveLinearSystem(solver); // 90%
+    //bool ok = solveLinearSystem2(solver); // 91%
     auto T7 = timer->stop();
-    if (!ok) cout << " Error, solveNodeHeads::solveLinearSystem failed!" << endl;
+    //if (!ok) cout << " Error, solveNodeHeads::solveLinearSystem failed!" << endl;
     updateHeads(solver.x);
     auto T8 = timer->stop();
 
@@ -2265,259 +2448,22 @@ void VRPipeSystem::solveNodeHeads(double dt) {
 
     auto T9 = timer->stop();
 
-    /*cout << " VRPipeSystem::update " << T1
-            << ", " << T2-T1
-            << ", " << T3-T2
-            << ", " << T4-T3
-            << ", " << T5-T4
-            << ", " << T6-T5
-            << ", " << T7-T6
-            << ", " << T8-T7
-            << ", " << T9-T8
+    /*int Ncells = 0;
+    for (auto& r : solver.A.rows) {
+        Ncells += r.cells.size();
+    }
+    cout << " Ncells " << Ncells / solver.N << ", solver.N " << solver.N << endl;
+
+    cout << " VRPipeSystem::update " << int(T1/T9*100.0)
+            << ", " << int((T2-T1)/T9*100.0)
+            << ", " << int((T3-T2)/T9*100.0)
+            << ", " << int((T4-T3)/T9*100.0)
+            << ", " << int((T5-T4)/T9*100.0)
+            << ", " << int((T6-T5)/T9*100.0)
+            << ", " << int((T7-T6)/T9*100.0)
+            << ", " << int((T8-T7)/T9*100.0)
+            << ", " << int((T9-T8)/T9*100.0)
             << endl;*/
-}
-
-void VRPipeSystem::solveNodeHeadsOld(double dt) {
-    auto sign = [](double v) { return (v > 0) - (v < 0); };
-
-    auto simpleAverage = [&](const vector<VRPipeEndPtr>& ends) -> double {
-        if (ends.size() == 0) return 0;
-        if (ends.size() == 1) return ends[0]->pipe.lock()->hydraulicHead;
-
-        double H = 0;
-        for (auto& e : ends) {
-            auto pipe = e->pipe.lock();
-            H += pipe->hydraulicHead;
-        }
-        return H / ends.size();
-    };
-
-    auto computeAverage = [&](const vector<VRPipeEndPtr>& ends) -> double {
-        if (ends.size() == 0) return 0;
-        if (ends.size() == 1) return ends[0]->pipe.lock()->hydraulicHead;
-
-        //return simpleAverage(ends); // TOTEST
-
-        double num = 0.0;
-        double den = 0.0;
-
-        //cout << "computeAverage ";
-
-        for (auto& e : ends) {
-            auto pipe = e->pipe.lock();
-            double R = pipe->computeEffectiveResistance(e->flow);
-            double H = pipe->hydraulicHead;
-            num += H / R;
-            den += 1.0 / R;
-            //cout << " H/R: " << H << "/" << R;
-        }
-        //cout << " -> new head: " << num / den << endl;
-
-        if (abs(den) < 1e-13) return simpleAverage(ends);
-        return num / den;
-    };
-
-    auto averageOverPipes = [&](vector<VRPipeEndPtr> ends, double& maxHeadDelta) {
-        double newHead = computeAverage(ends);
-
-        for (auto& e : ends) {
-            maxHeadDelta = max(maxHeadDelta, abs(e->hydraulicHead-newHead));
-            e->hydraulicHead = newHead;
-        }
-    };
-
-    auto computePumpHead = [&](VREntityPtr entity, double flow) {
-        double mH = entity->getValue("maxHead", 0.0);
-        double mQ = entity->getValue("maxFlow", 1.0);
-        double e = entity->getValue("curveExponent", 2.0);
-        double H = mH * ( 1.0 - pow(flow / mQ,e) );
-        //cout << "computePumpHead Q: " << flow << ", H " << H << ", e " << e << endl;
-        return H;
-    };
-
-    auto processPumpHeads = [&](vector<VRPipeEndPtr> ends, VREntityPtr entity, double& maxHeadDelta) -> bool {
-        if (ends.size() != 2) return false;
-
-        double control = entity->getValue("control", 0.0);
-        double state = entity->getValue("state", 0.0);
-        double rampTime = entity->getValue("rampTime", 0.5);
-        bool isOpen = entity->getValue("isOpen", false);
-        auto pEnd1 = ends[0];
-        auto pEnd2 = ends[1];
-        double pumpHead = computePumpHead(entity, pEnd1->flow);
-
-        double alpha = clamp(dt / rampTime, 0.0, 1.0);
-        state += sign(control - state) * alpha;
-        state = clamp(state, 0.0, 1.0);
-        entity->set("newState", toString(state,12));
-
-        if (state < 1e-3) { // pump off
-            if (!isOpen) {
-                averageOverPipes({pEnd1}, maxHeadDelta);
-                averageOverPipes({pEnd2}, maxHeadDelta);
-                return true;
-            } else return false;
-        }
-
-        averageOverPipes({pEnd1}, maxHeadDelta);
-        averageOverPipes({pEnd2}, maxHeadDelta);
-
-        double deltaHead = pEnd2->hydraulicHead - pEnd1->hydraulicHead;
-        double pumpGain = state * pumpHead;
-        double mod = clamp(pumpGain - deltaHead, 0.0, pumpGain);
-        maxHeadDelta = max(maxHeadDelta, abs(mod));
-
-        pEnd1->hydraulicHead -= mod;
-        pEnd2->hydraulicHead += mod;
-        //cout << " processPumpHeads " << mod << ", " << pEnd1->hydraulicHead << ", " << pEnd2->hydraulicHead << ", " << pumpGain << ", " << maxHead << endl;
-        return true;
-    };
-
-    auto processValve = [&](vector<VRPipeEndPtr> ends, VREntityPtr entity, double& maxHeadDelta) -> bool {
-        if (ends.size() != 2) return false;
-        double x = entity->getValue("state", 0.0);
-        if (x < 1e-3) {
-            averageOverPipes({ends[0]}, maxHeadDelta);
-            averageOverPipes({ends[1]}, maxHeadDelta);
-        } else averageOverPipes({ends[0], ends[1]}, maxHeadDelta);
-        return true;
-    };
-
-    auto processCylinder = [&](VRPipeNodePtr node, VREntityPtr entity, double& maxHeadDelta) -> bool {
-        if (node->pipes.size() != 2) return false;
-        auto& e1 = node->pipes[0];
-        auto& e2 = node->pipes[1];
-        bool chamber1Pressurized = entity->getValue("pressurized1", true);
-        bool chamber2Pressurized = entity->getValue("pressurized2", true);
-        if (chamber1Pressurized) averageOverPipes({e1}, maxHeadDelta);
-        if (chamber2Pressurized) averageOverPipes({e2}, maxHeadDelta);
-        //if (e1->pressurized) averageOverPipes({e1}, maxHeadDelta);
-        //if (e2->pressurized) averageOverPipes({e2}, maxHeadDelta);
-
-        double dH = e2->hydraulicHead - e1->hydraulicHead;
-        //if (dH < 0.0 && !e1->pressurized) return true;
-        //if (dH > 0.0 && !e2->pressurized) return true;
-
-        double v = entity->getValue("pistonSpeed", 0.0);
-        double A = entity->getValue("area", 0.0);
-        double Q = v*A;
-
-        // compute head gain from headFlow
-        auto p1 = e1->pipe.lock();
-        auto p2 = e2->pipe.lock();
-        double rho = p1->fluid.effectiveDensity;
-        double Rpipes = p1->resistanceLaminar + p2->resistanceLaminar;
-        double headGain = -Q * Rpipes / (rho * gravity);
-
-        //double K = abs(dH)*0.5;
-        //headGain = clamp(headGain, -K, K); // ok?
-
-        //double mod = clamp(headGain - dH, -headGain, headGain) * 0.5;
-        double mod = (headGain-dH)*0.5;
-        mod = clamp(mod, -abs(headGain), abs(headGain));
-
-        //if (entity->getName() == "cylinder_1")
-        //    cout << "cyl head, v " << v << ", Q " << Q << ", ent: " << entity->getName() << ", headGain " << headGain << ", mod " << mod << ", dH " << dH << endl;
-
-        e1->hydraulicHead -= mod;
-        e2->hydraulicHead += mod;
-        maxHeadDelta = max(maxHeadDelta, abs(mod));
-        return true;
-    };
-
-    auto processControlValve = [&](VRPipeNodePtr node, VREntityPtr entity, double& maxHeadDelta) -> bool {
-        vector<VRPipeEndPtr>& ends = node->pipes;
-        auto& endsGroup = node->endsGroup;
-        auto& endGroups = node->endGroups;
-
-        for (size_t i=0; i<ends.size(); i++) { // handle ends without paths/groups
-            if (!endsGroup.count(i)) averageOverPipes({ends[i]}, maxHeadDelta);
-        }
-
-        for (auto& g : endGroups) {
-            averageOverPipes(g.second, maxHeadDelta);
-        }
-        return true;
-    };
-
-    auto processTank = [&](VRPipeNodePtr node, VREntityPtr entity, double& maxHeadDelta) -> bool {
-        bool io = entity->getValue("isOpen", false);
-        bool tankPressurized = entity->getValue("pressurized", false);
-        if ( io ) return true; // open to atmosphere
-        if ( !tankPressurized ) return true; // pressure tank with gas pocket
-        /*cout << " averageOverPipes tank node " << node->nID;
-        for (auto e : node->pipes) {
-            if (!e) continue;
-            auto pipe = e->pipe.lock();
-            if (!pipe) continue;
-            cout << ", eH: " << e->hydraulicHead << " pH: " << pipe->hydraulicHead;
-        }*/
-        averageOverPipes(node->pipes, maxHeadDelta);
-        return true;
-    };
-
-    double maxHeadDelta = 1; // convergence criteria
-    double eps = 1e-6;
-    int i=0;
-    for (int i=0; maxHeadDelta>eps && i<50; i++) {
-        maxHeadDelta = 0;
-
-        for (auto& n : nodes) { // update pipe-end heads for each node
-            auto node = n.second;
-            auto entity = node->entity;
-
-            if (entity->is_a("Outlet")) continue; // open to atmosphere
-            if (entity->is_a("Tank") && processTank(node, entity, maxHeadDelta)) continue;
-            if (entity->is_a("Pump") && processPumpHeads(node->pipes, entity, maxHeadDelta)) continue;
-            if (entity->is_a("ControlValve") && processControlValve(node, entity, maxHeadDelta)) continue;
-            else if (entity->is_a("Valve") && processValve(node->pipes, entity, maxHeadDelta)) continue;
-            if (entity->is_a("Cylinder") && processCylinder(node, entity, maxHeadDelta)) continue;
-
-            /*if (node->nID == 52 || node->nID == 53) {
-                cout << " averageOverPipes node " << node->nID;
-                for (auto e : node->pipes) {
-                    auto pipe = e->pipe.lock();
-                    cout << ", eH: " << e->hydraulicHead << " pID: " << pipe->eID << " pH: " << pipe->hydraulicHead;
-                }
-                cout << endl;
-            }*/
-
-            averageOverPipes(node->pipes, maxHeadDelta);
-        }
-
-        for (auto& s : segments) { // update head for each pipe
-            auto& pipe = s.second;
-            auto e1 = pipe->end1.lock();
-            auto e2 = pipe->end2.lock();
-
-            double newHead = pipe->fluidLvl;
-            if (pipe->pressurized) {
-                double fH = max(pipe->hydraulicHead, pipe->fluidLvl);
-                if (e1->pressurized && e2->pressurized) newHead = (e1->hydraulicHead + e2->hydraulicHead) * 0.5;
-                else if (e1->pressurized) newHead = (e1->hydraulicHead + pipe->fluidLvl) * 0.5;
-                else if (e2->pressurized) newHead = (e2->hydraulicHead + pipe->fluidLvl) * 0.5;
-                //cout << "?? fH: " << fH << " H1: " << e1->hydraulicHead << " H2: " << e2->hydraulicHead << " nH: " << newHead;
-            }
-
-            maxHeadDelta = max(maxHeadDelta, abs(pipe->hydraulicHead-newHead));
-            pipe->hydraulicHead = newHead;
-        }
-    }
-
-    //cout << i << ", " << eps << endl;
-
-    // copy state vars
-    for (auto& n : nodes) {
-        auto node = n.second;
-        auto entity = node->entity;
-        if (!entity) continue;
-
-        if (entity->is_a("Pump")) {
-            double ns = entity->getValue("newState", 0.0);
-            entity->set("state", toString(ns,12));
-            //cout << " pump state " << ns << ", ctrol " << c << " dt " << dt << endl;
-        }
-    }
 }
 
 void VRPipeSystem::computeHeadFlows(double dt) {
