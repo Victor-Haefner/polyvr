@@ -126,6 +126,7 @@ class VRPipeSegment {
 class VRPipeNode {
     public:
         int nID = 0;
+        int stateID = -1;
         VREntityPtr entity;
         string name;
         vector<VRPipeEndPtr> pipes;

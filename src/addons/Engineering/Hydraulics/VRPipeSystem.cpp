@@ -664,7 +664,6 @@ void VRPipeSystem::initOntology() {
     Cylinder->addProperty("pressurized2", "bool");
     Cylinder->addProperty("state", "double");
     Cylinder->addProperty("headFlow", "double");
-    Cylinder->addProperty("pistonAcceleration", "double");
     Cylinder->addProperty("pistonSpeed", "double");
 }
 
@@ -1573,6 +1572,8 @@ double VRPipeSystem::clamp(double x, double a, double b, bool warn, string lbl) 
 }
 
 double VRPipeSystem::computeCylinderAccelleration(VRPipeNodePtr node, double dt) {
+    return 0; // deprecated
+
     if (node->pipes.size() != 2) return 0;
     auto entity = node->entity;
     if (!entity->is_a("Cylinder")) return 0;
@@ -1588,7 +1589,6 @@ double VRPipeSystem::computeCylinderAccelleration(VRPipeNodePtr node, double dt)
     double x = entity->getValue("state", 0.0);
     double L = entity->getValue("length", 0.0);
     double A = entity->getValue("area", 0.0);
-    double a = entity->getValue("pistonAcceleration", 0.0);
     double v = entity->getValue("pistonSpeed", 0.0);
 
     auto p1 = e1->pipe.lock();
@@ -1596,13 +1596,18 @@ double VRPipeSystem::computeCylinderAccelleration(VRPipeNodePtr node, double dt)
     double rho = p1->fluid.effectiveDensity;
     double dP = dH * rho * gravity;
     double Fhyd = -dP*A - v*d;
-    a = (Fhyd - Fext) / m;
-    v += a*dt;
+    double a = (Fhyd - Fext) / m;
+    double dv = a*dt;
+    if (v > 1e-3 && dv < -2e-3 || v < -1e-3 && dv > 2e-3) v = 0.0; // dont jump 0 in one step
+    else v += dv;
+
+    if (abs(v) < 1e-3 || true) cout << "v: " << v << " a: " << a << " dP: " << dP << " Fhyd: " << Fhyd << endl;
 
     double dx = v * dt / L;
     double x_new = clamp(x + dx, 0.001, 0.999);
     dx = x_new - x;
     v = dx*L/dt;
+
     entity->set("pistonSpeed", toString(v,12));
     //cout << "cyl speed " << v << endl;
 
@@ -1765,8 +1770,8 @@ void VRPipeSystem::assignBoundaryPressures(double dt) {
             double h = sqrt(a);
             double h1 = nPos[1] + h*(l1-0.5);
             double h2 = nPos[1] + h*(l2-0.5);
-            if (!chamber1Pressurized || true) e1->hydraulicHead = h1;
-            if (!chamber2Pressurized || true) e2->hydraulicHead = h2;
+            if (!chamber1Pressurized) e1->hydraulicHead = h1;
+            if (!chamber2Pressurized) e2->hydraulicHead = h2;
             //cout << "bcond cyl " << h1 << "/" << h2 << "  " << e1->hydraulicHead << "/" << e2->hydraulicHead << endl;
         }
     }
@@ -2499,6 +2504,17 @@ void VRPipeSystem::solveNodeHeads(double dt) {
             e2->stateID   = i+2;
             i += 3;
         }
+
+        for (auto& n : nodes) {
+            auto node = n.second;
+            auto entity = node->entity;
+            if (!entity) continue;
+
+            if (entity->is_a("Cylinder")) {
+                node->stateID = i; i++;
+            }
+        }
+        return i;
     };
 
     auto buildStateVector = [&](vector<double>& x) {
@@ -2509,6 +2525,16 @@ void VRPipeSystem::solveNodeHeads(double dt) {
             x[pipe->stateID] = pipe->hydraulicHead;
             x[e1->stateID]   = e1->hydraulicHead;
             x[e2->stateID]   = e2->hydraulicHead;
+        }
+
+        for (auto& n : nodes) {
+            auto node = n.second;
+            auto entity = node->entity;
+            if (!entity) continue;
+
+            if (entity->is_a("Cylinder")) {
+                x[node->stateID] = entity->getValue("pistonSpeed", 0.0);
+            }
         }
     };
 
@@ -2584,7 +2610,7 @@ void VRPipeSystem::solveNodeHeads(double dt) {
         solver.A[i][pi] = -1.0;
     };
 
-    auto addChamberFlow = [&](Solver& solver, VRPipeEndPtr e, double Qdes) {
+    auto addChamberFlow = [&](Solver& solver, VRPipeEndPtr e, int vID, double A) {
         auto pipe = e->pipe.lock();
 
         int i  = e->stateID;
@@ -2592,6 +2618,14 @@ void VRPipeSystem::solveNodeHeads(double dt) {
 
         double R = pipe->computeEffectiveResistance(e->flow);
         double G = 2.0 / max(R, 1e-9); // half-pipe conductance
+
+        /*if (e->flow > 1e-3) {
+            cout << "addChamberFlow"
+                << " eFlow " << e->flow
+                << " R " << R
+                << " G " << G
+                << endl;
+        }*/
 
         // Desired flow:
         //
@@ -2603,7 +2637,18 @@ void VRPipeSystem::solveNodeHeads(double dt) {
 
         solver.A[i][i]  =  1.0;
         solver.A[i][pi] = -1.0;
-        solver.b[i]     = -Qdes / G;
+
+        //solver.b[i]     = -Qdes / G;
+        solver.A[i][vID] = A / G;
+        solver.b[i] = 0.0;
+
+        /*if (i == 2 && Qdes < 0.0 || true)
+        cout << "addChamberFlow " << i
+            << " pipeRegime " << pipe->regime
+            << " R " << R
+            << " G " << G
+            << " Qdes " << Qdes
+            << endl;*/
     };
 
     auto detectHydraulicIslands = [&](Solver& solver) {
@@ -2681,12 +2726,11 @@ void VRPipeSystem::solveNodeHeads(double dt) {
     };
 
     auto timer = VRTimer::create();
-    Solver solver(segments.size()*3);
-    auto T1 = timer->stop();
 
-    distributeStateIDs();
-    auto T2 = timer->stop();
+    int N = distributeStateIDs();
+    Solver solver(N);
     buildStateVector(solver.x);
+
     auto T3 = timer->stop();
 
     for (auto& s : segments) {
@@ -2812,24 +2856,46 @@ void VRPipeSystem::solveNodeHeads(double dt) {
                 auto& e2 = ends[1];
                 bool chamber1Pressurized = entity->getValue("pressurized1", true);
                 bool chamber2Pressurized = entity->getValue("pressurized2", true);
+                double m = entity->getValue("mass", 500);
+                double Fext = entity->getValue("force", 0.0);
+                double d = entity->getValue("damping", 500.0);
+                auto pipe1 = e1->pipe.lock();
+                auto pipe2 = e2->pipe.lock();
+                double rho = pipe1->fluid.effectiveDensity;
 
                 double v = entity->getValue("pistonSpeed", 0.0);
                 double A = entity->getValue("area", 0.0);
-                double Q = v*A;
+
+                int vID = node->stateID;
 
                 if (chamber1Pressurized) {
-                    addChamberFlow(solver, e1,  Q);
+                    //addChamberFlow(solver, e1,  Q);
+                    addChamberFlow(solver, e1, vID, A);
                 } else {
                     // assignBoundaryPressures() already set this to the free-surface head.
                     setDirichlet(solver, e1->stateID, e1->hydraulicHead);
                 }
 
                 if (chamber2Pressurized) {
-                    addChamberFlow(solver, e2, -Q);
+                    //addChamberFlow(solver, e2, -Q);
+                    addChamberFlow(solver, e2, vID, -A);
                 } else {
                     // assignBoundaryPressures() already set this to the free-surface head.
                     setDirichlet(solver, e2->stateID, e2->hydraulicHead);
                 }
+
+                /*double R1 = pipe1->computeEffectiveResistance(e1->flow);
+                double R2 = pipe2->computeEffectiveResistance(e2->flow);
+                double G1 = 2.0 / max(R1, 1e-9); // half-pipe conductance
+                double G2 = 2.0 / max(R2, 1e-9); // half-pipe conductance
+                solver.A[e1->stateID][vID] =  A / G1;
+                solver.A[e2->stateID][vID] = -A / G2;*/
+
+                double k = rho * gravity * A;
+                solver.A[vID][e1->stateID]  = -k;
+                solver.A[vID][e2->stateID]  =  k;
+                solver.A[vID][vID] =  m/dt + d;
+                solver.b[vID]      =  m/dt * v - Fext;
                 continue;
             }
 
@@ -2870,6 +2936,11 @@ void VRPipeSystem::solveNodeHeads(double dt) {
             continue;
         }
 
+        if (entity->is_a("Gauge")) {
+            addFlowBalance(solver, ends);
+            continue;
+        }
+
         cout << "Warning: unhandled node in solve heads: " << entity->toString() << endl;
         addFlowBalance(solver, ends);
     }
@@ -2877,6 +2948,19 @@ void VRPipeSystem::solveNodeHeads(double dt) {
     auto T5 = timer->stop();
     detectHydraulicIslands(solver); // 8%
     auto T6 = timer->stop();
+
+    /*cout << "A:" << endl;
+    for (auto& r : solver.A.rows) {
+        for (auto& c : r.cells) cout << " (" << c.first << ", " << c.second << ")";
+        cout << endl;
+    }
+    cout << "b:";
+    for (auto& c : solver.b) cout << " " << c;
+    cout << endl;
+    cout << "x:";
+    for (auto& c : solver.x) cout << " " << c;
+    cout << endl;*/
+
     bool ok = solveLinearSystem(solver); // 88% best
     //bool ok = solveLinearSystem2(solver); // 91% bad, not stable
     //bool ok = solveLinearSystem3(solver); // promising, but not good enough
@@ -2890,6 +2974,22 @@ void VRPipeSystem::solveNodeHeads(double dt) {
         auto node = n.second;
         auto entity = node->entity;
         if (!entity) continue;
+
+        if (entity->is_a("Cylinder")) {
+            double A = entity->getValue("area", 0.0);
+            double L = entity->getValue("length", 0.0);
+            double x = entity->getValue("state", 0.0);
+            int vID = node->stateID;
+
+            double v = solver.x[vID];
+            double dx = v * dt / L;
+            double x_new = x + dx;
+            x_new = clamp(x_new, 0.001, 0.999);
+            dx = x_new - x;
+            v = dx*L/dt;
+
+            entity->set("pistonSpeed", toString(v, 12));
+        }
 
         if (entity->is_a("Pump")) {
             double ns = entity->getValue("newState", 0.0);
@@ -3082,8 +3182,12 @@ void VRPipeSystem::computeMaxFlows(double dt) {
         if (chamberPressurized) {
             if (relPistonFlow > 0) { // chamber grows
                 if (flow > 0) { // flow pushes, should be same as pistonflow
-                    if (flow+eps < relPistonFlow) { pistonFlow = pfSign*flow; pfChanged = true; } // piston too fast
-                    if (flow > pistonFlow) flow = relPistonFlow; // too much flow in
+                    if (flow+eps < relPistonFlow) {
+                        pistonFlow = pfSign*flow; pfChanged = true;
+                    } // piston too fast
+                    if (flow > pistonFlow) {
+                        flow = relPistonFlow; // too much flow in
+                    }
                 }
             }
 
@@ -3102,11 +3206,17 @@ void VRPipeSystem::computeMaxFlows(double dt) {
         double maxPistonFlow = (vAir - deltaWaterVol)/dt;
         if (-pfSign*pistonFlow > maxPistonFlow+eps) { pistonFlow = -pfSign*maxPistonFlow; pfChanged = true; }
 
-        //cout << " clampCylinderFlows f0: " << e->maxFlow << " -> " << flow << endl;
-        //cout << " clampCylinderFlows fc: " << pistonFlow << ", newLevel: " << newLevel << ", newVolWater: " << newVolWater << ", newVol: " << newVol << endl;
+        //if (abs(e->maxFlow) > 1e-3) cout << " clampCylinderFlows f0: " << e->maxFlow << " -> " << flow << ", " << flow /  e->maxFlow << endl;
+        //if (abs(pistonFlow) > 1e-3) cout << " clampCylinderFlows fc: " << pistonFlow << ", pfSign: " << pfSign << endl;
         //if (hflow > 0 && e1->pressurized) hflow = min(flow1, hflow);
         //if (hflow < 0 && e2->pressurized) hflow =-min(flow2,-hflow);
 
+        /*if (cVolume < 1e-5)
+        cout << e->stateID
+            << " f " << e->maxFlow << " -> " << flow
+            << " cV " << cVolume
+            << " cLvl " << cLevel
+            << endl;*/
         clampFlow(e, flow);
         return pfChanged;
     };
@@ -3463,6 +3573,9 @@ void VRPipeSystem::updateLevels(double dt) {
             double dx = dflow * dt / vol;
 
             double x_new = x + dx;
+            x_new = clamp(x_new, 0.001, 0.999);
+            dx = x_new - x;
+
             double v = dx*L/dt;
             entity->set("state", toString(x_new,12));
             entity->set("pistonSpeed", toString(v,12));
