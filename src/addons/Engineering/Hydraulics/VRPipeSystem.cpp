@@ -3096,6 +3096,16 @@ void VRPipeSystem::computeHeadFlows(double dt) {
             continue;
         }
 
+        if (pipe->pressurized) {
+            double dH1 = pipe->hydraulicHead - e1->hydraulicHead;
+            double dH2 = pipe->hydraulicHead - e2->hydraulicHead;
+            double flow1 = accellerateFlow(dH1, pipe, e1->flow);
+            double flow2 = accellerateFlow(dH2, pipe, e2->flow);
+            e1->headFlow = flow1;
+            e2->headFlow = flow2;
+            continue;
+        }
+
         forceFlow(e1, pipe);
         forceFlow(e2, pipe);
     }
@@ -3767,7 +3777,7 @@ void VRPipeSystem::updatePressures(double dt) {
                 auto te = e->getEntity("tank");
                 double maxPressure = e->getValue("maxPressure", 10*atmosphericPressure);
                 double pressure = e->getValue("pressure", 0.0) - atmosphericPressure;
-                if (t && maxPressure > 1e-3) {
+                if (te && maxPressure > 1e-3) {
                     double pt = te->getValue("pressure", atmosphericPressure) - atmosphericPressure;
                     double indicator = pt/maxPressure;
                     if (abs(pt - pressure)>1e-3) {
