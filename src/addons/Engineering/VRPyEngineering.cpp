@@ -92,6 +92,7 @@ PyMethodDef VRPyPipeSystem::methods[] = {
     {"getTankParticles", PyWrap( PipeSystem, getTankParticles, "Return volume fraction of a type of particles (tankID, particleType)", double, int, string ) },
     {"setTankParticles", PyWrap( PipeSystem, setTankParticles, "Set volume fraction of a type of particles (tankID, particleType, volumeFraction)", void, int, string, double ) },
     {"addTankParticles", PyWrap( PipeSystem, addTankParticles, "Add a type of particles by mass (tankID, particleType, mass)", void, int, string, double ) },
+    {"removeTankParticles", PyWrap( PipeSystem, removeTankParticles, "Remove a part of a type of particles, returns mass (tankID, particleType, part)", double, int, string, double ) },
     {"addTankParticleBin", PyWrap( PipeSystem, addTankParticleBin, "Add a type of particles (tankID, particleType, sizeRange, density)", void, int, string, Vec2d, double ) },
     {"addMaterial", PyWrap( PipeSystem, addMaterial, "Add a new material", int ) },
     {"setSegmentMaterial", PyWrap( PipeSystem, setSegmentMaterial, "Set segment material ID (eID, matID)", void, int, int ) },

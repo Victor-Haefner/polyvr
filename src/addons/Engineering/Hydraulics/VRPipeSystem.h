@@ -276,6 +276,7 @@ class VRPipeSystem : public VRTransform {
 		double getTankParticles(int i, string type);
 		void setTankParticles(int i, string type, double volFrac);
 		void addTankParticles(int i, string type, double mass);
+		double removeTankParticles(int i, string type, double part);
 		void addTankParticleBin(int i, string type, Vec2d sizeRange, double density);
 
 		void addControlValvePath(int i, int A, int B, double x0, double xs, double K);

@@ -176,6 +176,43 @@ void VRPipeSystem::setTankParticles(int nID, string type, double volFrac) {
     }
 }
 
+double VRPipeSystem::removeTankParticles(int nID, string type, double part) {
+    auto e = getNodeEntity(nID);
+    if (!e) return 0.0;
+    auto fe = e->getEntity("fluid");
+    if (!fe) return 0.0;
+
+    double tankArea = e->getValue("area", 1.0);
+    double tankHeight = e->getValue("height", 1.0);
+    double tankVolume = tankHeight * tankArea;
+    double tankLevel = e->getValue("level", 1.0);
+    double fluidVolume = tankVolume * tankLevel;
+    if (tankLevel < 1e-3) return 0.0;
+
+    VREntityPtr pe = 0;
+    for (auto& p : fe->getAllEntities("particles")) {
+        string t = p->getValue<string>("type", "");
+        if (type == t) { pe = p; break; }
+    }
+    if (!pe) return 0.0;
+
+    double vF = pe->getValue("volumeFraction", 0.0);
+    double d = pe->getValue("density", 1.0);
+    double volOld = fluidVolume * vF;
+    double volDelta = volOld * part;
+    volDelta = clamp(volDelta, 0.0, fluidVolume, true, "tank particles volume");
+    double mass = d * volDelta;
+
+    fluidVolume -= volDelta;
+    double volFrac = (volOld - volDelta) / fluidVolume;
+    pe->set("volumeFraction", toString(volFrac, 12));
+
+    // update tank level
+    tankLevel = fluidVolume / tankVolume;
+    e->set("level", toString(tankLevel,12));
+    return mass;
+}
+
 void VRPipeSystem::addTankParticles(int nID, string type, double mass) {
     auto e = getNodeEntity(nID);
     if (!e) return;
