@@ -48,6 +48,11 @@ void VRFluidComposition::mixIn(const VRFluidComposition& fluid, const double& pe
         mixLin(particles[p.first].volumeFraction, p.second.volumeFraction);
     }
 
+    for (auto& p : particles) {
+        if (fluid.particles.count( p.first )) continue;
+        mixLin(particles[p.first].volumeFraction, 0.0);
+    }
+
     updateThermalDependencies();
 }
 
@@ -243,8 +248,24 @@ void VRPipeSystem::addTankParticles(int nID, string type, double mass) {
     pe->set("volumeFraction", toString(volFrac, 12));
 
     // update tank level
-    tankLevel = fluidVolume / tankVolume;
-    e->set("level", toString(tankLevel,12));
+    double newLevel = fluidVolume / tankVolume;
+    e->set("level", toString(newLevel,12));
+
+    bool tankOpen = e->getValue("isOpen", false);
+    if (!tankOpen) { // update pressurized tank
+        double oldVolume = (1.0-tankLevel)*tankVolume;
+        double tankPressure = e->getValue("pressure", atmosphericPressure);
+        double initialGasVolume = e->getValue("initialGasVolume", oldVolume); // avoid drift
+        double initialGasPressure = e->getValue("initialGasPressure", tankPressure); // avoid drift
+
+        double newVolume = (1.0-newLevel) *tankVolume;
+        double p = initialGasPressure * initialGasVolume / newVolume;
+        //cout << " tank: " << n.first << " p gauge: " << tankPressure-atmosphericPressure << " level: " << newLevel << " tV " << tankVolume << endl;
+
+        p = clamp(p, atmosphericPressure * 0.001, atmosphericPressure * 2000.0, false, "tank pressure");
+        e->set("pressure", toString(p, 12));
+        //cout << " new tank pressure: " << p << endl;
+    }
 }
 
 void VRPipeSystem::addTankParticleBin(int nID, string type, Vec2d sizeRange, double density) {
@@ -1787,7 +1808,12 @@ void VRPipeSystem::assignBoundaryPressures(double dt) {
                 double Pgauge = tankPressure + Pfluid - atmosphericPressure;
                 double hydrHead = e->height + fluidEffect * Pgauge / (tankDensity * gravity);
                 e->hydraulicHead = hydrHead;
-                //cout << " tank boundary expr.: hH: " << e->hydraulicHead << ", tankOpen: " << tankOpen << ", d: " << depth << ", tP " << tankPressure << ", fP " << Pfluid << ", gP " << Pgauge << endl;
+                /*if (n.first == 4)
+                cout << " tank boundary expr.: hH: " << e->hydraulicHead
+                    << ", tankOpen: " << tankOpen << ", d: " << depth
+                    << ", tP " << tankPressure << ", fP " << Pfluid << ", gP " << Pgauge
+                    << " rho: " << tankDensity
+                    << endl;*/
             }
         }
 
@@ -3420,20 +3446,29 @@ void VRPipeSystem::computeMaxFlows(double dt) {
             }
 
             // forbid cavitations
-            if (e1->pressurized && e2->pressurized) {
-                double totalFlowIn = 0;
-                double totalFlowOut = 0;
-                for (auto& e : {e1, e2}) {
-                    auto f = e->maxFlow;
-                    if (f < 0) totalFlowIn += -f;
-                    else totalFlowOut += f;
-                }
+            totalFlowIn = 0;
+            totalFlowOut = 0;
+            for (auto& e : {e1, e2}) {
+                auto f = e->maxFlow;
+                if (f < 0) totalFlowIn += -f;
+                else totalFlowOut += f;
+            }
 
-                if (totalFlowOut > totalFlowIn) {
+            if (totalFlowOut > totalFlowIn) {
+                if (e1->pressurized && e2->pressurized) {
                     for (auto& e : {e1, e2}) {
                         if (e->maxFlow > 0) clampFlow(e, totalFlowIn);
                     }
                     needsIteration = true;
+                } else {
+                    if (e1->pressurized && e1->hydraulicHead > e2->hydraulicHead) {
+                        if (e2->maxFlow > 0) clampFlow(e2, totalFlowIn);
+                        needsIteration = true;
+                    }
+                    if (e2->pressurized && e2->hydraulicHead > e1->hydraulicHead) {
+                        if (e1->maxFlow > 0) clampFlow(e1, totalFlowIn);
+                        needsIteration = true;
+                    }
                 }
             }
         }
@@ -3598,7 +3633,12 @@ void VRPipeSystem::updateLevels(double dt) {
 
                 double newVolume = (1.0-newLevel) *tankVolume;
                 double p = initialGasPressure * initialGasVolume / newVolume;
-                //cout << " tank: " << n.first << " p gauge: " << tankPressure-atmosphericPressure << " level: " << newLevel << " tV " << tankVolume << endl;
+                /*cout << " tank: " << n.first
+                    << " p: " << tankPressure << " p/pI: " << p/initialGasPressure
+                    << " level: " << newLevel << " tV " << tankVolume
+                    << " e: " << entity
+                    << " iGV: " << initialGasVolume << " nV: " << newVolume
+                    << endl;*/
 
                 p = clamp(p, atmosphericPressure * 0.001, atmosphericPressure * 2000.0, false, "tank pressure");
                 entity->set("pressure", toString(p, 12));
@@ -3805,7 +3845,15 @@ void VRPipeSystem::updatePressures(double dt) {
     for (auto& n : nodes) {
         for (auto& e : n.second->pipes) {
             auto pipe = e->pipe.lock();
-            e->pressure = e->hydraulicHead * pipe->fluid.effectiveDensity * gravity;
+            double Pgauge = (e->hydraulicHead - e->height) * pipe->fluid.effectiveDensity * gravity;
+            e->pressure = Pgauge + atmosphericPressure;
+            /*if (n.first == 4)
+            cout << " updatePressure: " << n.first << " " << e
+                << " h: " << e->height
+                << " H: " << e->hydraulicHead
+                << " P: " << e->pressure
+                << " rho: " << pipe->fluid.effectiveDensity
+                << endl;*/
         }
 
         if (n.second->userCb) {

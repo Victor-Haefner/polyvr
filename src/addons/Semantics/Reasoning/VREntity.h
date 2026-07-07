@@ -69,6 +69,7 @@ struct VREntity : public std::enable_shared_from_this<VREntity>, public VROntoID
     template<class T> T getValue(const string& prop, T t, int i = 0) {
         auto P = get(prop, i);
         if (P) toValue(P->value, t);
+        else set(prop, ::toString(t));
         return t;
     }
 
