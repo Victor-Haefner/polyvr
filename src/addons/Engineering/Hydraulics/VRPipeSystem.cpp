@@ -155,7 +155,7 @@ void VRFluidComposition::updateThermalDependencies() {
     effectiveViscosity = max(effectiveViscosity, 1e-6);
 }
 
-double VRPipeSystem::getTankParticles(int nID, string type) {
+double VRPipeSystem::getFluidParticles(int nID, string type) {
     auto e = getNodeEntity(nID);
     if (!e) return 0.0;
     e = e->getEntity("fluid");
@@ -167,7 +167,7 @@ double VRPipeSystem::getTankParticles(int nID, string type) {
     return 0.0;
 }
 
-void VRPipeSystem::setTankParticles(int nID, string type, double volFrac) {
+void VRPipeSystem::setFluidParticles(int nID, string type, double volFrac) {
     auto e = getNodeEntity(nID);
     if (!e) return;
     e = e->getEntity("fluid");
@@ -268,7 +268,7 @@ void VRPipeSystem::addTankParticles(int nID, string type, double mass) {
     }
 }
 
-void VRPipeSystem::addTankParticleBin(int nID, string type, Vec2d sizeRange, double density) {
+void VRPipeSystem::addFluidParticleBin(int nID, string type, Vec2d sizeRange, double density) {
     auto e = getNodeEntity(nID);
     if (!e) return;
     e = e->getEntity("fluid");
@@ -785,6 +785,7 @@ void VRPipeSystem::setDoVisual(bool b, float s) {
 }
 
 void VRPipeSystem::setTimeScale(double s) { timeScale = s; }
+double VRPipeSystem::getSimulationTime() { return simTime; }
 
 void VRPipeSystem::setVisuals(vector<string> ls) { layers = ls; }
 
@@ -4093,6 +4094,7 @@ void VRPipeSystem::update() {
     int subSteps = 4;
     double dT = 1.0/60;
     dT *= timeScale;
+    simTime += dT;
     double dt = dT/subSteps;
 
     //sleep(1);

@@ -175,6 +175,7 @@ class VRPipeSystem : public VRTransform {
         vector<string> layers = { "p", "d", "v", "n" };
 
         double timeScale = 1.0;
+        double simTime = 0.0;
         double gravity = 9.81;
         double atmosphericPressure = 101325; // Pa at sea level (1 atm)
         //double atmosphericPressure = 0.0; // set to 0 because its just a global offset
@@ -241,6 +242,7 @@ class VRPipeSystem : public VRTransform {
 		void setDoVisual(bool b, float spread = 0.1);
 		void setVisuals(vector<string> layers);
 		void setTimeScale(double s);
+		double getSimulationTime();
 
 		void update();
 		void updateVisual();
@@ -271,11 +273,11 @@ class VRPipeSystem : public VRTransform {
 		void setPipeRadius(int i, double r);
 		void setPipePressure(int i, double p1, double p2);
 
-		double getTankParticles(int i, string type);
-		void setTankParticles(int i, string type, double volFrac);
+		void addFluidParticleBin(int i, string type, Vec2d sizeRange, double density);
+		double getFluidParticles(int i, string type);
+		void setFluidParticles(int i, string type, double volFrac);
 		void addTankParticles(int i, string type, double mass);
 		double removeTankParticles(int i, string type, double part);
-		void addTankParticleBin(int i, string type, Vec2d sizeRange, double density);
 
 		void addControlValvePath(int i, int A, int B, double x0, double xs, double K);
 
