@@ -466,7 +466,7 @@ int VRPipeSystem::addNode(string name, PosePtr pos, string type, map<string, str
     nodes[nID] = n;
     nodesByName[name] = nID;
 
-    if (type == "Tank") {
+    if (type == "Tank" || type == "FlowSource") {
         auto fe = ontology->addEntity("fluid", "FluidComposition");
         e->set("fluid", fe->getName());
     }
@@ -657,6 +657,7 @@ void VRPipeSystem::initOntology() {
     auto Cylinder = ontology->addConcept("Cylinder");
     auto FluidComposition = ontology->addConcept("FluidComposition");
     auto ParticleBin = ontology->addConcept("ParticleBin");
+    auto FlowSource = ontology->addConcept("FlowSource");
 
     FluidComposition->addProperty("density", "double");
     FluidComposition->addProperty("temperature", "double");
@@ -723,6 +724,9 @@ void VRPipeSystem::initOntology() {
     Cylinder->addProperty("state", "double");
     Cylinder->addProperty("headFlow", "double");
     Cylinder->addProperty("pistonSpeed", "double");
+
+    FlowSource->addProperty("fluid", FluidComposition);
+    FlowSource->addProperty("flow", "double");
 }
 
 void VRPipeSystem::addControlValvePath(int i, int A, int B, double x0, double xs, double K) {
@@ -1183,35 +1187,14 @@ void VRPipeSystem::updateVisual() {
             dataNodes.pushVert(p2-dPipe*l*0.02, norm, e2->pressurized ? dblue : white, Vec2d());
             dataNodes.pushPoint();
 
-            // water box
-            if (p2[1] < p1[1]) swap(p1,p2); // p2 always higher than p1
-            pm = (p1+p2)*0.5;
             Vec3d d = (p2-p1); d.normalize();
-
-            double g = r*2;
             Vec3d u = Vec3d(1,0,0);
             if (d[1] < 1.0-1e-6) { u = d.cross(Vec3d(0,1,0)); u.normalize(); }
-            double a = d.enclosedAngle(Vec3d(0,1,0));
-            double t = g*cos(a) + l*sin(a);
-            int i0 = dataVolumes.size();
-            int k0 = dataVolumes.getNIndices();
-
-            dataVolumes.pushQuad(p1, d, u, Vec2d(g,g), false);
-            dataVolumes.pushQuad(pm, Vec3d(0,1,0), u, Vec2d(t,g), true);
-            dataVolumes.pushQuad(pm, Vec3d(0,1,0), u, Vec2d(t,g), false);
-            dataVolumes.pushQuad(p2, d, u, Vec2d(g,g), false);
-            for (int i=0; i<4; i++) dataVolumes.pushColor(dblue);
-            for (int i=0; i<4; i++) dataVolumes.pushColor(blue);
-            for (int i=0; i<4; i++) dataVolumes.pushColor(white);
-            for (int i=0; i<4; i++) dataVolumes.pushColor(white);
-
-            dataVolumes.pushQuad(-9, -10, -11, -12); // mid but reversed
-            for (int i=0; i<12; i++) dataVolumes.pushQuad(-1,-1,-1,-1); // placeholders
-            updatePipeInds(dataVolumes, 0.5, i0, k0);
+            double g = r*2;
 
             // flow arrows
-            i0 = dataArrows.size();
-            k0 = dataArrows.getNIndices();
+            int i0 = dataArrows.size();
+            int k0 = dataArrows.getNIndices();
 
             Vec3d u2 = d.cross(u) + u; u2.normalize();
             float g2 = g*1.05;
@@ -1248,6 +1231,31 @@ void VRPipeSystem::updateVisual() {
                     }
                 }
             }
+
+            // water box
+            if (p2[1] < p1[1]) { // p2 always higher than p1
+                swap(p1,p2);
+                d *= -1;
+                u *= -1;
+            }
+
+            double a = d.enclosedAngle(Vec3d(0,1,0));
+            double t = g*cos(a) + l*sin(a);
+            i0 = dataVolumes.size();
+            k0 = dataVolumes.getNIndices();
+
+            dataVolumes.pushQuad(p1, d, u, Vec2d(g,g), false);
+            dataVolumes.pushQuad(pm, Vec3d(0,1,0), u, Vec2d(t,g), true);
+            dataVolumes.pushQuad(pm, Vec3d(0,1,0), u, Vec2d(t,g), false);
+            dataVolumes.pushQuad(p2, d, u, Vec2d(g,g), false);
+            for (int i=0; i<4; i++) dataVolumes.pushColor(dblue);
+            for (int i=0; i<4; i++) dataVolumes.pushColor(blue);
+            for (int i=0; i<4; i++) dataVolumes.pushColor(white);
+            for (int i=0; i<4; i++) dataVolumes.pushColor(white);
+
+            dataVolumes.pushQuad(-9, -10, -11, -12); // mid but reversed
+            for (int i=0; i<12; i++) dataVolumes.pushQuad(-1,-1,-1,-1); // placeholders
+            updatePipeInds(dataVolumes, 0.5, i0, k0);
         }
 
         auto createWaterBox = [&](Vec3d p, double a, double b, double h) {
@@ -1604,8 +1612,9 @@ void VRPipeSystem::updateVisual() {
             c = s>0.9 ? Color3f(0,1,0) : Color3f(1,0,0);
         }
 
-        if (e->is_a("Junction")) c = Color3f(0.2,0.4,1);
-        if (e->is_a("Outlet"))   c = Color3f(0.1,0.2,0.8);
+        if (e->is_a("Junction"))   c = Color3f(0.2,0.4,1);
+        if (e->is_a("Outlet"))     c = Color3f(0.1,0.2,0.8);
+        if (e->is_a("FlowSource")) c = Color3f(0.8,0.1,0.8);
 
         if (e->is_a("Pump")) {
             double p = e->getValue("control", 0.0);
@@ -1627,56 +1636,6 @@ double VRPipeSystem::clamp(double x, double a, double b, bool warn, string lbl) 
         if (x < a-eps) cout << "Warning in VRPipeSystem::clamp " << lbl << ": " << x << " < " << a << ", d: " << abs(x-b) << endl;
     }
     return x<a ? a : x>b ? b : x;
-}
-
-double VRPipeSystem::computeCylinderAccelleration(VRPipeNodePtr node, double dt) {
-    return 0; // deprecated
-
-    if (node->pipes.size() != 2) return 0;
-    auto entity = node->entity;
-    if (!entity->is_a("Cylinder")) return 0;
-
-    auto& e1 = node->pipes[0];
-    auto& e2 = node->pipes[1];
-    double dH = e2->hydraulicHead - e1->hydraulicHead;
-
-    // compute piston movement and flow
-    double Fext = entity->getValue("force", 0.0);
-    double d = entity->getValue("damping", 500.0);
-    double m = entity->getValue("mass", 500.0);
-    double x = entity->getValue("state", 0.0);
-    double L = entity->getValue("length", 0.0);
-    double A = entity->getValue("area", 0.0);
-    double v = entity->getValue("pistonSpeed", 0.0);
-
-    auto p1 = e1->pipe.lock();
-    auto p2 = e2->pipe.lock();
-    double rho = p1->fluid.effectiveDensity;
-    double dP = dH * rho * gravity;
-    double Fhyd = -dP*A - v*d;
-    double a = (Fhyd - Fext) / m;
-    double dv = a*dt;
-    if (v > 1e-3 && dv < -2e-3 || v < -1e-3 && dv > 2e-3) v = 0.0; // dont jump 0 in one step
-    else v += dv;
-
-    if (abs(v) < 1e-3 || true) cout << "v: " << v << " a: " << a << " dP: " << dP << " Fhyd: " << Fhyd << endl;
-
-    double dx = v * dt / L;
-    double x_new = clamp(x + dx, 0.001, 0.999);
-    dx = x_new - x;
-    v = dx*L/dt;
-
-    entity->set("pistonSpeed", toString(v,12));
-    //cout << "cyl speed " << v << endl;
-
-    //static int i=0; i++;
-    //if (i<50) cout << "cyl acc, v " << v << ", x " << x << ", dx " << dx << ", dH " << dH << ", h1 " << e1->hydraulicHead << ", h2 " << e2->hydraulicHead << endl;
-    //if (abs(v) > 1.0) cout << "cyl acc, v " << v << ", dx " << dx << ", dH " << dH << ", h1 " << e1->hydraulicHead << ", h2 " << e2->hydraulicHead << endl;
-    //if (entity->getName() == "cylinder") cout << "cyl acc, v " << v << ", dx " << dx << ", dH " << dH << endl;
-
-
-    double hflow = A*v;
-    return hflow;
 }
 
 void VRPipeSystem::updateNodePaths() {
@@ -1819,9 +1778,6 @@ void VRPipeSystem::assignBoundaryPressures(double dt) {
 
         if (entity->is_a("Cylinder")) {
             if (node->pipes.size() != 2) continue;
-
-            computeCylinderAccelleration(node, dt);
-
             auto& e1 = node->pipes[0];
             auto& e2 = node->pipes[1];
 
@@ -2573,9 +2529,8 @@ void VRPipeSystem::solveNodeHeads(double dt) {
             auto entity = node->entity;
             if (!entity) continue;
 
-            if (entity->is_a("Cylinder")) {
-                node->stateID = i; i++;
-            }
+            if (entity->is_a("Cylinder"))   { node->stateID = i; i++; }
+            if (entity->is_a("FlowSource")) { node->stateID = i; i++; }
         }
         return i;
     };
@@ -2712,6 +2667,20 @@ void VRPipeSystem::solveNodeHeads(double dt) {
             << " G " << G
             << " Qdes " << Qdes
             << endl;*/
+    };
+
+    auto addForcedEndFlow = [&](Solver& solver, VRPipeEndPtr e, double Q) {
+        auto pipe = e->pipe.lock();
+
+        int i  = e->stateID;
+        int pi = pipe->stateID;
+
+        double R = pipe->computeEffectiveResistance(e->flow);
+        double G = 2.0 / max(R, 1e-9); // half-pipe conductance
+
+        solver.A[i][i]  =  1.0;
+        solver.A[i][pi] = -1.0;
+        solver.b[i]     =  Q / G; // Force: Hend - Hpipe = Q / G
     };
 
     auto detectHydraulicIslands = [&](Solver& solver) {
@@ -2994,6 +2963,15 @@ void VRPipeSystem::solveNodeHeads(double dt) {
             continue;
         }
 
+        if (entity->is_a("FlowSource")) {
+            if (ends.size() > 0) {
+                double Q = entity->getValue("flow", 0.0);
+                Q /= ends.size();
+                for (auto& e : ends) addForcedEndFlow(solver, e, Q);
+            }
+            continue;
+        }
+
         if (entity->is_a("Junction")) {
             addFlowBalance(solver, ends);
             continue;
@@ -3176,13 +3154,28 @@ void VRPipeSystem::computeHeadFlows(double dt) {
     for (auto n : nodes) {
         auto node = n.second;
         auto entity = node->entity;
+        auto& ends = node->pipes;
+
         if (entity->is_a("Cylinder")) {
-            if (node->pipes.size() != 2) continue;
+            if (ends.size() != 2) continue;
             double v = entity->getValue("pistonSpeed", 0.0);
             double A = entity->getValue("area", 0.0);
             double hflow = A*v;
             entity->set("headFlow", toString(hflow,12));
             //cout << " cylinder flow: " << hflow << endl;
+        }
+
+        if (entity->is_a("FlowSource")) {
+            if (ends.size() > 0) {
+                double Q = entity->getValue("flow", 0.0);
+                Q /= ends.size();
+                for (auto& e1 : ends) {
+                    auto p = e1->pipe.lock();
+                    auto e2 = p->otherEnd(e1);
+                    e1->headFlow = -Q;
+                    e2->headFlow =  Q;
+                }
+            }
         }
     }
 }
@@ -3413,6 +3406,8 @@ void VRPipeSystem::computeMaxFlows(double dt) {
                 }
                 continue;
             }
+
+            if (entity->is_a("FlowSource")) continue;
 
             rebalanceEndsGroupFlow(node->pipes, 0.0, 0.0);
         }
@@ -3940,6 +3935,7 @@ void VRPipeSystem::computeFlowMixing(double dt) {
 
     auto mixAtNode = [&](VRPipeNodePtr node) {
         auto e = node->entity;
+        auto& ends = node->pipes;
 
         if (e->is_a("Tank")) {
             double tankArea = e->getValue("area", 0.0);
@@ -3953,7 +3949,7 @@ void VRPipeSystem::computeFlowMixing(double dt) {
             tFluid.fromEntity( fe );
 
             vector<FluidVolume> flows;
-            for (auto e : node->pipes) {
+            for (auto e : ends) {
                 double V = e->flow * dt;
                 if (abs(V) < 1e-9) continue;
 
@@ -3965,7 +3961,7 @@ void VRPipeSystem::computeFlowMixing(double dt) {
             tFluid = mixVolumeFlows({V0, tFluid}, flows);
             bool addedBin = tFluid.toEntity( fe );
             if (addedBin) rebuildMesh = true;
-            for (auto e : node->pipes) if (e->flow < 0.0) e->fluid = tFluid;
+            for (auto e :ends) if (e->flow < 0.0) e->fluid = tFluid;
             return;
         }
 
@@ -3975,7 +3971,18 @@ void VRPipeSystem::computeFlowMixing(double dt) {
             return;
         }
 
-        if (e->is_a("Junction")) mixNodeFlows(node->pipes);
+        if (e->is_a("FlowSource")) {
+            VRFluidComposition srcFluid;
+            srcFluid.fromEntity(e->getEntity("fluid"));
+
+            for (auto end : ends) {
+                if (end->flow < 0.0) end->fluid = srcFluid;
+            }
+
+            return;
+        }
+
+        if (e->is_a("Junction")) mixNodeFlows(ends);
 
         // TODO: handle other nodes
     };
@@ -4000,14 +4007,8 @@ void VRPipeSystem::computeFlowMixing(double dt) {
         for (auto e : {end1, end2}) if (e->flow >= 0.0) e->fluid = pipe->fluid;
     };
 
-
-    for (auto& n : nodes) {
-        mixAtNode( n.second );
-    }
-
-    for (auto& s : segments) {
-        mixPipeSegment( s.second );
-    }
+    for (auto& n : nodes) mixAtNode( n.second );
+    for (auto& s : segments) mixPipeSegment( s.second );
 }
 
 void VRPipeSystem::radiateHeat(double dt) {

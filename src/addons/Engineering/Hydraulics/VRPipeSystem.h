@@ -201,8 +201,6 @@ class VRPipeSystem : public VRTransform {
 
         void computeEndOffset(VRPipeEndPtr e);
 
-        double computeCylinderAccelleration(VRPipeNodePtr node, double dt);
-
         void updateNodePaths();
         void assignBoundaryPressures(double dt);
         void solveNodeHeads(double dt);
