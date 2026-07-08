@@ -742,19 +742,25 @@ void VRPipeSystem::addControlValvePath(int i, int A, int B, double x0, double xs
 }
 
 void VRPipeSystem::setNodePose(int nID, PosePtr p) {
-    auto handlePipe = [&](int eID) {
+    auto handlePipe = [&](int eID, int movedEnd) {
         auto pipe = segments[eID];
         auto mat = materials[pipe->materialID];
+        double V0 = pipe->volume;
         pipe->updateGeometry(graph, mat->friction);
+        double V1 = pipe->volume;
         auto e1 = pipe->end1.lock();
         auto e2 = pipe->end2.lock();
         e1->updateGeometry(graph);
         e2->updateGeometry(graph);
+
+        double dV = V1 - V0;
+        auto e = (movedEnd == 0) ? e1 : e2;
+        e->volumeChanged += dV;
     };
 
     graph->setPosition(nID, p);
-    for (auto e : graph->getInEdges(nID)  ) handlePipe(e.ID);
-    for (auto e : graph->getOutEdges(nID) ) handlePipe(e.ID);
+    for (auto e : graph->getInEdges(nID)  ) handlePipe(e.ID, 1);
+    for (auto e : graph->getOutEdges(nID) ) handlePipe(e.ID, 0);
     rebuildMesh = true;
 }
 
@@ -3486,6 +3492,10 @@ void VRPipeSystem::computeMaxFlows(double dt) {
                 e->flowClamp = 0.0;
                 e->maxFlow = e->headFlow;
 
+                // try to handle geometric changes after nodes moved
+                e->maxFlow -= e->volumeChanged / dt;
+                e->volumeChanged = 0.0;
+
                 if (entity->is_a("Tank")) {
                     double tankLevel = entity->getValue("level", 1.0);
                     double tankHeight = entity->getValue("height", 1.0);
@@ -3710,6 +3720,7 @@ void VRPipeSystem::updateLevels(double dt) {
         auto e2 = pipe->end2.lock();
         double flow = e1->flow + e2->flow; // positive flow is going out the pipe
         double volDelta = flow*dt;
+
         double lvl = clamp(pipe->level -  volDelta / pipe->volume, 0.0, 1.0, true);
         pipe->setLevel(lvl);
     }

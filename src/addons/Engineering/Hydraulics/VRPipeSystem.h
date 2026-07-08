@@ -62,6 +62,8 @@ class VRPipeEnd {
         double flow = 0.0;
         double flowClamp = 0.0;
 
+        double volumeChanged = 0.0;
+
         VRFluidComposition fluid;
 
     public:
