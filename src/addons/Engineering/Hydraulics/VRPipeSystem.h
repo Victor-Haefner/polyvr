@@ -62,8 +62,6 @@ class VRPipeEnd {
         double flow = 0.0;
         double flowClamp = 0.0;
 
-        double volumeChanged = 0.0;
-
         VRFluidComposition fluid;
 
     public:
@@ -99,6 +97,8 @@ class VRPipeSegment {
         double lastVizLevel = -1.0;
         bool pressurized = false;
         bool flowBlocked = false;
+
+        double excessFluidVolume = 0.0;
 
         int materialID = 0;
         int environmentID = 0;
