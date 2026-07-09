@@ -2791,11 +2791,11 @@ void VRPipeSystem::solveNodeHeads(double dt) {
         double R = pipe->computeEffectiveResistance(e1->flow);
         double G = 2.0 / max(R, 1e-9);
 
-        //double Qg = pipe->excessFluidVolume / dt;
+        double Qg = pipe->excessFluidVolume / dt;
 
         if (pipe->pressurized) { // Q1 + Q2 = 0 -> G(Hpipe - H1) + G(Hpipe - H2) = 0
             balancePipeFlow(solver, p, { { i1, G }, { i2, G } });
-            //solver.b[p] = Qg;
+            solver.b[p] = Qg;
         } else {
             setDirichlet(solver, p, pipe->fluidLvl);
         }
@@ -3148,13 +3148,13 @@ void VRPipeSystem::computeHeadFlows(double dt) {
         auto e1 = pipe->end1.lock();
         auto e2 = pipe->end2.lock();
 
-        //double Qg = pipe->excessFluidVolume / dt;
+        double Qg = pipe->excessFluidVolume / dt;
 
         if (pipe->pressurized && e1->pressurized && e2->pressurized) {
             double dH = e2->hydraulicHead - e1->hydraulicHead;
             double flow = accellerateFlow(dH, pipe, e1->flow);
-            e1->headFlow =  flow;// + 0.5*Qg;
-            e2->headFlow = -flow;// + 0.5*Qg;
+            e1->headFlow =  flow + 0.5*Qg;
+            e2->headFlow = -flow + 0.5*Qg;
             //cout << "accellerate dH " << dH << endl;
             continue;
         }
@@ -3162,10 +3162,10 @@ void VRPipeSystem::computeHeadFlows(double dt) {
         if (pipe->pressurized) {
             double dH1 = pipe->hydraulicHead - e1->hydraulicHead;
             double dH2 = pipe->hydraulicHead - e2->hydraulicHead;
-            double flow1 = accellerateFlow(dH1, pipe, e1->flow);
-            double flow2 = accellerateFlow(dH2, pipe, e2->flow);
-            e1->headFlow = flow1;
-            e2->headFlow = flow2;
+            double flow1 = accellerateFlow(dH1, pipe, e1->flow, true);
+            double flow2 = accellerateFlow(dH2, pipe, e2->flow, true);
+            e1->headFlow = flow1 + 0.5*Qg;
+            e2->headFlow = flow2 + 0.5*Qg;
             continue;
         }
 
@@ -3212,7 +3212,11 @@ void VRPipeSystem::computeMaxFlows(double dt) {
         e->maxFlow = flow;
         double c = 0.0;
         if (f > 1e-6) c = clamp(1.0 - abs(flow) / f, 0.0, 1.0);
-        //if (c > e->flowClamp) cout << "clamping flow " << flow << ", m: " << marker << endl;
+        /*if (c > e->flowClamp) {
+            cout << "clamping flow " << f << " to " << flow
+                << " c: " << c << ", " << e->flowClamp
+                << ", m: " << marker << endl;
+        }*/
         e->flowClamp = max(c, e->flowClamp);
     };
 
@@ -3458,7 +3462,7 @@ void VRPipeSystem::computeMaxFlows(double dt) {
             double pipeAirVolume = pipe->volume * (1.0-pipe->level);
             double pipeWaterVolume = pipe->volume * pipe->level;// + pipe->excessFluidVolume;
 
-            //double Qg = pipe->excessFluidVolume / dt;
+            double Qg = pipe->excessFluidVolume / dt;
             double totalFlowIn = 0;
             double totalFlowOut = 0;
             for (auto& e : {e1, e2}) {
@@ -3477,7 +3481,7 @@ void VRPipeSystem::computeMaxFlows(double dt) {
             }
 
             // forbid cavitations
-            totalFlowIn = 0;
+            totalFlowIn = Qg;
             totalFlowOut = 0;
             for (auto& e : {e1, e2}) {
                 auto f = e->maxFlow;
