@@ -3168,23 +3168,24 @@ void VRPipeSystem::computeHeadFlows(double dt) {
         auto e2 = pipe->end2.lock();
 
         double Qg = pipe->imbalanceFluidFlow;
+        Qg *= 0.5;
 
-        if (pipe->pressurized && e1->pressurized && e2->pressurized) {
+        /*if (pipe->pressurized && e1->pressurized && e2->pressurized) {
             double dH = e2->hydraulicHead - e1->hydraulicHead;
             double flow = accellerateFlow(dH, pipe, e1->flow);
-            e1->headFlow =  flow + 0.5*Qg;
-            e2->headFlow = -flow + 0.5*Qg;
+            e1->headFlow =  flow + Qg;
+            e2->headFlow = -flow + Qg;
             //cout << "accellerate dH " << dH << endl;
             continue;
-        }
+        }*/
 
         if (pipe->pressurized) {
             double dH1 = pipe->hydraulicHead - e1->hydraulicHead;
             double dH2 = pipe->hydraulicHead - e2->hydraulicHead;
             double flow1 = accellerateFlow(dH1, pipe, e1->flow, true);
             double flow2 = accellerateFlow(dH2, pipe, e2->flow, true);
-            e1->headFlow = flow1 + 0.5*Qg;
-            e2->headFlow = flow2 + 0.5*Qg;
+            e1->headFlow = flow1 + Qg;
+            e2->headFlow = flow2 + Qg;
             continue;
         }
 
@@ -3648,6 +3649,8 @@ void VRPipeSystem::computeMaxFlows(double dt) {
 }
 
 void VRPipeSystem::updateLevels(double dt) {
+    auto sign = [](double v) { return (v > 0) - (v < 0); };
+
     for (auto n : nodes) {
         auto node = n.second;
         auto entity = node->entity;
@@ -3757,45 +3760,30 @@ void VRPipeSystem::updateLevels(double dt) {
         }
     }
 
-    double totalVf = 0.0;
-    double totalQf = 0.0;
     for (auto& s : segments) {
         auto& pipe = s.second;
         auto e1 = pipe->end1.lock();
         auto e2 = pipe->end2.lock();
-        double flow = e1->flow + e2->flow - pipe->imbalanceFluidFlow; // positive flow is going out the pipe
+        double flow = e1->flow + e2->flow; // positive flow is going out the pipe
+
+        double Qg = pipe->imbalanceFluidFlow;
+        if (abs(Qg) > abs(flow)) Qg = sign(Qg)*abs(flow);
+        flow -= Qg;
+
         double volDelta = flow*dt;
         double Vf = pipe->volume*pipe->level - volDelta;
 
-        pipe->excessFluidVolume = max(Vf-pipe->volume, 0.0);
-        pipe->missingFluidVolume = max(-Vf, 0.0);
+        if (Qg >= 0) pipe->excessFluidVolume -= Qg*dt;
+        else pipe->missingFluidVolume -= -Qg*dt;
+        pipe->excessFluidVolume  += max(Vf-pipe->volume, 0.0);
+        pipe->missingFluidVolume += max(-Vf, 0.0);
         Vf = clamp(Vf, 0.0, pipe->volume);
-
-        totalVf += Vf + pipe->excessFluidVolume;
-        totalQf += flow;
 
         if (pipe->volume > 1e-9) {
             double lvl = Vf / pipe->volume;
             lvl = clamp(lvl, 0.0, 1.0, true);
             pipe->setLevel(lvl);
         } else pipe->setLevel(1.0);
-
-        if (debugVerbose) {
-            cout << "  segment " << s.first
-                << " Vf " << Vf + pipe->excessFluidVolume
-                << " dVee " << (e1->flow + e2->flow)*dt
-                << " dV " << volDelta
-                << " mV " << pipe->missingFluidVolume
-                << " eV " << pipe->excessFluidVolume
-                << endl;
-        }
-    }
-
-    if (debugVerbose) {
-        cout << "  total Vf " << totalVf
-            << " total Qf " << totalQf
-            << " total M " << computeTotalMass()
-            << endl;
     }
 }
 
