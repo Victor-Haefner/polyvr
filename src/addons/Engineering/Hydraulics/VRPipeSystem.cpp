@@ -17,6 +17,7 @@
 using namespace OSG;
 
 double gasSpeed = 300;
+bool debugVerbose = false;
 
 // fluid composition
 
@@ -634,7 +635,7 @@ Vec2d VRPipeSystem::computeTotalMass() {
         auto pipe = s.second;
         double pipeLevel = pipe->level; // 0..1
         double pipeVolume = pipe->volume; // m³
-        double fluidVolume = pipeVolume * pipeLevel + pipe->excessFluidVolume;
+        double fluidVolume = pipeVolume * pipeLevel + pipe->excessFluidVolume - pipe->missingFluidVolume;
         totalFluidMass += pipe->fluid.computeFluidMass(fluidVolume);
         totalParticlesMass += pipe->fluid.computeParticlesMass(fluidVolume);
     }
@@ -746,19 +747,35 @@ void VRPipeSystem::setNodePose(int nID, PosePtr p) {
         auto pipe = segments[eID];
         auto mat = materials[pipe->materialID];
         double V0 = pipe->volume;
+
         pipe->updateGeometry(graph, mat->friction);
         double V1 = pipe->volume;
+        double dV = V1-V0;
+
         auto e1 = pipe->end1.lock();
         auto e2 = pipe->end2.lock();
         e1->updateGeometry(graph);
         e2->updateGeometry(graph);
 
-        double Vf = V0 * pipe->level + pipe->excessFluidVolume;
-        pipe->excessFluidVolume = max(Vf-V1, 0.0);
-        pipe->pressurized = bool(Vf >= V1);
-        Vf = min(Vf, V1);
-        if (V1 > 1e-9) pipe->setLevel(Vf / V1);
-        else pipe->setLevel(1.0);
+        if (dV >= 0) { // volume grows
+            double pdV = dV*pipe->level;
+            if (pipe->excessFluidVolume >= pdV) {
+                pipe->excessFluidVolume -= pdV;
+            } else {
+                pdV -= pipe->excessFluidVolume;
+                pipe->excessFluidVolume = 0.0;
+                pipe->missingFluidVolume += pdV;
+            }
+        } else { // volume shrinks
+            double ndV = -dV*pipe->level;
+            if (pipe->missingFluidVolume >= ndV) {
+                pipe->missingFluidVolume -= ndV;
+            } else {
+                ndV -= pipe->missingFluidVolume;
+                pipe->missingFluidVolume = 0.0;
+                pipe->excessFluidVolume += ndV;
+            }
+        }
     };
 
     graph->setPosition(nID, p);
@@ -2791,7 +2808,9 @@ void VRPipeSystem::solveNodeHeads(double dt) {
         double R = pipe->computeEffectiveResistance(e1->flow);
         double G = 2.0 / max(R, 1e-9);
 
-        double Qg = pipe->excessFluidVolume / dt;
+        double Qg = (pipe->excessFluidVolume - pipe->missingFluidVolume) / dt;
+        pipe->imbalanceFluidFlow = Qg;
+        if (debugVerbose) cout << " compute imbalance Q " << Qg << endl;
 
         if (pipe->pressurized) { // Q1 + Q2 = 0 -> G(Hpipe - H1) + G(Hpipe - H2) = 0
             balancePipeFlow(solver, p, { { i1, G }, { i2, G } });
@@ -3148,7 +3167,7 @@ void VRPipeSystem::computeHeadFlows(double dt) {
         auto e1 = pipe->end1.lock();
         auto e2 = pipe->end2.lock();
 
-        double Qg = pipe->excessFluidVolume / dt;
+        double Qg = pipe->imbalanceFluidFlow;
 
         if (pipe->pressurized && e1->pressurized && e2->pressurized) {
             double dH = e2->hydraulicHead - e1->hydraulicHead;
@@ -3213,7 +3232,7 @@ void VRPipeSystem::computeMaxFlows(double dt) {
         double c = 0.0;
         if (f > 1e-6) c = clamp(1.0 - abs(flow) / f, 0.0, 1.0);
         /*if (c > e->flowClamp) {
-            cout << "clamping flow " << f << " to " << flow
+            cout << "clamping nID " << e->nID << " flow " << f << " to " << flow
                 << " c: " << c << ", " << e->flowClamp
                 << ", m: " << marker << endl;
         }*/
@@ -3318,10 +3337,6 @@ void VRPipeSystem::computeMaxFlows(double dt) {
         double totalFlowIn = 0;
         double totalFlowOut = 0;
         for (auto& e : ends) {
-            /*auto pipe = e->pipe.lock();
-            double Qg = pipe->excessFluidVolume / dt;
-            totalFlowIn += Qg;*/
-
             auto f = e->maxFlow;
             if (f < 0) totalFlowOut += -f;
             else totalFlowIn += f;
@@ -3329,7 +3344,7 @@ void VRPipeSystem::computeMaxFlows(double dt) {
 
         Vec2d scaleFlowInOut = computeContainerFlowScaling(volAir, volWater, totalFlowIn, totalFlowOut, true);
 
-        /*cout << "rebalanceEndsGroupFlow"
+        /*cout << "rebalanceEndsGroupFlow Ne: " << ends.size()
             << " fIn "  << totalFlowIn
             << " fOut "  << totalFlowOut
             << " s "  << scaleFlowInOut
@@ -3460,10 +3475,10 @@ void VRPipeSystem::computeMaxFlows(double dt) {
             auto e2 = pipe->end2.lock();
 
             double pipeAirVolume = pipe->volume * (1.0-pipe->level);
-            double pipeWaterVolume = pipe->volume * pipe->level;// + pipe->excessFluidVolume;
+            double pipeWaterVolume = pipe->volume * pipe->level;
 
-            double Qg = pipe->excessFluidVolume / dt;
-            double totalFlowIn = 0;
+            double Qg = pipe->imbalanceFluidFlow;
+            double totalFlowIn = Qg;
             double totalFlowOut = 0;
             for (auto& e : {e1, e2}) {
                 auto f = e->maxFlow;
@@ -3742,21 +3757,45 @@ void VRPipeSystem::updateLevels(double dt) {
         }
     }
 
+    double totalVf = 0.0;
+    double totalQf = 0.0;
     for (auto& s : segments) {
         auto& pipe = s.second;
         auto e1 = pipe->end1.lock();
         auto e2 = pipe->end2.lock();
-        double flow = e1->flow + e2->flow; // positive flow is going out the pipe
+        double flow = e1->flow + e2->flow - pipe->imbalanceFluidFlow; // positive flow is going out the pipe
         double volDelta = flow*dt;
+        double Vf = pipe->volume*pipe->level - volDelta;
 
-        double Vf = pipe->volume*pipe->level - volDelta + pipe->excessFluidVolume;
         pipe->excessFluidVolume = max(Vf-pipe->volume, 0.0);
-        Vf = min(Vf, pipe->volume);
+        pipe->missingFluidVolume = max(-Vf, 0.0);
+        Vf = clamp(Vf, 0.0, pipe->volume);
+
+        totalVf += Vf + pipe->excessFluidVolume;
+        totalQf += flow;
+
         if (pipe->volume > 1e-9) {
             double lvl = Vf / pipe->volume;
             lvl = clamp(lvl, 0.0, 1.0, true);
             pipe->setLevel(lvl);
         } else pipe->setLevel(1.0);
+
+        if (debugVerbose) {
+            cout << "  segment " << s.first
+                << " Vf " << Vf + pipe->excessFluidVolume
+                << " dVee " << (e1->flow + e2->flow)*dt
+                << " dV " << volDelta
+                << " mV " << pipe->missingFluidVolume
+                << " eV " << pipe->excessFluidVolume
+                << endl;
+        }
+    }
+
+    if (debugVerbose) {
+        cout << "  total Vf " << totalVf
+            << " total Qf " << totalQf
+            << " total M " << computeTotalMass()
+            << endl;
     }
 }
 
@@ -4145,6 +4184,12 @@ void VRPipeSystem::update() {
     //sleep(1);
 
 
+    if (debugVerbose) {
+        cout << " initial M " << computeTotalMass()
+            << endl;
+    }
+
+
     updateNodePaths();
 
     for (int i=0; i<subSteps; i++) {
@@ -4186,6 +4231,7 @@ void VRPipeSystem::update() {
     }
 
     updateVisual();
+    debugVerbose = false;
 
     //cout << "mass " << computeTotalMass() << endl;
 }

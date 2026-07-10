@@ -98,7 +98,9 @@ class VRPipeSegment {
         bool pressurized = false;
         bool flowBlocked = false;
 
+        double missingFluidVolume = 0.0;
         double excessFluidVolume = 0.0;
+        double imbalanceFluidFlow = 0.0;
 
         int materialID = 0;
         int environmentID = 0;
