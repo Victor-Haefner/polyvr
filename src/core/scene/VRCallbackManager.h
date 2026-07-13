@@ -7,12 +7,16 @@
 #include <list>
 #include <memory>
 #include "core/utils/VRFunctionFwd.h"
+#include "core/utils/VRMutex.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
 class VRCallbackManager {
     private:
+        VRMutex mtx;
+        VRMutex mtxJobs;
+
         struct job {
             VRUpdateCbPtr ptr;
             VRUpdateCbWeakPtr wptr;
@@ -29,7 +33,6 @@ class VRCallbackManager {
             int last_call;
         };
 
-        bool updateListsChanged;
         vector<job> jobFktPtrs;
         map<int, shared_ptr<list<timeoutFkt>> > timeoutFktPtrs;
         map<int, shared_ptr<list<VRUpdateCbWeakPtr>> > updateFktPtrs;

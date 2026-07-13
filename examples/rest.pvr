@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Scene base_name="rest" name_space="Scene" name_suffix="1" persistency="666">
+<Scene base_name="rest" name_space="Scene" name_suffix="2" persistency="666">
   <Objects>
-    <Object base_name="Root" name_space="__global__" name_suffix="1" persistency="666" pickable="0" type="Object" visible="4294967295">
+    <Object base_name="Root" name_space="__global__" name_suffix="2" persistency="666" pickable="0" type="Object" visible="4294967295">
       <Object ambient="0.3 0.3 0.3 1" base_name="light" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" name_space="__global__" name_suffix="0" on="1" persistency="666" photometricMap="" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" shadowVolume="1.79769e+308 1.79769e+308 1.79769e+308 -1.79769e+308 -1.79769e+308 -1.79769e+308 1" specular="0.1 0.1 0.1 1" type="Light" visible="4294967295">
         <Object accept_root="1" aspect="1" at="0 0 0" at_dir="0" base_name="Default" camType="perspective" far="512" fov="1.0472" from="3 2 3" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="4294967295">
           <attachments>
@@ -21,7 +21,7 @@
   <Cameras activeCam="Default" persistency="666"/>
   <Rendering deferred_rendering="0" fogColor="0.5 0.5 0.5 1" fogParams="0 0 100 0.1" frustum_culling="1" fxaa="0" hmdd="0" marker="0" occlusion_culling="0" persistency="666" ssao="0" ssao_kernel="4" ssao_noise="4" ssao_radius="0.02" two_sided="1"/>
   <Scripts persistency="666">
-    <Script base_name="init" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+    <Script base_name="init" group="no group" name_space="__script__" name_suffix="0" persistency="666" pyVersion="3.14.4" server="server1" type="Python">
       <core>
 	import VR
 
@@ -32,11 +32,11 @@
 
 	def onMessage(req):
 		# handle request
-		print 'server, handle request:'
-		print ' data:'
-		print req.getData()
-		print ' headers:'
-		for h in req.getHeaders(): print ' ', h
+		print('server, handle request:')
+		print(' data:')
+		print(req.getData())
+		print(' headers:')
+		for h in req.getHeaders(): print (' ', h)
 		
 		# write answer back into request object
 		req.setStatus(200)
@@ -47,19 +47,19 @@
 	VR.server = VR.RestServer('myServer')
 	VR.server.listen(5678, onMessage)
 </core>
-      <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" base_name="trigger" name_space="__global__" name_suffix="1" persistency="666"/>
+      <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" base_name="trigger" name_space="__global__" name_suffix="2" persistency="666"/>
     </Script>
-    <Script base_name="send" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+    <Script base_name="send" group="no group" name_space="__script__" name_suffix="0" persistency="666" pyVersion="3.14.4" server="server1" type="Python">
       <core>
 	import VR
 
 	
 	def cb(resp):
-		print 'client, got response:'
-		print ' status: ', resp.getStatus()
-		print ' data: ', resp.getData()
-		print ' headers:'
-		for h in resp.getHeaders(): print ' ', h
+		print('client, got response:')
+		print(' status: ', resp.getStatus())
+		print(' data: ', resp.getData())
+		print(' headers:')
+		for h in resp.getHeaders(): print( ' ', h)
 		
 	
 	VR.client = VR.RestClient('myClient')
@@ -70,7 +70,7 @@
     </Script>
   </Scripts>
   <Sockets persistency="666"/>
-  <Background color="0.6 0.6 0.6" format=".png" path="" persistency="666" type="0"/>
+  <Background color="0.6 0.6 0.6" format=".png" path="" persistency="666" showSplash="0" splashPath="" type="0"/>
   <Navigation persistency="666">
     <presetStates>
       <Orbit>1</Orbit>

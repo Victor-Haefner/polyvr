@@ -20,14 +20,15 @@ class VRRestClient : public VRNetworkClient {
 
         list<shared_ptr<RestPromise>> promises;
 
-        void finishAsync(VRRestCbPtr cb, VRRestResponsePtr res);
+        void cleanupPromises();
+        static void finishAsync(VRRestClientWeakPtr self, VRRestCbPtr cb, VRRestResponsePtr res);
 
 	public:
 		VRRestClient(string name);
 		~VRRestClient();
 
 		static VRRestClientPtr create(string name = "none");
-		//VRRestClientPtr ptr();
+		VRRestClientPtr ptr();
 
 		VRRestResponsePtr get(string uri, int timeoutSecs = 2, vector<string> headers = {});
 		void getAsync(string uri, VRRestCbPtr cb, int timeoutSecs = 2, vector<string> headers = {});
