@@ -93,13 +93,16 @@ void ImSection::end() {
 }
 
 void ImSection::updateLayout(const Surface& newSize) {
+    auto& l = layout;
+
     //cout << " updateLayout " << newSize.y + newSize.height << "/800?   " << layout << ", parentSurface: " << parentSurface;
-    layout.left  = float(newSize.x - parentSurface.x) / parentSurface.width;
-    layout.right = float(newSize.x + newSize.width - parentSurface.x) / parentSurface.width;
-    layout.top    = 1.0 - float(newSize.y - parentSurface.y) / parentSurface.height;
-    layout.bottom = 1.0 - float(newSize.y + newSize.height - parentSurface.y) / parentSurface.height;
-    surface.compute(parentSurface, layout);
-    //cout << ", new size: " << newSize << " -> " << layout << endl;
+    l.left   = double(newSize.x - parentSurface.x) / parentSurface.width;
+    l.right  = double(newSize.x + newSize.width - parentSurface.x) / parentSurface.width;
+    l.top    = 1.0 - double(newSize.y - parentSurface.y) / parentSurface.height;
+    l.bottom = 1.0 - double(newSize.y + newSize.height - parentSurface.y) / parentSurface.height;
+    l.clamp();
+
+    surface.compute(parentSurface, l);
 }
 
 void ImSection::resize(const Surface& parent) {
@@ -724,8 +727,8 @@ void VRImguiEditor::init(Signal signal, ResizeSignal resizeSignal) {
     double vSlider = 0.3;
     toValue(uiGetParameter("hPanelSlider", "0.3"), hSlider);
     toValue(uiGetParameter("vPanelSlider", "0.3"), vSlider);
-    clamp(hSlider, 0.05, 0.95);
-    clamp(vSlider, 0.05, 0.95);
+    hSlider = clamp(hSlider, 0.05, 0.95);
+    vSlider = clamp(vSlider, 0.05, 0.95);
 
     sidePanel.layout.right = hSlider;
     consoles.layout.left = hSlider;

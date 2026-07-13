@@ -17,6 +17,12 @@ struct ImRectangle {
     float right = 1;
     float bottom = 0;
     float top = 1;
+    ImVec2 clampLeft = ImVec2(0,1);
+    ImVec2 clampRight = ImVec2(0,1);
+    ImVec2 clampBottom = ImVec2(0,1);
+    ImVec2 clampTop = ImVec2(0,1);
+
+    void clamp();
 };
 
 struct Surface {

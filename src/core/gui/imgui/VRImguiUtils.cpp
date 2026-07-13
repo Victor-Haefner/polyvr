@@ -28,6 +28,13 @@ ostream& operator<<(ostream& os, const Surface& s) {
     return os;
 }
 
+void ImRectangle::clamp() {
+    left   = ::clamp(left  , clampLeft.x  , clampLeft.y);
+    right  = ::clamp(right , clampRight.x , clampRight.y);
+    top    = ::clamp(top   , clampTop.x   , clampTop.y);
+    bottom = ::clamp(bottom, clampBottom.x, clampBottom.y);
+}
+
 void Surface::compute(const Surface& parent, const ImRectangle& area) {
     width  = round( parent.width * (area.right - area.left) );
     height = round( parent.height * (area.top - area.bottom) );
