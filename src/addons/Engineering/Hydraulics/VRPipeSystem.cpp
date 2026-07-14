@@ -1762,7 +1762,7 @@ void VRPipeSystem::updateNodePaths() {
 
 }
 
-void VRPipeSystem::assignBoundaryPressures(double dt) {
+void VRPipeSystem::assignBoundaryPressures(double dt, double dT) {
     for (auto n : nodes) {
         auto node = n.second;
         auto entity = node->entity;
@@ -1837,6 +1837,11 @@ void VRPipeSystem::assignBoundaryPressures(double dt) {
         auto& pipe = s.second;
         auto e1 = pipe->end1.lock();
         auto e2 = pipe->end2.lock();
+
+        double Qg = (pipe->excessFluidVolume - pipe->missingFluidVolume) / dT;
+        pipe->imbalanceFluidFlow = Qg;
+        if (debugVerbose) cout << " compute imbalance Q " << Qg << endl;
+
         if (pipe->pressurized && e1->pressurized && e2->pressurized) continue;
 
         if (!pipe->pressurized) {
@@ -2814,10 +2819,7 @@ void VRPipeSystem::solveNodeHeads(double dt) {
 
         double R = pipe->computeEffectiveResistance(e1->flow);
         double G = 2.0 / max(R, 1e-9);
-
-        double Qg = (pipe->excessFluidVolume - pipe->missingFluidVolume) / dt;
-        pipe->imbalanceFluidFlow = Qg;
-        if (debugVerbose) cout << " compute imbalance Q " << Qg << endl;
+        double Qg = pipe->imbalanceFluidFlow;
 
         if (pipe->pressurized) { // Q1 + Q2 = 0 -> G(Hpipe - H1) + G(Hpipe - H2) = 0
             balancePipeFlow(solver, p, { { i1, G }, { i2, G } });
@@ -3175,25 +3177,22 @@ void VRPipeSystem::computeHeadFlows(double dt) {
         auto e1 = pipe->end1.lock();
         auto e2 = pipe->end2.lock();
 
-        double Qg = pipe->imbalanceFluidFlow;
-        Qg *= 0.5;
-
-        /*if (pipe->pressurized && e1->pressurized && e2->pressurized) {
+        if (pipe->pressurized && e1->pressurized && e2->pressurized) {
             double dH = e2->hydraulicHead - e1->hydraulicHead;
             double flow = accellerateFlow(dH, pipe, e1->flow);
-            e1->headFlow =  flow + Qg;
-            e2->headFlow = -flow + Qg;
+            e1->headFlow =  flow;
+            e2->headFlow = -flow;
             //cout << "accellerate dH " << dH << endl;
             continue;
-        }*/
+        }
 
         if (pipe->pressurized) {
             double dH1 = pipe->hydraulicHead - e1->hydraulicHead;
             double dH2 = pipe->hydraulicHead - e2->hydraulicHead;
             double flow1 = accellerateFlow(dH1, pipe, e1->flow, true);
             double flow2 = accellerateFlow(dH2, pipe, e2->flow, true);
-            e1->headFlow = flow1 + Qg;
-            e2->headFlow = flow2 + Qg;
+            e1->headFlow = flow1;
+            e2->headFlow = flow2;
             e1->flowForce = (e1->headFlow - e1->flow)/dt;
             e2->flowForce = (e2->headFlow - e2->flow)/dt;
             continue;
@@ -3487,8 +3486,8 @@ void VRPipeSystem::computeMaxFlows(double dt) {
 
             double pipeAirVolume = pipe->volume * (1.0-pipe->level);
             double pipeWaterVolume = pipe->volume * pipe->level;
-
             double Qg = pipe->imbalanceFluidFlow;
+
             double totalFlowIn = Qg;
             double totalFlowOut = 0;
             for (auto& e : {e1, e2}) {
@@ -3496,6 +3495,7 @@ void VRPipeSystem::computeMaxFlows(double dt) {
                 if (f < 0) totalFlowIn += -f;
                 else totalFlowOut += f;
             }
+
 
             Vec2d scaleFlowInOut = computeContainerFlowScaling(pipeAirVolume, pipeWaterVolume, totalFlowIn, totalFlowOut, pipe->pressurized);
             //cout << " e " << s.first << " s: " << scaleFlowInOut << endl;
@@ -4194,7 +4194,7 @@ void VRPipeSystem::update() {
         auto t1 = VRTimer::create();
         updatePressurization(dt);
         auto T1 = t1->stop();
-        assignBoundaryPressures(dt);
+        assignBoundaryPressures(dt, dT);
         auto T2 = t1->stop();
         solveNodeHeads(dt); // 80%
         auto T3 = t1->stop();
