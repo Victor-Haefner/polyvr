@@ -1231,9 +1231,10 @@ void VRPipeSystem::updateVisual() {
                 Vec3d pt = (p1+pm)*0.5;
                 if (t == 1) pt = (pm+p2)*0.5;
 
-                for (int t = 0; t<2; t++) { // 2 triangles
+                for (int t = 0; t<3; t++) { // 3 triangles
                     auto col = green;
                     if (t == 1) { g2 *= 0.98; g3 *= 0.98; g4 *= 0.98; col = red; }
+                    if (t == 2) { g2 *= 0.98; g3 *= 0.98; g4 *= 0.98; col = yellow; }
 
                     dataArrows.pushQuad(pt, d, u,  Vec2d(g3,g2), false);
                     dataArrows.pushQuad(pt, d, u,  Vec2d(g2,g3), false);
@@ -1457,25 +1458,31 @@ void VRPipeSystem::updateVisual() {
         double F2 = flowToArrowLength(-e2->flow, r, A, v0, v_ref);
         double H1 = flowToArrowLength( e1->headFlow, r, A, v0, v_ref);
         double H2 = flowToArrowLength(-e2->headFlow, r, A, v0, v_ref);
+        double A1 = flowToArrowLength( e1->flowForce, r, A, v0, v_ref);
+        double A2 = flowToArrowLength(-e2->flowForce, r, A, v0, v_ref);
 
         for (int j=0; j<4; j++) {
             int j1 = iArrows+4+j;
             int j2 = j1+4;
             int j3 = j2+12;
+            int j4 = j3+12;
             Vec3d sD = dataArrows.getNormal(j1);
             Vec3d p0 = dataArrows.getNormal(j2);
             dataArrows.setPos(j2, p0 + F1*sD);
             dataArrows.setPos(j3, p0 + H1*sD);
+            dataArrows.setPos(j4, p0 + A1*sD);
         }
 
         for (int j=0; j<4; j++) {
-            int j1 = iArrows+28+j;
+            int j1 = iArrows+40+j;
             int j2 = j1+4;
             int j3 = j2+12;
+            int j4 = j3+12;
             Vec3d sD = dataArrows.getNormal(j1);
             Vec3d p0 = dataArrows.getNormal(j2);
             dataArrows.setPos(j2, p0 + F2*sD);
             dataArrows.setPos(j3, p0 + H2*sD);
+            dataArrows.setPos(j4, p0 + A2*sD);
         }
 
         /*for (int j=0; j<16; j++) {
@@ -1484,7 +1491,7 @@ void VRPipeSystem::updateVisual() {
             ann->set(j, p, toString(j));
         }*/
 
-        iArrows += 12*4;
+        iArrows += 12*6;
 
 
         // ----------- volume
@@ -1595,7 +1602,7 @@ void VRPipeSystem::updateVisual() {
                 double sMax = p.second.sizeMax;
                 double d = p.second.density;
                 double vol = p.second.volumeFraction;
-                updateParticleBox(vol*l);
+                updateParticleBox(vol*l*h);
             }
             continue;
         }
@@ -3160,6 +3167,7 @@ void VRPipeSystem::computeHeadFlows(double dt) {
         double dH = pipe->hydraulicHead - e->hydraulicHead;
         double flow = computeFlow(dH, pipe, true);
         e->headFlow = flow;
+        e->flowForce = (flow - e->flow)/dt;
     };
 
     for (auto& s : segments) {
@@ -3186,6 +3194,8 @@ void VRPipeSystem::computeHeadFlows(double dt) {
             double flow2 = accellerateFlow(dH2, pipe, e2->flow, true);
             e1->headFlow = flow1 + Qg;
             e2->headFlow = flow2 + Qg;
+            e1->flowForce = (e1->headFlow - e1->flow)/dt;
+            e2->flowForce = (e2->headFlow - e2->flow)/dt;
             continue;
         }
 

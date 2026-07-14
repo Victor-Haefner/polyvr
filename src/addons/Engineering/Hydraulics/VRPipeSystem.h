@@ -57,6 +57,7 @@ class VRPipeEnd {
         int stateID = -1;
         bool pressurized = false;
 
+        double flowForce = 0.0;
         double headFlow = 0.0;
         double maxFlow = 0.0;
         double flow = 0.0;
