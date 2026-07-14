@@ -56,6 +56,7 @@ PyMethodDef VRPyPipeSystem::methods[] = {
     {"setNodePose", PyWrap( PipeSystem, setNodePose, "Set node pose by ID", void, int, PosePtr ) },
     {"disconnect", PyWrap( PipeSystem, disconnect, "Disconnect a node from a segment, keeps the segment by adding a junction to its end (nId, sID)", int, int, int ) },
     {"insertSegment", PyWrap( PipeSystem, insertSegment, "Insert a segment between a node and segment (nID, sID, radius)", int, int, int, float ) },
+    {"splitSegment", PyWrap( PipeSystem, splitSegment, "Split a segment in two in the middle (sID), returns nID of new node", int, int) },
     {"getGraph", PyWrap( PipeSystem, getGraph, "Get internal graph", GraphPtr ) },
     {"getOntology", PyWrap( PipeSystem, getOntology, "Get ontology", VROntologyPtr ) },
     {"getNode", PyWrap( PipeSystem, getNode, "Get node ID by name", int, string ) },

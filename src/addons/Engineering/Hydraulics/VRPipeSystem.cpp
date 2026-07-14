@@ -791,6 +791,62 @@ int VRPipeSystem::insertSegment(int nID, int sID, float radius) {
     return cID;
 }
 
+int VRPipeSystem::splitSegment(int sID) {
+    auto pipe = segments[sID];
+    auto e1 = pipe->end1.lock();
+    auto e2 = pipe->end2.lock();
+    auto P1 = getNodePose(e1->nID);
+    auto P2 = getNodePose(e2->nID);
+    P1->setPos( (P1->pos() + P2->pos())*0.5 );
+    int nID = addNode("split", P1, "Junction", {});
+
+    double R = pipe->radius;
+    double lvl = pipe->level;
+    double h1 = e1->offsetHeight;
+    double h2 = e2->offsetHeight;
+    double hm = (h1+h2)*0.5;
+
+    auto fluid = pipe->fluid;
+    double flow1 = e1->flow;
+    double flow2 = e2->flow;
+    double flowm = (flow1+flow2)*0.5;
+    double H1 = e1->hydraulicHead;
+    double H2 = e2->hydraulicHead;
+    double Hm = (H1+H2)*0.5;
+
+    double mfV = pipe->missingFluidVolume;
+    double efV = pipe->excessFluidVolume;
+
+    remSegment(sID);
+    int s1ID = addSegment(R, e1->nID, nID, lvl, h1, hm);
+    int s2ID = addSegment(R, nID, e2->nID, lvl, hm, h2);
+    auto pipe1 = segments[s1ID];
+    auto pipe2 = segments[s2ID];
+    pipe1->fluid = fluid;
+    pipe2->fluid = fluid;
+    auto e11 = pipe1->end1.lock();
+    auto e12 = pipe1->end2.lock();
+    auto e21 = pipe1->end1.lock();
+    auto e22 = pipe1->end2.lock();
+
+    e11->flow = flow1;
+    e12->flow = flowm;
+    e21->flow = flowm;
+    e22->flow = flow2;
+
+    e11->hydraulicHead = H1;
+    e12->hydraulicHead = Hm;
+    e21->hydraulicHead = Hm;
+    e22->hydraulicHead = H2;
+
+    pipe1->missingFluidVolume = mfV*0.5;
+    pipe1->excessFluidVolume  = efV*0.5;
+    pipe2->missingFluidVolume = mfV*0.5;
+    pipe2->excessFluidVolume  = efV*0.5;
+
+    return nID;
+}
+
 int VRPipeSystem::disconnect(int nID, int sID) {
     rebuildMesh = true;
     int cID = graph->split(nID, sID);

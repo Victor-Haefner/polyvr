@@ -242,6 +242,7 @@ class VRPipeSystem : public VRTransform {
 		void setNodePose(int nID, PosePtr p);
         int disconnect(int nID, int sID);
         int insertSegment(int nID, int sID, float radius);
+        int splitSegment(int sID);
 		void setFlowParameters(float latency);
 
 		void setDoVisual(bool b, float spread = 0.1);
