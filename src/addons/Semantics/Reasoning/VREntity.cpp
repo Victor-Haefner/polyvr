@@ -323,11 +323,17 @@ void VREntity::load(XMLElementPtr e, VRStorageContextPtr context) {
 
     if (auto o = getOntology()) {
         auto self = ptr();
-        o->addEntity(self);
-        for (auto cs : conceptNames) if (auto c = o->getConcept(cs)) concepts.push_back(c);
+        o->addEntity(self); //
+
+        concepts.clear();
+        for (auto cs : conceptNames) {
+            auto c = o->getConcept(cs);
+            if (c) concepts.push_back(c);
+        }
     }
 
     auto eP = e->getChild("properties");
+    properties.clear();
     for (auto el : eP->getChildren()) {
         for (auto el2 : el->getChildren()) {
             string n = el2->getName();

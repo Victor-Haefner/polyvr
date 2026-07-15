@@ -84,6 +84,9 @@ PyMethodDef VRPyPipeSystem::methods[] = {
     {"setTankDensity", PyWrap( PipeSystem, setTankDensity, "Set tank density", void, int, double ) },
     {"setPipeRadius", PyWrap( PipeSystem, setPipeRadius, "Set pipe radius, set to 0 to simulate blocked pipe", void, int, double ) },
     {"setPipePressure", PyWrap( PipeSystem, setPipePressure, "Set pipe pressure, (pID, p1, p2)", void, int, double, double ) },
+    {"setPipeTemperature", PyWrap( PipeSystem, setPipeTemperature, "Set pipe temperature, (pID, t)", void, int, double ) },
+    {"setPipeLevel", PyWrap( PipeSystem, setPipeLevel, "Set pipe level, (pID, lvl)", void, int, double ) },
+    {"setPipeFlow", PyWrap( PipeSystem, setPipeFlow, "Set pipe flow, (pID, f1, f2)", void, int, double, double ) },
     {"setOutletDensity", PyWrap( PipeSystem, setOutletDensity, "Set outlet exterior density", void, int, double ) },
     {"setOutletPressure", PyWrap( PipeSystem, setOutletPressure, "Set outlet exterior pressure", void, int, double ) },
     {"printSystem", PyWrap( PipeSystem, printSystem, "Print system state to console", void ) },
@@ -105,6 +108,8 @@ PyMethodDef VRPyPipeSystem::methods[] = {
     {"setEnvironmentVolume", PyWrap( PipeSystem, setEnvironmentVolume, "Set environment volume", void, int, double ) },
     {"setEnvironmentTemperature", PyWrap( PipeSystem, setEnvironmentTemperature, "Set environment temperature", void, int, double ) },
     {"getEnvironmentTemperature", PyWrap( PipeSystem, getEnvironmentTemperature, "Get environment temperature", double, int ) },
+    {"createSnapshot", PyWrap( PipeSystem, createSnapshot, "Create snapshot of the simulation model state", string ) },
+    {"applySnapshot", PyWrap( PipeSystem, applySnapshot, "Apply snapshot to simulation model state, model needs to be compatible", void, string ) },
     {NULL}
 };
 

@@ -21,14 +21,16 @@ class VRFluidComposition {
             double sizeMax;
             double density;
             double volumeFraction;
+
+            void toXML(XMLElementPtr n);
+            void fromXML(XMLElementPtr n);
         };
 
         double temperature = 20.0;
-        double effectiveDensity = 1000.0; // kg / m3
-        double effectiveViscosity = 1e-3; // Pa s
-
         double baseDensity = 1000.0; // kg / m3 at 20 C
         double baseViscosity = 1e-3; // Pa s at 20 C
+        double effectiveDensity = 1000.0; // kg / m3
+        double effectiveViscosity = 1e-3; // Pa s
 
         map<string, ParticleBin> particles;
 
@@ -40,6 +42,9 @@ class VRFluidComposition {
 
         double computeFluidMass(double Volume);
         double computeParticlesMass(double Volume);
+
+        void toXML(XMLElementPtr n);
+        void fromXML(XMLElementPtr n);
 };
 
 class VRPipeEnd {
@@ -47,21 +52,28 @@ class VRPipeEnd {
         VRPipeSegmentWeakPtr pipe;
         int nID = -1;
 
+        // parameters
+        double offsetHeight = 0.0; // used for tank offset
+
+        // computed geometry
         double height = 0.0;
         double heightMax = 0.0;
-        double offsetHeight = 0.0; // used for tank offset
         Vec3d offset; // offset relative to node center
 
-        double pressure = 0.0;
-        double hydraulicHead = 0.0;
+        // solver
         int stateID = -1;
-        bool pressurized = false;
-
-        double flowForce = 0.0;
         double headFlow = 0.0;
         double maxFlow = 0.0;
-        double flow = 0.0;
+
+        // visualization
+        double flowForce = 0.0;
         double flowClamp = 0.0;
+
+        // state parameters
+        double pressure = 0.0;
+        double hydraulicHead = 0.0;
+        bool pressurized = false;
+        double flow = 0.0;
 
         VRFluidComposition fluid;
 
@@ -73,41 +85,50 @@ class VRPipeEnd {
         void setInitialHead();
 
         static VRPipeEndPtr create(VRPipeSegmentPtr s, int nID, double height = 0.0);
+
+        void toXML(XMLElementPtr n);
+        void fromXML(XMLElementPtr n);
 };
 
 class VRPipeSegment {
     public:
         int eID = 0;
+
+        // parameters
         double radius = 0.0;
+        double gravity = 9.81;
+        int materialID = 0;
+        int environmentID = 0;
+
+        // computed geometry
         double length = 0.0;
         double area = 0.0;
         double volume = 0.0;
         double fluidMin = 0.0;
         double fluidMax = 0.0;
-        double fluidLvl = 0.0;
         double zRadius = 0.0;
 
-        double gravity = 9.81;
+        // computed parameters
         double resistanceLaminar = 0.0;
         double resistanceTurbulent = 0.0;
-        //double resistance = 0.0;
-        double regime = 1.0; // 0 laminar, 1 turbulent
-        double level = 0.0;
-        double hydraulicHead = 0.0;
-        int stateID = -1;
-        double lastVizLevel = -1.0;
-        bool pressurized = false;
-        bool flowBlocked = false;
 
-        double missingFluidVolume = 0.0;
-        double excessFluidVolume = 0.0;
+        // solver
+        int stateID = -1;
         double imbalanceFluidFlow = 0.0;
 
-        int materialID = 0;
-        int environmentID = 0;
+        // visualization
+        double lastVizLevel = -1.0;
+
+        // state parameters
+        double level = 0.0;
+        double fluidLvl = 0.0;
+        double hydraulicHead = 0.0;
+        bool pressurized = false;
+        double regime = 1.0; // 0 laminar, 1 turbulent
+        double missingFluidVolume = 0.0;
+        double excessFluidVolume = 0.0;
 
         VRFluidComposition fluid;
-
         VRPipeEndWeakPtr end1;
         VRPipeEndWeakPtr end2;
 
@@ -126,6 +147,9 @@ class VRPipeSegment {
         void updateGeometry(GraphPtr graph, double friction);
 
         double computeEffectiveResistance(const double& flow);
+
+        void toXML(XMLElementPtr n);
+        void fromXML(XMLElementPtr n);
 };
 
 class VRPipeNode {
@@ -147,6 +171,9 @@ class VRPipeNode {
         ~VRPipeNode();
 
         static VRPipeNodePtr create(VREntityPtr entity);
+
+        void toXML(XMLElementPtr n);
+        void fromXML(XMLElementPtr n);
 };
 
 class VRPipeSystem : public VRTransform {
@@ -154,11 +181,19 @@ class VRPipeSystem : public VRTransform {
         struct Environment {
             double temperature = 20.0;
             double volume = 100.0;
+            double ousideTemperature = 20.0;
+            double heatLossCoefficient = 50.0; // W/K
+
+            void toXML(XMLElementPtr n);
+            void fromXML(XMLElementPtr n);
         };
 
         struct Material {
             double thermalConductance = 10.0;
             double friction = 0.02;
+
+            void toXML(XMLElementPtr n);
+            void fromXML(XMLElementPtr n);
         };
 
         using EnvironmentPtr = shared_ptr<Environment>;
@@ -278,6 +313,9 @@ class VRPipeSystem : public VRTransform {
 		void setOutletPressure(int nID, double p);
 		void setPipeRadius(int i, double r);
 		void setPipePressure(int i, double p1, double p2);
+		void setPipeTemperature(int i, double t);
+		void setPipeLevel(int i, double l);
+		void setPipeFlow(int i, double f1, double f2);
 
 		void addFluidParticleBin(int i, string type, Vec2d sizeRange, double density);
 		double getFluidParticles(int i, string type);
@@ -303,6 +341,9 @@ class VRPipeSystem : public VRTransform {
 
 		Vec2d computeTotalMass();
         void printSystem();
+
+        string createSnapshot();
+        void applySnapshot(string snapshot);
 };
 
 OSG_END_NAMESPACE;

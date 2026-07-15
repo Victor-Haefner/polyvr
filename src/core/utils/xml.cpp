@@ -126,12 +126,16 @@ vector<XMLElementPtr> XMLElement::getChildren(string name, bool recursive) {
     return res;
 }
 
-XMLElementPtr XMLElement::getChild(string name) {
+XMLElementPtr XMLElement::getChild(string name, int i) {
     if (!node) return 0;
     auto cnode = getNextNode( node->xmlChildrenNode );
+    int j = 0;
     while ( cnode ) {
         if (cnode->type == XML_ELEMENT_NODE) {
-            if (name == string((const char*)cnode->name)) return XMLElement::create(cnode);
+            if (name == string((const char*)cnode->name)) {
+                if (i <= j) return XMLElement::create(cnode);
+                j++;
+            }
         }
         cnode = getNextNode( cnode->next );
     }

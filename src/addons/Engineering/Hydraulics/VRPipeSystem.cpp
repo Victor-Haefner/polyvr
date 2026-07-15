@@ -2,6 +2,7 @@
 #include "core/utils/toString.h"
 #include "core/utils/isNan.h"
 #include "core/utils/VRFunction.h"
+#include "core/utils/xml.h"
 #include "core/utils/system/VRSystem.h"
 #include "core/tools/VRAnalyticGeometry.h"
 #include "core/tools/VRAnnotationEngine.h"
@@ -20,6 +21,44 @@ double gasSpeed = 300;
 bool debugVerbose = false;
 
 // fluid composition
+
+void VRFluidComposition::toXML(XMLElementPtr n) {
+    n->setAttribute("temperature", toString(temperature));
+    n->setAttribute("baseDensity", toString(baseDensity));
+    n->setAttribute("baseViscosity", toString(baseViscosity));
+    n->setAttribute("effectiveDensity", toString(effectiveDensity));
+    n->setAttribute("effectiveViscosity", toString(effectiveViscosity));
+
+    for (auto& p : particles) {
+        auto pn = n->addChild("ParticleBin");
+        p.second.toXML(pn);
+    }
+}
+
+void VRFluidComposition::fromXML(XMLElementPtr n) {
+    if (n->hasAttribute("temperature")) toValue(n->getAttribute("temperature"), temperature);
+    if (n->hasAttribute("baseDensity")) toValue(n->getAttribute("baseDensity"), baseDensity);
+    if (n->hasAttribute("baseViscosity")) toValue(n->getAttribute("baseViscosity"), baseViscosity);
+    if (n->hasAttribute("effectiveDensity")) toValue(n->getAttribute("effectiveDensity"), effectiveDensity);
+    if (n->hasAttribute("effectiveViscosity")) toValue(n->getAttribute("effectiveViscosity"), effectiveViscosity);
+
+    int i=0;
+    auto pbNodes = n->getChildren("ParticleBin");
+    for (auto& p : particles) {
+        if (i >= pbNodes.size()) break;
+        auto pn = pbNodes[i];
+        p.second.fromXML(pn);
+        i++;
+    }
+}
+
+void VRFluidComposition::ParticleBin::toXML(XMLElementPtr n) {
+    n->setAttribute("volumeFraction", toString(volumeFraction));
+}
+
+void VRFluidComposition::ParticleBin::fromXML(XMLElementPtr n) {
+    if (n->hasAttribute("volumeFraction")) toValue(n->getAttribute("volumeFraction"), volumeFraction);
+}
 
 void VRFluidComposition::mixIn(const VRFluidComposition& fluid, const double& percentage) {
     double k = percentage;
@@ -300,6 +339,26 @@ VRPipeEnd::VRPipeEnd(VRPipeSegmentPtr s, int n, double h) { pipe = s; nID = n; o
 VRPipeEnd::~VRPipeEnd() {}
 VRPipeEndPtr VRPipeEnd::create(VRPipeSegmentPtr s, int n, double h) { return VRPipeEndPtr( new VRPipeEnd(s,n,h) ); }
 
+void VRPipeEnd::toXML(XMLElementPtr n) {
+    n->setAttribute("pressure", toString(pressure));
+    n->setAttribute("flow", toString(flow));
+    n->setAttribute("hydraulicHead", toString(hydraulicHead));
+    n->setAttribute("pressurized", toString(pressurized));
+
+    auto fn = n->addChild("Fluid");
+    fluid.toXML(fn);
+}
+
+void VRPipeEnd::fromXML(XMLElementPtr n) {
+    if (n->hasAttribute("pressure")) toValue(n->getAttribute("pressure"), pressure);
+    if (n->hasAttribute("flow")) toValue(n->getAttribute("flow"), flow);
+    if (n->hasAttribute("hydraulicHead")) toValue(n->getAttribute("hydraulicHead"), hydraulicHead);
+    if (n->hasAttribute("pressurized")) toValue(n->getAttribute("pressurized"), pressurized);
+
+    auto fn = n->getChild("Fluid");
+    if (fn) fluid.fromXML(fn);
+}
+
 void VRPipeEnd::updateGeometry(GraphPtr graph) {
     auto s = pipe.lock();
     auto p = graph->getPosition(nID)->pos();
@@ -321,6 +380,40 @@ VRPipeSegment::VRPipeSegment(int eID, double radius, double length, double level
 VRPipeSegment::~VRPipeSegment() {}
 
 VRPipeSegmentPtr VRPipeSegment::create(int eID, double radius, double length, double level) { return VRPipeSegmentPtr( new VRPipeSegment(eID, radius, length, level) ); }
+
+void VRPipeSegment::toXML(XMLElementPtr n) {
+    n->setAttribute("level", toString(level));
+    n->setAttribute("fluidLvl", toString(fluidLvl));
+    n->setAttribute("hydraulicHead", toString(hydraulicHead));
+    n->setAttribute("pressurized", toString(pressurized));
+    n->setAttribute("regime", toString(regime));
+    n->setAttribute("missingFluidVolume", toString(missingFluidVolume));
+    n->setAttribute("excessFluidVolume", toString(excessFluidVolume));
+
+    auto fn = n->addChild("Fluid");
+    fluid.toXML(fn);
+    auto e1n = n->addChild("End");
+    auto e2n = n->addChild("End");
+    end1.lock()->toXML(e1n);
+    end2.lock()->toXML(e2n);
+}
+
+void VRPipeSegment::fromXML(XMLElementPtr n) {
+    if (n->hasAttribute("level")) toValue(n->getAttribute("level"), level);
+    if (n->hasAttribute("fluidLvl")) toValue(n->getAttribute("fluidLvl"), fluidLvl);
+    if (n->hasAttribute("hydraulicHead")) toValue(n->getAttribute("hydraulicHead"), hydraulicHead);
+    if (n->hasAttribute("pressurized")) toValue(n->getAttribute("pressurized"), pressurized);
+    if (n->hasAttribute("regime")) toValue(n->getAttribute("regime"), regime);
+    if (n->hasAttribute("missingFluidVolume")) toValue(n->getAttribute("missingFluidVolume"), missingFluidVolume);
+    if (n->hasAttribute("excessFluidVolume")) toValue(n->getAttribute("excessFluidVolume"), excessFluidVolume);
+
+    auto fn = n->getChild("Fluid");
+    if (fn) fluid.fromXML(fn);
+    auto e1n = n->getChild("End", 0);
+    auto e2n = n->getChild("End", 1);
+    if (e1n) end1.lock()->fromXML(e1n);
+    if (e2n) end2.lock()->fromXML(e2n);
+}
 
 VRPipeEndPtr VRPipeSegment::otherEnd(VRPipeEndPtr e) {
     bool isFirst = (end1.lock().get() == e.get());
@@ -412,6 +505,82 @@ VRPipeNode::~VRPipeNode() {}
 
 VRPipeNodePtr VRPipeNode::create(VREntityPtr entity) { return VRPipeNodePtr( new VRPipeNode(entity) ); }
 
+void VRPipeNode::toXML(XMLElementPtr n) {
+    entity->save(n, -1);
+
+    if (entity->hasProperty("fluid")) {
+        auto fluidE = entity->getEntity("fluid");
+        auto nf = n->addChild("fluid");
+        fluidE->save(nf, -1);
+
+        if (fluidE->hasProperty("particles")) {
+            auto particles = fluidE->getAllEntities("particles");
+            auto nps = nf->addChild("particles");
+            for (auto pE : particles) {
+                auto np = nps->addChild("path");
+                pE->save(np, -1);
+            }
+        }
+    }
+
+    if (entity->hasProperty("paths")) {
+        auto paths = entity->getAllEntities("paths");
+        auto nps = n->addChild("paths");
+        for (auto pE : paths) {
+            auto np = nps->addChild("path");
+            pE->save(np, -1);
+        }
+    }
+}
+
+void VRPipeNode::fromXML(XMLElementPtr n) {
+    auto ctx = VRStorageContext::create(true, false);
+
+    entity->load(n, ctx);
+    auto ontology = entity->getOntology();
+
+    auto nf = n->getChild("fluid");
+    if (nf) {
+        auto fluidE = entity->getEntity("fluid");
+        fluidE->load(nf, ctx);
+
+        auto particles = fluidE->getAllEntities("particles");
+        map<string, VREntityPtr> eParts;
+        for (auto& pe : particles) {
+            string t = pe->getValue<string>("type", "");
+            eParts[t] = pe;
+            pe->set("volumeFraction", "0.0");
+        }
+
+        auto nps = n->getChild("particles");
+        if (nps) {
+            auto particlesn = nps->getChildren();
+            for (int i = 0; i<particlesn.size(); i++) {
+                auto np = particlesn[i];
+                string type = np->getChild(0)->getAttribute("type");
+
+                VREntityPtr pe = 0;
+                if (!eParts.count(type)) {
+                    pe = ontology->addEntity(type, "ParticleBin");
+                    fluidE->add("particles", pe->getName());
+                } else pe = eParts[type];
+
+                pe->load(np, ctx);
+            }
+        }
+    }
+
+    auto nps = n->getChild("paths");
+    if (nps) {
+        auto paths = entity->getAllEntities("paths");
+        auto pathsn = nps->getChildren();
+        for (int i = 0; i<pathsn.size(); i++) {
+            auto np = pathsn[i];
+            auto pE = paths[i];
+            pE->load(np, ctx);
+        }
+    }
+}
 
 // Pipe System ----
 
@@ -430,6 +599,26 @@ VRPipeSystem::~VRPipeSystem() {}
 
 VRPipeSystemPtr VRPipeSystem::create() { return VRPipeSystemPtr( new VRPipeSystem() ); }
 VRPipeSystemPtr VRPipeSystem::ptr() { return static_pointer_cast<VRPipeSystem>(shared_from_this()); }
+
+void VRPipeSystem::Environment::toXML(XMLElementPtr n) {
+    n->setAttribute("temperature", toString(temperature));
+    n->setAttribute("volume", toString(volume));
+}
+
+void VRPipeSystem::Environment::fromXML(XMLElementPtr n) {
+    if (n->hasAttribute("temperature")) toValue(n->getAttribute("temperature"), temperature);
+    if (n->hasAttribute("volume")) toValue(n->getAttribute("volume"), volume);
+}
+
+void VRPipeSystem::Material::toXML(XMLElementPtr n) {
+    n->setAttribute("thermalConductance", toString(thermalConductance));
+    n->setAttribute("friction", toString(friction));
+}
+
+void VRPipeSystem::Material::fromXML(XMLElementPtr n) {
+    if (n->hasAttribute("thermalConductance")) toValue(n->getAttribute("thermalConductance"), thermalConductance);
+    if (n->hasAttribute("friction")) toValue(n->getAttribute("friction"), friction);
+}
 
 VRMaterialPtr VRPipeSystem::setupMaterial() {
     auto m = VRMaterial::create("pipes");
@@ -802,6 +991,8 @@ int VRPipeSystem::splitSegment(int sID) {
 
     double R = pipe->radius;
     double lvl = pipe->level;
+    double regime = pipe->regime;
+    bool pressurized = pipe->pressurized;
     double h1 = e1->offsetHeight;
     double h2 = e2->offsetHeight;
     double hm = (h1+h2)*0.5;
@@ -810,9 +1001,9 @@ int VRPipeSystem::splitSegment(int sID) {
     double flow1 = e1->flow;
     double flow2 = e2->flow;
     double flowm = (flow1+flow2)*0.5;
+    double Hp = pipe->hydraulicHead;
     double H1 = e1->hydraulicHead;
     double H2 = e2->hydraulicHead;
-    double Hm = (H1+H2)*0.5;
 
     double mfV = pipe->missingFluidVolume;
     double efV = pipe->excessFluidVolume;
@@ -824,6 +1015,13 @@ int VRPipeSystem::splitSegment(int sID) {
     auto pipe2 = segments[s2ID];
     pipe1->fluid = fluid;
     pipe2->fluid = fluid;
+    pipe1->hydraulicHead = (H1+Hp)*0.5;
+    pipe2->hydraulicHead = (Hp+H2)*0.5;
+    pipe1->regime = regime;
+    pipe2->regime = regime;
+    pipe1->pressurized = pressurized;
+    pipe2->pressurized = pressurized;
+
     auto e11 = pipe1->end1.lock();
     auto e12 = pipe1->end2.lock();
     auto e21 = pipe1->end1.lock();
@@ -835,8 +1033,8 @@ int VRPipeSystem::splitSegment(int sID) {
     e22->flow = flow2;
 
     e11->hydraulicHead = H1;
-    e12->hydraulicHead = Hm;
-    e21->hydraulicHead = Hm;
+    e12->hydraulicHead = Hp;
+    e21->hydraulicHead = Hp;
     e22->hydraulicHead = H2;
 
     pipe1->missingFluidVolume = mfV*0.5;
@@ -935,6 +1133,19 @@ void VRPipeSystem::setPipePressure(int i, double p1, double p2) {
     auto e2 = segments[i]->end2.lock();
     if (e1) e1->pressure = p1;
     if (e2) e2->pressure = p2;
+}
+
+void VRPipeSystem::setPipeTemperature(int i, double t) {
+    segments[i]->fluid.temperature = t;
+}
+
+void VRPipeSystem::setPipeLevel(int i, double l) {
+    segments[i]->level = l;
+}
+
+void VRPipeSystem::setPipeFlow(int i, double f1, double f2) {
+    segments[i]->end1.lock()->flow = f1;
+    segments[i]->end2.lock()->flow = f2;
 }
 
 void VRPipeSystem::setPump(int nID, double c, bool isOpen) {
@@ -4297,5 +4508,72 @@ void VRPipeSystem::printSystem() {
         for (auto e : n.second->pipes) {
             cout << "  end head " << e->hydraulicHead << endl;
         }
+    }
+}
+
+string VRPipeSystem::createSnapshot() {
+    vector<VRPipeNodePtr> _nodes;
+    vector<VRPipeSegmentPtr> _segments;
+    for (auto& n : nodes) _nodes.push_back(n.second);
+    for (auto& s : segments) _segments.push_back(s.second);
+
+    XML xml;
+    auto root = xml.newRoot("PipeSystemState", "", "");
+
+    auto envsNode  = root->addChild("Environments");
+    auto nodesNode = root->addChild("Nodes");
+    auto segsNode  = root->addChild("Segments");
+
+    for (auto e : environments) {
+        auto eNode = envsNode->addChild("Environment");
+        e->toXML(eNode);
+    }
+
+    for (auto n : _nodes) {
+        auto nNode = nodesNode->addChild("Node");
+        n->toXML(nNode);
+    }
+
+    for (auto s : _segments) {
+        auto sNode = segsNode->addChild("Segment");
+        s->toXML(sNode);
+    }
+
+    return xml.toString();
+}
+
+void VRPipeSystem::applySnapshot(string snapshot) {
+    vector<VRPipeNodePtr> _nodes;
+    vector<VRPipeSegmentPtr> _segments;
+    for (auto& n : nodes) _nodes.push_back(n.second);
+    for (auto& s : segments) _segments.push_back(s.second);
+
+    XML xml;
+    xml.parse(snapshot);
+
+    auto root = xml.getRoot();
+
+    auto envsNode  = root->getChild("Environments");
+    auto nodesNode = root->getChild("Nodes");
+    auto segsNode  = root->getChild("Segments");
+    if (!envsNode || !nodesNode || !segsNode) return;
+
+    auto envsNodes  = envsNode->getChildren();
+    auto nodesNodes = nodesNode->getChildren();
+    auto segsNodes  = segsNode->getChildren();
+    if (envsNodes.size()  != environments.size()) return;
+    if (nodesNodes.size() != _nodes.size()) return;
+    if (segsNodes.size()  != _segments.size()) return;
+
+    for (int i=0; i<envsNodes.size(); i++) {
+        environments[i]->fromXML(envsNodes[i]);
+    }
+
+    for (int i=0; i<nodesNodes.size(); i++) {
+        _nodes[i]->fromXML(nodesNodes[i]);
+    }
+
+    for (int i=0; i<segsNodes.size(); i++) {
+        _segments[i]->fromXML(segsNodes[i]);
     }
 }
