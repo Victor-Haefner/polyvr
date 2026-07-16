@@ -659,6 +659,8 @@ int VRPipeSystem::addNode(string name, PosePtr pos, string type, map<string, str
     if (type == "Tank" || type == "FlowSource") {
         auto fe = ontology->addEntity("fluid", "FluidComposition");
         e->set("fluid", fe->getName());
+        fe->set("density", toString(defaultDensity));
+        fe->set("viscosity", toString(defaultViscosity));
     }
 
     return nID;
@@ -713,6 +715,8 @@ int VRPipeSystem::addSegment(double radius, int n1, int n2, double level, double
     auto p2 = graph->getPosition(n2)->pos();
 
     auto s = VRPipeSegment::create(sID, radius, 0.0, level);
+    s->fluid.baseDensity   = defaultDensity;
+    s->fluid.baseViscosity = defaultViscosity;
     segments[sID] = s;
     auto e1 = VRPipeEnd::create(s, n1, h1);
     auto e2 = VRPipeEnd::create(s, n2, h2);
@@ -815,8 +819,8 @@ Vec2d VRPipeSystem::computeTotalMass() {
             double cFluidVol2 = cVol2 * lvl2;
 
             // TODO: there is currently no fluid composition in cylinder chambers yet
-            totalFluidMass += cFluidVol1 * waterDensity;
-            totalFluidMass += cFluidVol2 * waterDensity;
+            totalFluidMass += cFluidVol1 * defaultDensity;
+            totalFluidMass += cFluidVol2 * defaultDensity;
         }
     }
 
@@ -918,6 +922,9 @@ void VRPipeSystem::initOntology() {
     FlowSource->addProperty("fluid", FluidComposition);
     FlowSource->addProperty("flow", "double");
 }
+
+void VRPipeSystem::setDefaultDensity(double d) { defaultDensity = d; }
+void VRPipeSystem::setDefaultViscosity(double v) { defaultViscosity = v; }
 
 void VRPipeSystem::addControlValvePath(int i, int A, int B, double x0, double xs, double K) {
     if (!nodes.count(i)) return;
@@ -1115,7 +1122,7 @@ double VRPipeSystem::getTankPressure(int nID) {
 
 double VRPipeSystem::getTankDensity(int nID) {
     auto e = getNodeEntity(nID);
-    return e ? e->getEntity("fluid")->getValue("density", waterDensity) : 0.0;
+    return e ? e->getEntity("fluid")->getValue("density", defaultDensity) : 0.0;
 }
 
 void VRPipeSystem::setPipeRadius(int i, double r) {

@@ -44,6 +44,8 @@ Add node (name, pose, type, params)\n\
 "
 
 PyMethodDef VRPyPipeSystem::methods[] = {
+    {"setDefaultDensity", PyWrap( PipeSystem, setDefaultDensity, "Set default fluid density", void, double ) },
+    {"setDefaultViscosity", PyWrap( PipeSystem, setDefaultViscosity, "Set default fluid viscosity", void, double ) },
     {"addNode", PyWrap( PipeSystem, addNode, DOC_addNode, int, string, PosePtr, string, map<string, string> ) },
     {"remNode", PyWrap( PipeSystem, remNode, "Remove node", void, int ) },
     {"addSegment", PyWrapOpt( PipeSystem, addSegment, "Add segment between nodes, optional height [0.0->1.0] for connecting tanks (radius, n1, n2, level | height1, height2)", "0|0", int, double, int, int, double, double, double ) },

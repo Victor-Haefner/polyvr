@@ -219,7 +219,9 @@ class VRPipeSystem : public VRTransform {
         double gravity = 9.81;
         double atmosphericPressure = 101325; // Pa at sea level (1 atm)
         //double atmosphericPressure = 0.0; // set to 0 because its just a global offset
-        double waterDensity = 1000.0; // kg / m3
+
+        double defaultDensity = 1000.0; // kg / m3
+        double defaultViscosity = 0.003; // Pa.s at 20 C
 
         map<int, VRPipeNodePtr> nodes;
         map<string, int> nodesByName;
@@ -264,6 +266,9 @@ class VRPipeSystem : public VRTransform {
 
         GraphPtr getGraph();
         VROntologyPtr getOntology();
+
+        void setDefaultDensity(double d);
+        void setDefaultViscosity(double v);
 
 		int addNode(string name, PosePtr pos, string type, map<string, string> params);
 		int addSegment(double radius, int n1, int n2, double level, double h1, double h2);
