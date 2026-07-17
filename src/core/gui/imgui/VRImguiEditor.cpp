@@ -227,18 +227,18 @@ void ImToolbar::begin() {
     ImGui::SameLine(max(x1,x2));
 
     ImGui::TextUnformatted("Theme:"); ImGui::SameLine();
-    if (ImGui::RadioButton("Light", &uiTheme, 0)) { ImGui::StyleColorsLight(); uiStoreParameter("uiTheme", "light"); } ImGui::SameLine();
-    if (ImGui::RadioButton("Dark" , &uiTheme, 1)) { ImGui::StyleColorsDark();  uiStoreParameter("uiTheme", "dark");  } ImGui::SameLine();
-    //if (ImGui::RadioButton("Classic", &uiTheme, 2)) { ImGui::StyleColorsClassic(); uiStoreParameter("uiTheme", "classic"); } ImGui::SameLine();
 
-    /*ImGui::SetNextItemWidth(100*io.FontGlobalScale);
-    if (ImGui::BeginCombo("##UItheme", "Theme", 0)) {
-        if (ImGui::RadioButton("Light", &uiTheme, 0)) { ImGui::StyleColorsLight(); uiStoreParameter("uiTheme", "light"); }
-        if (ImGui::RadioButton("Dark", &uiTheme, 1)) { ImGui::StyleColorsDark(); uiStoreParameter("uiTheme", "dark"); }
-        if (ImGui::RadioButton("Classic", &uiTheme, 2)) { ImGui::StyleColorsClassic(); uiStoreParameter("uiTheme", "classic"); }
-        ImGui::EndCombo();
-    }
-    ImGui::SameLine();*/
+    if (ImGui::RadioButton("Light", &uiTheme, 0)) {
+        ImGui::StyleColorsLight();
+        uiSignal("ui_set_palette", {{"theme","light"}});
+        uiStoreParameter("uiTheme", "light");
+    } ImGui::SameLine();
+
+    if (ImGui::RadioButton("Dark" , &uiTheme, 1)) {
+        ImGui::StyleColorsDark();
+        uiSignal("ui_set_palette", {{"theme","dark"}});
+        uiStoreParameter("uiTheme", "dark");
+    } ImGui::SameLine();
 
     ImGui::TextUnformatted("Font size:"); ImGui::SameLine();
     //io.FontAllowUserScaling = false;
@@ -777,9 +777,9 @@ void VRImguiEditor::init(Signal signal, ResizeSignal resizeSignal) {
 
     string theme;
     toValue(uiGetParameter("uiTheme", "dark"), theme);
-    if (theme == "dark") ImGui::StyleColorsDark();
-    if (theme == "light") ImGui::StyleColorsLight();
-    if (theme == "classic") ImGui::StyleColorsClassic();
+    if (theme == "light") { ImGui::StyleColorsLight(); toolbar.uiTheme = 0; }
+    if (theme == "dark")  { ImGui::StyleColorsDark();  toolbar.uiTheme = 1; }
+    uiSignal("ui_set_palette", {{"theme",theme}});
 }
 
 void VRImguiEditor::initPopup() {

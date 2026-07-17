@@ -101,6 +101,7 @@ class ImScriptEditor {
         ImScriptEditor();
         void render();
         string getSelection();
+        void setPalette(string t);
 };
 
 class ImScripting {

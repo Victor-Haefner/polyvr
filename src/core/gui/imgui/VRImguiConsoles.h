@@ -58,14 +58,21 @@ class ImConsole {
         void render();
         void clear();
         void pause(bool b);
+        void setTheme(string theme);
 };
 
 class ImConsoles : public ImWidget {
-    public:
+    private:
         ImViewControls viewControls;
         vector<string> consolesOrder;
         map<string,ImConsole> consoles;
+
+        string theme = "dark";
         bool paused = false;
+
+        void setConsolesPalette(string theme);
+
+    public:
 
         void newConsole(string ID, string color);
         void clearConsole(string ID);

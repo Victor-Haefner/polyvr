@@ -68,65 +68,6 @@ void ImConsole::render() {
 
         console.Render(wID.c_str());
 
-		/*ImGui::BeginChild(wID.c_str());
-		ImGui::PushStyleColor(ImGuiCol_FrameBg, IM_COL32(0,0,0,0));
-		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0,0));
-		ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 0);
-		ImGui::PushStyleVar(ImGuiStyleVar_ItemInnerSpacing, ImVec2(0,0));
-		ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0,0));
-
-        size_t i = 0;
-		for (auto& l : lines) {
-            string lID = wID + toString(i);
-
-            bool colorized = false;
-            if (attributes.count(i)) {
-                auto& a = attributes[i];
-                ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(255,0,0,255));
-                colorized = true;
-            }
-
-            // TODO: test with InputTextMultiline
-            ImGui::SetNextItemWidth(-1);
-            ImGui::InputText(lID.c_str(), &l[0], l.size(), ImGuiInputTextFlags_ReadOnly);
-            if (colorized) ImGui::PopStyleColor();
-
-            if (ImGui::IsItemHovered() && ImGui::IsMouseReleased( 0 ) ) {
-                if (attributes.count(i)) {
-                    float mP = ImGui::GetMousePos().x;
-                    float r0 = ImGui::GetItemRectMin().x;
-                    ImFont* font = ImGui::GetFont();
-
-                    int cM = 0; // mouse column clicked in editor
-                    float pC = r0;
-                    for (int j=0; j<l.size(); j++) {
-                        auto& c = l[j];
-                        pC += font->CalcTextSizeA(font->FontSize, FLT_MAX, 0, &c, &c + 1).x;
-                        if (mP < pC) {
-                            cM = j;
-                            break;
-                        }
-                    }
-
-                    auto& a = attributes[i];
-                    for (auto& mark : a.marks) {
-                        if (cM > mark.c0 && cM < mark.c0+mark.L) {
-                            uiSignal("clickConsole", {{"mark",mark.value}, {"ID",ID}});
-                            break;
-                        }
-                    }
-                }
-            }
-            i++;
-		}
-
-		ImGui::PopStyleVar();
-		ImGui::PopStyleVar();
-		ImGui::PopStyleVar();
-		ImGui::PopStyleVar();
-		ImGui::PopStyleColor();
-		ImGui::EndChild();*/
-
         ImGui::EndTabItem();
     }
 
@@ -138,6 +79,11 @@ void ImConsole::clear() {
     console.SetText("");
     attributes.clear();
     changed = 0;
+}
+
+void ImConsole::setTheme(string theme) {
+    if (theme == "light") console.SetPalette( TextEditor::GetLightPalette() );
+    if (theme == "dark")  console.SetPalette( TextEditor::GetDarkPalette() );
 }
 
 void ImConsole::pause(bool b) {
@@ -153,6 +99,12 @@ ImConsoles::ImConsoles() : ImWidget("Consoles") {
     mgr->addCallback("clearConsoles", [&](OSG::VRGuiSignals::Options o){ for (auto& c : consoles) c.second.clear(); return true; } );
     mgr->addCallback("pauseConsoles", [&](OSG::VRGuiSignals::Options o){ paused = toBool(o["state"]); for (auto& c : consoles) c.second.pause(paused); return true; } );
     mgr->addCallback("setConsoleLabelColor", [&](OSG::VRGuiSignals::Options o){ setConsoleLabelColor(o["ID"], o["color"]); return true; } );
+    mgr->addCallback("ui_set_palette", [&](OSG::VRGuiSignals::Options o){ setConsolesPalette(o["theme"]); return true; } );
+}
+
+void ImConsoles::setConsolesPalette(string t) {
+    theme = t;
+    for (auto& c : consoles) c.second.setTheme(theme);
 }
 
 void ImConsoles::setConsoleLabelColor(string ID, string color) {
@@ -162,6 +114,7 @@ void ImConsoles::setConsoleLabelColor(string ID, string color) {
 
 void ImConsoles::newConsole(string ID, string color) {
     consoles[ID] = ImConsole(ID);
+    consoles[ID].setTheme(theme);
     consolesOrder.push_back(ID);
     setConsoleLabelColor(ID, color);
 }

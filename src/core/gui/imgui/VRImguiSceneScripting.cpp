@@ -265,6 +265,7 @@ ImScriptEditor::ImScriptEditor() {
     mgr->addCallback("editor_cmd", [&](OSG::VRGuiSignals::Options o){ editorCommand(o["cmd"]); return true; } );
     mgr->addCallback("openUiScript", [&](OSG::VRGuiSignals::Options o){ focusOn(o["line"], o["column"]); return true; } );
     mgr->addCallback("shiftTab", [&](OSG::VRGuiSignals::Options o){ handleShiftTab(toInt(o["tab"]), toInt(o["shift"])); return true; }, true );
+    mgr->addCallback("ui_set_palette", [&](OSG::VRGuiSignals::Options o){ setPalette(o["theme"]); return true; } );
 
     imEditor.SetShowWhitespaces(doShowWhitespace);
     imEditor.SetLanguageDefinition(TextEditor::LanguageDefinition::Python());
@@ -274,6 +275,11 @@ ImScriptEditor::ImScriptEditor() {
     triggerTypes = {"None", "on_scene_load", "on_scene_close", "on_scene_import", "on_timeout", "on_device", "on_socket"};
     device_types = {"None", "mouse", "multitouch", "keyboard", "flystick", "haptic", "server1", "leap", "vrpn_device"};
     trigger_states = {"Pressed", "Released", "Drag", "Drop", "To edge", "From edge"};
+}
+
+void ImScriptEditor::setPalette(string t) {
+    if (t == "light") imEditor.SetPalette( TextEditor::GetLightPalette() );
+    if (t == "dark")  imEditor.SetPalette( TextEditor::GetDarkPalette() );
 }
 
 void ImScriptEditor::showWhitespace(bool b) {
