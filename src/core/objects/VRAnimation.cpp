@@ -57,6 +57,10 @@ void VRAnimation::addCallback(VRAnimCbPtr fkt) {
     ownedCallbacks.push_back(fkt);
 }
 
+void VRAnimation::setFinishedCallback(VRUpdateCbPtr fkt) {
+    onFinishCb = fkt;
+}
+
 bool VRAnimation::getLoop() { return loop; }
 float VRAnimation::getDuration() { return duration; }
 
@@ -83,6 +87,7 @@ bool VRAnimation::update(float current_time) {
         else {
             stop();
             execCallbacks(1);
+            if (onFinishCb) (*onFinishCb)();
         }
         return true;
     }

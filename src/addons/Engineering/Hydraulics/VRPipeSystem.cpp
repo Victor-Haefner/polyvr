@@ -1055,12 +1055,27 @@ int VRPipeSystem::splitSegment(int sID) {
 int VRPipeSystem::disconnect(int nID, int sID) {
     rebuildMesh = true;
     int cID = graph->split(nID, sID);
+
     auto e = ontology->addEntity("junction", "Junction");
-    auto n = VRPipeNode::create(e);
-    nodes[cID] = n;
+    auto newNode = VRPipeNode::create(e);
+    newNode->nID = cID;
     string name = e->getName();
-    n->name = name;
+    newNode->name = name;
+
+    nodes[cID] = newNode;
     nodesByName[name] = cID;
+    //segments[sID]
+
+    // move pipe end to new node
+    auto oldNode = nodes[nID];
+    auto& v = oldNode->pipes;
+    auto pipe = segments[sID];
+    VRPipeEndPtr movedEnd = pipe->end1.lock();
+    if (::find(v.begin(), v.end(), movedEnd) == v.end()) movedEnd = pipe->end2.lock();
+    v.erase(remove(v.begin(), v.end(), movedEnd), v.end());
+    newNode->pipes.push_back(movedEnd);
+    movedEnd->nID = cID;
+
     return cID;
 }
 
@@ -2114,7 +2129,7 @@ void VRPipeSystem::assignBoundaryPressures(double dt, double dT) {
 
         double Qg = (pipe->excessFluidVolume - pipe->missingFluidVolume) / dT;
         pipe->imbalanceFluidFlow = Qg;
-        if (debugVerbose) cout << " compute imbalance Q " << Qg << endl;
+        if (debugVerbose) cout << " compute imbalance segment " << pipe->eID << ", Qg " << Qg << ", Q12 " << pipe->excessFluidVolume << " " << pipe->missingFluidVolume<< endl;
 
         if (pipe->pressurized && e1->pressurized && e2->pressurized) continue;
 
@@ -3877,6 +3892,7 @@ void VRPipeSystem::computeMaxFlows(double dt) {
         double mfc = 0.0;
         for (auto& n : nodes) {
             for (auto& e : n.second->pipes) {
+                //e->flowClamp = clamp(1.0 - abs(e->maxFlow) / abs(e->headFlow), 0.0, 1.0);
                 mfc = max(mfc, e->flowClamp);
             }
         }

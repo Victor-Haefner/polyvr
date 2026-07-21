@@ -18,6 +18,7 @@ PyMethodDef VRPyAnimation::methods[] = {
     {"isPaused", PyWrap(Animation, isPaused, "Check if paused", bool) },
     {"setCallback", PyWrap(Animation, addCallback, "Set animation callback", void, VRAnimCbPtr) },
     {"addCallback", PyWrap(Animation, addCallback, "Set animation callback", void, VRAnimCbPtr) },
+    {"setFinishedCallback", PyWrap(Animation, setFinishedCallback, "Set onFinish callback", void, VRUpdateCbPtr) },
     {"setDuration", PyWrap(Animation, setDuration, "Set animation duration", void, float) },
     {"setLoop", PyWrap(Animation, setLoop, "Set animation loop flag", void, bool) },
     {"getDuration", PyWrap(Animation, getDuration, "Return total animation duration", float) },
