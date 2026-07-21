@@ -181,8 +181,8 @@ class VRPipeSystem : public VRTransform {
         struct Environment {
             double temperature = 20.0;
             double volume = 100.0;
-            double ousideTemperature = 20.0;
-            double heatLossCoefficient = 50.0; // W/K
+            double outsideTemperature = 20.0;
+            double heatLossCoefficient = 0.001; // 1/s
 
             void toXML(XMLElementPtr n);
             void fromXML(XMLElementPtr n);
@@ -213,6 +213,8 @@ class VRPipeSystem : public VRTransform {
         float spread = 0.1;
         double latency = 0.001;
         vector<string> layers = { "p", "d", "v", "n" };
+        double colorTempMin = 20.0;
+        double colorTempMax = 100.0;
 
         double timeScale = 1.0;
         double simTime = 0.0;
@@ -286,6 +288,7 @@ class VRPipeSystem : public VRTransform {
 		void setFlowParameters(float latency);
 
 		void setDoVisual(bool b, float spread = 0.1);
+		void setTemperatureVisualScale(double T1, double T2);
 		void setVisuals(vector<string> layers);
 		void setTimeScale(double s);
 		double getSimulationTime();
@@ -339,6 +342,7 @@ class VRPipeSystem : public VRTransform {
 		void setSegmentEnvironment(int sID, int eID);
 		void setEnvironmentVolume(int eID, double V);
 		void setEnvironmentTemperature(int eID, double T);
+		void setEnvironmentHeatloss(int eID, double H, double Tout);
 		double getEnvironmentTemperature(int eID);
 
 

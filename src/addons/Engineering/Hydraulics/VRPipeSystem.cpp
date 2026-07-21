@@ -1090,6 +1090,7 @@ void VRPipeSystem::setTimeScale(double s) { timeScale = s; }
 double VRPipeSystem::getSimulationTime() { return simTime; }
 
 void VRPipeSystem::setVisuals(vector<string> ls) { layers = ls; }
+void VRPipeSystem::setTemperatureVisualScale(double T1, double T2) { colorTempMin = T1; colorTempMax = T2; }
 
 VREntityPtr VRPipeSystem::getEntity(string name) {
     if (!nodesByName.count(name)) return 0;
@@ -1191,6 +1192,7 @@ void VRPipeSystem::setSegmentEnvironment(int sID, int mID) { segments[sID]->envi
 int VRPipeSystem::addEnvironment() { environments.push_back( EnvironmentPtr(new Environment()) ); return environments.size()-1; }
 void VRPipeSystem::setEnvironmentVolume(int eID, double v) { environments[eID]->volume = v; }
 void VRPipeSystem::setEnvironmentTemperature(int eID, double t) { environments[eID]->temperature = t; }
+void VRPipeSystem::setEnvironmentHeatloss(int eID, double H, double T) { environments[eID]->heatLossCoefficient = H; environments[eID]->outsideTemperature = T; }
 double VRPipeSystem::getEnvironmentTemperature(int eID) { return environments[eID]->temperature; }
 
 void VRPipeSystem::updateInspection(int nID) {
@@ -1314,8 +1316,8 @@ void VRPipeSystem::updateVisual() {
     };
 
     auto getTempColor = [&](float T) -> Color3f {
-        if (T <= 20) return mix(dblue, blue, T/20.0);
-        if (T <= 100) return mix(blue, red, (T-20.0)/80.0);
+        if (T <= colorTempMin) return mix(dblue, blue, T/colorTempMin);
+        if (T <= colorTempMax) return mix(blue, red, (T-colorTempMin)/(colorTempMax-colorTempMin));
         return red;
     };
 
@@ -4452,6 +4454,11 @@ void VRPipeSystem::radiateHeat(double dt) {
         fluid.temperature += Q / (mWtr * cWtr);
         env->temperature  -= Q / (mAir * cAir);
         fluid.toEntity(fe);
+    }
+
+    for (auto& e : environments) {
+        double dT = e->temperature - e->outsideTemperature;
+        e->temperature -= dT * e->heatLossCoefficient * dt;
     }
 }
 
