@@ -49,6 +49,17 @@
 extern "C" {
     _declspec(dllexport) DWORD NvOptimusEnablement = 0x00000001; // tells an optimus system to run PolyVR in high performance mode
 }
+
+// opensg_msvc_compat.hpp
+#pragma once
+
+#include <iomanip>
+
+namespace OSG
+{
+    template<class Arg>
+    inline OutStream& operator<<(OutStream& out, std::_Smanip<Arg> manip) { return out.operator<<(manip); }
+}
 #endif
 
 using namespace OSG;

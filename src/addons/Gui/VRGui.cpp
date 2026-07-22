@@ -23,12 +23,8 @@
 #include "core/gui/VRGuiManager.h"
 #include "core/gui/VRGuiConsole.h"
 
-#include <imgui.h>
-#ifdef _WIN32
-#include <imgui_impl_opengl3.h>
-#else
-#include <backends/imgui_impl_opengl3.h>
-#endif
+#include "imgui.h"
+#include "backends/imgui_impl_opengl3.h"
 #include <GL/gl.h>
 #include <GL/glext.h>
 

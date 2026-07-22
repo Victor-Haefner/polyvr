@@ -179,7 +179,7 @@ typedef enum : byte {
     VT_DB = 0x7
 } VarTabMemoryArea;
 
-typedef struct {
+struct VarTabItem {
     VarTabMemoryArea memory_area_and_dt_width;
     byte repetition_factor;
     word db_number;
@@ -190,7 +190,7 @@ typedef struct {
     byte getDataTypeLength() {
         return memory_area_and_dt_width & 0x0F;
     }
-} VarTabItem;
+};
 
 class TSnap7Server; // forward declaration
 

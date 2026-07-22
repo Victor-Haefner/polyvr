@@ -6,13 +6,8 @@
 #include <GL/glut.h>
 #include <GL/freeglut_ext.h>
 
-#ifdef _WIN32
-#include <imgui_impl_glut.h>
-#include <imgui_impl_opengl3.h>
-#else
-#include <backends/imgui_impl_glut.h>
-#include <backends/imgui_impl_opengl3.h>
-#endif
+#include "backends/imgui_impl_glut.h"
+#include "backends/imgui_impl_opengl3.h"
 
 #include "core/gui/VRGuiSignals.h"
 #include "core/gui/VRGuiManager.h"

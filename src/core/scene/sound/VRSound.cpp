@@ -946,7 +946,7 @@ void VRSound::writeStreamData(const string& data) {
     //doFrameSleep(0, 60);
 }
 
-#if FF_API_AVIO_WRITE_NONCONST
+#if LIBAVFORMAT_VERSION_MAJOR < 61
 int custom_io_write(void* opaque, uint8_t* buffer, int32_t N) {
 #else
 int custom_io_write(void* opaque, const uint8_t* buffer, int32_t N) {
