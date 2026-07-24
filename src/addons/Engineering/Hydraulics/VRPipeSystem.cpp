@@ -15,6 +15,9 @@
 #include "addons/Semantics/Reasoning/VREntity.h"
 #include "addons/Semantics/Reasoning/VRConcept.h"
 
+#include <algorithm>
+#include <array>
+
 using namespace OSG;
 
 double gasSpeed = 300;

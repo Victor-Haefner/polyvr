@@ -1760,10 +1760,17 @@ add_dependencies(polyvr freeglut)
 endif()
 
 if(APPLE)
-#add_dependencies(polyvr cefResourceCopy)
-# debug flags:
-#set(COMPILER_FLAGS ${COMPILER_FLAGS} -fsanitize=address -fno-omit-frame-pointer -g -O1)
-#target_link_options(polyvr PRIVATE -fsanitize=address) # for memory issues debugging
+	#add_dependencies(polyvr cefResourceCopy)
+	# debug flags:
+	#set(COMPILER_FLAGS ${COMPILER_FLAGS} -fsanitize=address -fno-omit-frame-pointer -g -O1)
+	#target_link_options(polyvr PRIVATE -fsanitize=address) # for memory issues debugging
+endif()
+
+if(WIN32)
+	# dont use this!! just compile RelWithDebInfo and change the start in start-win2.bat
+	# debug flags:
+	#set(COMPILER_FLAGS ${COMPILER_FLAGS} /fsanitize=address /Zi)
+    #target_link_options(polyvr PRIVATE /fsanitize=address /DEBUG)
 endif()
 
 message("compiling with: ${COMPILER_FLAGS}")
