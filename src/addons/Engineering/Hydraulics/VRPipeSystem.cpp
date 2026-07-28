@@ -376,6 +376,7 @@ void VRPipeEnd::setInitialHead() { // initial guess
 // Pipe Segment ----
 
 VRPipeSegment::VRPipeSegment(int eID, double radius, double length, double level) : eID(eID), radius(radius), length(length) {
+    createdFrame = VRGlobals::CURRENT_FRAME;
     pressurized = bool(level > 1.0-1e-6);
     setLevel(level);
 }
@@ -955,6 +956,8 @@ void VRPipeSystem::setNodePose(int nID, PosePtr p) {
         auto e2 = pipe->end2.lock();
         e1->updateGeometry(graph);
         e2->updateGeometry(graph);
+
+        if (pipe->createdFrame == VRGlobals::CURRENT_FRAME) return; // ignore fluid movement during setup
 
         if (dV >= 0) { // volume grows
             double pdV = dV*pipe->level;

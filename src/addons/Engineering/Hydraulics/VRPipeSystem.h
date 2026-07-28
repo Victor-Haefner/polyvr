@@ -93,6 +93,7 @@ class VRPipeEnd {
 class VRPipeSegment {
     public:
         int eID = 0;
+        int createdFrame = 0;
 
         // parameters
         double radius = 0.0;
