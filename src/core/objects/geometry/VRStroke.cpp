@@ -99,6 +99,29 @@ void VRStroke::strokeProfile(vector<Vec3d> profile, bool closed, bool lit, bool 
         else data->pushVert(p, n, c, tc);
     };
 
+
+    // compute profile normals
+    vector<Vec3d> profileNormals(profile.size(), Vec3d(0, 0, 0));
+    auto edgeNormal = [&](const Vec3d& a, const Vec3d& b) -> Vec3d {
+        Vec3d edge = b - a;
+        if (edge.squareLength() <= 1e-12) return Vec3d(0, 0, 0);
+        Vec3d normal = edge.cross(Vec3d(0,0,1));
+        normal.normalize();
+        return normal;
+    };
+
+    for (size_t i = 0; i < profile.size(); ++i) {
+        Vec3d normal(0, 0, 0);
+        if (i > 0) normal += edgeNormal(profile[i - 1], profile[i]);
+        else if (closed) normal += edgeNormal(profile.back(), profile.front());
+
+        if (i + 1 < profile.size()) normal += edgeNormal(profile[i], profile[i + 1]);
+        else if (closed) normal += edgeNormal(profile.back(), profile.front());
+
+        if (normal.squareLength() > 1e-12) normal.normalize();
+        profileNormals[i] = normal;
+    }
+
     for (auto path : paths) {
         auto pnts = path->getPositions();
         auto directions = path->getDirections();
@@ -133,7 +156,9 @@ void VRStroke::strokeProfile(vector<Vec3d> profile, bool closed, bool lit, bool 
                 if (endArrow2 || begArrow1) pos = pCenter;
                 m.mult(pos, pos);
 
-                Vec3d norm = pos; norm.normalize();
+                Vec3d norm = profileNormals[i];
+                if (norm.squareLength() < 1e-12) { norm = pos; norm.normalize(); }
+                else m.mult(norm, norm);
                 addVertex(p + pos, norm, c, tc);
             }
 
