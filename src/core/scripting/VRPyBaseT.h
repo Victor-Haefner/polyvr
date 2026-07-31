@@ -129,31 +129,21 @@ template <typename T>
 void VRPyBase::execPyCallVoid(PyObject* pyFkt, PyObject* pArgs, T t) {
     VRPyGilGuard gilGuard;
     if (pyFkt == 0) return;
+
+    if (!PyCallable_Check(pyFkt)) {
+        fprintf(stderr, "pyFkt is not callable!\n");
+        PyErr_Print();
+    }
+
     if (PyErr_Occurred() != NULL) PyErr_Print();
 
     PyTuple_SetItem(pArgs, pySize(pArgs)-1, VRPyTypeCaster::cast(t));
-    PyObject_CallObject(pyFkt, pArgs);
+    PyObject* result = PyObject_CallObject(pyFkt, pArgs);
 
-    //Py_XDECREF(pArgs); Py_DecRef(pyFkt); // TODO!!
+    if (result) Py_DECREF(result);
+    else PyErr_Print();
 
     if (PyErr_Occurred() != NULL) PyErr_Print();
-}
-
-template <typename T, typename R>
-VRFunction<T, R>* VRPyBase::parseCallback(PyObject* args) {
-	PyObject* pyFkt = 0;
-	PyObject* pArgs = 0;
-    if (pySize(args) == 1) if (! PyArg_ParseTuple(args, "O", &pyFkt)) return 0;
-    if (pySize(args) == 2) if (! PyArg_ParseTuple(args, "OO", &pyFkt, &pArgs)) return 0;
-	if (pyFkt == 0) return 0;
-    Py_IncRef(pyFkt);
-    addPyCallback(pyFkt);
-
-    if (pArgs == 0) pArgs = PyTuple_New(0);
-    else if (string(pArgs->ob_type->tp_name) == "list") pArgs = PyList_AsTuple(pArgs);
-    _PyTuple_Resize(&pArgs, pySize(pArgs)+1);
-
-    return new VRFunction<T, R>( "pyExecCall", bind(VRPyBase::execPyCall<T, R>, pyFkt, pArgs, std::placeholders::_1) );
 }
 
 template <class T, class t>

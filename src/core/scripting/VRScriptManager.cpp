@@ -404,23 +404,25 @@ void VRScriptManager::initPyModules() {
     );
 }
 
-PyObject* VRScriptManager::newModule(string name, PyMethodDef* methods, string doc) {
-    string name2 = "VR."+name;
+PyObject* VRScriptManager::newModule( string name, PyMethodDef* methods, string doc) {
+    string name2 = "VR." + name;
 
-    PyModuleDef modDef = {
-        PyModuleDef_HEAD_INIT,
-        name2.c_str(),                                // module name
-        doc.c_str(),                         // module docstring
-        -1,                                  // module state size (-1 if global vars)
-        methods              // method table
-    };
+    PyObject* module = PyModule_New(name2.c_str());
+    if (!module) { return nullptr; }
+    if (PyModule_AddFunctions(module, methods) < 0) { Py_DECREF(module); return nullptr; }
+    if (PyModule_SetDocString(module, doc.c_str()) < 0) { Py_DECREF(module); return nullptr; }
 
-    PyObject* m = PyModule_Create(&modDef);
-    PyObject* sysModules = PyImport_GetModuleDict();
-    PyDict_SetItemString(sysModules, name2.c_str(), m);
-    modules[name] = m;
-    PyModule_AddObject(pModVR, name.c_str(), m);
-    return m;
+    PyObject* sysModules = PyImport_GetModuleDict(); // borrowed
+    if (PyDict_SetItemString( sysModules, name2.c_str(), module) < 0) { Py_DECREF(module); return nullptr; }
+
+    if (PyModule_AddObject(pModVR, name.c_str(), module) < 0) {
+        PyDict_DelItemString(sysModules, name2.c_str());
+        Py_DECREF(module);
+        return nullptr;
+    }
+
+    modules[name] = module;
+    return module; // borrowed reference
 }
 
 PyObject* VRScriptManager::getPyModule(string name) {

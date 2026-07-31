@@ -90,11 +90,23 @@ PyObject* proxyWrap<allowPacking, sT, R (T::*)(Args...), mf, O>::exec(sT* self, 
     auto wrap = VRCallbackWrapperT<PyObject*, O, R (T::*)(Args...)>::create();
     if (!wrap) { self->setErr( "Internal error in proxyWrap, invalid wrapper!" ); return NULL; }
 
+    PyObject* packedParams = 0;
     size_t Nargs = sizeof...(Args); // try packing parameter into a list
     if (params.size() >= 2 && params.size() <= 4 && Nargs == 1 && allowPacking) {
-        PyObject* res = PyList_New(params.size());
-        for (uint i=0; i<params.size(); i++) PyList_SetItem(res, i, params[i]);
-        params = { res };
+        packedParams = PyList_New(static_cast<Py_ssize_t>(params.size()));
+        if (!packedParams) return NULL;
+
+        for (uint i = 0; i<params.size(); i++) {
+            PyObject* item = params[i]; // borrowed from args
+            Py_INCREF(item); // create reference that the list may steal
+
+            if (PyList_SetItem(packedParams, i, item) < 0) {
+                Py_DECREF(packedParams);
+                return NULL;
+            }
+        }
+
+        params = {packedParams};
     }
 
     int offset = 0;
@@ -111,6 +123,7 @@ PyObject* proxyWrap<allowPacking, sT, R (T::*)(Args...), mf, O>::exec(sT* self, 
     T* tPtr = self->objPtr ? self->objPtr.get() : self->obj;
     if (offset != 0) tPtr = (T*)(((char*)tPtr)+offset);
     bool success = wrap->execute(tPtr, params, res);
+    if (packedParams) Py_XDECREF(packedParams);
     if (!success) { self->setErr(wrap->err); return NULL; }
     if (!res) Py_RETURN_TRUE;
     else return res;

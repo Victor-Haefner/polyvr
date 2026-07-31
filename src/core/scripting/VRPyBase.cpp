@@ -27,7 +27,8 @@ VRPyGilGuard::VRPyGilGuard() {
 }
 
 VRPyGilGuard::~VRPyGilGuard() {
-    if (acquired && Py_IsInitialized()) {
+    //if (acquired && Py_IsInitialized()) {
+    if (acquired) {
         PyGILState_Release((PyGILState_STATE)state);
     }
 }
@@ -491,7 +492,16 @@ void VRPyBase::execPyCallVoidVoid(PyObject* pyFkt, PyObject* pArgs) {
     VRPyGilGuard gilGuard;
     if (PyErr_Occurred() != NULL) PyErr_Print();
 
-    PyObject_CallObject(pyFkt, pArgs);
+    if (!PyCallable_Check(pyFkt)) {
+        PyErr_SetString(PyExc_TypeError, "Stored Python callback is not callable");
+        PyErr_Print();
+        return;
+    }
+
+    PyObject* result = PyObject_CallObject(pyFkt, pArgs);
+
+    if (result) Py_DECREF(result);
+    else PyErr_Print();
 
     //Py_XDECREF(pArgs); Py_DecRef(pyFkt); // TODO!!
 
