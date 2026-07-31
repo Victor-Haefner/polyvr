@@ -25,8 +25,12 @@ VRGizmoPtr VRGizmo::ptr() { return static_pointer_cast<VRGizmo>(shared_from_this
 
 void VRGizmo::setTarget(VRTransformPtr t) {
     target = t;
+    auto P = target->getWorldPose();
     auto bb = target->getWorldBoundingbox(true);
-    tOffset = bb->center() - target->getWorldPosition();
+    auto Pbb = Pose::create( bb->center() );
+
+    auto Pinv = P->inverse();
+    tOffset = Pinv->multRight(Pbb);
 }
 
 VRTransformPtr VRGizmo::getTarget() { return target; }
@@ -108,20 +112,22 @@ void VRGizmo::setup() {
 void VRGizmo::update() {
     if (!isVisible()) return;
     if (!target) return;
+    if (!tOffset) return;
 
     auto cam = VRScene::getCurrent()->getActiveCamera();
     auto cP = cam->getWorldPose();
 
-    Pose T ( tOffset);
-    Pose tP = (*target->getWorldPose()) * T;
-    Vec3d cD  = cP->pos() - tP.pos();
+    auto tP = target->getWorldPose();
+    auto gP = tP->multRight(tOffset);
+    Vec3d cD  = cP->pos() - gP->pos();
+    //cout << " tOffset " << tOffset << " -> " << tP.pos() << endl;
 
     bool anyRotDragged = cRot->isDragged() || cRotX->isDragged() || cRotY->isDragged() || cRotZ->isDragged();
     bool anyTransDragged = aTransX->isDragged() || aTransY->isDragged() || aTransZ->isDragged();
     bool anyScaleDragged = aScaleX->isDragged() || aScaleY->isDragged() || aScaleZ->isDragged();
     bool anyDragged = anyRotDragged || anyTransDragged || anyScaleDragged;
 
-    if (!(anyRotDragged || anyScaleDragged)) setFrom(tP.pos());
+    if (!(anyRotDragged || anyScaleDragged)) setFrom(gP->pos());
 
     auto P = Pose::create(Vec3d(), cP->x(), cD);
     P->makeDirOrthogonal();
@@ -200,8 +206,8 @@ void VRGizmo::update() {
         auto tP = t->getWorldPose();
         double x = tP->pos()[dof] - mBase->pos()[dof];
 
-        Pose T ( tOffset);
-        Pose Ti(-tOffset);
+        Pose T  = *tOffset;
+        Pose Ti = *tOffset->inverse();
 
         Pose B = (*tBase);
         Pose Br(Vec3d(), B.dir(), B.up());
@@ -227,8 +233,8 @@ void VRGizmo::update() {
         auto r = t->getEuler();
         double x = (r[dof] - rBase[dof])*8.0;
 
-        Pose T ( tOffset);
-        Pose Ti(-tOffset);
+        Pose T  = *tOffset;
+        Pose Ti = *tOffset->inverse();
 
         Pose R;
         Vec3d D; D[dof] = 1;
