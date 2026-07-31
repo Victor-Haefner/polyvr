@@ -24,6 +24,7 @@ template<> int toValue(stringstream& ss, VRSelector::VISUAL& e) {
 VRSelector::VRSelector() {
     selection = VRSelection::create();
     boxRoot = VRObject::create("boxRoot");
+    boxRoot->setPersistency(0);
 
     auto scene = VRScene::getCurrent();
     if (scene) scene->getRoot()->addChild(boxRoot);

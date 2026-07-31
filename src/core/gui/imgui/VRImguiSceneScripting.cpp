@@ -52,17 +52,6 @@ string formatPerformance(float exec_time) {
 #define ImGuiKey_D 'd'
 #endif // IMGUI_VERSION_NUM
 
-bool imguiKeyPressed(int c) {
-#if IMGUI_VERSION_NUM <= 18600
-	ImGuiIO& io = ImGui::GetIO();
-	bool kDown = io.KeysDown[c];
-	io.KeysDown[c] = false;
-    return kDown;
-#else
-    return ImGui::IsKeyPressed( (ImGuiKey)c );
-#endif
-}
-
 ImScriptGroup::ImScriptGroup(string name) : name(name) {}
 ImScriptEntry::ImScriptEntry(string name) : name(name) {}
 
@@ -514,14 +503,12 @@ void ImScripting::render() {
 
     ImGuiIO& io = ImGui::GetIO();
 
-    static bool ctrlFired = false;
-    if (io.KeyCtrl && !ctrlFired) {
-        if (imguiKeyPressed(ImGuiKey_S)) { uiSignal("scripts_toolbar_save"); ctrlFired = true; }
-        if (imguiKeyPressed(ImGuiKey_E)) { uiSignal("scripts_toolbar_execute"); ctrlFired = true; }
-        if (imguiKeyPressed(ImGuiKey_W)) { uiSignal("clearConsoles"); ctrlFired = true; }
-        if (imguiKeyPressed(ImGuiKey_F)) { openSearch(); ctrlFired = true; }
+    if (io.KeyCtrl) {
+        if (ImGui::IsKeyReleased(ImGuiKey_S)) uiSignal("scripts_toolbar_save");
+        if (ImGui::IsKeyReleased(ImGuiKey_E)) uiSignal("scripts_toolbar_execute");
+        if (ImGui::IsKeyReleased(ImGuiKey_W)) uiSignal("clearConsoles");
+        if (ImGui::IsKeyReleased(ImGuiKey_F)) openSearch();
     }
-    if (!io.KeyCtrl) ctrlFired = false;
 
     // toolbar
     ImGui::Spacing();
@@ -579,8 +566,8 @@ void ImScripting::render() {
     ImGui::Spacing();
     ImGui::BeginChild("ScriptEditorPanel", ImVec2(w2, h), false, flags);
     if (ImGui::IsWindowFocused(ImGuiFocusedFlags_ChildWindows) && io.KeyCtrl) {
-        if (imguiKeyPressed(ImGuiKey_T)) { uiSignal("editor_cmd", {{"cmd","toggleLine"}}); }
-        if (imguiKeyPressed(ImGuiKey_D)) { uiSignal("editor_cmd", {{"cmd","duplicateLine"}}); }
+        if (ImGui::IsKeyPressed(ImGuiKey_T)) { uiSignal("editor_cmd", {{"cmd","toggleLine"}}); }
+        if (ImGui::IsKeyPressed(ImGuiKey_D)) { uiSignal("editor_cmd", {{"cmd","duplicateLine"}}); }
     }
 
     editor.render();
