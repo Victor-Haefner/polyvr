@@ -34,6 +34,7 @@ template<> int toValue(stringstream& ss, VRSnappingEngine::Type& e) {
     if (s == "NONE") { e = VRSnappingEngine::NONE; return true; }
     if (s == "POINT") { e = VRSnappingEngine::POINT; return true; }
     if (s == "LINE") { e = VRSnappingEngine::LINE; return true; }
+    if (s == "SEGMENT") { e = VRSnappingEngine::SEGMENT; return true; }
     if (s == "PLANE") { e = VRSnappingEngine::PLANE; return true; }
     if (s == "POINT_LOCAL") { e = VRSnappingEngine::POINT_LOCAL; return true; }
     if (s == "LINE_LOCAL") { e = VRSnappingEngine::LINE_LOCAL; return true; }
@@ -58,8 +59,8 @@ struct VRSnappingEngine::Rule {
         translation(t), orientation(o),
         prim_t(pt), prim_o(po), csys(l),
         distance(d), group(g) {
-        static unsigned long long i = 0;
-        ID = i++;
+            static unsigned long long i = 0;
+            ID = i++;
     }
 
     Vec3d local(Vec3d p) {
@@ -78,6 +79,20 @@ struct VRSnappingEngine::Rule {
         if (translation == LINE) {
             Line l(Vec3f(prim_t->pos()), Vec3f(prim_t->dir()));
             snapP = Vec3d( l.getClosestPoint( Vec3f(p) ) ); // project on line
+        }
+
+        if (translation == SEGMENT) {
+            Vec3f p0 = Vec3f(prim_t->pos());
+            Vec3f d = Vec3f(prim_t->dir());
+            d.normalize();
+            Line l(p0, d);
+            Vec3f pl = Vec3f( l.getClosestPoint( Vec3f(p) ) ); // project on line
+            double d1 = prim_t->up()[0];
+            double d2 = prim_t->up()[1];
+            double D = (pl-p0).dot(d);
+            if (D < d1) snapP = Vec3d(p0+d*d1);
+            else if (D > d2) snapP = Vec3d(p0+d*d2);
+            else snapP = Vec3d(pl);
         }
 
         if (translation == PLANE) {
@@ -151,6 +166,7 @@ VRSnappingEngine::Type VRSnappingEngine::typeFromStr(string t) {
     if (t == "NONE") return NONE;
     if (t == "POINT") return POINT;
     if (t == "LINE") return LINE;
+    if (t == "SEGMENT") return SEGMENT;
     if (t == "PLANE") return PLANE;
     if (t == "POINT_LOCAL") return POINT_LOCAL;
     if (t == "LINE_LOCAL") return LINE_LOCAL;

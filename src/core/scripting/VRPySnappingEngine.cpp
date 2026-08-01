@@ -45,7 +45,7 @@ PyMethodDef VRPySnappingEngine::methods[] = {
     {"remObject", PyWrap(SnappingEngine, remObject, "Remove an object", void, VRTransformPtr ) },
     {"addTree", PyWrapOpt(SnappingEngine, addTree, "Add all subtree objects to be checked for snapping", "0", void, VRObjectPtr, int ) },
     {"setPreset", PyWrap(SnappingEngine, setPreset, "Initiate the engine with a preset - setPreset(str preset)\n   preset can be: 'SNAP_BACK', 'SIMPLE_ALIGNMENT'", void, VRSnappingEngine::PRESET ) },
-    {"addRule", PyWrapOpt(SnappingEngine, addRule, "Add snapping rule (Type1, Type2, Pose1, Pose2, snapDistance, group, snapReference), Type can be 'POINT', 'LINE' or 'PLANE'", "0|0", int, VRSnappingEngine::Type, VRSnappingEngine::Type, PosePtr, PosePtr, float, int, VRTransformPtr ) },
+    {"addRule", PyWrapOpt(SnappingEngine, addRule, "Add snapping rule (Type1, Type2, Pose1, Pose2, snapDistance, group, snapReference), Type can be 'NONE', POINT', 'LINE', 'SEGMENT' or 'PLANE'", "0|0", int, VRSnappingEngine::Type, VRSnappingEngine::Type, PosePtr, PosePtr, float, int, VRTransformPtr ) },
     {"remRule", PyWrap(SnappingEngine, remRule, "Remove a rule - remRule(int ID)", void, int ) },
     {"addObjectAnchor", PyWrapOpt(SnappingEngine, addObjectAnchor, "Remove a rule - addObjectAnchor(obj transform, obj anchor)", "0|0", void, VRTransformPtr, VRTransformPtr, int, int ) },
     {"clearObjectAnchors", PyWrap(SnappingEngine, clearObjectAnchors, "Remove a rule (obj transform)", void, VRTransformPtr ) },

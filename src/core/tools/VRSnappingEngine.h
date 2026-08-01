@@ -33,6 +33,7 @@ class VRSnappingEngine {
             NONE,
             POINT,
             LINE,
+            SEGMENT,
             PLANE,
             POINT_LOCAL,
             LINE_LOCAL,
