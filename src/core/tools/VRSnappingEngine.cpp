@@ -74,6 +74,8 @@ struct VRSnappingEngine::Rule {
     }
 
     Vec3d getSnapPoint(Vec3d p) {
+        if (translation == NONE) snapP = p;
+
         if (translation == POINT) snapP = prim_t->pos();
 
         if (translation == LINE) {
@@ -110,11 +112,14 @@ struct VRSnappingEngine::Rule {
         PosePtr O = prim_o;
         if (o) O = prim_o->multRight(o);
 
+        if (orientation == NONE) {
+            m.setTranslate(snapP);
+            if (csys) m.multLeft(C); // TODO: check if this messes with orientation!
+        }
+
         if (orientation == POINT) {
             MatrixLookAt(m, snapP, snapP+O->dir(), O->up());
-            if (csys) {
-                m.multLeft(C);
-            }
+            if (csys) m.multLeft(C);
         }
     }
 
