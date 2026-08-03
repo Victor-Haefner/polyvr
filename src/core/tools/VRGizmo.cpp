@@ -16,12 +16,44 @@ using namespace OSG;
 VRGizmo::VRGizmo(string name) : VRTransform(name) {
     updateCb = VRUpdateCb::create( "player", bind(&VRGizmo::update, this));
     VRScene::getCurrent()->addUpdateFkt(updateCb);
+    config = vector<bool>(10, true);
 }
 
 VRGizmo::~VRGizmo() {}
 
 VRGizmoPtr VRGizmo::create(string name) { auto g = VRGizmoPtr( new VRGizmo(name) ); g->setup(); return g; }
 VRGizmoPtr VRGizmo::ptr() { return static_pointer_cast<VRGizmo>(shared_from_this()); }
+
+void VRGizmo::enableTranslation(bool x, bool y, bool z, bool onlyTranslation) {
+    if (onlyTranslation) config = vector<bool>(10,false);
+    config[0] = x; config[1] = y; config[2] = z;
+    updateHandleVisibility();
+}
+
+void VRGizmo::enableRotation(bool x, bool y, bool z, bool w, bool onlyRotation) {
+    if (onlyRotation) config = vector<bool>(10,false);
+    config[3] = x; config[4] = y; config[5] = z; config[6] = w;
+    updateHandleVisibility();
+}
+
+void VRGizmo::enableScaling(bool x, bool y, bool z, bool onlyScaling) {
+    if (onlyScaling) config = vector<bool>(10,false);
+    config[7] = x; config[8] = y; config[9] = z;
+    updateHandleVisibility();
+}
+
+void VRGizmo::updateHandleVisibility() {
+    aTransX->setVisible(config[0]);
+    aTransY->setVisible(config[1]);
+    aTransZ->setVisible(config[2]);
+    cRotX->setVisible(config[3]);
+    cRotY->setVisible(config[4]);
+    cRotZ->setVisible(config[5]);
+    cRot->setVisible(config[6]);
+    aScaleX->setVisible(config[7]);
+    aScaleY->setVisible(config[8]);
+    aScaleZ->setVisible(config[9]);
+}
 
 void VRGizmo::setTarget(VRTransformPtr t) {
     target = t;
@@ -262,6 +294,8 @@ void VRGizmo::update() {
     else if (cRotZ->isDragged()) processRotation(cRotZ, 2);
     else mBase = 0;
 }
+
+
 
 string VRGizmo::rotVP =
 "#version 120\n"

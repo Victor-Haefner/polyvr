@@ -27,5 +27,8 @@ PyMethodDef VRPyTimeline::methods[] = {
 PyMethodDef VRPyGizmo::methods[] = {
     {"setTarget", PyWrap( Gizmo, setTarget, "Set transformation target", void, VRTransformPtr ) },
     {"getTarget", PyWrap( Gizmo, getTarget, "Return transformation target", VRTransformPtr ) },
+    {"enableTranslation", PyWrapOpt( Gizmo, enableTranslation, "Configure the translation handles (x,y,z,onlyT=0)", "0", void, bool, bool, bool, bool ) },
+    {"enableRotation", PyWrapOpt( Gizmo, enableRotation, "Configure the rotation handles (x,y,z,w,onlyR=0)", "0", void, bool, bool, bool, bool, bool ) },
+    {"enableScaling", PyWrapOpt( Gizmo, enableScaling, "Configure the scaling handles (x,y,z,onlyS=0)", "0", void, bool, bool, bool, bool ) },
     {NULL}  /* Sentinel */
 };

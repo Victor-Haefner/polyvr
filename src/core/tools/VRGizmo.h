@@ -21,6 +21,8 @@ class VRGizmo : public VRTransform {
 	    static string rotVP;
 	    static string rotFP;
 
+	    vector<bool> config;
+
 	    VRGeometryPtr cRot;
 	    VRGeometryPtr cRotX;
 	    VRGeometryPtr cRotY;
@@ -33,6 +35,7 @@ class VRGizmo : public VRTransform {
 	    VRGeometryPtr aScaleZ;
 
 	    void setup();
+	    void updateHandleVisibility();
 	    void update();
 
 	public:
@@ -44,6 +47,10 @@ class VRGizmo : public VRTransform {
 
         void setTarget(VRTransformPtr t);
         VRTransformPtr getTarget();
+
+        void enableTranslation(bool x, bool y, bool z, bool onlyTranslation = false);
+        void enableRotation(bool x, bool y, bool z, bool w, bool onlyRotation = false);
+        void enableScaling(bool x, bool y, bool z, bool onlyScaling = false);
 };
 
 OSG_END_NAMESPACE;
