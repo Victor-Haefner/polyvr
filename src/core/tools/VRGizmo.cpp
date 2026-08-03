@@ -75,6 +75,8 @@ void VRGizmo::setup() {
         return m;
     };
 
+    refT = VRTransform::create("ref");
+
     auto setupPart = [&](VRGeometryPtr geo, VRMaterialPtr mat, Vec3d p, Vec3d d, Vec3d u) {
         addChild(geo);
         geo->setMaterial(mat);
@@ -165,15 +167,9 @@ void VRGizmo::update() {
     P->makeDirOrthogonal();
 
     if (!cRot->isDragged()) cRot->setPose(P);
-    else {
-        auto wP = cRot->getWorldPose();
-        wP->setUp( cD );
-        wP->makeDirOrthogonal();
-        cRot->setWorldPose(wP);
-    }
-    //cRot->getConstraint()->setReferenceA( cRot->getPose() );
 
     auto checkTransHandle = [&](VRTransformPtr t, int dof) {
+        if (!t->isVisible()) return;
         if (t->isDragged()) return;
 
         Vec3d f,u;
@@ -193,6 +189,7 @@ void VRGizmo::update() {
     };
 
     auto checkScaleHandle = [&](VRTransformPtr t, int dof) {
+        if (!t->isVisible()) return;
         if (t->isDragged()) return;
         Vec3d f;
         f[dof] = 1.3;
@@ -257,20 +254,42 @@ void VRGizmo::update() {
     };
 
     auto processRotation = [&](VRGeometryPtr t, int dof) {
+        auto getProjectedAngle = [&]() -> double {
+            auto pa = dynamic_pointer_cast<VRTransform>(refT->getParent());
+            auto dP = pa->getWorldPose();
+            auto rP = refT->getWorldPose();
+            auto tP = mBase->multRight(tOffset);
+            Vec3d d = rP->pos() - tP->pos(); d.normalize();
+            double x = d.dot(dP->x());
+            double y = d.dot(dP->up());
+            d = Vec3d(x,y,0); d.normalize();
+            return atan2(-d[0], d[1]);
+        };
+
         if (!mBase) {
             mBase = target->getWorldPose();
-            rBase = t->getEuler();
+            rBase = t->getWorldPose();
+            t->getParent()->addChild(refT);
+            refT->setWorldPose(t->getWorldPose());
+            Vec3d p = refT->getFrom();
+            p[0] = 0; p[1] = 0;
+            refT->setFrom(p);
+            angle0 = getProjectedAngle();
         }
 
-        auto r = t->getEuler();
-        double x = (r[dof] - rBase[dof])*8.0;
+        Pose R;
+        double x = getProjectedAngle() - angle0;
 
+        if (dof < 3) {
+            Vec3d D; D[dof] = 1;
+            R.rotate(x, D);
+        } else {
+            R.rotate(x, cD);
+        }
+
+        // transform target
         Pose T  = *tOffset;
         Pose Ti = *tOffset->inverse();
-
-        Pose R;
-        Vec3d D; D[dof] = 1;
-        R.rotate(x, D);
 
         Pose B = (*mBase) * T;
         Pose Br(Vec3d(), B.dir(), B.up());
@@ -280,18 +299,25 @@ void VRGizmo::update() {
         S.setScale( B.scale() );
 
         target->setWorldPose( Pose::create( Bt * R * Br * S * Ti ) );
+
+        // transform handle
+        Pose rB = (*rBase);
+        Pose rBr(Vec3d(), rB.dir(), rB.up());
+        Pose rBt( rB.pos() );
+        t->setWorldPose( Pose::create( rBt * R * rBr ) );
     };
 
     // check for dragging part
-    if (aTransX->isDragged()) processTranslate(aTransX, 0);
+    if (aTransX->isDragged())      processTranslate(aTransX, 0);
     else if (aTransY->isDragged()) processTranslate(aTransY, 1);
     else if (aTransZ->isDragged()) processTranslate(aTransZ, 2);
     else if (aScaleX->isDragged()) processScale(aScaleX, 0);
     else if (aScaleY->isDragged()) processScale(aScaleY, 1);
     else if (aScaleZ->isDragged()) processScale(aScaleZ, 2);
-    else if (cRotX->isDragged()) processRotation(cRotX, 0);
-    else if (cRotY->isDragged()) processRotation(cRotY, 1);
-    else if (cRotZ->isDragged()) processRotation(cRotZ, 2);
+    else if (cRotX->isDragged())   processRotation(cRotX, 0);
+    else if (cRotY->isDragged())   processRotation(cRotY, 1);
+    else if (cRotZ->isDragged())   processRotation(cRotZ, 2);
+    else if (cRot->isDragged())    processRotation(cRot, 3);
     else mBase = 0;
 }
 
