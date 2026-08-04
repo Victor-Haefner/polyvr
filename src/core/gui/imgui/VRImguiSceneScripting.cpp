@@ -504,9 +504,9 @@ void ImScripting::render() {
     ImGuiIO& io = ImGui::GetIO();
 
     if (io.KeyCtrl) {
-        if (ImGui::IsKeyReleased(ImGuiKey_S)) uiSignal("scripts_toolbar_save");
-        if (ImGui::IsKeyReleased(ImGuiKey_E)) uiSignal("scripts_toolbar_execute");
-        if (ImGui::IsKeyReleased(ImGuiKey_W)) uiSignal("clearConsoles");
+        if (ImGui::IsKeyPressed(ImGuiKey_S)) uiSignal("scripts_toolbar_save");
+        if (ImGui::IsKeyPressed(ImGuiKey_E)) uiSignal("scripts_toolbar_execute");
+        if (ImGui::IsKeyPressed(ImGuiKey_W)) uiSignal("clearConsoles");
         if (ImGui::IsKeyReleased(ImGuiKey_F)) openSearch();
     }
 
