@@ -40,6 +40,7 @@ class Pose {
         Vec3d up();
         Vec3d x();
         Vec3d scale();
+        double distance(PosePtr);
 
         void translate(const Vec3d& p);
         void move(double x);
