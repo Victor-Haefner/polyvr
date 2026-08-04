@@ -101,7 +101,7 @@ void VRFluidComposition::mixIn(const VRFluidComposition& fluid, const double& pe
 
 void VRFluidComposition::fromEntity(VREntityPtr e) {
     temperature = e->getValue("temperature", 20.0);
-    baseDensity = e->getValue("density", 1000.0);
+    baseDensity = e->getValue("density", 1e3);
     baseViscosity = e->getValue("viscosity", 1e-3);
 
     map<string, VREntityPtr> eParts;
@@ -186,11 +186,11 @@ void VRFluidComposition::updateThermalDependencies() {
     double phi = 0.0;
     double rhoParticles = 0.0;
     for (auto& p : particles) {
-        double vf = clamp(p.second.volumeFraction, 0.0, 0.95);
+        double vf = clamp(p.second.volumeFraction, 0.0, 1.0);
         phi += vf;
         rhoParticles += vf * p.second.density;
     }
-    phi = clamp(phi, 0.0, 0.95);
+    phi = clamp(phi, 0.0, 1.0);
 
     effectiveDensity   = rhoFluid * (1.0 - phi) + rhoParticles;
     effectiveDensity   = max(effectiveDensity,   1.0);
@@ -725,6 +725,7 @@ int VRPipeSystem::addSegment(double radius, int n1, int n2, double level, double
     auto s = VRPipeSegment::create(sID, radius, 0.0, level);
     s->fluid.baseDensity   = defaultDensity;
     s->fluid.baseViscosity = defaultViscosity;
+    s->fluid.updateThermalDependencies();
     segments[sID] = s;
     auto e1 = VRPipeEnd::create(s, n1, h1);
     auto e2 = VRPipeEnd::create(s, n2, h2);
@@ -4316,6 +4317,10 @@ void VRPipeSystem::computeFlowMixing(double dt) {
 
         VRFluidComposition fluid0 = f0.fluid;
         double K = Vbefore;
+
+        // negative/outgoing first
+        sort(flows.begin(), flows.end(), [](const FluidVolume& a, const FluidVolume& b) { return a.V < b.V; });
+
         for (auto& f : flows) {
             K += f.V;
             if (abs(K) < 1e-12) continue;
@@ -4344,8 +4349,10 @@ void VRPipeSystem::computeFlowMixing(double dt) {
             for (auto e : ends) {
                 double V = e->flow * dt;
                 if (abs(V) < 1e-9) continue;
-
                 auto pipe = e->pipe.lock();
+
+                if (V > pipe->volume) cout << "WARNING! mixing in pipe flow bigger than pipe volume!" << endl;
+
                 if (e->flow < 0.0) flows.push_back({V, tFluid});
                 else flows.push_back({V, pipe->fluid});
             }

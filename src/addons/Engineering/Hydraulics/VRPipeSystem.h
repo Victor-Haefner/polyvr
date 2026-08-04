@@ -225,7 +225,7 @@ class VRPipeSystem : public VRTransform {
         //double atmosphericPressure = 0.0; // set to 0 because its just a global offset
 
         double defaultDensity = 1000.0; // kg / m3
-        double defaultViscosity = 0.003; // Pa.s at 20 C
+        double defaultViscosity = 1e-3; // Pa.s at 20 C
 
         map<int, VRPipeNodePtr> nodes;
         map<string, int> nodesByName;
