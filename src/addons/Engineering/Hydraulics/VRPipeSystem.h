@@ -147,6 +147,7 @@ class VRPipeSegment {
         void setLevel(double lvl);
         void updateGeometry(GraphPtr graph, double friction);
 
+        double fluidVolume();
         double computeEffectiveResistance(const double& flow);
 
         void toXML(XMLElementPtr n);

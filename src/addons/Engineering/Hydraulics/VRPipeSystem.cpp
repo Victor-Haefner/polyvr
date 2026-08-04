@@ -488,6 +488,10 @@ void VRPipeSegment::updateResistance(double friction) {
     //resistance = resistanceTurbulent; //max(resistanceLaminar, resistanceTurbulent); // TODO
 }
 
+double VRPipeSegment::fluidVolume() {
+    return level * volume + excessFluidVolume - missingFluidVolume;
+}
+
 double VRPipeSegment::computeEffectiveResistance(const double& flow) {
     double k = regime;
     double rho_g = fluid.effectiveDensity * gravity;
@@ -830,9 +834,7 @@ Vec2d VRPipeSystem::computeTotalMass() {
 
     for (auto& s : segments) { // mass in pipes
         auto pipe = s.second;
-        double pipeLevel = pipe->level; // 0..1
-        double pipeVolume = pipe->volume; // m³
-        double fluidVolume = pipeVolume * pipeLevel + pipe->excessFluidVolume - pipe->missingFluidVolume;
+        double fluidVolume = pipe->fluidVolume();
         totalFluidMass += pipe->fluid.computeFluidMass(fluidVolume);
         totalParticlesMass += pipe->fluid.computeParticlesMass(fluidVolume);
     }
@@ -1037,8 +1039,8 @@ int VRPipeSystem::splitSegment(int sID) {
 
     auto e11 = pipe1->end1.lock();
     auto e12 = pipe1->end2.lock();
-    auto e21 = pipe1->end1.lock();
-    auto e22 = pipe1->end2.lock();
+    auto e21 = pipe2->end1.lock();
+    auto e22 = pipe2->end2.lock();
 
     e11->flow = flow1;
     e12->flow = flowm;
@@ -3529,7 +3531,17 @@ void VRPipeSystem::computeHeadFlows(double dt) {
 }
 
 void VRPipeSystem::computeMaxFlows(double dt) {
+    /*int Nitr = 30;
     double eps = 1e-11;
+    double eps2 = 1e-12;
+    double eps3 = 1e-7;*/
+
+    int Nitr = 60;
+    double eps = 1e-13;
+    double eps2 = 1e-13;
+    double eps3 = 1e-13;
+
+
     auto sign = [](double v) { return (v > 0) - (v < 0); };
 
     //auto clampFlow = [&](double& flow, double c) -> double {
@@ -3563,8 +3575,8 @@ void VRPipeSystem::computeMaxFlows(double dt) {
             maxFlowOut =  min(flowOut, volWater/dt);
         }
 
-        double scaleFlowIn  = abs(flowIn ) > 1e-12 ? maxFlowIn  / flowIn  : 1.0;
-        double scaleFlowOut = abs(flowOut) > 1e-12 ? maxFlowOut / flowOut : 1.0;
+        double scaleFlowIn  = abs(flowIn ) > eps2 ? maxFlowIn  / flowIn  : 1.0;
+        double scaleFlowOut = abs(flowOut) > eps2 ? maxFlowOut / flowOut : 1.0;
 
         return Vec2d(scaleFlowIn, scaleFlowOut);
     };
@@ -3800,7 +3812,7 @@ void VRPipeSystem::computeMaxFlows(double dt) {
                 auto f = e->maxFlow;
                 if (f < 0) clampFlow(e, f * scaleFlowInOut[0], 7);
                 else clampFlow(e, f * scaleFlowInOut[1], 8);
-                if (abs(e->maxFlow-f) > 1e-7) needsIteration = true;
+                if (abs(e->maxFlow-f) > eps3) needsIteration = true;
             }
 
             // forbid cavitations
@@ -3833,7 +3845,7 @@ void VRPipeSystem::computeMaxFlows(double dt) {
     };
 
     auto computeOrificePressureLoss = [&](double A, double Q, double rho) {
-        double v = Q/max(A, 1e-12);
+        double v = Q/max(A, eps2);
         return 0.5 * rho * v*v * sign(Q);
     };
 
@@ -3876,7 +3888,7 @@ void VRPipeSystem::computeMaxFlows(double dt) {
                         double dPvalve = computeOrificePressureLoss(Avalve, Q, rho);
                         double dPopen  = computeOrificePressureLoss(Apipe,  Q, rho);
 
-                        double L = rho * pipe->length / max(Apipe, 1e-9);
+                        double L = rho * pipe->length / max(Apipe, eps2);
                         double valveAccel = (dPvalve - dPopen) / L;
 
                         double dQ = (e->headFlow - Q)/dt;
@@ -3904,7 +3916,7 @@ void VRPipeSystem::computeMaxFlows(double dt) {
                 mfc = max(mfc, e->flowClamp);
             }
         }
-        if (mfc < 1e-12) return;
+        if (mfc < eps2) return;
 
         for (auto& n : nodes) {
             for (auto& e : n.second->pipes) {
@@ -3919,8 +3931,8 @@ void VRPipeSystem::computeMaxFlows(double dt) {
             if (e->is_a("Tank")) continue;
             if (e->is_a("Cylinder")) continue;
 
-            //double eps = 1e-15;
-            double eps = 1e-4;
+            double eps = 1e-15;
+            //double eps = 1e-4;
 
             double Q = 0;
             for (auto& e : n.second->pipes) Q += e->maxFlow;
@@ -3938,15 +3950,14 @@ void VRPipeSystem::computeMaxFlows(double dt) {
     copyInitialMaxHead();
 
     bool needsIteration = true;
-    int Nitr = 30;
     for (int i=0; needsIteration && i<Nitr; i++) {
         needsIteration = false;
         processNodes();
         processSegments(needsIteration);
 
         if (i >= Nitr-1 && needsIteration) {
-            //cout << "Warning, not enought iterations: " << i << ", ni " << needsIteration << endl;
-            //checkNodeFlows();
+            cout << "Warning, not enought iterations: " << i << ", ni " << needsIteration << endl;
+            checkNodeFlows();
         }
     }
 
@@ -4372,8 +4383,7 @@ void VRPipeSystem::computeFlowMixing(double dt) {
         //cout << "segment" << endl;
         auto end1 = pipe->end1.lock();
         auto end2 = pipe->end2.lock();
-
-        double V0 = pipe->level * pipe->volume;
+        double V0 = pipe->fluidVolume();
 
         vector<FluidVolume> flows;
         for (auto e : {end1, end2}) {
