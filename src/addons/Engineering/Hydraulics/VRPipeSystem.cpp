@@ -2062,6 +2062,138 @@ void VRPipeSystem::updateNodePaths() {
 
 }
 
+void VRPipeSystem::updateNodeChains() {
+    vector<Vec2i> chainsToMerge;
+    map<int, bool> chainsToOrder;
+
+    auto genChainID = [&]() {
+        int cID = -1;
+        do { cID = rand(); }
+        while (nodeChains.count(cID));
+        return cID;
+    };
+
+    auto removeChain = [&](int cID) {
+        if (!nodeChains.count(cID)) return;
+        for (auto& nID : nodeChains[cID]) {
+            if (!nodes.count(nID)) continue;
+            nodes[nID]->chainID = -1;
+        }
+        nodeChains.erase(cID);
+    };
+
+    auto detectRemovedNodes = [&]() {
+        vector<int> chainIDs;
+        for (auto c : nodeChains) chainIDs.push_back(c.first);
+
+        vector<int> chainsToRemove;
+        for (int cID : chainIDs) {
+            for (auto nID : nodeChains[cID]) {
+                if (!nodes.count(nID)) {
+                    chainsToRemove.push_back(cID);
+                    break;
+                }
+            }
+        }
+
+        for (auto cID : chainsToRemove) removeChain(cID);
+    };
+
+    auto findChainEnd = [&](int cID) {
+        for (auto nID : nodeChains[cID]) {
+            auto neighbors = graph->getNeighbors(nID);
+            auto n1 = nodes[neighbors[0].ID];
+            auto n2 = nodes[neighbors[1].ID];
+            if (n1->chainID != cID || n2->chainID != cID) {
+                int nID2 = (n1->chainID == cID) ? n1->nID : n2->nID;
+                return Vec2i(nID,nID2);
+            }
+        }
+        return Vec2i(-1,-1);
+    };
+
+    function<void(VRPipeNodePtr, VRPipeNodePtr, int)> aggregateChain = [&](VRPipeNodePtr prev, VRPipeNodePtr node, int cID) {
+        if (node->chainID != -1) { // already in chain
+            chainsToMerge.push_back(Vec2i(node->chainID, cID));
+            return;
+        }
+
+        if (node->pipes.size() != 2) return; // not valid
+        if (!node->entity->is_a("Junction")) return; // not valid
+
+        node->chainID = cID;
+        nodeChains[cID].push_back(node->nID);
+        auto neighbors = graph->getNeighbors(node->nID);
+        int neighbor = (neighbors[0].ID == prev->nID) ? neighbors[1].ID : neighbors[0].ID;
+        aggregateChain(node, nodes[neighbor], cID);
+    };
+
+    detectRemovedNodes();
+
+    for (auto& n : nodes) { // reset nodes if necessary
+        int cID = n.second->chainID;
+        if (cID == -1) continue; // not in chain
+        if (n.second->pipes.size() == 2) continue; // in chain but valid
+        removeChain(cID);
+    }
+
+    for (auto& n : nodes) { // detect chains
+        if (n.second->chainID != -1) continue; // already in chain
+        if (n.second->pipes.size() != 2) continue; // not valid
+        if (!n.second->entity->is_a("Junction")) continue; // not valid
+
+        // found chain seed
+        int cID = genChainID();
+        n.second->chainID = cID;
+        chainsToOrder[cID] = true;
+        nodeChains[cID].push_back(n.first);
+        auto neighbors = graph->getNeighbors(n.first);
+        aggregateChain(n.second, nodes[neighbors[0].ID], cID);
+        aggregateChain(n.second, nodes[neighbors[1].ID], cID);
+    }
+
+    for (int i=0; i<chainsToMerge.size(); i++) {
+        auto& IDs = chainsToMerge[i];
+        if (IDs[0] == IDs[1]) continue;
+
+        auto& c1 = nodeChains[IDs[0]];
+        auto& c2 = nodeChains[IDs[1]];
+        for (int nID : c2) { nodes[nID]->chainID = IDs[0]; }
+        c1.insert( c1.end(), c2.begin(), c2.end() );
+        nodeChains.erase(IDs[1]);
+        chainsToOrder[IDs[0]] = true;
+
+        for (int j=i+1; j<chainsToMerge.size(); j++) {
+            auto& ID2s = chainsToMerge[j];
+            if (ID2s[0] == IDs[1]) ID2s[0] = IDs[0];
+            if (ID2s[1] == IDs[1]) ID2s[1] = IDs[0];
+        }
+    }
+
+    function<void(int,int,vector<int>&)> appendNext = [&](int prev, int nID, vector<int>& v) {
+        if (nodes[nID]->chainID != nodes[prev]->chainID) return;
+        v.push_back(nID);
+        auto neighbors = graph->getNeighbors(nID);
+        int nID2 = (neighbors[0].ID == prev) ? neighbors[1].ID : neighbors[0].ID;
+        appendNext(nID, nID2, v);
+    };
+
+    for (auto co : chainsToOrder) {
+        int cID = co.first;
+        if (!nodeChains.count(cID)) continue;
+        auto& c = nodeChains[cID];
+        if (c.size() < 3) continue;
+
+        Vec2i nEndIDs = findChainEnd(cID);
+        if (nEndIDs[0] < 0 || nEndIDs[1] < 0) { removeChain(cID); continue; }
+
+        vector<int> orderedChain = { nEndIDs[0] };
+        appendNext(nEndIDs[0], nEndIDs[1], orderedChain);
+        if (orderedChain.size() != c.size()) cout << "Warning!! orderedChain size doesnt match!" << endl;
+        else nodeChains[cID] = orderedChain;
+    }
+}
+
 void VRPipeSystem::assignBoundaryPressures(double dt, double dT) {
     for (auto n : nodes) {
         auto node = n.second;
@@ -3538,9 +3670,9 @@ void VRPipeSystem::computeMaxFlows(double dt) {
     double eps3 = 1e-7;*/
 
     int Nitr = 60;
-    double eps = 1e-13;
-    double eps2 = 1e-13;
-    double eps3 = 1e-13;
+    double eps = 1e-10;
+    double eps2 = 1e-10;
+    double eps3 = 1e-10;
 
 
     auto sign = [](double v) { return (v > 0) - (v < 0); };
@@ -3825,7 +3957,7 @@ void VRPipeSystem::computeMaxFlows(double dt) {
                 else totalFlowOut += f;
             }
 
-            if (totalFlowOut > totalFlowIn) {
+            if (totalFlowOut > totalFlowIn + eps) {
                 if (e1->pressurized && e2->pressurized) {
                     for (auto& e : {e1, e2}) {
                         if (e->maxFlow > 0) clampFlow(e, totalFlowIn, 9);
@@ -3839,6 +3971,65 @@ void VRPipeSystem::computeMaxFlows(double dt) {
                     if (e2->pressurized && e2->hydraulicHead > e1->hydraulicHead) {
                         if (e1->maxFlow > 0) clampFlow(e1, totalFlowIn, 11);
                         needsIteration = true;
+                    }
+                }
+            }
+        }
+    };
+
+    auto processChains = [&](bool& needsIteration) {
+        auto getMaxGroupFlow = [&](vector<int>& g) {
+            double maxFlow = 1e6;
+            for (auto nID : g) {
+                auto& node = nodes[nID];
+                for (auto e : node->pipes) {
+                    maxFlow = min(maxFlow, abs(e->maxFlow) );
+                }
+            }
+            return maxFlow;
+        };
+
+        for (auto& c : nodeChains) {
+            /*cout << "chain " << c.first << ": ";
+            for (auto n : c.second) cout << " " << n;
+            cout << endl;*/
+
+
+            vector<vector<int>> pressurizedGroups = {vector<int>({c.second[0]})};
+            for (int i=1; i<c.second.size(); i++) {
+                int nID  = c.second[i-1];
+                int nID2 = c.second[i];
+                int eID = graph->getEdgeID(nID, nID2);
+                auto& pipe = segments[eID];
+                if (pipe->pressurized) {
+                    auto e1 = pipe->end1.lock();
+                    auto e2 = pipe->end2.lock();
+                    if (e1->pressurized && e2->pressurized && abs(pipe->imbalanceFluidFlow) < 1e-12) {
+                        pressurizedGroups.rbegin()->push_back(nID2);
+                        continue;
+                    }
+                }
+
+                if (pressurizedGroups.rbegin()->size() > 0) {
+                    pressurizedGroups.push_back(vector<int>());
+                    pressurizedGroups.rbegin()->push_back(nID2);
+                }
+            }
+
+            for (auto g : pressurizedGroups) {
+                double maxFlow = getMaxGroupFlow(g);
+                //cout << " group " << g.size() << ", Q: " << maxFlow << endl;
+
+                for (auto nID : g) {
+                    auto& node = nodes[nID];
+                    for (auto e : node->pipes) {
+                        auto& q = e->maxFlow;
+                        if (abs(q) > maxFlow+eps) {
+                            //cout << q << " " << maxFlow << endl;
+                            if (q >= 0) q = min( q, maxFlow );
+                            else q = -min( -q, maxFlow );
+                            needsIteration = true;
+                        }
                     }
                 }
             }
@@ -3955,11 +4146,14 @@ void VRPipeSystem::computeMaxFlows(double dt) {
         needsIteration = false;
         processNodes();
         processSegments(needsIteration);
+        //processChains(needsIteration);
 
         if (i >= Nitr-1 && needsIteration) {
             cout << "Warning, not enought iterations: " << i << ", ni " << needsIteration << endl;
-            checkNodeFlows();
+            //checkNodeFlows();
         }
+
+        //if (!needsIteration) cout << " -- used " << i << " iterations!" << endl;
     }
 
     copyFinalMaxHead();
@@ -4350,8 +4544,7 @@ void VRPipeSystem::computeFlowMixing(double dt) {
                 double V = e->flow * dt;
                 if (abs(V) < 1e-9) continue;
                 auto pipe = e->pipe.lock();
-
-                if (V > pipe->volume) cout << "WARNING! mixing in pipe flow bigger than pipe volume!" << endl;
+                //if (V > pipe->volume) cout << "WARNING! mixing in pipe flow bigger than pipe volume!" << endl;
 
                 if (e->flow < 0.0) flows.push_back({V, tFluid});
                 else flows.push_back({V, pipe->fluid});
@@ -4509,6 +4702,7 @@ void VRPipeSystem::update() {
 
 
     updateNodePaths();
+    updateNodeChains();
 
     for (int i=0; i<subSteps; i++) {
         auto t1 = VRTimer::create();

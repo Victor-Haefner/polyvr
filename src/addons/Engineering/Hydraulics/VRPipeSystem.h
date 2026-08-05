@@ -157,6 +157,7 @@ class VRPipeSegment {
 class VRPipeNode {
     public:
         int nID = 0;
+        int chainID = -1;
         int stateID = -1;
         VREntityPtr entity;
         string name;
@@ -230,6 +231,7 @@ class VRPipeSystem : public VRTransform {
         map<int, VRPipeNodePtr> nodes;
         map<string, int> nodesByName;
         map<int, VRPipeSegmentPtr> segments;
+        map<int, vector<int>> nodeChains;
         vector<EnvironmentPtr> environments;
         vector<MaterialPtr> materials;
 
@@ -249,6 +251,7 @@ class VRPipeSystem : public VRTransform {
         void computeEndOffset(VRPipeEndPtr e);
 
         void updateNodePaths();
+        void updateNodeChains();
         void assignBoundaryPressures(double dt, double dT);
         void solveNodeHeads(double dt);
         void computeHeadFlows(double dt);
