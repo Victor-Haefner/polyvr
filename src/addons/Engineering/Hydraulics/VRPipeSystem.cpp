@@ -4004,7 +4004,7 @@ void VRPipeSystem::computeMaxFlows(double dt) {
                 if (pipe->pressurized) {
                     auto e1 = pipe->end1.lock();
                     auto e2 = pipe->end2.lock();
-                    if (e1->pressurized && e2->pressurized && abs(pipe->imbalanceFluidFlow) < 1e-12) {
+                    if (e1->pressurized && e2->pressurized && abs(pipe->imbalanceFluidFlow) < eps) {
                         pressurizedGroups.rbegin()->push_back(nID2);
                         continue;
                     }
@@ -4023,13 +4023,13 @@ void VRPipeSystem::computeMaxFlows(double dt) {
                 for (auto nID : g) {
                     auto& node = nodes[nID];
                     for (auto e : node->pipes) {
-                        auto& q = e->maxFlow;
-                        if (abs(q) > maxFlow+eps) {
-                            //cout << q << " " << maxFlow << endl;
-                            if (q >= 0) q = min( q, maxFlow );
-                            else q = -min( -q, maxFlow );
-                            needsIteration = true;
-                        }
+                        auto q = e->maxFlow;
+                        if (abs(q) < maxFlow+eps) continue;
+
+                        //cout << q << " " << maxFlow << endl;
+                        q = maxFlow * sign(q);
+                        clampFlow(e, q, 15);
+                        needsIteration = true;
                     }
                 }
             }
@@ -4146,14 +4146,13 @@ void VRPipeSystem::computeMaxFlows(double dt) {
         needsIteration = false;
         processNodes();
         processSegments(needsIteration);
-        //processChains(needsIteration);
+        //processChains(needsIteration); // TODO: not stable!
+        //if (!needsIteration) cout << " -- used " << i << " iterations!" << endl;
 
         if (i >= Nitr-1 && needsIteration) {
             cout << "Warning, not enought iterations: " << i << ", ni " << needsIteration << endl;
             //checkNodeFlows();
         }
-
-        //if (!needsIteration) cout << " -- used " << i << " iterations!" << endl;
     }
 
     copyFinalMaxHead();
