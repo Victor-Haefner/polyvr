@@ -969,6 +969,7 @@ void VRPipeSystem::setNodePose(int nID, PosePtr p) {
 
         if (pipe->createdFrame == VRGlobals::CURRENT_FRAME) return; // ignore fluid movement during setup
 
+
         if (dV >= 0) { // volume grows
             double pdV = dV*pipe->level;
             if (pipe->excessFluidVolume >= pdV) {
@@ -988,6 +989,12 @@ void VRPipeSystem::setNodePose(int nID, PosePtr p) {
                 pipe->excessFluidVolume += ndV;
             }
         }
+
+        // fix float issues
+        if (pipe->missingFluidVolume < 1e-11) pipe->missingFluidVolume = 0.0;
+        if (pipe->excessFluidVolume < 1e-11)  pipe->excessFluidVolume = 0.0;
+
+        //if (eID == 3) cout << eID << " pipe deformation! " << dV << " -> " << pipe->missingFluidVolume + pipe->excessFluidVolume << endl;
     };
 
     graph->setPosition(nID, p);
@@ -3678,11 +3685,6 @@ void VRPipeSystem::computeHeadFlows(double dt) {
 }
 
 void VRPipeSystem::computeMaxFlows(double dt) {
-    /*int Nitr = 30;
-    double eps = 1e-11;
-    double eps2 = 1e-12;
-    double eps3 = 1e-7;*/
-
     int Nitr = 30;
     double eps1 = 1e-12;
     double eps2 = 1e-10;
@@ -3697,7 +3699,6 @@ void VRPipeSystem::computeMaxFlows(double dt) {
         iterationError = max(iterationError, e);
     };
 
-    //auto clampFlow = [&](double& flow, double c) -> double {
     auto clampFlow = [&](const VRPipeEndPtr& e, double flow, int marker) {
         double f = abs(e->maxFlow);
         e->maxFlow = flow;
@@ -4733,13 +4734,26 @@ void VRPipeSystem::update() {
 
 
     if (debugVerbose) {
-        cout << " initial M " << computeTotalMass()
-            << endl;
+        cout << " initial M " << computeTotalMass() << endl;
     }
 
 
     updateNodePaths();
     updateNodeChains();
+
+    /*for (auto s : segments) {
+        auto pipe = s.second;
+
+        // fix float issues
+        if (pipe->missingFluidVolume < 1e-11) pipe->missingFluidVolume = 0.0;
+        if (pipe->excessFluidVolume < 1e-11)  pipe->excessFluidVolume = 0.0;
+
+        double dV = pipe->missingFluidVolume + pipe->excessFluidVolume;
+        if (abs(dV) > 1e-12) cout << s.first << " pipe deformation! " << dV
+            << " " << pipe->missingFluidVolume
+            << " " << pipe->excessFluidVolume
+            << endl;
+    }*/
 
     for (int i=0; i<subSteps; i++) {
         auto t1 = VRTimer::create();
