@@ -1680,13 +1680,13 @@ void VRPipeSystem::updateVisual() {
         return F;
     };
 
-    auto ann = dynamic_pointer_cast<VRAnnotationEngine>( findFirst("testInds") );
+    /*auto ann = dynamic_pointer_cast<VRAnnotationEngine>( findFirst("testInds") );
     for (int i=0; i<nodes.size(); i++) {
         auto n = nodes[i];
         if (n->chainID == -1) continue;
         auto p = getNodePose(n->nID);
         ann->set(i, p->pos(), toString(n->nID) + " - " + toString(n->chainID) + " - " + toString(n->chainGrpID));
-    }
+    }*/
 
     for (auto& s : segments) {
         auto e1 = s.second->end1.lock();
@@ -3684,10 +3684,18 @@ void VRPipeSystem::computeMaxFlows(double dt) {
     double eps3 = 1e-7;*/
 
     int Nitr = 30;
-    double eps = 1e-10;
+    double eps1 = 1e-12;
+    double eps2 = 1e-10;
 
+    double iterationError = 0.0;
+    bool needsIteration = true;
 
     auto sign = [](double v) { return (v > 0) - (v < 0); };
+
+    auto requestIteration = [&](double e, int srcID) {
+        needsIteration = true;
+        iterationError = max(iterationError, e);
+    };
 
     //auto clampFlow = [&](double& flow, double c) -> double {
     auto clampFlow = [&](const VRPipeEndPtr& e, double flow, int marker) {
@@ -3720,8 +3728,8 @@ void VRPipeSystem::computeMaxFlows(double dt) {
             maxFlowOut =  min(flowOut, volWater/dt);
         }
 
-        double scaleFlowIn  = abs(flowIn ) > eps ? maxFlowIn  / flowIn  : 1.0;
-        double scaleFlowOut = abs(flowOut) > eps ? maxFlowOut / flowOut : 1.0;
+        double scaleFlowIn  = abs(flowIn ) > eps1 ? maxFlowIn  / flowIn  : 1.0;
+        double scaleFlowOut = abs(flowOut) > eps1 ? maxFlowOut / flowOut : 1.0;
 
         return Vec2d(scaleFlowIn, scaleFlowOut);
     };
@@ -3758,7 +3766,7 @@ void VRPipeSystem::computeMaxFlows(double dt) {
         if (chamberPressurized) {
             if (relPistonFlow > 0) { // chamber grows
                 if (flow > 0) { // flow pushes, should be same as pistonflow
-                    if (flow+eps < relPistonFlow) {
+                    if (flow+eps1 < relPistonFlow) {
                         pistonFlow = pfSign*flow; pfChanged = true;
                     } // piston too fast
                     if (flow > pistonFlow) {
@@ -3780,7 +3788,7 @@ void VRPipeSystem::computeMaxFlows(double dt) {
 
         // test too much push out
         double maxPistonFlow = (vAir - deltaWaterVol)/dt;
-        if (-pfSign*pistonFlow > maxPistonFlow+eps) { pistonFlow = -pfSign*maxPistonFlow; pfChanged = true; }
+        if (-pfSign*pistonFlow > maxPistonFlow+eps1) { pistonFlow = -pfSign*maxPistonFlow; pfChanged = true; }
 
         //if (abs(e->maxFlow) > 1e-3) cout << " clampCylinderFlows f0: " << e->maxFlow << " -> " << flow << ", " << flow /  e->maxFlow << endl;
         //if (abs(pistonFlow) > 1e-3) cout << " clampCylinderFlows fc: " << pistonFlow << ", pfSign: " << pfSign << endl;
@@ -3957,7 +3965,8 @@ void VRPipeSystem::computeMaxFlows(double dt) {
                 auto f = e->maxFlow;
                 if (f < 0) clampFlow(e, f * scaleFlowInOut[0], 7);
                 else clampFlow(e, f * scaleFlowInOut[1], 8);
-                if (abs(e->maxFlow-f) > eps) needsIteration = true;
+                double err = abs(e->maxFlow-f);
+                if (err > eps2) requestIteration(err, 0);
             }
 
             // forbid cavitations
@@ -3969,20 +3978,27 @@ void VRPipeSystem::computeMaxFlows(double dt) {
                 else totalFlowOut += f;
             }
 
-            if (totalFlowOut > totalFlowIn + eps) {
+            if (totalFlowOut > totalFlowIn + eps2) {
+                double err = abs(totalFlowOut-totalFlowIn);
                 if (e1->pressurized && e2->pressurized) {
                     for (auto& e : {e1, e2}) {
-                        if (e->maxFlow > 0) clampFlow(e, totalFlowIn, 9);
+                        if (e->maxFlow > 0) {
+                            clampFlow(e, totalFlowIn, 9);
+                            requestIteration(err, 1);
+                        }
                     }
-                    needsIteration = true;
                 } else {
                     if (e1->pressurized && e1->hydraulicHead > e2->hydraulicHead) {
-                        if (e2->maxFlow > 0) clampFlow(e2, totalFlowIn, 10);
-                        needsIteration = true;
+                        if (e2->maxFlow > 0) {
+                            clampFlow(e2, totalFlowIn, 10);
+                            requestIteration(err, 2);
+                        }
                     }
                     if (e2->pressurized && e2->hydraulicHead > e1->hydraulicHead) {
-                        if (e1->maxFlow > 0) clampFlow(e1, totalFlowIn, 11);
-                        needsIteration = true;
+                        if (e1->maxFlow > 0) {
+                            clampFlow(e1, totalFlowIn, 11);
+                            requestIteration(err, 3);
+                        }
                     }
                 }
             }
@@ -4021,7 +4037,7 @@ void VRPipeSystem::computeMaxFlows(double dt) {
                 if (pipe->pressurized) {
                     auto e1 = pipe->end1.lock();
                     auto e2 = pipe->end2.lock();
-                    if (e1->pressurized && e2->pressurized && abs(pipe->imbalanceFluidFlow) < eps) {
+                    if (e1->pressurized && e2->pressurized && abs(pipe->imbalanceFluidFlow) < eps1) {
                         pressurizedGroups.rbegin()->push_back(nID2);
                         nodes[nID2]->chainGrpID = pressurizedGroups.size();
                         continue;
@@ -4044,12 +4060,13 @@ void VRPipeSystem::computeMaxFlows(double dt) {
                     auto& node = nodes[nID];
                     for (auto e : node->pipes) {
                         auto q = e->maxFlow;
-                        if (abs(q) < maxFlow+eps) continue;
+                        double err = abs(q) - maxFlow;
+                        if (err < eps2) continue;
 
                         //cout << q << " " << maxFlow << endl;
                         q = maxFlow * sign(q);
                         clampFlow(e, q, 15);
-                        needsIteration = true;
+                        requestIteration(err, 4);
                     }
                 }
             }
@@ -4057,7 +4074,7 @@ void VRPipeSystem::computeMaxFlows(double dt) {
     };
 
     auto computeOrificePressureLoss = [&](double A, double Q, double rho) {
-        double v = Q/max(A, eps);
+        double v = Q/max(A, eps1);
         return 0.5 * rho * v*v * sign(Q);
     };
 
@@ -4100,7 +4117,7 @@ void VRPipeSystem::computeMaxFlows(double dt) {
                         double dPvalve = computeOrificePressureLoss(Avalve, Q, rho);
                         double dPopen  = computeOrificePressureLoss(Apipe,  Q, rho);
 
-                        double L = rho * pipe->length / max(Apipe, eps);
+                        double L = rho * pipe->length / max(Apipe, eps1);
                         double valveAccel = (dPvalve - dPopen) / L;
 
                         double dQ = (e->headFlow - Q)/dt;
@@ -4128,7 +4145,7 @@ void VRPipeSystem::computeMaxFlows(double dt) {
                 mfc = max(mfc, e->flowClamp);
             }
         }
-        if (mfc < eps) return;
+        if (mfc < eps1) return;
 
         for (auto& n : nodes) {
             for (auto& e : n.second->pipes) {
@@ -4161,16 +4178,17 @@ void VRPipeSystem::computeMaxFlows(double dt) {
     //cout << "-------------------------" << endl;
     copyInitialMaxHead();
 
-    bool needsIteration = true;
     for (int i=0; needsIteration && i<Nitr; i++) {
         needsIteration = false;
+        iterationError = 0.0;
+
         processNodes();
         processSegments(needsIteration);
         processChains(needsIteration);
         //if (!needsIteration) cout << " -- used " << i << " iterations!" << endl;
 
         if (i >= Nitr-1 && needsIteration) {
-            cout << "Warning, not enought iterations: " << i << ", ni " << needsIteration << endl;
+            cout << "Warning, not enought iterations: " << i << ", ni " << needsIteration << ", err: " << iterationError << endl;
             //checkNodeFlows();
         }
     }
