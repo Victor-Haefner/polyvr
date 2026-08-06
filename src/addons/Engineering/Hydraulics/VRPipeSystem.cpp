@@ -795,6 +795,8 @@ vector<VRPipeSegmentPtr> VRPipeSystem::getOutPipes(int nID) {
 }
 
 Vec2d VRPipeSystem::computeTotalMass() {
+    double totalTankVolume = 0.0;
+    double totalPipeVolume = 0.0;
     double totalFluidMass = 0.0;
     double totalParticlesMass = 0.0;
 
@@ -813,6 +815,7 @@ Vec2d VRPipeSystem::computeTotalMass() {
             tFluid.fromEntity( entity->getEntity("fluid") );
             totalFluidMass += tFluid.computeFluidMass(fluidVolume);
             totalParticlesMass += tFluid.computeParticlesMass(fluidVolume);
+            totalTankVolume += tankVolume;
         }
 
         if (entity->is_a("Cylinder")) {
@@ -830,15 +833,19 @@ Vec2d VRPipeSystem::computeTotalMass() {
             // TODO: there is currently no fluid composition in cylinder chambers yet
             totalFluidMass += cFluidVol1 * defaultDensity;
             totalFluidMass += cFluidVol2 * defaultDensity;
+            totalTankVolume += cVolume;
         }
     }
 
     for (auto& s : segments) { // mass in pipes
         auto pipe = s.second;
+        totalPipeVolume += pipe->volume;
         double fluidVolume = pipe->fluidVolume();
         totalFluidMass += pipe->fluid.computeFluidMass(fluidVolume);
         totalParticlesMass += pipe->fluid.computeParticlesMass(fluidVolume);
     }
+
+    //cout << " totalPipeVolume " << totalPipeVolume << " totalTankVolume " << totalTankVolume << " P: " << totalPipeVolume/totalTankVolume << endl;
 
     return Vec2d( totalFluidMass, totalParticlesMass );
 }
@@ -1674,6 +1681,13 @@ void VRPipeSystem::updateVisual() {
     };
 
     auto ann = dynamic_pointer_cast<VRAnnotationEngine>( findFirst("testInds") );
+    for (int i=0; i<nodes.size(); i++) {
+        auto n = nodes[i];
+        if (n->chainID == -1) continue;
+        auto p = getNodePose(n->nID);
+        ann->set(i, p->pos(), toString(n->nID) + " - " + toString(n->chainID) + " - " + toString(n->chainGrpID));
+    }
+
     for (auto& s : segments) {
         auto e1 = s.second->end1.lock();
         auto e2 = s.second->end2.lock();
@@ -3669,10 +3683,8 @@ void VRPipeSystem::computeMaxFlows(double dt) {
     double eps2 = 1e-12;
     double eps3 = 1e-7;*/
 
-    int Nitr = 60;
+    int Nitr = 30;
     double eps = 1e-10;
-    double eps2 = 1e-10;
-    double eps3 = 1e-10;
 
 
     auto sign = [](double v) { return (v > 0) - (v < 0); };
@@ -3708,8 +3720,8 @@ void VRPipeSystem::computeMaxFlows(double dt) {
             maxFlowOut =  min(flowOut, volWater/dt);
         }
 
-        double scaleFlowIn  = abs(flowIn ) > eps2 ? maxFlowIn  / flowIn  : 1.0;
-        double scaleFlowOut = abs(flowOut) > eps2 ? maxFlowOut / flowOut : 1.0;
+        double scaleFlowIn  = abs(flowIn ) > eps ? maxFlowIn  / flowIn  : 1.0;
+        double scaleFlowOut = abs(flowOut) > eps ? maxFlowOut / flowOut : 1.0;
 
         return Vec2d(scaleFlowIn, scaleFlowOut);
     };
@@ -3945,7 +3957,7 @@ void VRPipeSystem::computeMaxFlows(double dt) {
                 auto f = e->maxFlow;
                 if (f < 0) clampFlow(e, f * scaleFlowInOut[0], 7);
                 else clampFlow(e, f * scaleFlowInOut[1], 8);
-                if (abs(e->maxFlow-f) > eps3) needsIteration = true;
+                if (abs(e->maxFlow-f) > eps) needsIteration = true;
             }
 
             // forbid cavitations
@@ -3994,26 +4006,34 @@ void VRPipeSystem::computeMaxFlows(double dt) {
             for (auto n : c.second) cout << " " << n;
             cout << endl;*/
 
-
             vector<vector<int>> pressurizedGroups = {vector<int>({c.second[0]})};
+            nodes[c.second[0]]->chainGrpID = pressurizedGroups.size();
+
             for (int i=1; i<c.second.size(); i++) {
                 int nID  = c.second[i-1];
                 int nID2 = c.second[i];
-                int eID = graph->getEdgeID(nID, nID2);
+                int eID = -1;
+                if (graph->connected(nID, nID2)) eID = graph->getEdgeID(nID, nID2);
+                if (graph->connected(nID2, nID)) eID = graph->getEdgeID(nID2, nID);
+                if (eID == -1) continue;
+
                 auto& pipe = segments[eID];
                 if (pipe->pressurized) {
                     auto e1 = pipe->end1.lock();
                     auto e2 = pipe->end2.lock();
                     if (e1->pressurized && e2->pressurized && abs(pipe->imbalanceFluidFlow) < eps) {
                         pressurizedGroups.rbegin()->push_back(nID2);
+                        nodes[nID2]->chainGrpID = pressurizedGroups.size();
                         continue;
                     }
                 }
 
                 if (pressurizedGroups.rbegin()->size() > 0) {
                     pressurizedGroups.push_back(vector<int>());
-                    pressurizedGroups.rbegin()->push_back(nID2);
                 }
+
+                pressurizedGroups.rbegin()->push_back(nID2);
+                nodes[nID2]->chainGrpID = pressurizedGroups.size();
             }
 
             for (auto g : pressurizedGroups) {
@@ -4037,7 +4057,7 @@ void VRPipeSystem::computeMaxFlows(double dt) {
     };
 
     auto computeOrificePressureLoss = [&](double A, double Q, double rho) {
-        double v = Q/max(A, eps2);
+        double v = Q/max(A, eps);
         return 0.5 * rho * v*v * sign(Q);
     };
 
@@ -4080,7 +4100,7 @@ void VRPipeSystem::computeMaxFlows(double dt) {
                         double dPvalve = computeOrificePressureLoss(Avalve, Q, rho);
                         double dPopen  = computeOrificePressureLoss(Apipe,  Q, rho);
 
-                        double L = rho * pipe->length / max(Apipe, eps2);
+                        double L = rho * pipe->length / max(Apipe, eps);
                         double valveAccel = (dPvalve - dPopen) / L;
 
                         double dQ = (e->headFlow - Q)/dt;
@@ -4108,7 +4128,7 @@ void VRPipeSystem::computeMaxFlows(double dt) {
                 mfc = max(mfc, e->flowClamp);
             }
         }
-        if (mfc < eps2) return;
+        if (mfc < eps) return;
 
         for (auto& n : nodes) {
             for (auto& e : n.second->pipes) {
@@ -4146,7 +4166,7 @@ void VRPipeSystem::computeMaxFlows(double dt) {
         needsIteration = false;
         processNodes();
         processSegments(needsIteration);
-        //processChains(needsIteration); // TODO: not stable!
+        processChains(needsIteration);
         //if (!needsIteration) cout << " -- used " << i << " iterations!" << endl;
 
         if (i >= Nitr-1 && needsIteration) {

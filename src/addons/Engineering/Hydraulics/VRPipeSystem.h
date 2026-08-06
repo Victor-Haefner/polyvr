@@ -158,6 +158,7 @@ class VRPipeNode {
     public:
         int nID = 0;
         int chainID = -1;
+        int chainGrpID = -1;
         int stateID = -1;
         VREntityPtr entity;
         string name;
