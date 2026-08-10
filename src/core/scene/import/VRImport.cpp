@@ -470,13 +470,14 @@ VRGeometryPtr VRImport::loadGeometry(string file, string object, string preset, 
     }
 
     VRObjectPtr o = cache[file].objects[object];
-    if (o->getType() != "Geometry") {
+    auto geo = dynamic_pointer_cast<VRGeometry>(o);
+    if (!geo) {
         cout << "VRImport::loadGeometry - Warning: " << file << " is cached but object " << object << " has wrong type: " << o->getType() << endl;
         for (auto o : cache[file].objects) cout << " cache " << o.first << ", " << o.second->getType() << endl;
         return 0;
     }
 
-    return static_pointer_cast<VRGeometry>(o);
+    return geo;
 }
 
 VRProgressPtr VRImport::getProgressObject() { return progress; }

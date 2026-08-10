@@ -321,6 +321,7 @@ void VRGeometry::wrapOSG(OSGObjectPtr node, OSGObjectPtr geoNode) {
 
 /** Set the geometry mesh (OSG geometry core) **/
 void VRGeometry::setMesh(OSGGeometryPtr geo, Reference ref, bool keep_material) {
+    if (!geo) return;
     if (geo->geo == 0) return;
     if (mesh) remGeometryAttachment(mesh->geo);
     if (mesh_node && mesh_node->node && getNode() && getNode()->node) getNode()->node->subChild(mesh_node->node);

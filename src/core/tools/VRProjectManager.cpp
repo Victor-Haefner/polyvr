@@ -55,10 +55,7 @@ void VRProjectManager::save(string path) {
 
     XML xml;
     XMLElementPtr root = xml.newRoot("Project", "", ""); // name, ns_uri, ns_prefix
-    storage.save(root);
-
-    for (auto v : vault_reload) v->saveUnder(root, persistencyLvl);
-    for (auto v : vault_rebuild) v->saveUnder(root, persistencyLvl);
+    saveTo(root);
     xml.write(path);
 }
 
@@ -73,11 +70,21 @@ bool VRProjectManager::load(string path) {
     XML xml;
     xml.read(path, false);
     XMLElementPtr root = xml.getRoot();
-    storage.load(root);
+    return loadFrom(root);
+}
+
+void VRProjectManager::saveTo(XMLElementPtr el) {
+    storage.save(el);
+    for (auto v : vault_reload) v->saveUnder(el, persistencyLvl);
+    for (auto v : vault_rebuild) v->saveUnder(el, persistencyLvl);
+}
+
+bool VRProjectManager::loadFrom(XMLElementPtr el) {
+    storage.load(el);
 
     vault_rebuild.clear();
     unsigned int i=0;
-    for (auto e : root->getChildren()) {
+    for (auto e : el->getChildren()) {
         if (!e) continue;
 
         VRStoragePtr s;
