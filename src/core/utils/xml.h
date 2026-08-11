@@ -41,6 +41,8 @@ class XMLElement {
         XMLElementPtr getChild(int i);
         XMLElementPtr addChild(string name);
 
+        void clearChildren();
+
         void importNode(XMLElementPtr e, bool recursive, XML& xml);
 
         string toString();

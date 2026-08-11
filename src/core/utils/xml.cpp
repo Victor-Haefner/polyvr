@@ -143,6 +143,7 @@ XMLElementPtr XMLElement::getChild(string name, int i) {
 }
 
 XMLElementPtr XMLElement::getChild(int i) {
+    if (!node) return 0;
     int k = 0;
     auto cnode = getNextNode( node->xmlChildrenNode );
     while ( cnode ) {
@@ -159,6 +160,13 @@ XMLElementPtr XMLElement::addChild(string name) {
     auto child = xmlNewNode(NULL, (xmlChar*)name.c_str());
     xmlAddChild(node, child);
     return XMLElement::create(child);
+}
+
+void XMLElement::clearChildren() {
+    if (!node) return;
+    xmlFreeNodeList(node->children);
+    node->children = nullptr;
+    node->last = nullptr;
 }
 
 void XMLElement::importNode(XMLElementPtr e, bool recursive, XML& xml) {

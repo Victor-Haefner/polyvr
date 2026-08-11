@@ -938,6 +938,7 @@ PyMethodDef VRPyXMLElement::methods[] = {
     {"getChildren", PyWrapOpt2(XMLElement, getChildren, "Get children, optional element name and recursive", "|0", vector<XMLElementPtr>, string, bool) },
     {"getChild", PyWrapOpt2(XMLElement, getChild, "Get child by name", "|0", XMLElementPtr, string, int) },
     {"addChild", PyWrap2(XMLElement, addChild, "Add child element", XMLElementPtr, string) },
+    {"clearChildren", PyWrap2(XMLElement, clearChildren, "Remove all child elements", void) },
     {"toString", PyWrap2(XMLElement, toString, "Return element data as string", string) },
     {"print", PyWrap2(XMLElement, print, "Print to console", void) },
     {NULL}  /* Sentinel */
