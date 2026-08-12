@@ -253,8 +253,8 @@ void VRGuiScripts::on_del_clicked() {
 
 void VRGuiScripts::on_select_script(string scriptName) { // selected a script
     if (pages.count(selected)) {
-        auto& P = pages[selected];
-        getLineFocus(P.line, P.column);
+        pagePos& P = pages[selected];
+        getLineFocus(P.line, P.column); // store line and column
         cout << "editor deselect " << selected << ", cursor at: " << selected << "  " << P.line << "  " << P.column << endl;
     }
 
@@ -736,8 +736,6 @@ void VRGuiScripts::focusScript(string name, int line, int column) {
 
 void VRGuiScripts::getLineFocus(int& line, int& column) {
     editor->getCursorPosition(line, column);
-    line++;
-    column++;
 }
 
 void VRGuiScripts::on_search_link_clicked(searchResult res, string s) {

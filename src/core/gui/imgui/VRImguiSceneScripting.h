@@ -84,6 +84,7 @@ class ImScriptEditor {
 
         void setBuffer(string data);
         void getBuffer(int skipLines);
+        void getCursor();
 
         void setParameters(string type, string group);
 

@@ -9,22 +9,15 @@ using namespace std;
 
 class VRGuiEditor {
     private:
-        /*_GtkWidget* editor = 0;
-        _GtkSourceBuffer* sourceBuffer = 0;
-        _GtkSourceLanguage* python = 0;
-        _GtkSourceLanguage* web = 0;
-        _GtkSourceLanguage* glsl = 0;
-        _GtkTextBuffer* editorBuffer = 0;*/
         string buffer;
-        int headerLines = 0;
-	    map<string, VRUpdateCbPtr> keyBindings;
-
 	    string selection;
+        int headerLines = 0;
 
-        //map<string, _GtkTextTag*> editorStyles;
+	    map<string, VRUpdateCbPtr> keyBindings;
         map<string, bool> styleStates;
 
         void onCoreUpdate(string& data);
+        void onCursorUpdate(int l, int c);
 
         void printViewerLanguages();
         //bool on_editor_shortkey( _GdkEventKey* e );

@@ -18,10 +18,11 @@ class VRConsoleWidget {
         struct message {
             string msg;
             string style;
-            shared_ptr< VRFunction<string> > link;
+            VRMessageCbPtr link;
+            int source = -1;
 
             message() {}
-            message(string m, string s, shared_ptr< VRFunction<string> > l);
+            message(string m, string s, VRMessageCbPtr l, int i);
         };
 
     private:
@@ -50,7 +51,7 @@ class VRConsoleWidget {
         void setLabel(string lbl);
         void configColor(string color);
         void forward();
-        void write(string s, string style = "", shared_ptr< VRFunction<string> > link = 0);
+        void write(string s, string style = "", VRMessageCbPtr link = 0, int sourceID = -1);
         void addStyle( string style, string fg, string bg, bool italiq, bool bold, bool underlined, bool editable );
         void update();
 };

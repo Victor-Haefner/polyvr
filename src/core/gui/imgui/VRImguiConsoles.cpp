@@ -23,26 +23,6 @@ void ImConsole::push(string data, string style, string mark) {
     changed = 2;
     console.SetCursorPosition(console.GetEndCoordinates());
     console.InsertText(data.c_str(), style, mark);
-    //console.ScrollBottom();
-
-    // TODO: reimplement error mark/style
-
-    //cout << " - - - - - - - ImConsoles::pushConsole " << ID << "  '" << data << "'  " << style << "  " << mark << endl;
-    /*auto dataV = splitString(data, '\n');
-
-    for (int i=0; i<dataV.size(); i++) {
-        int c0 = 0;
-        if (lines.size() > 0) c0 = lines[lines.size()-1].size();
-        int L = dataV[i].size();
-
-        //if (i == 0 && lines.size() > 0) lines[lines.size()-1] += dataV[i];
-        //else lines.push_back(dataV[i]);
-
-        if (mark.size() > 0)  attributes[lines.size()-1].marks.push_back({mark, c0, L});
-        if (style.size() > 0) attributes[lines.size()-1].styles.push_back({style, c0, L});
-    }*/
-
-    //if (data[data.size()-1] == '\n') lines.push_back("");
 }
 
 void ImConsole::render() {

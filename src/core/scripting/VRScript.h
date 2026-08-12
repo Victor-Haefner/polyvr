@@ -77,11 +77,12 @@ class VRScript : public std::enable_shared_from_this<VRScript>, public VRName {
             map<int, vector<int> > result;
         };
 
-        struct errLink {
+        struct Reference {
             string filename;
-            int line;
-            int column;
-            errLink(string f, int l, int c);
+            int line = -1;
+            int column = -1;
+            Reference();
+            Reference(string f, int l, int c);
         };
 
         typedef shared_ptr<arg> argPtr;
@@ -114,7 +115,7 @@ class VRScript : public std::enable_shared_from_this<VRScript>, public VRName {
 
         argPtr getArg(string name);
         trigPtr getTrig(string name);
-        void on_err_link_clicked(errLink link, string s);
+        void on_err_link_clicked(Reference link, string s);
         void pyErrPrint(string channel);
         void update();
 

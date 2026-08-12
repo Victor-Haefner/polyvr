@@ -345,12 +345,13 @@ int VRScript::getHeadSize() { // number of head lines
     return 0;
 }
 
-void VRScript::on_err_link_clicked(errLink link, string s) {
+void VRScript::on_err_link_clicked(Reference link, string s) {
     cout << "VRScript::on_err_link_clicked " << s << endl;
     VRGuiManager::get()->focusScript(link.filename, link.line, link.column);
 }
 
-VRScript::errLink::errLink(string f, int l, int c) : filename(f), line(l), column(c) {}
+VRScript::Reference::Reference() {}
+VRScript::Reference::Reference(string f, int l, int c) : filename(f), line(l), column(c) {}
 
 void VRPyException::get() {
     occured = PyErr_Occurred();
@@ -467,7 +468,7 @@ void VRScript::pyErrPrint(string channel) {
         print( "Traceback (most recent call last):\n" );
 
         for (auto& frame : exc.bt) {
-            errLink eLink(frame.filename, frame.line, 0);
+            Reference eLink(frame.filename, frame.line, 0);
             auto fct = VRMessageCb::create("search_link", bind(&VRScript::on_err_link_clicked, this, eLink, _1) );
 
             string line = "Script \""+frame.filename+"\", line "+toString(frame.line);

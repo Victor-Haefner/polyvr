@@ -8,7 +8,7 @@ using namespace OSG;
 
 VRMutex mtx;
 
-VRConsoleWidget::message::message(string m, string s, shared_ptr< VRFunction<string> > l) : msg(m), style(s), link(l) {}
+VRConsoleWidget::message::message(string m, string s, VRMessageCbPtr l, int i) : msg(m), style(s), link(l), source(i) {}
 
 VRConsoleWidget::VRConsoleWidget() {
     notifyColor = "#00aaff";
@@ -17,26 +17,6 @@ VRConsoleWidget::VRConsoleWidget() {
 
     auto sigs = OSG::VRGuiSignals::get();
     sigs->addCallback("clickConsole", [&](OSG::VRGuiSignals::Options o) { if (o["ID"] == ID) on_link_activate( o["mark"] ); return true; }, true );
-
-    /*buffer = gtk_text_buffer_new(0);
-    GtkTextView* term_view = (GtkTextView*)gtk_text_view_new_with_buffer(buffer);
-    PangoFontDescription* fdesc = pango_font_description_new();
-    pango_font_description_set_family(fdesc, "monospace");
-    pango_font_description_set_size(fdesc, 10 * PANGO_SCALE);
-    gtk_widget_modify_font((GtkWidget*)term_view, fdesc);
-    pango_font_description_free(fdesc);
-
-    swin = (GtkScrolledWindow*)gtk_scrolled_window_new(0,0);
-    gtk_container_add((GtkContainer*)swin, (GtkWidget*)term_view);
-    gtk_widget_set_size_request((GtkWidget*)swin, -1, 70);
-
-    GtkAdjustment* adj = gtk_scrolled_window_get_vadjustment(swin);
-    function<void(void)> sig = bind(&VRConsoleWidget::forward, this);
-    connect_signal((GtkWidget*)adj, sig, "changed");
-
-    setToolButtonCallback("toolbutton24", bind(&VRConsoleWidget::clear, this));
-    setToolButtonCallback("toolbutton25", bind(&VRConsoleWidget::forward, this));
-    setToolButtonCallback("pause_terminal", bind(&VRConsoleWidget::pause, this));*/
 
     addStyle( "console91", "#ff3311", "#ffffff", false, false, false, true );
     addStyle( "console92", "#11ff33", "#ffffff", false, false, false, true );
@@ -50,7 +30,7 @@ VRConsoleWidgetPtr VRConsoleWidget::get(string name) {
     return VRGuiManager::get()->getConsole(name);
 }
 
-void VRConsoleWidget::write(string msg, string style, shared_ptr< VRFunction<string> > link) {
+void VRConsoleWidget::write(string msg, string style, VRMessageCbPtr link, int sourceID) {
     //cout << " - - - - - - - VRConsoleWidget::write " << msg << endl;
     VRLock lock(mtx);
 
@@ -62,7 +42,7 @@ void VRConsoleWidget::write(string msg, string style, shared_ptr< VRFunction<str
             if (c == '\033') {
                 inTag = true;
                 tag = "";
-                if (aggregate != "") msg_queue.push( message(aggregate,style,link) );
+                if (aggregate != "") msg_queue.push( message(aggregate,style,link,sourceID) );
                 aggregate = "";
                 continue;
             }
@@ -83,8 +63,8 @@ void VRConsoleWidget::write(string msg, string style, shared_ptr< VRFunction<str
 
             aggregate += c;
         }
-        if (aggregate != "") msg_queue.push( message(aggregate,style,link) );
-    } else msg_queue.push( message(msg,style,link) );
+        if (aggregate != "") msg_queue.push( message(aggregate,style,link,sourceID) );
+    } else msg_queue.push( message(msg,style,link,sourceID) );
 }
 
 void VRConsoleWidget::clear() {
@@ -120,9 +100,15 @@ void VRConsoleWidget::addStyle( string style, string fg, string bg, bool italic,
 }
 
 void VRConsoleWidget::on_link_activate(string mark) {
-    if (links.count(mark)) {
-        if (auto l = links[mark].link) {
-            (*l)( links[mark].msg );
+    if (mark[0] == 'S') {
+        ;
+    }
+
+    if (mark[0] == 'L') {
+        if (links.count(mark)) {
+            if (auto l = links[mark].link) {
+                (*l)( links[mark].msg );
+            }
         }
     }
 }
@@ -139,8 +125,12 @@ void VRConsoleWidget::update() {
 
         string mark;
         if (msg.link) {
-                mark = genUUID();
-                links[mark] = msg;
+            mark = "L"+genUUID();
+            links[mark] = msg;
+        }
+
+        if (msg.source != -1) {
+            mark = "S"+toString(msg.source);
         }
 
         uiSignal("pushConsole", {{"ID",ID}, {"string",msg.msg}, {"style",tag}, {"mark",mark}});

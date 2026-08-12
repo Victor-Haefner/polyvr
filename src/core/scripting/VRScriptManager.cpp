@@ -15,6 +15,7 @@
 #undef _XOPEN_SOURCE
 #undef _POSIX_C_SOURCE
 #include <Python.h>
+#include <frameobject.h>
 #include <iostream>
 #include <algorithm>
 #include <memory>
@@ -244,10 +245,34 @@ void VRScriptManager::updateScript(string name, string core, bool compile) {
 static string pyOutConsole = "Console";
 static string pyErrConsole = "Errors";
 
+
+static VRScript::Reference getSourceLocation() {
+    VRScript::Reference ref;
+
+    PyFrameObject* frame = PyEval_GetFrame(); // borrowed ref
+    if (!frame) return ref;
+
+    ref.line = PyFrame_GetLineNumber(frame);
+
+    PyCodeObject* code = PyFrame_GetCode(frame); // new ref
+    if (code) {
+        PyObject* filename = PyObject_GetAttrString((PyObject*)code, "co_filename");
+        if (filename) {
+            ref.filename = PyUnicode_AsUTF8(filename);
+            Py_DECREF(filename);
+        }
+        Py_DECREF(code);
+    }
+
+    return ref;
+}
+
 // intercept python stdout
 static PyObject* writeOut(PyObject *self, PyObject *args) {
     const char* what = 0;
     if (!PyArg_ParseTuple(args, "s", &what)) return NULL;
+    auto ref = getSourceLocation();
+    cout << " got py out '" << what << "' from " << ref.filename << ", line " << ref.line << endl;
 #ifndef WITHOUT_IMGUI
     if (what) if (auto c = VRConsoleWidget::get(pyOutConsole)) c->write(what);
 #else

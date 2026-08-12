@@ -245,6 +245,7 @@ ImScriptEditor::ImScriptEditor() {
     mgr->addCallback("script_editor_set_buffer", [&](OSG::VRGuiSignals::Options o){ setBuffer(o["data"]); return true; } );
     mgr->addCallback("script_editor_set_parameters", [&](OSG::VRGuiSignals::Options o){ setParameters(o["type"], o["group"]); return true; } );
     mgr->addCallback("script_editor_request_buffer", [&](OSG::VRGuiSignals::Options o){ getBuffer(toInt(o["skipLines"])); return true; } );
+    mgr->addCallback("script_editor_request_cursor", [&](OSG::VRGuiSignals::Options o){ getCursor(); return true; } );
     mgr->addCallback("scripts_list_clear", [&](OSG::VRGuiSignals::Options o){ clearGroups(); return true; } );
     mgr->addCallback("scripts_list_add_group", [&](OSG::VRGuiSignals::Options o){ addGroup(o["name"], o["ID"]); return true; } );
     mgr->addCallback("script_editor_clear_trigs_and_args", [&](OSG::VRGuiSignals::Options o){ clearTrigsAndArgs(); return true; } );
@@ -352,6 +353,11 @@ void ImScriptEditor::editorCommand(string cmd) {
     }
 
     uiSignal("script_editor_text_changed");
+}
+
+void ImScriptEditor::getCursor() {
+    auto p = imEditor.GetCursorPosition();
+    uiSignal("script_editor_transmit_cursor", {{"line",toString(p.mLine)},{"column",toString(p.mColumn)}});
 }
 
 void ImScriptEditor::getBuffer(int skipLines) {
