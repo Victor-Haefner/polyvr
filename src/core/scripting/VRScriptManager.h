@@ -33,6 +33,8 @@ class VRScriptManager : public VRStorage, public VRPyBase {
         map<string, vector<string>> importedScripts;
         PyThreadState* pyThreadState = 0;
 
+        void on_click_source(int source);
+
         void test();
         void initPyModules();
         void initTemplates();

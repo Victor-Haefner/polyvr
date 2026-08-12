@@ -111,6 +111,9 @@ VRScriptManager::VRScriptManager() {
     cout << "Init ScriptManager" << endl;
     initPyModules();
 
+    auto mgr = OSG::VRGuiSignals::get();
+    mgr->addCallback("clickConsoleSource", [&](OSG::VRGuiSignals::Options o) { on_click_source(toInt(o["source"])); return true; } );
+
     cout << " Python version: " << Py_GetVersion() << endl;
 
     setStorageType("Scripts");
@@ -252,7 +255,7 @@ static VRScript::Reference getSourceLocation() {
     PyFrameObject* frame = PyEval_GetFrame(); // borrowed ref
     if (!frame) return ref;
 
-    ref.line = PyFrame_GetLineNumber(frame);
+    ref.line = PyFrame_GetLineNumber(frame)-1;
 
     PyCodeObject* code = PyFrame_GetCode(frame); // new ref
     if (code) {
@@ -267,14 +270,34 @@ static VRScript::Reference getSourceLocation() {
     return ref;
 }
 
+static map<int, VRScript::Reference> outReferences;
+static map<string,map<int,int>> outSources;
+
+void VRScriptManager::on_click_source(int source) {
+    if (!outReferences.count(source)) return;
+    auto& ref = outReferences[source];
+    uiSignal("script_editor_set_cursor", {{"name",ref.filename}, {"line",toString(ref.line)}, {"column","0"}});
+}
+
+static int getRefID(const VRScript::Reference& r) {
+    if (!outSources.count(r.filename)) outSources[r.filename] = map<int,int>();
+    if (!outSources[r.filename].count(r.line)) {
+        static int ID = 0; ID++;
+        outSources[r.filename][r.line] = ID;
+        outReferences[ID] = r;
+    }
+    return outSources[r.filename][r.line];
+}
+
 // intercept python stdout
 static PyObject* writeOut(PyObject *self, PyObject *args) {
     const char* what = 0;
     if (!PyArg_ParseTuple(args, "s", &what)) return NULL;
     auto ref = getSourceLocation();
-    cout << " got py out '" << what << "' from " << ref.filename << ", line " << ref.line << endl;
+    int refID = getRefID(ref);
+    //cout << " got py out '" << what << "' from " << ref.filename << ", line " << ref.line << endl;
 #ifndef WITHOUT_IMGUI
-    if (what) if (auto c = VRConsoleWidget::get(pyOutConsole)) c->write(what);
+    if (what) if (auto c = VRConsoleWidget::get(pyOutConsole)) c->write(what, "", 0, refID);
 #else
     if (what) cout << what;
 #endif

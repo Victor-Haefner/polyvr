@@ -101,7 +101,7 @@ void VRConsoleWidget::addStyle( string style, string fg, string bg, bool italic,
 
 void VRConsoleWidget::on_link_activate(string mark) {
     if (mark[0] == 'S') {
-        ;
+        uiSignal("clickConsoleSource", {{"source",subString(mark, 1)}});
     }
 
     if (mark[0] == 'L') {

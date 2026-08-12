@@ -888,7 +888,10 @@ void TextEditor::HandleMouseInputs()
                     auto& line = mLines[lineNo];
                     const auto colNo = mState.mCursorPosition.mColumn;
                     for (auto& m : line.marks) {
-                        if (colNo >= m.c0 && colNo < m.c0 + m.L) TriggerMark(m);
+                        if (colNo >= m.c0 && colNo < m.c0 + m.L) {
+                            if (m.value[0] == 'L') TriggerMark(m);
+                            if (m.value[0] == 'S' && ctrl) TriggerMark(m);
+                        }
                     }
                 }
 			}

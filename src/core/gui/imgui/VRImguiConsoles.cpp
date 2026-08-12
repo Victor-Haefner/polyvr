@@ -22,6 +22,7 @@ void ImConsole::push(string data, string style, string mark) {
     auto cursor = console.GetCursorPosition();
     changed = 2;
     console.SetCursorPosition(console.GetEndCoordinates());
+    //cout << "ImConsole::push " << data << ", S: " << style << ", M: " << mark << endl;
     console.InsertText(data.c_str(), style, mark);
 }
 
