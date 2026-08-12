@@ -28,11 +28,9 @@ class VRGuiEditor {
 
         string getCore();
         void setCore(string c, int i);
-        void focus(int line, int column);
         void highlightStrings(string s, string c);
         void addKeyBinding(string name, VRUpdateCbPtr cb);
         void setLanguage(string lang);
-        void grabFocus();
         void setCursorPosition(int line, int column);
         void getCursorPosition(int& line, int& column);
         void setSelection(string s);

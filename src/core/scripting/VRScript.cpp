@@ -468,7 +468,7 @@ void VRScript::pyErrPrint(string channel) {
         print( "Traceback (most recent call last):\n" );
 
         for (auto& frame : exc.bt) {
-            Reference eLink(frame.filename, frame.line, 0);
+            Reference eLink(frame.filename, frame.line-1, 0);
             auto fct = VRMessageCb::create("search_link", bind(&VRScript::on_err_link_clicked, this, eLink, _1) );
 
             string line = "Script \""+frame.filename+"\", line "+toString(frame.line);

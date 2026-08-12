@@ -30,11 +30,6 @@ void VRGuiEditor::onCoreUpdate(string& data) {
     while(buffer.size() > 0 && buffer.back() == '\n') buffer.pop_back();
 }
 
-void VRGuiEditor::focus(int line, int column) {
-    grabFocus();
-    setCursorPosition(line, column);
-}
-
 void VRGuiEditor::setCursorPosition(int line, int column) {
     if (line <= 0) line = 1;
     if (column <= 0) column = 1;
@@ -188,10 +183,6 @@ void VRGuiEditor::addStyle( string style, string fg, string bg, bool italic, boo
 
     editorStyles[style] = tag;
     styleStates[style] = false;*/
-}
-
-void VRGuiEditor::grabFocus() {
-    //gtk_widget_grab_focus(editor);
 }
 
 void VRGuiEditor::addKeyBinding(string name, VRUpdateCbPtr cb) { keyBindings[name] = cb; }

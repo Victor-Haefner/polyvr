@@ -62,7 +62,8 @@ ImScriptList::ImScriptList() {
     mgr->addCallback("scripts_list_add_script", [&](OSG::VRGuiSignals::Options o){ addScript(o["name"], o["group"], toFloat(o["perf"])); return true; } );
     mgr->addCallback("scripts_list_set_color", [&](OSG::VRGuiSignals::Options o){ setColor(o["name"], o["fg"], o["bg"]); return true; } );
     mgr->addCallback("scripts_list_set_perf", [&](OSG::VRGuiSignals::Options o){ setPerformance(o["name"], toFloat(o["perf"])); return true; } );
-    mgr->addCallback("openUiScript", [&](OSG::VRGuiSignals::Options o) {
+    mgr->addCallback("script_editor_set_cursor", [&](OSG::VRGuiSignals::Options o) {
+        if (!o.count("name")) return true;
         selected = o["name"];
         uiSignal("select_script", {{"script",selected}});
         return true;
@@ -253,7 +254,7 @@ ImScriptEditor::ImScriptEditor() {
     mgr->addCallback("script_editor_add_argument", [&](OSG::VRGuiSignals::Options o){ addArgument(o["name"], o["type"], o["value"]); return true; } );
     mgr->addCallback("script_editor_toggle_whitespace", [&](OSG::VRGuiSignals::Options o){ showWhitespace(!doShowWhitespace); return true; } );
     mgr->addCallback("editor_cmd", [&](OSG::VRGuiSignals::Options o){ editorCommand(o["cmd"]); return true; } );
-    mgr->addCallback("openUiScript", [&](OSG::VRGuiSignals::Options o){ focusOn(o["line"], o["column"]); return true; } );
+    mgr->addCallback("script_editor_set_cursor", [&](OSG::VRGuiSignals::Options o){ focusOn(o["line"], o["column"]); return true; } );
     mgr->addCallback("shiftTab", [&](OSG::VRGuiSignals::Options o){ handleShiftTab(toInt(o["tab"]), toInt(o["shift"])); return true; }, true );
     mgr->addCallback("ui_set_palette", [&](OSG::VRGuiSignals::Options o){ setPalette(o["theme"]); return true; } );
 
@@ -293,8 +294,10 @@ void ImScriptEditor::handleShiftTab(int tab, int shift) {
 }
 
 void ImScriptEditor::focusOn(string line, string column) {
-    TextEditor::Coordinates coords(max(0,toInt(line)-1), toInt(column));
+    TextEditor::Coordinates coords(max(0,toInt(line)), toInt(column));
     imEditor.SetCursorPosition(coords);
+    imEditor.SetDoGrabFocus(true);
+	imEditor.SetDoEnsureCursorVisible(true);
 }
 
 void ImScriptEditor::editorCommand(string cmd) {

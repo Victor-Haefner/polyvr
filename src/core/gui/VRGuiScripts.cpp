@@ -21,11 +21,6 @@ using namespace std;
 // --------------------------
 
 VRScriptPtr VRGuiScripts::getSelectedScript() {
-    /*VRGuiTreeView tree_view("treeview5");
-    if (!tree_view.hasSelection()) return 0;
-
-    // get selected script
-    string name = tree_view.getSelectedStringValue(0);*/
     auto scene = VRScene::getCurrent();
     if (scene == 0) return 0;
     VRScriptPtr script = scene->getScript(selected);
@@ -252,31 +247,28 @@ void VRGuiScripts::on_del_clicked() {
 }
 
 void VRGuiScripts::on_select_script(string scriptName) { // selected a script
+    if (scriptName == selected) return;
+
+    //cout << endl << "on_select_script " << scriptName << ", previous: " << selected << endl;
     if (pages.count(selected)) {
         pagePos& P = pages[selected];
         getLineFocus(P.line, P.column); // store line and column
-        cout << "editor deselect " << selected << ", cursor at: " << selected << "  " << P.line << "  " << P.column << endl;
+        //cout << "editor deselect " << selected << ", cursor at: " << selected << "  " << P.line << "  " << P.column << endl;
     }
 
     selected = scriptName;
     auto script = getSelectedScript();
     if (!script) {
         // TODO: deactivate editor
+        //cout << " .. no script " << selected << " selected!" << endl;
         return;
     }
     trigger_cbs = false;
 
-    // update options
-    //setCombobox("combobox1", getListStorePos("liststore6", script->getType()));
-    //auto setup = VRSetup::getCurrent();
-    //if (setup) fillStringListstore("liststore7", setup->getDevices("server"));
-
-    // update editor content
+    // update editor content, triggers and arguments
     editor->setCore(script->getScript(), script->getHeadSize());
     uiSignal("script_editor_set_parameters", {{"type",script->getType()},{"group",script->getGroup()}});
-
     uiSignal("script_editor_clear_trigs_and_args");
-    // update arguments liststore
     for (auto a : script->getArguments()) uiSignal("script_editor_add_argument", {{"name",a->getName()},{"type",a->type},{"value",a->val}});
 
     // update trigger liststore
@@ -296,28 +288,16 @@ void VRGuiScripts::on_select_script(string scriptName) { // selected a script
         });
     }
 
-    /*setWidgetSensitivity("toolbutton8", true);
-    setWidgetSensitivity("toolbutton7", false);
-    setWidgetSensitivity("toolbutton9", true);
-    setWidgetSensitivity("table15", true);*/
-
     // language
     editor->setLanguage(script->getType());
 
-    // script trigger
-    //string trigger = script->getTrigger();
-    //setTextEntry("entry48", script->getTriggerParams());
-
-    //setCombobox("combobox1", getListStorePos("ScriptTrigger", trigger));
-    trigger_cbs = true;
-
     if (pages.count(selected)) {
         pagePos P2 = pages[selected];
-        if (P2.line > 0) {
-            cout << " fokus selected " << selected << " " << P2.line << ", " << P2.column << endl;
-            editor->focus(P2.line, P2.column);
-        }
+        //cout << " focus selected " << selected << " " << P2.line << ", " << P2.column << endl;
+        editor->setCursorPosition(P2.line, P2.column);
     }
+
+    trigger_cbs = true;
 }
 
 // keyboard key detection
@@ -731,7 +711,7 @@ VRGuiScripts::searchResult::searchResult(string s, int l, int c) : scriptName(s)
 
 void VRGuiScripts::focusScript(string name, int line, int column) {
     uiSignal("openUiTabs", {{"tab1", "Scene"}, {"tab2", "Scripting"}});
-    uiSignal("openUiScript", {{"name", name}, {"line", toString(line)}, {"column", toString(column)}});
+    uiSignal("script_editor_set_cursor", {{"name", name}, {"line", toString(line)}, {"column", toString(column)}});
 }
 
 void VRGuiScripts::getLineFocus(int& line, int& column) {
@@ -1015,12 +995,12 @@ bool VRGuiScripts::updateList() {
 
     if (selected == "") {
         cout << "No script open, selecting a script.." << endl;
-        if (scene->getScript("init")) uiSignal("openUiScript", {{"name", "init"}, {"line", "0"}, {"column", "0"}});
+        if (scene->getScript("init")) uiSignal("script_editor_set_cursor", {{"name", "init"}, {"line", "0"}, {"column", "0"}});
         else {
             auto scs = scene->getScripts();
             if (scs.size() > 0) {
                 auto sc = scs.begin()->second;
-                if (sc) uiSignal("openUiScript", {{"name", sc->getName()}, {"line", "0"}, {"column", "0"}});
+                if (sc) uiSignal("script_editor_set_cursor", {{"name", sc->getName()}, {"line", "0"}, {"column", "0"}});
             }
         }
     }
