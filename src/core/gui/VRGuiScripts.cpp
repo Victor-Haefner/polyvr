@@ -247,8 +247,6 @@ void VRGuiScripts::on_del_clicked() {
 }
 
 void VRGuiScripts::on_select_script(string scriptName) { // selected a script
-    if (scriptName == selected) return;
-
     //cout << endl << "on_select_script " << scriptName << ", previous: " << selected << endl;
     if (pages.count(selected)) {
         pagePos& P = pages[selected];
