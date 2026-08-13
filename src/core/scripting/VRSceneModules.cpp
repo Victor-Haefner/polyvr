@@ -294,7 +294,7 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPyMolecule>("Molecule", pModVR, VRPyGeometry::typeRef);
     sm->registerModule<VRPyCrystal>("Crystal", pModVR, VRPyMolecule::typeRef);
     sm->registerModule<VRPyRobotArm>("RobotArm", pModVR);
-    sm->registerModule<VRPyPipeSystem>("PipeSystem", pModVR, VRPyGeometry::typeRef);
+    sm->registerModule<VRPyPipeSystem>("PipeSystem", pModVR, VRPyTransform::typeRef);
     sm->registerModule<VRPyElectricSystem>("ElectricSystem", pModVR);
     sm->registerModule<VRPyWire>("Wire", pModVR);
     sm->registerModule<VRPyWiringSimulation>("WiringSimulation", pModVR);
