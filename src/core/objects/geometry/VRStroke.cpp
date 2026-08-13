@@ -278,12 +278,11 @@ void VRStroke::strokeStrew(VRGeometryPtr geo) {
 
     clearChildren();
     for (unsigned int i=0; i<paths.size(); i++) {
-        vector<Vec3d> pnts = paths[i]->getPositions();
-        for (unsigned int j=0; j<pnts.size(); j++) {
-            Vec3d p = pnts[j];
+        vector<PosePtr> poses = paths[i]->getPoses();
+        for (auto P : poses) {
             VRGeometryPtr g = static_pointer_cast<VRGeometry>(geo->duplicate());
+            g->setPose(P);
             addChild(g);
-            g->translate(p);
         }
     }
 }
