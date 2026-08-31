@@ -65,8 +65,11 @@ ImScriptList::ImScriptList() {
     mgr->addCallback("scripts_list_set_perf", [&](OSG::VRGuiSignals::Options o){ setPerformance(o["name"], toFloat(o["perf"])); return true; } );
     mgr->addCallback("script_editor_set_cursor", [&](OSG::VRGuiSignals::Options o) {
         if (!o.count("name")) return true;
-        selected = o["name"];
-        uiSignal("select_script", {{"script",selected}});
+        string name = o["name"];
+        selected = name + "##script";
+        focus(name);
+        uiSignal("select_script", {{"script",name}});
+        if (input) input->value = name;
         return true;
     } );
 }
@@ -76,6 +79,17 @@ void ImScriptList::clear() {
     groupsList.clear();
     addGroup("__default__", "__default__");
     computeMinWidth();
+}
+
+void ImScriptList::focus(string name) {
+    for (auto& g : groups) {
+        for (auto& s : g.second.scripts) {
+            if (s.name == name) {
+                g.second.needsOpen = true;
+                return;
+            }
+        }
+    }
 }
 
 void ImScriptList::addGroup(string name, string ID) {
@@ -155,7 +169,6 @@ void ImScriptList::renderScriptEntry(ImScriptEntry& scriptEntry) {
     string& source = scriptEntry.source;
     string bID = script + "##script";
 
-    if (!input) input = new ImInput("##renameScript", "", "Script0", ImGuiInputTextFlags_EnterReturnsTrue);
     //ImVec4 colorSelected(0.3f, 0.5f, 1.0f, 1.0f);
     bool isSelected = bool(selected == bID);
     //if (isSelected) ImGui::PushStyleColor(ImGuiCol_Button, colorSelected);
@@ -166,6 +179,7 @@ void ImScriptList::renderScriptEntry(ImScriptEntry& scriptEntry) {
         if (ImGui::Button(bID.c_str())) {
             selected = bID;
             uiSignal("select_script", {{"script",script}});
+            if (!input) input = new ImInput("##renameScript", "", script, ImGuiInputTextFlags_EnterReturnsTrue);
             if (input) input->value = script;
         }
 
@@ -175,8 +189,9 @@ void ImScriptList::renderScriptEntry(ImScriptEntry& scriptEntry) {
 		ImGui::PushStyleColor(ImGuiCol_Text, colorFromString(scriptEntry.fg));
 		ImGui::PushStyleColor(ImGuiCol_FrameBg, colorFromString(scriptEntry.bg));
 		ImGui::PushStyleColor(ImGuiCol_Border, colorFromString("#66AAFF"));
-		ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 2);
+		ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 3);
 
+        if (!input) input = new ImInput("##renameScript", "", script, ImGuiInputTextFlags_EnterReturnsTrue);
         if (input) {
             Rinput = uiStrWidth( input->value ) + 5;
             if (input->render(Rinput)) {
@@ -242,10 +257,11 @@ void ImScriptList::render() {
 
     for (auto groupID : tmpGroupsList) {
         if (groupID == "__default__") continue;
-        string group = tmpGroups[groupID].name;
-        renderGroupEntry(tmpGroups[groupID].name);
+        auto& group = tmpGroups[groupID];
+        renderGroupEntry(group.name);
         ImGui::SameLine();
 
+        if (group.needsOpen) { group.needsOpen = false; ImGui::SetNextItemOpen(true, ImGuiCond_Always); }
         //if (ImGui::CollapsingHeader((group+"##"+groupID).c_str(), flags)) {
         if (ImGui::CollapsingHeader(("##"+groupID).c_str(), flags)) {
             ImGui::Indent();

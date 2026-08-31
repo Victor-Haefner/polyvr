@@ -21,6 +21,7 @@ struct ImScriptEntry {
 struct ImScriptGroup {
     vector<ImScriptEntry> scripts;
     string name;
+    bool needsOpen = false;
     ImScriptGroup() {}
     ImScriptGroup(string name);
 };
@@ -38,6 +39,7 @@ class ImScriptList {
         ImInput* input = 0;
 
         void clear();
+        void focus(string name);
         void addGroup(string name, string ID);
         void addScript(string name, string groupID, float time);
         void setColor(string name, string fg, string bg);
