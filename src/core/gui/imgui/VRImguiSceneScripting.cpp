@@ -61,6 +61,7 @@ ImScriptList::ImScriptList() {
     mgr->addCallback("scripts_list_add_group", [&](OSG::VRGuiSignals::Options o){ addGroup(o["name"], o["ID"]); return true; } );
     mgr->addCallback("scripts_list_add_script", [&](OSG::VRGuiSignals::Options o){ addScript(o["name"], o["group"], toFloat(o["perf"])); return true; } );
     mgr->addCallback("scripts_list_set_color", [&](OSG::VRGuiSignals::Options o){ setColor(o["name"], o["fg"], o["bg"]); return true; } );
+    mgr->addCallback("scripts_list_set_source", [&](OSG::VRGuiSignals::Options o){ setSource(o["name"], o["source"]); return true; } );
     mgr->addCallback("scripts_list_set_perf", [&](OSG::VRGuiSignals::Options o){ setPerformance(o["name"], toFloat(o["perf"])); return true; } );
     mgr->addCallback("script_editor_set_cursor", [&](OSG::VRGuiSignals::Options o) {
         if (!o.count("name")) return true;
@@ -114,6 +115,17 @@ void ImScriptList::setColor(string name, string fg, string bg) {
     }
 }
 
+void ImScriptList::setSource(string name, string source) {
+    for (auto& g : groups) {
+        for (auto& s : g.second.scripts) {
+            if (s.name == name) {
+                s.source = source;
+                return;
+            }
+        }
+    }
+}
+
 void ImScriptList::computeMinWidth() {
     ImGuiIO& io = ImGui::GetIO();
     float fs = io.FontGlobalScale;
@@ -140,7 +152,9 @@ void ImScriptList::computeMinWidth() {
 
 void ImScriptList::renderScriptEntry(ImScriptEntry& scriptEntry) {
     string& script = scriptEntry.name;
+    string& source = scriptEntry.source;
     string bID = script + "##script";
+
     if (!input) input = new ImInput("##renameScript", "", "Script0", ImGuiInputTextFlags_EnterReturnsTrue);
     //ImVec4 colorSelected(0.3f, 0.5f, 1.0f, 1.0f);
     bool isSelected = bool(selected == bID);
@@ -179,6 +193,11 @@ void ImScriptList::renderScriptEntry(ImScriptEntry& scriptEntry) {
 		ImGui::PopStyleColor();
 		ImGui::PopStyleColor();
 		ImGui::PopStyleColor();
+    }
+
+    if (!source.empty() && ImGui::IsItemHovered()) {
+        string tip = "source: "+source;
+        ImGui::SetTooltip(tip.c_str());
     }
 
     if (doPerf) {

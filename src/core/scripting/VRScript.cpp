@@ -329,11 +329,13 @@ void VRScript::setArguments(vector<string> vals) {
 }
 
 void VRScript::setName(string n) { clean(); VRName::setName(n); update(); }
+void VRScript::setSource(string s) { source = s; }
 void VRScript::setFunction(PyObject* fkt) { this->fkt = fkt; }
 void VRScript::setCore(string core) { clean(); this->core = core; update(); }
 void VRScript::setType(string type) { clean(); this->type = type; update(); }
 void VRScript::setHTMLHost(string server) { clean(); this->server = server; update(); }
 
+string VRScript::getSource() { return source; }
 string VRScript::getCore() { return core; }
 string VRScript::getHead() { return head; }
 string VRScript::getScript() { return head + core; }

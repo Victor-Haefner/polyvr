@@ -83,6 +83,7 @@ void VRGuiScripts::updateScriptColor(VRScriptPtr script) {
     if (trig_lvl >= 256) tbg = "#CCAAFF";
 
     uiSignal("scripts_list_set_color", {{"name",script->getName()},{"fg",tfg},{"bg",tbg}});
+    uiSignal("scripts_list_set_source", {{"name",script->getName()},{"source",script->getSource()}});
 }
 
 void VRGuiScripts::on_new_clicked() {

@@ -396,7 +396,12 @@ void VRScene::importScene(XMLElementPtr e, string path) {
         for (auto s : newScripts) importedScripts[path].push_back(s);
     } else newScripts = importedScripts[path];
 
-    for (auto s : newScripts) getScript(s)->setPersistency(0);
+    for (auto s : newScripts) {
+        auto sc = getScript(s);
+        sc->setPersistency(0);
+        sc->setSource(path);
+    }
+
     for (auto s : newScripts) updateScript(s, getScript(s)->getCore());
     for (auto s : newScripts) if (getScript(s)->hasTrigger("on_scene_import")) getScript(s)->execute();
 #ifndef WITHOUT_IMGUI

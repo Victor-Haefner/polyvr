@@ -89,6 +89,7 @@ class VRScript : public std::enable_shared_from_this<VRScript>, public VRName {
         typedef shared_ptr<trig> trigPtr;
 
     private:
+        string source;
         string core = "\tpass";
         string head;
         string type = "Python";
@@ -130,11 +131,13 @@ class VRScript : public std::enable_shared_from_this<VRScript>, public VRName {
         void updateDeviceTrigger();
 
         void setName(string n);
+        void setSource(string s);
         void setFunction(PyObject* _fkt);
         void setCore(string _script);
         void setType(string type);
         void setHTMLHost(string server);
 
+        string getSource();
         string getHead();
         string getCore();
         string getScript();
