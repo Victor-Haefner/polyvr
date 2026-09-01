@@ -404,7 +404,7 @@ void VRObject::addChild(OSGObjectPtr n) {
 void VRObject::addChild(VRObjectPtr child, bool osg, int place) {
     if (child == 0 || child == ptr()) return;
     //cout << "VRObject::addChild " << child->getName() << "  to: " << getName() << endl;
-    if (child->getParent() != 0) { child->switchParent(ptr(), place); return; }
+    if (child->getParent() != 0) { child->switchParent(ptr(), false, place); return; }
 
     if (osg) addChild(child->osg);
     child->graphChanged = VRGlobals::CURRENT_FRAME;
@@ -440,7 +440,13 @@ void VRObject::subChild(VRObjectPtr child, bool doOsg) {
     updateChildrenIndices(true);
 }
 
-void VRObject::switchParent(VRObjectPtr new_p, int place) {
+void VRObject::switchParent(VRObjectPtr new_p, bool keepTransform, int place) {
+    Matrix4d wm;
+    if (keepTransform) {
+        if (auto t = dynamic_pointer_cast<VRTransform>(ptr()))
+            t->getWorldMatrix(wm);
+    }
+
     //cout << "VRObject::switchParent of: " << getName() << "  new parent: " << new_p->getName() << " destroyed? " << destroyed << endl;
     if (destroyed) { cout << "VRObject::switchParent ERROR: object is marked as destroyed!" << endl; return; }
     if (new_p == ptr()) return;
@@ -451,6 +457,11 @@ void VRObject::switchParent(VRObjectPtr new_p, int place) {
 
     getParent()->subChild(ptr(), true);
     new_p->addChild(ptr(), true, place);
+
+    if (keepTransform) {
+        if (auto t = dynamic_pointer_cast<VRTransform>(ptr()))
+            t->setWorldMatrix(wm);
+    }
 }
 
 void VRObject::replaceChild(int i, VRObjectPtr new_c) {

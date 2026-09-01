@@ -53,6 +53,10 @@ void VRAnimation::addUnownedCallback(VRAnimCbPtr fkt) {
     weakCallbacks.push_back(fkt);
 }
 
+void VRAnimation::setCallback(VRAnimCbPtr fkt) {
+    ownedCallbacks = {fkt};
+}
+
 void VRAnimation::addCallback(VRAnimCbPtr fkt) {
     ownedCallbacks.push_back(fkt);
 }

@@ -90,7 +90,7 @@ PyMethodDef VRPyObject::methods[] = {
     {"hasChild", PyWrapOpt(Object, hasChild, "Check if object is a child", "-1", bool, VRObjectPtr, int ) },
     {"addChild", PyWrapOpt(Object, addChild, "Add object as child", "1|-1", void, VRObjectPtr, bool, int ) },
     {"subChild", PyWrapOpt(Object, subChild, "Sub child object", "1", void, VRObjectPtr, bool ) },
-    {"switchParent", PyWrapOpt(Object, switchParent, "Switch object to other parent object", "-1", void, VRObjectPtr, int) },
+    {"switchParent", PyWrapOpt(Object, switchParent, "Switch object to other parent object, (new parent, keep transform, place)", "0|-1", void, VRObjectPtr, bool, int) },
     {"replaceChild", PyWrap(Object, replaceChild, "Replace child i with another", void, int, VRObjectPtr) },
     {"hasDescendant", PyWrap(Object, hasDescendant, "Check if object in in subgraph", bool, VRObjectPtr) },
     {"hasAncestor", PyWrap(Object, hasAncestor, "Check if object is an ancestor", bool, VRObjectPtr) },

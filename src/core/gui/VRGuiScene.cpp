@@ -833,7 +833,7 @@ void VRGuiScene::on_treeview_drop(string sID, string tID) {
     VRObjectPtr target = scene->get( toInt(tID) );
     if ( !source || !target ) return;
 
-    source->switchParent(target, 0);
+    source->switchParent(target, false, 0);
     updateTreeView();
 }
 
