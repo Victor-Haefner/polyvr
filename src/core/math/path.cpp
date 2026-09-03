@@ -452,15 +452,18 @@ void Path::close() {
 
 bool Path::isClosed() { return closed; }
 
-Vec3d Path::interp(vector<Vec3d>& vec, float t, int i, int j, bool verbose) {
+void Path::rebaseIndices(int& i, int& j, float& t) {
     if (t <= 0) t = 0;
     if (t >= 1) t = 1; // clamp t
     if (direction == -1) t = 1-t;
 
-    if (j <= 0) j = vec.size()-1;
+    if (j <= 0) j = positions.size()-1;
     else j *= (iterations-1);
     i *= (iterations-1);
+}
 
+Vec3d Path::interp(vector<Vec3d>& vec, float t, int i, int j, bool verbose) {
+    rebaseIndices(i,j,t);
     int N = j-i;
     if (N < 0) return Vec3d();
 
@@ -535,9 +538,24 @@ void Path::getOrientation(float t, Vec3d& dir, Vec3d& up, int i, int j, bool fas
 }
 
 PosePtr Path::getPose(float t, int i, int j, bool fast) {
-    Vec3d d,u;
+    Vec3d p, d,u;
     getOrientation(t,d,u,i,j,fast);
-    return Pose::create(getPosition(t,i,j,fast), d, u);
+    p = getPosition(t,i,j,fast);
+    return Pose::create(p, d, u);
+}
+
+PosePtr Path::getUniformPose(float t, int i, int j, bool fast) {
+    double L = getLength(i,j);
+    rebaseIndices(i,j,t);
+    double Lk = t*L;
+    double l = 0;
+
+    for (int k=i+1; k<j; k++) {
+        double Li = getLength(k-1,k);
+        if (Li > 1e-3 && Lk < l+Li) return getPose((Lk-l)/Li, k-1, k, fast);
+        l += Li;
+    }
+    return getPose(1.0, i,j, fast);
 }
 
 void Path::set(PosePtr p1, PosePtr p2, int res) {

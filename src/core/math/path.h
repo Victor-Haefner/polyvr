@@ -27,6 +27,7 @@ class Path : public VRStorage {
         vector<Vec3d> up_vectors;
         vector<Vec3d> colors;
 
+        void rebaseIndices(int& i, int& j, float& t);
         Vec3d interp(vector<Vec3d>& vec, float t, int i = 0, int j = 0, bool verbose = false);
         Vec3d projectInPlane(Vec3d v, Vec3d n, bool keep_length);
         void cubicBezier(Vec3d* container, int N, Vec3d p0, Vec3d p1, Vec3d n0, Vec3d n1);
@@ -64,6 +65,7 @@ class Path : public VRStorage {
         void getOrientation(float t, Vec3d& dir, Vec3d& up, int i = 0, int j = 0, bool fast = true);
         Color3f getColor(float t, int i = 0, int j = 0);
         PosePtr getPose(float t, int i = 0, int j = 0, bool fast = true);
+        PosePtr getUniformPose(float t, int i = 0, int j = 0, bool fast = true);
 
         float getClosestPoint(Vec3d p); // return t parameter on Path
         float getDistance(Vec3d p);
