@@ -20,9 +20,6 @@
 #include <algorithm>
 #include <memory>
 
-#define TEMPLATEV(...) #__VA_ARGS__
-#define TEMPLATE(...) TEMPLATEV(__VA_ARGS__)
-
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
@@ -595,150 +592,164 @@ void VRScriptManager::triggerOnImport() { // deprecated
     }
 }
 
-string hudSite = TEMPLATE(
-<!DOCTYPE html>\n
-<html>\n\n
+string hudSite =
+R"HTML(<!DOCTYPE html>
+<html>
 
-<head>\n
-\t<style type="text/css">\n
-\t\tbody {\n
-\t\t\tmargin:0;\n
-\t\t}\n\n
-\t\tbutton {\n
-\t\t\tfont-size:10vh;\n
-\t\t\twidth:100vw;\n
-\t\t\theight:20vh;\n
-\t\t}\n
-\t</style>\n
-\t<script>\n
-\t\tvar websocket = new WebSocket('ws://localhost:$PORT_server1$');\n
-\t\twebsocket.onopen = function() { send('register|hud'); };\n
-\t\twebsocket.onerror = function(e) {};\n
-\t\twebsocket.onmessage = function(m) { if(m.data) handle(m.data); };\n
-\t\twebsocket.onclose = function(e) {};\n\n
+<head>
+    <style type="text/css">
+        body {
+            margin:0;
+        }
+        button {
+            font-size:10vh;
+            width:100vw;
+            height:20vh;
+        }
+    </style>
+    <script>
+        var websocket = new WebSocket('ws://localhost:$PORT_server1$');
+        websocket.onopen = function() { send('register|hud'); };
+        websocket.onerror = function(e) {};
+        websocket.onmessage = function(m) { if(m.data) handle(m.data); };
+        websocket.onclose = function(e) {};
 
-\t\tfunction send(m) { websocket.send(m); };\n
-\t\tfunction handle(m) { console.log(m); };\n
-\t</script>\n
-</head>\n\n
+        function send(m) { websocket.send(m); };
+        function handle(m) { console.log(m); };
+    </script>
+</head>
 
-<body>\n
-\t<button onclick="send('message1 from hud')">send message1</button>\n
-\t<button onclick="send('message2 from hud')">send message2</button>\n
-\t<button onclick="send('message3 from hud')">send message3</button>\n
-\t<button onclick="send('message4 from hud')">send message4</button>\n
-\t<button onclick="send('message5 from hud')">send message5</button>\n
-</body>\n
+<body>
+    <button onclick="send('message1 from hud')">send message1</button>
+    <button onclick="send('message2 from hud')">send message2</button>
+    <button onclick="send('message3 from hud')">send message3</button>
+    <button onclick="send('message4 from hud')">send message4</button>
+    <button onclick="send('message5 from hud')">send message5</button>
+</body>
 </html>
-);
+)HTML";
 
-string hudInit = TEMPLATE(
-\timport VR\n\n
-\tdef addHud(site,w,h,x,y,parent):\n
-\t\ts = VR.Sprite('site')\n
-\t\ts.setSize(w,h)\n
-\t\tport = VR.find('server1').getPort()\n
-\t\ts.webOpen('http://localhost:'+str(port)+'/'+site, 400, w/h)\n
-\t\ts.setFrom([x,y,-2])\n
-\t\tparent.addChild(s)\n\n
-\tif hasattr(VR, 'hud'): VR.hud.destroy()\n
-\tVR.hud = VR.Object('hud')\n
-\tVR.find('Default').addChild(VR.hud)\n\n
-\taddHud( 'hudSite', 0.5,0.5, 0,1, VR.hud )\n
-);
+string hudInit =
+R"(    import VR
 
-string hudHandler = TEMPLATE(
-\timport VR\n\n
-\tm = dev.getMessage()\n
-\tprint m\n
-);
+    def addHud(site,w,h,x,y,parent):
+        s = VR.Sprite('site')
+        s.setSize(w,h)
+        port = VR.find('server1').getPort()
+        s.webOpen('http://localhost:'+str(port)+'/'+site, 400, w/h)
+        s.setFrom([x,y,-2])
+        parent.addChild(s)
 
-string restClient = TEMPLATE(
-\timport VR\n\n
-\tif not hasattr(VR, 'client'): VR.client = VR.RestClient()\n\n
-\tdef cb(r):\n
-\t\tprint 'async: ' + r.getData()\n\n
-\tVR.client.getAsync("http://reqbin.com/echo/get/json", cb)\n\n
-\tres = VR.client.get("http://reqbin.com/echo/get/json")\n
-\tprint 'sync: ' + res.getData()\n
-);
+    if hasattr(VR, 'hud'): VR.hud.destroy()
+    VR.hud = VR.Object('hud')
+    VR.find('Default').addChild(VR.hud)
+    addHud( 'hudSite', 0.5,0.5, 0,1, VR.hud )
+)";
 
-string OrderedDict = TEMPLATE(
-\tclass OrderedDict:\n
-\t\tdef __init__(self):\n
-\t\t\tself.dict = {}\n
-\t\t\tself.keys = []\n\n
-\t\tdef __setitem__(self, k, v):\n
-\t\t\tself.dict[k] = v\n
-\t\t\tself.keys.append(k)\n\n
-\t\tdef __getitem__(self, k):\n
-\t\t\treturn self.dict[k]\n\n
-\t\tdef items(self):\n
-\t\t\treturn [ (k,self.dict[k]) for k in self.keys ]\n
-);
+string hudHandler =
+R"(    import VR
 
-string pointCloudImport = TEMPLATE(
-\timport VR\n\n
-\tif hasattr(VR, 'scene'): VR.scene.destroy()\n
-\tVR.scene = VR.Object('scene', 'light')\n\n
-\topts = {}\n
-\topts['downsampling'] = 1\n
-\topts['lit'] = 0\n
-\topts['resolution'] = 2\n
-\topts['pointSize'] = 5\n
-\topts['lod1'] = [5, 20]\n
-\topts['lod2'] = [10, 200]\n
-\topts['swapYZ'] = 1\n
-\topts['keepOctree'] = 0\n\n
-\tpath = 'data/myPC.e57'\n
-\tpc = VR.loadGeometry(path, options = opts)\n
-\tVR.scene.addChild(pc)\n
-);
+    m = dev.getMessage()
+    print m
+)";
+
+string restClient =
+R"(    import VR
+
+    if not hasattr(VR, 'client'): VR.client = VR.RestClient()
+
+    def cb(r):
+        print 'async: ' + r.getData()
+
+    VR.client.getAsync("http://reqbin.com/echo/get/json", cb)
+    res = VR.client.get("http://reqbin.com/echo/get/json")
+    print 'sync: ' + res.getData()
+)";
+
+string OrderedDict =
+R"(    class OrderedDict:
+        def __init__(self):
+            self.dict = {}
+            self.keys = []
+
+        def __setitem__(self, k, v):
+            self.dict[k] = v
+            self.keys.append(k)
+
+        def __getitem__(self, k):
+            return self.dict[k]
+
+        def items(self):
+            return [ (k,self.dict[k]) for k in self.keys ]
+)";
+
+string pointCloudImport =
+R"(    import VR
+
+    if hasattr(VR, 'scene'): VR.scene.destroy()
+    VR.scene = VR.Object('scene', 'light')
+
+    opts = {}
+    opts['downsampling'] = 1
+    opts['lit'] = 0
+    opts['resolution'] = 2
+    opts['pointSize'] = 5
+    opts['lod1'] = [5, 20]
+    opts['lod2'] = [10, 200]
+    opts['swapYZ'] = 1
+    opts['keepOctree'] = 0
+    path = 'data/myPC.e57'
+    pc = VR.loadGeometry(path, options = opts)
+    VR.scene.addChild(pc)
+)";
 
 string simpleVP =
-"#version 120\n"
-TEMPLATE(
-attribute vec4 osg_Vertex;\n
-attribute vec3 osg_Normal;\n
-attribute vec4 osg_Color;\n
-attribute vec2 osg_MultiTexCoord0;\n\n
-varying vec4 vertPos;\n
-varying vec3 vertNorm;\n
-varying vec4 color;\n
-void main(void) {\n
-\tvertPos = gl_ModelViewMatrix * osg_Vertex;\n
-\tvertNorm = gl_NormalMatrix * osg_Normal;\n
-\tgl_TexCoord[0] = vec4(osg_MultiTexCoord0,0.0,0.0);\n
-\tcolor = gl_Color;\n
-\tgl_Position = gl_ModelViewProjectionMatrix*osg_Vertex;\n
-}\n
-);
+R"(#version 120
+
+attribute vec4 osg_Vertex;
+attribute vec3 osg_Normal;
+attribute vec4 osg_Color;
+attribute vec2 osg_MultiTexCoord0;
+varying vec4 vertPos;
+varying vec3 vertNorm;
+varying vec4 color;
+
+void main(void) {
+    vertPos = gl_ModelViewMatrix * osg_Vertex;
+    vertNorm = gl_NormalMatrix * osg_Normal;
+    gl_TexCoord[0] = vec4(osg_MultiTexCoord0,0.0,0.0);
+    color = gl_Color;
+    gl_Position = gl_ModelViewProjectionMatrix*osg_Vertex;
+}
+)";
 
 string simpleFP =
-"#version 120\n"
-TEMPLATE(
-varying vec4 vertPos;\n
-varying vec3 vertNorm;\n
-varying vec4 color;\n
-uniform sampler2D tex0;\n\n
-void applyLightning() {\n
-\tvec3 n = normalize(vertNorm);\n
-\tvec3 light;\n
-\tif (gl_LightSource[0].position.w < 0.5) light = normalize( gl_LightSource[0].position.xyz ); // dir light\n
-\telse light = normalize( gl_LightSource[0].position.xyz - vertPos.xyz ); // pnt light\n
-\tfloat NdotL = max(dot( n, light ), 0.0);\n
-\tvec4 ambient = gl_LightSource[0].ambient * color;\n
-\tvec4 diffuse = gl_LightSource[0].diffuse * NdotL * color;\n
-\tfloat NdotHV = max(dot(n, normalize(gl_LightSource[0].halfVector.xyz)),0.0);\n
-\tvec4 specular = gl_LightSource[0].specular * pow( NdotHV, gl_FrontMaterial.shininess );\n
-\tgl_FragColor = ambient + diffuse + specular;\n
-}\n\n
-void main(void) {\n
-\tvec3 pos = vertPos.xyz / vertPos.w;\n
-\tvec4 diffCol = texture2D(tex0, gl_TexCoord[0].xy);\n
-\tapplyLightning();\n
-}\n
-);
+R"(#version 120
+
+varying vec4 vertPos;
+varying vec3 vertNorm;
+varying vec4 color;
+uniform sampler2D tex0;
+
+void applyLightning() {
+    vec3 n = normalize(vertNorm);
+    vec3 light;
+    if (gl_LightSource[0].position.w < 0.5) light = normalize( gl_LightSource[0].position.xyz ); // dir light
+    else light = normalize( gl_LightSource[0].position.xyz - vertPos.xyz ); // pnt light
+    float NdotL = max(dot( n, light ), 0.0);
+    vec4 ambient = gl_LightSource[0].ambient * color;
+    vec4 diffuse = gl_LightSource[0].diffuse * NdotL * color;
+    float NdotHV = max(dot(n, normalize(gl_LightSource[0].halfVector.xyz)),0.0);
+    vec4 specular = gl_LightSource[0].specular * pow( NdotHV, gl_FrontMaterial.shininess );
+    gl_FragColor = ambient + diffuse + specular;
+}
+
+void main(void) {
+    vec3 pos = vertPos.xyz / vertPos.w;
+    vec4 diffCol = texture2D(tex0, gl_TexCoord[0].xy);
+    applyLightning();
+}
+)";
 
 struct VRScriptTemplate {
     string name;
@@ -775,6 +786,14 @@ void VRScriptManager::initTemplates() {
         s.name = name;
         s.type = type;
         s.core = core;
+
+        // replace 4 spaces with tab
+        string::size_type pos = 0;
+        while ((pos = s.core.find("    ", pos)) != string::npos) {
+            s.core.replace(pos, 4, "\t");
+            pos++;
+        }
+
         templates[name] = s;
     };
 
