@@ -562,7 +562,6 @@ void ImScripting::render() {
         ImGui::SameLine(); if (ImGui::Button("Group")) uiSignal("scripts_toolbar_group");
 
         ImGui::SameLine();
-
         if (ImGui::Button("Import")) {
             string filters = "PolyVR Project (.pvr .pvc){.pvr,.pvc,.xml}";
             uiSignal("set_file_dialog_signal", {{"signal","script_import_clicked"}});

@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <functional>
 
 using namespace std;
 
@@ -16,6 +17,17 @@ class ImInput;
 
 class ImTreeview {
     public:
+        struct Selection {
+            vector<string> selected;
+            function<void(string)> onDeselect;
+
+            void clear();
+            void set(string s);
+            void add(string s);
+            void rem(string s);
+            bool has(string s);
+        };
+
         struct Node {
             string ID;
             string tvID;
@@ -32,15 +44,15 @@ class ImTreeview {
             Node(string ID, string tvID, string label, int options);
             Node* add(string childID, string child, int options);
             void setMenu(vector<pair<string, string>> menu);
-            bool render(int lvl = 0);
-            void renderButton();
-            void renderEditable();
+            bool render(ImTreeview::Selection& selection, int lvl = 0);
+            void renderButton(ImTreeview::Selection& selection);
+            void renderEditable(ImTreeview::Selection& selection);
             void renderMenu();
         };
 
     public:
         string ID;
-        string selected;
+        Selection selection;
         Node root;
         map<string, Node*> nodes;
         ImGuiTreeNodeFlags nodeFlags = 0;

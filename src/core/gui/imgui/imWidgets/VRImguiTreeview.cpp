@@ -2,23 +2,33 @@
 #include "VRImguiInput.h"
 #include "../VRImguiUtils.h"
 #include "core/gui/VRGuiManager.h"
+#include "core/utils/toString.h"
 
 #include <iostream>
+#include <algorithm>
 
 ImTreeview::ImTreeview(string ID) : ID(ID), root("", ID, "", 0) {
     auto mgr = OSG::VRGuiSignals::get();
     mgr->addCallback("treeview_select", [&](OSG::VRGuiSignals::Options o){ if (o["treeview"] == this->ID) handleSelection(o["node"]); return true; } );
     mgr->addCallback("on_tv_node_rename", [&](OSG::VRGuiSignals::Options o){ if (o["treeview"] == this->ID) rename(o["node"], o["name"]); return true; } );
+
+    selection.onDeselect = [&](string s) {
+        if (nodes.count(s)) nodes[s]->isSelected = false;
+    };
 }
 
 void ImTreeview::handleSelection(string node) {
-    if (nodes.count(selected)) nodes[selected]->isSelected = false;
-    selected = node;
-    nodes[selected]->isSelected = true;
+    ImGuiIO& io = ImGui::GetIO();
+    bool ShiftDown = io.KeyShift; // TODO, use it below!
+    bool CtrlDown = io.KeyCtrl;
+
+    if (CtrlDown) selection.add(node);
+    else selection.set(node);
+    nodes[node]->isSelected = true;
 }
 
 void ImTreeview::render() {
-    root.render(0);
+    root.render(selection, 0);
 }
 
 void ImTreeview::rename(string ID, string label) {
@@ -41,7 +51,7 @@ void ImTreeview::Node::renderMenu() {
     }
 }
 
-void ImTreeview::Node::renderButton() {
+void ImTreeview::Node::renderButton(ImTreeview::Selection& selection) {
     string idLbl = label + "##" + ID;
 
     if (isSelected) {
@@ -53,7 +63,8 @@ void ImTreeview::Node::renderButton() {
     if (ImGui::Button(idLbl.c_str())) {
         //isSelected = true;
         //cout << "ImTreeview::Node::renderButton " << tvID << ", " << ID << ", " << label << endl;
-        uiSignal("treeview_select", {{"treeview",tvID}, {"node",ID}});
+        string sel = toString(selection.selected);
+        uiSignal("treeview_select", {{"treeview",tvID}, {"node",ID}, {"selection",sel}});
     }
 
     if (isSelected) {
@@ -65,8 +76,8 @@ void ImTreeview::Node::renderButton() {
     renderMenu();
 }
 
-void ImTreeview::Node::renderEditable() {
-    if (!isSelected) renderButton();
+void ImTreeview::Node::renderEditable(ImTreeview::Selection& selection) {
+    if (!isSelected) renderButton(selection);
     else {
         if (!input) input = new ImInput(ID+"_input", "", label, ImGuiInputTextFlags_EnterReturnsTrue);
         if (input->render(0)) {
@@ -78,19 +89,19 @@ void ImTreeview::Node::renderEditable() {
     }
 }
 
-bool ImTreeview::Node::render(int lvl) {
+bool ImTreeview::Node::render(ImTreeview::Selection& selection, int lvl) {
     if (label == "") { // root nodes
-        for (auto& child : children) child->render(lvl+1);
+        for (auto& child : children) child->render(selection, lvl+1);
         return true;
     }
 
-    if (options & IM_TV_NODE_EDITABLE) renderEditable();
-    else renderButton();
+    if (options & IM_TV_NODE_EDITABLE) renderEditable(selection);
+    else renderButton(selection);
 
     if (ImGui::BeginDragDropSource()) {
         isDragged = true;
         ImGui::SetDragDropPayload(tvID.c_str(), ID.c_str(), ID.size() + 1);
-        renderButton();
+        renderButton(selection);
         ImGui::EndDragDropSource();
     } else isDragged = false;
 
@@ -108,7 +119,7 @@ bool ImTreeview::Node::render(int lvl) {
         open = ImGui::CollapsingHeader(("##"+ID).c_str(), nodeFlags);
         if (open) {
             ImGui::Indent(8);
-            for (auto& child : children) child->render(lvl+1);
+            for (auto& child : children) child->render(selection, lvl+1);
             ImGui::Unindent(8);
         }
     }
@@ -116,6 +127,29 @@ bool ImTreeview::Node::render(int lvl) {
 }
 
 ImTreeview::Node::Node(string ID, string tvID, string label, int options) : ID(ID), tvID(tvID), label(label), options(options) {}
+
+bool ImTreeview::Selection::has(string s) {
+    return bool( find(selected.begin(), selected.end(), s) != selected.end() );
+}
+
+void ImTreeview::Selection::clear() {
+    for (auto s : selected) onDeselect(s);
+    selected.clear();
+}
+
+void ImTreeview::Selection::set(string s) {
+    for (auto s : selected) onDeselect(s);
+    selected = { s };
+}
+
+void ImTreeview::Selection::add(string s) {
+    selected.push_back(s);
+}
+
+void ImTreeview::Selection::rem(string s) {
+    selected.erase(find(selected.begin(), selected.end(), s));
+    onDeselect(s);
+}
 
 void ImTreeview::setNodeFlags(ImGuiTreeNodeFlags flags) {
     nodeFlags = flags;

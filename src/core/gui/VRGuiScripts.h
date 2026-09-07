@@ -101,7 +101,7 @@ class VRGuiScripts {
         void on_argtype_edited(string name, string new_type);
 
         void on_import_project_selected(string path);
-        void on_import_clicked(string name);
+        void on_import_clicked(vector<string> name);
 
         void on_find_diag_find_clicked(string search, string scope, string replace);
         void on_toggle_find_replace();

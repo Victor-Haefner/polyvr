@@ -183,16 +183,17 @@ void VRGuiScripts::on_import_project_selected(string path) {
     uiSignal("ui_toggle_popup", {{"name","import"},{"title","Import Script"}, {"width","400"}, {"height","300"}});
 }
 
-void VRGuiScripts::on_import_clicked(string name) {
-    if (import_scripts.count(name) == 0) return;
-
-    VRScriptPtr s = import_scripts[name];
-    import_scripts.erase(name);
-
+void VRGuiScripts::on_import_clicked(vector<string> names) {
     auto scene = VRScene::getCurrent();
     if (scene == 0) return;
-    scene->addScript(s);
-    s->enable(true);
+
+    for (auto name : names) {
+        if (import_scripts.count(name) == 0) continue;
+        VRScriptPtr s = import_scripts[name];
+        import_scripts.erase(name);
+        scene->addScript(s);
+        s->enable(true);
+    }
     updateList();
 }
 
@@ -1079,7 +1080,13 @@ VRGuiScripts::VRGuiScripts() {
     mgr->addCallback("import_script_template", [&](OSG::VRGuiSignals::Options o) { on_templ_import_clicked(o["ID"]); return true; }, true );
 
     mgr->addCallback("script_import_clicked", [&](OSG::VRGuiSignals::Options o) { on_import_project_selected(o["fileName"]); return true; }, true );
-    mgr->addCallback("import_external_script", [&](OSG::VRGuiSignals::Options o) { on_import_clicked(o["ID"]); return true; }, true );
+
+    mgr->addCallback("import_external_script", [&](OSG::VRGuiSignals::Options o) {
+        vector<string> selected;
+        toValue(o["IDs"], selected);
+        on_import_clicked(selected);
+        return true;
+    }, true );
 
     editor = shared_ptr<VRGuiEditor>( new VRGuiEditor("scrolledwindow4") );
 

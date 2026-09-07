@@ -961,16 +961,15 @@ ImImportDialog::ImImportDialog() : ImDialog("import"), tree1("fileScriptsTree"),
     mgr->addCallback("import_scripts_clear", [&](OSG::VRGuiSignals::Options o){ clear(); return true; } );
     mgr->addCallback("on_import_scripts_tree_append", [&](OSG::VRGuiSignals::Options o){ add(o["ID"], o["label"], o["parent"], toBool(o["local"])); return true; } );
     mgr->addCallback("treeview_select", [&](OSG::VRGuiSignals::Options o) {
-            if(o["treeview"] == "fileScriptsTree")   selectScript(o["node"], true );
-            if(o["treeview"] == "externScriptsTree") selectScript(o["node"], false);
+            if(o["treeview"] == "fileScriptsTree")   selectScript(o["selection"], true );
+            if(o["treeview"] == "externScriptsTree") selectScript(o["selection"], false);
             return true;
         } );
 }
 
-void ImImportDialog::selectScript(string node, bool local) {
-    uiSignal("select_import_script", {{"ID", node}, {"local", toString(local)}});
-    if (local) selected1 = node;
-    else selected2 = node;
+void ImImportDialog::selectScript(string nodes, bool local) {
+    if (local) selected1 = nodes;
+    else selected2 = nodes;
 }
 
 void ImImportDialog::clear() {
@@ -1198,7 +1197,7 @@ void ImImportDialog::begin() {
 
     if (ImGui::Button("Ok")) {
         uiSignal("ui_close_popup");
-        uiSignal("import_external_script", {{"ID", selected2}});
+        uiSignal("import_external_script", {{"IDs", selected2}});
     }
     ImGui::SameLine();
     if (ImGui::Button("Cancel")) uiSignal("ui_close_popup");
