@@ -44,6 +44,7 @@ class ImTreeview {
             Node(string ID, string tvID, string label, int options);
             Node* add(string childID, string child, int options);
             void setMenu(vector<pair<string, string>> menu);
+            void handleSelection(ImTreeview::Selection& selection, string node);
             bool render(ImTreeview::Selection& selection, int lvl = 0);
             void renderButton(ImTreeview::Selection& selection);
             void renderEditable(ImTreeview::Selection& selection);

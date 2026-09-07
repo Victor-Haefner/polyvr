@@ -9,22 +9,11 @@
 
 ImTreeview::ImTreeview(string ID) : ID(ID), root("", ID, "", 0) {
     auto mgr = OSG::VRGuiSignals::get();
-    mgr->addCallback("treeview_select", [&](OSG::VRGuiSignals::Options o){ if (o["treeview"] == this->ID) handleSelection(o["node"]); return true; } );
     mgr->addCallback("on_tv_node_rename", [&](OSG::VRGuiSignals::Options o){ if (o["treeview"] == this->ID) rename(o["node"], o["name"]); return true; } );
 
     selection.onDeselect = [&](string s) {
         if (nodes.count(s)) nodes[s]->isSelected = false;
     };
-}
-
-void ImTreeview::handleSelection(string node) {
-    ImGuiIO& io = ImGui::GetIO();
-    bool ShiftDown = io.KeyShift; // TODO, use it below!
-    bool CtrlDown = io.KeyCtrl;
-
-    if (CtrlDown) selection.add(node);
-    else selection.set(node);
-    nodes[node]->isSelected = true;
 }
 
 void ImTreeview::render() {
@@ -36,6 +25,16 @@ void ImTreeview::rename(string ID, string label) {
 }
 
 void ImTreeview::Node::setMenu(vector<pair<string, string>> m) { menu = m; }
+
+void ImTreeview::Node::handleSelection(ImTreeview::Selection& selection, string node) {
+    ImGuiIO& io = ImGui::GetIO();
+    bool ShiftDown = io.KeyShift; // TODO, use it below!
+    bool CtrlDown = io.KeyCtrl;
+
+    if (CtrlDown) selection.add(node);
+    else selection.set(node);
+    isSelected = true;
+}
 
 void ImTreeview::Node::renderMenu() {
     if (menu.size() == 0) return;
@@ -62,7 +61,8 @@ void ImTreeview::Node::renderButton(ImTreeview::Selection& selection) {
 
     if (ImGui::Button(idLbl.c_str())) {
         //isSelected = true;
-        //cout << "ImTreeview::Node::renderButton " << tvID << ", " << ID << ", " << label << endl;
+        //cout << "ImTreeview::Node::renderButton " << tvID << ", " << ID << ", " << label << ", N selected: " << selection.selected.size() << endl;
+        handleSelection(selection, ID);
         string sel = toString(selection.selected);
         uiSignal("treeview_select", {{"treeview",tvID}, {"node",ID}, {"selection",sel}});
     }
@@ -82,8 +82,11 @@ void ImTreeview::Node::renderEditable(ImTreeview::Selection& selection) {
         if (!input) input = new ImInput(ID+"_input", "", label, ImGuiInputTextFlags_EnterReturnsTrue);
         if (input->render(0)) {
             //cout << "ImTreeview::Node::renderEditable " << tvID << ", " << ID << endl;
+
+            handleSelection(selection, ID);
+            string sel = toString(selection.selected);
             uiSignal("treeview_rename", {{"treeview",tvID}, {"node",ID}, {"name",input->value}});
-            uiSignal("treeview_select", {{"treeview",tvID}, {"node",ID}});
+            uiSignal("treeview_select", {{"treeview",tvID}, {"node",ID}, {"selection",sel}});
         }
         renderMenu();
     }

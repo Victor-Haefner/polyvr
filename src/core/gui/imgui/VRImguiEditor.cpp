@@ -968,6 +968,7 @@ ImImportDialog::ImImportDialog() : ImDialog("import"), tree1("fileScriptsTree"),
 }
 
 void ImImportDialog::selectScript(string nodes, bool local) {
+    //cout << " select scripts to import " << nodes << endl;
     if (local) selected1 = nodes;
     else selected2 = nodes;
 }

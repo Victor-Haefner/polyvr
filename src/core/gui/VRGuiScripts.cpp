@@ -188,6 +188,7 @@ void VRGuiScripts::on_import_clicked(vector<string> names) {
     if (scene == 0) return;
 
     for (auto name : names) {
+        cout << " import script " << name << endl;
         if (import_scripts.count(name) == 0) continue;
         VRScriptPtr s = import_scripts[name];
         import_scripts.erase(name);
