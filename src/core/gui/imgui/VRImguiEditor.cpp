@@ -955,7 +955,34 @@ ImSearchDialog::ImSearchDialog() : ImDialog("search")
 }
 
 ImRecorderDialog::ImRecorderDialog() : ImDialog("recorder") {}
-ImImportDialog::ImImportDialog() : ImDialog("import") {}
+
+ImImportDialog::ImImportDialog() : ImDialog("import"), tree1("fileScriptsTree"), tree2("externScriptsTree") {
+    auto mgr = OSG::VRGuiSignals::get();
+    mgr->addCallback("import_scripts_clear", [&](OSG::VRGuiSignals::Options o){ clear(); return true; } );
+    mgr->addCallback("on_import_scripts_tree_append", [&](OSG::VRGuiSignals::Options o){ add(o["ID"], o["label"], o["parent"], toBool(o["local"])); return true; } );
+    mgr->addCallback("treeview_select", [&](OSG::VRGuiSignals::Options o) {
+            if(o["treeview"] == "fileScriptsTree")   selectScript(o["node"], true );
+            if(o["treeview"] == "externScriptsTree") selectScript(o["node"], false);
+            return true;
+        } );
+}
+
+void ImImportDialog::selectScript(string node, bool local) {
+    uiSignal("select_import_script", {{"ID", node}, {"local", toString(local)}});
+    if (local) selected1 = node;
+    else selected2 = node;
+}
+
+void ImImportDialog::clear() {
+    tree1.clear();
+    tree2.clear();
+}
+
+void ImImportDialog::add(string ID, string label, string parent, bool local) {
+    if (local) tree1.add(ID, label, 0, parent);
+    else       tree2.add(ID, label, 0, parent);
+}
+
 ImWebExportDialog::ImWebExportDialog() : ImDialog("webExport") {}
 
 ImProfDialog::ImProfDialog() : ImDialog("profiler") {
@@ -1148,7 +1175,33 @@ void ImProfDialog::begin() {
 
 void ImImportDialog::begin() {
     ImSection::begin();
-    centeredText("Import");
+    centeredText("Import scripts from other projects");
+
+    auto region1 = ImGui::GetContentRegionAvail();
+    auto region2 = ImGui::GetContentRegionAvail();
+    region1.x *= 0.5;
+    region2.x *= 0.5;
+    region1.y -= 50;
+    region2.y -= 50;
+
+    ImGui::BeginChild("fileScriptsTree", region1, false, ImGuiWindowFlags_None);
+    centeredText("File scripts");
+    tree1.render();
+    ImGui::EndChild();
+
+    ImGui::SameLine();
+    ImGui::BeginChild("externScriptsTree", region2, false, ImGuiWindowFlags_None);
+    centeredText("External scripts");
+    tree2.render();
+    ImGui::EndChild();
+
+
+    if (ImGui::Button("Ok")) {
+        uiSignal("ui_close_popup");
+        uiSignal("import_external_script", {{"ID", selected2}});
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("Cancel")) uiSignal("ui_close_popup");
 }
 
 void ImWebExportDialog::begin() {

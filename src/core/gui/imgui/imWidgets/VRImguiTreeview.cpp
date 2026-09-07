@@ -1,5 +1,6 @@
 #include "VRImguiTreeview.h"
 #include "VRImguiInput.h"
+#include "../VRImguiUtils.h"
 #include "core/gui/VRGuiManager.h"
 
 #include <iostream>
@@ -42,10 +43,23 @@ void ImTreeview::Node::renderMenu() {
 
 void ImTreeview::Node::renderButton() {
     string idLbl = label + "##" + ID;
+
+    if (isSelected) {
+		ImGui::PushStyleColor(ImGuiCol_Text, colorFromString("#FFFFFF"));
+		ImGui::PushStyleColor(ImGuiCol_Border, colorFromString("#66AAFF"));
+		ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 3);
+    }
+
     if (ImGui::Button(idLbl.c_str())) {
         //isSelected = true;
         //cout << "ImTreeview::Node::renderButton " << tvID << ", " << ID << ", " << label << endl;
         uiSignal("treeview_select", {{"treeview",tvID}, {"node",ID}});
+    }
+
+    if (isSelected) {
+		ImGui::PopStyleVar();
+		ImGui::PopStyleColor();
+		ImGui::PopStyleColor();
     }
 
     renderMenu();

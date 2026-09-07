@@ -42,13 +42,7 @@ class VRGuiScripts {
 	    VRDeviceCbPtr sceneChangedCb;
 	    string selected;
 
-        /*_GtkGrid* scriptImportWidget = 0;
-        _GtkTreeView* import_treeview1 = 0;
-        _GtkTreeView* import_treeview2 = 0;
-        _GtkListStore* import_liststore1;
-        _GtkListStore* import_liststore2;*/
         map<string, VRScriptPtr> import_scripts;
-        //vector<pair<VRScriptWeakPtr, _GtkTreeIter>> scriptRows;
 
         string docs_filter;
         map<int, group> groups;
@@ -63,7 +57,6 @@ class VRGuiScripts {
         void on_save_clicked();
         void on_exec_clicked();
         void on_del_clicked();
-        void on_import_clicked();
         void on_perf_toggled(bool b);
         void on_pause_toggled(bool b);
 
@@ -107,10 +100,8 @@ class VRGuiScripts {
         void on_argval_edited(string name, string new_val);
         void on_argtype_edited(string name, string new_type);
 
-        void on_diag_import_select_1();
-        void on_diag_import_select_2();
-        void on_diag_import_select();
-        void on_diag_import();
+        void on_import_project_selected(string path);
+        void on_import_clicked(string name);
 
         void on_find_diag_find_clicked(string search, string scope, string replace);
         void on_toggle_find_replace();

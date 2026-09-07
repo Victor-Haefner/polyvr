@@ -168,8 +168,17 @@ class ImTemplateDialog : public ImDialog {
 
 class ImImportDialog : public ImDialog {
     public:
+        ImTreeview tree1;
+        ImTreeview tree2;
+        string selected1;
+        string selected2;
+
         ImImportDialog();
         void begin() override;
+
+        void clear();
+        void add(string ID, string label, string parent, bool local);
+        void selectScript(string node, bool local);
 };
 
 class ImWebExportDialog : public ImDialog {

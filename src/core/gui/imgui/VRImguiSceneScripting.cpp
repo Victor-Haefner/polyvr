@@ -560,7 +560,17 @@ void ImScripting::render() {
         if (ImGui::Button("New")) uiSignal("scripts_toolbar_new");
         ImGui::SameLine(); if (ImGui::Button("Template")) uiSignal("ui_toggle_popup", {{"name","template"},{"title","Script Templates"}, {"width","800"}, {"height","600"}});
         ImGui::SameLine(); if (ImGui::Button("Group")) uiSignal("scripts_toolbar_group");
-        ImGui::SameLine(); if (ImGui::Button("Import")) uiSignal("ui_toggle_popup", {{"name","import"},{"title","Import Script"}, {"width","400"}, {"height","300"}});
+
+        ImGui::SameLine();
+
+        if (ImGui::Button("Import")) {
+            string filters = "PolyVR Project (.pvr .pvc){.pvr,.pvc,.xml}";
+            uiSignal("set_file_dialog_signal", {{"signal","script_import_clicked"}});
+            uiSignal("set_file_dialog_filter", {{"filter",filters}});
+            uiSignal("set_file_dialog_setup", {{"title","Choose project"}, {"dir","."}, {"file","myApp.pvr"}});
+            uiSignal("ui_toggle_popup", {{"name","file"},{"title","Choose project"}, {"width","600"}, {"height","500"}});
+        }
+
         ImGui::SameLine(); if (ImGui::Button("Delete")) uiSignal("askUser", {{"msg1","This will remove the selected script!"}, {"msg2","Are you sure?"}, {"sig","scripts_toolbar_delete"}});
 
         if (pause) pushGlowBorderStyle(1);
