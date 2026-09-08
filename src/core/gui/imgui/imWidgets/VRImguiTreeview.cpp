@@ -53,7 +53,9 @@ void ImTreeview::Node::renderMenu() {
 void ImTreeview::Node::renderButton(ImTreeview::Selection& selection) {
     string idLbl = label + "##" + ID;
 
+    bool styled = false;
     if (isSelected) {
+        styled = true;
 		ImGui::PushStyleColor(ImGuiCol_Text, colorFromString("#FFFFFF"));
 		ImGui::PushStyleColor(ImGuiCol_Border, colorFromString("#66AAFF"));
 		ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 3);
@@ -67,7 +69,7 @@ void ImTreeview::Node::renderButton(ImTreeview::Selection& selection) {
         uiSignal("treeview_select", {{"treeview",tvID}, {"node",ID}, {"selection",sel}});
     }
 
-    if (isSelected) {
+    if (styled) {
 		ImGui::PopStyleVar();
 		ImGui::PopStyleColor();
 		ImGui::PopStyleColor();
