@@ -621,10 +621,13 @@ void CEF::addMouse(VRDevicePtr dev, VRObjectPtr obj, int lb, int mb, int rb, int
 }
 
 void CEF::addKeyboard(VRDevicePtr dev) {
-    if (dev == 0) return;
+    if (!dev) return;
     if (!keyboard_dev_callback) keyboard_dev_callback = VRFunction<VRDeviceWeakPtr, bool>::create( "CEF::KR", bind(&CEF::keyboard, this, _1 ) );
-    dev->newSignal(-1, 0)->add( keyboard_dev_callback );
-    dev->newSignal(-1, 1)->add( keyboard_dev_callback );
+    VRKeyboardPtr keyboard = dynamic_pointer_cast<VRKeyboard>(dev);
+    if (!keyboard) return;
+    keyboard->newSignal(-1, 0)->add( keyboard_dev_callback );
+    keyboard->newSignal(-1, 1)->add( keyboard_dev_callback );
+    keyboards.push_back(keyboard);
 }
 
 void CEF::mouse_move(VRDeviceWeakPtr d) {
@@ -715,6 +718,20 @@ bool CEF::mouse(int lb, int mb, int rb, int wu, int wd, VRDeviceWeakPtr d) {
     int height = resolution/aspect;
 
     CefMouseEvent me;
+    VRKeyboardPtr keyboard;
+    for (auto kb : keyboards) {
+        keyboard = kb.lock();
+        if (keyboard) break;
+    }
+
+    if (keyboard) {
+#ifdef _WIN32
+        me.modifiers = GetCefStateModifiers(false, false, keyboard->ctrlDown() && !keyboard->altDown(), false, false, false, false);
+#else
+        me.modifiers = GetCefStateModifiers(keyboard->shiftDown(), keyboard->lockDown(), keyboard->ctrlDown(), keyboard->altDown(), false, false, false);
+#endif
+    }
+
     me.x = ins->texel[0]*width;
     me.y = ins->texel[1]*height;
 

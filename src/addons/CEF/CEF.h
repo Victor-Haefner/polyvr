@@ -5,6 +5,7 @@
 #include <OpenSG/OSGConfig.h>
 
 #include "core/utils/VRFunctionFwd.h"
+#include "core/utils/VRDeviceFwd.h"
 #include "core/objects/VRObjectFwd.h"
 #include "core/objects/material/VRMaterialFwd.h"
 
@@ -32,6 +33,7 @@ class CEF {
         int mX = -1;
         int mY = -1;
 
+        vector<VRKeyboardWeakPtr> keyboards;
         map<int, bool> blockedSignals;
 
         VRUpdateCbPtr update_callback;
