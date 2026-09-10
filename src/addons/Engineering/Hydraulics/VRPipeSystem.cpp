@@ -4726,6 +4726,8 @@ void VRPipeSystem::updateThermalDependencies(double dt) {
 }
 
 void VRPipeSystem::update() {
+    if (timeScale < 1e-5) return;
+
     int subSteps = 4;
     double dT = 1.0/60;
     dT *= timeScale;
