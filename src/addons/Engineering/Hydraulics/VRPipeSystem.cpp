@@ -634,12 +634,14 @@ VRMaterialPtr VRPipeSystem::setupMaterial() {
     m->setLineWidth(5);
     m->setLit(0);
     m->setFrontBackModes(GL_NONE, GL_FILL);
+    m->setZOffset(-1,-1);
     //m->setDepthTest(GL_ALWAYS);
 
     m->addPass();
     m->setPointSize(10);
     m->setLit(0);
     m->setFrontBackModes(GL_NONE, GL_FILL);
+    m->setZOffset(-1,-1);
     //m->setDepthTest(GL_ALWAYS);
 
     return m;

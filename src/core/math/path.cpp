@@ -272,6 +272,7 @@ float Path::getLength(int i, int j) {
     if (j <= i) j = size()-1;
     if (degree == 3) {
         for (int k=i; k<j; k++) {
+            if (k+1 >= points.size()) break;
             auto p1 = points[k]->pos();
             auto p2 = points[k+1]->pos();
             l += (p2-p1).length();
@@ -279,6 +280,7 @@ float Path::getLength(int i, int j) {
     }
     if (degree == 2) {
         for (int k=i; k<j; k+=2) {
+            if (k+2 >= points.size()) break;
             auto p1 = points[k]->pos();
             auto p2 = points[k+2]->pos();
             l += (p2-p1).length();
@@ -457,13 +459,19 @@ void Path::rebaseIndices(int& i, int& j, float& t) {
     if (t >= 1) t = 1; // clamp t
     if (direction == -1) t = 1-t;
 
-    if (j <= 0) j = positions.size()-1;
-    else j *= (iterations-1);
-    i *= (iterations-1);
+    size_t N = points.size();
+    if (N == 0) return;
+
+    if (i < 0) i += N;
+    if (j < 0) j += N;
+    if (j == 0 || j >= N) j = N-1;
 }
 
 Vec3d Path::interp(vector<Vec3d>& vec, float t, int i, int j, bool verbose) {
     rebaseIndices(i,j,t);
+    j *= (iterations-1);
+    i *= (iterations-1);
+
     int N = j-i;
     if (N < 0) return Vec3d();
 
