@@ -164,8 +164,17 @@ bool VRPyBase::pyListToVector(PyObject* o, T& vec) {
 }
 
 template<class T>
+void initCppMembers(VRPyBaseT<T>* self) {
+    if (!self) return;
+    self->obj = nullptr;
+    new (&self->objPtr) std::shared_ptr<T>();
+    self->owner = true;
+}
+
+template<class T>
 PyObject* VRPyBaseT<T>::fromObject(T obj) {
-    VRPyBaseT<T> *self = (VRPyBaseT<T> *)allocatePyObject(typeRef, VRPyBaseT<T>::typeBases);
+    VRPyBaseT<T>* self = (VRPyBaseT<T> *)allocatePyObject(typeRef, VRPyBaseT<T>::typeBases);
+    initCppMembers(self);
     if (self == NULL) Py_RETURN_NONE;
     T* optr = new T(obj);
     self->objPtr = std::shared_ptr<T>( optr );
@@ -176,6 +185,7 @@ PyObject* VRPyBaseT<T>::fromObject(T obj) {
 template<class T>
 PyObject* VRPyBaseT<T>::fromPtr(T* obj) {
     VRPyBaseT<T> *self = (VRPyBaseT<T> *)allocatePyObject(typeRef, VRPyBaseT<T>::typeBases);
+    initCppMembers(self);
     if (self == NULL) Py_RETURN_NONE;
     self->obj = obj;
     self->owner = false;
@@ -190,6 +200,7 @@ PyObject* VRPyBaseT<T>::fromSharedPtr(std::shared_ptr<T> obj) {
         Py_RETURN_NONE;
     }
     VRPyBaseT<T> *self = (VRPyBaseT<T> *)allocatePyObject(typeRef, VRPyBaseT<T>::typeBases);
+    initCppMembers(self);
     if (self == NULL) {
         cout << "VRPyBase::fromSharedPtr for type " << typeName<T>(&obj) << " failed because of failed type alloc" << endl;
         Py_RETURN_NONE;
@@ -223,6 +234,7 @@ bool VRPyBaseT<T>::parse(PyObject *args, std::shared_ptr<T>* obj) {
 template<class T>
 PyObject* VRPyBaseT<T>::allocPtr(PyTypeObject* type, std::shared_ptr<T> t) {
     VRPyBaseT<T>* self = (VRPyBaseT<T> *)allocatePyObject(type, VRPyBaseT<T>::typeBases);
+    initCppMembers(self);
     if (self != NULL) {
         self->owner = true;
         self->objPtr = t;
@@ -268,6 +280,7 @@ void VRPyBaseT<T>::dealloc(VRPyBaseT<T>* self) {
     //cout << "VRPyBaseT<T>::dealloc " << self << " " << self->obj << " " << self->objPtr << " " << typeRef->tp_name << endl;
     //if (self->owner && self->obj != 0) delete self->obj; // TOCHECK
     if (self->objPtr) self->objPtr = 0;
+    self->objPtr.~shared_ptr<T>();
     Py_TYPE(self)->tp_free((PyObject*)self);
 }
 
