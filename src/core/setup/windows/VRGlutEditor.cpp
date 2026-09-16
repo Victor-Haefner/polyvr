@@ -68,7 +68,7 @@ VRGlutEditor::VRGlutEditor() {
     initGlut();
 
     cout << " Glut create editor" << endl;
-    winTop = GlutWindow::create("PolyVR", 0, 0, -1, -1);
+    winTop = GlutWindow::create("PolyVR", -1, -1, -1, -1); // -1 lets the window manager decide, important for multiple screens
     glutEditors[winTop->winID] = this;
     winTop->setCloseCb( [this](){ on_close_window(); } );
     winTop->setReshapeCb( [this](int x, int y){ on_resize_window(x,y); } );
