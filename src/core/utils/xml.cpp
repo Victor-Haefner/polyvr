@@ -196,7 +196,7 @@ void XML::read(string path, bool validate) {
     if (isHTML()) doc = htmlParseFile(path.c_str(), NULL);
     else doc = xmlParseFile(path.c_str());
     xmlNodePtr xmlRoot = xmlDocGetRootElement(doc);
-    root = XMLElement::create(xmlRoot);
+    if (xmlRoot) root = XMLElement::create(xmlRoot);
 }
 
 void XML::parse(string data, bool validate) {
@@ -204,7 +204,7 @@ void XML::parse(string data, bool validate) {
     // parser.set_validate(false); // TODO!
     doc = xmlParseMemory(data.c_str(), data.size());
     xmlNodePtr xmlRoot = xmlDocGetRootElement(doc);
-    root = XMLElement::create(xmlRoot);
+    if (xmlRoot) root = XMLElement::create(xmlRoot);
 }
 
 XMLElementPtr XML::getRoot() { return root; }
