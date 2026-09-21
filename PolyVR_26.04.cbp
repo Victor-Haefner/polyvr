@@ -392,7 +392,6 @@
 			<Add option="-lICE" />
 			<Add option="-lX11" />
 			<Add option="-lXext" />
-			<Add option="-lstb" />
 			<Add option="-lXmu" />
 			<Add option="-lXi" />
 			<Add option="-lrt" />
@@ -1148,6 +1147,21 @@
 			<Option target="PVR-Addons-d" />
 		</Unit>
 		<Unit filename="src/addons/Gui/VRGui.h">
+			<Option target="PVR-Addons-d" />
+		</Unit>
+		<Unit filename="src/addons/LLM/VRLLM.cpp">
+			<Option target="PVR-Addons-d" />
+		</Unit>
+		<Unit filename="src/addons/LLM/VRLLM.h">
+			<Option target="PVR-Addons-d" />
+		</Unit>
+		<Unit filename="src/addons/LLM/VRLLMFwd.h">
+			<Option target="PVR-Addons-d" />
+		</Unit>
+		<Unit filename="src/addons/LLM/VRPyLLM.cpp">
+			<Option target="PVR-Addons-d" />
+		</Unit>
+		<Unit filename="src/addons/LLM/VRPyLLM.h">
 			<Option target="PVR-Addons-d" />
 		</Unit>
 		<Unit filename="src/addons/LeapMotion/VRHandGeo.cpp">

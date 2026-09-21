@@ -89,6 +89,7 @@
 #include "addons/Algorithms/VRPyGraphLayout.h"
 #include "addons/Algorithms/VRPyPathFinding.h"
 #include "addons/CaveKeeper/VRPyCaveKeeper.h"
+#include "addons/LLM/VRPyLLM.h"
 #include "addons/Engineering/Factory/VRPyFactory.h"
 #include "addons/Engineering/Factory/VRPyLogistics.h"
 #include "addons/Engineering/Factory/VRPyProduction.h"
@@ -288,6 +289,7 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPyRocketExhaust>("RocketExhaust", pModVR, VRPyGeometry::typeRef);
     sm->registerModule<VRPySpaceMission>("SpaceMission", pModVR);
     sm->registerModule<VRPyOrbit>("Orbit", pModVR);
+    sm->registerModule<VRPyLLM>("LLM", pModVR);
     sm->registerModule<VRPyMillingMachine>("MillingMachine", pModVR);
     sm->registerModule<VRPyMillingWorkPiece>("MillingWorkPiece", pModVR, VRPyGeometry::typeRef);
     sm->registerModule<VRPyMillingCuttingToolProfile>("MillingCuttingToolProfile", pModVR);
