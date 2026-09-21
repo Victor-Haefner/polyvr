@@ -22,6 +22,7 @@ class VRLLM : public enable_shared_from_this<VRLLM> {
             string ID;
             size_t createdAt = 0;
             bool ready = false;
+            string queuedRequest;
 
             Conversation() {}
             Conversation(string n) : name(n) {}

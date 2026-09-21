@@ -56,7 +56,10 @@ void VRLLM::processResponse(VRRestResponsePtr r) {
             conv.ID = data["id"];
             conv.createdAt = toLong(data["created_at"]);
             conv.ready = true;
-            cout << "  ..conversation ready " << conv.name << endl;
+
+            if (conv.queuedRequest != "") {
+                sendRequest(conv.queuedRequest, conv.name);
+            }
         }
     }
 }
@@ -86,7 +89,7 @@ void VRLLM::startConversation(const string& conv) {
 }
 
 string VRLLM::convertEffort(const string& effort, const string& model) {
-    cout << "convertEffort " << effort << ", " << model << endl;
+
     if (model == "gpt-5-nano") {
         cout << " A " << endl;
         if (effort == "fast") return "minimal";
@@ -109,15 +112,14 @@ void VRLLM::sendRequest(string req, string conv, string effort) {
 
     if (conv != "") {
         if (!conversations.count(conv)) {
-            cout << "unknown conversation, start new " << conv << endl;
             conversations[conv] = Conversation(conv);
+            conversations[conv].queuedRequest = req;
             startConversation(conv);
-            return; // TODO: add request to queue
+            return;
         }
 
         con = &conversations[conv];
-        cout << "conversation ready? " << con->ready << endl;
-        if (!con->ready) return; // TODO: add request to queue
+        if (!con->ready) return;
     }
 
     effort = convertEffort(effort, model);
