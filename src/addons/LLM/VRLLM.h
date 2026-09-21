@@ -28,6 +28,26 @@ class VRLLM : public enable_shared_from_this<VRLLM> {
             Conversation(string n) : name(n) {}
         };
 
+        struct File {
+            string name;
+            string ID;
+            size_t createdAt = 0;
+            bool ready = false;
+        };
+
+        struct Store {
+            string name;
+            string ID;
+            size_t createdAt = 0;
+            bool ready = false;
+            string queuedRequest;
+
+            vector<File> files;
+
+            Store() {}
+            Store(string n) : name(n) {}
+        };
+
 	private:
 	    VRRestClientPtr cli;
 	    string apiKey;
@@ -35,14 +55,18 @@ class VRLLM : public enable_shared_from_this<VRLLM> {
 	    VRMessageCbPtr cb;
 	    VRRestCbPtr restCb;
 
+	    map<string, Store> stores;
 	    map<string, Conversation> conversations;
 
-	    void send(const string& uri, const Json::Value& data);
+	    void send(const string& uri, const Json::Value& data, VRRestCbPtr cb = 0);
 	    map<string, string> parseJsonMap(const string& data);
-        void startConversation(const string& conv);
-	    void processResponse(VRRestResponsePtr r);
-
 	    string convertEffort(const string& effort, const string& model);
+	    void processResponse(VRRestResponsePtr r);
+	    void processFileUpload(string store, VRRestResponsePtr r);
+
+        void setupVectorStore(const string& store, VRRestCbPtr cb);
+        void addStoreFile(const string& store, const string& filename, const string& data);
+        void startConversation(const string& conv);
 
 	public:
 		VRLLM();
@@ -53,6 +77,7 @@ class VRLLM : public enable_shared_from_this<VRLLM> {
 
 		void setApiKey(string s);
 		void setModel(string s);
+		void sendPyAPI();
 		void sendRequest(string req, string conv, string effort = "fast");
 		void setCallback(VRMessageCbPtr cb);
 };
