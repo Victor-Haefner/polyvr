@@ -43,6 +43,7 @@ class VRLLM : public enable_shared_from_this<VRLLM> {
             string queuedRequest;
 
             vector<File> files;
+            vector<string> hostEntries;
 
             Store() {}
             Store(string n) : name(n) {}
@@ -69,6 +70,7 @@ class VRLLM : public enable_shared_from_this<VRLLM> {
 	    void setupKnowledgeAssets();
 	    void deleteFile(const string& id);
 	    void deleteStore(const string& id);
+	    void deleteFileEntry(const string& store, const string& id);
         void setupFile(const string& store, const string& file, const string& content);
         void setupVectorStore(const string& store, function<void(void)>& cb);
         void startConversation(const string& conv);

@@ -287,6 +287,13 @@ void VRLLM::deleteFile(const string& id) {
     cli->deleteAsync(uri, restCb, 30, headers);
 }
 
+void VRLLM::deleteFileEntry(const string& store, const string& id) {
+    if (apiKey.empty() || store.empty() || id.empty()) return;
+    vector<string> headers = { "Authorization: Bearer " + apiKey };
+    string uri = "https://api.openai.com/v1/vector_stores/" + store + "/files/" + id;
+    cli->deleteAsync(uri, restCb, 30, headers);
+}
+
 void VRLLM::setupFile(const string& store, const string& filename, const string& content) {
     if (apiKey == "") return;
 
@@ -369,6 +376,12 @@ void VRLLM::sendPyAPI() {
         string s = r->getData();
         cout << "LLM files status response: " << s << endl;
 
+        auto& store = stores[storeName];
+        if (store.ID.empty()) {
+            cout << "Error in processFileUpload: store " << storeName << ", ID is empty!" << endl;
+            return;
+        }
+
         Json::Value data;
         Json::Reader reader;
         if (!reader.parse(s, data)) return;
@@ -381,17 +394,17 @@ void VRLLM::sendPyAPI() {
         };
 
         map<string, vector<FileStatus>> filesStatus;
-        for (const auto& store : data["data"]) {
-            string filename = store["filename"].asString();
+        for (const auto& file : data["data"]) {
+            string filename = file["filename"].asString();
             if (filename.size() < 6) continue;
             string name = subString(filename, 0, -5);
             if (!knowledgeAssets.count(name)) continue;
 
             FileStatus fstat;
-            fstat.ID = store["id"].asString();
+            fstat.ID = file["id"].asString();
             fstat.filename = filename;
-            fstat.bytes = store["bytes"].asInt64();
-            fstat.createdAt = store["created_at"].asInt64();
+            fstat.bytes = file["bytes"].asInt64();
+            fstat.createdAt = file["created_at"].asInt64();
             filesStatus[name].push_back( fstat );
         }
 
@@ -420,11 +433,6 @@ void VRLLM::sendPyAPI() {
             if (keepID.empty()) needsReupload = true;
             else {
                 cout << " .. keep file " << keepID << endl;
-                auto& store = stores[storeName];
-                if (store.ID.empty()) {
-                    cout << "Error in processFileUpload: store " << storeName << ", ID is empty!" << endl;
-                    return;
-                }
 
                 VRLLM::File f;
                 f.name = keepFS.filename;
@@ -433,20 +441,48 @@ void VRLLM::sendPyAPI() {
                 f.ready = true;
                 store.files.push_back(f);
 
-                Json::Value data2;
-                data2["file_id"] = f.ID;
-                string uri = "https://api.openai.com/v1/vector_stores/"+store.ID+"/files";
-                send(uri, data2);
+                bool hasEntry = find( store.hostEntries.begin(), store.hostEntries.end(), f.ID ) != store.hostEntries.end();
+                if (!hasEntry) {
+                    Json::Value data2;
+                    data2["file_id"] = f.ID;
+                    string uri = "https://api.openai.com/v1/vector_stores/"+store.ID+"/files";
+                    send(uri, data2);
+                }
             }
 
             if (needsReupload) { setupFile(storeName, a.first+".txt", a.second); continue; }
         }
 
         for (const auto& id : removeIDs) deleteFile(id);
+
+        for (auto& fe : store.hostEntries) {
+            bool doRemove = true;
+            for (auto f : store.files) if (f.ID == fe) doRemove = false;
+            if (doRemove) deleteFileEntry(store.ID, fe);
+        }
     }, placeholders::_1) );
 
-    function<void(void)> onStoreReady = [this, onFilesStatus]() {
+    auto onFileEntriesStatus = VRRestCb::create( "onFileEntriesStatus", bind([this, storeName, onFilesStatus](VRRestResponsePtr r) {
+        string s = r->getData();
+        cout << "LLM file store entries: " << s << endl;
+
+        Json::Value data;
+        Json::Reader reader;
+        if (!reader.parse(s, data)) return;
+
+        auto& store = stores[storeName];
+        for (const auto& fe : data["data"]) {
+            string ID = fe["id"].asString();
+            store.hostEntries.push_back(ID);
+        }
+
         get("https://api.openai.com/v1/files", onFilesStatus);
+    }, placeholders::_1) );
+
+    function<void(void)> onStoreReady = [this, storeName, onFileEntriesStatus]() {
+        string storeID = stores[storeName].ID;
+        get("https://api.openai.com/v1/vector_stores/"+storeID+"/files", onFileEntriesStatus);
+        //get("https://api.openai.com/v1/files", onFilesStatus);
     };
 
     setupVectorStore(storeName, onStoreReady);
