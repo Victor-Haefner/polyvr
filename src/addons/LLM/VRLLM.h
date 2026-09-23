@@ -55,17 +55,22 @@ class VRLLM : public enable_shared_from_this<VRLLM> {
 	    VRMessageCbPtr cb;
 	    VRRestCbPtr restCb;
 
+	    map<string,string> knowledgeAssets;
 	    map<string, Store> stores;
 	    map<string, Conversation> conversations;
 
+	    void get(const string& uri, VRRestCbPtr cb = 0);
 	    void send(const string& uri, const Json::Value& data, VRRestCbPtr cb = 0);
 	    map<string, string> parseJsonMap(const string& data);
 	    string convertEffort(const string& effort, const string& model);
 	    void processResponse(VRRestResponsePtr r);
 	    void processFileUpload(string store, VRRestResponsePtr r);
 
-        void setupVectorStore(const string& store, VRRestCbPtr cb);
-        void addStoreFile(const string& store, const string& filename, const string& data);
+	    void setupKnowledgeAssets();
+	    void deleteFile(const string& id);
+	    void deleteStore(const string& id);
+        void setupFile(const string& store, const string& file, const string& content);
+        void setupVectorStore(const string& store, function<void(void)>& cb);
         void startConversation(const string& conv);
 
 	public:
@@ -77,9 +82,10 @@ class VRLLM : public enable_shared_from_this<VRLLM> {
 
 		void setApiKey(string s);
 		void setModel(string s);
+		void setCallback(VRMessageCbPtr cb);
+
 		void sendPyAPI();
 		void sendRequest(string req, string conv, string effort = "fast");
-		void setCallback(VRMessageCbPtr cb);
 };
 
 OSG_END_NAMESPACE;

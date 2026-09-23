@@ -325,6 +325,68 @@ void VRRestClient::postFormAsync(string uri, VRRestCbPtr cb, const vector<map<st
 #endif
 }
 
+VRRestResponsePtr VRRestClient::del( string uri, int timeoutSecs, vector<string> headers ) {
+    auto res = VRRestResponse::create();
+
+#ifndef __EMSCRIPTEN__
+    auto curl = curl_easy_init();
+    if (!curl) return res;
+
+    curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "DELETE");
+    curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
+
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, res.get());
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &getRespData);
+
+    curl_easy_setopt(curl, CURLOPT_HEADERDATA, res.get());
+    curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, &getRespHeaders);
+
+    curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, timeoutSecs);
+    curl_easy_setopt(curl, CURLOPT_TIMEOUT, timeoutSecs);
+    curl_easy_setopt(curl, CURLOPT_URL, uri.c_str());
+
+    setupHeaders(curl, headers);
+    res->setHeaders({});
+
+    CURLcode c = curl_easy_perform(curl);
+    if (c != CURLE_OK) fprintf(stderr, "VRRestClient::del failed: %s, request was: %s\n", curl_easy_strerror(c), uri.c_str());
+
+    long status = 0;
+    curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &status);
+    res->setStatus(status);
+
+    curl_easy_cleanup(curl);
+#endif
+
+    return res;
+}
+
+void VRRestClient::deleteAsync(string uri, VRRestCbPtr cb, int timeoutSecs, vector<string> headers) {
+#ifdef __EMSCRIPTEN__
+    auto res = del(uri, timeoutSecs);
+    VRRestClientWeakPtr wCli = ptr();
+    auto fkt = VRUpdateCb::create("deleteAsync-finish", bind(&VRRestClient::finishAsync, wCli, cb, res));
+    auto s = VRScene::getCurrent();
+    if (s) s->queueJob(fkt);
+#else
+    auto job = [&](string uri, VRRestCbPtr cb, int timeoutSecs, vector<string> headers) -> void { // executed in async thread
+        auto res = del(uri, timeoutSecs, headers);
+        if (cb) {
+            VRRestClientWeakPtr wCli = ptr();
+            auto fkt = VRUpdateCb::create("deleteAsync-finish", bind(&VRRestClient::finishAsync, wCli, cb, res));
+            auto s = VRScene::getCurrent();
+            if (s) s->queueJob(fkt);
+        }
+    };
+
+    future<void> f = async(launch::async, job, uri, cb, timeoutSecs, headers);
+    VRLock lock(VRRestClientMtx);
+    auto p = shared_ptr<RestPromise>(new RestPromise() );
+    p->f = move(f);
+    promises.push_back( p );
+#endif
+}
+
 void VRRestClient::finishAsync(VRRestClientWeakPtr self, VRRestCbPtr cb, VRRestResponsePtr res) { // executed in main thread
     auto cli = self.lock();
     if (!cli) return;

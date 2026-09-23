@@ -33,10 +33,14 @@ class VRRestClient : public VRNetworkClient {
 
 		VRRestResponsePtr get(string uri, int timeoutSecs = 2, vector<string> headers = {});
 		void getAsync(string uri, VRRestCbPtr cb, int timeoutSecs = 2, vector<string> headers = {});
+
 		VRRestResponsePtr post(string uri, const string& data, int timeoutSecs = 2, vector<string> headers = {});
 		VRRestResponsePtr postForm(string uri, const vector<map<string,string>>& data, int timeoutSecs = 2, vector<string> headers = {});
 		void postAsync(string uri, VRRestCbPtr cb, const string& data, int timeoutSecs = 2, vector<string> headers = {});
 		void postFormAsync(string uri, VRRestCbPtr cb, const vector<map<string,string>>& data, int timeoutSecs = 2, vector<string> headers = {});
+
+		VRRestResponsePtr del(string uri, int timeoutSecs = 2, vector<string> headers = {});
+		void deleteAsync(string uri, VRRestCbPtr cb, int timeoutSecs = 2, vector<string> headers = {});
 
 		void connect(string uri, int timeoutSecs = 2);
 		void connectPort(string uri, int port, int timeoutSecs = 2);
