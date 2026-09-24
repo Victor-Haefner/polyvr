@@ -23,7 +23,8 @@ VRLLMPtr VRLLM::ptr() { return static_pointer_cast<VRLLM>(shared_from_this()); }
 
 void VRLLM::setApiKey(string s) { apiKey = s; }
 void VRLLM::setModel(string s) { model = s; }
-void VRLLM::setCallback(VRMessageCbPtr c) { cb = c; }
+void VRLLM::setMsgCallback(VRMessageCbPtr c) { usrMsgCb = c; }
+void VRLLM::setRestCallback(VRMessageCbPtr c) { usrRestCb = c; }
 
 void VRLLM::setupKnowledgeAssets() {
     auto scene = VRScene::getCurrent();
@@ -125,31 +126,45 @@ map<string, string> VRLLM::parseJsonMap(const string& data) {
 void VRLLM::processResponse(VRRestResponsePtr r) {
     string s = r->getData();
     cout << "LLM response: " << s << endl;
-    if (cb) (*cb)(s);
+    if (usrRestCb) (*usrRestCb)(s);
 
-    auto data = parseJsonMap(s);
-    if (data.count("object")) {
-        auto obj = data["object"];
-        cout << " ..is object " << obj << endl;
+    Json::Value data;
+    Json::Reader reader;
+    if (!reader.parse(s, data)) return;
+
+    if (data.isMember("output") && usrMsgCb) {
+        for (const auto& o : data["output"]) {
+            if (!o.isMember("content")) continue;
+            if (o["type"].asString() != "message") continue;
+
+            for (const auto& c : o["content"]) {
+                if (c["type"].asString() != "output_text") continue;
+                if (c.isMember("text")) (*usrMsgCb)(c["text"].asString());
+            }
+        }
+    }
+
+    if (data.isMember("object")) {
+        auto obj = data["object"].asString();
 
         if (obj == "conversation") {
-            auto metadata = parseJsonMap(data["metadata"]);
-            string name = metadata["name"];
+            string name = data["metadata"]["name"].asString();
             auto& conv = conversations[name];
-            conv.ID = data["id"];
-            conv.createdAt = toLong(data["created_at"]);
+            conv.ID = data["id"].asString();
+            conv.createdAt = data["created_at"].asInt64();
             conv.ready = true;
 
-            if (conv.queuedRequest != "") {
+            if (!conv.queuedRequest.empty()) {
                 sendRequest(conv.queuedRequest, conv.name);
+                conv.queuedRequest = "";
             }
         }
 
         if (obj == "vector_store") {
-            string name = data["name"];
+            string name = data["name"].asString();
             auto& store = stores[name];
-            store.ID = data["id"];
-            store.createdAt = toLong(data["created_at"]);
+            store.ID = data["id"].asString();
+            store.createdAt = data["created_at"].asInt64();
             store.ready = true;
         }
     }

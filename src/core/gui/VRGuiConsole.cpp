@@ -3,6 +3,7 @@
 #include "core/utils/VRFunction.h"
 #include "core/utils/VRMutex.h"
 #include "core/utils/toString.h"
+#include "addons/LLM/VRLLM.h"
 
 using namespace OSG;
 
@@ -13,7 +14,6 @@ VRConsoleWidget::message::message(string m, string s, VRMessageCbPtr l, int i) :
 VRConsoleWidget::VRConsoleWidget() {
     notifyColor = "#00aaff";
     ID = VRGuiManager::genUUID();
-    uiSignal("newConsole", {{"ID",ID}, {"color",notifyColor}});
 
     auto sigs = OSG::VRGuiSignals::get();
     sigs->addCallback("clickConsole", [&](OSG::VRGuiSignals::Options o) { if (o["ID"] == ID) on_link_activate( o["mark"] ); return true; }, true );
@@ -28,6 +28,10 @@ VRConsoleWidget::~VRConsoleWidget() {}
 
 VRConsoleWidgetPtr VRConsoleWidget::get(string name) {
     return VRGuiManager::get()->getConsole(name);
+}
+
+void VRConsoleWidget::setup() {
+    uiSignal("newConsole", {{"ID",ID}, {"color",notifyColor}});
 }
 
 void VRConsoleWidget::write(string msg, string style, VRMessageCbPtr link, int sourceID) {
@@ -148,9 +152,54 @@ void VRConsoleWidget::forward() { // TODO
 
 
 
-VRAIConsoleWidget::VRAIConsoleWidget() {}
+VRAIConsoleWidget::VRAIConsoleWidget() {
+    llm = VRLLM::create();
+
+    onMsgCb = VRMessageCb::create("ai_console_onMsgCb", bind(&VRAIConsoleWidget::onMessage, this, placeholders::_1));
+    llm->setMsgCallback(onMsgCb);
+
+    auto mgr = OSG::VRGuiSignals::get();
+    //mgr->addCallback("clickConsole", [&](OSG::VRGuiSignals::Options o) { if (o["ID"] == ID) on_link_activate( o["mark"] ); return true; }, true );
+
+    mgr->addCallback("current_ai_config", [&](OSG::VRGuiSignals::Options o) { getKey(o["key"]); model = o["model"]; effort = o["effort"]; return true; }, true );
+    mgr->addCallback("ai_dialog_setKey", [&](OSG::VRGuiSignals::Options o) { getKey(o["key"]); return true; }, true );
+    mgr->addCallback("ai_model_switch", [&](OSG::VRGuiSignals::Options o) { model = o["selection"]; return true; }, true );
+    mgr->addCallback("ai_effort_switch", [&](OSG::VRGuiSignals::Options o) { effort = o["selection"]; return true; }, true );
+
+    mgr->addCallback("on_ai_console_connect", [&](OSG::VRGuiSignals::Options o) { connect(); return true; }, true );
+    mgr->addCallback("on_ai_console_run", [&](OSG::VRGuiSignals::Options o) { sendQuery(o["query"]); return true; }, true );
+
+    uiSignal("newAIConsole", {{"ID",ID}, {"color",notifyColor}});
+    uiSignal("ai_diag_get_config");
+}
+
 VRAIConsoleWidget::~VRAIConsoleWidget() {}
 
+void VRAIConsoleWidget::getKey(string keyVar) {
+    const char* _key = std::getenv( keyVar.c_str() );
+    if (_key) key = _key;
+}
+
+void VRAIConsoleWidget::connect() {
+    if (key.empty()) return;
+
+    llm->setApiKey(key);
+    llm->setModel(model);
+    llm->sendPyAPI();
+
+    ready = true;
+}
+
+void VRAIConsoleWidget::sendQuery(string q) {
+    if (!ready) return;
+    string conversation = "singleConversation";
+    llm->sendRequest(q, conversation, effort);
+    uiSignal("ai_console_append", {{"msg",q}, {"role","user"}});
+}
+
+void VRAIConsoleWidget::onMessage(string m) {
+    uiSignal("ai_console_append", {{"msg",m}, {"role","llm"}});
+}
 
 
 

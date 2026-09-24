@@ -4,6 +4,7 @@
 #include "VRImguiUtils.h"
 #include "imEditor/TextEditor.h"
 #include "imWidgets/VRImguiCombo.h"
+#include "imWidgets/VRImguiInput.h"
 
 using namespace std;
 
@@ -52,20 +53,33 @@ class ImConsole {
         map<size_t, Attributes> attributes;
         unsigned int color = 0;
 
-        ImConsole() {}
         ImConsole(string ID);
         void push(string data, string style, string mark);
-        void render();
+        virtual void render();
         void clear();
         void pause(bool b);
         void setTheme(string theme);
 };
 
+class ImAIConsole : public ImConsole {
+    public:
+        string query;
+        ImInput queryInput;
+
+        ImAIConsole(string ID);
+
+        virtual void render() override;
+        void append(string m, string r);
+};
+
+ptrFwd( ImConsole );
+ptrFwd( ImAIConsole );
+
 class ImConsoles : public ImWidget {
     private:
         ImViewControls viewControls;
         vector<string> consolesOrder;
-        map<string,ImConsole> consoles;
+        map<string,ImConsolePtr> consoles;
 
         string theme = "dark";
         bool paused = false;
@@ -75,6 +89,7 @@ class ImConsoles : public ImWidget {
     public:
 
         void newConsole(string ID, string color);
+        void newAIConsole(string ID, string color);
         void clearConsole(string ID);
         void setupConsole(string ID, string name);
         void pushConsole(string ID, string data, string style, string mark);

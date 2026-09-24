@@ -7,6 +7,7 @@
 
 #include "core/utils/VRFunctionFwd.h"
 #include "core/utils/VRDeviceFwd.h"
+#include "addons/LLM/VRLLMFwd.h"
 #include "VRGuiFwd.h"
 
 
@@ -25,7 +26,7 @@ class VRConsoleWidget {
             message(string m, string s, VRMessageCbPtr l, int i);
         };
 
-    private:
+    protected:
         string ID;
         string buffer;
         map<string, string> styles;
@@ -46,6 +47,7 @@ class VRConsoleWidget {
         static VRConsoleWidgetPtr get(string name);
         string getWindow();
 
+        void setup();
         void clear();
         void pause();
         void setLabel(string lbl);
@@ -57,10 +59,25 @@ class VRConsoleWidget {
 };
 
 class VRAIConsoleWidget : public VRConsoleWidget {
+    private:
+        bool ready = false;
+
+        string key;
+        string model;
+        string effort;
+
+        VRMessageCbPtr onMsgCb;
+        VRLLMPtr llm;
+
+        void onMessage(string m);
 
     public:
         VRAIConsoleWidget();
         ~VRAIConsoleWidget();
+
+        void connect();
+        void getKey(string keyVar);
+        void sendQuery(string q);
 };
 
 OSG_END_NAMESPACE;

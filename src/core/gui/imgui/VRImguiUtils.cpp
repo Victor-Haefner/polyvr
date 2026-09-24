@@ -3,6 +3,7 @@
 #include <iostream>
 #include <math.h>
 
+#include "core/utils/xml.h"
 #include "core/utils/system/VRSystem.h"
 #include "core/tools/VRProjectManager.h"
 #include "core/objects/material/VRTexture.h"
@@ -91,12 +92,14 @@ ImVec4 colorFromString(const string& c) {
     return ImVec4(255,255,255,255);
 }
 
-#include "core/utils/xml.h"
-
 map<string, string> uiParameterStore;
 string uiParameterFile;
+bool uiParameterStoreReady = false;
 
 void uiInitStore() {
+    if (uiParameterStoreReady) return;
+    uiParameterStoreReady = true;
+
     uiParameterFile = absolute(".uiParameter.ini");
     OSG::XML xml;
     xml.read(uiParameterFile, false);
@@ -111,6 +114,8 @@ void uiInitStore() {
 }
 
 void uiStoreParameter(string name, string value) {
+    if (!uiParameterStoreReady) uiInitStore();
+
     uiParameterStore[name] = value;
 
     OSG::XML xml;
@@ -128,6 +133,7 @@ void uiCloseStore() {
 }
 
 string uiGetParameter(string name, string def) {
+    if (!uiParameterStoreReady) uiInitStore();
     if (uiParameterStore.count(name)) return uiParameterStore[name];
     else return def;
 }

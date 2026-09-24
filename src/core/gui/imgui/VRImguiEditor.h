@@ -9,6 +9,7 @@
 #include "core/utils/VRUtilsFwd.h"
 #include "VRImguiUtils.h"
 #include "imWidgets/VRImguiInput.h"
+#include "imWidgets/VRImguiCombo.h"
 #include "imWidgets/VRImguiTreeview.h"
 #include <imgui.h>
 #include <core/utils/VRFwdDeclTemplate.h>
@@ -150,6 +151,20 @@ class ImProfDialog : public ImDialog {
         void begin() override;
 };
 
+class ImAIConfigDialog : public ImDialog {
+    private:
+        ImInput keyInput;
+        string keyStatus;
+        ImCombo modelCombo;
+        ImCombo effortCombo;
+
+        void sendConfig();
+
+    public:
+        ImAIConfigDialog();
+        void begin() override;
+};
+
 class ImTemplateDialog : public ImDialog {
     public:
         bool initiated = false;
@@ -208,6 +223,7 @@ class VRImguiEditor {
         ImImportDialog importDialog = ImImportDialog();
         ImTemplateDialog templateDialog = ImTemplateDialog();
         ImWebExportDialog webExportDialog = ImWebExportDialog();
+        ImAIConfigDialog AIConfigDialog = ImAIConfigDialog();
 
         void resolveResize(const string& name, const ResizeEvent& resizer);
         void handleRelayedKey(int key, int state, bool special);
@@ -216,6 +232,9 @@ class VRImguiEditor {
         void pollFocusSafety();
 
     public:
+        VRImguiEditor();
+        ~VRImguiEditor();
+
         void init(Signal signal, ResizeSignal resizeSignal);
         void initPopup();
         void close();

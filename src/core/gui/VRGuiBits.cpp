@@ -340,6 +340,7 @@ VRGuiBits::VRGuiBits() {
     // TERMINAL
     auto addTermTab = [&](string name) {
         auto c = VRConsoleWidgetPtr( new VRConsoleWidget() );
+        c->setup();
         c->setLabel( name );
         consoles[name] = c;
         return c;
@@ -356,8 +357,8 @@ VRGuiBits::VRGuiBits() {
     auto colTab = addTermTab("Collaboration");
 
     auto c = VRAIConsoleWidgetPtr( new VRAIConsoleWidget() );
-    c->setLabel("Poly AI");
-    consoles["Poly AI"] = c;
+    c->setLabel("PolyAI");
+    consoles["PolyAI"] = c;
 
     colTab->addStyle( "red", "#ff3311", "#ffffff", false, false, false, true );
     colTab->addStyle( "green", "#00cc11", "#ffffff", false, false, false, true );

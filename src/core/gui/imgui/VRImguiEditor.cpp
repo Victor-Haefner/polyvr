@@ -269,6 +269,7 @@ void VRImguiEditor::resizePopup(const Surface& parent) {
     importDialog.resize(parent);
     templateDialog.resize(parent);
     webExportDialog.resize(parent);
+    AIConfigDialog.resize(parent);
     ImGui_ImplGLUT_ReshapeFunc(parent.width, parent.height);
 }
 
@@ -694,6 +695,9 @@ const char* IMGUIGetClipboardText(void* user_data) {
     else return 0;
 }
 
+VRImguiEditor::VRImguiEditor() {}
+VRImguiEditor::~VRImguiEditor() {}
+
 void VRImguiEditor::onLooseFocus() {
     ImGui::SetCurrentContext(mainContext);
     ImGui_ImplGLUT_ReleaseAllKeys();
@@ -716,8 +720,6 @@ void VRImguiEditor::handleRelayedKey(int key, int state, bool special) {
 }
 
 void VRImguiEditor::init(Signal signal, ResizeSignal resizeSignal) {
-    uiInitStore();
-
     double hSlider = 0.3;
     double vSlider = 0.3;
     toValue(uiGetParameter("hPanelSlider", "0.3"), hSlider);
@@ -761,6 +763,7 @@ void VRImguiEditor::init(Signal signal, ResizeSignal resizeSignal) {
     importDialog.signal = signal;
     templateDialog.signal = signal;
     webExportDialog.signal = signal;
+    AIConfigDialog.signal = signal;
 
     auto mgr = OSG::VRGuiSignals::get();
     mgr->addCallback("relayedKeySignal", [&](OSG::VRGuiSignals::Options o){ handleRelayedKey(toInt(o["key"]), toInt(o["state"]), false); return true; } );
@@ -901,6 +904,7 @@ void VRImguiEditor::renderPopup(OSG::VRGuiSignals::Options options) {
     if (name == "import") importDialog.render();
     if (name == "template") templateDialog.render();
     if (name == "webExport") webExportDialog.render();
+    if (name == "aiConfig") AIConfigDialog.render();
 
     // Rendering
     ImGui::Render();
@@ -987,6 +991,31 @@ ImWebExportDialog::ImWebExportDialog() : ImDialog("webExport") {}
 
 ImProfDialog::ImProfDialog() : ImDialog("profiler") {
     profiler = ImWidgetPtr(new ImProfiler());
+}
+
+ImAIConfigDialog::ImAIConfigDialog() :
+        ImDialog("AIConfig")
+        , keyInput("keyInput", "Open API key (env var):", "", ImGuiInputTextFlags_EnterReturnsTrue)
+        , modelCombo("aiComboModel", "Model:")
+        , effortCombo("aiComboEffort", "Effort:") {
+
+    modelCombo.setList(vector<string>({"gpt-5-nano", "gpt-5.6-luna"}));
+    effortCombo.setList({"fast", "normal", "deep"});
+    modelCombo.set( uiGetParameter("aiModel", "gpt-5-nano") );
+    effortCombo.set( uiGetParameter("aiEffort", "fast") );
+    keyInput.value = uiGetParameter("aiKeyEnvVar", "OPENAI_KEY");
+
+    auto mgr = OSG::VRGuiSignals::get();
+    mgr->addCallback("ai_diag_get_config", [&](OSG::VRGuiSignals::Options o) { sendConfig(); return true; } );
+    sendConfig();
+}
+
+void ImAIConfigDialog::sendConfig() {
+    map<string, string> params;
+    params["key"] = keyInput.value;
+    params["model"] = modelCombo.get();
+    params["effort"] = effortCombo.get();
+    uiSignal("current_ai_config", params);
 }
 
 ImTemplateDialog::ImTemplateDialog() : ImDialog("template"), filter("templSearch", "Search:", ""), tree("templTree") {
@@ -1171,6 +1200,33 @@ void ImProfDialog::begin() {
     ImSection::begin();
     centeredText("Profiler");
     profiler->render();
+}
+
+void ImAIConfigDialog::begin() {
+    ImSection::begin();
+    centeredText("AI Config");
+
+    if (keyInput.render(-1)) {
+        uiSignal("ai_dialog_setKey", {{"key",keyInput.value}});
+        uiStoreParameter("aiKeyEnvVar", keyInput.value);
+    }
+
+    ImGui::SameLine();
+    ImGui::Text(keyStatus.c_str());
+
+    ImGuiIO& io = ImGui::GetIO();
+
+    if (modelCombo.render(150*io.FontGlobalScale)) {
+        modelCombo.signal("ai_model_switch");
+        uiStoreParameter("aiModel", modelCombo.get());
+    }
+
+    if (effortCombo.render(150*io.FontGlobalScale)) {
+        effortCombo.signal("ai_effort_switch");
+        uiStoreParameter("aiEffort", effortCombo.get());
+    }
+
+    if (ImGui::Button("Close")) uiSignal("ui_close_popup");
 }
 
 void ImImportDialog::begin() {

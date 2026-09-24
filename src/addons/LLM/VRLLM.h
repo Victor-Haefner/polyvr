@@ -7,6 +7,7 @@
 #include "core/utils/VRFunctionFwd.h"
 
 #include <string>
+#include <functional>
 
 #ifndef WITHOUT_JSONCPP
 #include <json/json.h>
@@ -53,7 +54,8 @@ class VRLLM : public enable_shared_from_this<VRLLM> {
 	    VRRestClientPtr cli;
 	    string apiKey;
 	    string model = "gpt-5.6-luna";
-	    VRMessageCbPtr cb;
+	    VRMessageCbPtr usrMsgCb;
+	    VRMessageCbPtr usrRestCb;
 	    VRRestCbPtr restCb;
 
 	    map<string,string> knowledgeAssets;
@@ -84,7 +86,8 @@ class VRLLM : public enable_shared_from_this<VRLLM> {
 
 		void setApiKey(string s);
 		void setModel(string s);
-		void setCallback(VRMessageCbPtr cb);
+		void setMsgCallback(VRMessageCbPtr cb);
+		void setRestCallback(VRMessageCbPtr cb);
 
 		void sendPyAPI();
 		void sendRequest(string req, string conv, string effort = "fast");
