@@ -56,6 +56,13 @@ class VRConsoleWidget {
         void update();
 };
 
+class VRAIConsoleWidget : public VRConsoleWidget {
+
+    public:
+        VRAIConsoleWidget();
+        ~VRAIConsoleWidget();
+};
+
 OSG_END_NAMESPACE;
 
 #endif // VRGUICONSOLE_H_INCLUDED

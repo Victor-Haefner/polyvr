@@ -355,6 +355,10 @@ VRGuiBits::VRGuiBits() {
     addTermTab("Tracking");
     auto colTab = addTermTab("Collaboration");
 
+    auto c = VRAIConsoleWidgetPtr( new VRAIConsoleWidget() );
+    c->setLabel("Poly AI");
+    consoles["Poly AI"] = c;
+
     colTab->addStyle( "red", "#ff3311", "#ffffff", false, false, false, true );
     colTab->addStyle( "green", "#00cc11", "#ffffff", false, false, false, true );
 

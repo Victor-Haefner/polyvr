@@ -138,13 +138,19 @@ void VRConsoleWidget::update() {
     }
 }
 
-void VRConsoleWidget::forward() {
-    //if (swin == 0) return;
+void VRConsoleWidget::forward() { // TODO
     if (paused) return;
     /*GtkAdjustment* a = gtk_scrolled_window_get_vadjustment(swin);
     int p = gtk_adjustment_get_upper(a) - gtk_adjustment_get_page_size(a);
     gtk_adjustment_set_value(a, p);*/
 }
+
+
+
+
+VRAIConsoleWidget::VRAIConsoleWidget() {}
+VRAIConsoleWidget::~VRAIConsoleWidget() {}
+
 
 
 
