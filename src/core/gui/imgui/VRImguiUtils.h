@@ -7,7 +7,7 @@
 #include <vector>
 
 //#include "imEditor/TextEditor.h"
-#include <imgui.h>
+#include "imgui.h"
 #include "core/tools/VRToolsFwd.h"
 
 using namespace std;
@@ -17,6 +17,12 @@ struct ImRectangle {
     float right = 1;
     float bottom = 0;
     float top = 1;
+    ImVec2 clampLeft = ImVec2(0,1);
+    ImVec2 clampRight = ImVec2(0,1);
+    ImVec2 clampBottom = ImVec2(0,1);
+    ImVec2 clampTop = ImVec2(0,1);
+
+    void clamp();
 };
 
 struct Surface {
@@ -72,7 +78,8 @@ ImVec4 colorFromString(const string& c);
 void pushGlowBorderStyle(int ID);
 void popGlowBorderStyle();
 
-float strWidth(const string& s);
+float uiStrScale();
+float uiStrWidth(const string& s);
 
 void uiInitStore();
 void uiCloseStore();

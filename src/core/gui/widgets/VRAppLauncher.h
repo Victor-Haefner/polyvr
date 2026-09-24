@@ -27,6 +27,7 @@ class VRAppLauncher : public std::enable_shared_from_this<VRAppLauncher> {
         bool write_protected = false;
         VRDeviceCbPtr uPixmap;
         VRAppPanelWeakPtr section;
+        VRAppManager* manager = 0;
 
     public:
         VRAppLauncher(VRAppPanelPtr s, string path, string timestamp);

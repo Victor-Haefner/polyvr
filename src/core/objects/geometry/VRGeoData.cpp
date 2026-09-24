@@ -142,6 +142,28 @@ VRGeoData::VRGeoData(VRGeometryPtr geo) : pend(this, 0) {
 
 VRGeoDataPtr VRGeoData::create() { return VRGeoDataPtr( new VRGeoData() ); }
 
+VRGeometryPtr VRGeoData::getGeometry() { return geo; }
+
+void VRGeoData::clear() {
+    if (data->types) data->types->clear();
+    if (data->lengths) data->lengths->clear();
+    if (data->indices) data->indices->clear();
+    if (data->pos) data->pos->clear();
+    if (data->norms) data->norms->clear();
+    if (data->cols3) data->cols3->clear();
+    if (data->cols4) data->cols4->clear();
+    if (data->cols3ub) data->cols3ub->clear();
+    if (data->cols4ub) data->cols4ub->clear();
+
+    for (size_t i=0; i<data->texs.size(); i++)  data->texs[i]->clear();
+    for (size_t i=0; i<data->texs3.size(); i++) data->texs3[i]->clear();
+    if (data->indicesNormals) data->indicesNormals->clear();
+    if (data->indicesColors) data->indicesColors->clear();
+    if (data->indicesTexCoords) data->indicesTexCoords->clear();
+
+    data->lastPrim = -1;
+}
+
 void VRGeoData::reset() {
     if (data->types) data->types->clear();
     else data->types = GeoUInt8Property::create();
@@ -178,10 +200,12 @@ void VRGeoData::reset() {
     data->lastPrim = -1;
 }
 
-bool VRGeoData::valid() const {
-    if (!data->types->size()) { cout << "VRGeoData invalid: no types!\n"; return false; }
-    if (!data->lengths->size()) { cout << "VRGeoData invalid: no lengths!\n"; return false; }
-    if (!data->pos->size()) { cout << "VRGeoData invalid: no pos!\n"; return false; }
+bool VRGeoData::valid(bool verbose) const {
+    if (!data->types->size()) { if (verbose) cout << "VRGeoData invalid: no types!\n";
+    cout << status() << endl;
+    return false; }
+    if (!data->lengths->size()) { if (verbose) cout << "VRGeoData invalid: no lengths!\n"; return false; }
+    if (!data->pos->size()) { if (verbose) cout << "VRGeoData invalid: no pos!\n"; return false; }
 
     int Ni = data->indices->size();
     int Nni = data->indicesNormals->size();
@@ -193,19 +217,19 @@ bool VRGeoData::valid() const {
     int Nc = max( max( data->cols3->size(), data->cols3ub->size() ), max(data->cols4->size(), data->cols4ub->size() ) );
     int Nt = max( data->texs[0]->size(), data->texs3[0]->size() );
 
-    if (Ni > 0 && Nni > 0 && Nni != Ni) { cout << "VRGeoData invalid: coord and normal indices lengths mismatch!\n"; return false; }
-    if (Ni > 0 && Nci > 0 && Nci != Ni) { cout << "VRGeoData invalid: coord and color indices lengths mismatch!\n"; return false; }
-    if (Ni > 0 && Nti > 0 && Nti != Ni) { cout << "VRGeoData invalid: coord and texcoords indices lengths mismatch!\n"; return false; }
-    if (Ni == 0 && Nni > 0) { cout << "VRGeoData invalid: normal indices defined but no coord indices!\n"; return false; }
-    if (Ni == 0 && Nci > 0) { cout << "VRGeoData invalid: color indices defined but no coord indices!\n"; return false; }
-    if (Ni == 0 && Nti > 0) { cout << "VRGeoData invalid: texcoords indices defined but no coord indices!\n"; return false; }
-    if (Nni == 0 && Nn > 0 && Nn != Np) { cout << "VRGeoData invalid: common index but normals and positions length mismatch!\n"; return false; }
-    if (Nci == 0 && Nc > 0 && Nc != Np) { cout << "VRGeoData invalid: common index but colors and positions length mismatch!\n"; return false; }
-    if (Nti == 0 && Nt > 0 && Nt != Np) { cout << "VRGeoData invalid: common index but texcoords and positions length mismatch!\n"; return false; }
+    if (Ni > 0 && Nni > 0 && Nni != Ni) { if (verbose) cout << "VRGeoData invalid: coord and normal indices lengths mismatch!\n"; return false; }
+    if (Ni > 0 && Nci > 0 && Nci != Ni) { if (verbose) cout << "VRGeoData invalid: coord and color indices lengths mismatch!\n"; return false; }
+    if (Ni > 0 && Nti > 0 && Nti != Ni) { if (verbose) cout << "VRGeoData invalid: coord and texcoords indices lengths mismatch!\n"; return false; }
+    if (Ni == 0 && Nni > 0) { if (verbose) cout << "VRGeoData invalid: normal indices defined but no coord indices!\n"; return false; }
+    if (Ni == 0 && Nci > 0) { if (verbose) cout << "VRGeoData invalid: color indices defined but no coord indices!\n"; return false; }
+    if (Ni == 0 && Nti > 0) { if (verbose) cout << "VRGeoData invalid: texcoords indices defined but no coord indices!\n"; return false; }
+    if (Nni == 0 && Nn > 0 && Nn != Np) { if (verbose) cout << "VRGeoData invalid: common index but normals and positions length mismatch!\n"; return false; }
+    if (Nci == 0 && Nc > 0 && Nc != Np) { if (verbose) cout << "VRGeoData invalid: common index but colors and positions length mismatch!\n"; return false; }
+    if (Nti == 0 && Nt > 0 && Nt != Np) { if (verbose) cout << "VRGeoData invalid: common index but texcoords and positions length mismatch!\n"; return false; }
     return true;
 }
 
-bool VRGeoData::validIndices() const {
+bool VRGeoData::validIndices(bool verbose) const {
     auto checkMaxIndex = [](GeoUInt32PropertyMTRecPtr indices, unsigned int VecN, unsigned int& Imax) {
         if (VecN == 0) return true;
         Imax = 0;
@@ -218,17 +242,17 @@ bool VRGeoData::validIndices() const {
     };
 
     unsigned int Imax = 0;
-    if (!checkMaxIndex(data->indices, data->pos->size(), Imax)) { cout << "VRGeoData invalid: coord indices have too big values! max index is " << data->pos->size() << "/" << Imax << endl; return false; }
-    if (!checkMaxIndex(data->indicesNormals, data->norms->size(), Imax)) { cout << "VRGeoData invalid: normal indices have too big values!\n"; return false; }
-    if (!checkMaxIndex(data->indicesTexCoords, data->texs[0]->size(), Imax)) { cout << "VRGeoData invalid: tex coords indices have too big values!\n"; return false; }
+    if (!checkMaxIndex(data->indices, data->pos->size(), Imax)) { if (verbose) cout << "VRGeoData invalid: coord indices have too big values! max index is " << data->pos->size() << "/" << Imax << endl; return false; }
+    if (!checkMaxIndex(data->indicesNormals, data->norms->size(), Imax)) { if (verbose) cout << "VRGeoData invalid: normal indices have too big values!\n"; return false; }
+    if (!checkMaxIndex(data->indicesTexCoords, data->texs[0]->size(), Imax)) { if (verbose) cout << "VRGeoData invalid: tex coords indices have too big values!\n"; return false; }
     if (data->cols3->size())
-        if (!checkMaxIndex(data->indicesColors, data->cols3->size(), Imax)) { cout << "VRGeoData invalid: color3 indices have too big values!\n"; return false; }
+        if (!checkMaxIndex(data->indicesColors, data->cols3->size(), Imax)) { if (verbose) cout << "VRGeoData invalid: color3 indices have too big values!\n"; return false; }
     if (data->cols4->size())
-        if (!checkMaxIndex(data->indicesColors, data->cols4->size(), Imax)) { cout << "VRGeoData invalid: color4 indices have too big values!\n"; return false; }
+        if (!checkMaxIndex(data->indicesColors, data->cols4->size(), Imax)) { if (verbose) cout << "VRGeoData invalid: color4 indices have too big values!\n"; return false; }
     if (data->cols3ub->size())
-        if (!checkMaxIndex(data->indicesColors, data->cols3ub->size(), Imax)) { cout << "VRGeoData invalid: color3ub indices have too big values!\n"; return false; }
+        if (!checkMaxIndex(data->indicesColors, data->cols3ub->size(), Imax)) { if (verbose) cout << "VRGeoData invalid: color3ub indices have too big values!\n"; return false; }
     if (data->cols4ub->size())
-        if (!checkMaxIndex(data->indicesColors, data->cols4ub->size(), Imax)) { cout << "VRGeoData invalid: color4ub indices have too big values!\n"; return false; }
+        if (!checkMaxIndex(data->indicesColors, data->cols4ub->size(), Imax)) { if (verbose) cout << "VRGeoData invalid: color4ub indices have too big values!\n"; return false; }
     return true;
 }
 
@@ -317,10 +341,10 @@ int VRGeoData::getIndex(int i, int v) {
     return int(data->indices->size()) > i ? data->indices->getValue(i) : 0;
 }
 
-Pnt3d VRGeoData::getPosition(int i) { return int(data->pos->size()) > i ? Pnt3d(data->pos->getValue(i)) : Pnt3d(); }
-Vec3d VRGeoData::getNormal(int i) { return int(data->norms->size()) > i ? Vec3d(data->norms->getValue(i)) : Vec3d(); }
-Vec2d VRGeoData::getTexCoord(int i) { return int(data->texs[0]->size()) > i ? Vec2d(data->texs[0]->getValue(i)) : Vec2d(); }
-Vec2d VRGeoData::getTexCoord2(int i) { return int(data->texs[1]->size()) > i ? Vec2d(data->texs[1]->getValue(i)) : Vec2d(); }
+Pnt3d VRGeoData::getPosition(int i) { int N = data->pos->size(); if (i<0) i+=N; return N > i ? Pnt3d(data->pos->getValue(i)) : Pnt3d(); }
+Vec3d VRGeoData::getNormal(int i) { int N = data->norms->size(); if (i<0) i+=N; return N > i ? Vec3d(data->norms->getValue(i)) : Vec3d(); }
+Vec2d VRGeoData::getTexCoord(int i) { int N = data->texs[0]->size(); if (i<0) i+=N; return N > i ? Vec2d(data->texs[0]->getValue(i)) : Vec2d(); }
+Vec2d VRGeoData::getTexCoord2(int i) { int N = data->texs[1]->size(); if (i<0) i+=N; return N > i ? Vec2d(data->texs[1]->getValue(i)) : Vec2d(); }
 
 Color4f VRGeoData::getColor(int i) {
     if (int(data->cols4->size()) > i) return data->cols4->getValue(i);
@@ -499,15 +523,15 @@ bool VRGeoData::setVert(int i, Pnt3d p, Vec3d n, Color4f c, Vec2d t) { if (size(
 bool VRGeoData::setVert(int i, Pnt3d p, Vec3d n, Color3f c, Vec2d t, Vec2d t2) { if (size() > i) data->texs[1]->setValue(t2,i); else return 0; return setVert(i,p,n,c,t); }
 bool VRGeoData::setVert(int i, Pnt3d p, Vec3d n, Color4f c, Vec2d t, Vec2d t2) { if (size() > i) data->texs[1]->setValue(t2,i); else return 0; return setVert(i,p,n,c,t); }
 
-bool VRGeoData::setType(int i, int t) { if (i < (int)data->types->size()) data->types->setValue(t,i); else return 0; return 1; }
-bool VRGeoData::setLength(int i, int l) { if (i < (int)data->lengths->size()) data->lengths->setValue(l,i); else return 0; return 1; }
-bool VRGeoData::setIndex(int i, int I) { if (i < (int)data->indices->size()) data->indices->setValue(I,i); else return 0; return 1; }
-bool VRGeoData::setPos(int i, Pnt3d p) { if (i < (int)data->pos->size()) data->pos->setValue(p,i); else return 0; return 1; }
-bool VRGeoData::setNorm(int i, Vec3d n) { if (i < (int)data->norms->size()) data->norms->setValue(n,i); else return 0; return 1; }
-bool VRGeoData::setColor(int i, Color3f c) { if (i < (int)data->cols3->size()) data->cols3->setValue(c,i); else return 0; return 1; }
-bool VRGeoData::setColor(int i, Color4f c) { if (i < (int)data->cols4->size()) data->cols4->setValue(c,i); else return 0; return 1; }
-bool VRGeoData::setColor(int i, Color3ub c) { if (i < (int)data->cols3ub->size()) data->cols3ub->setValue(c,i); else return 0; return 1; }
-bool VRGeoData::setColor(int i, Color4ub c) { if (i < (int)data->cols4ub->size()) data->cols4ub->setValue(c,i); else return 0; return 1; }
+bool VRGeoData::setType(int i, int t) { int N = data->types->size(); if (i < 0) i += N; if (i < N) data->types->setValue(t,i); else return 0; return 1; }
+bool VRGeoData::setLength(int i, int l) { int N = data->lengths->size(); if (i < 0) i += N; if (i < N) data->lengths->setValue(l,i); else return 0; return 1; }
+bool VRGeoData::setIndex(int i, int I) { int N = data->indices->size(); if (i < 0) i += N; if (i < N) data->indices->setValue(I,i); else return 0; return 1; }
+bool VRGeoData::setPos(int i, Pnt3d p) { int N = data->pos->size(); if (i < 0) i += N; if (i < N) data->pos->setValue(p,i); else return 0; return 1; }
+bool VRGeoData::setNorm(int i, Vec3d n) { int N = data->norms->size(); if (i < 0) i += N; if (i < N) data->norms->setValue(n,i); else return 0; return 1; }
+bool VRGeoData::setColor(int i, Color3f c) { int N = data->cols3->size(); if (i < 0) i += N; if (i < N) data->cols3->setValue(c,i); else return 0; return 1; }
+bool VRGeoData::setColor(int i, Color4f c) { int N = data->cols4->size(); if (i < 0) i += N; if (i < N) data->cols4->setValue(c,i); else return 0; return 1; }
+bool VRGeoData::setColor(int i, Color3ub c) { int N = data->cols3ub->size(); if (i < 0) i += N; if (i < N) data->cols3ub->setValue(c,i); else return 0; return 1; }
+bool VRGeoData::setColor(int i, Color4ub c) { int N = data->cols4ub->size(); if (i < 0) i += N; if (i < N) data->cols4ub->setValue(c,i); else return 0; return 1; }
 
 bool VRGeoData::setTexCoord(int i, Vec2d t, int idx) {
     if (idx >= 7) return 0;
@@ -721,7 +745,7 @@ VRGeometryPtr VRGeoData::asGeometry(string name) const {
     return geo;
 }
 
-string VRGeoData::status() {
+string VRGeoData::status() const {
     string res;
     res += "VRGeoData stats:\n";
     res += " " + toString(data->types->size()) + " types: ";
@@ -930,6 +954,7 @@ void VRGeoData::addVertexTexCoords(Vec2d tc) {
 
 void VRGeoData::makeSingleIndex() {
     if (!geo) return;
+    if (size() == 0) return;
     //if (geo->getMesh()->geo->isSingleIndex()) return;
 
     geo->convertToTriangles(); // TODO: temp fix..

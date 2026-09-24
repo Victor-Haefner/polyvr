@@ -7,6 +7,22 @@
 
 using namespace OSG;
 
+template<> string typeName(const VRMenu::TYPE* o) { return "VRSnappingEngine::TYPE"; }
+template<> string typeName(const VRMenu::LAYOUT* o) { return "VRSnappingEngine::LAYOUT"; }
+
+template<> int toValue(stringstream& ss, VRMenu::TYPE& e) {
+    string s = ss.str();
+    if (s == "SPRITE") { e = VRMenu::SPRITE; return true; }
+    return false;
+}
+
+template<> int toValue(stringstream& ss, VRMenu::LAYOUT& e) {
+    string s = ss.str();
+    if (s == "LINEAR") { e = VRMenu::LINEAR; return true; }
+    if (s == "CIRCULAR") { e = VRMenu::CIRCULAR; return true; }
+    return false;
+}
+
 VRMenu::VRMenu(string path) : VRGeometry("menu") {
     type = "Menu";
     group = getName();
@@ -39,7 +55,7 @@ VRMenuPtr VRMenu::append(string path) {
 VRMenuPtr VRMenu::getParent() { return parent; }
 VRMenuPtr VRMenu::getSelected() { return selected; }
 
-void VRMenu::setCallback(VRFunction<VRMenuPtr>* cb) { callback = cb; }
+void VRMenu::setCallback(VRMenuCbPtr cb) { callback = cb; }
 
 void VRMenu::trigger() {
     if (callback) (*callback)(ptr());

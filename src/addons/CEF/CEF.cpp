@@ -6,8 +6,6 @@
 #endif
 
 #if defined(__APPLE__)
-//#include <boost/type_traits/decay.hpp> // /opt/homebrew/include/boost/type_traits/decay.hpp
-#include <boost/utility/in_place_factory.hpp>
 namespace std {
   template <class T> using decay_t = typename decay<T>::type;
 
@@ -52,8 +50,12 @@ namespace std {
 
 using namespace OSG;
 
-vector< weak_ptr<CEF> > instances;
+vector< weak_ptr<CEF> > cefInstances;
 bool cef_gl_init = false;
+
+#if !defined(_WIN32) && !defined(__APPLE__)
+class CefPermissionHandler {};
+#endif
 
 
 class CEF_app : public CefApp, public CefBrowserProcessHandler {
@@ -81,7 +83,7 @@ class CEF_app : public CefApp, public CefBrowserProcessHandler {
         DISALLOW_COPY_AND_ASSIGN(CEF_app);
 };
 
-class CEF_handler : public CefRenderHandler, public CefLoadHandler, public CefContextMenuHandler, public CefDialogHandler, public CefDisplayHandler, public CefLifeSpanHandler {
+class CEF_handler : public CefRenderHandler, public CefLoadHandler, public CefContextMenuHandler, public CefDialogHandler, public CefDisplayHandler, public CefLifeSpanHandler, public CefPermissionHandler {
     private:
         VRTexturePtr image = 0;
         int width = 1024;
@@ -105,6 +107,11 @@ class CEF_handler : public CefRenderHandler, public CefLoadHandler, public CefCo
         bool GetViewRect(CefRefPtr<CefBrowser> browser, CefRect& rect) override;
 #endif
 
+#if defined(_WIN32) || defined(__APPLE__)
+        bool OnRequestMediaAccessPermission(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, const CefString& requesting_origin, uint32 requested_permissions, CefRefPtr<CefMediaAccessCallback> callback) override;
+        bool OnShowPermissionPrompt(CefRefPtr<CefBrowser> browser, uint64 prompt_id, const CefString& requesting_origin, uint32 requested_permissions, CefRefPtr<CefPermissionPromptCallback> callback) override;
+        void OnDismissPermissionPrompt(CefRefPtr<CefBrowser> browser, uint64 prompt_id, cef_permission_request_result_t result) override;
+#endif
 
         void OnBeforeContextMenu(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, CefRefPtr<CefContextMenuParams> params, CefRefPtr<CefMenuModel> model) override;
         bool OnContextMenuCommand(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, CefRefPtr<CefContextMenuParams> params, int command_id, EventFlags event_flags) override;
@@ -189,6 +196,13 @@ bool CEF_handler::GetViewRect(CefRefPtr<CefBrowser> browser, CefRect& rect) {
 }
 #endif
 
+// handle permissions requests
+#if defined(_WIN32) || defined(__APPLE__)
+bool CEF_handler::OnRequestMediaAccessPermission(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, const CefString& requesting_origin, uint32 requested_permissions, CefRefPtr<CefMediaAccessCallback> callback) { callback->Cancel(); return true; };
+bool CEF_handler::OnShowPermissionPrompt(CefRefPtr<CefBrowser> browser, uint64 prompt_id, const CefString& requesting_origin, uint32 requested_permissions, CefRefPtr<CefPermissionPromptCallback> callback) { callback->Continue(CEF_PERMISSION_RESULT_DISMISS); return true; };
+void CEF_handler::OnDismissPermissionPrompt(CefRefPtr<CefBrowser> browser, uint64 prompt_id, cef_permission_request_result_t result) {};
+#endif
+
 //Disable context menu
 //Define below two functions to essentially do nothing, overwriting defaults
 void CEF_handler::OnBeforeContextMenu( CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, CefRefPtr<CefContextMenuParams> params, CefRefPtr<CefMenuModel> model) {
@@ -234,7 +248,7 @@ void setSubData(Image* img, Int32 x0, Int32 y0, Int32 z0, Int32 srcW, Int32 srcH
     UChar8* dest = img->editData();
     if (!src || !dest) return;
 
-    UInt32 xMax = x0 + srcW;
+    //UInt32 xMax = x0 + srcW;
     UInt32 yMax = y0 + srcH;
     UInt32 zMax = z0 + srcD;
 
@@ -361,7 +375,7 @@ void CEF::shutdown() {
 
 CEFPtr CEF::create() {
     auto cef = CEFPtr(new CEF());
-    instances.push_back(cef);
+    cefInstances.push_back(cef);
     return cef;
 }
 
@@ -497,6 +511,7 @@ void CEF::initiate() {
 #else
     internals->browser = CefBrowserHost::CreateBrowserSync(win, internals->client, "", browser_settings, 0);
 #endif
+    cout << "CEF::initiate " << site << ", " << internals->browser << endl;
 }
 
 void CEF::setMaterial(VRMaterialPtr mat) {
@@ -563,7 +578,7 @@ void CEF::resize() {
 
 vector<CEFPtr> CEF::getInstances() {
     vector<CEFPtr> res;
-    for (auto i : instances) {
+    for (auto i : cefInstances) {
         auto cef = i.lock();
         if (!cef) continue;
         res.push_back(cef);
@@ -572,7 +587,7 @@ vector<CEFPtr> CEF::getInstances() {
 }
 
 void CEF::reloadScripts(string path) {
-    for (auto i : instances) {
+    for (auto i : cefInstances) {
         auto cef = i.lock();
         if (!cef) continue;
         string s = cef->getSite();
@@ -606,10 +621,13 @@ void CEF::addMouse(VRDevicePtr dev, VRObjectPtr obj, int lb, int mb, int rb, int
 }
 
 void CEF::addKeyboard(VRDevicePtr dev) {
-    if (dev == 0) return;
+    if (!dev) return;
     if (!keyboard_dev_callback) keyboard_dev_callback = VRFunction<VRDeviceWeakPtr, bool>::create( "CEF::KR", bind(&CEF::keyboard, this, _1 ) );
-    dev->newSignal(-1, 0)->add( keyboard_dev_callback );
-    dev->newSignal(-1, 1)->add( keyboard_dev_callback );
+    VRKeyboardPtr keyboard = dynamic_pointer_cast<VRKeyboard>(dev);
+    if (!keyboard) return;
+    keyboard->newSignal(-1, 0)->add( keyboard_dev_callback );
+    keyboard->newSignal(-1, 1)->add( keyboard_dev_callback );
+    keyboards.push_back(keyboard);
 }
 
 void CEF::mouse_move(VRDeviceWeakPtr d) {
@@ -618,6 +636,8 @@ void CEF::mouse_move(VRDeviceWeakPtr d) {
     if (!dev) return;
     auto geo = obj.lock();
     if (!geo) return;
+    if (!geo->isVisible("", true)) return;
+
     VRIntersectionPtr ins = dev->intersect(geo);
 
     if (!ins->hit) return;
@@ -663,6 +683,7 @@ bool CEF::mouse(int lb, int mb, int rb, int wu, int wd, VRDeviceWeakPtr d) {
 
     auto geo = obj.lock();
     if (!geo) return true;
+    if (!geo->isVisible("", true)) return true;
 
     auto ins = dev->intersect(geo);
     auto iobj = ins->object.lock();
@@ -697,6 +718,20 @@ bool CEF::mouse(int lb, int mb, int rb, int wu, int wd, VRDeviceWeakPtr d) {
     int height = resolution/aspect;
 
     CefMouseEvent me;
+    VRKeyboardPtr keyboard;
+    for (auto kb : keyboards) {
+        keyboard = kb.lock();
+        if (keyboard) break;
+    }
+
+    if (keyboard) {
+#ifdef _WIN32
+        me.modifiers = GetCefStateModifiers(false, false, keyboard->ctrlDown() && !keyboard->altDown(), false, false, false, false);
+#else
+        me.modifiers = GetCefStateModifiers(keyboard->shiftDown(), keyboard->lockDown(), keyboard->ctrlDown(), keyboard->altDown(), false, false, false);
+#endif
+    }
+
     me.x = ins->texel[0]*width;
     me.y = ins->texel[1]*height;
 

@@ -12,7 +12,6 @@
 using namespace OSG;
 
 
-double clamp(double f, double a = -1, double b = 1) { return f<a ? a : f>b ? b : f; }
 
 VRRobotArm::System::System() {
     base = VRTransform::create("base");
@@ -26,6 +25,8 @@ VRRobotArm::System::System() {
 }
 
 VRRobotArm::System::~System() {}
+
+double VRRobotArm::System::clamp(double f, double a, double b) { return f<a ? a : f>b ? b : f; }
 
 double VRRobotArm::System::convertAngle(double a, int i) {
     if (i >= angle_directions.size() || i >= angle_offsets.size()) return 0;
@@ -837,7 +838,7 @@ void VRRobotArm::update() { // update robot joint angles
         while (da >  Pi) da -= 2*Pi;
         while (da < -Pi) da += 2*Pi;
         if (abs(da) > 1e-4) m = true;
-        system->angles[i] += clamp( da, -maxSpeed, maxSpeed );
+        system->angles[i] += system->clamp( da, -maxSpeed, maxSpeed );
     }
 
     if (m) system->applyAngles();
@@ -1020,8 +1021,8 @@ void VRRobotArm::moveTo(PosePtr p2, bool local) {
     //cout << "VRRobotArm::moveTo " << p1->toString() << "   ->   " << p2->toString() << endl;
 
     animPath->clear();
-    animPath->addPoint( *p1 );
-    animPath->addPoint( *p2 );
+    animPath->addPoint( p1 );
+    animPath->addPoint( p2 );
     animPath->compute(2);
 
     /*cout << "moveTo, p1: " << p1->toString() << endl;

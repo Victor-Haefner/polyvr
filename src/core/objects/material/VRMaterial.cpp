@@ -446,8 +446,15 @@ void VRMaterial::updateOGL2Parameters() {
     setShaderParameter("mat_ambient", Vec4f(a[0], a[1], a[2], 1.0));
     setShaderParameter("mat_diffuse", Vec4f(d[0], d[1], d[2], 1.0));
     setShaderParameter("mat_specular", Vec4f(s[0], s[1], s[2], 1.0));
-    auto lb = VRLightBeacon::getAll()[0].lock();
-    lb->getLight().lock()->updateMaterial(ptr());
+    for (auto wlb : VRLightBeacon::getAll()) {
+        auto lb = wlb.lock();
+        if (!lb) continue;
+        auto wli = lb->getLight();
+        //if (!wli) continue;
+        auto li = wli.lock();
+        if (!li) continue;
+        li->updateMaterial(ptr());
+    }
     //setShaderParameter("glLightPosition", Vec4f(0, 0, 0, 1)); // pnt light
     //setFrontBackModes(GL_NONE, GL_FILL);
 #endif
@@ -555,7 +562,7 @@ void VRMaterial::remPass(int i) {
     passes->mat->subAttachment(passes->mat->getMaterials(i));
     passes->mat->subMaterial(i);
     mats.erase(remove(mats.begin(), mats.end(), mats[i]), mats.end());
-    if (activePass == i) activePass = 0;
+    if (activePass == i || activePass >= getNPasses()) activePass = 0;
 }
 
 void VRMaterial::setActivePass(int i) {
@@ -918,7 +925,7 @@ void VRMaterial::setTextureType(string type, int unit) {
     }
 }
 
-void VRMaterial::setQRCode(string s, Vec3d fg, Vec3d bg, int offset) {
+void VRMaterial::setQRCode(string s, Color3f fg, Color3f bg, int offset) {
 #ifndef WITHOUT_QRENCODE
     createQRCode(s, ptr(), fg, bg, offset);
     setTextureParams(GL_NEAREST_MIPMAP_NEAREST, GL_NEAREST, -1, -1, -1);
@@ -1165,6 +1172,9 @@ float VRMaterial::getShininess() { return mats[activePass]->colChunk->getShinine
 float VRMaterial::getTransparency() { return mats[activePass]->colChunk->getDiffuse()[3]; }
 bool VRMaterial::isLit() { return mats[activePass]->colChunk->getLit(); }
 
+int VRMaterial::getPointSize() { if (auto pc = mats[activePass]->pointChunk) return pc->getSize(); return 1; }
+int VRMaterial::getLineWidth() { if (auto lc = mats[activePass]->lineChunk)  return lc->getWidth(); return 1; }
+
 VRTexturePtr VRMaterial::getTexture(int unit) {
     auto md = mats[activePass];
     if (md->texChunks.count(unit) == 0) return 0;
@@ -1353,11 +1363,15 @@ void VRMaterial::setVertexShader(string s, string name) {
     if (startsWith(s, "#version")) {
 	auto i = s.find('\n');
 	string s1 = s.substr(0,i);
+	if (s1 == "#version 120") s1 = "";
+	
 	string s2 = s.substr(i);
 	s = s1 + "\n#define WEBGL\n" + s2;
 	//s = "#define WEBGL\n" + s.substr(i);
     } else s = "#define WEBGL\n" + s;
 #endif
+
+    //if (name == "logsVP") cout << endl << s << endl << endl;
 
 #ifndef OSG_OGL_ES2
     m->vProgram->setProgram(s);
@@ -1391,6 +1405,7 @@ void VRMaterial::setFragmentShader(string s, string name, bool deferred) {
 	auto i = s.find('\n');
         vStr = s.substr(0,i);
 	s = s.substr(i);
+	if (vStr == "#version 120") vStr = "";
     }
 
     if (!contains(s, "precision mediump")) s = "precision mediump float;\n" + s;

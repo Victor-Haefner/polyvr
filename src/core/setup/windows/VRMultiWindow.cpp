@@ -17,6 +17,7 @@
 #include <OpenSG/OSGClusterNetwork.h>
 #include <OpenSG/OSGGroupMCastConnection.h>
 #include <OpenSG/OSGGroupSockConnection.h>
+#include <OpenSG/OSGRenderOptions.h>
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -83,6 +84,9 @@ void VRMultiWindow::initialize() {
 #endif
     OSG::setName( win, getName() );
 
+    RenderOptionsRefPtr renderOptions = RenderOptions::create();
+    win->setRenderOptions(renderOptions);
+
     win->setSize(width, height);
     win->setHServers(Nx);
     win->setVServers(Ny);
@@ -146,6 +150,7 @@ void VRMultiWindow::render(bool fromThread) {
     if (state == CONNECTED) {
         try {
             int pID = VRProfiler::get()->regStart("Multiwindow render "+getName());
+
             //cout << "VRMultiWindow::render " << fromThread << ", " << pID << endl;
             setState(RENDERING);
             OSG_render(_win, ract);

@@ -114,7 +114,7 @@ class VRObject : public std::enable_shared_from_this<VRObject>, public VRName, p
         void remLink(VRObjectPtr obj);
         void clearLinks();
 
-        void switchParent(VRObjectPtr new_p, int place = -1);
+        void switchParent(VRObjectPtr new_p, bool keepTransform = false, int place = -1);
         void replaceChild(int i, VRObjectPtr new_c);
         void detach();
 
@@ -140,8 +140,8 @@ class VRObject : public std::enable_shared_from_this<VRObject>, public VRName, p
         void setEntity(VREntityPtr e);
         VREntityPtr getEntity();
 
-        BoundingboxPtr getBoundingbox(bool commitSG = false);
-        BoundingboxPtr getWorldBoundingbox();
+        BoundingboxPtr getBoundingbox(bool onlyVisible = true);
+        BoundingboxPtr getWorldBoundingbox(bool onlyVisible = true);
 
         void flattenHiarchy();
 

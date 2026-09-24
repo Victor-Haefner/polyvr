@@ -3,40 +3,20 @@
 #include "core/utils/VRFunction.h"
 #include "core/utils/VRMutex.h"
 #include "core/utils/toString.h"
+#include "addons/LLM/VRLLM.h"
 
 using namespace OSG;
 
 VRMutex mtx;
 
-VRConsoleWidget::message::message(string m, string s, shared_ptr< VRFunction<string> > l) : msg(m), style(s), link(l) {}
+VRConsoleWidget::message::message(string m, string s, VRMessageCbPtr l, int i) : msg(m), style(s), link(l), source(i) {}
 
 VRConsoleWidget::VRConsoleWidget() {
     notifyColor = "#00aaff";
     ID = VRGuiManager::genUUID();
-    uiSignal("newConsole", {{"ID",ID}, {"color",notifyColor}});
 
     auto sigs = OSG::VRGuiSignals::get();
     sigs->addCallback("clickConsole", [&](OSG::VRGuiSignals::Options o) { if (o["ID"] == ID) on_link_activate( o["mark"] ); return true; }, true );
-
-    /*buffer = gtk_text_buffer_new(0);
-    GtkTextView* term_view = (GtkTextView*)gtk_text_view_new_with_buffer(buffer);
-    PangoFontDescription* fdesc = pango_font_description_new();
-    pango_font_description_set_family(fdesc, "monospace");
-    pango_font_description_set_size(fdesc, 10 * PANGO_SCALE);
-    gtk_widget_modify_font((GtkWidget*)term_view, fdesc);
-    pango_font_description_free(fdesc);
-
-    swin = (GtkScrolledWindow*)gtk_scrolled_window_new(0,0);
-    gtk_container_add((GtkContainer*)swin, (GtkWidget*)term_view);
-    gtk_widget_set_size_request((GtkWidget*)swin, -1, 70);
-
-    GtkAdjustment* adj = gtk_scrolled_window_get_vadjustment(swin);
-    function<void(void)> sig = bind(&VRConsoleWidget::forward, this);
-    connect_signal((GtkWidget*)adj, sig, "changed");
-
-    setToolButtonCallback("toolbutton24", bind(&VRConsoleWidget::clear, this));
-    setToolButtonCallback("toolbutton25", bind(&VRConsoleWidget::forward, this));
-    setToolButtonCallback("pause_terminal", bind(&VRConsoleWidget::pause, this));*/
 
     addStyle( "console91", "#ff3311", "#ffffff", false, false, false, true );
     addStyle( "console92", "#11ff33", "#ffffff", false, false, false, true );
@@ -50,7 +30,11 @@ VRConsoleWidgetPtr VRConsoleWidget::get(string name) {
     return VRGuiManager::get()->getConsole(name);
 }
 
-void VRConsoleWidget::write(string msg, string style, shared_ptr< VRFunction<string> > link) {
+void VRConsoleWidget::setup() {
+    uiSignal("newConsole", {{"ID",ID}, {"color",notifyColor}});
+}
+
+void VRConsoleWidget::write(string msg, string style, VRMessageCbPtr link, int sourceID) {
     //cout << " - - - - - - - VRConsoleWidget::write " << msg << endl;
     VRLock lock(mtx);
 
@@ -62,7 +46,7 @@ void VRConsoleWidget::write(string msg, string style, shared_ptr< VRFunction<str
             if (c == '\033') {
                 inTag = true;
                 tag = "";
-                if (aggregate != "") msg_queue.push( message(aggregate,style,link) );
+                if (aggregate != "") msg_queue.push( message(aggregate,style,link,sourceID) );
                 aggregate = "";
                 continue;
             }
@@ -83,8 +67,8 @@ void VRConsoleWidget::write(string msg, string style, shared_ptr< VRFunction<str
 
             aggregate += c;
         }
-        if (aggregate != "") msg_queue.push( message(aggregate,style,link) );
-    } else msg_queue.push( message(msg,style,link) );
+        if (aggregate != "") msg_queue.push( message(aggregate,style,link,sourceID) );
+    } else msg_queue.push( message(msg,style,link,sourceID) );
 }
 
 void VRConsoleWidget::clear() {
@@ -120,9 +104,15 @@ void VRConsoleWidget::addStyle( string style, string fg, string bg, bool italic,
 }
 
 void VRConsoleWidget::on_link_activate(string mark) {
-    if (links.count(mark)) {
-        if (auto l = links[mark].link) {
-            (*l)( links[mark].msg );
+    if (mark[0] == 'S') {
+        uiSignal("clickConsoleSource", {{"source",subString(mark, 1)}});
+    }
+
+    if (mark[0] == 'L') {
+        if (links.count(mark)) {
+            if (auto l = links[mark].link) {
+                (*l)( links[mark].msg );
+            }
         }
     }
 }
@@ -139,8 +129,12 @@ void VRConsoleWidget::update() {
 
         string mark;
         if (msg.link) {
-                mark = genUUID();
-                links[mark] = msg;
+            mark = "L"+genUUID();
+            links[mark] = msg;
+        }
+
+        if (msg.source != -1) {
+            mark = "S"+toString(msg.source);
         }
 
         uiSignal("pushConsole", {{"ID",ID}, {"string",msg.msg}, {"style",tag}, {"mark",mark}});
@@ -148,12 +142,63 @@ void VRConsoleWidget::update() {
     }
 }
 
-void VRConsoleWidget::forward() {
-    //if (swin == 0) return;
+void VRConsoleWidget::forward() { // TODO
     if (paused) return;
     /*GtkAdjustment* a = gtk_scrolled_window_get_vadjustment(swin);
     int p = gtk_adjustment_get_upper(a) - gtk_adjustment_get_page_size(a);
     gtk_adjustment_set_value(a, p);*/
+}
+
+
+
+
+VRAIConsoleWidget::VRAIConsoleWidget() {
+    llm = VRLLM::create();
+
+    onMsgCb = VRMessageCb::create("ai_console_onMsgCb", bind(&VRAIConsoleWidget::onMessage, this, placeholders::_1));
+    llm->setMsgCallback(onMsgCb);
+
+    auto mgr = OSG::VRGuiSignals::get();
+    //mgr->addCallback("clickConsole", [&](OSG::VRGuiSignals::Options o) { if (o["ID"] == ID) on_link_activate( o["mark"] ); return true; }, true );
+
+    mgr->addCallback("current_ai_config", [&](OSG::VRGuiSignals::Options o) { getKey(o["key"]); model = o["model"]; effort = o["effort"]; return true; }, true );
+    mgr->addCallback("ai_dialog_setKey", [&](OSG::VRGuiSignals::Options o) { getKey(o["key"]); return true; }, true );
+    mgr->addCallback("ai_model_switch", [&](OSG::VRGuiSignals::Options o) { model = o["selection"]; return true; }, true );
+    mgr->addCallback("ai_effort_switch", [&](OSG::VRGuiSignals::Options o) { effort = o["selection"]; return true; }, true );
+
+    mgr->addCallback("on_ai_console_connect", [&](OSG::VRGuiSignals::Options o) { connect(); return true; }, true );
+    mgr->addCallback("on_ai_console_run", [&](OSG::VRGuiSignals::Options o) { sendQuery(o["query"]); return true; }, true );
+
+    uiSignal("newAIConsole", {{"ID",ID}, {"color",notifyColor}});
+    uiSignal("ai_diag_get_config");
+}
+
+VRAIConsoleWidget::~VRAIConsoleWidget() {}
+
+void VRAIConsoleWidget::getKey(string keyVar) {
+    const char* _key = std::getenv( keyVar.c_str() );
+    if (_key) key = _key;
+}
+
+void VRAIConsoleWidget::connect() {
+    if (key.empty()) return;
+
+    llm->setApiKey(key);
+    llm->setModel(model);
+    llm->sendPyAPI();
+
+    ready = true;
+}
+
+void VRAIConsoleWidget::sendQuery(string q) {
+    if (!ready) return;
+    string conversation = "singleConversation";
+    llm->sendRequest(q, conversation, effort);
+    uiSignal("ai_console_append", {{"msg",q}, {"role","user"}});
+}
+
+void VRAIConsoleWidget::onMessage(string m) {
+    uiSignal("ai_console_append", {{"msg",m}, {"role","llm"}});
 }
 
 

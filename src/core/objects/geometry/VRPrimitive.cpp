@@ -15,22 +15,24 @@ int VRPrimitive::getNParams() { return N; }
 string VRPrimitive::getType() { return type; }
 void VRPrimitive::fromString(string s) { stringstream ss(s); fromStream(ss); }
 string VRPrimitive::toString() { stringstream ss; toStream(ss); return ss.str(); }
-VRPrimitive* VRPrimitive::create(string p) {
-    if (p == "Plane") return new VRPlane();
-    if (p == "Box") return new VRBox();
-    if (p == "Sphere") return new VRSphere();
-    if (p == "Torus") return new VRTorus();
-    if (p == "Teapot") return new VRTeapot();
-    if (p == "Cylinder") return new VRCylinder();
-    if (p == "Cone") return new VRCone();
-    if (p == "Arrow") return new VRArrow();
-    if (p == "Pill") return new VRPill();
-    if (p == "Gear") return new VRGear();
-    if (p == "Thread") return new VRScrewThread();
+VRPrimitivePtr VRPrimitive::create(string p) {
+    if (p == "Plane") return shared_ptr<VRPrimitive>( new VRPlane() );
+    if (p == "Box") return shared_ptr<VRPrimitive>( new VRBox() );
+    if (p == "Sphere") return shared_ptr<VRPrimitive>( new VRSphere() );
+    if (p == "Torus") return shared_ptr<VRPrimitive>( new VRTorus() );
+    if (p == "Teapot") return shared_ptr<VRPrimitive>( new VRTeapot() );
+    if (p == "Cylinder") return shared_ptr<VRPrimitive>( new VRCylinder() );
+    if (p == "Cone") return shared_ptr<VRPrimitive>( new VRCone() );
+    if (p == "Arrow") return shared_ptr<VRPrimitive>( new VRArrow() );
+    if (p == "Pill") return shared_ptr<VRPrimitive>( new VRPill() );
+    if (p == "Gear") return shared_ptr<VRPrimitive>( new VRGear() );
+    if (p == "Thread") return shared_ptr<VRPrimitive>( new VRScrewThread() );
+    if (p == "Disk") return shared_ptr<VRPrimitive>( new VRDisk() );
+    if (p == "Annulus") return shared_ptr<VRPrimitive>( new VRAnnulus() );
     return 0;
 }
 
-VRPrimitive* VRPrimitive::copy() {
+VRPrimitivePtr VRPrimitive::copy() {
     auto p = create(getType());
     p->fromString(toString());
     return p;
@@ -151,6 +153,8 @@ VRArrow::VRArrow() { N = 5; type = "Arrow"; }
 VRPill::VRPill() { N = 6; type = "Pill"; }
 VRScrewThread::VRScrewThread() { N = 4; type = "Thread"; }
 VRGear::VRGear() { N = 6; type = "Gear"; }
+VRDisk::VRDisk() { N = 2; type = "Disk"; }
+VRAnnulus::VRAnnulus() { N = 3; type = "Annulus"; }
 
 VRGear::VRGear(float w, float h, float p, int Nt, float St, float b) {
     width = w;
@@ -173,6 +177,8 @@ void VRCone::fromStream(stringstream& ss) { ss >> height >> radius >> Nsides >> 
 void VRArrow::fromStream(stringstream& ss) { ss >> height >> width >> trunc >> hat >> thickness; }
 void VRScrewThread::fromStream(stringstream& ss) { ss >> length >> radius >> pitch >> Nsegments; }
 void VRGear::fromStream(stringstream& ss) { ss >> width >> hole >> pitch >> teeth_number >> teeth_size >> bevel; }
+void VRDisk::fromStream(stringstream& ss) { ss >> radius >> Nsegments; }
+void VRAnnulus::fromStream(stringstream& ss) { ss >> outerRadius >> innerRadius >> Nsegments; }
 
 void VRPlane::toStream(stringstream& ss) { ss << width << " " << height << " " << Nx << " " << Ny; }
 void VRBox::toStream(stringstream& ss) { ss << width << " " << height << " " << depth << " " << Nx << " " << Ny << " " << Nz; }
@@ -185,6 +191,8 @@ void VRCone::toStream(stringstream& ss) { ss << height << " " << radius << " " <
 void VRArrow::toStream(stringstream& ss) { ss << height << " " << width << " " << trunc << " " << hat << " " << thickness; }
 void VRScrewThread::toStream(stringstream& ss) { ss << length << " " << radius << " " << pitch << " " << Nsegments; }
 void VRGear::toStream(stringstream& ss) { ss << width << " " << hole << " " << pitch << " " << teeth_number << " " << teeth_size << " " << bevel; }
+void VRDisk::toStream(stringstream& ss) { ss << radius << Nsegments; }
+void VRAnnulus::toStream(stringstream& ss) { ss << outerRadius << innerRadius << Nsegments; }
 
 GeometryMTRecPtr VRPlane::make() {
     //return makePlaneGeo(width, height, Nx, Ny);
@@ -672,6 +680,61 @@ GeometryMTRecPtr VRGear::make() {
     return geo->getMesh()->geo;
 }
 
-
-
 float VRGear::radius() { return 0.5*pitch*teeth_number/Pi; }
+
+GeometryMTRecPtr VRDisk::make() {
+    VRGeoData data;
+
+    Vec3d n(0,1,0);
+
+    data.pushVert(Pnt3d(), n, Vec2d(0.5,0.5));
+
+    double k = 2*Pi/(Nsegments-1);
+    for (int i=0; i<Nsegments; i++) {
+        double a = k*i;
+        Pnt3d p(cos(a), 0, sin(-a));
+        if (i+1 < Nsegments) data.pushVert(p*radius, n, Vec2d(p[0]*0.5+0.5, p[2]*0.5+0.5));
+        if (i > 0 && i+1 < Nsegments) data.pushTri(0, -2, -1);
+        if (i+1 == Nsegments) data.pushTri(0, -1, 1);
+    }
+
+    auto mat = VRMaterial::create("gearDefault");
+    mat->setDiffuse (Color3f(0.8, 0.8, 0.6));
+    mat->setAmbient (Color3f(0.4, 0.4, 0.2));
+    mat->setSpecular(Color3f(0.1, 0.1, 0.1));
+
+    auto geo = data.asGeometry("Disk");
+    geo->setMaterial(mat);
+    return geo->getMesh()->geo;
+}
+
+GeometryMTRecPtr VRAnnulus::make() {
+    VRGeoData data;
+
+    if (innerRadius >= outerRadius) return 0;
+
+    double h = innerRadius / outerRadius;
+
+    Vec3d n(0,1,0);
+
+    double k = 2*Pi/Nsegments;
+    for (int i=0; i<=Nsegments; i++) {
+        double a = k*i;
+        Pnt3d p(cos(a), 0, sin(-a));
+        if (i+1 <= Nsegments) {
+            data.pushVert(p*innerRadius, n, Vec2d(p[0]*0.5*h+0.5, p[2]*0.5*h+0.5));
+            data.pushVert(p*outerRadius, n, Vec2d(p[0]*0.5+0.5, p[2]*0.5+0.5));
+        }
+        if (i > 0 && i+1 <= Nsegments) data.pushQuad(-4, -3, -1, -2);
+        if (i == Nsegments) data.pushQuad(-2, -1, 1, 0);
+    }
+
+    auto mat = VRMaterial::create("gearDefault");
+    mat->setDiffuse (Color3f(0.8, 0.8, 0.6));
+    mat->setAmbient (Color3f(0.4, 0.4, 0.2));
+    mat->setSpecular(Color3f(0.1, 0.1, 0.1));
+
+    auto geo = data.asGeometry("Disk");
+    geo->setMaterial(mat);
+    return geo->getMesh()->geo;
+}

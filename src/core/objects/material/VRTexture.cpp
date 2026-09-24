@@ -8,6 +8,7 @@
 #endif
 
 #include <OpenSG/OSGImage.h>
+#include <random>
 
 using namespace OSG;
 
@@ -31,13 +32,52 @@ void VRTexture::setInternalFormat(int ipf) { internal_format = ipf; }
 int VRTexture::getInternalFormat() { return internal_format; }
 ImageMTRecPtr VRTexture::getImage() { return img; }
 
+int VRTexture_getChnEnum(int chanels) {
+    int chEnum = chanels; // chanels may be an enum already
+    if (chanels == 1) chEnum = Image::OSG_I_PF;
+    if (chanels == 2) chEnum = Image::OSG_LA_PF;
+    if (chanels == 3) chEnum = Image::OSG_RGB_PF;
+    if (chanels == 4) chEnum = Image::OSG_RGBA_PF;
+    return chEnum;
+}
+
+void VRTexture::readBuffer(string path, string format, Vec3i layout, int chanels, int Nmipmaps, int ipf) {
+    int frmt = -1;
+    if (format == "UINT8") frmt = Image::OSG_UINT8_IMAGEDATA;
+    if (format == "FLOAT32") frmt = Image::OSG_FLOAT32_IMAGEDATA;
+    if (frmt < 0) { cout << "ERROR: format conversion failed!" << endl; return; }
+
+    ifstream file(path, std::ios::binary);
+    if (!file) { cout << "Error opening " << path << endl; return; }
+
+    file.seekg(0, std::ios::end);
+    size_t N = file.tellg();
+
+    file.seekg(0, std::ios::beg);
+    vector<char> data(N);
+    file.read(data.data(), N);
+    if (file.fail()) { cout << "Error reading " << path << endl; return;}
+
+    for (int i=0; i<200; i++) cout << " " << (int)(uint8_t)data[i];
+    cout << endl;
+
+    file.close();
+
+    int chEnum = VRTexture_getChnEnum(chanels);
+    img->set( chEnum, layout[0], layout[1], layout[2], Nmipmaps, 1, 0, (const uint8_t*)&data[0], frmt, true, 1);
+    internal_format = ipf;
+}
+
 void VRTexture::setByteData(vector<char> data, Vec3i layout, int chanels, int Nmipmaps, int ipf) {
-    img->set( chanels, layout[0], layout[1], layout[2], Nmipmaps, 1, 0, (const uint8_t*)&data[0], Image::OSG_UINT8_IMAGEDATA, true, 1);
+    int chEnum = VRTexture_getChnEnum(chanels);
+    img->set( chEnum, layout[0], layout[1], layout[2], Nmipmaps, 1, 0, (const uint8_t*)&data[0], Image::OSG_UINT8_IMAGEDATA, true, 1);
     internal_format = ipf;
 }
 
 void VRTexture::setFloatData(vector<float> data, Vec3i layout, int chanels, int Nmipmaps, int ipf) {
-    img->set( chanels, layout[0], layout[1], layout[2], Nmipmaps, 1, 0, (const uint8_t*)&data[0], Image::OSG_FLOAT32_IMAGEDATA, true, 1);
+    //cout << "setFloatData " << toString(data) << "  " << data.size() << "  " << layout[0]*layout[1]*layout[2] << endl;
+    int chEnum = VRTexture_getChnEnum(chanels);
+    img->set( chEnum, layout[0], layout[1], layout[2], Nmipmaps, 1, 0, (const uint8_t*)&data[0], Image::OSG_FLOAT32_IMAGEDATA, true, 1);
     internal_format = ipf;
 }
 
@@ -135,31 +175,55 @@ struct Pixel {
     Pixel(char r, char g, char b, char a) : r(r), g(g), b(b), a(a) {}
 };
 
-void VRTexture::paste(VRTexturePtr other, Vec3i offset) {
-    Vec3i s1 = getSize();
-    Vec3i s2 = other->getSize();
-    if (s2[0]*s2[1]*s2[2] == 0) return;
+void VRTexture::paste(VRTexturePtr other, Vec3i destOffset) { // copy from other into itself
+    auto memPos = [](const Vec3i& p, const Vec3i& s, const int& bpp) {
+        return (p[0] + p[1]*s[0] + p[2]*s[0]*s[1])*bpp;
+    };
 
-    Vec3i S = offset + s2;
-    if (S[0] > s1[0]) { cout << "VRTexture::paste sx too big: " << S << " s " << s1 << endl; return; }
-    if (S[1] > s1[1]) { cout << "VRTexture::paste sy too big: " << S << " s " << s1 << endl; return; }
-    if (S[2] > s1[2]) { cout << "VRTexture::paste sz too big: " << S << " s " << s1 << endl; return; }
+    auto validPoint = [](const Vec3i& p, const Vec3i& s) {
+        if (p[0] < 0 || p[1] < 0 || p[2] < 0) return false;
+        if (p[0] >= s[0] || p[1] >= s[1] || p[2] >= s[2]) return false;
+        return true;
+    };
 
+    Vec3i destSize = getSize();
+    Vec3i srcSize = other->getSize();
+    if (srcSize[0]*srcSize[1]*srcSize[2] == 0) return;
+    if (destOffset[0] <= -srcSize[0] || destOffset[1] <= -srcSize[1] || destOffset[2] <= -srcSize[2]) return; // img not visible
+    if (destOffset[0] > destSize[0] || destOffset[1] > destSize[1] || destOffset[2] > destSize[2]) return; // img not visible
+
+    // compute window to copy
+    Vec3i winSize = srcSize;
+    Vec3i srcOffset = Vec3i(0,0,0);
+    for (int i=0; i<3; i++) {
+        if (destOffset[i] > 0)  winSize[i] = min(srcSize[i], destSize[i]-destOffset[i]);
+        if (destOffset[i] <= 0) winSize[i] = min(srcSize[i] + destOffset[i], destSize[i]);
+        if (destOffset[i] < 0) srcOffset[i] = -destOffset[i];
+        if (destOffset[i] < 0) destOffset[i] = 0;
+    }
+
+    //cout << "window size: " << winSize << ", src offset: " << srcOffset << ", dest offset: " << destOffset << endl;
 
     auto data1 = img->editData();
     auto data2 = other->img->editData();
     int Bpp1 = getPixelByteSize();
     int Bpp2 = other->getPixelByteSize();
     int BppMin = min(Bpp1, Bpp2);
-    for (int k=0; k<s2[2]; k++) {
-        for (int j=0; j<s2[1]; j++) {
-            size_t J1 = (offset[0] + (j+offset[1])*s1[0] + (k+offset[2])*s1[0]*s1[1])*Bpp1;
-            size_t J2 = (j*s2[0] + k*s2[0]*s2[1])*Bpp2;
-            if (Bpp1 == Bpp2) memcpy(data1+J1, data2+J2, s2[0]*Bpp2); // copy whole line
-            else {
-                for (int i=0; i<s2[0]; i++) {
-                    size_t J11 = J1 + i*Bpp1;
-                    size_t J21 = J2 + i*Bpp2;
+
+    for (int k=0; k<winSize[2]; k++) {
+        for (int j=0; j<winSize[1]; j++) {
+            Vec3i dstP = Vec3i(0,j,k)+destOffset;
+            Vec3i srcP = Vec3i(0,j,k)+srcOffset;
+            size_t dstMem = memPos(dstP, destSize, Bpp1);
+            size_t srcMem = memPos(srcP, srcSize , Bpp2);
+
+            if (Bpp1 == Bpp2) {
+                    //cout << " copy " << srcP << " -> " << dstP << "/" << winSize[0] << " - dstMem: " << dstMem/Bpp1 << "/" << destSize[0]*destSize[1]*destSize[2] << endl;
+                    memcpy(data1+dstMem, data2+srcMem, winSize[0]*Bpp2); // copy whole line
+            } else {
+                for (int i=0; i<winSize[0]; i++) {
+                    size_t J11 = dstMem + i*Bpp1;
+                    size_t J21 = srcMem + i*Bpp2;
 
                     if (Bpp1 == 4 && Bpp2 == 1) { // hack, make it nicer later on
                         char c = *(data2+J21);
@@ -186,6 +250,7 @@ void VRTexture::paste(VRTexturePtr other, Vec3i offset) {
 }
 
 void VRTexture::resize(Vec3i size, bool scale, Vec3i offset) {
+    cout << "resize " << getSize() << " to " << size << ", scale " << scale << ", offset " << offset << endl;
     ImageMTRecPtr nimg = Image::create();
     nimg->set(img->getPixelFormat(), size[0], size[1], size[2], img->getMipMapCount(), img->getFrameCount(), img->getFrameDelay(), 0, img->getDataType(), true, img->getSideCount());
     VRTexturePtr tmp;
@@ -201,6 +266,45 @@ void VRTexture::resize(Vec3i size, bool scale, Vec3i offset) {
 
     img = nimg;
     paste(tmp, offset);
+}
+
+void VRTexture::turn(int steps) {
+    int N = steps%4;
+    if (N < 0) N += 4;
+    if (N == 0) return; // full circles
+
+    Vec3i sSrc = getSize();
+    Vec3i sDst = getSize();
+    if (N == 1 || N == 3) sDst = Vec3i(sSrc[1], sSrc[0], sSrc[2]); // 90 deg rotation
+
+    ImageMTRecPtr rimg = Image::create();
+    rimg->set(img->getPixelFormat(), sDst[0], sDst[1], sDst[2], img->getMipMapCount(), img->getFrameCount(), img->getFrameDelay(), 0, img->getDataType(), true, img->getSideCount());
+
+    auto src = img->editData();
+    auto dst = rimg->editData();
+
+    auto indexOf = [](size_t i, size_t j, size_t k, Vec3i s) {
+        return i + j*s[0] + k*s[0]*s[1];
+    };
+
+    int bpp = getPixelByteSize();
+
+    //cout << "VRTexture::turn " << steps << ", N " << N << endl;
+
+    for (size_t k=0; k<sDst[2]; k++) {
+        for (size_t j=0; j<sDst[1]; j++) {
+            for (size_t i=0; i<sDst[0]; i++) {
+                size_t a = indexOf( i,j,k, sDst) * bpp;
+                size_t b = 0;
+                if (N == 1) b = indexOf( sDst[1]-1-j,i,k, sSrc) * bpp;
+                if (N == 2) b = indexOf( sDst[0]-1-i,sDst[1]-1-j,k, sSrc) * bpp;
+                if (N == 3) b = indexOf( j,sDst[0]-1-i,k, sSrc) * bpp;
+                memcpy(dst+a, src+b, bpp);
+            }
+        }
+    }
+
+    img = rimg;
 }
 
 void VRTexture::merge(VRTexturePtr other, Vec3d pos) {
@@ -311,7 +415,7 @@ void VRTexture::setPixel(Vec3i p, Color4f c) {
     int h = img->getHeight();
     clampToImage(p);
     int i = p[0] + p[1]*w + p[2]*w*h;
-    setPixel(i, c);
+    setIthPixel(i, c);
 }
 
 size_t VRTexture::getNPixel() {
@@ -319,7 +423,7 @@ size_t VRTexture::getNPixel() {
     return s[0]*s[1]*s[2];
 }
 
-void VRTexture::setPixel(int i, Color4f c) {
+void VRTexture::setIthPixel(int i, Color4f c) {
     int N = getChannels();
     int Nbytes = getPixelByteN();
     auto data = img->editData();
@@ -373,6 +477,30 @@ void VRTexture::clampToImage(Vec3i& p) {
     if (p[1] >= img->getHeight()) p[1] = img->getHeight()-1;
     if (p[2] < 0) p[2] = 0;
     if (p[2] >= img->getDepth()) p[2] = img->getDepth()-1;
+}
+
+vector<Color4f> VRTexture::randomSamples(int N) {
+    size_t Np = getNPixel();
+    N = min(N, int(Np));
+
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<> dist(0, Np);
+
+    vector<Color4f> res;
+    for (int i = 0; i < N; i++) {
+        int k = min(dist(gen), int(Np)-1);
+        res.push_back( getPixel(k) );
+    }
+    return res;
+}
+
+Color4f VRTexture::sampleMeanColor(int N) {
+    auto samples = randomSamples(N);
+    Color4f r;
+    for (auto& s : samples) r += s;
+    r *= 1.0/samples.size();
+    return r;
 }
 
 vector<Color4f> VRTexture::getPixels(bool invertY) {
@@ -575,7 +703,7 @@ void VRTexture::mixColor(Color4f c, float a) {
     size_t N = getNPixel();
     for (size_t i=0; i<N; i++) {
         Color4f p = getPixel(i);
-        setPixel(i, p*(1-a) + c*a);
+        setIthPixel(i, p*(1-a) + c*a);
     }
 }
 

@@ -14,7 +14,7 @@ int imguiInputCb(ImGuiInputTextCallbackData* data) { // the callback reacts on a
 
 bool ImInput::render(int width) {
     if (label != "") {
-        ImGui::Text(label.c_str());
+        ImGui::TextUnformatted(label.c_str());
         ImGui::SameLine();
     }
 

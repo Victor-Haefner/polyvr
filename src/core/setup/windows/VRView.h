@@ -36,6 +36,8 @@ class VRView : public std::enable_shared_from_this<VRView> {
         bool projection = false;
         bool doStats = false;
 
+        string stereoMode = "Side by side";
+
         NodeMTRecPtr viewGeo;
         VRMaterialPtr viewGeoMat;
         NodeMTRecPtr coordsGeo;
@@ -132,6 +134,7 @@ class VRView : public std::enable_shared_from_this<VRView> {
         void setBackground(BackgroundMTRecPtr bg);
         void setWindow(WindowMTRecPtr win);
         void setStereo(bool b);
+        void setStereoMode(string mode);
         void setStereoEyeSeparation(float v);
         void setProjection(bool b);
         void setOffset(Vec3d);
@@ -143,6 +146,7 @@ class VRView : public std::enable_shared_from_this<VRView> {
         ProjectionCameraDecoratorMTRecPtr getCameraDecoratorLeft();
         ProjectionCameraDecoratorMTRecPtr getCameraDecoratorRight();
         bool isStereo();
+        string getStereoMode();
         float getEyeSeparation();
         bool isProjection();
 

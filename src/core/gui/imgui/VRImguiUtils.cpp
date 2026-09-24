@@ -3,6 +3,7 @@
 #include <iostream>
 #include <math.h>
 
+#include "core/utils/xml.h"
 #include "core/utils/system/VRSystem.h"
 #include "core/tools/VRProjectManager.h"
 #include "core/objects/material/VRTexture.h"
@@ -26,6 +27,13 @@ ostream& operator<<(ostream& os, const ImRectangle& s) {
 ostream& operator<<(ostream& os, const Surface& s) {
     os << "[" << s.x << ", " << s.y << ", " << s.width << ", " << s.height << "]";
     return os;
+}
+
+void ImRectangle::clamp() {
+    left   = ::clamp(left  , clampLeft.x  , clampLeft.y);
+    right  = ::clamp(right , clampRight.x , clampRight.y);
+    top    = ::clamp(top   , clampTop.x   , clampTop.y);
+    bottom = ::clamp(bottom, clampBottom.x, clampBottom.y);
 }
 
 void Surface::compute(const Surface& parent, const ImRectangle& area) {
@@ -84,12 +92,14 @@ ImVec4 colorFromString(const string& c) {
     return ImVec4(255,255,255,255);
 }
 
-#include "core/utils/xml.h"
-
 map<string, string> uiParameterStore;
 string uiParameterFile;
+bool uiParameterStoreReady = false;
 
 void uiInitStore() {
+    if (uiParameterStoreReady) return;
+    uiParameterStoreReady = true;
+
     uiParameterFile = absolute(".uiParameter.ini");
     OSG::XML xml;
     xml.read(uiParameterFile, false);
@@ -104,6 +114,8 @@ void uiInitStore() {
 }
 
 void uiStoreParameter(string name, string value) {
+    if (!uiParameterStoreReady) uiInitStore();
+
     uiParameterStore[name] = value;
 
     OSG::XML xml;
@@ -121,17 +133,23 @@ void uiCloseStore() {
 }
 
 string uiGetParameter(string name, string def) {
+    if (!uiParameterStoreReady) uiInitStore();
     if (uiParameterStore.count(name)) return uiParameterStore[name];
     else return def;
 }
 
-float strWidth(const string& s) { // TODO
+float uiStrWidth(const string& s) { // TODO
     ImGuiStyle& style = ImGui::GetStyle();
     ImGuiIO& io = ImGui::GetIO();
 
     float p = style.FramePadding.x * 2.0f;
     //return ImGui::CalcTextSize(s.c_str()).x + p; // CalcTextSize may crash when starting maximized
     return s.size()*6.5*io.FontGlobalScale + p;
+}
+
+float uiStrScale() {
+    ImGuiIO& io = ImGui::GetIO();
+    return io.FontGlobalScale;
 }
 
 static bool borderGlowActive = false;
@@ -177,6 +195,9 @@ void ImImage::read(string p) {
     width = s[0];
     height = s[1];
 
+    int colorLayout = GL_RGBA;
+    if (tex->getChannels() == 3) colorLayout = GL_RGB;
+
     // Create a OpenGL texture identifier
     glGenTextures(1, &glID);
     glBindTexture(GL_TEXTURE_2D, glID);
@@ -186,8 +207,7 @@ void ImImage::read(string p) {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE); // This is required on WebGL for non power-of-two textures
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE); // Same
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, image_data);
-
+    glTexImage2D(GL_TEXTURE_2D, 0, colorLayout, width, height, 0, colorLayout, GL_UNSIGNED_BYTE, image_data);
 }
 
 void ImImage::render(int w, int h) {

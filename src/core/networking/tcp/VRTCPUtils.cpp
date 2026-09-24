@@ -3,24 +3,23 @@
 #include "core/networking/rest/VRRestResponse.h"
 #include "core/utils/toString.h"
 
-#include <boost/asio.hpp>
+#include "asio.hpp"
 #include <iostream>
 
 using namespace OSG;
-using boost::asio::ip::udp;
-using boost::asio::ip::tcp;
+using asio::ip::udp;
+using asio::ip::tcp;
 
 string VRTCPUtils::getLocalIP() {
     string lIP;
     try {
-        boost::asio::io_service netService;
+        asio::io_context netService;
         udp::resolver resolver(netService);
-        udp::resolver::query query(udp::v4(), "google.com", "");
-        udp::resolver::iterator endpoints = resolver.resolve(query);
-        udp::endpoint ep = *endpoints;
+        udp::resolver::results_type endpoints = resolver.resolve(udp::v4(), "google.com", "");
+        udp::endpoint ep = *endpoints.begin();
         udp::socket socket(netService);
         socket.connect(ep);
-        boost::asio::ip::address addr = socket.local_endpoint().address();
+        asio::ip::address addr = socket.local_endpoint().address();
         lIP = addr.to_string();
     } catch (std::exception& e){
         std::cout << "VRTCPUtils::getLocalIP exception: " << e.what() << std::endl;
@@ -46,11 +45,10 @@ string VRTCPUtils::getHostIP(string host) {
 
     string IP;
     try {
-        boost::asio::io_service netService;
+        asio::io_context netService;
         tcp::resolver resolver(netService);
-        tcp::resolver::query query(host, "80");
-        tcp::resolver::iterator endpoints = resolver.resolve(query);
-        tcp::endpoint ep = *endpoints;
+        tcp::resolver::results_type endpoints = resolver.resolve(host, "80");
+        tcp::endpoint ep = *endpoints.begin();
         IP = ep.address().to_string();
     } catch (std::exception& e){
         std::cout << "VRTCPUtils::getHostIP from " << host << ", exception: " << e.what() << std::endl;

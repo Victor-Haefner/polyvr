@@ -20,8 +20,7 @@ template<> bool toValue(PyObject* o, VRObjectPtr& v) {
 }
 
 template<> PyTypeObject VRPyBaseT<OSG::VRObject>::type = {
-    PyObject_HEAD_INIT(NULL)
-    0,                         /*ob_size*/
+    PyVarObject_HEAD_INIT(NULL, 0)
     "VR.Object",             /*tp_name*/
     sizeof(VRPyObject),             /*tp_basicsize*/
     0,                         /*tp_itemsize*/
@@ -29,12 +28,12 @@ template<> PyTypeObject VRPyBaseT<OSG::VRObject>::type = {
     0,                         /*tp_print*/
     0,                         /*tp_getattr*/
     0,                         /*tp_setattr*/
-    VRPyObject::compare,                         /*tp_compare*/
+    0,                         /*tp_as_async*/
     0,                         /*tp_repr*/
     0,                         /*tp_as_number*/
     0,                         /*tp_as_sequence*/
     0,                         /*tp_as_mapping*/
-    VRPyObject::hash,                         /*tp_hash */
+    VRPyObject::hash,          /*tp_hash */
     0,                         /*tp_call*/
     0,                         /*tp_str*/
     0,                         /*tp_getattro*/
@@ -44,7 +43,7 @@ template<> PyTypeObject VRPyBaseT<OSG::VRObject>::type = {
     "VRObject binding",           /* tp_doc */
     0,		               /* tp_traverse */
     0,		               /* tp_clear */
-    0,		               /* tp_richcompare */
+    VRPyObject::compare,		               /* tp_richcompare */
     0,		               /* tp_weaklistoffset */
     0,		               /* tp_iter */
     0,		               /* tp_iternext */
@@ -59,6 +58,17 @@ template<> PyTypeObject VRPyBaseT<OSG::VRObject>::type = {
     (initproc)init,      /* tp_init */
     0,                         /* tp_alloc */
     New_VRObjects_ptr,                 /* tp_new */
+    0, /* tp_free; */
+    0, /* tp_is_gc; */
+    0, /* tp_bases; */
+    0, /* tp_mro; */
+    0, /* tp_cache; */
+    0, /* tp_subclasses; */
+    0, /* tp_weaklist; */
+    0, /* tp_del; */
+    0, /* tp_version_tag; */
+    0, /* tp_finalize; */
+    0, /* tp_vectorcall; */
 };
 
 const char* exportToFileDoc = "Export subtree to file"
@@ -80,7 +90,7 @@ PyMethodDef VRPyObject::methods[] = {
     {"hasChild", PyWrapOpt(Object, hasChild, "Check if object is a child", "-1", bool, VRObjectPtr, int ) },
     {"addChild", PyWrapOpt(Object, addChild, "Add object as child", "1|-1", void, VRObjectPtr, bool, int ) },
     {"subChild", PyWrapOpt(Object, subChild, "Sub child object", "1", void, VRObjectPtr, bool ) },
-    {"switchParent", PyWrapOpt(Object, switchParent, "Switch object to other parent object", "-1", void, VRObjectPtr, int) },
+    {"switchParent", PyWrapOpt(Object, switchParent, "Switch object to other parent object, (new parent, keep transform, place)", "0|-1", void, VRObjectPtr, bool, int) },
     {"replaceChild", PyWrap(Object, replaceChild, "Replace child i with another", void, int, VRObjectPtr) },
     {"hasDescendant", PyWrap(Object, hasDescendant, "Check if object in in subgraph", bool, VRObjectPtr) },
     {"hasAncestor", PyWrap(Object, hasAncestor, "Check if object is an ancestor", bool, VRObjectPtr) },
@@ -125,8 +135,8 @@ PyMethodDef VRPyObject::methods[] = {
     {"clearChildren", PyWrapOpt(Object, clearChildren, "Remove all children", "1", void, bool) },
     {"getChildIndex", PyWrap(Object, getChildIndex, "Return the child index of this object", int) },
     {"getOSGTreeString", PyWrap(Object, getOSGTreeString, "Get string description of OSG subtree", string) },
-    {"getBoundingbox", PyWrapOpt(Object, getBoundingbox, "get Boundingbox", "0", BoundingboxPtr, bool) },
-    {"getWorldBoundingbox", PyWrap(Object, getWorldBoundingbox, "get world Boundingbox", BoundingboxPtr) },
+    {"getBoundingbox", PyWrapOpt(Object, getBoundingbox, "get Boundingbox in object coord system\n getBoundingbox(onlyVisible)", "1", BoundingboxPtr, bool) },
+    {"getWorldBoundingbox", PyWrapOpt(Object, getWorldBoundingbox, "get world Boundingbox\n getWorldBoundingbox(onlyVisible)", "1", BoundingboxPtr, bool) },
     {"setVolume", PyWrap(Object, setVolume, "Set the scenegraph volume to boundingbox", void, Boundingbox) },
     {"getPoseTo", PyWrap(Object, getPoseTo, "Get the transformation from this object to another, returns a pose", PosePtr, VRObjectPtr ) },
     {"exportToFile", PyWrap(Object, exportToFile, "Export object (and subtree) to file, supported extensions: [wrl, wrz, obj, osb, osg, ply, gltf, dae]", void, string, mapStrStr) },
@@ -134,7 +144,7 @@ PyMethodDef VRPyObject::methods[] = {
     {NULL}  /* Sentinel */
 };
 
-PyObject* VRPyObject::destroy(VRPyObject* self) {
+PyObject* VRPyObject::destroy(VRPyObject* self, PyObject* args) {
     if (self->objPtr == 0) { PyErr_SetString(err, "VRPyObject::destroy - C Object is invalid"); return NULL; }
     self->objPtr->destroy();
     self->objPtr = 0;
@@ -151,31 +161,36 @@ PyObject* VRPyObject::setPersistency(VRPyObject* self, PyObject* args) {
     Py_RETURN_TRUE;
 }
 
-PyObject* VRPyObject::getPersistency(VRPyObject* self) {
+PyObject* VRPyObject::getPersistency(VRPyObject* self, PyObject* args) {
     if (self->objPtr == 0) { PyErr_SetString(err, "VRPyObject::getPersistency - C Object is invalid"); return NULL; }
-    return PyInt_FromLong( self->objPtr->getPersistency() );
+    return PyLong_FromLong( self->objPtr->getPersistency() );
 }
 
-int VRPyObject::compare(PyObject* p1, PyObject* p2) {
-    if (Py_TYPE(p1) != Py_TYPE(p2)) return -1;
+PyObject* VRPyObject::compare(PyObject* p1, PyObject* p2, int op) {
+    if (op != Py_EQ && op != Py_NE) Py_RETURN_NOTIMPLEMENTED;
+    bool same = true;
+    if (Py_TYPE(p1) != Py_TYPE(p2)) same = false;
     VRPyBaseT* o1 = (VRPyBaseT*)p1;
     VRPyBaseT* o2 = (VRPyBaseT*)p2;
-    return (o1->objPtr == o2->objPtr) ? 0 : -1;
+    if (o1->objPtr != o2->objPtr) same = false;
+    if (same && op == Py_EQ) Py_RETURN_TRUE;
+    if (!same && op == Py_NE) Py_RETURN_TRUE;
+    Py_RETURN_FALSE;
 }
 
-long VRPyObject::hash(PyObject* p) {
+Py_hash_t VRPyObject::hash(PyObject* p) {
     VRPyBaseT* o = (VRPyBaseT*)p;
-    return (long)o->objPtr.get();
+    return (Py_hash_t)o->objPtr.get();
 }
 
-PyObject* VRPyObject::getName(VRPyObject* self) {
+PyObject* VRPyObject::getName(VRPyObject* self, PyObject* args) {
     if (self->objPtr == 0) { PyErr_SetString(err, "C Object is invalid"); return NULL; }
-    return PyString_FromString(self->objPtr->getName().c_str());
+    return PyUnicode_FromString(self->objPtr->getName().c_str());
 }
 
-PyObject* VRPyObject::getBaseName(VRPyObject* self) {
+PyObject* VRPyObject::getBaseName(VRPyObject* self, PyObject* args) {
     if (self->objPtr == 0) { PyErr_SetString(err, "C Object is invalid"); return NULL; }
-    return PyString_FromString(self->objPtr->getBaseName().c_str());
+    return PyUnicode_FromString(self->objPtr->getBaseName().c_str());
 }
 
 PyObject* VRPyObject::setName(VRPyObject* self, PyObject* args) {

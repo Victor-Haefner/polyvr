@@ -12,6 +12,7 @@ ptrFwd(VRNetNodeWidget);
 ptrFwd(VRDataFlowWidget);
 ptrFwd(VRGuiTreeExplorer);
 ptrFwd(VRConsoleWidget);
+ptrFwd(VRAIConsoleWidget);
 ptrFwd(VRSemanticWidget);
 ptrFwd(VRConceptWidget);
 ptrFwd(VREntityWidget);

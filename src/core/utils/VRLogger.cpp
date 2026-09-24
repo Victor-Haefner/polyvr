@@ -4,10 +4,14 @@
 #include "core/gui/VRGuiConsole.h"
 #endif
 
+#include <iostream>
+
 map<string, bool> VRLog::tags;
 
 void VRLog::print(string tag, string s, string c) {
     if (!tags[tag]) return;
+
+    //cout << "print " << tag << " " << s << " " << c << endl;
 
 #ifndef WITHOUT_IMGUI
     auto co = OSG::VRConsoleWidget::get(c);

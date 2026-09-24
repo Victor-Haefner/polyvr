@@ -79,15 +79,11 @@ VRWindowPtr VRWindowManager::addCocoaWindow(string name) {
 }
 
 VRWindowPtr VRWindowManager::addGlutWindow(string name) {
-#ifndef WITHOUT_IMGUI
     VRGlutWindowPtr win = VRGlutWindow::create();
     win->setName(name);
     win->setAction(ract);
     windows[win->getName()] = win;
     return win;
-#else
-    return 0;
-#endif
 }
 
 VRWindowPtr VRWindowManager::addGlutEditor(string name) {
@@ -176,7 +172,7 @@ void VRWindowManager::updateWindows() {
     }
     profiler->regStop(pID1);
 
-    //TODO: use barrier->getnumwaiting to make a state machine, allways ensure all are waiting!!
+    //TODO: use barrier->getnumwaiting to make a state machine, always ensure all are waiting!!
 
 #ifndef WASM
     BarrierRefPtr barrier = Barrier::get("PVR_rendering", true);
@@ -227,11 +223,13 @@ void VRWindowManager::updateWindows() {
         if (!wait()) return false;
         // let the windows merge the change lists, sync and clear
         if (!wait()) return false;
+
 #ifndef WITHOUT_GLUT
         int pID2 = profiler->regStart("process glut events");
         glutMainLoopEvent();
         profiler->regStop(pID2);
 #endif
+
         for (auto w : getWindows()) {
 #ifndef WITHOUT_GLUT
             int pID3 = profiler->regStart("render glut editor");
@@ -336,22 +334,22 @@ void VRWindowManager::load(XMLElementPtr node) {
 
         if (type == "0" || type == "distributed") {
             win = addMultiWindow(name);
-            win->load(el);
+            if (win) win->load(el);
         }
 
         if (type == "1" || type == "glut") {
             win = addGlutWindow(name);
-            win->load(el);
+            if (win) win->load(el);
         }
 
         if (type == "glutEditor") {
             win = addGlutEditor(name);
-            win->load(el);
+            if (win) win->load(el);
         }
 
         if (type == "cocoa") {
             win = addCocoaWindow(name);
-            win->load(el);
+            if (win) win->load(el);
         }
     }
 }

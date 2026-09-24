@@ -7,8 +7,7 @@
 OSG::SimViDekont* VRPySimViDekont::svd = 0;
 
 template<> PyTypeObject VRPyBaseT<OSG::SimViDekont>::type = {
-    PyObject_HEAD_INIT(NULL)
-    0,                         /*ob_size*/
+    PyVarObject_HEAD_INIT(NULL, 0)
     "VR.SimViDekont",             /*tp_name*/
     sizeof(VRPySimViDekont),             /*tp_basicsize*/
     0,                         /*tp_itemsize*/

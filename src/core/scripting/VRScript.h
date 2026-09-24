@@ -20,8 +20,28 @@ namespace xmlpp{ class Element; }
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
+struct VRPyException {
+    struct Frame {
+        int line = 0;
+        int offset = -1;
+        int eline = 0;
+        int eoffset = -1;
+        string message;
+        string text;
+        string filename;
+        string funcname;
+    };
+
+    bool occured = false;
+    string val;
+    vector<Frame> bt;
+
+    void get();
+};
+
 class VRScript : public std::enable_shared_from_this<VRScript>, public VRName {
     public:
+
         struct arg : public VRName {
             string type = "NoneType";
             string val = "None";
@@ -57,22 +77,25 @@ class VRScript : public std::enable_shared_from_this<VRScript>, public VRName {
             map<int, vector<int> > result;
         };
 
-        struct errLink {
+        struct Reference {
             string filename;
-            int line;
-            int column;
-            errLink(string f, int l, int c);
+            int line = -1;
+            int column = -1;
+            Reference();
+            Reference(string f, int l, int c);
         };
 
         typedef shared_ptr<arg> argPtr;
         typedef shared_ptr<trig> trigPtr;
 
     private:
+        string source;
         string core = "\tpass";
         string head;
         string type = "Python";
         string server = "server1";
         string group = "no group";
+        string pyVersion = "2.7.18"; // latest pre python 3
         PyObject* fkt = 0;
         PyObject* pargs = 0;
         argPtr devArg = 0;
@@ -93,9 +116,8 @@ class VRScript : public std::enable_shared_from_this<VRScript>, public VRName {
 
         argPtr getArg(string name);
         trigPtr getTrig(string name);
-        void on_err_link_clicked(errLink link, string s);
+        void on_err_link_clicked(Reference link, string s);
         void pyErrPrint(string channel);
-        void printSyntaxError(PyObject* exception, PyObject* value, PyObject* tb);
         void update();
 
     public:
@@ -109,11 +131,13 @@ class VRScript : public std::enable_shared_from_this<VRScript>, public VRName {
         void updateDeviceTrigger();
 
         void setName(string n);
+        void setSource(string s);
         void setFunction(PyObject* _fkt);
         void setCore(string _script);
         void setType(string type);
         void setHTMLHost(string server);
 
+        string getSource();
         string getHead();
         string getCore();
         string getScript();
@@ -150,6 +174,7 @@ class VRScript : public std::enable_shared_from_this<VRScript>, public VRName {
         void changeTrigState(string name, string state);
         bool hasTrigger(string type);
 
+        void preprocess();
         void compile( PyObject* pGlobal, PyObject* pModVR );
         void execute();
         bool execute_dev(VRDeviceWeakPtr dev);
@@ -164,6 +189,8 @@ class VRScript : public std::enable_shared_from_this<VRScript>, public VRName {
 
         void save(XMLElementPtr e, int p = 0) override;
         void load(XMLElementPtr e, VRStorageContextPtr context = 0) override;
+
+        void exportForWasm();
 };
 
 OSG_END_NAMESPACE;

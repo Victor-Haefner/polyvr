@@ -2,6 +2,7 @@
 #include "core/scene/VRSceneManager.h"
 #include "core/setup/VRSetup.h"
 #include "core/setup/windows/VRView.h"
+#include "core/setup/windows/VRWindow.h"
 #include "core/utils/toString.h"
 #include "core/utils/VRStorage_template.h"
 #include "core/objects/VRLight.h"
@@ -12,6 +13,7 @@
 #include "VRRenderStudio.h"
 
 #include <OpenSG/OSGRenderAction.h>
+#include <OpenSG/OSGRenderOptions.h>
 
 using namespace OSG;
 
@@ -55,6 +57,19 @@ void VRRenderManager::update() {
     ract->setCorrectTwoSidedLighting(twoSided);
     //ract->setSortTrans(true); // renders transparent objects from back to front
     ract->setZWriteTrans(true); // enables the zbuffer for transparent objects
+
+    for (auto win : setup->getWindows()) {
+        auto osgWin = win.second->getOSGWindow();
+        if (osgWin) {
+            auto rOpts = osgWin->getRenderOptions();
+            if (rOpts) {
+                rOpts->setZWriteTrans(true);
+                rOpts->setFrustumCulling(frustumCulling);
+                rOpts->setOcclusionCulling(occlusionCulling);
+                rOpts->setCorrectTwoSidedLighting(twoSided);
+            }
+        }
+    }
 
     for (auto v : setup->getViews()) {
         auto rendering = v->getRenderingL();
@@ -178,11 +193,12 @@ void VRRenderManager::reloadStageShaders() {
 bool VRRenderManager::getMultisampling() { return glMSAA; }
 void VRRenderManager::setMultisampling(bool b) {
     glMSAA = b;
+#ifndef WASM
 #ifdef GL_MULTISAMPLE_ARB
     cout << "VRRenderManager::setMultisampling " << b << endl;
     if (b) glEnable(GL_MULTISAMPLE_ARB);
     else glDisable(GL_MULTISAMPLE_ARB);
-    cout << " VRRenderManager::setMultisampling done" << endl;
+#endif
 #endif
 }
 

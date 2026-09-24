@@ -10,6 +10,7 @@ class ImInput;
 
 struct ImScriptEntry {
     string name;
+    string source;
     string fg = "#000000";
     string bg = "#FFFFFF";
     float perf = 0;
@@ -20,6 +21,7 @@ struct ImScriptEntry {
 struct ImScriptGroup {
     vector<ImScriptEntry> scripts;
     string name;
+    bool needsOpen = false;
     ImScriptGroup() {}
     ImScriptGroup(string name);
 };
@@ -37,9 +39,11 @@ class ImScriptList {
         ImInput* input = 0;
 
         void clear();
+        void focus(string name);
         void addGroup(string name, string ID);
         void addScript(string name, string groupID, float time);
         void setColor(string name, string fg, string bg);
+        void setSource(string name, string source);
         void setPerformance(string name, float time);
         void renderScriptEntry(ImScriptEntry& script);
         void renderGroupEntry(string& group);
@@ -67,6 +71,7 @@ class ImScriptEditor {
             string value;
         };
 
+        bool doShowWhitespace = false;
         bool sensitive = false;
         TextEditor imEditor;
         int current_type = 0;
@@ -83,6 +88,7 @@ class ImScriptEditor {
 
         void setBuffer(string data);
         void getBuffer(int skipLines);
+        void getCursor();
 
         void setParameters(string type, string group);
 
@@ -94,11 +100,13 @@ class ImScriptEditor {
         void editorCommand(string cmd);
         void focusOn(string line, string column);
         void handleShiftTab(int tab, int shift);
+        void showWhitespace(bool b);
 
     public:
         ImScriptEditor();
         void render();
         string getSelection();
+        void setPalette(string t);
 };
 
 class ImScripting {

@@ -61,6 +61,8 @@ class VRLod : public VRObject {
         static VRLodPtr create(string name = "None");
         VRLodPtr ptr();
 
+        virtual void wrapOSG(OSGObjectPtr node) override;
+
         void setCenter(Vec3d c);
         Vec3d getCenter();
         void setScale(double s);

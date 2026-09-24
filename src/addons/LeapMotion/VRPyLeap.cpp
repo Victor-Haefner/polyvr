@@ -36,6 +36,7 @@ PyMethodDef VRPyLeap::methods[] = {
 
 PyObject* VRPyLeap::registerFrameCallback(VRPyLeap* self, PyObject* args) {
     if (!self->valid()) return NULL;
+    VRPyGilGuard gilGuard;
 
     PyObject* my_callback = NULL;
     PyObject* result = NULL;
@@ -53,11 +54,8 @@ PyObject* VRPyLeap::registerFrameCallback(VRPyLeap* self, PyObject* args) {
         result = Py_None;
 
         function<void(VRLeapFramePtr)> cb = [my_callback](VRLeapFramePtr frame) {
-
             if (!my_callback) { return; }
-
-            PyGILState_STATE gstate;
-            gstate = PyGILState_Ensure(); // because we come from a non python thread
+            VRPyGilGuard gilGuard;
 
             PyObject* arglist;
             PyObject* r;
@@ -68,8 +66,6 @@ PyObject* VRPyLeap::registerFrameCallback(VRPyLeap* self, PyObject* args) {
             Py_DECREF(pyFrame);
             if (r != NULL) Py_DECREF(r);
             PyErr_SetString(err, "VRPyLeap - Error while running callback");
-
-            PyGILState_Release(gstate);
         };
 
         self->objPtr->registerFrameCallback(cb);

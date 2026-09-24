@@ -7,12 +7,16 @@
 #include <list>
 #include <memory>
 #include "core/utils/VRFunctionFwd.h"
+#include "core/utils/VRMutex.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
 class VRCallbackManager {
     private:
+        VRMutex mtx;
+        VRMutex mtxJobs;
+
         struct job {
             VRUpdateCbPtr ptr;
             VRUpdateCbWeakPtr wptr;
@@ -29,11 +33,10 @@ class VRCallbackManager {
             int last_call;
         };
 
-        bool updateListsChanged;
         vector<job> jobFktPtrs;
-        map<int, list<timeoutFkt>* > timeoutFktPtrs;
-        map<int, list<VRUpdateCbWeakPtr>* > updateFktPtrs;
-        map<int, list<VRUpdateCbWeakPtr>* >::reverse_iterator fktPtr_list_itr;
+        map<int, shared_ptr<list<timeoutFkt>> > timeoutFktPtrs;
+        map<int, shared_ptr<list<VRUpdateCbWeakPtr>> > updateFktPtrs;
+        map<int, shared_ptr<list<VRUpdateCbWeakPtr>> >::reverse_iterator fktPtr_list_itr;
         list<VRUpdateCbWeakPtr>::iterator fktPtr_itr;
         map<VRUpdateCb*, int> updateFktPtrs_priorities;//to easier delete functions
 

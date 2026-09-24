@@ -18,6 +18,13 @@ using namespace std;
 void addPyCallback(PyObject* o);
 void cleanupPyCallbacks();
 
+struct VRPyGilGuard {
+    bool acquired = false;
+    int state = 0;
+    VRPyGilGuard();
+    ~VRPyGilGuard();
+};
+
 struct VRPyBase {
     PyObject_HEAD;
     static PyObject* err;
@@ -42,8 +49,6 @@ struct VRPyBase {
     template <typename T>
     static void execPyCallVoid(PyObject* pyFkt, PyObject* pArgs, T t);
     static void execPyCallVoidVoid(PyObject* pyFkt, PyObject* pArgs);
-    template <typename T, typename R>
-    static VRFunction<T, R>* parseCallback(PyObject *args);
 
     static vector<PyObject*> parseList(PyObject *args);
     static OSG::Vec2d parseVec2f(PyObject *args);
@@ -77,6 +82,7 @@ struct VRPyBase {
     static PyObject* toPyTuple(const OSG::Vec2i& v);
     static PyObject* toPyTuple(const OSG::Vec3i& v);
     static PyObject* toPyTuple(const OSG::Vec4i& v);
+    static PyObject* toPyTuple(const OSG::Matrix4d& v);
     static PyObject* toPyTuple(const vector<string>& v);
     static PyObject* toPyTuple(const vector<PyObject*>& v);
 

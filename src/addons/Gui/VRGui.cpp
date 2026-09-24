@@ -23,18 +23,14 @@
 #include "core/gui/VRGuiManager.h"
 #include "core/gui/VRGuiConsole.h"
 
-#include <imgui.h>
-#ifdef _WIN32
-#include <imgui_impl_opengl3.h>
-#else
-#include <backends/imgui_impl_opengl3.h>
-#endif
+#include "imgui.h"
+#include "backends/imgui_impl_opengl3.h"
 #include <GL/gl.h>
 #include <GL/glext.h>
 
 using namespace OSG;
 
-vector< weak_ptr<VRGui> > instances;
+vector< weak_ptr<VRGui> > guiInstances;
 bool VRGui_gl_init = false;
 
 ImGuiContext* uiContext = 0;
@@ -102,7 +98,7 @@ VRGui::~VRGui() {
 
 VRGuiPtr VRGui::create() {
     auto gui = VRGuiPtr(new VRGui());
-    instances.push_back(gui);
+    guiInstances.push_back(gui);
     return gui;
 }
 
@@ -214,7 +210,7 @@ void VRGui::resize() {
 
 vector<VRGuiPtr> VRGui::getInstances() {
     vector<VRGuiPtr> res;
-    for (auto i : instances) {
+    for (auto i : guiInstances) {
         auto VRGui = i.lock();
         if (!VRGui) continue;
         res.push_back(VRGui);
@@ -223,7 +219,7 @@ vector<VRGuiPtr> VRGui::getInstances() {
 }
 
 void VRGui::reloadScripts(string path) {
-    for (auto i : instances) {
+    for (auto i : guiInstances) {
         auto VRGui = i.lock();
         if (!VRGui) continue;
         string s = VRGui->getSite();

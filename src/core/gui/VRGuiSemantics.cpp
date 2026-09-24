@@ -272,7 +272,7 @@ bool VRGuiSemantics::updateOntoList() {
 }
 
 void VRGuiSemantics::copyConcept(VRConceptWidget* w) {
-    auto c = current->addConcept(w->concept->getName() + "_derived", w->concept->getName());
+    auto c = current->addConcept(w->concept_->getName() + "_derived", w->concept_->getName());
     if (!c || !w) {
         cout << current->toString() << endl;
         return;
@@ -286,7 +286,7 @@ void VRGuiSemantics::copyConcept(VRConceptWidget* w) {
 }
 
 void VRGuiSemantics::addEntity(VRConceptWidget* w) {
-    auto c = current->addEntity(w->concept->getName() + "_entity", w->concept->getName());
+    auto c = current->addEntity(w->concept_->getName() + "_entity", w->concept_->getName());
     /*auto cw = VREntityWidgetPtr( new VREntityWidget(this, canvas->getCanvas(), c) );
     canvas->addWidget(c->ID, cw);
     cw->move(w->pos + Vec2d(90,0));
@@ -295,7 +295,7 @@ void VRGuiSemantics::addEntity(VRConceptWidget* w) {
 }
 
 void VRGuiSemantics::addRule(VRConceptWidget* w) {
-    string n = w->concept->getName();
+    string n = w->concept_->getName();
     /*auto c = current->addRule("q(x):"+n+"(x)", n);
     auto cw = VRRuleWidgetPtr( new VRRuleWidget(this, canvas->getCanvas(), c) );
     canvas->addWidget(c->ID, cw);
@@ -305,9 +305,9 @@ void VRGuiSemantics::addRule(VRConceptWidget* w) {
 }
 
 void VRGuiSemantics::remConcept(VRConceptWidget* w) {
-    canvas->remWidget(w->concept->ID);
-    current->remConcept(w->concept);
-    canvas->remNode(w->concept->ID);
+    canvas->remWidget(w->concept_->ID);
+    current->remConcept(w->concept_);
+    canvas->remNode(w->concept_->ID);
     //disconnectAny(); // TODO
     //saveScene();
 }

@@ -11,6 +11,7 @@
 #include "addons/Semantics/Reasoning/VROntology.h"
 
 #include <boost/algorithm/string/join.hpp>
+#include <ifcparse/Ifc4.h>
 #include <ifcparse/IfcFile.h>
 #include <ifcparse/IfcHierarchyHelper.h>
 #include <ifcgeom/IfcGeom.h>
@@ -261,7 +262,7 @@ class IFCLoader {
             if (obj) obj->setEntity(e);
             e->set("type", Type::ToString(element->type()));
             e->set("gID", element->GlobalId());
-            //cout << " " << Type::ToString(element->type()) << ", " << element->Name() << ", " << element->GlobalId() << endl;
+            //cout << " " << Type::ToString(element->type()) << ", " << getName(element) << ", " << element->GlobalId() << endl;
             return e;
         }
 
@@ -279,8 +280,8 @@ class IFCLoader {
             }
 
             if (mat.hasTransparency()) {
-                cout << "mat with trans " << mat.transparency() << endl;
-                c[3] = mat.transparency();
+                //cout << "mat with trans " << mat.transparency() << endl;
+                c[3] = 1.0 - mat.transparency();
                 baseMat->enableTransparency();
             }
 
@@ -413,8 +414,19 @@ class IFCLoader {
             //Logger::Verbosity( Logger::LOG_WARNING );
             //Logger::Verbosity( Logger::LOG_ERROR );
 
+
             IfcParse::IfcFile file;
-            if ( !file.Init(path) ) { cout << "Unable to parse .ifc file: " << path << endl; return; }
+            try {
+                if (!file.Init(path)) { cout << "Unable to parse .ifc file: " << path << endl; return; }
+            } catch (const IfcParse::IfcInvalidTokenException& e) {
+                cerr << "IFC parse error (invalid token): " << e.what() << endl;
+            } catch (const IfcParse::IfcException& e) {
+                cerr << "IFC parse error: " << e.what() << endl;
+            } catch (const std::exception& e) {
+                cerr << "Standard exception: " << e.what() << endl;
+            } catch (...) {
+                cerr << "Unknown exception while parsing IFC file." << endl;
+            }
 
 
             // create objects
@@ -470,6 +482,11 @@ class IFCLoader {
             // hide openings
             for (auto o : ifcObjects) {
                 if (o.first->is(Type::IfcOpeningElement)) {
+                    auto g = dynamic_pointer_cast<VRGeometry>(o.second);
+                    if (g) g->setMeshVisibility(false);
+                }
+
+                if (o.first->is(Type::IfcSpace)) {
                     auto g = dynamic_pointer_cast<VRGeometry>(o.second);
                     if (g) g->setMeshVisibility(false);
                 }

@@ -21,11 +21,6 @@ using namespace std;
 // --------------------------
 
 VRScriptPtr VRGuiScripts::getSelectedScript() {
-    /*VRGuiTreeView tree_view("treeview5");
-    if (!tree_view.hasSelection()) return 0;
-
-    // get selected script
-    string name = tree_view.getSelectedStringValue(0);*/
     auto scene = VRScene::getCurrent();
     if (scene == 0) return 0;
     VRScriptPtr script = scene->getScript(selected);
@@ -88,6 +83,7 @@ void VRGuiScripts::updateScriptColor(VRScriptPtr script) {
     if (trig_lvl >= 256) tbg = "#CCAAFF";
 
     uiSignal("scripts_list_set_color", {{"name",script->getName()},{"fg",tfg},{"bg",tbg}});
+    uiSignal("scripts_list_set_source", {{"name",script->getName()},{"source",script->getSource()}});
 }
 
 void VRGuiScripts::on_new_clicked() {
@@ -129,42 +125,45 @@ void VRGuiScripts::on_save_clicked() {
     saveScene();
 }
 
-void VRGuiScripts::on_import_clicked() {
+void VRGuiScripts::on_import_project_selected(string path) {
     auto scene = VRScene::getCurrent();
-    if (scene == 0) return;
-
-    /*gtk_list_store_clear(import_liststore1);
-    gtk_list_store_clear(import_liststore2);
-    GtkTreeIter row;
-    for (auto script : scene->getScripts()) {
-        gtk_list_store_append(import_liststore2, &row);
-        gtk_list_store_set (import_liststore2, &row, 0, script.first.c_str(), -1);
-    }
-
-    cout << "VRGuiScripts::on_import_clicked " << scriptImportWidget << endl;
-    VRGuiFile::clearFilter();
-    VRGuiFile::addFilter("Project", 2, "*.xml", "*.pvr");
-    VRGuiFile::addFilter("All", 1, "*");
-    VRGuiFile::setWidget(scriptImportWidget, true, true);
-    VRGuiFile::setCallbacks( bind(&VRGuiScripts::on_diag_import, this), function<void()>(), bind(&VRGuiScripts::on_diag_import_select, this));
-    VRGuiFile::open("Import", "open", "Import script");*/
-}
-
-void VRGuiScripts::on_diag_import_select() {
-    /*gtk_list_store_clear(import_liststore1);
-    import_scripts.clear();
-    string path = VRGuiFile::getPath();
+    if (!scene) return;
     if (path == "") return;
+
+    import_scripts.clear();
+    uiSignal("import_scripts_clear");
+
+    auto setRow = [&](string parent, string label, bool local) {
+        uiSignal("on_import_scripts_tree_append", {{"ID",label}, {"label",label}, {"parent",parent}, {"local",toString(local)}});
+    };
+
+    auto setScriptRows = [&](map<string, VRScriptPtr> scripts, bool local) {
+        map<string, bool> grpAdded;
+        for (auto s : scripts) {
+            string grp = s.second->getGroup();
+            if (grp != "" && grp != "no group" && !grpAdded.count(grp)) {
+                setRow("", grp, local);
+                grpAdded[grp] = true;
+            }
+        }
+
+        for (auto s : scripts) {
+            string grp = s.second->getGroup();
+            if (grpAdded.count(grp)) setRow(grp, s.first, local);
+            else setRow("", s.first, local);
+        }
+    };
+
+    setScriptRows(scene->getScripts(), true);
 
     XML xml;
     xml.read(path, false);
 
-    XMLElementPtr scene = xml.getRoot();
-    if (!scene) return;
-    auto scripts = scene->getChild("Scripts");
+    XMLElementPtr root = xml.getRoot();
+    if (!root) return;
+    auto scripts = root->getChild("Scripts");
     if (!scripts) return;
 
-    GtkTreeIter row;
     for (auto script : scripts->getChildren()) {
         string name = script->getName();
         if (script->hasAttribute("base_name")) {
@@ -177,32 +176,27 @@ void VRGuiScripts::on_diag_import_select() {
         s->enable(false);
         s->load(script);
         import_scripts[name] = s;
+    }
 
-        gtk_list_store_append(import_liststore1, &row);
-        gtk_list_store_set (import_liststore1, &row, 0, name.c_str(), -1);
-    }*/
+    setScriptRows(import_scripts, false);
+
+    uiSignal("ui_toggle_popup", {{"name","import"},{"title","Import Script"}, {"width","400"}, {"height","300"}});
 }
 
-void VRGuiScripts::on_diag_import() {
-    /*VRGuiTreeView tree_view((GtkWidget*)import_treeview1);
-    if (!tree_view.hasSelection()) return;
-
-    // get selected script
-    string name = tree_view.getSelectedStringValue(0);
-    if (import_scripts.count(name) == 0) return;
-
-    VRScriptPtr s = import_scripts[name];
-    import_scripts.erase(name);
-
+void VRGuiScripts::on_import_clicked(vector<string> names) {
     auto scene = VRScene::getCurrent();
     if (scene == 0) return;
-    scene->addScript(s);
-    s->enable(true);
-    updateList();*/
-}
 
-void VRGuiScripts::on_diag_import_select_1() {} // TODO
-void VRGuiScripts::on_diag_import_select_2() {}
+    for (auto name : names) {
+        cout << " import script " << name << endl;
+        if (import_scripts.count(name) == 0) continue;
+        VRScriptPtr s = import_scripts[name];
+        import_scripts.erase(name);
+        scene->addScript(s);
+        s->enable(true);
+    }
+    updateList();
+}
 
 void VRGuiScripts::on_exec_clicked() {
     VRScriptPtr script = getSelectedScript();
@@ -252,31 +246,26 @@ void VRGuiScripts::on_del_clicked() {
 }
 
 void VRGuiScripts::on_select_script(string scriptName) { // selected a script
+    //cout << endl << "on_select_script " << scriptName << ", previous: " << selected << endl;
     if (pages.count(selected)) {
-        auto& P = pages[selected];
-        getLineFocus(P.line, P.column);
-        cout << "editor deselect " << selected << ", cursor at: " << selected << "  " << P.line << "  " << P.column << endl;
+        pagePos& P = pages[selected];
+        getLineFocus(P.line, P.column); // store line and column
+        //cout << "editor deselect " << selected << ", cursor at: " << selected << "  " << P.line << "  " << P.column << endl;
     }
 
     selected = scriptName;
     auto script = getSelectedScript();
     if (!script) {
         // TODO: deactivate editor
+        //cout << " .. no script " << selected << " selected!" << endl;
         return;
     }
     trigger_cbs = false;
 
-    // update options
-    //setCombobox("combobox1", getListStorePos("liststore6", script->getType()));
-    //auto setup = VRSetup::getCurrent();
-    //if (setup) fillStringListstore("liststore7", setup->getDevices("server"));
-
-    // update editor content
+    // update editor content, triggers and arguments
     editor->setCore(script->getScript(), script->getHeadSize());
     uiSignal("script_editor_set_parameters", {{"type",script->getType()},{"group",script->getGroup()}});
-
     uiSignal("script_editor_clear_trigs_and_args");
-    // update arguments liststore
     for (auto a : script->getArguments()) uiSignal("script_editor_add_argument", {{"name",a->getName()},{"type",a->type},{"value",a->val}});
 
     // update trigger liststore
@@ -296,28 +285,16 @@ void VRGuiScripts::on_select_script(string scriptName) { // selected a script
         });
     }
 
-    /*setWidgetSensitivity("toolbutton8", true);
-    setWidgetSensitivity("toolbutton7", false);
-    setWidgetSensitivity("toolbutton9", true);
-    setWidgetSensitivity("table15", true);*/
-
     // language
     editor->setLanguage(script->getType());
 
-    // script trigger
-    //string trigger = script->getTrigger();
-    //setTextEntry("entry48", script->getTriggerParams());
-
-    //setCombobox("combobox1", getListStorePos("ScriptTrigger", trigger));
-    trigger_cbs = true;
-
     if (pages.count(selected)) {
         pagePos P2 = pages[selected];
-        if (P2.line > 0) {
-            cout << " fokus selected " << selected << " " << P2.line << ", " << P2.column << endl;
-            editor->focus(P2.line, P2.column);
-        }
+        //cout << " focus selected " << selected << " " << P2.line << ", " << P2.column << endl;
+        editor->setCursorPosition(P2.line, P2.column);
     }
+
+    trigger_cbs = true;
 }
 
 // keyboard key detection
@@ -641,15 +618,15 @@ void VRGuiScripts::updateDocumentation() {
     }
 
     for (auto mod : filtered) {
-        string modname = (mod.first == "VR") ? "VR" : "VR."+mod.first;
-        string mID = modname;
+        string mID = mod.first;
+        string modname = (mID == "VR") ? "VR" : "VR."+mID;
         uiSignal("on_doc_filter_tree_append", {{"ID",mID}, {"parent",""}, {"label",modname}, {"type","module"}, {"cla",""}, {"mod",""}, {"col","#BBDDFF"}});
         for (auto typ : mod.second) {
             string cID = mID+":"+typ.first;
-            uiSignal("on_doc_filter_tree_append", {{"ID",cID}, {"parent",mID}, {"label",typ.first}, {"type","class"}, {"cla",typ.first}, {"mod",mod.first}, {"col","#FFFFFF"}});
+            uiSignal("on_doc_filter_tree_append", {{"ID",cID}, {"parent",mID}, {"label",typ.first}, {"type","class"}, {"cla",typ.first}, {"mod",mID}, {"col","#FFFFFF"}});
             for (auto fkt : typ.second) {
                 string fID = cID+":"+fkt.first;
-                uiSignal("on_doc_filter_tree_append", {{"ID",fID}, {"parent",cID}, {"label",fkt.first}, {"type","method"}, {"cla",typ.first}, {"mod",mod.first}, {"col","#FFFFFF"}});
+                uiSignal("on_doc_filter_tree_append", {{"ID",fID}, {"parent",cID}, {"label",fkt.first}, {"type","method"}, {"cla",typ.first}, {"mod",mID}, {"col","#FFFFFF"}});
             }
         }
     }
@@ -731,13 +708,11 @@ VRGuiScripts::searchResult::searchResult(string s, int l, int c) : scriptName(s)
 
 void VRGuiScripts::focusScript(string name, int line, int column) {
     uiSignal("openUiTabs", {{"tab1", "Scene"}, {"tab2", "Scripting"}});
-    uiSignal("openUiScript", {{"name", name}, {"line", toString(line)}, {"column", toString(column)}});
+    uiSignal("script_editor_set_cursor", {{"name", name}, {"line", toString(line)}, {"column", toString(column)}});
 }
 
 void VRGuiScripts::getLineFocus(int& line, int& column) {
     editor->getCursorPosition(line, column);
-    line++;
-    column++;
 }
 
 void VRGuiScripts::on_search_link_clicked(searchResult res, string s) {
@@ -1017,12 +992,12 @@ bool VRGuiScripts::updateList() {
 
     if (selected == "") {
         cout << "No script open, selecting a script.." << endl;
-        if (scene->getScript("init")) uiSignal("openUiScript", {{"name", "init"}, {"line", "0"}, {"column", "0"}});
+        if (scene->getScript("init")) uiSignal("script_editor_set_cursor", {{"name", "init"}, {"line", "0"}, {"column", "0"}});
         else {
             auto scs = scene->getScripts();
             if (scs.size() > 0) {
                 auto sc = scs.begin()->second;
-                if (sc) uiSignal("openUiScript", {{"name", sc->getName()}, {"line", "0"}, {"column", "0"}});
+                if (sc) uiSignal("script_editor_set_cursor", {{"name", sc->getName()}, {"line", "0"}, {"column", "0"}});
             }
         }
     }
@@ -1069,7 +1044,6 @@ VRGuiScripts::VRGuiScripts() {
     mgr->addCallback("rename_group", [&](OSG::VRGuiSignals::Options o) { on_rename_group(o["name"]); return true; } );
     mgr->addCallback("scripts_toolbar_new", [&](OSG::VRGuiSignals::Options o) { on_new_clicked(); return true; }, true );
     mgr->addCallback("scripts_toolbar_group", [&](OSG::VRGuiSignals::Options o) { on_addSep_clicked(); return true; } );
-    mgr->addCallback("scripts_toolbar_import", [&](OSG::VRGuiSignals::Options o) { on_import_clicked(); return true; } );
     mgr->addCallback("scripts_toolbar_delete", [&](OSG::VRGuiSignals::Options o) { on_del_clicked(); return true; } );
     mgr->addCallback("scripts_toolbar_pause", [&](OSG::VRGuiSignals::Options o) { on_pause_toggled(toBool(o["state"])); return true; } );
     mgr->addCallback("scripts_toolbar_cpp", [&](OSG::VRGuiSignals::Options o) { on_convert_cpp_clicked(); return true; } );
@@ -1106,65 +1080,16 @@ VRGuiScripts::VRGuiScripts() {
     mgr->addCallback("select_script_template", [&](OSG::VRGuiSignals::Options o) { on_select_templ(o["ID"]); return true; }, true );
     mgr->addCallback("import_script_template", [&](OSG::VRGuiSignals::Options o) { on_templ_import_clicked(o["ID"]); return true; }, true );
 
-    /*
-    setToolButtonCallback("toolbutton23", bind(&VRGuiScripts::on_find_clicked, this) );
-    setToolButtonCallback("toggletoolbutton2", bind(&VRGuiScripts::on_pause_toggled, this) );
-    setToolButtonCallback("toolbutton30", bind(&VRGuiScripts::on_convert_cpp_clicked, this) );
+    mgr->addCallback("script_import_clicked", [&](OSG::VRGuiSignals::Options o) { on_import_project_selected(o["fileName"]); return true; }, true );
 
-    setButtonCallback("button16", bind(&VRGuiScripts::on_help_close_clicked, this) );
-    setButtonCallback("tbutton1", bind(&VRGuiScripts::on_templ_close_clicked, this) );
-    setButtonCallback("tbutton2", bind(&VRGuiScripts::on_templ_import_clicked, this) );
-    setButtonCallback("button28", bind(&VRGuiScripts::on_find_diag_cancel_clicked, this) );
-    setButtonCallback("button29", bind(&VRGuiScripts::on_find_diag_find_clicked, this) );
-
-    setToggleButtonCallback("checkbutton12", bind(&VRGuiScripts::on_toggle_find_replace, this) );
-
-    setComboboxCallback("combobox24", bind(&VRGuiScripts::on_change_server, this) );
-
-    // trigger tree_view
-    auto tree_view = VRGuiBuilder::get()->get_widget("treeview14");
-    gtk_widget_add_events(tree_view, (int)GDK_KEY_PRESS_MASK);
-    connect_signal<void, GdkEvent*>(tree_view, bind(&VRGuiScripts::on_any_event, this, PL::_1), "event-after");
-    connect_signal<bool, GdkEventKey*>(tree_view, bind(&VRGuiScripts::on_any_key_event, this, PL::_1), "key_press_event");
-
-    setTreeviewSelectCallback("treeview14", bind(&VRGuiScripts::on_select_trigger, this) );
-    setTreeviewSelectCallback("treeview5", bind(&VRGuiScripts::on_select_script, this) );
-    setTreeviewSelectCallback("treeview3", bind(&VRGuiScripts::on_select_help, this) );
-    setTreeviewSelectCallback("ttreeview1", bind(&VRGuiScripts::on_select_templ, this) );
-    setTreeviewDoubleclickCallback("ttreeview1", bind(&VRGuiScripts::on_doubleclick_templ, this, PL::_1, PL::_2) );*/
+    mgr->addCallback("import_external_script", [&](OSG::VRGuiSignals::Options o) {
+        vector<string> selected;
+        toValue(o["IDs"], selected);
+        on_import_clicked(selected);
+        return true;
+    }, true );
 
     editor = shared_ptr<VRGuiEditor>( new VRGuiEditor("scrolledwindow4") );
-    /*editor->addKeyBinding("find", VRUpdateCb::create("findCb", bind(&VRGuiScripts::on_find_clicked, this)));
-    editor->addKeyBinding("help", VRUpdateCb::create("helpCb", bind(&VRGuiScripts::on_help_clicked, this)));
-    editor->addKeyBinding("save", VRUpdateCb::create("saveCb", bind(&VRGuiScripts::on_save_clicked, this)));
-    editor->addKeyBinding("exec", VRUpdateCb::create("execCb", bind(&VRGuiScripts::on_exec_clicked, this)));*/
-    /*connect_signal<void, GdkEvent*>(editor->getEditor(), bind(&VRGuiScripts::on_focus_out_changed, this, PL::_1), "focus-out-event");
-
-    setEntryCallback("entry10", bind(&VRGuiScripts::on_find_diag_find_clicked, this), false, false);
-
-    setCellRendererCallback("cellrenderertext13", bind(&VRGuiScripts::on_name_edited, this, PL::_1, PL::_2) );
-    setCellRendererCallback("cellrenderertext16", bind(&VRGuiScripts::on_trigparam_edited, this, PL::_1, PL::_2) );
-    setCellRendererCallback("cellrenderertext41", bind(&VRGuiScripts::on_trigkey_edited, this, PL::_1, PL::_2) );
-
-    setCellRendererCombo("treeviewcolumn27", "ScriptTrigger", 0, bind(&VRGuiScripts::on_trigger_edited, this, PL::_1, PL::_2) );
-    setCellRendererCombo("treeviewcolumn28", "ScriptTriggerDevices", 1, bind(&VRGuiScripts::on_trigdev_edited, this, PL::_1, PL::_2) );
-    setCellRendererCombo("treeviewcolumn30", "ScriptTriggerStates", 3, bind(&VRGuiScripts::on_trigstate_edited, this, PL::_1, PL::_2) );*/
-
-    // fill combolists
-    const char *arg_types[] = {"int", "float", "str", "VRPyObjectType", "VRPyTransformType", "VRPyGeometryType", "VRPyLightType", "VRPyLodType", "VRPyDeviceType", "VRPyMouseType", "VRPyHapticType", "VRPySocketType", "VRPyLeapFrameType"};
-    const char *trigger_types[] = {"none", "on_scene_load", "on_scene_close", "on_scene_import", "on_timeout", "on_device", "on_socket"};
-    const char *device_types[] = {"mouse", "multitouch", "keyboard", "flystick", "haptic", "server1", "leap", "vrpn_device"}; // TODO: get from a list in devicemanager or something
-    const char *trigger_states[] = {"Pressed", "Released", "Drag", "Drop", "To edge", "From edge"};
-    const char *script_types[] = {"Python", "GLSL", "HTML"};
-    /*fillStringListstore("arg_types", vector<string>(arg_types, end(arg_types)) );
-    fillStringListstore("ScriptTrigger", vector<string>(trigger_types, end(trigger_types)) );
-    fillStringListstore("ScriptTriggerDevices", vector<string>(device_types, end(device_types)) );
-    fillStringListstore("ScriptTriggerStates", vector<string>(trigger_states, end(trigger_states)) );
-    fillStringListstore("liststore6", vector<string>(script_types, end(script_types)) );
-
-    setWidgetSensitivity("toolbutton7", false);
-    setWidgetSensitivity("toolbutton8", false);
-    setWidgetSensitivity("toolbutton9", false);*/
 
     // update the list each frame to update the execution time
     updatePtr = VRUpdateCb::create("scripts_gui_update",  bind(&VRGuiScripts::update, this) );
@@ -1207,10 +1132,7 @@ VRGuiScripts::VRGuiScripts() {
     gtk_tree_view_append_column(import_treeview2, column2);
     connect_signal<void>(import_treeview1, bind(&VRGuiScripts::on_diag_import_select_1, this), "cursor_changed");
     connect_signal<void>(import_treeview2, bind(&VRGuiScripts::on_diag_import_select_2, this), "cursor_changed");
-
-    // documentation widget
-    setEntryCallback("entry25", bind(&VRGuiScripts::on_doc_filter_edited, this), true);
-    setEntryCallback("tentry1", bind(&VRGuiScripts::on_templ_filter_edited, this), true);*/
+    */
 }
 
 OSG_END_NAMESPACE;

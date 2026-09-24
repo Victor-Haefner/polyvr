@@ -272,8 +272,8 @@ void VRPathtool::setGraphEdge(Graph::edge& e, bool handles, bool doArrow, Vec3d 
     auto& nodes = graph->getNodes();
     if (!paths.count(e.ID)) {
         paths[e.ID] = Path::create();
-        paths[e.ID]->addPoint( Pose(nodes[e.from].p.pos(), n1));
-        paths[e.ID]->addPoint( Pose(nodes[e.to].p.pos(), n2));
+        paths[e.ID]->addPoint( Pose::create(nodes[e.from].p.pos(), n1));
+        paths[e.ID]->addPoint( Pose::create(nodes[e.to].p.pos(), n2));
     }
     auto en = newEntry( paths[e.ID], option(10, handles), e.ID, 0 );
     setupHandles(en, knots[e.from].handle.lock(), knots[e.to].handle.lock());
@@ -338,15 +338,15 @@ void VRPathtool::updateHandlePose(knot& knot, map<int, Vec3d>& hPositions, bool 
                 int i = e->points[key];
                 auto po = e->p->getPoint(i);
                 if (!opt.doSmoothGraphNodes) {
-                    Vec3d p1 = po.pos();
+                    Vec3d p1 = po->pos();
                     Vec3d p0 = p1;
                     Vec3d p2 = p1;
-                    if (i > 0) p0 = e->p->getPoint(i-1).pos();
-                    if (i < e->p->size()-1) p2 = e->p->getPoint(i+1).pos();
+                    if (i > 0) p0 = e->p->getPoint(i-1)->pos();
+                    if (i < e->p->size()-1) p2 = e->p->getPoint(i+1)->pos();
                     dir = p2-p0;
                     dir.normalize();
                 }
-                po.setDir(dir - opt.bulge*(2.0*i/(e->p->size()-1)-1));
+                po->setDir(dir - opt.bulge*(2.0*i/(e->p->size()-1)-1));
                 e->p->setPoint( e->points[key], po );
                 e->doUpdate = true;
                 updateEntry(e);
@@ -370,18 +370,18 @@ void VRPathtool::update() { // call in script to have smooth knots
         for (auto e : handleToEntries[key]) {
             auto opt = options[e->edge];
             int i = e->points[key];
-            auto po = *e->anchor.lock()->getPoseTo(handle);
+            auto po = e->anchor.lock()->getPoseTo(handle);
             if (!opt.doSmoothGraphNodes) {
-                Vec3d p1 = po.pos();
+                Vec3d p1 = po->pos();
                 Vec3d p0 = p1;
                 Vec3d p2 = p1;
-                if (i > 0) p0 = e->p->getPoint(i-1).pos();
-                if (i < e->p->size()-1) p2 = e->p->getPoint(i+1).pos();
+                if (i > 0) p0 = e->p->getPoint(i-1)->pos();
+                if (i < e->p->size()-1) p2 = e->p->getPoint(i+1)->pos();
                 Vec3d dir = p2-p0;
                 dir.normalize();
-                po.setDir(dir);
+                po->setDir(dir);
             }
-            po.setDir( po.dir() - opt.bulge*(2.0*i/(e->p->size()-1)-1) );
+            po->setDir( po->dir() - opt.bulge*(2.0*i/(e->p->size()-1)-1) );
             e->p->setPoint( i, po );
             e->doUpdate = true;
         }
@@ -456,7 +456,7 @@ void VRPathtool::updateHandle(VRGeometryPtr handle) { // update paths the handle
             auto pnt = e->points[key];
             if (e->p->size() <= pnt) continue;
             auto op = e->p->getPoint(pnt);
-            e->p->setPoint( e->points[key], Pose(p->pos(), op.dir(), p->up()));
+            e->p->setPoint( e->points[key], Pose::create(p->pos(), op->dir(), p->up()));
             updateEntry(e);
         }
 
@@ -484,7 +484,7 @@ void VRPathtool::updateHandle(VRGeometryPtr handle) { // update paths the handle
         Vec3d d = p->pos() - pg->getWorldPosition();
         auto e = handleToEntries[key][0]; // should only be one entry at most!
         auto op = e->p->getPoint(e->points[key]);
-        e->p->setPoint( e->points[key], Pose(op.pos(), d, op.up()));
+        e->p->setPoint( e->points[key], Pose::create(op->pos(), d, op->up()));
         updateEntry(e);
     }
 }
@@ -535,10 +535,10 @@ void VRPathtool::setupHandles(entryPtr e, VRGeometryPtr ha, VRGeometryPtr he) {
         if (i == 0) h = ha;
         if (i == N-1) h = he;
         if (!h) h = newHandle();
-        h->setPose( Pose::create(point) );
+        h->setPose( point );
 
-        if (opt.useControlHandles && i > 0)   h1 = newControlHandle(h, point.pos() + point.dir());
-        if (opt.useControlHandles && i < N-1) h2 = newControlHandle(h, point.pos() + point.dir());
+        if (opt.useControlHandles && i > 0)   h1 = newControlHandle(h, point->pos() + point->dir());
+        if (opt.useControlHandles && i < N-1) h2 = newControlHandle(h, point->pos() + point->dir());
 
         handleToEntries[h.get()].push_back(e);
         if (h1) handleToEntries[h1.get()].push_back(e);
@@ -663,7 +663,7 @@ VRGeometryPtr VRPathtool::extrude(VRDevicePtr dev, PathPtr p) {
     }
 
     auto e = pathToEntry[p.get()];
-    e->p->addPoint( Pose(Vec3d(0,0,-1), Vec3d(1,0,0)));
+    e->p->addPoint( Pose::create(Vec3d(0,0,-1), Vec3d(1,0,0)));
 
     VRGeometryPtr h = newHandle();
     handleToEntries[h.get()].push_back(e);
@@ -776,7 +776,7 @@ void VRPathtool::updateBezierVisuals() {
                     data.pushPoint();
                 }
                 for (auto P : path->getPoints()) {
-                    data.pushVert(P.pos());
+                    data.pushVert(P->pos());
                     data.pushPoint();
                 }
             }
@@ -804,10 +804,10 @@ void VRPathtool::updateBezierVisuals() {
                 auto Ps = path->getPoints();
                 if ((Ps.size()-1)*2 != cPs.size()) continue;
                 for (unsigned int i=0; i<Ps.size()-1; i++) {
-                    int p1 = data.pushVert(Ps[i].pos());
+                    int p1 = data.pushVert(Ps[i]->pos());
                     int p2 = data.pushVert(cPs[i*2]);
                     int p3 = data.pushVert(cPs[i*2+1]);
-                    int p4 = data.pushVert(Ps[i+1].pos());
+                    int p4 = data.pushVert(Ps[i+1]->pos());
                     data.pushTri(p1, p4, p2);
                     data.pushTri(p1, p3, p4);
                     data.pushTri(p1, p2, p3);

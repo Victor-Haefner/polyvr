@@ -9,6 +9,9 @@
 #ifndef WITHOUT_DWG
 #include "VRDWG.h"
 #endif
+#ifndef WITHOUT_VTK
+#include "VRVTK.h"
+#endif
 //#include "VRCOLLADA.h"
 //#include "VRSTEP.h"
 
@@ -17,7 +20,10 @@
 #include "core/objects/OSGObject.h"
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/VRPointCloud.h"
+#include "addons/Semantics/Reasoning/VREntity.h"
+#include "addons/Semantics/Reasoning/VROntology.h"
 #include "core/utils/system/VRSystem.h"
+#include "core/utils/xml.h"
 
 using namespace OSG;
 
@@ -40,13 +46,47 @@ void VRExport::write(VRObjectPtr obj, string path, map<string, string> options) 
     if (ext == ".e57") { writeE57(dynamic_pointer_cast<VRPointCloud>(obj), path); }
 #endif
 
-    if (ext == ".wrl" || ext == ".wrz" || ext == ".obj" || ext == ".osb" || ext == ".osg")
+    map<VROntologyPtr, bool> exportedOntologies;
+
+    auto attachOntology = [&](VRObjectPtr obj, VROntologyPtr onto) {
+        if (!onto || !obj) return;
+        if (exportedOntologies.count(onto)) return;
+        exportedOntologies[onto] = true;
+        auto xml = XML::create();
+        xml->newRoot("root", "", "");
+        onto->save(xml->getRoot(), 0);
+        string data = xml->toString();
+        obj->getNode()->setAttachment("ontology", data);
+    };
+
+    auto attachEntity = [&](VRObjectPtr obj, VREntityPtr ent) {
+        if (!ent || !obj) return;
+        auto xml = XML::create();
+        xml->newRoot("root", "", "");
+        ent->save(xml->getRoot(), 0);
+        string data = xml->toString();
+        obj->getNode()->setAttachment("entity", data);
+    };
+
+    if (ext == ".wrl" || ext == ".wrz" || ext == ".obj" || ext == ".osb" || ext == ".osg") {
+        for (auto& c : obj->getChildren(true, "", true)) {
+            auto e = c->getEntity();
+            if (e) {
+                attachEntity(c, e);
+                auto o = e->getOntology();
+                if (o) attachOntology(c, o);
+            }
+        }
         SceneFileHandler::the()->write(obj->getNode()->node, path.c_str());
+    }
 
 #ifndef WITHOUT_COLLADA
     if (ext == ".dae") { writeCollada(obj, path, options); }
 #endif
 #ifndef WITHOUT_GDAL
     if (ext == ".shp") { writeSHP(obj, path, options); }
+#endif
+#ifndef WITHOUT_VTK
+    if (ext == ".vtk") { writeVTK(obj, path, options); return; }
 #endif
 }

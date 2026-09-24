@@ -3,6 +3,7 @@
 
 #include "VRImguiUtils.h"
 #include "imWidgets/VRImguiInput.h"
+#include "imWidgets/VRImguiColorPicker.h"
 
 using namespace std;
 
@@ -12,7 +13,7 @@ class ImRendering {
         ImInput pathInput;
         ImInput pathSplash;
         ImInput extInput;
-        ImVec4 color;
+        ImColorPicker bgColor;
 
         bool vsync = true;
         bool framesleep = true;
@@ -24,7 +25,6 @@ class ImRendering {
         void render();
 
         void setBGType(string t);
-        void setBGColor(string c);
         void setBGPath(string c);
         void setBGExt(string c);
         void setShowSplash(bool b);

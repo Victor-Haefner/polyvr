@@ -4,29 +4,39 @@
 
 #include "VRWindow.h"
 #include <OpenSG/OSGGLUTWindow.h>
+#include "glut/GlutWindow.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
 
 class VRGlutEditor: public VRWindow {
+    public:
+        enum CONTEXT {
+            TOP = 0,
+            SCENE,
+            IMGUI,
+            POPUP,
+        };
+
     private:
         GLUTWindowMTRecPtr win;
-        int topWin = -1;
-        int winGL = -1;
-        int winUI = -1;
-        int winPopup = -1;
+        GlutWindowPtr winTop;
+        GlutWindowPtr winGL;
+        GlutWindowPtr winUI;
+        GlutWindowPtr winPopup;
         VRHeadMountedDisplayPtr hmd;
         bool fullscreen = false;
         bool maximized = false;
-        bool glViewFocussed = true;
-        string popup;
+        int focusedWinID = -1;
+        string iconPath;
 
         typedef function<void(string, map<string, string>)> Signal;
         typedef function<void(string, int, int, int, int)> ResizeSignal;
         Signal signal;
         ResizeSignal resizeSignal;
 
+        void getsFocus(int wID);
         void handleRelayedKey(int key, int state, bool special);
 
     public:
@@ -39,15 +49,15 @@ class VRGlutEditor: public VRWindow {
         static void initGlut();
 
         int getCurrentWinID();
+        int getWinID(CONTEXT c);
         void setCurrentWinID(int i);
 
         void setTitle(string title) override;
         void setIcon(string iconpath) override;
+        void saveSnapshot(string path);
 
-        void onMain_Keyboard_special(int k);
-
-        void openPopupWindow(string name, int width, int height);
-        void togglePopupWindow(string name, int width, int height);
+        void openPopupWindow(string name, string title, int width, int height);
+        void togglePopupWindow(string name, string title, int width, int height);
         void closePopupWindow();
 
         void render(bool fromThread = false) override;
@@ -57,8 +67,7 @@ class VRGlutEditor: public VRWindow {
 
         void onMouse(int b, int s, int x, int y);
         void onMotion(int x, int y);
-        void onKeyboard(int k, int s, int x, int y);
-        void onKeyboard_special(int k, int s, int x, int y);
+        void onKeyboard(int k, bool d, bool s, int x, int y);
 
         void forceGLResize(int w, int h);
         void enableVSync(bool b);

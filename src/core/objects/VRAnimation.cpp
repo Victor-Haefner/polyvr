@@ -53,8 +53,16 @@ void VRAnimation::addUnownedCallback(VRAnimCbPtr fkt) {
     weakCallbacks.push_back(fkt);
 }
 
+void VRAnimation::setCallback(VRAnimCbPtr fkt) {
+    ownedCallbacks = {fkt};
+}
+
 void VRAnimation::addCallback(VRAnimCbPtr fkt) {
     ownedCallbacks.push_back(fkt);
+}
+
+void VRAnimation::setFinishedCallback(VRUpdateCbPtr fkt) {
+    onFinishCb = fkt;
 }
 
 bool VRAnimation::getLoop() { return loop; }
@@ -83,6 +91,7 @@ bool VRAnimation::update(float current_time) {
         else {
             stop();
             execCallbacks(1);
+            if (onFinishCb) (*onFinishCb)();
         }
         return true;
     }
@@ -93,10 +102,12 @@ bool VRAnimation::update(float current_time) {
     return true;
 }
 
-void VRAnimation::goTo(float f) {
+void VRAnimation::goTo(float f) { // TODO: meh, not realy working
     if (run) {
         start_time -= (f-t) * duration;
     } else { // TODOt dt = (f-t) * duration;
+        run = true;
+        start_time = getTime()*1e-6;
     }
 }
 

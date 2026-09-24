@@ -34,7 +34,7 @@
 	
 	m = VR.Material('videoMat')
 	m.setDiffuse([1,1,1])
-	v = m.setVideo('robot.avi')
+	v = m.setVideo('stars.mp4')
 	videoBox.setMaterial(m)
 	
 	v.play()

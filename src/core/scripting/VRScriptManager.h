@@ -20,10 +20,10 @@ class VRScriptTemplate;
 
 class VRScriptManager : public VRStorage, public VRPyBase {
     protected:
-        PyObject* pGlobal;
-        PyObject* pLocal;
-        PyObject* pModBase;
-        PyObject* pModVR;
+        PyObject* pGlobal = 0;
+        PyObject* pLocal = 0;
+        PyObject* pModBase = 0;
+        PyObject* pModVR = 0;
         map<int, VRThreadCbPtr> pyThreads;
         map<string, PyObject*> modules;
         map<string, map<string, PyTypeObject*> > moduleTypes;
@@ -32,6 +32,8 @@ class VRScriptManager : public VRStorage, public VRPyBase {
         map<string, VRScriptTemplate> templates;
         map<string, vector<string>> importedScripts;
         PyThreadState* pyThreadState = 0;
+
+        void on_click_source(int source);
 
         void test();
         void initPyModules();

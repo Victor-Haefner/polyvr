@@ -1,6 +1,7 @@
 #ifndef VRPRIMITIVE_H_INCLUDED
 #define VRPRIMITIVE_H_INCLUDED
 
+#include "core/objects/VRObjectFwd.h"
 #include <string>
 #include <OpenSG/OSGSField.h>
 
@@ -15,9 +16,9 @@ struct VRPrimitive {
     string getType();
     void fromString(string s);
     string toString();
-    VRPrimitive* copy();
+    VRPrimitivePtr copy();
 
-    static VRPrimitive* create(string p);
+    static VRPrimitivePtr create(string p);
     static vector<string> getTypes();
     static vector<string> getTypeParameter(string type);
 
@@ -168,6 +169,27 @@ struct VRGear : public VRPrimitive {
     void toStream(stringstream& ss) override;
     OSG::GeometryMTRecPtr make() override;
     float radius();
+};
+
+struct VRDisk : public VRPrimitive {
+    float radius = 0.5;
+    int Nsegments = 16;
+
+    VRDisk();
+    void fromStream(stringstream& ss) override;
+    void toStream(stringstream& ss) override;
+    OSG::GeometryMTRecPtr make() override;
+};
+
+struct VRAnnulus : public VRPrimitive {
+    float outerRadius = 0.5;
+    float innerRadius = 0.3;
+    int Nsegments = 16;
+
+    VRAnnulus();
+    void fromStream(stringstream& ss) override;
+    void toStream(stringstream& ss) override;
+    OSG::GeometryMTRecPtr make() override;
 };
 
 #endif // VRPRIMITIVE_H_INCLUDED

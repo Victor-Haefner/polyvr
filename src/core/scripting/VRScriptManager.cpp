@@ -15,12 +15,10 @@
 #undef _XOPEN_SOURCE
 #undef _POSIX_C_SOURCE
 #include <Python.h>
+#include <frameobject.h>
 #include <iostream>
 #include <algorithm>
 #include <memory>
-
-#define TEMPLATEV(...) #__VA_ARGS__
-#define TEMPLATE(...) TEMPLATEV(__VA_ARGS__)
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -62,6 +60,8 @@ void clear_all_objects() {
 }
 
 void checkGarbageCollection() { // for diagnostic purposes
+    VRPyGilGuard gilGuard;
+
     auto gc = PyImport_ImportModule("gc");
     string name = PyModule_GetName(gc);
     cout << "Python checkGarbageColection, module " << name << endl;
@@ -72,18 +72,16 @@ void checkGarbageCollection() { // for diagnostic purposes
 
     map<string, PyObject*> gc_members;
     while (PyDict_Next(gc_dict, &pos, &key, &value)) {
-        string key_name = PyString_AsString(key);
+        string key_name = PyUnicode_AsUTF8(key);
         gc_members[key_name] = value;
         //cout << " " << key_name << "  " << value << endl;
     }
 
     auto exec = [&](string cb) {
         auto pyFkt = gc_members[cb];
-        PyGILState_STATE gstate = PyGILState_Ensure();
         if (PyErr_Occurred() != NULL) PyErr_Print();
         PyObject* res = PyObject_CallObject(pyFkt, 0);
         if (PyErr_Occurred() != NULL) PyErr_Print();
-        PyGILState_Release(gstate);
         return res;
     };
 
@@ -109,6 +107,11 @@ void clearModule(PyObject* mod) {
 VRScriptManager::VRScriptManager() {
     cout << "Init ScriptManager" << endl;
     initPyModules();
+
+    auto mgr = OSG::VRGuiSignals::get();
+    mgr->addCallback("clickConsoleSource", [&](OSG::VRGuiSignals::Options o) { on_click_source(toInt(o["source"])); return true; } );
+
+    cout << " Python version: " << Py_GetVersion() << endl;
 
     setStorageType("Scripts");
     storeMap("Script", &scripts);
@@ -138,12 +141,7 @@ VRScriptManager::~VRScriptManager() {
 
     PyErr_Clear();
     cout << " VRScriptManager Py_Finalize\n";
-#ifndef __APPLE__ // Py_Finalize, crash on apple, just upgrade to python 3 ;)
     Py_Finalize();
-#else
-    N = Py_REFCNT(pModVR);
-    if (N == 1) Py_DECREF(pModVR);
-#endif
     VRPyBase::err = 0;
 }
 
@@ -246,21 +244,64 @@ void VRScriptManager::updateScript(string name, string core, bool compile) {
 
 static string pyOutConsole = "Console";
 static string pyErrConsole = "Errors";
-static PyObject* modOut = 0;
-static PyObject* modErr = 0;
 
-// intersept python stdout
+
+static VRScript::Reference getSourceLocation() {
+    VRScript::Reference ref;
+
+    PyFrameObject* frame = PyEval_GetFrame(); // borrowed ref
+    if (!frame) return ref;
+
+    ref.line = PyFrame_GetLineNumber(frame)-1;
+
+    PyCodeObject* code = PyFrame_GetCode(frame); // new ref
+    if (code) {
+        PyObject* filename = PyObject_GetAttrString((PyObject*)code, "co_filename");
+        if (filename) {
+            ref.filename = PyUnicode_AsUTF8(filename);
+            Py_DECREF(filename);
+        }
+        Py_DECREF(code);
+    }
+
+    return ref;
+}
+
+static map<int, VRScript::Reference> outReferences;
+static map<string,map<int,int>> outSources;
+
+void VRScriptManager::on_click_source(int source) {
+    if (!outReferences.count(source)) return;
+    auto& ref = outReferences[source];
+    uiSignal("script_editor_set_cursor", {{"name",ref.filename}, {"line",toString(ref.line)}, {"column","0"}});
+}
+
+static int getRefID(const VRScript::Reference& r) {
+    if (!outSources.count(r.filename)) outSources[r.filename] = map<int,int>();
+    if (!outSources[r.filename].count(r.line)) {
+        static int ID = 0; ID++;
+        outSources[r.filename][r.line] = ID;
+        outReferences[ID] = r;
+    }
+    return outSources[r.filename][r.line];
+}
+
+// intercept python stdout
 static PyObject* writeOut(PyObject *self, PyObject *args) {
     const char* what = 0;
     if (!PyArg_ParseTuple(args, "s", &what)) return NULL;
+    auto ref = getSourceLocation();
+    int refID = getRefID(ref);
+    //cout << " got py out '" << what << "' from " << ref.filename << ", line " << ref.line << endl;
 #ifndef WITHOUT_IMGUI
-    if (what) if (auto c = VRConsoleWidget::get(pyOutConsole)) c->write(what);
+    if (what) if (auto c = VRConsoleWidget::get(pyOutConsole)) c->write(what, "", 0, refID);
 #else
     if (what) cout << what;
 #endif
     return Py_BuildValue("");
 }
 
+// intercept python stderr
 static PyObject* writeErr(PyObject *self, PyObject *args) {
     const char* what = 0;
     if (!PyArg_ParseTuple(args, "s", &what)) return NULL;
@@ -272,55 +313,99 @@ static PyObject* writeErr(PyObject *self, PyObject *args) {
     return Py_BuildValue("");
 }
 
+static PyObject* flushDummy(PyObject *self, PyObject *args) {
+    Py_RETURN_NONE;
+}
+
 static PyMethodDef methOut[] = {
     {"write", writeOut, METH_VARARGS, "Write something."},
+    {"flush", flushDummy, METH_NOARGS, "Dummy flush."},
     {NULL, NULL, 0, NULL}
 };
 
 static PyMethodDef methErr[] = {
     {"write", writeErr, METH_VARARGS, "Write something."},
+    {"flush", flushDummy, METH_NOARGS, "Dummy flush."},
     {NULL, NULL, 0, NULL}
+};
+
+typedef struct {
+    PyObject_HEAD
+} PyConsoleRedirect;
+
+static PyTypeObject PyOutConsoleType = {
+    PyVarObject_HEAD_INIT(NULL, 0)
+    "OutConsoleRedirect",             /* tp_name */
+    sizeof(PyConsoleRedirect),    /* tp_basicsize */
+    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+    Py_TPFLAGS_DEFAULT,            /* tp_flags */
+    "Console redirection object", /* tp_doc */
+    0,0,0,0,0,0,
+    methOut,              /* tp_methods */
+};
+
+static PyTypeObject PyErrConsoleType = {
+    PyVarObject_HEAD_INIT(NULL, 0)
+    "ErrConsoleRedirect",             /* tp_name */
+    sizeof(PyConsoleRedirect),    /* tp_basicsize */
+    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+    Py_TPFLAGS_DEFAULT,            /* tp_flags */
+    "Console redirection object", /* tp_doc */
+    0,0,0,0,0,0,
+    methErr,              /* tp_methods */
 };
 
 void VRScriptManager::redirectPyOutput(string pyOutput, string console) {
     if (pyOutput == "stdout") {
-        if (!modOut) {
-            modOut = Py_InitModule(("py"+pyOutput).c_str(), methOut);
-            if (modOut) PySys_SetObject((char *)pyOutput.c_str(), modOut);
-        }
+        if (PyType_Ready(&PyOutConsoleType) < 0) return;
+        PyObject* redirector = (PyObject*)PyObject_New(PyConsoleRedirect, &PyOutConsoleType);
+        PySys_SetObject(pyOutput.c_str(), redirector);
         pyOutConsole = console;
+        Py_DECREF(redirector);
     }
+
     if (pyOutput == "stderr") {
-        if (!modErr) {
-            modErr = Py_InitModule(("py"+pyOutput).c_str(), methErr);
-            if (modErr) PySys_SetObject((char *)pyOutput.c_str(), modErr);
-        }
+        if (PyType_Ready(&PyErrConsoleType) < 0) return;
+        PyObject* redirector = (PyObject*)PyObject_New(PyConsoleRedirect, &PyErrConsoleType);
+        PySys_SetObject(pyOutput.c_str(), redirector);
         pyErrConsole = console;
+        Py_DECREF(redirector);
     }
 }
 
 // ----------------------------
 
-// TODO:
-//  a script has parameters, they are some sort of default parameters with values defined in the gui
-//  such a script can be called from another script, but only by passing all the variables again
-//  it should be possible to call the script with any parameter, the gui parameter should be used as default ones!
-
 PyObject* VRScriptManager::getGlobalModule() { return pModVR; }
 PyObject* VRScriptManager::getGlobalDict() { return pGlobal; }
 
+static struct PyModuleDef VRModDef = {
+    PyModuleDef_HEAD_INIT,
+    "VR",                                // module name
+    "VR Module",                         // module docstring
+    -1,                                  // module state size (-1 if global vars)
+    VRSceneGlobals::methods              // method table
+};
+
+PyMODINIT_FUNC PyInit_VR(void) {
+    auto s = VRScene::getCurrent();
+    return s ? s->getGlobalModule() : 0;
+}
+
 void VRScriptManager::initPyModules() {
     cout << " initPyModules" << endl;
-    modOut = 0;
-    modErr = 0;
 #if defined(WASM) || defined(WIN32)
     Py_NoSiteFlag = 1;
 #endif
+    PyImport_AppendInittab("VR", PyInit_VR);
+
     Py_Initialize();
+
     cout << "  Py_Initialize done" << endl;
-    char* argv[1];
-    argv[0] = (char*)"PolyVR";
-    PySys_SetArgv(1, argv);
+    wchar_t* wargv[1];
+    wargv[0] = Py_DecodeLocale("PolyVR", NULL);
+    PySys_SetArgv(1, wargv);
+    PyMem_RawFree(wargv[0]);
+
 #ifndef WASM
     PyEval_InitThreads();
     cout << "  PyEval_InitThreads done" << endl;
@@ -340,9 +425,14 @@ void VRScriptManager::initPyModules() {
     cout << "  Added module PolyVR_base" << endl;
 
     PyObject* sys_path = PySys_GetObject((char*)"path");
-    PyList_Append(sys_path, PyString_FromString(".") );
+    PyList_Append(sys_path, PyUnicode_FromString(".") );
 
-    pModVR = Py_InitModule3("VR", VRSceneGlobals::methods, "VR Module");
+    pModVR = PyModule_Create(&VRModDef);
+    if (!pModVR) {
+        cout << "PyModule_Create of pModVR failed!" << endl;
+        return;
+    }
+    PyObject_SetAttrString(pModVR, "__path__", PyList_New(0)); // module becomes a package
 
     VRSceneModules sceneModules;
     sceneModules.setup(this, pModVR);
@@ -359,12 +449,25 @@ void VRScriptManager::initPyModules() {
     );
 }
 
-PyObject* VRScriptManager::newModule(string name, PyMethodDef* methods, string doc) {
-    string name2 = "VR."+name;
-    PyObject* m = Py_InitModule3(name2.c_str(), methods, doc.c_str());
-    modules[name] = m;
-    PyModule_AddObject(pModVR, name.c_str(), m);
-    return m;
+PyObject* VRScriptManager::newModule( string name, PyMethodDef* methods, string doc) {
+    string name2 = "VR." + name;
+
+    PyObject* module = PyModule_New(name2.c_str());
+    if (!module) { return nullptr; }
+    if (PyModule_AddFunctions(module, methods) < 0) { Py_DECREF(module); return nullptr; }
+    if (PyModule_SetDocString(module, doc.c_str()) < 0) { Py_DECREF(module); return nullptr; }
+
+    PyObject* sysModules = PyImport_GetModuleDict(); // borrowed
+    if (PyDict_SetItemString( sysModules, name2.c_str(), module) < 0) { Py_DECREF(module); return nullptr; }
+
+    if (PyModule_AddObject(pModVR, name.c_str(), module) < 0) {
+        PyDict_DelItemString(sysModules, name2.c_str());
+        Py_DECREF(module);
+        return nullptr;
+    }
+
+    modules[name] = module;
+    return module; // borrowed reference
 }
 
 PyObject* VRScriptManager::getPyModule(string name) {
@@ -383,7 +486,7 @@ vector<string> VRScriptManager::getPyVRModules() {
 
 vector<string> VRScriptManager::getPyVRTypes(string mod) {
     vector<string> res;
-    if (moduleTypes.count(mod) == 0) { cout << "Module " << mod << " not found\n"; return res; }
+    if (moduleTypes.count(mod) == 0) { cout << "VRScriptManager::getPyVRTypes - Module " << mod << " not found\n"; return res; }
     res.push_back("globals");
     for (auto m : moduleTypes[mod]) res.push_back(m.first);
     sort (res.begin()+1, res.end());
@@ -392,14 +495,14 @@ vector<string> VRScriptManager::getPyVRTypes(string mod) {
 
 string VRScriptManager::getPyVRDescription(string mod, string type) {
     if (type == "globals") return "";
-    if (moduleTypes.count(mod) == 0) { cout << "Module " << mod << " not found\n"; return ""; }
+    if (moduleTypes.count(mod) == 0) { cout << "VRScriptManager::getPyVRDescription - Module " << mod << " not found\n"; return ""; }
     if (moduleTypes[mod].count(type) == 0) { cout << "Method " << type << " not found\n"; return ""; }
     return moduleTypes[mod][type]->tp_doc;
 }
 
 vector<string> VRScriptManager::getPyVRMethods(string mod, string type) {
     vector<string> res;
-    if (moduleTypes.count(mod) == 0) { cout << "Module " << mod << " not found\n"; return res; }
+    if (moduleTypes.count(mod) == 0) { cout << "VRScriptManager::getPyVRMethods - Module " << mod << " not found\n"; return res; }
     if (moduleTypes[mod].count(type) == 0 && type != "globals") { cout << "Method " << type << " not found\n"; return res; }
     PyObject* dict = PyModule_GetDict(pModVR);
     PyObject *key, *value;
@@ -408,7 +511,7 @@ vector<string> VRScriptManager::getPyVRMethods(string mod, string type) {
     if (type == "globals") {
         if (mod != "VR") return res;
         while (PyDict_Next(dict, &pos, &key, &value)) {
-            string name = PyString_AsString(key);
+            string name = PyUnicode_AsUTF8(key);
             if (name[0] == '_' && name[1] == '_') continue;
             if (PyCFunction_Check(value)) res.push_back(name);
         }
@@ -420,7 +523,7 @@ vector<string> VRScriptManager::getPyVRMethods(string mod, string type) {
     dict = moduleTypes[mod][type]->tp_dict;
     pos = 0;
     while (PyDict_Next(dict, &pos, &key, &value)) {
-        string name = PyString_AsString(key);
+        string name = PyUnicode_AsUTF8(key);
         if (name[0] == '_' && name[1] == '_') continue;
         res.push_back(name);
     }
@@ -431,7 +534,7 @@ vector<string> VRScriptManager::getPyVRMethods(string mod, string type) {
 
 string VRScriptManager::getPyVRMethodDoc(string mod, string type, string method) {
     if (moduleTypes.count(mod) == 0) { cout << "Module " << mod << " not found\n"; return ""; }
-    if (moduleTypes[mod].count(type) == 0 && type != "globals") { cout << "Method " << type << " not found\n"; return ""; }
+    if (moduleTypes[mod].count(type) == 0 && type != "globals") { cout << "VRScriptManager::getPyVRMethodDoc - Method " << type << " not found\n"; return ""; }
     string res;
 
     PyObject* dict = PyModule_GetDict(pModVR);
@@ -441,7 +544,7 @@ string VRScriptManager::getPyVRMethodDoc(string mod, string type, string method)
     if (type == "globals") {
         if (mod != "VR") return res;
         while (PyDict_Next(dict, &pos, &key, &meth)) {
-            string name = PyString_AsString(key);
+            string name = PyUnicode_AsUTF8(key);
             if (method != name) continue;
             if (!PyCFunction_Check(meth)) continue;
             PyCFunctionObject* cfo =  (PyCFunctionObject*)meth;
@@ -452,7 +555,7 @@ string VRScriptManager::getPyVRMethodDoc(string mod, string type, string method)
     pos = 0;
     dict = moduleTypes[mod][type]->tp_dict;
     while (PyDict_Next(dict, &pos, &key, &meth)) {
-        string name = PyString_AsString(key);
+        string name = PyUnicode_AsUTF8(key);
         if (method != name) continue;
 
         string ty = meth->ob_type->tp_name;
@@ -489,150 +592,164 @@ void VRScriptManager::triggerOnImport() { // deprecated
     }
 }
 
-string hudSite = TEMPLATE(
-<!DOCTYPE html>\n
-<html>\n\n
+string hudSite =
+R"HTML(<!DOCTYPE html>
+<html>
 
-<head>\n
-\t<style type="text/css">\n
-\t\tbody {\n
-\t\t\tmargin:0;\
-\t\t}\n
-\t\tbutton {\n
-\t\t\tfont-size:10vh;\n
-\t\t\twidth:100vw;\n
-\t\t\theight:20vh;\n
-\t\t}\n
-\t</style>\n
-\t<script>\n
-\t\tvar websocket = new WebSocket('ws://localhost:$PORT_server1$');\n
-\t\twebsocket.onopen = function() { send('register|hud'); };\n
-\t\twebsocket.onerror = function(e) {};\n
-\t\twebsocket.onmessage = function(m) { if(m.data) handle(m.data); };\n
-\t\twebsocket.onclose = function(e) {};\n\n
+<head>
+    <style type="text/css">
+        body {
+            margin:0;
+        }
+        button {
+            font-size:10vh;
+            width:100vw;
+            height:20vh;
+        }
+    </style>
+    <script>
+        var websocket = new WebSocket('ws://localhost:$PORT_server1$');
+        websocket.onopen = function() { send('register|hud'); };
+        websocket.onerror = function(e) {};
+        websocket.onmessage = function(m) { if(m.data) handle(m.data); };
+        websocket.onclose = function(e) {};
 
-\t\tfunction send(m) { websocket.send(m); };\n
-\t\tfunction handle(m) { console.log(m); };\n
-\t</script>\n
-</head>\n\n
+        function send(m) { websocket.send(m); };
+        function handle(m) { console.log(m); };
+    </script>
+</head>
 
-<body>\n
-\t<button onclick="send('message1 from hud')">send message1</button>\n
-\t<button onclick="send('message2 from hud')">send message2</button>\n
-\t<button onclick="send('message3 from hud')">send message3</button>\n
-\t<button onclick="send('message4 from hud')">send message4</button>\n
-\t<button onclick="send('message5 from hud')">send message5</button>\n
-</body>\n
+<body>
+    <button onclick="send('message1 from hud')">send message1</button>
+    <button onclick="send('message2 from hud')">send message2</button>
+    <button onclick="send('message3 from hud')">send message3</button>
+    <button onclick="send('message4 from hud')">send message4</button>
+    <button onclick="send('message5 from hud')">send message5</button>
+</body>
 </html>
-);
+)HTML";
 
-string hudInit = TEMPLATE(
-\timport VR\n\n
-\tdef addHud(site,w,h,x,y,parent):\n
-\t\ts = VR.Sprite('site')\n
-\t\ts.setSize(w,h)\n
-\t\tport = VR.find('server1').getPort()\n
-\t\ts.webOpen('http://localhost:'+str(port)+'/'+site, 400, w/h)\n
-\t\ts.setFrom([x,y,-2])\n
-\t\tparent.addChild(s)\n\n
-\tif hasattr(VR, 'hud'): VR.hud.destroy()\n
-\tVR.hud = VR.Object('hud')\n
-\tVR.find('Default').addChild(VR.hud)\n\n
-\taddHud( 'hudSite', 0.5,0.5, 0,1, VR.hud )\n
-);
+string hudInit =
+R"(    import VR
 
-string hudHandler = TEMPLATE(
-\timport VR\n\n
-\tm = dev.getMessage()\n
-\tprint m\n
-);
+    def addHud(site,w,h,x,y,parent):
+        s = VR.Sprite('site')
+        s.setSize(w,h)
+        port = VR.find('server1').getPort()
+        s.webOpen('http://localhost:'+str(port)+'/'+site, 400, w/h)
+        s.setFrom([x,y,-2])
+        parent.addChild(s)
 
-string restClient = TEMPLATE(
-\timport VR\n\n
-\tif not hasattr(VR, 'client'): VR.client = VR.RestClient()\n\n
-\tdef cb(r):\n
-\t\tprint 'async: ' + r.getData()\n\n
-\tVR.client.getAsync("http://reqbin.com/echo/get/json", cb)\n\n
-\tres = VR.client.get("http://reqbin.com/echo/get/json")\n
-\tprint 'sync: ' + res.getData()\n
-);
+    if hasattr(VR, 'hud'): VR.hud.destroy()
+    VR.hud = VR.Object('hud')
+    VR.find('Default').addChild(VR.hud)
+    addHud( 'hudSite', 0.5,0.5, 0,1, VR.hud )
+)";
 
-string OrderedDict = TEMPLATE(
-\tclass OrderedDict:\n
-\t\tdef __init__(self):\n
-\t\t\tself.dict = {}\n
-\t\t\tself.keys = []\n\n
-\t\tdef __setitem__(self, k, v):\n
-\t\t\tself.dict[k] = v\n
-\t\t\tself.keys.append(k)\n\n
-\t\tdef __getitem__(self, k):\n
-\t\t\treturn self.dict[k]\n\n
-\t\tdef items(self):\n
-\t\t\treturn [ (k,self.dict[k]) for k in self.keys ]\n
-);
+string hudHandler =
+R"(    import VR
 
-string pointCloudImport = TEMPLATE(
-\timport VR\n\n
-\tif hasattr(VR, 'scene'): VR.scene.destroy()\n
-\tVR.scene = VR.Object('scene', 'light')\n\n
-\topts = {}\n
-\topts['downsampling'] = 1\n
-\topts['lit'] = 0\n
-\topts['resolution'] = 2\n
-\topts['pointSize'] = 5\n
-\topts['lod1'] = [5, 20]\n
-\topts['lod2'] = [10, 200]\n
-\topts['swapYZ'] = 1\n
-\topts['keepOctree'] = 0\n\n
-\tpath = 'data/myPC.e57'\n
-\tpc = VR.loadGeometry(path, options = opts)\n
-\tVR.scene.addChild(pc)\n
-);
+    m = dev.getMessage()
+    print m
+)";
+
+string restClient =
+R"(    import VR
+
+    if not hasattr(VR, 'client'): VR.client = VR.RestClient()
+
+    def cb(r):
+        print 'async: ' + r.getData()
+
+    VR.client.getAsync("http://reqbin.com/echo/get/json", cb)
+    res = VR.client.get("http://reqbin.com/echo/get/json")
+    print 'sync: ' + res.getData()
+)";
+
+string OrderedDict =
+R"(    class OrderedDict:
+        def __init__(self):
+            self.dict = {}
+            self.keys = []
+
+        def __setitem__(self, k, v):
+            self.dict[k] = v
+            self.keys.append(k)
+
+        def __getitem__(self, k):
+            return self.dict[k]
+
+        def items(self):
+            return [ (k,self.dict[k]) for k in self.keys ]
+)";
+
+string pointCloudImport =
+R"(    import VR
+
+    if hasattr(VR, 'scene'): VR.scene.destroy()
+    VR.scene = VR.Object('scene', 'light')
+
+    opts = {}
+    opts['downsampling'] = 1
+    opts['lit'] = 0
+    opts['resolution'] = 2
+    opts['pointSize'] = 5
+    opts['lod1'] = [5, 20]
+    opts['lod2'] = [10, 200]
+    opts['swapYZ'] = 1
+    opts['keepOctree'] = 0
+    path = 'data/myPC.e57'
+    pc = VR.loadGeometry(path, options = opts)
+    VR.scene.addChild(pc)
+)";
 
 string simpleVP =
-"#version 120\n"
-TEMPLATE(
-attribute vec4 osg_Vertex;\n
-attribute vec3 osg_Normal;\n
-attribute vec4 osg_Color;\n
-attribute vec2 osg_MultiTexCoord0;\n\n
-varying vec4 vertPos;\n
-varying vec3 vertNorm;\n
-varying vec4 color;\n
-void main(void) {\n
-\tvertPos = gl_ModelViewMatrix * osg_Vertex;\n
-\tvertNorm = gl_NormalMatrix * osg_Normal;\n
-\tgl_TexCoord[0] = vec4(osg_MultiTexCoord0,0.0,0.0);\n
-\tcolor = gl_Color;\n
-\tgl_Position = gl_ModelViewProjectionMatrix*osg_Vertex;\n
-}\n
-);
+R"(#version 120
+
+attribute vec4 osg_Vertex;
+attribute vec3 osg_Normal;
+attribute vec4 osg_Color;
+attribute vec2 osg_MultiTexCoord0;
+varying vec4 vertPos;
+varying vec3 vertNorm;
+varying vec4 color;
+
+void main(void) {
+    vertPos = gl_ModelViewMatrix * osg_Vertex;
+    vertNorm = gl_NormalMatrix * osg_Normal;
+    gl_TexCoord[0] = vec4(osg_MultiTexCoord0,0.0,0.0);
+    color = gl_Color;
+    gl_Position = gl_ModelViewProjectionMatrix*osg_Vertex;
+}
+)";
 
 string simpleFP =
-"#version 120\n"
-TEMPLATE(
-varying vec4 vertPos;\n
-varying vec3 vertNorm;\n
-varying vec4 color;\n
-uniform sampler2D tex0;\n\n
-void applyLightning() {\n
-\tvec3 n = normalize(vertNorm);\n
-\tvec3 light;\n
-\tif (gl_LightSource[0].position.w < 0.5) light = normalize( gl_LightSource[0].position.xyz ); // dir light\n
-\telse light = normalize( gl_LightSource[0].position.xyz - vertPos.xyz ); // pnt light\n
-\tfloat NdotL = max(dot( n, light ), 0.0);\n
-\tvec4 ambient = gl_LightSource[0].ambient * color;\n
-\tvec4 diffuse = gl_LightSource[0].diffuse * NdotL * color;\n
-\tfloat NdotHV = max(dot(n, normalize(gl_LightSource[0].halfVector.xyz)),0.0);\n
-\tvec4 specular = gl_LightSource[0].specular * pow( NdotHV, gl_FrontMaterial.shininess );\n
-\tgl_FragColor = ambient + diffuse + specular;\n
-}\n\n
-void main(void) {\n
-\tvec3 pos = vertPos.xyz / vertPos.w;\n
-\tvec4 diffCol = texture2D(tex0, gl_TexCoord[0].xy);\n
-\tapplyLightning();\n
-}\n
-);
+R"(#version 120
+
+varying vec4 vertPos;
+varying vec3 vertNorm;
+varying vec4 color;
+uniform sampler2D tex0;
+
+void applyLightning() {
+    vec3 n = normalize(vertNorm);
+    vec3 light;
+    if (gl_LightSource[0].position.w < 0.5) light = normalize( gl_LightSource[0].position.xyz ); // dir light
+    else light = normalize( gl_LightSource[0].position.xyz - vertPos.xyz ); // pnt light
+    float NdotL = max(dot( n, light ), 0.0);
+    vec4 ambient = gl_LightSource[0].ambient * color;
+    vec4 diffuse = gl_LightSource[0].diffuse * NdotL * color;
+    float NdotHV = max(dot(n, normalize(gl_LightSource[0].halfVector.xyz)),0.0);
+    vec4 specular = gl_LightSource[0].specular * pow( NdotHV, gl_FrontMaterial.shininess );
+    gl_FragColor = ambient + diffuse + specular;
+}
+
+void main(void) {
+    vec3 pos = vertPos.xyz / vertPos.w;
+    vec4 diffCol = texture2D(tex0, gl_TexCoord[0].xy);
+    applyLightning();
+}
+)";
 
 struct VRScriptTemplate {
     string name;
@@ -669,6 +786,14 @@ void VRScriptManager::initTemplates() {
         s.name = name;
         s.type = type;
         s.core = core;
+
+        // replace 4 spaces with tab
+        string::size_type pos = 0;
+        while ((pos = s.core.find("    ", pos)) != string::npos) {
+            s.core.replace(pos, 4, "\t");
+            pos++;
+        }
+
         templates[name] = s;
     };
 

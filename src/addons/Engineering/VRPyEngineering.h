@@ -3,7 +3,7 @@
 
 #include "core/scripting/VRPyObject.h"
 #include "VRRobotArm.h"
-#include "VRPipeSystem.h"
+#include "Hydraulics/VRPipeSystem.h"
 #include "VRNumberingEngine.h"
 #include "Space/VRSpaceMission.h"
 #include "Space/VRRocketExhaust.h"

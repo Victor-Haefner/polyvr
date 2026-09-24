@@ -480,7 +480,7 @@ vector<OpcUa::Variant> MyMethod(NodeId context, vector<OpcUa::Variant> arguments
 }
 
 void startTestServerT() {
-    string endpoint = "opc.tcp://localhost:4840/freeopcua/server";
+    /*string endpoint = "opc.tcp://localhost:4840/freeopcua/server";
     cout << "OPCUA: start server at " << endpoint << endl;
     OpcUa::UaServer server(0);
     server.SetEndpoint(endpoint);
@@ -502,9 +502,9 @@ void startTestServerT() {
 
     //Uncomment following to subscribe to datachange events inside server
 
-    /*SubClient clt;
-    auto sub = server.CreateSubscription(100, clt);
-    sub->SubscribeDataChange(myvar);*/
+    //SubClient clt;
+    //auto sub = server.CreateSubscription(100, clt);
+    //sub->SubscribeDataChange(myvar);
 
 
     //Now write values to address space and send events so clients can have some fun
@@ -528,7 +528,7 @@ void startTestServerT() {
         this_thread::sleep_for(chrono::milliseconds(5000));
     }
 
-    server.Stop();
+    server.Stop();*/
 }
 
 void VROPCUA::setupTestServer() {

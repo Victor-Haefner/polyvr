@@ -456,7 +456,7 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
 
     auto wayToPolygon = [&](OSMWayPtr& way) {
         auto poly = VRPolygon::create();
-        for (auto ps : way->polygon.get()) {
+        for (auto ps : way->polygon.getPoints()) {
             auto p = planet->fromLatLongPosition(ps[1], ps[0], true);
             poly->addPoint( Vec2d(p[0], p[2]) );
         }
@@ -481,7 +481,7 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
                 p = terrains[0]->elevatePoint(p,p[1]);
                 terrains[0]->projectTangent(d, p);
             } else d.normalize();
-            path->addPoint( Pose( p, d ) );
+            path->addPoint( Pose::create( p, d ) );
         };
 
         if (pos.size() < 2) return 0;
@@ -520,7 +520,7 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
             }
             //d[1] = 0;
             d.normalize();
-            path->addPoint( Pose( p, d ) );
+            path->addPoint( Pose::create( p, d ) );
         };
 
         if (pos.size() == 2) {

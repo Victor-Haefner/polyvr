@@ -66,8 +66,8 @@ static void VRRestServer_handler(mg_connection* connection, int ev, void* ev_dat
         msg->setData(body);
 
         auto fkt = VRUpdateCb::create("VRRestServer_handler", bind(&VRRestServer::onMessage, server, (void*)connection, msg));
-        auto s = VRScene::getCurrent();
-        if (s) s->queueJob(fkt);
+        auto scene = VRScene::getCurrent();
+        if (scene) scene->queueJob(fkt);
         else server->sendString(connection, "", 200); // fallback
     }
 }

@@ -126,7 +126,7 @@ void VRDistrict::addBuilding( VRPolygonPtr p, int stories, string housenumber, s
         area->set("borders", perimeter->getName());
         bEnt->set("area", area->getName());
 
-        for (auto pnt : p->get()) {
+        for (auto pnt : p->getPoints()) {
             auto node = o->addEntity("node", "Node");
             node->setVector("position", toStringVector(Vec3d(pnt[0],0,pnt[1])), "Position");
             auto nodeEntry = o->addEntity(name+"Entry", "NodeEntry");

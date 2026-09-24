@@ -79,6 +79,7 @@ class VRTextureGenerator {
 
         void add(GEN_TYPE type, float amount, Color4f c1, Color4f c2);
         void add(string type, float amount, Color4f c1, Color4f c2);
+        void addTexture(VRTexturePtr tex);
         VRTexGenLayerPtr addLayer(GEN_TYPE type);
 
         void drawFill(Color4f c);

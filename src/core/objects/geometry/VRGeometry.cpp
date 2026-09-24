@@ -41,6 +41,9 @@
 #include <OpenSG/OSGGroup.h>
 #include <OpenSG/OSGTransform.h>
 
+#include "addons/Semantics/Segmentation/VRAdjacencyGraph.h"
+#include "core/math/partitioning/OctreeT.h"
+
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
@@ -224,6 +227,8 @@ vector<int> VRGeometry::intersectEdges(Line ray, double threshold) {
     };
 
     VRGeoData data(ptr());
+    if (!data.size()) return res;
+
     for (VRGeoData::Primitive& prim : data) {
         if (prim.type != 1) continue;
 
@@ -282,7 +287,12 @@ VRGeometry::~VRGeometry() {
     if (mesh) remGeometryAttachment(mesh->geo);
 }
 
-VRGeometryPtr VRGeometry::create(string name) { auto g = VRGeometryPtr(new VRGeometry(name) ); g->setMesh(); return g; }
+VRGeometryPtr VRGeometry::create(string name) {
+	auto g = VRGeometryPtr(new VRGeometry(name) );
+	g->setMesh();
+	return g;
+}
+
 VRGeometryPtr VRGeometry::create(string name, bool hidden) { auto g = VRGeometryPtr(new VRGeometry(name, hidden) ); g->setMesh(); return g; }
 VRGeometryPtr VRGeometry::create(string name, string primitive, string params) {
     auto g = VRGeometryPtr(new VRGeometry(name) );
@@ -293,9 +303,14 @@ VRGeometryPtr VRGeometry::create(string name, string primitive, string params) {
 VRGeometryPtr VRGeometry::ptr() { return static_pointer_cast<VRGeometry>( shared_from_this() ); }
 
 void VRGeometry::wrapOSG(OSGObjectPtr node, OSGObjectPtr geoNode) {
+    if (!node) return;
     VRTransform::wrapOSG(node);
-    mesh_node = geoNode;
-    Geometry* geo = dynamic_cast<Geometry*>(geoNode->node->getCore());
+    type = "Geometry";
+    //else VRObject::wrapOSG(geoNode); // TOCHECK
+
+    mesh_node = geoNode?geoNode:node;
+    Geometry* geo = dynamic_cast<Geometry*>(mesh_node->node->getCore());
+    if (!geo) { cout << "Error in VRGeometry::wrapOSG! geoNode not a geometry!" << endl; return; }
     mesh = OSGGeometry::create(geo);
     setGeometryAttachment(geo, this);
     meshSet = true;
@@ -306,6 +321,7 @@ void VRGeometry::wrapOSG(OSGObjectPtr node, OSGObjectPtr geoNode) {
 
 /** Set the geometry mesh (OSG geometry core) **/
 void VRGeometry::setMesh(OSGGeometryPtr geo, Reference ref, bool keep_material) {
+    if (!geo) return;
     if (geo->geo == 0) return;
     if (mesh) remGeometryAttachment(mesh->geo);
     if (mesh_node && mesh_node->node && getNode() && getNode()->node) getNode()->node->subChild(mesh_node->node);
@@ -473,7 +489,7 @@ void calcFaceNormals(GeometryMTRecPtr geo) {
     Vec3f normal;
 
     FaceIterator faceIter = geo->beginFaces();
-    GeoIntegralPropertyMTRecPtr oldPosIndex = geo->getIndex(Geometry::PositionsIndex);
+    GeoIntegralPropertyMTRecPtr posIndex = geo->getIndex(Geometry::PositionsIndex);
     GeoIntegralPropertyMTRecPtr oldNormsIndex = geo->getIndex(Geometry::NormalsIndex);
 
     auto calcNormal = [&](FaceIterator& f) {
@@ -513,7 +529,7 @@ void calcFaceNormals(GeometryMTRecPtr geo) {
         return res;
     };*/
 
-    if (oldPosIndex) { //Indexed
+    if (posIndex) { //Indexed
         /*if (oldPosIndex != oldNormsIndex) { // multi indexed -> TODO
             MFUInt16& oldIndexMap = geo->getIndexMapping();
             UInt32 oldIMSize = oldIndexMap.size();
@@ -538,24 +554,35 @@ void calcFaceNormals(GeometryMTRecPtr geo) {
         }*/
     }
 
+    if (posIndex) newIndex->resize( posIndex->size() );
+    else {
+        auto positions = geo->getPositions();
+        newIndex->resize( positions->size() );
+    }
+
     for(; faceIter != geo->endFaces(); ++faceIter) {
         normal = calcNormal(faceIter);
+        size_t normIdx = newNormals->size();
         newNormals->addValue(normal);
 
-        switch(faceIter.getType()) {
+        for (UInt32 i = 0; i < faceIter.getLength(); ++i) {
+            newIndex->setValue( normIdx, faceIter.getIndex(i) );
+        }
+
+        /*switch(faceIter.getType()) {
             case GL_TRIANGLE_FAN:
             case GL_TRIANGLE_STRIP:
-                newIndex->addValue(faceIter.getIndex(2));
+                newIndex->setValue( normIdx, faceIter.getIndex(2) );
                 break;
             case GL_QUAD_STRIP:
-                newIndex->addValue(faceIter.getIndex(3));
+                newIndex->setValue( normIdx, faceIter.getIndex(3) );
                 break;
             default:
                 for (UInt32 i = 0; i < faceIter.getLength(); ++i) {
-                    newIndex->addValue(faceIter.getIndex(i));
+                    newIndex->setValue( normIdx, faceIter.getIndex(i) );
                 }
                 break;
-            }
+            }*/
     }
 
     geo->setNormals(newNormals);
@@ -688,8 +715,12 @@ void VRGeometry::setPositionalTexCoords(float scale, int i, Vec3i format) {
     for (unsigned int i=0; i<pos->size(); i++) {
         Pnt3f P = pos->getValue<Pnt3f>(i);
         M.mult(P,P);
-        auto p = Vec3d(P)*scale;
-        tex->addValue(Vec3d(p[format[0]], p[format[1]], p[format[2]]));
+        Vec3d p = Vec3d(P)*scale;
+        Vec3d uv = Vec3d(p[abs(format[0])], p[abs(format[1])], p[abs(format[2])]);
+        if (format[0] < 0) uv[0] *= -1;
+        if (format[1] < 0) uv[1] *= -1;
+        if (format[2] < 0) uv[2] *= -1;
+        tex->addValue(uv);
     }
     setTexCoords(tex, i, 1);
 }
@@ -700,8 +731,11 @@ void VRGeometry::setPositionalTexCoords2D(float scale, int i, Vec2i format) {
     if (!pos) return;
     GeoVec2fPropertyRefPtr tex = GeoVec2fProperty::create();
     for (unsigned int i=0; i<pos->size(); i++) {
-        auto p = Vec3d(pos->getValue<Pnt3f>(i))*scale;
-        tex->addValue(Vec2d(p[format[0]], p[format[1]]));
+        Vec3d p = Vec3d( pos->getValue<Pnt3f>(i) )*scale;
+        Vec2d uv = Vec2d(p[abs(format[0])], p[abs(format[1])]);
+        if (format[0] < 0) uv[0] *= -1;
+        if (format[1] < 0) uv[1] *= -1;
+        tex->addValue(uv);
     }
     setTexCoords(tex, i, 1);
 }
@@ -994,8 +1028,195 @@ void VRGeometry::decimate(float f) {
     createSharedIndex(mesh->geo);
 }
 
-void VRGeometry::removeDoubles(float minAngle) {// TODO: use angle
+void VRGeometry::removeDoubles(float rMin) {
     createSharedIndex(mesh->geo);
+
+    VRGeoData data(ptr());
+
+    auto tree = Octree<int>::create(rMin, rMin*1e3);
+    for (size_t i=0; i<data.size(); i++) tree->add( Vec3d(data.getPosition(i)), i );
+
+    map< int, int > toReplace;
+
+    for (size_t i=0; i<data.size(); i++) {
+        int j = data.size()-i-1;
+        auto neighbors = tree->radiusSearch( Vec3d(data.getPosition(j)), rMin );
+        if (neighbors.size() <= 1) continue;
+        if (toReplace.count(j)) continue;
+
+        sort(neighbors.begin(), neighbors.end());
+
+        for (size_t k=1; k<neighbors.size(); k++) {
+            toReplace[neighbors[k]] = neighbors[0];
+        }
+    }
+
+    for (size_t i=0; i<data.getNIndices(); i++) {
+        size_t j = data.getIndex(i);
+        if (toReplace.count(j) == 0) continue;
+        data.setIndex(i, toReplace[j]);
+    }
+}
+
+void VRGeometry::closeHoles() {
+    cout << "closeHoles" << endl;
+
+    // find boundary loops
+    auto ag = VRAdjacencyGraph::create();
+    ag->setGeometry(ptr());
+    ag->compNeighbors();
+    ag->compTriLookup();
+
+    auto loops = ag->getBorderLoops();
+
+    auto closeLoop1 = [&](vector<int>& loop, VRGeoData& data) { // TODO: properly handle collapsing triangles!
+        map< int, int > toReplace;
+        for (size_t i=1; i<loop[i]; i++) {
+            toReplace[loop[i]] = loop[0];
+        }
+
+        for (size_t i=0; i<data.getNIndices(); i++) {
+            size_t j = data.getIndex(i);
+            if (toReplace.count(j) == 0) continue;
+            data.setIndex(i, toReplace[j]);
+        }
+    };
+
+    auto closeLoop2 = [&](vector<int>& loop, VRGeoData& data) {
+        // triangulate loop
+        for (size_t i=2; i<loop.size(); i++) {
+            data.pushTri(loop[0], loop[i-1], loop[i]);
+        }
+    };
+
+    auto closeLoop3 = [&](vector<int>& loop, VRGeoData& data) {
+        // triangulate loop
+        for (size_t i=2; i<loop.size(); i++) {
+            data.pushTri(loop[0], loop[i], loop[i-1]);
+        }
+    };
+
+    // close loops
+    VRGeoData data(ptr());
+    for (auto& loop : loops) {
+        //closeLoop1(loop, data);
+        //closeLoop2(loop, data);
+        closeLoop3(loop, data);
+    }
+}
+
+void VRGeometry::fixFaceOrientations(int face0) {
+    struct Triangle {
+        size_t ID;
+        int v1, v2, v3;
+        vector<int> neighbors;
+        bool checked = false;
+    };
+
+    vector<Triangle> faces;
+    map<int, vector<int>> vertexFaces;
+
+    for (TriangleIterator it = TriangleIterator(getMesh()->geo); !it.isAtEnd(); ++it) {
+        Triangle t;
+        t.ID = faces.size();
+        t.v1 = it.getPositionIndex(0);
+        t.v2 = it.getPositionIndex(1);
+        t.v3 = it.getPositionIndex(2);
+        faces.push_back( t );
+        for (int v : {t.v1, t.v2, t.v3}) {
+            vertexFaces[t.v1].push_back(t.ID);
+        }
+    }
+
+    auto hasCommonEdge = [](const Triangle& t1, const Triangle& t2) {
+        bool v1 = (t1.v1 == t2.v1 || t1.v1 == t2.v2 || t1.v1 == t2.v3);
+        bool v2 = (t1.v2 == t2.v1 || t1.v2 == t2.v2 || t1.v2 == t2.v3);
+        bool v3 = (t1.v3 == t2.v1 || t1.v3 == t2.v2 || t1.v3 == t2.v3);
+        return (v1 && v2 || v1 && v3 || v2 && v3);
+    };
+
+    for (auto& t : faces) {
+        for (int v : {t.v1, t.v2, t.v3}) {
+            for (auto& t2ID : vertexFaces[v]) {
+                if (t2ID == t.ID) continue;
+                if (::find(t.neighbors.begin(), t.neighbors.end(),t2ID) != t.neighbors.end()) continue;
+
+                auto& t2 = faces[t2ID];
+                if (hasCommonEdge(t, t2)) t.neighbors.push_back(t2ID);
+            }
+        }
+    }
+
+    struct Check {
+        int t1;
+        int t2;
+    };
+
+    auto queueNeighbors = [&](int f, vector<Check>& checks) {
+        for ( auto n : faces[f].neighbors ) {
+            if (faces[n].checked) continue;
+            faces[n].checked = true;
+            Check c = {f, n};
+            checks.push_back(c);
+        }
+    };
+
+    auto orientationMismatch = [&](int f1, int f2) {
+        Triangle& t1 = faces[f1];
+        Triangle& t2 = faces[f2];
+
+        // check t1.v1 -> t1.v2 edge
+        if (t1.v1 == t2.v1 && t1.v2 == t2.v2) return true;
+        if (t1.v1 == t2.v2 && t1.v2 == t2.v3) return true;
+        if (t1.v1 == t2.v3 && t1.v2 == t2.v1) return true;
+
+        // check t1.v2 -> t1.v3 edge
+        if (t1.v2 == t2.v1 && t1.v3 == t2.v2) return true;
+        if (t1.v2 == t2.v2 && t1.v3 == t2.v3) return true;
+        if (t1.v2 == t2.v3 && t1.v3 == t2.v1) return true;
+
+        // check t1.v3 -> t1.v1 edge
+        if (t1.v3 == t2.v1 && t1.v1 == t2.v2) return true;
+        if (t1.v3 == t2.v2 && t1.v1 == t2.v3) return true;
+        if (t1.v3 == t2.v3 && t1.v1 == t2.v1) return true;
+
+        return false;
+    };
+
+    VRGeoData data(ptr());
+
+    auto flipOrientation = [&](int f) {
+        Triangle& t = faces[f];
+        swap(t.v1, t.v3);
+        data.setIndex(f*3+0, t.v1);
+        data.setIndex(f*3+2, t.v3);
+    };
+
+
+    vector<Check> checks;
+    size_t processed = 0;
+
+    faces[face0].checked = true;
+    queueNeighbors(face0, checks);
+
+    while (processed < checks.size()) {
+        size_t N = checks.size();
+        for (; processed<N; processed++) {
+            auto c = checks[processed];
+            if ( orientationMismatch(c.t1, c.t2) ) flipOrientation(c.t2);
+            queueNeighbors(c.t2, checks);
+
+            /*if (processed < 10) {
+                auto& t1 = faces[c.t1];
+                auto& t2 = faces[c.t2];
+                Vec3d p1 = (1.0/3.0)*(Vec3d(data.getPosition(t1.v1)) + Vec3d(data.getPosition(t1.v2)) + Vec3d(data.getPosition(t1.v3)));
+                Vec3d p2 = (1.0/3.0)*(Vec3d(data.getPosition(t2.v1)) + Vec3d(data.getPosition(t2.v2)) + Vec3d(data.getPosition(t2.v3)));
+                data.pushVert(p1, Vec3d(0,1,0));
+                data.pushVert(p2, Vec3d(0,1,0));
+                data.pushLine();
+            }*/
+        }
+    }
 }
 
 void VRGeometry::setRandomColors() {
@@ -1093,7 +1314,7 @@ OSGGeometryPtr VRGeometry::getMesh() {
     else return 0;
 }
 
-VRPrimitive* VRGeometry::getPrimitive() { return primitive; }
+shared_ptr<VRPrimitive> VRGeometry::getPrimitive() { return primitive; }
 
 void VRGeometry::setMeshVisibility(bool b) {
     if (!mesh_node) return;
@@ -1271,7 +1492,7 @@ void VRGeometry::readSharedMemory(string segment, string object) {
 
 void VRGeometry::clear() {
     VRGeoData geo(ptr());
-    geo.reset();
+    geo.clear();
 }
 
 void VRGeometry::addPoint(int i) {

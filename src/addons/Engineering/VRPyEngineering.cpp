@@ -32,16 +32,34 @@ template<> PyObject* VRPyTypeCaster::cast(const VRElectricComponent::Address& a)
     return VRPyTypeCaster::cast(v);
 }
 
+#define DOC_addNode \
+"\
+Add node (name, pose, type, params)\n\
+ type can be [Tank, Valve, Outlet, Pump, Junction]\n\
+ params can be:\n\
+  Tank: 'area', 'height', 'level', 'pressure', 'isOpen', 'density'\n\
+  Valve: 'state'\n\
+  Outlet: 'radius', 'pressure', 'density'\n\
+  Pump: 'headGain', 'isOpen'\
+"
+
 PyMethodDef VRPyPipeSystem::methods[] = {
-    {"addNode", PyWrap( PipeSystem, addNode, "Add node, type can be [Tank, Valve, Outlet, Pump]", int, string, PosePtr, string, map<string, string> ) },
+    {"setDefaultDensity", PyWrap( PipeSystem, setDefaultDensity, "Set default fluid density", void, double ) },
+    {"setDefaultViscosity", PyWrap( PipeSystem, setDefaultViscosity, "Set default fluid viscosity", void, double ) },
+    {"addNode", PyWrap( PipeSystem, addNode, DOC_addNode, int, string, PosePtr, string, map<string, string> ) },
     {"remNode", PyWrap( PipeSystem, remNode, "Remove node", void, int ) },
-    {"addSegment", PyWrap( PipeSystem, addSegment, "Add segment between nodes (radius, n1, n2)", int, double, int, int ) },
+    {"addSegment", PyWrapOpt( PipeSystem, addSegment, "Add segment between nodes, optional height [0.0->1.0] for connecting tanks (radius, n1, n2, level | height1, height2)", "0|0", int, double, int, int, double, double, double ) },
     {"remSegment", PyWrap( PipeSystem, remSegment, "Remove segment", void, int ) },
     {"setFlowParameters", PyWrap( PipeSystem, setFlowParameters, "Set flow parameters, (latency)", void, float ) },
-    {"setDoVisual", PyWrapOpt( PipeSystem, setDoVisual, "Enable visual", "0.1", void, bool, float ) },
+    {"setDoVisual", PyWrapOpt( PipeSystem, setDoVisual, "Enable visual - (bool, | 0.1)", "0.1", void, bool, float ) },
+    {"setVisuals", PyWrap( PipeSystem, setVisuals, "Set visual layers - ([layers])\n layers can be pressure: \"p\", density: \"d\", flow: \"v\", edge directions: \"n\"", void, vector<string> ) },
+    {"setTemperatureVisualScale", PyWrap( PipeSystem, setTemperatureVisualScale, "Set temperature visual scale - (Tmin, Tmax)", void, double, double ) },
+    {"getSimulationTime", PyWrap( PipeSystem, getSimulationTime, "Returns simulation time in seconds", double ) },
+    {"setTimeScale", PyWrap( PipeSystem, setTimeScale, "Set time scale, 1.0 is rt, 0.01 is 100x slower", void, double ) },
     {"setNodePose", PyWrap( PipeSystem, setNodePose, "Set node pose by ID", void, int, PosePtr ) },
     {"disconnect", PyWrap( PipeSystem, disconnect, "Disconnect a node from a segment, keeps the segment by adding a junction to its end (nId, sID)", int, int, int ) },
     {"insertSegment", PyWrap( PipeSystem, insertSegment, "Insert a segment between a node and segment (nID, sID, radius)", int, int, int, float ) },
+    {"splitSegment", PyWrap( PipeSystem, splitSegment, "Split a segment in two in the middle (sID), returns nID of new node", int, int) },
     {"getGraph", PyWrap( PipeSystem, getGraph, "Get internal graph", GraphPtr ) },
     {"getOntology", PyWrap( PipeSystem, getOntology, "Get ontology", VROntologyPtr ) },
     {"getNode", PyWrap( PipeSystem, getNode, "Get node ID by name", int, string ) },
@@ -53,23 +71,49 @@ PyMethodDef VRPyPipeSystem::methods[] = {
     {"getSegmentPressure", PyWrap( PipeSystem, getSegmentPressure, "Get segment pressure", double, int ) },
     {"getSegmentGradient", PyWrap( PipeSystem, getSegmentGradient, "Get segment pressure gradient", Vec2d, int ) },
     {"getSegmentDensity", PyWrap( PipeSystem, getSegmentDensity, "Get segment density", double, int ) },
-    {"getSegmentFlow", PyWrap( PipeSystem, getSegmentFlow, "Get segment flow", double, int ) },
-    {"getValveState", PyWrap( PipeSystem, getValveState, "Get valve state", bool, string ) },
-    {"getSegmentFlowAccelleration", PyWrap( PipeSystem, getSegmentFlowAccelleration, "Get segment flow acceleration due to pressure gradient", Vec2d, int ) },
-    {"getTankPressure", PyWrap( PipeSystem, getTankPressure, "Get tank pressure", double, string ) },
-    {"getTankDensity", PyWrap( PipeSystem, getTankDensity, "Get tank density", double, string ) },
-    {"getTankVolume", PyWrap( PipeSystem, getTankVolume, "Get tank volume", double, string ) },
-    {"getPump", PyWrap( PipeSystem, getPump, "Get pump performance", double, string ) },
-    {"setPump", PyWrap( PipeSystem, setPump, "Set pump performance and max pressure", void, string, double, double ) },
-    {"setValve", PyWrap( PipeSystem, setValve, "Set valve state", void, string, bool ) },
-    {"setTankPressure", PyWrap( PipeSystem, setTankPressure, "Set tank pressure", void, string, double ) },
-    {"setTankDensity", PyWrap( PipeSystem, setTankDensity, "Set tank density", void, string, double ) },
+    {"getSegmentFlow", PyWrap( PipeSystem, getSegmentFlow, "Get segment flow", Vec2d, int ) },
+    {"getSegmentHeadFlow", PyWrap( PipeSystem, getSegmentHeadFlow, "Get segment head flow", Vec2d, int ) },
+    {"getSegmentHead", PyWrap( PipeSystem, getSegmentHead, "Get segment head", Vec2d, int ) },
+    {"getSegmentTemperature", PyWrap( PipeSystem, getSegmentTemperature, "Get segment temperature", Vec2d, int ) },
+    {"getValveState", PyWrap( PipeSystem, getValveState, "Get valve state", double, int ) },
+    {"getTankPressure", PyWrap( PipeSystem, getTankPressure, "Get tank pressure", double, int ) },
+    {"getTankDensity", PyWrap( PipeSystem, getTankDensity, "Get tank density", double, int ) },
+    {"getTankLevel", PyWrap( PipeSystem, getTankLevel, "Get tank level", double, int ) },
+    {"getPump", PyWrap( PipeSystem, getPump, "Get pump head gain [m]", double, int ) },
+    {"setPump", PyWrap( PipeSystem, setPump, "Set pump head gain [m] and isOpen props", void, int, double, bool ) },
+    {"setValve", PyWrap( PipeSystem, setValve, "Set valve state", void, int, double ) },
+    {"setTankPressure", PyWrap( PipeSystem, setTankPressure, "Set tank pressure", void, int, double ) },
+    {"setTankTemperature", PyWrap( PipeSystem, setTankTemperature, "Set tank temperature", void, int, double ) },
+    {"setTankDensity", PyWrap( PipeSystem, setTankDensity, "Set tank density", void, int, double ) },
     {"setPipeRadius", PyWrap( PipeSystem, setPipeRadius, "Set pipe radius, set to 0 to simulate blocked pipe", void, int, double ) },
     {"setPipePressure", PyWrap( PipeSystem, setPipePressure, "Set pipe pressure, (pID, p1, p2)", void, int, double, double ) },
-    {"setOutletDensity", PyWrap( PipeSystem, setOutletDensity, "Set outlet exterior density", void, string, double ) },
-    {"setOutletPressure", PyWrap( PipeSystem, setOutletPressure, "Set outlet exterior pressure", void, string, double ) },
+    {"setPipeTemperature", PyWrap( PipeSystem, setPipeTemperature, "Set pipe temperature, (pID, t)", void, int, double ) },
+    {"setPipeLevel", PyWrap( PipeSystem, setPipeLevel, "Set pipe level, (pID, lvl)", void, int, double ) },
+    {"setPipeFlow", PyWrap( PipeSystem, setPipeFlow, "Set pipe flow, (pID, f1, f2)", void, int, double, double ) },
+    {"setOutletDensity", PyWrap( PipeSystem, setOutletDensity, "Set outlet exterior density", void, int, double ) },
+    {"setOutletPressure", PyWrap( PipeSystem, setOutletPressure, "Set outlet exterior pressure", void, int, double ) },
     {"printSystem", PyWrap( PipeSystem, printSystem, "Print system state to console", void ) },
     {"updateInspection", PyWrap( PipeSystem, updateInspection, "Visualize node information", void, int ) },
+    {"computeTotalMass", PyWrap( PipeSystem, computeTotalMass, "Compute and return the total mass in the system", Vec2d ) },
+    {"setNodeCb", PyWrap( PipeSystem, setNodeCb, "Set node callback, for gauge or cylinder, will trigger if main parameter changes", void, int, VRAnimCbPtr ) },
+    {"addControlValvePath", PyWrap( PipeSystem, addControlValvePath, "Add control valve path, (valveID, A, B, x0, xs, K),\nwhere A and B are a pipe end index, x0 and xs are spool position and orifice size, and K is the resistance on that path", void, int, int, int, double, double, double ) },
+    {"addTankParticles", PyWrap( PipeSystem, addTankParticles, "Add a type of particles by mass (tankID, particleType, mass)", void, int, string, double ) },
+    {"removeTankParticles", PyWrap( PipeSystem, removeTankParticles, "Remove a part of a type of particles, returns mass (tankID, particleType, part)", double, int, string, double ) },
+    {"addFluidParticleBin", PyWrap( PipeSystem, addFluidParticleBin, "Add a type of particles (nodeID, particleType, sizeRange, density)", void, int, string, Vec2d, double ) },
+    {"getFluidParticles", PyWrap( PipeSystem, getFluidParticles, "Return volume fraction of a type of particles (nodeID, particleType)", double, int, string ) },
+    {"setFluidParticles", PyWrap( PipeSystem, setFluidParticles, "Set volume fraction of a type of particles (nodeID, particleType, volumeFraction)", void, int, string, double ) },
+    {"addMaterial", PyWrap( PipeSystem, addMaterial, "Add a new material", int ) },
+    {"setSegmentMaterial", PyWrap( PipeSystem, setSegmentMaterial, "Set segment material ID (eID, matID)", void, int, int ) },
+    {"setMaterialFriction", PyWrap( PipeSystem, setMaterialFriction, "Set material friction", void, int, double ) },
+    {"setMaterialThermalConductivity", PyWrap( PipeSystem, setMaterialThermalConductivity, "Set material thermal cond.", void, int, double ) },
+    {"addEnvironment", PyWrap( PipeSystem, addEnvironment, "Add a new environment", int ) },
+    {"setSegmentEnvironment", PyWrap( PipeSystem, setSegmentEnvironment, "Set segment environment ID (eID, envID)", void, int, int ) },
+    {"setEnvironmentVolume", PyWrap( PipeSystem, setEnvironmentVolume, "Set environment volume", void, int, double ) },
+    {"setEnvironmentTemperature", PyWrap( PipeSystem, setEnvironmentTemperature, "Set environment temperature", void, int, double ) },
+    {"getEnvironmentTemperature", PyWrap( PipeSystem, getEnvironmentTemperature, "Get environment temperature", double, int ) },
+    {"setEnvironmentHeatloss", PyWrap( PipeSystem, setEnvironmentHeatloss, "Set heat loss coefficient of environment in 1/s as well as outside temp (eID, coeff, T_ouside)", void, int, double, double ) },
+    {"createSnapshot", PyWrap( PipeSystem, createSnapshot, "Create snapshot of the simulation model state", string ) },
+    {"applySnapshot", PyWrap( PipeSystem, applySnapshot, "Apply snapshot to simulation model state, model needs to be compatible", void, string ) },
     {NULL}
 };
 

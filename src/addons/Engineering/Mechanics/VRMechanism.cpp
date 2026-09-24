@@ -137,6 +137,7 @@ bool MPart::propagateMovement() { // recursion
 }
 
 bool MPart::propagateMovement(MChange c, MRelation* r) { // change
+    if (!r) return false;
     r->translateChange(c);
     if (change.time == c.time && change.substep == c.substep) { // either it is the same change OR another change in the same timestep
         if (change.origin == c.origin) return change.same(c); // the same change
@@ -193,8 +194,8 @@ MGearGearRelation* checkGearGear(MGear* p1, MGear* p2) {
     Vec3d n1 = a1; n1.normalize();
     Vec3d n2 = a2; n2.normalize();
 
-    VRGear* g1 = (VRGear*)p1->prim;
-    VRGear* g2 = (VRGear*)p2->prim;
+    auto g1 = dynamic_pointer_cast<VRGear>(p1->prim);
+    auto g2 = dynamic_pointer_cast<VRGear>(p2->prim);
     Vec3d d = P2 - P1;
     float t1 = g1->teeth_size*s1;
 
@@ -248,8 +249,8 @@ MRelation* checkGearThread(MGear* p1, MThread* p2) {
     Vec3d n1 = a1; n1.normalize();
     Vec3d n2 = a2; n2.normalize();
 
-    VRGear* g1 = (VRGear*)p1->prim;
-    VRScrewThread* g2 = (VRScrewThread*)p2->prim;
+    auto g1 = dynamic_pointer_cast<VRGear>(p1->prim);
+    auto g2 = dynamic_pointer_cast<VRScrewThread>(p2->prim);
     //float t = g1->teeth_size * s1;
 
     // check if gear center along thread
@@ -284,7 +285,8 @@ MChainGearRelation* checkChainPart(MChain* c, MPart* p) {
     float s = p->geo->getWorldScale()[0];
     if (!p->prim) return 0;
     if (p->prim->getType() != "Gear") return 0;
-    float r = ((VRGear*)p->prim)->radius()*s;
+    auto g1 = dynamic_pointer_cast<VRGear>(p->prim);
+    float r = g1->radius()*s;
     Vec3d dir = ((MGear*)p)->axis;
     M.mult(dir,dir);
 
@@ -364,8 +366,8 @@ vector<pointPolySegment> MChain::toPolygon(Vec3d p) {
     return true;
 }*/
 
-VRGear* MGear::gear() { return (VRGear*)prim; }
-VRScrewThread* MThread::thread() { return (VRScrewThread*)prim; }
+shared_ptr<VRGear> MGear::gear() { return dynamic_pointer_cast<VRGear>(prim); }
+shared_ptr<VRScrewThread> MThread::thread() { return dynamic_pointer_cast<VRScrewThread>(prim); }
 
 void MPart::move() {}
 void MChain::move() { if (!geo || !geo->isVisible("", true)) return; needsUpdate = true; }
@@ -480,7 +482,7 @@ void MGear::updateNeighbors(vector<MPart*> parts) {
     clearNeighbors();
     for (auto part : parts) {
         if (!isPossibleNeighbor(part, this)) continue;
-        VRPrimitive* p = part->prim;
+        auto p = part->prim;
 
         if (p == 0) { // chain
             MRelation* rel = checkChainPart((MChain*)part, this);
@@ -519,7 +521,7 @@ void MThread::updateNeighbors(vector<MPart*> parts) {
     clearNeighbors();
     for (auto part : parts) {
         if (!isPossibleNeighbor(part, this)) continue;
-        VRPrimitive* p = part->prim;
+        auto p = part->prim;
         if (p->getType() == "Gear") {
             MRelation* rel = checkGearThread((MGear*)part, this);
             if (rel) addNeighbor(part, rel);
@@ -572,13 +574,13 @@ void MChain::updateGeo() {
     //cout << "MChain::updateGeo " << nbrs.size() << "   " << neighbors.size() << endl;
     for (unsigned int i=0; i<nbrs.size(); i++) {
         j = (i+1) % nbrs.size(); // next
-        VRPrimitive* p1 = nbrs[i]->prim;
-        VRPrimitive* p2 = nbrs[j]->prim;
+        auto p1 = nbrs[i]->prim;
+        auto p2 = nbrs[j]->prim;
         if (!p1 || !p2) continue;
         if (p1->getType() != "Gear") continue;
         if (p2->getType() != "Gear") continue;
-        VRGear* g1 = (VRGear*)p1;
-        VRGear* g2 = (VRGear*)p2;
+        auto g1 = dynamic_pointer_cast<VRGear>(p1);
+        auto g2 = dynamic_pointer_cast<VRGear>(p2);
 
         int d1 = dirs[i] == 'r' ? -1 : 1;
         int d2 = dirs[j] == 'r' ? -1 : 1;
@@ -668,7 +670,10 @@ VRMechanism::VRMechanism() : VRObject("mechanism") {
 
 VRMechanism::~VRMechanism() {
     if (doThread) {
-        doRun = false;
+        {
+            VRLock lock(mechMtx);
+            doRun = false;
+        }
         simThread->join();
         delete simThread;
     }
@@ -678,11 +683,13 @@ VRMechanism::~VRMechanism() {
 shared_ptr<VRMechanism> VRMechanism::create() { return shared_ptr<VRMechanism>(new VRMechanism()); }
 
 void VRMechanism::clear() {
+    VRLock lock(mechMtx);
     for (auto part : parts) delete part;
     for (auto motor : motors) delete motor.second;
     parts.clear();
     cache.clear();
     motors.clear();
+    changed_parts.clear();
 }
 
 void VRMechanism::addMotor(string name, VRTransformPtr driven, float speed, int dof) {
@@ -715,7 +722,7 @@ void VRMechanism::addGear(VRTransformPtr part, float width, float hole, float pi
     auto p = new MGear();
     p->axis = axis;
     p->offset = offset;
-    p->prim = new VRGear(width, hole, pitch, N_teeth, teeth_size, bevel);
+    p->prim = shared_ptr<VRGear>(new VRGear(width, hole, pitch, N_teeth, teeth_size, bevel));
     p->geo = part;
     p->trans = part;
     cache[part].push_back(p);
@@ -810,6 +817,7 @@ void VRMechanism::update(bool fromThread) {
     //cout << "\nVRMechanism::update" << endl;
 
     VRLock lock(mechMtx);
+    if (!doRun) return;
 
 #ifndef WITHOUT_BULLET
     if (doSG) {
@@ -857,6 +865,7 @@ void VRMechanism::update(bool fromThread) {
         auto dt = 0.001 * simTime->stop(); simTime->reset();
         substep += 1;
         for (auto& motor : motors) {
+            if (!motor.second) continue;
             if (abs(motor.second->speed) < 1e-6) continue; // TODO: motorbremse?
             if (!cache.count(motor.second->driven)) continue;
             auto mCache = cache[motor.second->driven];
@@ -869,6 +878,7 @@ void VRMechanism::update(bool fromThread) {
         }
 
         for (auto& part : changed_parts) {
+            if (!part) continue;
             if (part->getChange().isNull()) continue;
             bool block = !part->propagateMovement();
 
@@ -894,7 +904,7 @@ void MPart::updateTransform() {
     cumulativeChange = MChange();
     if (type == "gear") {
         double s = trans->getWorldScale()[0];
-        VRGear* g = (VRGear*)prim;
+        auto g = dynamic_pointer_cast<VRGear>(prim);
         double r = g->radius() * s;
         lastChange.dx = lastChange.a*r;
     }
@@ -938,7 +948,7 @@ void VRMechanism::updateVisuals() {
     for (auto p : parts) {
         if (p->type == "gear") {
             double s = p->trans->getWorldScale()[0];
-            VRGear* g = (VRGear*)p->prim;
+            auto g = dynamic_pointer_cast<VRGear>(p->prim);
             Vec3d a = ((MGear*)p)->rAxis;
             Vec3d o = ((MGear*)p)->rOffset;
             float w = g->width*0.5 * s;
@@ -982,7 +992,7 @@ void VRMechanism::updateVisuals() {
 
         if (p->type == "thread") {
             double s = p->trans->getWorldScale()[0];
-            VRScrewThread* t = (VRScrewThread*)p->prim;
+            auto t = dynamic_pointer_cast<VRScrewThread>(p->prim);
             Vec3d a = ((MThread*)p)->rAxis;
             Vec3d pos = Vec3d(p->reference[3]);
             float w = t->length * s;
@@ -1010,12 +1020,15 @@ void VRMechanism::updateVisuals() {
         auto pos1 = Vec3d(cp->reference[3]);
         if (cp->type == "gear") pos1 += ((MGear*)cp)->rOffset;
 
+        auto g = dynamic_pointer_cast<VRGear>(cp->prim);
+        auto t = dynamic_pointer_cast<VRScrewThread>(cp->prim);
+
         Vec3d n = Vec3d(0,1,0);
         if (cp->type == "gear") n = ((MGear*)cp)->rAxis;
         if (cp->type == "thread") n = ((MThread*)cp)->rAxis;
 
-        if (cp->type == "gear") n = ((VRGear*)((MGear*)cp)->prim)->radius() *s;
-        if (cp->type == "thread") n = ((VRScrewThread*)((MThread*)cp)->prim)->radius *s;
+        if (cp->type == "gear") n = g->radius() *s;
+        if (cp->type == "thread") n = t->radius *s;
 
         //double r = 1.0;
         //mviz->addVector(pos1, Vec3d(0,10,0), Color3f(1,0,0));

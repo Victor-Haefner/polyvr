@@ -73,6 +73,7 @@
 #include "VRPyProjectManager.h"
 #include "VRPyGeoPrimitive.h"
 #include "core/objects/geometry/brep/VRPyBRep.h"
+#include "core/objects/geometry/drawing/VRPyDrawing.h"
 #include "VRPyProgress.h"
 #include "VRPyUndoManager.h"
 #include "VRPyObjectManager.h"
@@ -82,10 +83,13 @@
 #include "VRPyCodeCompletion.h"
 #include "VRPyPointCloud.h"
 
+#include "core/tools/VRPyTools.h"
+
 #include "addons/Character/VRPyCharacter.h"
 #include "addons/Algorithms/VRPyGraphLayout.h"
 #include "addons/Algorithms/VRPyPathFinding.h"
 #include "addons/CaveKeeper/VRPyCaveKeeper.h"
+#include "addons/LLM/VRPyLLM.h"
 #include "addons/Engineering/Factory/VRPyFactory.h"
 #include "addons/Engineering/Factory/VRPyLogistics.h"
 #include "addons/Engineering/Factory/VRPyProduction.h"
@@ -214,7 +218,10 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
 #endif
     sm->registerModule<VRPyRestResponse>("RestResponse", pModVR);
     sm->registerModule<VRPyRestClient>("RestClient", pModVR);
+#ifndef WITHOUT_TCP
     sm->registerModule<VRPyRestServer>("RestServer", pModVR);
+    sm->registerModule<VRPyWebSocket>("WebSocket", pModVR);
+#endif
     sm->registerModule<VRPyState>("State", pModVR);
     sm->registerModule<VRPyGraphLayout>("GraphLayout", pModVR);
     sm->registerModule<VRPyPathFinding>("PathFinding", pModVR);
@@ -282,13 +289,14 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPyRocketExhaust>("RocketExhaust", pModVR, VRPyGeometry::typeRef);
     sm->registerModule<VRPySpaceMission>("SpaceMission", pModVR);
     sm->registerModule<VRPyOrbit>("Orbit", pModVR);
+    sm->registerModule<VRPyLLM>("LLM", pModVR);
     sm->registerModule<VRPyMillingMachine>("MillingMachine", pModVR);
     sm->registerModule<VRPyMillingWorkPiece>("MillingWorkPiece", pModVR, VRPyGeometry::typeRef);
     sm->registerModule<VRPyMillingCuttingToolProfile>("MillingCuttingToolProfile", pModVR);
     sm->registerModule<VRPyMolecule>("Molecule", pModVR, VRPyGeometry::typeRef);
     sm->registerModule<VRPyCrystal>("Crystal", pModVR, VRPyMolecule::typeRef);
     sm->registerModule<VRPyRobotArm>("RobotArm", pModVR);
-    sm->registerModule<VRPyPipeSystem>("PipeSystem", pModVR, VRPyGeometry::typeRef);
+    sm->registerModule<VRPyPipeSystem>("PipeSystem", pModVR, VRPyTransform::typeRef);
     sm->registerModule<VRPyElectricSystem>("ElectricSystem", pModVR);
     sm->registerModule<VRPyWire>("Wire", pModVR);
     sm->registerModule<VRPyWiringSimulation>("WiringSimulation", pModVR);
@@ -318,10 +326,19 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPyXML>("XML", pModVR);
     sm->registerModule<VRPyXMLElement>("XMLElement", pModVR);
     sm->registerModule<VRPySpreadsheet>("Spreadsheet", pModVR);
+    sm->registerModule<VRPyTable>("Table", pModVR);
 
+    sm->registerModule<VRPyPlayer>("Player", pModVR);
+    sm->registerModule<VRPyTimeline>("Timeline", pModVR);
+    sm->registerModule<VRPyGizmo>("Gizmo", pModVR, VRPyTransform::typeRef);
+
+#ifndef WASM
 	sm->registerModule<VRPyBRepSurface>("BRepSurface", pModVR);
 	sm->registerModule<VRPyBRepEdge>("BRepEdge", pModVR);
 	sm->registerModule<VRPyBRepBound>("BRepBound", pModVR);
+#endif
+
+	sm->registerModule<VRPyTechnicalDrawing>("TechnicalDrawing", pModVR);
 #ifndef WITHOUT_CGAL
 	sm->registerModule<VRPyCSGGeometry>("CSGGeometry", pModVR, VRPyGeometry::typeRef);
 #endif
@@ -413,12 +430,17 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPyOPCUANode>("OPCUANode", pModVR);
 #endif
 
+#ifndef WITHOUT_TCP
     sm->registerModule<VRPyPing>("Ping", pModVR);
+#endif
 #ifndef WITHOUT_SNAP7
     sm->registerModule<VRPyProfinetClient>("ProfinetClient", pModVR);
 #endif
+
+#ifndef WITHOUT_TCP
     sm->registerModule<VRPyMQTTClient>("MQTTClient", pModVR, VRPyNetworkClient::typeRef);
     sm->registerModule<VRPyMQTTServer>("MQTTServer", pModVR);
+#endif
 
 #ifndef WITHOUT_CRYPTOPP
     sm->registerModule<VRPyEncryption>("Encryption", pModVR);

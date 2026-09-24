@@ -123,22 +123,24 @@ void VRAnalyticGeometry::resize(int i, int j, int k) {
         auto pos = vectorLinesGeometry->getMesh()->geo->getPositions();
         auto cols = vectorLinesGeometry->getMesh()->geo->getColors();
         auto lengths = vectorLinesGeometry->getMesh()->geo->getLengths();
+
         while (i >= (int)pos->size()) {
             pos->addValue(Pnt3d());
             cols->addValue(Vec3d());
-            lengths->setValue(pos->size(), 0);
         }
+        lengths->setValue(pos->size(), 0);
     }
 
     if (vectorEndsGeometry) {
         auto pos = vectorEndsGeometry->getMesh()->geo->getPositions();
         auto cols = vectorEndsGeometry->getMesh()->geo->getColors();
         auto lengths = vectorEndsGeometry->getMesh()->geo->getLengths();
+
         while (j >= (int)pos->size()) {
             pos->addValue(Pnt3d());
             cols->addValue(Vec3d());
-            lengths->setValue(pos->size(), 0);
         }
+        lengths->setValue(pos->size(), 0);
     }
 
     if (circlesGeometry) {
@@ -147,13 +149,14 @@ void VRAnalyticGeometry::resize(int i, int j, int k) {
         auto lengths = circlesGeometry->getMesh()->geo->getLengths();
         auto norms = circlesGeometry->getMesh()->geo->getNormals();
         auto tcs = circlesGeometry->getMesh()->geo->getTexCoords();
+
         while (k >= (int)pos->size()) {
             pos->addValue(Pnt3d());
             cols->addValue(Vec3d());
             norms->addValue(Vec3d());
             tcs->addValue(Vec2d());
-            lengths->setValue(pos->size(), 0);
         }
+        lengths->setValue(pos->size(), 0);
     }
 }
 
@@ -271,7 +274,10 @@ int VRAnalyticGeometry::addVector(Vec3d pos, Vec3d vec, Color3f color, string la
 
 void VRAnalyticGeometry::clear() {
     if (ae) ae->clear();
-    // TODO
+    if (vectorLinesGeometry) vectorLinesGeometry->clear();
+    if (vectorEndsGeometry) vectorEndsGeometry->clear();
+    if (circlesGeometry) circlesGeometry->clear();
+    init();
 }
 
 void VRAnalyticGeometry::setZOffset(float factor, float bias) {

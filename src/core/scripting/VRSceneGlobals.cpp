@@ -41,6 +41,14 @@ string loadGeometryDoc =
 "Loads a file and returns an object"
 "\n\n\tobj loadGeometry(path, cached = True, preset = 'OSG', threaded = 0, parent = None, options = None, useBinaryCache = False)"
 "\n\n\tpreset can be: 'OSG', 'PVR', 'COLLADA', 'SOLIDWORKS-VRML2'"
+"\n\n\toptions example for DWG files (.dwg):"
+"\n\t\topts = {}"
+"\n\t\topts['offset'] = [0,0,0]"
+"\n\n\toptions example for shape files (.shp):"
+"\n\t\topts = {}"
+"\n\t\topts['pointSize'] = 5"
+"\n\t\topts['lineSize'] = 2"
+"\n\t\topts['offset'] = [0,0,0]"
 "\n\n\toptions example for pointclouds (.e57, .xyz):"
 "\n\t\topts = {}"
 "\n\t\topts['lit'] = 0"
@@ -99,7 +107,7 @@ PyMethodDef VRSceneGlobals::methods[] = {
 // ==============
 
 
-PyObject* VRSceneGlobals::sendToBrowser(VRSceneGlobals* self, PyObject* args) {
+PyObject* VRSceneGlobals::sendToBrowser(PyObject* self, PyObject* args) {
     string msg = parseString(args);
 #ifdef __EMSCRIPTEN__
     VRSetup::sendToBrowser(msg);
@@ -107,7 +115,7 @@ PyObject* VRSceneGlobals::sendToBrowser(VRSceneGlobals* self, PyObject* args) {
     Py_RETURN_TRUE;
 }
 
-PyObject* VRSceneGlobals::setWindowTitle(VRSceneGlobals* self, PyObject* args) {
+PyObject* VRSceneGlobals::setWindowTitle(PyObject* self, PyObject* args) {
     string name = parseString(args);
 #ifndef WITHOUT_IMGUI
     VRGuiManager::get()->setWindowTitle(name);
@@ -115,25 +123,25 @@ PyObject* VRSceneGlobals::setWindowTitle(VRSceneGlobals* self, PyObject* args) {
     Py_RETURN_TRUE;
 }
 
-PyObject* VRSceneGlobals::getScript(VRSceneGlobals* self, PyObject* args) {
+PyObject* VRSceneGlobals::getScript(PyObject* self, PyObject* args) {
     string name = parseString(args);
     VRScriptPtr s = VRScene::getCurrent()->getScript(name);
     return VRPyScript::fromSharedPtr( s );
 }
 
-PyObject* VRSceneGlobals::getFrame(VRSceneGlobals* self) {
-    return PyInt_FromLong(VRGlobals::CURRENT_FRAME);
+PyObject* VRSceneGlobals::getFrame(PyObject* self, PyObject* args) {
+    return PyLong_FromLong(VRGlobals::CURRENT_FRAME);
 }
 
-PyObject* VRSceneGlobals::getFPS(VRSceneGlobals* self) {
+PyObject* VRSceneGlobals::getFPS(PyObject* self, PyObject* args) {
     return PyFloat_FromDouble(VRGlobals::FRAME_RATE.fps);
 }
 
-PyObject* VRSceneGlobals::getActiveCamera(VRSceneGlobals* self) {
+PyObject* VRSceneGlobals::getActiveCamera(PyObject* self, PyObject* args) {
     return VRPyTypeCaster::cast( VRScene::getCurrent()->getActiveCamera() );
 }
 
-PyObject* VRSceneGlobals::testDWGArcs(VRSceneGlobals* self) {
+PyObject* VRSceneGlobals::testDWGArcs(PyObject* self, PyObject* args) {
 #ifndef WITHOUT_DWG
     return VRPyGeometry::fromSharedPtr( dwgArcTest() );
 #else
@@ -141,7 +149,7 @@ PyObject* VRSceneGlobals::testDWGArcs(VRSceneGlobals* self) {
 #endif
 }
 
-PyObject* VRSceneGlobals::getSoundManager(VRSceneGlobals* self) {
+PyObject* VRSceneGlobals::getSoundManager(PyObject* self, PyObject* args) {
 #ifndef WITHOUT_AV
     return VRPySoundManager::fromSharedPtr( VRSoundManager::get() );
 #else
@@ -149,18 +157,18 @@ PyObject* VRSceneGlobals::getSoundManager(VRSceneGlobals* self) {
 #endif
 }
 
-PyObject* VRSceneGlobals::getBackground(VRSceneGlobals* self) {
+PyObject* VRSceneGlobals::getBackground(PyObject* self, PyObject* args) {
     auto scene = VRScene::getCurrent();
     auto bg = dynamic_pointer_cast<VRBackground>(scene);
     return VRPyBackground::fromSharedPtr( bg );
 }
 
-PyObject* VRSceneGlobals::getSky(VRSceneGlobals* self) {
+PyObject* VRSceneGlobals::getSky(PyObject* self, PyObject* args) {
     auto scene = VRScene::getCurrent();
     return VRPySky::fromSharedPtr( scene->getSky() );
 }
 
-PyObject* VRSceneGlobals::getSceneMaterials(VRSceneGlobals* self) {
+PyObject* VRSceneGlobals::getSceneMaterials(PyObject* self, PyObject* args) {
     auto scene = VRScene::getCurrent();
     auto res = PyList_New(0);
     if (scene) {
@@ -170,7 +178,7 @@ PyObject* VRSceneGlobals::getSceneMaterials(VRSceneGlobals* self) {
     return res;
 }
 
-PyObject* VRSceneGlobals::setPhysicsActive(VRSceneGlobals* self, PyObject *args) {
+PyObject* VRSceneGlobals::setPhysicsActive(PyObject* self, PyObject *args) {
 #ifndef WITHOUT_BULLET
     auto scene = VRScene::getCurrent();
     if (scene) (dynamic_pointer_cast<VRPhysicsManager>(scene))->setPhysicsActive( parseBool(args) );
@@ -178,7 +186,7 @@ PyObject* VRSceneGlobals::setPhysicsActive(VRSceneGlobals* self, PyObject *args)
     Py_RETURN_TRUE;
 }
 
-PyObject* VRSceneGlobals::setPhysicsTimestep(VRSceneGlobals* self, PyObject *args) {
+PyObject* VRSceneGlobals::setPhysicsTimestep(PyObject* self, PyObject *args) {
 #ifndef WITHOUT_BULLET
     auto scene = VRScene::getCurrent();
     if (scene) (dynamic_pointer_cast<VRPhysicsManager>(scene))->setSimulationTimestep( parseFloat(args) );
@@ -186,47 +194,49 @@ PyObject* VRSceneGlobals::setPhysicsTimestep(VRSceneGlobals* self, PyObject *arg
     Py_RETURN_TRUE;
 }
 
-PyObject* VRSceneGlobals::getSystemDirectory(VRSceneGlobals* self, PyObject *args) {
+PyObject* VRSceneGlobals::getSystemDirectory(PyObject* self, PyObject *args) {
     string dir = parseString(args);
     string path = VRSceneManager::get()->getOriginalWorkdir();
     if (dir == "ROOT") ;
     if (dir == "EXAMPLES") path += "/examples";
     if (dir == "RESSOURCES") path += "/ressources";
     if (dir == "TRAFFIC") path += "/src/addons/RealWorld/traffic/simulation/bin";
-    return PyString_FromString(path.c_str());
+    return PyUnicode_FromString(path.c_str());
 }
 
-PyObject* VRSceneGlobals::loadScene(VRSceneGlobals* self, PyObject *args) {
+PyObject* VRSceneGlobals::loadScene(PyObject* self, PyObject *args) {
     auto fkt = VRUpdateCb::create( "scheduled scene load", bind(&VRSceneManager::loadScene, VRSceneManager::get(), parseString(args), false, "" ) );
     VRSceneManager::get()->queueJob(fkt);
     Py_RETURN_TRUE;
 }
 
-PyObject* VRSceneGlobals::getSetup(VRSceneGlobals* self) {
+PyObject* VRSceneGlobals::getSetup(PyObject* self, PyObject* args) {
     return VRPySetup::fromSharedPtr(VRSetup::getCurrent());
 }
 
-PyObject* VRSceneGlobals::getNavigator(VRSceneGlobals* self) {
+PyObject* VRSceneGlobals::getNavigator(PyObject* self, PyObject* args) {
     auto scene = VRScene::getCurrent();
     return VRPyNavigator::fromSharedPtr(dynamic_pointer_cast<VRNavigator>(scene));
 }
 
-PyObject* VRSceneGlobals::getRendering(VRSceneGlobals* self) {
+PyObject* VRSceneGlobals::getRendering(PyObject* self, PyObject* args) {
     auto scene = VRScene::getCurrent();
     return VRPyRendering::fromSharedPtr(dynamic_pointer_cast<VRRendering>(scene));
 }
 
-PyObject* VRSceneGlobals::getPlatform(VRSceneGlobals* self) {
+PyObject* VRSceneGlobals::getPlatform(PyObject* self, PyObject* args) {
 #ifdef _WIN32
-    return PyString_FromString("windows");
+    return PyUnicode_FromString("windows");
 #elif __linux__
-    return PyString_FromString("linux");
+    return PyUnicode_FromString("linux");
 #elif __APPLE__
-    return PyString_FromString("mac");
+    return PyUnicode_FromString("mac");
+#elif __EMSCRIPTEN__
+    return PyUnicode_FromString("wasm");
 #endif
 }
 
-PyObject* VRSceneGlobals::printOSG(VRSceneGlobals* self) {
+PyObject* VRSceneGlobals::printOSG(PyObject* self, PyObject *args) {
     cout << " --- Print Scene ---" << endl;
     VRObject::printOSGTree( VRScene::getCurrent()->getRoot()->getNode() );
     cout << " --- Print Setup ---" << endl;
@@ -234,12 +244,12 @@ PyObject* VRSceneGlobals::printOSG(VRSceneGlobals* self) {
     Py_RETURN_TRUE;
 }
 
-PyObject* VRSceneGlobals::exit(VRSceneGlobals* self) {
+PyObject* VRSceneGlobals::exit(PyObject* self, PyObject* args) {
     PolyVR::shutdown();
     Py_RETURN_TRUE;
 }
 
-PyObject* VRSceneGlobals::find(VRSceneGlobals* self, PyObject *args) {
+PyObject* VRSceneGlobals::find(PyObject* self, PyObject *args) {
     string name = parseString(args);
     auto setup = VRSetup::getCurrent();
     if (setup)
@@ -249,17 +259,17 @@ PyObject* VRSceneGlobals::find(VRSceneGlobals* self, PyObject *args) {
     Py_RETURN_NONE;
 }
 
-PyObject* VRSceneGlobals::findByID(VRSceneGlobals* self, PyObject *args) {
+PyObject* VRSceneGlobals::findByID(PyObject* self, PyObject *args) {
     int ID = parseInt(args);
     if (auto res = VRScene::getCurrent()->get(ID)) return VRPyTypeCaster::cast(res);
     Py_RETURN_NONE;
 }
 
-PyObject* VRSceneGlobals::getRoot(VRSceneGlobals* self) {
+PyObject* VRSceneGlobals::getRoot(PyObject* self, PyObject* args) {
     return VRPyTypeCaster::cast( VRScene::getCurrent()->getRoot() );
 }
 
-PyObject* VRSceneGlobals::importScene(VRSceneGlobals* self, PyObject *args) {
+PyObject* VRSceneGlobals::importScene(PyObject* self, PyObject *args) {
     const char* path = "";
     const char* key = "";
     int offLights = 0;
@@ -272,7 +282,7 @@ PyObject* VRSceneGlobals::importScene(VRSceneGlobals* self, PyObject *args) {
     //else Py_RETURN_NONE;
 }
 
-PyObject* VRSceneGlobals::loadGeometry(VRSceneGlobals* self, PyObject *args, PyObject *kwargs) {
+PyObject* VRSceneGlobals::loadGeometry(PyObject* self, PyObject *args, PyObject *kwargs) {
     const char* path = "";
     int cached = 0;
     int threaded = 0;
@@ -300,7 +310,7 @@ PyObject* VRSceneGlobals::loadGeometry(VRSceneGlobals* self, PyObject *args, PyO
     return VRPyTypeCaster::cast(obj);
 }
 
-PyObject* VRSceneGlobals::createPrimitive(VRSceneGlobals* self, PyObject *args, PyObject *kwargs) {
+PyObject* VRSceneGlobals::createPrimitive(PyObject* self, PyObject *args, PyObject *kwargs) {
     const char* name = "";
     const char* parameters = "";
     PyObject* parent = 0;
@@ -332,7 +342,7 @@ PyObject* VRSceneGlobals::createPrimitive(VRSceneGlobals* self, PyObject *args, 
     return VRPyTypeCaster::cast(obj);
 }
 
-PyObject* VRSceneGlobals::analyzeFile(VRSceneGlobals* self, PyObject *args) {
+PyObject* VRSceneGlobals::analyzeFile(PyObject* self, PyObject *args) {
     const char* path = "";
     const char* out = "";
     if (! PyArg_ParseTuple(args, "ss", &path, &out)) return NULL;
@@ -340,7 +350,7 @@ PyObject* VRSceneGlobals::analyzeFile(VRSceneGlobals* self, PyObject *args) {
     Py_RETURN_TRUE;
 }
 
-PyObject* VRSceneGlobals::exportToFile(VRSceneGlobals* self, PyObject *args) {
+PyObject* VRSceneGlobals::exportToFile(PyObject* self, PyObject *args) {
     const char* path = "";
     VRPyObject* o;
     PyObject* opts;
@@ -351,18 +361,18 @@ PyObject* VRSceneGlobals::exportToFile(VRSceneGlobals* self, PyObject *args) {
     Py_RETURN_TRUE;
 }
 
-PyObject* VRSceneGlobals::getLoadGeometryProgress(VRSceneGlobals* self) {
+PyObject* VRSceneGlobals::getLoadGeometryProgress(PyObject* self, PyObject* args) {
     return VRPyProgress::fromSharedPtr( VRImport::get()->getProgressObject() );
 }
 
-PyObject* VRSceneGlobals::pyTriggerScript(VRSceneGlobals* self, PyObject *args) {
+PyObject* VRSceneGlobals::pyTriggerScript(PyObject* self, PyObject *args) {
     VRScene::getCurrent()->triggerScript( parseString(args) );
     Py_RETURN_TRUE;
 }
 
 void execCall(PyObject* pyFkt, PyObject* pArgs, float f) {
     if (pyFkt == 0) return;
-    PyGILState_STATE gstate = PyGILState_Ensure();
+    VRPyGilGuard gilGuard;
     if (PyErr_Occurred() != NULL) PyErr_Print();
     if (pArgs == 0) pArgs = PyTuple_New(0);
 
@@ -372,7 +382,6 @@ void execCall(PyObject* pyFkt, PyObject* pArgs, float f) {
     Py_DecRef(pyFkt);
 
     if (PyErr_Occurred() != NULL) PyErr_Print();
-    PyGILState_Release(gstate);
 }
 
 void execThread(PyObject* pyFkt, PyObject* pArgs,  std::weak_ptr<VRThread>  thread) {
@@ -380,7 +389,7 @@ void execThread(PyObject* pyFkt, PyObject* pArgs,  std::weak_ptr<VRThread>  thre
 }
 
 map<int, VRThreadCbPtr> pyThreadsTmp;
-PyObject* VRSceneGlobals::startThread(VRSceneGlobals* self, PyObject *args) {
+PyObject* VRSceneGlobals::startThread(PyObject* self, PyObject *args) {
     PyObject *pyFkt, *pArgs = 0;
     if (! PyArg_ParseTuple(args, "O|O", &pyFkt, &pArgs)) return NULL;
     Py_IncRef(pyFkt);
@@ -395,17 +404,17 @@ PyObject* VRSceneGlobals::startThread(VRSceneGlobals* self, PyObject *args) {
     int t = VRScene::getCurrent()->initThread(pyThread, "python thread");
     pyThreadsTmp[t] = pyThread; // need to keep a reference!
     //self->pyThreads[t] = pyThread; // TODO: self is 0 ???
-    return PyInt_FromLong(t);
+    return PyLong_FromLong(t);
 }
 
-PyObject* VRSceneGlobals::joinThread(VRSceneGlobals* self, PyObject *args) {
+PyObject* VRSceneGlobals::joinThread(PyObject* self, PyObject *args) {
     int ID = parseInt(args);
     VRScene::getCurrent()->stopThread(ID);
     pyThreadsTmp.erase(ID);
     Py_RETURN_TRUE;
 }
 
-PyObject* VRSceneGlobals::stackCall(VRSceneGlobals* self, PyObject *args) {
+PyObject* VRSceneGlobals::stackCall(PyObject* self, PyObject *args) {
     PyObject* pyFkt = 0;
     PyObject* pArgs = 0;
     float delay = 0;
@@ -443,13 +452,13 @@ static PyFileOpenParams pyFileOpenParams;
 void callPyFileCb() {
     cout << "callPyFileCb " << pyFileOpenParams.fileName << endl;
     PyObject *pArgs = PyTuple_New(3);
-    PyTuple_SetItem( pArgs, 0, PyString_FromString( pyFileOpenParams.fileName.c_str()) );
+    PyTuple_SetItem( pArgs, 0, PyUnicode_FromString( pyFileOpenParams.fileName.c_str()) );
     PyTuple_SetItem( pArgs, 1, PyFloat_FromDouble( pyFileOpenParams.scale ) );
-    PyTuple_SetItem( pArgs, 2, PyString_FromString( pyFileOpenParams.preset.c_str() ) );
+    PyTuple_SetItem( pArgs, 2, PyUnicode_FromString( pyFileOpenParams.preset.c_str() ) );
     execCall( pyFileOpenParams.cb, pArgs, 0 );
 }
 
-PyObject* VRSceneGlobals::openFileDialog(VRSceneGlobals* self, PyObject *args) {
+PyObject* VRSceneGlobals::openFileDialog(PyObject* self, PyObject *args) {
     PyObject *cb, *mode, *title, *default_path, *filter;
     if (! PyArg_ParseTuple(args, "OOOOO", &cb, &mode, &title, &default_path, &filter)) return NULL;
     Py_IncRef(cb);
@@ -479,30 +488,30 @@ PyObject* VRSceneGlobals::openFileDialog(VRSceneGlobals* self, PyObject *args) {
         signalsConnected = true;
     }
 
-    string m = PyString_AsString(mode);
+    string m = PyUnicode_AsUTF8(mode);
     //string action = "on_script_open_file";
     //if (m == "Save" || m == "New" || m == "Create") action = "on_script_save_file";
     //else VRGuiFile::setGeoLoadWidget();
 
-    string openPath = PyString_AsString(default_path);
+    string openPath = PyUnicode_AsUTF8(default_path);
     if (!exists(openPath)) openPath = ".";
 
     uiSignal("set_file_dialog_signal", {{"signal","on_script_file_dialog_ok"}});
-    uiSignal("set_file_dialog_filter", {{"filter",PyString_AsString(filter)}});
-    uiSignal("set_file_dialog_setup", {{"title",PyString_AsString(title)}, {"dir",openPath}, {"file",""}});
+    uiSignal("set_file_dialog_filter", {{"filter",PyUnicode_AsUTF8(filter)}});
+    uiSignal("set_file_dialog_setup", {{"title",PyUnicode_AsUTF8(title)}, {"dir",openPath}, {"file",""}});
     uiSignal("set_file_dialog_options", {{"options","geoOpts"}});
-    uiSignal("ui_toggle_popup", {{"name","file"}, {"width","600"}, {"height","500"}});
+    uiSignal("ui_toggle_popup", {{"name","file"},{"title","Choose File"}, {"width","600"}, {"height","500"}});
     Py_RETURN_TRUE;
 }
 
-PyObject* VRSceneGlobals::updateGui(VRSceneGlobals* self) {
+PyObject* VRSceneGlobals::updateGui(PyObject* self, PyObject* args) {
 #ifndef WITHOUT_IMGUI
     //VRGuiManager::get()->updateGtk(); // TODO
 #endif
     Py_RETURN_TRUE;
 }
 
-PyObject* VRSceneGlobals::render(VRSceneGlobals* self) {
+PyObject* VRSceneGlobals::render(PyObject* self, PyObject* args) {
     VRSceneManager::get()->updateScene();
     VRSetup::getCurrent()->updateWindows();
 #ifndef WITHOUT_IMGUI
@@ -511,7 +520,7 @@ PyObject* VRSceneGlobals::render(VRSceneGlobals* self) {
     Py_RETURN_TRUE;
 }
 
-PyObject* VRSceneGlobals::runTest(VRSceneGlobals* self, PyObject *args) {
+PyObject* VRSceneGlobals::runTest(PyObject* self, PyObject *args) {
     const char* test = "";
     if (!PyArg_ParseTuple(args, "s", &test)) return NULL;
     VRRunTest(test);

@@ -7,10 +7,10 @@
 OSG_BEGIN_NAMESPACE;
 
 struct VRConceptWidget : public VRSemanticWidget {
-    VRConceptPtr concept;
+    VRConceptPtr concept_;
     VRPropertyPtr selected_property;
 
-    VRConceptWidget(VRGuiSemantics* m, VRConceptPtr concept = 0);
+    VRConceptWidget(VRGuiSemantics* m, VRConceptPtr concept_ = 0);
 
     void on_new_concept_clicked();
     void on_new_entity_clicked();

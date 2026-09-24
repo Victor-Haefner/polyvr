@@ -48,6 +48,7 @@ PyMethodDef VRPyTransform::methods[] = {
     {"getAt", PyWrap(Transform, getAt, "Return the object's at vector", Vec3d ) },
     {"getDir", PyWrap(Transform, getDir, "Return the object's dir vector", Vec3d ) },
     {"getUp", PyWrap(Transform, getUp, "Return the object's up vector", Vec3d ) },
+    {"getMatrix", PyWrap(Transform, getMatrix, "Get the object's 4x4 matrix", Matrix4d ) },
     {"getPose", PyWrap(Transform, getPose, "Return the object's pose", PosePtr ) },
     {"getWorldPose", PyWrap(Transform, getWorldPose, "Return the object's world pose", PosePtr ) },
     {"getWorldFrom", PyWrapOpt(Transform, getWorldPosition, "Return the object's world position", "0", Vec3d, bool ) },

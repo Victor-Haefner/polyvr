@@ -10,7 +10,7 @@ ImCombo::ImCombo(string ID, string label, int flags) : ID("##"+ID), label(label)
 void ImCombo::setList(vector<string> v) {
     strings = v;
     cstrings = vector<const char*>(v.size(), 0);
-    for (int i=0; i<strings.size(); i++) cstrings[i] = strings[i].c_str();
+    for (size_t i=0; i<strings.size(); i++) cstrings[i] = strings[i].c_str();
 }
 
 void ImCombo::setList(string v) {
@@ -18,9 +18,19 @@ void ImCombo::setList(string v) {
     setList(strings);
 }
 
+void ImCombo::appendList(string s) {
+    strings.push_back(s);
+    cstrings.push_back(strings[strings.size()-1].c_str());
+}
+
+void ImCombo::clearList() {
+    strings.clear();
+    cstrings.clear();
+}
+
 bool ImCombo::render(int width) {
     if (label != "") {
-        ImGui::Text(label.c_str());
+        ImGui::TextUnformatted(label.c_str());
         ImGui::SameLine();
     }
 
@@ -33,7 +43,7 @@ bool ImCombo::render(int width) {
 }
 
 void ImCombo::signal(string s) {
-    uiSignal(s, {{"selection", strings[current]}});
+    uiSignal(s, {{"selection", strings[current]}, {"index", toString(current)}});
 }
 
 void ImCombo::set(string s) {

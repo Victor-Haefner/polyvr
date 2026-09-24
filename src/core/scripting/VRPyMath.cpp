@@ -15,8 +15,7 @@ PyObject* VRPyMath::cos(VRPyMath* self, PyObject* args) { float v = VRPyBase::pa
 PyObject* VRPyMath::sin(VRPyMath* self, PyObject* args) { float v = VRPyBase::parseFloat(args); return PyFloat_FromDouble(::sin(v)); }
 
 template<> PyTypeObject VRPyBaseT<Vec2d>::type = {
-    PyObject_HEAD_INIT(NULL)
-    0,                         /*ob_size*/
+    PyVarObject_HEAD_INIT(NULL, 0)
     "VR.Math.Vec2",             /*tp_name*/
     sizeof(VRPyVec2f),             /*tp_basicsize*/
     0,                         /*tp_itemsize*/
@@ -35,7 +34,7 @@ template<> PyTypeObject VRPyBaseT<Vec2d>::type = {
     0,                         /*tp_getattro*/
     0,                         /*tp_setattro*/
     0,                         /*tp_as_buffer*/
-    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE | Py_TPFLAGS_CHECKTYPES, /*tp_flags*/
+    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE, /*tp_flags*/
     "Vec2 binding",           /* tp_doc */
     0,		               /* tp_traverse */
     0,		               /* tp_clear */
@@ -60,9 +59,8 @@ PyNumberMethods VRPyVec2f::nMethods = {
     (binaryfunc)VRPyVec2f::add,
     (binaryfunc)VRPyVec2f::sub,
     (binaryfunc)VRPyVec2f::mul,
-    (binaryfunc)VRPyVec2f::div,
     0,               /* binaryfunc nb_remainder;    __mod__ */
-    0,            /* binaryfunc nb_divmod;       __divmod__ */
+    (binaryfunc)VRPyVec2f::div,
     0,               /* ternaryfunc nb_power;       __pow__ */
     (unaryfunc)VRPyVec2f::neg,
     0,               /* unaryfunc nb_positive;      __pos__ */
@@ -116,21 +114,21 @@ PyObject* VRPyVec2f::New(PyTypeObject *type, PyObject *args, PyObject *kwds) {
 PyObject* VRPyVec2f::Print(PyObject* self) {
     string s = "[" + toString(((VRPyVec2f*)self)->v) + "]";
     std::replace( s.begin(), s.end(), ' ', ',');
-    return PyString_FromString( s.c_str() );
+    return PyUnicode_FromString( s.c_str() );
 }
 
-PyObject* VRPyVec2f::normalize(VRPyVec2f* self) {
+PyObject* VRPyVec2f::normalize(VRPyVec2f* self, PyObject* args) {
     self->v.normalize();
     return (PyObject*) toPyVec2f(self->v);
 }
 
-PyObject* VRPyVec2f::normalized(VRPyVec2f* self) {
+PyObject* VRPyVec2f::normalized(VRPyVec2f* self, PyObject* args) {
     auto v = self->v;
     v.normalize();
     return (PyObject*) toPyVec2f(v);
 }
 
-PyObject* VRPyVec2f::asList(VRPyVec2f* self) {
+PyObject* VRPyVec2f::asList(VRPyVec2f* self, PyObject* args) {
     auto l = PyList_New(3);
     PyList_SetItem(l,0,PyFloat_FromDouble(self->v[0]));
     PyList_SetItem(l,1,PyFloat_FromDouble(self->v[1]));
@@ -138,7 +136,7 @@ PyObject* VRPyVec2f::asList(VRPyVec2f* self) {
     return l;
 }
 
-PyObject* VRPyVec2f::length(VRPyVec2f* self) {
+PyObject* VRPyVec2f::length(VRPyVec2f* self, PyObject* args) {
     return PyFloat_FromDouble( self->v.length() );
 }
 
@@ -196,10 +194,15 @@ PySequenceMethods VRPyVec2f::sMethods = {
     0,    /* binaryfunc sq_concat;           __add__ */
     0,    /* intargfunc sq_repeat;           __mul__ */
     VRPyVec2f::getItem,   /* intargfunc sq_item;             __getitem__ */
-    VRPyVec2f::getSlice,  /* intintargfunc sq_slice;         __getslice__ */
+    0, /* was_sq_slice */
     VRPyVec2f::setItem,   /* intobjargproc sq_ass_item;      __setitem__ */
-    0,  /* intintobjargproc sq_ass_slice;  __setslice__ */
+    0, /* was_sq_ass_slice */
+    0, /* objobjproc sq_contains; */
+    0, /* objobjproc sq_inplace_concat; */
+    0, /* objobjproc sq_inplace_repeat; */
 };
+
+ //VRPyVec2f::getSlice
 
 Py_ssize_t VRPyVec2f::len(PyObject* self) {
     return 3;
@@ -216,7 +219,7 @@ int VRPyVec2f::setItem(PyObject* self, Py_ssize_t i, PyObject* val) {
     return 0;
 }
 
-PyObject* VRPyVec2f::getSlice(PyObject* self, Py_ssize_t ilow, Py_ssize_t ihigh) {
+/*PyObject* VRPyVec2f::getSlice(PyObject* self, Py_ssize_t ilow, Py_ssize_t ihigh) {
     if (ilow < 0) ilow += 2;
     if (ihigh < 0) ihigh += 2;
     if (ilow >= 2) ilow = 2-1;
@@ -227,7 +230,7 @@ PyObject* VRPyVec2f::getSlice(PyObject* self, Py_ssize_t ilow, Py_ssize_t ihigh)
         for (int i=ilow; i < ihigh; i++) v2[i] = ((VRPyVec2f*)self)->v[i];
     } else v2 = ((VRPyVec2f*)self)->v;
     return toPyObject(v2);
-}
+}*/
 
 PyObject* VRPyVec2f::iter(PyObject *self) {
     Py_INCREF(self);
@@ -251,8 +254,7 @@ PyObject* VRPyVec2f::iternext(PyObject *self) {
 
 
 template<> PyTypeObject VRPyBaseT<Vec3d>::type = {
-    PyObject_HEAD_INIT(NULL)
-    0,                         /*ob_size*/
+    PyVarObject_HEAD_INIT(NULL, 0)
     "VR.Math.Vec3",             /*tp_name*/
     sizeof(VRPyVec3f),             /*tp_basicsize*/
     0,                         /*tp_itemsize*/
@@ -271,7 +273,7 @@ template<> PyTypeObject VRPyBaseT<Vec3d>::type = {
     0,                         /*tp_getattro*/
     0,                         /*tp_setattro*/
     0,                         /*tp_as_buffer*/
-    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE | Py_TPFLAGS_CHECKTYPES, /*tp_flags*/
+    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE, /*tp_flags*/
     "Vec3 binding",           /* tp_doc */
     0,		               /* tp_traverse */
     0,		               /* tp_clear */
@@ -296,9 +298,8 @@ PyNumberMethods VRPyVec3f::nMethods = {
     (binaryfunc)VRPyVec3f::add,
     (binaryfunc)VRPyVec3f::sub,
     (binaryfunc)VRPyVec3f::mul,
-    (binaryfunc)VRPyVec3f::div,
     0,               /* binaryfunc nb_remainder;    __mod__ */
-    0,            /* binaryfunc nb_divmod;       __divmod__ */
+    (binaryfunc)VRPyVec3f::div,
     0,               /* ternaryfunc nb_power;       __pow__ */
     (unaryfunc)VRPyVec3f::neg,
     0,               /* unaryfunc nb_positive;      __pos__ */
@@ -355,21 +356,21 @@ PyObject* VRPyVec3f::New(PyTypeObject *type, PyObject *args, PyObject *kwds) {
 PyObject* VRPyVec3f::Print(PyObject* self) {
     string s = "[" + toString(((VRPyVec3f*)self)->v) + "]";
     std::replace( s.begin(), s.end(), ' ', ',');
-    return PyString_FromString( s.c_str() );
+    return PyUnicode_FromString( s.c_str() );
 }
 
-PyObject* VRPyVec3f::normalize(VRPyVec3f* self) {
+PyObject* VRPyVec3f::normalize(VRPyVec3f* self, PyObject* args) {
     self->v.normalize();
     return (PyObject*) toPyVec3f(self->v);
 }
 
-PyObject* VRPyVec3f::normalized(VRPyVec3f* self) {
+PyObject* VRPyVec3f::normalized(VRPyVec3f* self, PyObject* args) {
     auto v = self->v;
     v.normalize();
     return (PyObject*) toPyVec3f(v);
 }
 
-PyObject* VRPyVec3f::asList(VRPyVec3f* self) {
+PyObject* VRPyVec3f::asList(VRPyVec3f* self, PyObject* args) {
     auto l = PyList_New(3);
     PyList_SetItem(l,0,PyFloat_FromDouble(self->v[0]));
     PyList_SetItem(l,1,PyFloat_FromDouble(self->v[1]));
@@ -377,7 +378,7 @@ PyObject* VRPyVec3f::asList(VRPyVec3f* self) {
     return l;
 }
 
-PyObject* VRPyVec3f::length(VRPyVec3f* self) {
+PyObject* VRPyVec3f::length(VRPyVec3f* self, PyObject* args) {
     return PyFloat_FromDouble( self->v.length() );
 }
 
@@ -435,9 +436,12 @@ PySequenceMethods VRPyVec3f::sMethods = {
     0,    /* binaryfunc sq_concat;           __add__ */
     0,    /* intargfunc sq_repeat;           __mul__ */
     VRPyVec3f::getItem,   /* intargfunc sq_item;             __getitem__ */
-    VRPyVec3f::getSlice,  /* intintargfunc sq_slice;         __getslice__ */
+    0, // VRPyVec3f::getSlice,  /* intintargfunc sq_slice;         __getslice__ */
     VRPyVec3f::setItem,   /* intobjargproc sq_ass_item;      __setitem__ */
     0,  /* intintobjargproc sq_ass_slice;  __setslice__ */
+    0, /* objobjproc sq_contains; */
+    0, /* objobjproc sq_inplace_concat; */
+    0, /* objobjproc sq_inplace_repeat; */
 };
 
 Py_ssize_t VRPyVec3f::len(PyObject* self) {
@@ -483,7 +487,7 @@ int VRPyVec3f::setItem(PyObject* self, Py_ssize_t i, PyObject* val) {
     return 0;
 }
 
-PyObject* VRPyVec3f::getSlice(PyObject* self, Py_ssize_t ilow, Py_ssize_t ihigh) {
+/*PyObject* VRPyVec3f::getSlice(PyObject* self, Py_ssize_t ilow, Py_ssize_t ihigh) {
     if (ilow < 0) ilow += 3;
     if (ihigh < 0) ihigh += 3;
     if (ilow >= 3) ilow = 3-1;
@@ -494,11 +498,10 @@ PyObject* VRPyVec3f::getSlice(PyObject* self, Py_ssize_t ilow, Py_ssize_t ihigh)
         for (int i=ilow; i < ihigh; i++) v2[i] = ((VRPyVec3f*)self)->v[i];
     } else v2 = ((VRPyVec3f*)self)->v;
     return toPyObject(v2);
-}
+}*/
 
 template<> PyTypeObject VRPyBaseT<Line>::type = {
-    PyObject_HEAD_INIT(NULL)
-    0,                         /*ob_size*/
+    PyVarObject_HEAD_INIT(NULL, 0)
     "VR.Math.Line",             /*tp_name*/
     sizeof(VRPyLine),             /*tp_basicsize*/
     0,                         /*tp_itemsize*/
@@ -517,7 +520,7 @@ template<> PyTypeObject VRPyBaseT<Line>::type = {
     0,                         /*tp_getattro*/
     0,                         /*tp_setattro*/
     0,                         /*tp_as_buffer*/
-    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE | Py_TPFLAGS_CHECKTYPES, /*tp_flags*/
+    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE, /*tp_flags*/
     "Line binding",           /* tp_doc */
     0,		               /* tp_traverse */
     0,		               /* tp_clear */
@@ -558,14 +561,14 @@ PyObject* VRPyLine::Print(PyObject* self) {
     auto l = ((VRPyLine*)self)->l;
     string s = "[" + toString(l) + "]";
     std::replace( s.begin(), s.end(), ' ', ',');
-    return PyString_FromString( s.c_str() );
+    return PyUnicode_FromString( s.c_str() );
 }
 
-PyObject* VRPyLine::pos(VRPyLine* self) {
+PyObject* VRPyLine::pos(VRPyLine* self, PyObject* args) {
     return ::toPyObject(Vec3d(self->l.getPosition()));
 }
 
-PyObject* VRPyLine::dir(VRPyLine* self) {
+PyObject* VRPyLine::dir(VRPyLine* self, PyObject* args) {
     return ::toPyObject(Vec3d(self->l.getDirection()));
 }
 
@@ -609,13 +612,13 @@ simplePyType(Patch, New_ptr);
 simplePyType(PID, New_ptr);
 simplePyType(XML, New_ptr);
 simplePyType(XMLElement, 0);
+simplePyType(Table, New_ptr);
 simpleVRPyType(Spreadsheet, New_ptr);
 
 template<> string typeName(const Datarow* p) { return "Datarow"; }
 
 template<> PyTypeObject VRPyBaseT<Datarow>::type = {
-    PyObject_HEAD_INIT(NULL)
-    0,                         /*ob_size*/
+    PyVarObject_HEAD_INIT(NULL, 0)
     "VR.Datarow",             /*tp_name*/
     sizeof(VRPyDatarow),             /*tp_basicsize*/
     0,                         /*tp_itemsize*/
@@ -696,9 +699,12 @@ PySequenceMethods VRPyDatarow::sMethods = {
     0,    /* binaryfunc sq_concat;           __add__ */
     0,    /* intargfunc sq_repeat;           __mul__ */
     VRPyDatarow::getItem,   /* intargfunc sq_item;             __getitem__ */
-    VRPyDatarow::getSlice,  /* intintargfunc sq_slice;         __getslice__ */
+    0, //VRPyDatarow::getSlice,  /* intintargfunc sq_slice;         __getslice__ */
     VRPyDatarow::setItem,   /* intobjargproc sq_ass_item;      __setitem__ */
     0,  /* intintobjargproc sq_ass_slice;  __setslice__ */
+    0, /* objobjproc sq_contains; */
+    0, /* objobjproc sq_inplace_concat; */
+    0, /* objobjproc sq_inplace_repeat; */
 };
 
 Py_ssize_t VRPyDatarow::len(PyObject* self) {
@@ -725,7 +731,7 @@ int VRPyDatarow::setItem(PyObject* self, Py_ssize_t i, PyObject* val) {
     return 0;
 }
 
-PyObject* VRPyDatarow::getSlice(PyObject* self, Py_ssize_t ilow, Py_ssize_t ihigh) {
+/*PyObject* VRPyDatarow::getSlice(PyObject* self, Py_ssize_t ilow, Py_ssize_t ihigh) {
     auto v = ((VRPyDatarow*)self)->objPtr;
     int N = v->length();
     if (ilow < 0) ilow += N;
@@ -738,7 +744,7 @@ PyObject* VRPyDatarow::getSlice(PyObject* self, Py_ssize_t ilow, Py_ssize_t ihig
         for (int i=ilow; i < ihigh; i++) v2->append( v->get(i) );
     } else return NULL;
     return VRPyDatarow::fromSharedPtr(v2);
-}
+}*/
 
 PyMethodDef VRPyDatarow::methods[] = {
     {"append", PyWrap2( Datarow, append, "Add value", void, double ) },
@@ -912,7 +918,7 @@ PyMethodDef VRPyXML::methods[] = {
     {"write", PyWrap2(XML, write, "Write data to file", void, string) },
     {"toString", PyWrap2(XML, toString, "Return data as string", string) },
     {"getRoot", PyWrap2(XML, getRoot, "Return data root node", XMLElementPtr) },
-    {"newRoot", PyWrap2(XML, newRoot, "Create new root node (name, ns_uri, ns_prefix)", XMLElementPtr, string, string, string) },
+    {"newRoot", PyWrapOpt2(XML, newRoot, "Create new root node (name, ns_uri, ns_prefix)", "|", XMLElementPtr, string, string, string) },
     {"printTree", PyWrapOpt2(XML, printTree, "Print subtree to console", "", void, XMLElementPtr, string) },
     {NULL}  /* Sentinel */
 };
@@ -930,14 +936,30 @@ PyMethodDef VRPyXMLElement::methods[] = {
     {"hasAttribute", PyWrap2(XMLElement, hasAttribute, "Return if element has an attribute", bool, string) },
     {"setAttribute", PyWrap2(XMLElement, setAttribute, "Set an attribute (name, value)", void, string, string) },
     {"getChildren", PyWrapOpt2(XMLElement, getChildren, "Get children, optional element name and recursive", "|0", vector<XMLElementPtr>, string, bool) },
-    {"getChild", PyWrap2(XMLElement, getChild, "Get child by name", XMLElementPtr, string) },
+    {"getChild", PyWrapOpt2(XMLElement, getChild, "Get child by name", "|0", XMLElementPtr, string, int) },
     {"addChild", PyWrap2(XMLElement, addChild, "Add child element", XMLElementPtr, string) },
+    {"clearChildren", PyWrap2(XMLElement, clearChildren, "Remove all child elements", void) },
     {"toString", PyWrap2(XMLElement, toString, "Return element data as string", string) },
     {"print", PyWrap2(XMLElement, print, "Print to console", void) },
     {NULL}  /* Sentinel */
 };
 
+PyMethodDef VRPyTable::methods[] = {
+    {"getCol", PyWrap2(Table, getCol, "Get column data by name", vector<string>, string) },
+    {"getRow", PyWrap2(Table, getRow, "Get row data by row index", vector<string>, size_t) },
+    {"get", PyWrap2(Table, get, "Get value by column name and row index", string, string, size_t) },
+    {"getColumns", PyWrap2(Table, getColumns, "Get column names", vector<string>) },
+    {"getRows", PyWrap2(Table, getRows, "Get data rows", vector< vector<string> >) },
+    {"getNCols", PyWrap2(Table, getNCols, "Get number of columns", size_t) },
+    {"getNRows", PyWrap2(Table, getNRows, "Get number of rows", size_t) },
+    {"addCol", PyWrap2(Table, addCol, "Add column by name", void, string) },
+    {"add", PyWrap2(Table, add, "Append value to column (column, value)", void, string, string) },
+    {"set", PyWrap2(Table, set, "Set value (column, row, value)", void, string, size_t, string) },
+    {NULL}  /* Sentinel */
+};
+
 PyMethodDef VRPySpreadsheet::methods[] = {
+    {"asTable", PyWrap(Spreadsheet, asTable, "Return sheet as table", TablePtr, string) },
     {"read", PyWrap(Spreadsheet, read, "Read file, .xlsx, .mdb, .eap", void, string) },
     {"write", PyWrap(Spreadsheet, write, "Write to folder, (folder, extention)", void, string, string) },
     {"writeSheet", PyWrap(Spreadsheet, writeSheet, "Write to sheet to file (.csv), (sheet, path)", void, string, string) },

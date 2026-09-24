@@ -42,6 +42,27 @@ vector<PathPtr> VRStroke::getPaths() { return paths; }
 
 void VRStroke::addPolygon(VRPolygonPtr p) { polygons.push_back(p); }
 
+vector<Vec3d> VRStroke::makeRectProfile(double width, double height) {
+    double w2 = width*0.5;
+    double h2 = height*0.5;
+    vector<Vec3d> p(4);
+    p[0] = Vec3d(-w2, -h2, 0);
+    p[1] = Vec3d( w2, -h2, 0);
+    p[2] = Vec3d( w2,  h2, 0);
+    p[3] = Vec3d(-w2,  h2, 0);
+    return p;
+}
+
+vector<Vec3d> VRStroke::makeCircleProfile(double radius, int Npoints) {
+    double a = 2*Pi/Npoints;
+    vector<Vec3d> p(Npoints);
+    for (int i=0; i<Npoints; i++) {
+        double b = a*i;
+        p[i] = Vec3d(radius*cos(b), radius*sin(b), 0);
+    }
+    return p;
+}
+
 void VRStroke::strokeProfile(vector<Vec3d> profile, bool closed, bool lit, bool doColor, CAP l, CAP r, bool doCaps) {
     mode = 0;
     this->profile = profile;
@@ -78,6 +99,29 @@ void VRStroke::strokeProfile(vector<Vec3d> profile, bool closed, bool lit, bool 
         else data->pushVert(p, n, c, tc);
     };
 
+
+    // compute profile normals
+    vector<Vec3d> profileNormals(profile.size(), Vec3d(0, 0, 0));
+    auto edgeNormal = [&](const Vec3d& a, const Vec3d& b) -> Vec3d {
+        Vec3d edge = b - a;
+        if (edge.squareLength() <= 1e-12) return Vec3d(0, 0, 0);
+        Vec3d normal = edge.cross(Vec3d(0,0,1));
+        normal.normalize();
+        return normal;
+    };
+
+    for (size_t i = 0; i < profile.size(); ++i) {
+        Vec3d normal(0, 0, 0);
+        if (i > 0) normal += edgeNormal(profile[i - 1], profile[i]);
+        else if (closed) normal += edgeNormal(profile.back(), profile.front());
+
+        if (i + 1 < profile.size()) normal += edgeNormal(profile[i], profile[i + 1]);
+        else if (closed) normal += edgeNormal(profile.back(), profile.front());
+
+        if (normal.squareLength() > 1e-12) normal.normalize();
+        profileNormals[i] = normal;
+    }
+
     for (auto path : paths) {
         auto pnts = path->getPositions();
         auto directions = path->getDirections();
@@ -112,7 +156,9 @@ void VRStroke::strokeProfile(vector<Vec3d> profile, bool closed, bool lit, bool 
                 if (endArrow2 || begArrow1) pos = pCenter;
                 m.mult(pos, pos);
 
-                Vec3d norm = pos; norm.normalize();
+                Vec3d norm = profileNormals[i];
+                if (norm.squareLength() < 1e-12) { norm = pos; norm.normalize(); }
+                else m.mult(norm, norm);
                 addVertex(p + pos, norm, c, tc);
             }
 
@@ -232,12 +278,11 @@ void VRStroke::strokeStrew(VRGeometryPtr geo) {
 
     clearChildren();
     for (unsigned int i=0; i<paths.size(); i++) {
-        vector<Vec3d> pnts = paths[i]->getPositions();
-        for (unsigned int j=0; j<pnts.size(); j++) {
-            Vec3d p = pnts[j];
+        vector<PosePtr> poses = paths[i]->getPoses();
+        for (auto P : poses) {
             VRGeometryPtr g = static_pointer_cast<VRGeometry>(geo->duplicate());
+            g->setPose(P);
             addChild(g);
-            g->translate(p);
         }
     }
 }

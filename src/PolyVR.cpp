@@ -36,7 +36,9 @@
 #include "core/objects/VRTransform.h"
 #include "core/setup/VRSetup.h"
 
-#include <boost/filesystem.hpp>
+#ifndef WITHOUT_CEF
+#include "addons/CEF/CEF.h"
+#endif
 
 #ifndef _WIN32
 #include <unistd.h>
@@ -58,33 +60,52 @@ using namespace std;
 
 PolyVR* pvr = 0;
 
-void printFieldContainer(int maxID = -1) {
+void printFieldContainer() {
     int N = FieldContainerFactory::the()->getNumTotalContainers();
-    for (int i=0;i<N;++i) {
-        FieldContainer* fc = FieldContainerFactory::the()->getContainer(i);
-        if(fc == 0) continue;
-        int fcID = fc->getId();
-        if(fcID <= 358) continue; // stuff created in osgInit()
-        if(fcID > maxID && maxID > 0) break; // stop
+    cout << "... found " << N << " remaining field containers" << endl;
 
-        // skip prototypes
-        if(fc->getType().getPrototype() == 0 || fc->getType().getPrototype() == fc  ) continue;
+    int printedN = 0;
 
-        //cout << "\nFC id: " << fcID << flush;
+    auto printFC = [&](FieldContainer* fc, FieldContainer* pfc) {
+        if (!fc) return false;
+        if (printedN == 20) { cout << "more than 20 fieldcontainers found, skipping.." << endl; printedN++; }
+        if (printedN > 20) return true;
+        printedN++;
 
         AttachmentContainer* ac = dynamic_cast<AttachmentContainer*>(fc);
+        const Char8* name = getName(ac);
+        cout << "Detected living FC " << fc->getTypeName() << " (" << fc << ") ";
+        if (name) cout << "named '" << name << "'";
+        cout << " refcount " << fc->getRefCount() << ", ID " << fc->getId() << endl;
+
+        if (pfc) {
+            AttachmentContainer* ac = dynamic_cast<AttachmentContainer*>(pfc);
+            const Char8* name = getName(ac);
+            cout << " Parent container FC " << pfc->getTypeName() << " (" << pfc << ") ";
+            if (name) cout << "named '" << name << "'";
+            cout << " refcount " << pfc->getRefCount() << ", ID " << pfc->getId() << endl;
+        }
+
+        return false;
+    };
+
+    for (int i=0; i<N; i++) {
+        FieldContainer* fc = FieldContainerFactory::the()->getContainer(i);
+        if (!fc) continue;
+        int fcID = fc->getId();
+        if (fcID <= 358) continue; // stuff created in osgInit()
+        if (fc->getType().getPrototype() == 0 || fc->getType().getPrototype() == fc  ) continue; // skip prototypes
+
+        AttachmentContainer* ac = dynamic_cast<AttachmentContainer*>(fc);
+        FieldContainer* parentfc = 0;
         if (ac == 0) {
             Attachment* a = dynamic_cast<Attachment*>(fc);
             if (a != 0) {
-                FieldContainer* dad = 0;
-                if (a->getMFParents()->size() > 0) dad = a->getParents(0);
-                ac = dynamic_cast<AttachmentContainer*>(dad);
+                if (a->getMFParents()->size() > 0) parentfc = a->getParents(0);
             }
         }
 
-        const Char8* name = getName(ac);
-        if (name != 0) printf("Detected living FC %s (%s) %p refcount %d ID %d\n", fc->getTypeName(), name, fc, fc->getRefCount(), fcID);
-        else printf( "Detected living FC %s (no name) %p refcount %d ID %d\n", fc->getTypeName(), fc, fc->getRefCount(), fcID );
+        if (printFC(fc, parentfc)) break;
     }
 }
 
@@ -107,6 +128,11 @@ PolyVR::~PolyVR() {
     VRGuiSignals::get()->clear();
 #endif
     if (scene_mgr) scene_mgr->closeScene();
+
+#ifndef WITHOUT_CEF
+    CEF::shutdown();
+#endif
+
     if (auto setup = VRSetup::getCurrent()) setup->stopWindows();
     if (scene_mgr) scene_mgr->stopAllThreads();
     if (setup_mgr) setup_mgr->closeSetup();
@@ -119,6 +145,10 @@ PolyVR::~PolyVR() {
     scene_mgr.reset();
     sound_mgr.reset();
     options.reset();
+
+#ifdef WIN32
+#define OSG_SILENT_SHUTDOWN
+#endif
 
     cout << " terminated all polyvr modules" << endl;
 #ifndef WASM
@@ -175,9 +205,7 @@ void printOSGImportCapabilities() {
 
 void PolyVR::initEnvironment() {
     initTime();
-    //setlocale(LC_ALL, "C");
-    setlocale(LC_ALL, "en_US.UTF-8");
-    boost::filesystem::path::imbue(std::locale("en_US.UTF-8"));
+    setlocale(LC_ALL, "en_US.UTF-8"); // C locale
 
 #ifdef _WIN32
     // to get windows to compile for UTF8
@@ -238,11 +266,10 @@ void PolyVR::initUI() {
     VRSetupManager::get()->load("Browser", "Browser.xml");
     cout << " Browser setup loaded!" << endl;
 #else
-	main_interface = shared_ptr<VRMainInterface>(VRMainInterface::get());
-#endif
-
+    main_interface = shared_ptr<VRMainInterface>(VRMainInterface::get());
     gui_mgr = shared_ptr<VRGuiManager>(VRGuiManager::get());
     gui_mgr->init();
+#endif
 
     loader = shared_ptr<VRSceneLoader>(VRSceneLoader::get());
 }
@@ -279,6 +306,7 @@ void PolyVR::update() {
         float d = float(i)/(initQueue.size()-1);
         i++;
         VRSetup::sendToBrowser("setProgress|"+toString(d)+"|"+cp->name);
+        cout << " init done!" << endl;
         return;
     }
 
@@ -290,13 +318,16 @@ void PolyVR::update() {
     int appInitFrame = 2;
 #endif
     if (VRGlobals::CURRENT_FRAME == appInitFrame) {
+        cout << " resolve init frame" << endl;
         string app = options->getOption<string>("application");
         //app = "/home/victor/Projects/polyvr/examples/CEF.xml";
         string dcy = options->getOption<string>("decryption");
         string key;
         if (startsWith(dcy, "key:")) key = subString(dcy, 4, dcy.size()-4);
         if (startsWith(dcy, "serial:")) key = "123"; // TODO: access serial connection to retrieve key
+        if (app != "") cout << "  requested start of: '" << app << "'" << endl;
         if (app != "") VRSceneManager::get()->loadScene(app, false, key);
+        cout << "   init frame done!" << endl;
     }
 
     //if (VRGlobals::CURRENT_FRAME == 1000) { shutdown(); }

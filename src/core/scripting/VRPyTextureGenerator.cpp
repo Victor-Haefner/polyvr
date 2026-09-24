@@ -13,6 +13,7 @@ PyMethodDef VRPyTexGenLayer::methods[] = {
 
 PyMethodDef VRPyTextureGenerator::methods[] = {
     {"add", PyWrap( TextureGenerator, add, "Add a layer\n\ttype can be: 'Perlin', 'Bricks'", void, string, float, Color4f, Color4f ) },
+    {"addTexture", PyWrap( TextureGenerator, addTexture, "Add a layer from a texture", void, VRTexturePtr) },
     {"drawFill", PyWrap( TextureGenerator, drawFill, "Fill whole texture", void, Color4f ) },
     {"drawPixel", PyWrap( TextureGenerator, drawPixel, "Set a pixel color", void, Vec3i, Color4f ) },
     {"drawLine", PyWrap( TextureGenerator, drawLine, "Add a line in UV space", void, Vec3d, Vec3d, Color4f, float ) },

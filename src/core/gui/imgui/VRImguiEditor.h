@@ -6,8 +6,10 @@
 #include <map>
 #include <vector>
 
+#include "core/utils/VRUtilsFwd.h"
 #include "VRImguiUtils.h"
 #include "imWidgets/VRImguiInput.h"
+#include "imWidgets/VRImguiCombo.h"
 #include "imWidgets/VRImguiTreeview.h"
 #include <imgui.h>
 #include <core/utils/VRFwdDeclTemplate.h>
@@ -34,6 +36,9 @@ class ImSection : public ImWidget {
 
 class ImToolbar : public ImSection {
     public:
+        int uiTheme = 1;
+        int uiFont = 0;
+
         ImToolbar(ImRectangle r);
         void begin() override;
 };
@@ -104,6 +109,7 @@ class ImFileDialog : public ImDialog {
 
         ImFileDialog();
         void begin() override;
+        void close();
 };
 
 class ImRecorderDialog : public ImDialog {
@@ -145,6 +151,20 @@ class ImProfDialog : public ImDialog {
         void begin() override;
 };
 
+class ImAIConfigDialog : public ImDialog {
+    private:
+        ImInput keyInput;
+        string keyStatus;
+        ImCombo modelCombo;
+        ImCombo effortCombo;
+
+        void sendConfig();
+
+    public:
+        ImAIConfigDialog();
+        void begin() override;
+};
+
 class ImTemplateDialog : public ImDialog {
     public:
         bool initiated = false;
@@ -163,7 +183,22 @@ class ImTemplateDialog : public ImDialog {
 
 class ImImportDialog : public ImDialog {
     public:
+        ImTreeview tree1;
+        ImTreeview tree2;
+        string selected1;
+        string selected2;
+
         ImImportDialog();
+        void begin() override;
+
+        void clear();
+        void add(string ID, string label, string parent, bool local);
+        void selectScript(string node, bool local);
+};
+
+class ImWebExportDialog : public ImDialog {
+    public:
+        ImWebExportDialog();
         void begin() override;
 };
 
@@ -171,6 +206,7 @@ class VRImguiEditor {
     private:
         Signal signal;
         ResizeSignal resizeSignal;
+        OSG::VRTimerPtr focusTimer;
 
         ImToolbar toolbar = ImToolbar({0,1,0.95,1});
         ImSidePanel sidePanel = ImSidePanel({0,0.3,0,0.95});
@@ -186,11 +222,19 @@ class VRImguiEditor {
         ImProfDialog profDialog = ImProfDialog();
         ImImportDialog importDialog = ImImportDialog();
         ImTemplateDialog templateDialog = ImTemplateDialog();
+        ImWebExportDialog webExportDialog = ImWebExportDialog();
+        ImAIConfigDialog AIConfigDialog = ImAIConfigDialog();
 
         void resolveResize(const string& name, const ResizeEvent& resizer);
         void handleRelayedKey(int key, int state, bool special);
+        void onLooseFocus();
+        void onAnyKey();
+        void pollFocusSafety();
 
     public:
+        VRImguiEditor();
+        ~VRImguiEditor();
+
         void init(Signal signal, ResizeSignal resizeSignal);
         void initPopup();
         void close();

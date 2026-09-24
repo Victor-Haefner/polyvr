@@ -208,14 +208,14 @@ VRGeometryPtr VRRoad::createGeometry() {
 
             if(offsetIn!=0 || offsetOut!=0){
                 for (int zz=0; zz<path->size(); zz++) {
-                    Vec3d p = path->getPoint(zz).pos();
-                    Vec3d n = path->getPoint(zz).dir();
-                    Vec3d x = path->getPoint(zz).x();
                     auto po = path->getPoint(zz);
+                    Vec3d p = po->pos();
+                    Vec3d n = po->dir();
+                    Vec3d x = po->x();
                     x.normalize();
                     float offsetter = offsetIn*(1.0-(float(zz)/(float(path->size())-1.0))) + offsetOut*(float(zz)/(float(path->size())-1.0));
                     if (zz>0 && zz+1<(int)path->getPoints().size()) offsetter = 0; //only first node has offsetter
-                    po.setPos(x*offsetter  + p);
+                    po->setPos(x*offsetter  + p);
                     path->setPoint(zz,po);
                 };
                 path->compute(12);
@@ -278,9 +278,9 @@ void VRRoad::computeMarkings() {
     auto path = toPath(pathEnt, 12);
     int zz=0;
     for (auto point : path->getPoints()) {
-        Vec3d p = point.pos();
-        Vec3d n = point.dir();
-        Vec3d x = point.x();
+        Vec3d p = point->pos();
+        Vec3d n = point->dir();
+        Vec3d x = point->x();
         x.normalize();
         float offsetter = offsetIn*(1.0-(float(zz)/(float(path->size())-1.0))) + offsetOut*(float(zz)/(float(path->size())-1.0));
         //float offsetterOld = offsetter;

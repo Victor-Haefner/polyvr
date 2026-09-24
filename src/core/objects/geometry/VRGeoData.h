@@ -41,6 +41,7 @@ class VRGeoData {
         VRGeoData(VRGeometryPtr geo);
 
         static VRGeoDataPtr create();
+        VRGeometryPtr getGeometry();
 
         int size() const;
         int sizeNormals() const;
@@ -51,9 +52,10 @@ class VRGeoData {
         int getFaceSize(int fID) const;
         int getNTypes() const;
 
+        void clear();
         void reset();
-        bool valid() const;
-        bool validIndices() const;
+        bool valid(bool verbose = true) const;
+        bool validIndices(bool verbose = true) const;
 
         int getType(int i);
         int getLength(int i);
@@ -203,7 +205,7 @@ class VRGeoData {
         void addVertexColors(Color4f c);
         void addVertexTexCoords(Vec2d tc);
 
-        string status();
+        string status() const;
         void test_copy(VRGeoData& g);
 };
 

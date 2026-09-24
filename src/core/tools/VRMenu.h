@@ -33,7 +33,7 @@ class VRMenu : public VRGeometry {
         VRMenuPtr parent = 0;
         VRMenuPtr selected = 0;
 
-        VRFunction<VRMenuPtr>* callback = 0;
+        VRMenuCbPtr callback = 0;
 
         VRSelector* selector = 0;
 
@@ -51,7 +51,7 @@ class VRMenu : public VRGeometry {
 
         void setLeafType(TYPE l, Vec2d scale);
         void setLayout(LAYOUT l, float param);
-        void setCallback(VRFunction<VRMenuPtr>* cb);
+        void setCallback(VRMenuCbPtr cb);
 
         VRMenuPtr append(string path);
         VRMenuPtr getParent();

@@ -32,10 +32,11 @@ class VRTexture : public std::enable_shared_from_this<VRTexture> {
 
         bool read(string path);
         void readGIS(string path);
+        void readBuffer(string path, string format, Vec3i layout, int chanels, int Nmipmaps, int internalpf);
         void setImage(ImageMTRecPtr img);
         void setInternalFormat(int ipf);
         void setPixel(Vec3i p, Color4f c);
-        void setPixel(int i, Color4f c);
+        void setIthPixel(int i, Color4f c);
         void setByteData(vector<char> data, Vec3i layout, int chanels, int Nmipmaps, int internalpf);
         void setFloatData(vector<float> data, Vec3i layout, int chanels, int Nmipmaps, int internalpf);
 
@@ -46,6 +47,8 @@ class VRTexture : public std::enable_shared_from_this<VRTexture> {
         size_t getNPixel();
         vector<Color4f> getPixels(bool invertY = false);
         ImageMTRecPtr getImage();
+        vector<Color4f> randomSamples(int N);
+        Color4f sampleMeanColor(int N);
 
         void convertToBytes();
         void writeImage(ImageMTRecPtr img, string path);
@@ -63,6 +66,7 @@ class VRTexture : public std::enable_shared_from_this<VRTexture> {
         void paste(VRTexturePtr other, Vec3i offset);
         void merge(VRTexturePtr other, Vec3d pos);
         void mixColor(Color4f c, float a);
+        void turn(int steps); // turn n times 90 deg
 
         static string typeToString(int t);
         static string formatToString(int f);

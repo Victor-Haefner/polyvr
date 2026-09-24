@@ -40,6 +40,7 @@ class VRRobotArm {
             virtual void applyAngles() = 0;
 
             double convertAngle(double a, int i);
+            double clamp(double f, double a = -1, double b = 1);
         };
 
         struct job {

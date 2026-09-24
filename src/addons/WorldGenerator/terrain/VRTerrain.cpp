@@ -36,8 +36,8 @@ using namespace OSG;
 
 
 VREmbankment::VREmbankment(PathPtr p1, PathPtr p2, PathPtr p3, PathPtr p4) : VRGeometry("embankment"), p1(p1), p2(p2), p3(p3), p4(p4) {
-    for (auto p : p1->getPoints()) { auto pos = p.pos(); area.addPoint(Vec2d(pos[0],pos[2])); };
-    for (auto p : p2->getPoints()) { auto pos = p.pos(); area.addPoint(Vec2d(pos[0],pos[2])); };
+    for (auto p : p1->getPoints()) { auto pos = p->pos(); area.addPoint(Vec2d(pos[0],pos[2])); };
+    for (auto p : p2->getPoints()) { auto pos = p->pos(); area.addPoint(Vec2d(pos[0],pos[2])); };
     hide("SHADOW");
 }
 
@@ -715,12 +715,12 @@ void VRTerrain::elevateVertices(VRGeometryPtr geo, float offset) {
 }
 
 void VRTerrain::elevatePolygon(VRPolygonPtr poly, float offset, bool useEmbankments) {
-    for (auto p2 : poly->get()) {
+    for (auto p2 : poly->getPoints()) {
         Vec3d p3(p2[0], 0, p2[1]);
         p3 = elevatePoint(p3, offset, useEmbankments);
         poly->addPoint(p3);
     }
-    poly->get().clear();
+    poly->getPoints().clear();
 }
 
 void VRTerrain::projectTangent( Vec3d& t, Vec3d p) {

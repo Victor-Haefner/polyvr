@@ -17,12 +17,12 @@ PyObject* VRPySocket::ping(VRPySocket* self, PyObject* args) {
 	if (!self->valid()) return NULL;
     PyObject *ip, *p;
     if (! PyArg_ParseTuple(args, "OO", &ip, &p)) return NULL;
-    return PyBool_FromLong( self->objPtr->ping( PyString_AsString(ip), PyString_AsString(p)) );
+    return PyBool_FromLong( self->objPtr->ping( PyUnicode_AsUTF8(ip), PyUnicode_AsUTF8(p)) );
 }
 
 PyObject* VRPySocket::getName(VRPySocket* self) {
 	if (!self->valid()) return NULL;
-    return PyString_FromString(self->objPtr->getName().c_str());
+    return PyUnicode_FromString(self->objPtr->getName().c_str());
 }
 
 PyObject* VRPySocket::destroy(VRPySocket* self) {
@@ -40,7 +40,7 @@ PyObject* VRPySocket::send(VRPySocket* self, PyObject* args) {
         return NULL;
     }
 
-    string _msg = PyString_AsString(msg);
+    string _msg = PyUnicode_AsUTF8(msg);
     //self->objPtr->sendMessage(_msg);
     Py_RETURN_TRUE;
 }

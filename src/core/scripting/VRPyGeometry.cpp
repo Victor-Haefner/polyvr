@@ -73,6 +73,8 @@ PyMethodDef VRPyGeometry::methods[] = {
                         "\n\t   Box is the primitive type, followed by the geometric parameters"
                         "\n\tavailable primitives are:"
                         "\n\t\tPlane size_x size_y segments_x segments_y"
+                        "\n\t\tDisk radius N_segments"
+                        "\n\t\tAnnulus outerRadius innerRadius N_segments"
                         "\n\t\tBox size_x size_y size_z segments_x segments_y segments_z"
                         "\n\t\tSphere radius iterations"
                         "\n\t\tCylinder height radius N_sides do_bottom do_top do_sides"
@@ -123,6 +125,8 @@ PyMethodDef VRPyGeometry::methods[] = {
     {"remColors", PyWrapOpt( Geometry, remColors, "Removes color data", "0", void, bool ) },
     {"makeSingleIndex", PyWrap( Geometry, makeSingleIndex, "Make geometry single index", void ) },
     {"intersectEdges", PyWrap( Geometry, intersectEdges, "Intersect the geometry with a ray to get edges", vector<int>, Line, double ) },
+    {"closeHoles", PyWrap( Geometry, closeHoles, "Try to close holes in the geometry - best after removeDoubles", void ) },
+    {"fixFaceOrientations", PyWrapOpt( Geometry, fixFaceOrientations, "Try to homogenize face orientations - best after removeDoubles and closeHoles", "0", void, int ) },
     {NULL}  /* Sentinel */
 };
 
@@ -203,7 +207,7 @@ void feed1D(PyObject* o, T& vec) {
 
     for (Py_ssize_t i=0; i<N; i++) {
         pi = PyList_GetItem(o, i);
-        int j = PyInt_AsLong(pi);
+        int j = PyLong_AsLong(pi);
         vec->addValue(j);
     }
 }
@@ -262,7 +266,7 @@ PyObject* VRPyGeometry::addVertex(VRPyGeometry* self, PyObject *args) {
     else res = geo.pushVert(parseVec3dList(p));
 
     if (res == 0) geo.apply(self->objPtr, false);
-    return PyInt_FromLong(res);
+    return PyLong_FromLong(res);
 }
 
 PyObject* VRPyGeometry::setVertex(VRPyGeometry* self, PyObject *args) {
@@ -479,7 +483,7 @@ PyObject* VRPyGeometry::setTexCoords(VRPyGeometry* self, PyObject *args) {
     Py_RETURN_TRUE;
 }
 
-PyObject* VRPyGeometry::getPositions(VRPyGeometry* self) {
+PyObject* VRPyGeometry::getPositions(VRPyGeometry* self, PyObject *args) {
     if (!self->valid()) return NULL;
     if (self->objPtr->getMesh() == 0) { PyErr_SetString(err, "VRPyGeometry::getPositions - Mesh is invalid"); return NULL; }
 
@@ -498,7 +502,7 @@ PyObject* VRPyGeometry::getPositions(VRPyGeometry* self) {
     return res;
 }
 
-PyObject* VRPyGeometry::getTypes(VRPyGeometry* self) {
+PyObject* VRPyGeometry::getTypes(VRPyGeometry* self, PyObject *args) {
     if (!self->valid()) return NULL;
     if (self->objPtr->getMesh() == 0) { PyErr_SetString(err, "VRPyGeometry::getNormals - Mesh is invalid"); return NULL; }
 
@@ -509,13 +513,13 @@ PyObject* VRPyGeometry::getTypes(VRPyGeometry* self) {
     for (unsigned int i=0; i<types->size(); i++) {
         int v;
         types->getValue(v,i);
-        PyList_SetItem(res, i, PyInt_FromLong(v));
+        PyList_SetItem(res, i, PyLong_FromLong(v));
     }
 
     return res;
 }
 
-PyObject* VRPyGeometry::getLengths(VRPyGeometry* self) {
+PyObject* VRPyGeometry::getLengths(VRPyGeometry* self, PyObject *args) {
     if (!self->valid()) return NULL;
     if (self->objPtr->getMesh() == 0) { PyErr_SetString(err, "VRPyGeometry::getNormals - Mesh is invalid"); return NULL; }
 
@@ -526,13 +530,13 @@ PyObject* VRPyGeometry::getLengths(VRPyGeometry* self) {
     for (unsigned int i=0; i<lengths->size(); i++) {
         int v;
         lengths->getValue(v,i);
-        PyList_SetItem(res, i, PyInt_FromLong(v));
+        PyList_SetItem(res, i, PyLong_FromLong(v));
     }
 
     return res;
 }
 
-PyObject* VRPyGeometry::getNormals(VRPyGeometry* self) {
+PyObject* VRPyGeometry::getNormals(VRPyGeometry* self, PyObject *args) {
     if (!self->valid()) return NULL;
     if (self->objPtr->getMesh() == 0) { PyErr_SetString(err, "VRPyGeometry::getNormals - Mesh is invalid"); return NULL; }
 
@@ -550,7 +554,7 @@ PyObject* VRPyGeometry::getNormals(VRPyGeometry* self) {
     return res;
 }
 
-PyObject* VRPyGeometry::getColors(VRPyGeometry* self) {
+PyObject* VRPyGeometry::getColors(VRPyGeometry* self, PyObject *args) {
     if (!self->valid()) return NULL;
     if (self->objPtr->getMesh() == 0) { PyErr_SetString(err, "VRPyGeometry::getColors - Mesh is invalid"); return NULL; }
 
@@ -596,7 +600,7 @@ PyObject* VRPyGeometry::getIndices(VRPyGeometry* self, PyObject *args) {
     for (unsigned int i=0; i<idProp->size(); i++) {
         int v;
         idProp->getValue(v,i);
-        PyObject* pv = PyInt_FromLong(v);
+        PyObject* pv = PyLong_FromLong(v);
         PyList_SetItem(res, i, pv);
     }
 
@@ -626,7 +630,9 @@ PyObject* VRPyGeometry::getTexCoords(VRPyGeometry* self, PyObject *args) {
     int type = tc->getType().getId();
     int eN = 2;
     if (type == GeoVec3fProperty::create()->getType().getId()) eN = 3;
+#ifndef WASM
     if (type == GeoVec3dProperty::create()->getType().getId()) eN = 3;
+#endif
 
     for (unsigned int i=0; i<tc->size(); i++) {
         if (eN == 2) {

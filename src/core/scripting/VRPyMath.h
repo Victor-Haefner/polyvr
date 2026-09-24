@@ -40,12 +40,12 @@ struct VRPyVec2f : VRPyBaseT<OSG::Vec2d> {
     static PyObject* New(PyTypeObject *type, PyObject *args, PyObject *kwds);
     static PyObject* Print(PyObject* self);
 
-    static PyObject* normalize(VRPyVec2f* self);
-    static PyObject* normalized(VRPyVec2f* self);
-    static PyObject* length(VRPyVec2f* self);
+    static PyObject* normalize(VRPyVec2f* self, PyObject* args);
+    static PyObject* normalized(VRPyVec2f* self, PyObject* args);
+    static PyObject* length(VRPyVec2f* self, PyObject* args);
     static PyObject* dot(VRPyVec2f* self, PyObject* args);
     static PyObject* cross(VRPyVec2f* self, PyObject* args);
-    static PyObject* asList(VRPyVec2f* self);
+    static PyObject* asList(VRPyVec2f* self, PyObject* args);
     static PyObject* distance(VRPyVec2f* self, PyObject* args);
 
     static PyObject* add(PyObject* self, PyObject* v);
@@ -58,7 +58,7 @@ struct VRPyVec2f : VRPyBaseT<OSG::Vec2d> {
     static Py_ssize_t len(PyObject* self);
     static PyObject* getItem(PyObject* self, Py_ssize_t i);
     static int setItem(PyObject* self, Py_ssize_t i, PyObject* val);
-    static PyObject* getSlice(PyObject* self, Py_ssize_t i0, Py_ssize_t i1);
+    //static PyObject* getSlice(PyObject* self, PyObject* slice);
 
     static PyObject* iter(PyObject *self) ;
     static PyObject* iternext(PyObject *self) ;
@@ -77,12 +77,12 @@ struct VRPyVec3f : VRPyBaseT<OSG::Vec3d> {
     static PyObject* New(PyTypeObject *type, PyObject *args, PyObject *kwds);
     static PyObject* Print(PyObject* self);
 
-    static PyObject* normalize(VRPyVec3f* self);
-    static PyObject* normalized(VRPyVec3f* self);
-    static PyObject* length(VRPyVec3f* self);
+    static PyObject* normalize(VRPyVec3f* self, PyObject* args);
+    static PyObject* normalized(VRPyVec3f* self, PyObject* args);
+    static PyObject* length(VRPyVec3f* self, PyObject* args);
     static PyObject* dot(VRPyVec3f* self, PyObject* args);
     static PyObject* cross(VRPyVec3f* self, PyObject* args);
-    static PyObject* asList(VRPyVec3f* self);
+    static PyObject* asList(VRPyVec3f* self, PyObject* args);
     static PyObject* distance(VRPyVec3f* self, PyObject* args);
 
     static PyObject* add(PyObject* self, PyObject* v);
@@ -95,7 +95,7 @@ struct VRPyVec3f : VRPyBaseT<OSG::Vec3d> {
     static Py_ssize_t len(PyObject* self);
     static PyObject* getItem(PyObject* self, Py_ssize_t i);
     static int setItem(PyObject* self, Py_ssize_t i, PyObject* val);
-    static PyObject* getSlice(PyObject* self, Py_ssize_t i0, Py_ssize_t i1);
+    //static PyObject* getSlice(PyObject* self, PyObject* slice);
 
     static PyObject* iter(PyObject *self) ;
     static PyObject* iternext(PyObject *self) ;
@@ -111,8 +111,8 @@ struct VRPyLine : VRPyBaseT<OSG::Line> {
     static PyObject* Print(PyObject* self);
 
     static PyObject* intersect(VRPyLine* self, PyObject *args);
-    static PyObject* pos(VRPyLine* self);
-    static PyObject* dir(VRPyLine* self);
+    static PyObject* pos(VRPyLine* self, PyObject* args);
+    static PyObject* dir(VRPyLine* self, PyObject* args);
 };
 
 struct VRPyTimer : VRPyBaseT<OSG::VRTimer> {
@@ -188,7 +188,7 @@ struct VRPyDatarow : VRPyBaseT<OSG::Datarow> {
     static Py_ssize_t len(PyObject* self);
     static PyObject* getItem(PyObject* self, Py_ssize_t i);
     static int setItem(PyObject* self, Py_ssize_t i, PyObject* val);
-    static PyObject* getSlice(PyObject* self, Py_ssize_t i0, Py_ssize_t i1);
+    //static PyObject* getSlice(PyObject* self, PyObject* slice);
 
     static PyObject* iter(PyObject *self) ;
     static PyObject* iternext(PyObject *self) ;
@@ -199,6 +199,10 @@ struct VRPyXML : VRPyBaseT<OSG::XML> {
 };
 
 struct VRPyXMLElement : VRPyBaseT<OSG::XMLElement> {
+    static PyMethodDef methods[];
+};
+
+struct VRPyTable : VRPyBaseT<OSG::Table> {
     static PyMethodDef methods[];
 };
 

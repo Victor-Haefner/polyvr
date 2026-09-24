@@ -25,6 +25,9 @@ class ImCombo {
 
         void setList(vector<string> v);
         void setList(string v);
+        void appendList(string s);
+        void clearList();
+
         void set(string s);
         string get();
 };

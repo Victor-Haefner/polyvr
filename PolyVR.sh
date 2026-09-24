@@ -1,5 +1,8 @@
 #!/bin/bash
 
+export __NV_PRIME_RENDER_OFFLOAD=1
+export __GLX_VENDOR_LIBRARY_NAME=nvidia
+
 osName=$(uname -s)
 
 if [ "$osName" == "Darwin" ]; then # on mac
@@ -14,18 +17,19 @@ fi
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd $DIR
 
+if [ -e ./bin/Debug/VRFramework ]; then
+        ./bin/Debug/VRFramework $@
+        exit 0
+else
+        ./bin/Release/VRFramework $@
+        exit 0
+fi
+
+
 if [ -e ./build/polyvr ]; then
 	 echo "run build/polyvr"
 	 #otool -L ./build/polyvr
 	 ./build/polyvr $@
 	 #lldb -o "settings set target.env-vars DYLD_LIBRARY_PATH=\"$DYLD_LIBRARY_PATH\"" -o "settings append target.env-vars DYLD_FRAMEWORK_PATH=\"$DYLD_FRAMEWORK_PATH\"" -o run -- ./build/polyvr $@
 	 exit 0
-fi
-
-if [ -e ./bin/Debug/VRFramework ]; then
-	./bin/Debug/VRFramework $@
-	exit 0
-else
-	./bin/Release/VRFramework $@
-	exit 0
 fi

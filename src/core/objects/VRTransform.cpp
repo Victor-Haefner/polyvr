@@ -775,12 +775,8 @@ void VRTransform::drop() {
     if (!held) return;
     held = false;
 
-    Matrix4d wm, m1, m2;
-    getWorldMatrix(wm);
-    m1 = getMatrix();
     auto dragParent = dynamic_pointer_cast<VRTransform>( getParent() );
-    if (auto p = old_parent.lock()) switchParent(p, old_child_id);
-    setWorldMatrix(wm);
+    if (auto p = old_parent.lock()) switchParent(p, true, old_child_id);
     recUndo(&VRTransform::setMatrix, ptr(), old_transformation, getMatrix());
 
 #ifndef WITHOUT_BULLET

@@ -108,7 +108,7 @@ class MPart {
         vector<MPart*> group;
         VRTransformPtr geo = 0;
         VRTransformPtr trans = 0;
-        VRPrimitive* prim = 0;
+        shared_ptr<VRPrimitive> prim = 0;
         MChange change;
         MChange cumulativeChange;
         MChange lastChange;
@@ -157,7 +157,7 @@ class MGear : public MPart {
         MGear();
         ~MGear();
 
-        VRGear* gear();
+        shared_ptr<VRGear> gear();
 
         void setup() override;
 
@@ -175,7 +175,7 @@ class MThread : public MPart {
         MThread();
         ~MThread();
 
-        VRScrewThread* thread();
+        shared_ptr<VRScrewThread> thread();
 
         void setup() override;
 

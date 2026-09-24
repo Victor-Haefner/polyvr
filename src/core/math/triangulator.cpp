@@ -56,8 +56,8 @@ VRGeometryPtr Triangulator::computeBounds() {
 
     auto drawPoly = [&](VRPolygon& poly, Color3f col) {
         vector<Vec3d> points;
-        if (poly.size2() > 2) points = toSpace(poly.get());
-        if (poly.size3() > 2) points = poly.get3();
+        if (poly.size2() > 2) points = toSpace(poly.getPoints());
+        if (poly.size3() > 2) points = poly.getPoints3();
         for (int i=0; i<points.size(); i++) {
             auto& p = points[i];
             geo.pushVert(Pnt3d(p), Vec3d(0,1,0), col);
@@ -162,10 +162,10 @@ void Triangulator::tessellate() {
     gluTessCallback(tess, GLU_TESS_COMBINE_DATA, (void (*)()) tessCombineCB);
 
     vector<vector<Vec3d> > bounds;
-    for (auto b : outer_bounds) if (b.size2() > 2) bounds.push_back( toSpace(b.get()) );
-    for (auto b : inner_bounds) if (b.size2() > 2) bounds.push_back( toSpace(b.get()) );
-    for (auto b : outer_bounds) if (b.size3() > 2) bounds.push_back( b.get3() );
-    for (auto b : inner_bounds) if (b.size3() > 2) bounds.push_back( b.get3() );
+    for (auto b : outer_bounds) if (b.size2() > 2) bounds.push_back( toSpace(b.getPoints()) );
+    for (auto b : inner_bounds) if (b.size2() > 2) bounds.push_back( toSpace(b.getPoints()) );
+    for (auto b : outer_bounds) if (b.size3() > 2) bounds.push_back( b.getPoints3() );
+    for (auto b : inner_bounds) if (b.size3() > 2) bounds.push_back( b.getPoints3() );
 
     if (bounds.size() > 0) {
         //cout << "tessellate " << toString(bounds) << endl;

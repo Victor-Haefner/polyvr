@@ -6,6 +6,7 @@
 #include "core/networking/rest/VRRestResponse.h"
 #include "core/networking/rest/VRRestClient.h"
 #include "core/networking/rest/VRRestServer.h"
+#include "core/networking/VRWebSocket.h"
 #include "core/networking/udp/VRUDPClient.h"
 #include "core/networking/udp/VRUDPServer.h"
 #include "core/networking/tcp/VRTCPClient.h"
@@ -42,6 +43,10 @@ struct VRPyRestClient : public VRPyBaseT<OSG::VRRestClient> {
 };
 
 struct VRPyRestServer : public VRPyBaseT<OSG::VRRestServer> {
+    static PyMethodDef methods[];
+};
+
+struct VRPyWebSocket : public VRPyBaseT<OSG::VRWebSocket> {
     static PyMethodDef methods[];
 };
 

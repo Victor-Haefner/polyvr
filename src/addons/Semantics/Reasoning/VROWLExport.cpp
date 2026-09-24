@@ -68,19 +68,19 @@ void VROWLExport::write(VROntologyPtr o, string path) {
     };
 
     auto writeClasses = [&]() {
-        for (auto concept : o->getConcepts()) {
-            if (concept->getName() == "Thing") continue;
+        for (auto concept_ : o->getConcepts()) {
+            if (concept_->getName() == "Thing") continue;
             auto a = root->addChild("owl:Class");
-            a->setAttribute("rdf:about", ontology_ns + concept->getName());    // concept name
-            for (auto cp : concept->getParents()) {                             // concept parents
+            a->setAttribute("rdf:about", ontology_ns + concept_->getName());    // concept name
+            for (auto cp : concept_->getParents()) {                             // concept parents
                 if (cp->getName() == "Thing") continue;
                 auto p = a->addChild("rdfs:subClassOf");
                 p->setAttribute("rdf:resource", ontology_ns + cp->getName());
             }
 
-            for (auto p : concept->getProperties(false)) {
+            for (auto p : concept_->getProperties(false)) {
                 auto d = propertyNodes[p->getName()]->addChild("rdfs:domain");
-                d->setAttribute("rdf:resource", ontology_ns + concept->getName());
+                d->setAttribute("rdf:resource", ontology_ns + concept_->getName());
             }
         }
     };

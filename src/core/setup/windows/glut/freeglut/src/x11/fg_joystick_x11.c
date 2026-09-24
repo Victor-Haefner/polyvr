@@ -40,6 +40,7 @@
 #endif
 
 #include <fcntl.h>
+#include <unistd.h>
 
 
 /* BSD defines from "jsBSD.cxx" around lines 42-270 */

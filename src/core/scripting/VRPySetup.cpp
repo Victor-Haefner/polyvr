@@ -19,6 +19,7 @@ simpleVRPyType(WebXR, 0);
 
 PyMethodDef VRPyViewManager::methods[] = {
     {"getView", PyWrap(ViewManager, getView, "Get view by index", VRViewPtr, int ) },
+    {"setFotoMode", PyWrap(ViewManager, setFotoMode, "Set foto mode, sets eye separation of view to 0 temporarily", void, bool ) },
     {NULL}  /* Sentinel */
 };
 

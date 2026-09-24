@@ -4,6 +4,7 @@
 #include "core/utils/VRFunction.h"
 #include "core/utils/VRStorage_template.h"
 #include "core/scene/VRScene.h"
+#include "core/objects/OSGObject.h"
 #include "core/objects/object/OSGCore.h"
 
 #include <OpenSG/OSGDistanceLOD.h>
@@ -41,6 +42,21 @@ VRLod::~VRLod() {}
 
 VRLodPtr VRLod::create(string name) { return shared_ptr<VRLod>(new VRLod(name) ); }
 VRLodPtr VRLod::ptr() { return static_pointer_cast<VRLod>( shared_from_this() ); }
+
+void VRLod::wrapOSG(OSGObjectPtr node) {
+    if (!node) return;
+    VRObject::wrapOSG(node);
+    if (!node->node || !node->node->getCore()) return;
+    DistanceLOD* lod = dynamic_cast<DistanceLOD*>(node->node->getCore());
+    if (lod) {
+        center = Vec3d(lod->getCenter());
+        this->lod = lod;
+        auto dists = lod->getMFRange();
+        distances.clear();
+        for (size_t i=0; i<dists->size(); i++) distances[i] = lod->getRange(i);
+    }
+}
+
 
 void VRLod::setCallback(VRLodCbPtr cb) { userCb = cb; }
 

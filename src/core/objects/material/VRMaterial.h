@@ -105,7 +105,7 @@ class VRMaterial : public VRObject {
         void setTextureType(string type, int unit = 0);
         void setMappingBeacon(VRObjectPtr obj, int unit = 0);
         void setMappingPlanes(Vec4d p1, Vec4d p2, Vec4d p3, Vec4d p4, int unit = 0);
-        void setQRCode(string s, Vec3d fg, Vec3d bg, int offset);
+        void setQRCode(string s, Color3f fg, Color3f bg, int offset);
         VRVideoPtr setVideo(string vid_path);
         VRVideoPtr getVideo();
 
@@ -145,6 +145,8 @@ class VRMaterial : public VRObject {
         float getShininess();
         Color3f getEmission();
         float getTransparency();
+        int getPointSize();
+        int getLineWidth();
         int getDepthTest();
 
         string constructShaderVP(VRMatDataPtr data = 0);

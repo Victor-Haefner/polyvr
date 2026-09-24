@@ -126,10 +126,28 @@ void VRView::setViewports() {//create && set size of viewports
     if (stereo && !active_stereo) {
         lView = Viewport::create();
         rView = Viewport::create();
-        double a = p[0]*0.5;
-        double b = (1.0-p[2])*0.5;
-        lView->setSize(a,     p[1], 0.5-b, p[3]);
-        rView->setSize(0.5+a, p[1], 1.0-b, p[3]);
+
+        if (stereoMode == "Side by side") {
+            double a = p[0]*0.5;
+            double b = (1.0-p[2])*0.5;
+            lView->setSize(a,     p[1], 0.5-b, p[3]);
+            rView->setSize(0.5+a, p[1], 1.0-b, p[3]);
+        }
+
+        if (stereoMode == "Top and bottom") {
+            double a = p[1]*0.5;
+            double b = (1.0-p[3])*0.5;
+            lView->setSize(p[0], a,     p[2], 0.5-b);
+            rView->setSize(p[0], 0.5+a, p[2], 1.0-b);
+        }
+
+        if (stereoMode == "Frame packed") {
+            double a = p[1]*0.5;
+            double b = (1.0-p[3])*0.5;
+            double c = 0.010204082; // half of the 45 pixels in between L and R
+            lView->setSize(p[0], a,     p[2], 0.5-b-c);
+            rView->setSize(p[0], 0.5+a+c, p[2], 1.0-b);
+        }
     }
 
     if (active_stereo) {
@@ -253,6 +271,7 @@ void VRView::setDecorators() {//set decorators, only if projection true
     PCDecoratorRight->editMFSurface()->push_back(screenUpperLeft);
 }
 
+#ifndef OSG_OGL_ES2
 static string coordsVP =
 "attribute vec4 osg_Vertex;\n"
 "attribute vec4 osg_Color;\n"
@@ -272,10 +291,31 @@ static string coordsFP =
 "void main(void) {\n"
 "  gl_FragColor = color;\n"
 "}\n";
+#else
+static string coordsVP =
+"attribute vec4 osg_Vertex;\n"
+"attribute vec4 osg_Color;\n"
+"uniform mat4 OSGModelViewProjectionMatrix;\n"
+"uniform mat4 OSGViewMatrix;\n"
+"varying vec4 color;\n"
+"void main(void) {\n"
+"  mat4 M = OSGViewMatrix;\n"
+"  M[3] = vec4(0,0,0,1);\n"
+"  vec4 p = vec4(osg_Vertex.xyz*0.08, osg_Vertex.w);\n"
+"  gl_Position = (OSGModelViewProjectionMatrix * ( M * p + vec4(0,0,-0.5,0))) + vec4(0.85,-0.8,0,0);\n"
+"  gl_Position.w = 1.0;\n"
+"  color = osg_Color;\n"
+"}\n";
+
+static string coordsFP =
+"varying vec4 color;\n"
+"void main(void) {\n"
+"  gl_FragColor = color;\n"
+"}\n";
+#endif
 
 VRView::VRView(string name) {
     this->name = name;
-
     SolidBackgroundMTRecPtr sbg = SolidBackground::create();
     sbg->setColor(Color3f(0.7, 0.7, 0.7));
     background = sbg;
@@ -604,6 +644,7 @@ void VRView::setWindow() {
 }
 
 void VRView::setStereo(bool b) { stereo = b; update(); }
+void VRView::setStereoMode(string mode) { stereoMode = mode; update(); }
 void VRView::setActiveStereo(bool b) { active_stereo = b; update(); }
 
 void VRView::setStereoEyeSeparation(float v) {
@@ -694,6 +735,7 @@ VRTexturePtr VRView::grab() {
 
 void VRView::save(XMLElementPtr node) {
     node->setAttribute("stereo", toString(stereo).c_str());
+    node->setAttribute("stereoMode", stereoMode.c_str());
     node->setAttribute("active_stereo", toString(active_stereo).c_str());
     node->setAttribute("projection", toString(projection).c_str());
     node->setAttribute("eye_inverted", toString(eyeinverted).c_str());
@@ -716,6 +758,7 @@ void VRView::save(XMLElementPtr node) {
 
 void VRView::load(XMLElementPtr node) {
     stereo = toValue<bool>(node->getAttribute("stereo"));
+    if (node->hasAttribute("stereoMode")) stereoMode = node->getAttribute("stereoMode");
     active_stereo = toValue<bool>(node->getAttribute("active_stereo"));
     projection = toValue<bool>(node->getAttribute("projection"));
     eyeinverted = toValue<bool>(node->getAttribute("eye_inverted"));
@@ -753,6 +796,7 @@ ViewportMTRecPtr VRView::getViewportL() { return lView; }
 ViewportMTRecPtr VRView::getViewportR() { return rView; }
 float VRView::getEyeSeparation() { return eyeSeparation; }
 bool VRView::isStereo() { return stereo; }
+string VRView::getStereoMode() { return stereoMode; }
 
 void VRView::setProjection(bool b) { projection = b; update(); }
 bool VRView::isProjection() { return projection; }

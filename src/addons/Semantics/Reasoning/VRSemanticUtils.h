@@ -37,7 +37,7 @@ struct Variable {
     map<int, VREntityPtr> entities;
     map<int, Evaluation> evaluations; // summarize the evaluation state of each instance!
     vector<string> value;
-    string concept = "var";
+    string concept_ = "var";
     bool isAnonymous = true;
     bool valid = true;
 
@@ -46,11 +46,11 @@ struct Variable {
     bool has(VariablePtr other, VPath& p1, VPath& p2, VROntologyPtr onto);
     bool is(VariablePtr other, VPath& p1, VPath& p2);
 
-    Variable(VROntologyPtr onto, string concept, vector<string> var, VRSemanticContextPtr context);
+    Variable(VROntologyPtr onto, string concept_, vector<string> var, VRSemanticContextPtr context);
     Variable(VROntologyPtr onto, vector<string> val);
     Variable();
 
-    static VariablePtr create(VROntologyPtr onto, string concept, vector<string> var, VRSemanticContextPtr context);
+    static VariablePtr create(VROntologyPtr onto, string concept_, vector<string> var, VRSemanticContextPtr context);
     static VariablePtr create(VROntologyPtr onto, vector<string> val);
 
     void addEntity(VREntityPtr e, bool assumtion = false);

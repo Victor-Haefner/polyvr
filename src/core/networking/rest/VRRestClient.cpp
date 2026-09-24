@@ -37,7 +37,7 @@ VRRestClient::~VRRestClient() {
 }
 
 VRRestClientPtr VRRestClient::create(string name) { return VRRestClientPtr( new VRRestClient(name) ); }
-//VRRestClientPtr VRRestClient::ptr() { return dynamic_pointer_cast<VRRestClient>(shared_from_this()); }
+VRRestClientPtr VRRestClient::ptr() { return dynamic_pointer_cast<VRRestClient>(shared_from_this()); }
 
 size_t getRespData(char *ptr, size_t size, size_t nmemb, VRRestResponse* res) {
     res->appendData(string(ptr, size*nmemb));
@@ -52,14 +52,44 @@ size_t getRespHeaders(char* ptr, size_t size, size_t nitems, VRRestResponse* res
 }
 
 
+#ifndef __EMSCRIPTEN__
 void setupHeaders(CURL* curl, vector<string>& headers) {
     struct curl_slist* hlist = NULL;
     for (auto h : headers) if (h != "") hlist = curl_slist_append(hlist, h.c_str());
     curl_easy_setopt(curl, CURLOPT_HTTPHEADER, hlist);
 }
+#endif
+
+std::string sanitizeUrl(const std::string& url) {
+    auto pos = url.find('?');
+    if (pos == std::string::npos) return url; // no query string
+
+    std::string base = url.substr(0, pos);
+    std::string query = url.substr(pos + 1);
+
+    std::stringstream ss(query);
+    std::string pair;
+    std::string newQuery;
+    bool first = true;
+
+    while (std::getline(ss, pair, '&')) {
+        auto eq = pair.find('=');
+        if (eq == std::string::npos) continue; // skip invalid
+
+        std::string key = pair.substr(0, eq);
+        std::string value = pair.substr(eq + 1);
+
+        // encode the value
+        if (!first) newQuery += "&"; else first = false;
+        newQuery += key + "=" + VRRestResponse::uriEncode(value);
+    }
+
+    return base + "?" + newQuery;
+}
 
 VRRestResponsePtr VRRestClient::get(string uri, int timeoutSecs, vector<string> headers) {
     auto res = VRRestResponse::create();
+    uri = sanitizeUrl(uri);
 #ifdef __EMSCRIPTEN__
     char* data = (char*)EM_ASM_INT({
         var uri = Module.UTF8ToString($0);
@@ -102,6 +132,7 @@ VRRestResponsePtr VRRestClient::get(string uri, int timeoutSecs, vector<string> 
     curl_easy_setopt(curl, CURLOPT_HEADERDATA, res.get());
     curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, &getRespHeaders);
     curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, timeoutSecs);
+    curl_easy_setopt(curl, CURLOPT_TIMEOUT, timeoutSecs);
     curl_easy_setopt(curl, CURLOPT_URL, uri.c_str());
     setupHeaders(curl, headers);
     res->setHeaders({});
@@ -130,6 +161,7 @@ VRRestResponsePtr VRRestClient::post(string uri, const string& data, int timeout
     curl_easy_setopt(curl, CURLOPT_HEADERDATA, res.get());
     curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, &getRespHeaders);
     curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, timeoutSecs);
+    curl_easy_setopt(curl, CURLOPT_TIMEOUT, timeoutSecs);
     curl_easy_setopt(curl, CURLOPT_URL, uri.c_str());
     setupHeaders(curl, headers);
     res->setHeaders({});
@@ -143,6 +175,56 @@ VRRestResponsePtr VRRestClient::post(string uri, const string& data, int timeout
     return res;
 }
 
+VRRestResponsePtr VRRestClient::postForm(string uri, const vector<map<string,string>>& data, int timeoutSecs, vector<string> headers) {
+    auto res = VRRestResponse::create();
+    res->setStatus(200);
+
+#ifndef __EMSCRIPTEN__
+    auto curl = curl_easy_init();
+    curl_mime* mime = curl_mime_init(curl);
+
+    for (const auto& entry : data) {
+        auto nameIt = entry.find("name");
+        auto dataIt = entry.find("data");
+        if (nameIt == entry.end() || dataIt == entry.end()) continue;
+
+        curl_mimepart* part = curl_mime_addpart(mime);
+        curl_mime_name( part, nameIt->second.c_str() );
+        curl_mime_data( part, dataIt->second.data(), dataIt->second.size() );
+
+        auto filenameIt = entry.find("filename");
+        if (filenameIt != entry.end()) curl_mime_filename( part, filenameIt->second.c_str() );
+
+        auto typeIt = entry.find("contentType");
+        if (typeIt != entry.end()) curl_mime_type( part, typeIt->second.c_str() );
+    }
+
+    curl_easy_setopt(curl, CURLOPT_MIMEPOST, mime);
+    curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, res.get());
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &getRespData);
+    curl_easy_setopt(curl, CURLOPT_HEADERDATA, res.get());
+    curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, &getRespHeaders);
+    curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, timeoutSecs);
+    curl_easy_setopt(curl, CURLOPT_TIMEOUT, timeoutSecs);
+    curl_easy_setopt(curl, CURLOPT_URL, uri.c_str());
+
+    setupHeaders(curl, headers);
+    res->setHeaders({});
+
+    CURLcode c = curl_easy_perform(curl);
+    if (c != CURLE_OK) fprintf( stderr, "VRRestClient::postForm, curl_easy_perform() failed: %s, request was: %s\n", curl_easy_strerror(c), uri.c_str());
+
+    long status = 0;
+    curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &status);
+    res->setStatus(status);
+    curl_mime_free(mime);
+    curl_easy_cleanup(curl);
+#endif
+
+    return res;
+}
+
 void VRRestClient::connectPort(string uri, int port, int timeoutSecs) {
     connect(uri+":"+toString(port), timeoutSecs);
 }
@@ -152,6 +234,7 @@ void VRRestClient::connect(string uri, int timeoutSecs) { // TODO: used? depreca
     curl = curl_easy_init();
     curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1);
     curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, timeoutSecs);
+    curl_easy_setopt(curl, CURLOPT_TIMEOUT, timeoutSecs);
     curl_easy_setopt(curl, CURLOPT_URL, uri.c_str());
     //curl_easy_setopt(curl, CURLOPT_TCP_KEEPALIVE, 1L);
     //curl_easy_setopt(curl, CURLOPT_TCP_KEEPIDLE, 120L); // set keep-alive idle time to 120 seconds
@@ -167,14 +250,16 @@ bool VRRestClient::connected() { return isConnected; }
 void VRRestClient::getAsync(string uri, VRRestCbPtr cb, int timeoutSecs, vector<string> headers) { // TODO: implement correctly for wasm
 #ifdef __EMSCRIPTEN__
     auto res = get(uri, timeoutSecs);
-    auto fkt = VRUpdateCb::create("getAsync-finish", bind(&VRRestClient::finishAsync, this, cb, res));
+    VRRestClientWeakPtr wCli = ptr();
+    auto fkt = VRUpdateCb::create("getAsync-finish", bind(&VRRestClient::finishAsync, wCli, cb, res));
     auto s = VRScene::getCurrent();
     if (s) s->queueJob(fkt);
 #else
     auto job = [&](string uri, VRRestCbPtr cb, int timeoutSecs, vector<string> headers) -> void { // executed in async thread
         auto res = get(uri, timeoutSecs, headers);
         if (cb) {
-            auto fkt = VRUpdateCb::create("getAsync-finish", bind(&VRRestClient::finishAsync, this, cb, res));
+            VRRestClientWeakPtr wCli = ptr();
+            auto fkt = VRUpdateCb::create("getAsync-finish", bind(&VRRestClient::finishAsync, wCli, cb, res));
             auto s = VRScene::getCurrent();
             if (s) s->queueJob(fkt);
         }
@@ -190,15 +275,17 @@ void VRRestClient::getAsync(string uri, VRRestCbPtr cb, int timeoutSecs, vector<
 
 void VRRestClient::postAsync(string uri, VRRestCbPtr cb, const string& data, int timeoutSecs, vector<string> headers) { // TODO: implement correctly for wasm
 #ifdef __EMSCRIPTEN__
-    auto res = get(uri, timeoutSecs);
-    auto fkt = VRUpdateCb::create("getAsync-finish", bind(&VRRestClient::finishAsync, this, cb, res));
+    auto res = post(uri, timeoutSecs);
+    VRRestClientWeakPtr wCli = ptr();
+    auto fkt = VRUpdateCb::create("postAsync-finish", bind(&VRRestClient::finishAsync, wCli, cb, res));
     auto s = VRScene::getCurrent();
     if (s) s->queueJob(fkt);
 #else
     auto job = [&](string uri, VRRestCbPtr cb, string data, int timeoutSecs, vector<string> headers) -> void { // executed in async thread
         auto res = post(uri, data, timeoutSecs, headers);
         if (cb) {
-            auto fkt = VRUpdateCb::create("getAsync-finish", bind(&VRRestClient::finishAsync, this, cb, res));
+            VRRestClientWeakPtr wCli = ptr();
+            auto fkt = VRUpdateCb::create("postAsync-finish", bind(&VRRestClient::finishAsync, wCli, cb, res));
             auto s = VRScene::getCurrent();
             if (s) s->queueJob(fkt);
         }
@@ -212,10 +299,105 @@ void VRRestClient::postAsync(string uri, VRRestCbPtr cb, const string& data, int
 #endif
 }
 
-void VRRestClient::finishAsync(VRRestCbPtr cb, VRRestResponsePtr res) { // executed in main thread
-    (*cb)(res);
+void VRRestClient::postFormAsync(string uri, VRRestCbPtr cb, const vector<map<string,string>>& data, int timeoutSecs, vector<string> headers) {
+#ifdef __EMSCRIPTEN__
+    auto res = postForm(uri, timeoutSecs);
+    VRRestClientWeakPtr wCli = ptr();
+    auto fkt = VRUpdateCb::create("postFormAsync-finish", bind(&VRRestClient::finishAsync, wCli, cb, res));
+    auto s = VRScene::getCurrent();
+    if (s) s->queueJob(fkt);
+#else
+    auto job = [&](string uri, VRRestCbPtr cb, const vector<map<string,string>>& data, int timeoutSecs, vector<string> headers) -> void { // executed in async thread
+        auto res = postForm(uri, data, timeoutSecs, headers);
+        if (cb) {
+            VRRestClientWeakPtr wCli = ptr();
+            auto fkt = VRUpdateCb::create("postFromAsync-finish", bind(&VRRestClient::finishAsync, wCli, cb, res));
+            auto s = VRScene::getCurrent();
+            if (s) s->queueJob(fkt);
+        }
+    };
 
+    future<void> f = async(launch::async, job, uri, cb, data, timeoutSecs, headers);
     VRLock lock(VRRestClientMtx);
+    auto p = shared_ptr<RestPromise>(new RestPromise() );
+    p->f = move(f);
+    promises.push_back( p );
+#endif
+}
+
+VRRestResponsePtr VRRestClient::del( string uri, int timeoutSecs, vector<string> headers ) {
+    auto res = VRRestResponse::create();
+
+#ifndef __EMSCRIPTEN__
+    auto curl = curl_easy_init();
+    if (!curl) return res;
+
+    curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "DELETE");
+    curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
+
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, res.get());
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &getRespData);
+
+    curl_easy_setopt(curl, CURLOPT_HEADERDATA, res.get());
+    curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, &getRespHeaders);
+
+    curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, timeoutSecs);
+    curl_easy_setopt(curl, CURLOPT_TIMEOUT, timeoutSecs);
+    curl_easy_setopt(curl, CURLOPT_URL, uri.c_str());
+
+    setupHeaders(curl, headers);
+    res->setHeaders({});
+
+    CURLcode c = curl_easy_perform(curl);
+    if (c != CURLE_OK) fprintf(stderr, "VRRestClient::del failed: %s, request was: %s\n", curl_easy_strerror(c), uri.c_str());
+
+    long status = 0;
+    curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &status);
+    res->setStatus(status);
+
+    curl_easy_cleanup(curl);
+#endif
+
+    return res;
+}
+
+void VRRestClient::deleteAsync(string uri, VRRestCbPtr cb, int timeoutSecs, vector<string> headers) {
+#ifdef __EMSCRIPTEN__
+    auto res = del(uri, timeoutSecs);
+    VRRestClientWeakPtr wCli = ptr();
+    auto fkt = VRUpdateCb::create("deleteAsync-finish", bind(&VRRestClient::finishAsync, wCli, cb, res));
+    auto s = VRScene::getCurrent();
+    if (s) s->queueJob(fkt);
+#else
+    auto job = [&](string uri, VRRestCbPtr cb, int timeoutSecs, vector<string> headers) -> void { // executed in async thread
+        auto res = del(uri, timeoutSecs, headers);
+        if (cb) {
+            VRRestClientWeakPtr wCli = ptr();
+            auto fkt = VRUpdateCb::create("deleteAsync-finish", bind(&VRRestClient::finishAsync, wCli, cb, res));
+            auto s = VRScene::getCurrent();
+            if (s) s->queueJob(fkt);
+        }
+    };
+
+    future<void> f = async(launch::async, job, uri, cb, timeoutSecs, headers);
+    VRLock lock(VRRestClientMtx);
+    auto p = shared_ptr<RestPromise>(new RestPromise() );
+    p->f = move(f);
+    promises.push_back( p );
+#endif
+}
+
+void VRRestClient::finishAsync(VRRestClientWeakPtr self, VRRestCbPtr cb, VRRestResponsePtr res) { // executed in main thread
+    auto cli = self.lock();
+    if (!cli) return;
+
+    (*cb)(res);
+    cli->cleanupPromises();
+}
+
+void VRRestClient::cleanupPromises() {
+    VRLock lock(VRRestClientMtx);
+
     auto i = promises.begin();
     while (i != promises.end()) {
         if ((*i)->ready()) promises.erase(i++);

@@ -22,8 +22,7 @@ template<> bool toValue(PyObject* o, VRTexturePtr& v) {
 }
 
 template<> PyTypeObject VRPyBaseT<VRTexture>::type = {
-    PyObject_HEAD_INIT(NULL)
-    0,
+    PyVarObject_HEAD_INIT(NULL, 0)
     "VR.Image",
     sizeof(VRPyTexture),
     0,
@@ -57,19 +56,27 @@ template<> PyTypeObject VRPyBaseT<VRTexture>::type = {
 };
 
 PyMethodDef VRPyTexture::methods[] = {
+    {"copy", PyWrap(Texture, copy, "Copy texture", VRTexturePtr ) },
     {"read", PyWrap(Texture, read, "Read an image from disk", bool, string ) },
     {"readGIS", PyWrap(Texture, readGIS, "Read GIS raster data from disk", void, string ) },
+    {"readBuffer", PyWrapOpt(Texture, readBuffer, "Read binary file as raster data", "1|0", void, string, string, Vec3i, int, int, int ) },
     {"write", PyWrapOpt(Texture, write, "Write an image to disk - write( str path )", "0", void, string, bool ) },
-    {"getPixel", PyWrap(Texture, getPixelUV, "Return pixel at coordinates u,v - getPixel( [u,v] )", Color4f, Vec2d, bool ) },
+    {"getPixel", PyWrapOpt(Texture, getPixelVec, "Return pixel at coordinates [i,j,k]", "0", Color4f, Vec3i, bool ) },
+    {"getPixelUV", PyWrapOpt(Texture, getPixelUV, "Return pixel at coordinates u,v - getPixel( [u,v] )", "0", Color4f, Vec2d, bool ) },
     {"getPixels", PyWrap(Texture, getPixels, "Return pixels", vector<Color4f>, bool ) },
     {"getSize", PyWrap(Texture, getSize, "Return texture size, [W,H,D]", Vec3i ) },
     {"getAspectRatio", PyWrap(Texture, getAspectRatio, "Return aspect ratio between width and height", float ) },
     {"getChannels", PyWrap(Texture, getChannels, "Get number of image channels", int ) },
     {"mixColor", PyWrap(Texture, mixColor, "Mix texture colors with color", void, Color4f, float ) },
-    {"setByteData", PyWrapOpt(Texture, setByteData, "Set byte texture data", "1|0", void, vector<char>, Vec3i, int, int, int ) },
-    {"setFloatData", PyWrapOpt(Texture, setFloatData, "Set float texture data", "1|0", void, vector<float>, Vec3i, int, int, int ) },
+    {"setPixel", PyWrap(Texture, setPixel, "Set pixel, (pos, color)", void, Vec3i, Color4f ) },
+    {"setIthPixel", PyWrap(Texture, setIthPixel, "Set ith pixel, (i, color)", void, int, Color4f ) },
+    {"setByteData", PyWrapOpt(Texture, setByteData, "Set byte texture data (data, layout, N chanels | N mipmaps = 1, internal pf = 0)", "1|0", void, vector<char>, Vec3i, int, int, int ) },
+    {"setFloatData", PyWrapOpt(Texture, setFloatData, "Set float texture data (data, layout | channels = 'GL_RED', Nmipmaps = 0, internal pf = 'GL_R32F')", "GL_RED|0|GL_R32F", void, vector<float>, Vec3i, int, int, int ) },
     {"setInternalFormat", PyWrap(Texture, setInternalFormat, "Set internal format", void, int ) },
-    {"resize", PyWrapOpt(Texture, resize, "Resize image, optional scaling and offset", "1|0 0 0", void, Vec3i, bool, Vec3i ) },
+    {"resize", PyWrapOpt(Texture, resize, "Resize image, (newSize | doScale, offset)", "1|0 0 0", void, Vec3i, bool, Vec3i ) },
+    {"turn", PyWrap(Texture, turn, "Turn image n times 90 degree", void, int ) },
+    {"randomSamples", PyWrap(Texture, randomSamples, "Randomly sample the texture (Nsamples)", vector<Color4f>, int ) },
+    {"sampleMeanColor", PyWrap(Texture, sampleMeanColor, "Randomly sample the texture to compute a mean color (Nsamples)", Color4f, int ) },
     {NULL}  /* Sentinel */
 };
 
@@ -83,9 +90,9 @@ bool CheckExtension(string extN) {
 }
 
 PyObject* VRPyTexture::New(PyTypeObject *type, PyObject *args, PyObject *kwds) {
+    VRTexturePtr img = VRTexture::create();
 #ifndef WITHOUT_NUMPY
     //import_array1(NULL);
-    VRTexturePtr img = VRTexture::create();
     if (pySize(args) == 0) return allocPtr( type, img );
 
     PyArrayObject* data = 0;
@@ -100,21 +107,18 @@ PyObject* VRPyTexture::New(PyTypeObject *type, PyObject *args, PyObject *kwds) {
     if ((PyObject*)datatype == Py_None) Py_RETURN_NONE;
 
     unsigned char* cdata  = (unsigned char*)PyArray_DATA(data);
-    int pf = toOSGConst(PyString_AsString((PyObject*)channels));
-    int dt = toOSGConst(PyString_AsString((PyObject*)datatype));
+    int pf = toOSGConst(PyUnicode_AsUTF8((PyObject*)channels));
+    int dt = toOSGConst(PyUnicode_AsUTF8((PyObject*)datatype));
 
-    //bool b = CheckExtension(PyString_AsString((PyObject*)channels));
-    //cout << "check ext " << PyString_AsString((PyObject*)channels) << " " << b << endl;
+    //bool b = CheckExtension(PyUnicode_AsUTF8((PyObject*)channels));
+    //cout << "check ext " << PyUnicode_AsUTF8((PyObject*)channels) << " " << b << endl;
     //if (b)
     //for (int i=0; i<W*H; i++) cout << "cdata " <<
 
     img->getImage()->set(pf, W, H, 1, 1, 1, 0, cdata, dt, true);
-    if (channels2) img->setInternalFormat( toOSGConst(PyString_AsString((PyObject*)channels2)) );
-    return allocPtr( type, img );
-#else
-    VRTexturePtr img = VRTexture::create();
-    return allocPtr( type, img );
+    if (channels2) img->setInternalFormat( toOSGConst(PyUnicode_AsUTF8((PyObject*)channels2)) );
 #endif
+    return allocPtr( type, img );
 }
 
 

@@ -34,9 +34,9 @@ void saveScene(string path, bool saveas, string encryptionKey) {
     if (scene->getFlag("write_protected") && !saveas) return;
     scene->setFlag("write_protected", false);
     if (path == "") path = scene->getPath();
-    OSG::VRSceneLoader::get()->saveScene(path, 0, encryptionKey);
-    //saveSnapshot( scene->getIcon() );
-    OSG::VRGuiSignals::get()->getSignal("onSaveScene")->triggerAll<OSG::VRDevice>();
+    VRSceneLoader::get()->saveScene(path, 0, encryptionKey);
+    VRGuiManager::trigger("onSaveSnapshot", {{"path",scene->getIcon()}} );
+    VRGuiSignals::get()->getSignal("onSaveScene")->triggerAll<OSG::VRDevice>();
 }
 
 VRGuiScene* g_scene = 0;

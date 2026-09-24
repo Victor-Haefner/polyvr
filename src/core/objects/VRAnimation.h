@@ -13,6 +13,9 @@ class VRAnimation : public VRName, public std::enable_shared_from_this<VRAnimati
     protected:
         vector<VRAnimCbWeakPtr> weakCallbacks;
         vector<VRAnimCbPtr> ownedCallbacks;
+
+        VRUpdateCbPtr onFinishCb;
+
         float start_value = 0;
         float end_value = 1;
 
@@ -36,8 +39,10 @@ class VRAnimation : public VRName, public std::enable_shared_from_this<VRAnimati
         VRAnimation(float _duration, float _offset, VRAnimCbPtr _fkt, float _start, float _end, bool _loop, bool owned);
         static VRAnimationPtr create(float _duration, float _offset, VRAnimCbPtr _fkt, float _start, float _end, bool _loop, bool owned);
 
+        void setCallback(VRAnimCbPtr fkt);
         void addCallback(VRAnimCbPtr fkt);
         void addUnownedCallback(VRAnimCbPtr fkt);
+        void setFinishedCallback(VRUpdateCbPtr fkt);
 
         void setLoop(bool b);
         bool getLoop();

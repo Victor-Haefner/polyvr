@@ -41,7 +41,7 @@ class VROWLImport {
             string property;
             int min = -1;
             int max = -1;
-            string concept;
+            string concept_;
             string dataRange;
             string someValuesFrom;
             string allValuesFrom;
@@ -52,7 +52,7 @@ class VROWLImport {
             string property;
             int min = -1;
             int max = -1;
-            string concept;
+            string concept_;
             string dataRange;
             string someValuesFrom;
             string allValuesFrom;
@@ -93,7 +93,7 @@ class VROWLImport {
 
         void clear();
         bool blacklisted(string& s, map<string, bool>& data);
-        VRConceptPtr getConcept(string concept);
+        VRConceptPtr getConcept(string concept_);
         VRPropertyPtr getProperty(string prop);
         VROntologyRulePtr getRule(string rule);
 

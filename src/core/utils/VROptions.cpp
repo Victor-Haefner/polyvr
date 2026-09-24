@@ -1,16 +1,16 @@
 #include "VROptions.h"
 
-#include <boost/program_options/parsers.hpp>
 #include <iostream>
 #include <fstream>
 #include <iomanip>
+#include <map>
+#include <vector>
+#include <string>
 
 using namespace std;
-namespace bpo = boost::program_options;
 
-VROptions::VROptions() : desc("Configuration ") {
+VROptions::VROptions() {
     cout << " setup command line options" << endl;
-    desc.add_options() ("help", "show possible options");
 
     addOption<bool>(true, "dofailcheck", "do a fail check of the last startup of PolyVR, may halt startup");
     addOption<bool>(false, "standalone", "start without UI, only GL canvas");
@@ -37,7 +37,18 @@ VROptions* VROptions::get() {
     return singleton;
 }
 
-bool VROptions::hasOption(string name) { return bool(vm.count(name) > 0); }
+bool VROptions::hasOption(string name) {
+    return options.find(name) != options.end();
+}
+
+void VROptions::printHelp() {
+    cout << "\nConfiguration options:\n";
+    for (const auto& [name, description] : descriptions) {
+        cout << "  --" << setw(15) << left << name << " : " << description
+             << " (default: " << options[name] << ")\n";
+    }
+    cout << endl;
+}
 
 void VROptions::parse(int _argc, char** _argv) {
     argc = _argc;
@@ -47,18 +58,46 @@ void VROptions::parse(int _argc, char** _argv) {
     for (int i=0; i<argc; i++) cout << "  " << i+1 << ") '" << _argv[i] << "'" << endl;
 
     try {
-        bpo::positional_options_description p;
-        p.add("application", -1);
+        for (int i = 1; i < argc; ++i) {
+            string arg = argv[i];
 
-        //bpo::store(bpo::parse_command_line(argc, argv, desc), vm);
-        bpo::store(bpo::command_line_parser(argc, argv).options(desc).positional(p).run(), vm);
-        bpo::notify(vm);
-        if (vm.count("help")) { cout << desc << endl; exit(1); }
+            if (arg == "--help") {
+                printHelp();
+                exit(1);
+            }
+
+            if (arg.rfind("--", 0) == 0) {
+                string name;
+                string value;
+
+                auto eqPos = arg.find('=');
+		if (eqPos != std::string::npos) {
+		    name = arg.substr(2, eqPos - 2);
+		    value = arg.substr(eqPos + 1);
+		} else {
+		    name = arg.substr(2);
+
+		    // Support --name value
+		    if (i + 1 < argc && argv[i + 1][0] != '-') {
+		        value = argv[++i];
+		    } else {
+		        value = "true";  // Boolean flag
+		    }
+		}
+
+                options[name] = value;
+            } else {
+                // positional argument assumed to be application
+                options["application"] = arg;
+            }
+        }
     } catch(exception& e) {
         cout << "VROptions::parse exception: " << e.what() << endl;
+        exit(1);
     } catch(...) {
         cout << "VROptions::parse unknown exception" << endl;
-        cout << desc << endl;
+        printHelp();
+        exit(1);
     }
 
     // for testing

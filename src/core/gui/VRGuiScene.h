@@ -23,6 +23,8 @@ class VRGuiScene {
         bool liveUpdate = false;
         bool trigger_cbs = false;
 
+        string toBeDeleted;
+
         VRGuiVectorEntry posEntry;
         VRGuiVectorEntry atEntry;
         VRGuiVectorEntry dirEntry;
@@ -75,6 +77,7 @@ class VRGuiScene {
         // ----------------------------------------------
 
         // ------------- geometry -----------------------
+        void on_toggle_mesh_visible(bool b);
         void setGeometry_gui();
         void setGeometry_material();
         void setGeometry_shadow_toggle();
@@ -110,11 +113,14 @@ class VRGuiScene {
 
         // ------------- material -----------------------
         void setMaterial_gui();
-        void setMaterial_lit();
-        bool setMaterial_diffuse();
-        bool setMaterial_specular();
-        bool setMaterial_ambient();
-        void setMaterial_pointsize();
+        void setMaterial_lit(bool b);
+        void setMaterial_meshcolors(bool b);
+        bool setMaterial_diffuse(Color4f c);
+        bool setMaterial_specular(Color4f c);
+        bool setMaterial_ambient(Color4f c);
+        bool setMaterial_emission(Color4f c);
+        void setMaterial_pointsize(int ps);
+        void setMaterial_linewidth(int lw);
         void setMaterial_texture_toggle();
         void setMaterial_texture_name();
         // ----------------------------------------------
@@ -126,25 +132,22 @@ class VRGuiScene {
         // ----------------------------------------------
 
         // ------------- scenegraph drag && drop -------
-        void on_drag_beg();
-        void on_drag_end();
-        void on_drag_data_receive(/*_GdkDragContext* dc , int i1, int i2, _GtkSelectionData* sd, unsigned int i3, unsigned int i4*/);
+        void on_treeview_drop(string sID, string tID);
         void on_edit_object_name(const char* path_string, const char* new_text);
         // ----------------------------------------------
 
         // ------------- context menu -------------------
         void initMenu();
         bool on_treeview_rightclick();
-        void on_menu_delete();
-        void on_menu_copy();
-        void on_menu_paste();
+        void on_menu_delete(string node);
+        void on_menu_copy(string node);
+        void on_menu_paste(string node);
         template<class T>
-        void on_menu_add();
-        void on_menu_add_file();
-        void on_menu_add_light();
-        void on_menu_add_camera();
-        void on_menu_add_animation();
-        void on_menu_add_primitive(string s);
+        void on_menu_add(string node);
+        void on_menu_add_file(string node);
+        void on_menu_add_light(string node);
+        void on_menu_add_camera(string node);
+        void on_menu_add_animation(string node);
 
         void on_geo_menu_print();
         //void on_menu_add_csg();
@@ -165,6 +168,7 @@ class VRGuiScene {
         void on_change_primitive();
         void on_change_group();
 
+        void on_select_parent();
         void on_toggle_liveupdate();
         void on_toggle_visible(bool b);
         void on_toggle_pickable(bool b);

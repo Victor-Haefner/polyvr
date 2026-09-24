@@ -97,7 +97,7 @@ Matrix4d PCA::computeEigenvectors(Matrix4d m) {
     lwork = (int)wkopt;
     work = new double[lwork];
     info = dgeev( LAPACK_COL_MAJOR, 'V', 'V', n, a, lda, wr, wi, vl, ldvl, vr, ldvr,  work, lwork);
-    delete work;
+    delete[] work;
 #endif
     //cout << "   dgeev done" << endl;
 

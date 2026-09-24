@@ -171,7 +171,7 @@
 				<Compiler>
 					<Add option="-O2" />
 					<Add option="-g" />
-					<Add option="-std=c++14" />
+					<Add option="-std=c++17" />
 				</Compiler>
 				<Linker>
 					<Add library="bin/Debug/libPVR-Gui.so" />
@@ -197,7 +197,7 @@
 				<Option compiler="gcc" />
 				<Compiler>
 					<Add option="-O2" />
-					<Add option="-std=c++14" />
+					<Add option="-std=c++17" />
 				</Compiler>
 				<Linker>
 					<Add option="-s" />
@@ -210,11 +210,10 @@
 		</VirtualTargets>
 		<Compiler>
 			<Add option="-Wall" />
+			<Add option="-std=c++17" />
 			<Add option="-fPIC" />
-			<Add option="-std=c++14" />
-			<Add option="`pkg-config gtk+-3.0 --cflags`" />
 			<Add option="`pkg-config gmodule-2.0 --cflags`" />
-			<Add option="`pkg-config python2 --cflags`" />
+			<Add option="`pkg-config python3-embed --cflags`" />
 			<Add option="-fopenmp" />
 			<Add option="-use_readonly_const" />
 			<Add option="-Wno-deprecated" />
@@ -283,6 +282,7 @@
 			<Add directory="/usr/include/bullet" />
 			<Add directory="/usr/include/CEF" />
 			<Add directory="src" />
+			<Add directory="src/core/networking/asio/include/" />
 			<Add directory="/usr/include/opensg" />
 			<Add directory="/usr/include/collada" />
 			<Add directory="/usr/include/STEPcode" />
@@ -294,11 +294,11 @@
 			<Add directory="/usr/include/DWG" />
 			<Add directory="/usr/include/libxml2" />
 			<Add directory="/usr/include/eigen3" />
-			<Add directory="/usr/include/python2.7" />
 			<Add directory="/usr/include/jsoncpp" />
 			<Add directory="/usr/include/openvr" />
 			<Add directory="/usr/include/imgui" />
 			<Add directory="/usr/include/vtk-9.1" />
+			<Add directory="/usr/include/cairo" />
 		</Compiler>
 		<Linker>
 			<Add option="-lTKV3d" />
@@ -329,10 +329,10 @@
 			<Add option="-lTKSTEPBase" />
 			<Add option="-lIfcParse" />
 			<Add option="`pkg-config icu-i18n --libs`" />
+			<Add option="`pkg-config python3-embed --libs`" />
 			<Add option="-lcef" />
 			<Add option="-lcef_dll_wrapper" />
 			<Add option="`pkg-config bullet --libs`" />
-			<Add option="-lpython2.7" />
 			<Add option="`pkg-config vte --libs`" />
 			<Add option="-ljsoncpp" />
 			<Add option="-lvrpn" />
@@ -366,6 +366,7 @@
 			<Add option="-lOSGDrawable" />
 			<Add option="-lOSGEffectGroups" />
 			<Add option="-lOSGFileIO" />
+			<Add option="-lOSGDynamics" />
 			<Add option="-lOSGGroup" />
 			<Add option="-lOSGImageFileIO" />
 			<Add option="-lOSGState" />
@@ -387,11 +388,6 @@
 			<Add option="-lstb" />
 			<Add option="-lXmu" />
 			<Add option="-lXi" />
-			<Add option="-lboost_system" />
-			<Add option="-lboost_program_options" />
-			<Add option="-lboost_serialization" />
-			<Add option="-lboost_filesystem" />
-			<Add option="-lboost_regex" />
 			<Add option="-lrt" />
 			<Add option="-ljpeg" />
 			<Add option="-lpng" />
@@ -443,7 +439,6 @@
 			<Add directory="/usr/lib/OPCUA" />
 			<Add directory="/usr/lib/OCE" />
 			<Add directory="/usr/lib/DWG" />
-			<Add directory="/usr/lib/python2.7" />
 		</Linker>
 		<ExtraCommands>
 			<Add before="src/version/genVersion.sh" />
@@ -876,6 +871,9 @@
 		<Unit filename="src/addons/Engineering/Factory/network.h">
 			<Option target="PVR-Addons-d" />
 		</Unit>
+		<Unit filename="src/addons/Engineering/Hydraulics/VRPipeSystem.cpp">
+			<Option target="PVR-Addons-d" />
+		</Unit>
 		<Unit filename="src/addons/Engineering/Machining/VRCartesianKinematics.cpp">
 			<Option target="Release" />
 			<Option target="PVR-Addons-d" />
@@ -1064,11 +1062,9 @@
 		</Unit>
 		<Unit filename="src/addons/Engineering/VRPipeSystem.cpp">
 			<Option target="Release" />
-			<Option target="PVR-Addons-d" />
 		</Unit>
 		<Unit filename="src/addons/Engineering/VRPipeSystem.h">
 			<Option target="Release" />
-			<Option target="PVR-Addons-d" />
 		</Unit>
 		<Unit filename="src/addons/Engineering/VRProfile.cpp">
 			<Option target="Release" />
@@ -2027,6 +2023,13 @@
 			<Option target="Release" />
 			<Option target="PVR-Gui-d" />
 		</Unit>
+		<Unit filename="src/core/gui/imgui/imWidgets/VRImguiColorPicker.cpp">
+			<Option target="PVR-Gui-d" />
+			<Option target="Release" />
+		</Unit>
+		<Unit filename="src/core/gui/imgui/imWidgets/VRImguiColorPicker.h">
+			<Option target="PVR-Gui-d" />
+		</Unit>
 		<Unit filename="src/core/gui/imgui/imWidgets/VRImguiCombo.cpp">
 			<Option target="PVR-Gui-d" />
 		</Unit>
@@ -2540,6 +2543,12 @@
 			<Option target="Release" />
 			<Option target="PVR-Networking-d" />
 		</Unit>
+		<Unit filename="src/core/networking/asio/src/asio.cpp">
+			<Option target="PVR-Networking-d" />
+		</Unit>
+		<Unit filename="src/core/networking/asio/src/asio_ssl.cpp">
+			<Option target="PVR-Networking-d" />
+		</Unit>
 		<Unit filename="src/core/networking/mongoose/mongoose.c">
 			<Option compilerVar="CC" />
 			<Option target="Release" />
@@ -2985,6 +2994,21 @@
 		</Unit>
 		<Unit filename="src/core/objects/geometry/brep/VRPyBRep.h">
 			<Option target="Release" />
+			<Option target="PVR-Objects-d" />
+		</Unit>
+		<Unit filename="src/core/objects/geometry/drawing/VRDrawingFwd.h">
+			<Option target="PVR-Objects-d" />
+		</Unit>
+		<Unit filename="src/core/objects/geometry/drawing/VRPyDrawing.cpp">
+			<Option target="PVR-Scripting-d" />
+		</Unit>
+		<Unit filename="src/core/objects/geometry/drawing/VRPyDrawing.h">
+			<Option target="PVR-Scripting-d" />
+		</Unit>
+		<Unit filename="src/core/objects/geometry/drawing/VRTechnicalDrawing.cpp">
+			<Option target="PVR-Objects-d" />
+		</Unit>
+		<Unit filename="src/core/objects/geometry/drawing/VRTechnicalDrawing.h">
 			<Option target="PVR-Objects-d" />
 		</Unit>
 		<Unit filename="src/core/objects/geometry/sprite/VRSprite.cpp">
@@ -4527,6 +4551,18 @@
 			<Option target="Release" />
 			<Option target="PVR-Setup-d" />
 		</Unit>
+		<Unit filename="src/core/setup/windows/glut/GlutSignals.cpp">
+			<Option target="PVR-Setup-d" />
+		</Unit>
+		<Unit filename="src/core/setup/windows/glut/GlutSignals.h">
+			<Option target="PVR-Setup-d" />
+		</Unit>
+		<Unit filename="src/core/setup/windows/glut/GlutWindow.cpp">
+			<Option target="PVR-Setup-d" />
+		</Unit>
+		<Unit filename="src/core/setup/windows/glut/GlutWindow.h">
+			<Option target="PVR-Setup-d" />
+		</Unit>
 		<Unit filename="src/core/setup/windows/glut/VRGlutExtensions.cpp">
 			<Option target="PVR-Gui-d" />
 		</Unit>
@@ -4801,6 +4837,12 @@
 			<Option target="Release" />
 			<Option target="PVR-Tools-d" />
 		</Unit>
+		<Unit filename="src/core/tools/VRGizmo.cpp">
+			<Option target="PVR-Tools-d" />
+		</Unit>
+		<Unit filename="src/core/tools/VRGizmo.h">
+			<Option target="PVR-Tools-d" />
+		</Unit>
 		<Unit filename="src/core/tools/VRKinematictool.cpp">
 			<Option target="Release" />
 			<Option target="PVR-Tools-d" />
@@ -4833,6 +4875,12 @@
 			<Option target="Release" />
 			<Option target="PVR-Tools-d" />
 		</Unit>
+		<Unit filename="src/core/tools/VRPlayer.cpp">
+			<Option target="PVR-Tools-d" />
+		</Unit>
+		<Unit filename="src/core/tools/VRPlayer.h">
+			<Option target="PVR-Tools-d" />
+		</Unit>
 		<Unit filename="src/core/tools/VRProjectManager.cpp">
 			<Option target="Release" />
 			<Option target="PVR-Tools-d" />
@@ -4840,6 +4888,12 @@
 		<Unit filename="src/core/tools/VRProjectManager.h">
 			<Option target="Release" />
 			<Option target="PVR-Tools-d" />
+		</Unit>
+		<Unit filename="src/core/tools/VRPyTools.cpp">
+			<Option target="PVR-Scripting-d" />
+		</Unit>
+		<Unit filename="src/core/tools/VRPyTools.h">
+			<Option target="PVR-Scripting-d" />
 		</Unit>
 		<Unit filename="src/core/tools/VRQRCode.cpp">
 			<Option target="Release" />
@@ -4879,6 +4933,12 @@
 		</Unit>
 		<Unit filename="src/core/tools/VRTextureRenderer.h">
 			<Option target="Release" />
+			<Option target="PVR-Tools-d" />
+		</Unit>
+		<Unit filename="src/core/tools/VRTimeline.cpp">
+			<Option target="PVR-Tools-d" />
+		</Unit>
+		<Unit filename="src/core/tools/VRTimeline.h">
 			<Option target="PVR-Tools-d" />
 		</Unit>
 		<Unit filename="src/core/tools/VRToolsFwd.h">
@@ -4936,6 +4996,9 @@
 		<Unit filename="src/core/tools/selection/VRSelector.h">
 			<Option target="Release" />
 			<Option target="PVR-Tools-d" />
+		</Unit>
+		<Unit filename="src/core/utils/RPCUtils.h">
+			<Option target="PVR-Utils-d" />
 		</Unit>
 		<Unit filename="src/core/utils/Thread.cpp">
 			<Option target="PVR-Utils-d" />
@@ -5063,10 +5126,6 @@
 			<Option target="Release" />
 			<Option target="PVR-Utils-d" />
 		</Unit>
-		<Unit filename="src/core/utils/VRPDF.cpp">
-			<Option target="Release" />
-			<Option target="PVR-Utils-d" />
-		</Unit>
 		<Unit filename="src/core/utils/VRPDF.h">
 			<Option target="Release" />
 			<Option target="PVR-Utils-d" />
@@ -5177,6 +5236,46 @@
 		</Unit>
 		<Unit filename="src/core/utils/isNan.h">
 			<Option target="Release" />
+			<Option target="PVR-Utils-d" />
+		</Unit>
+		<Unit filename="src/core/utils/pdf/RPCUtils.h">
+			<Option target="PVR-Utils-d" />
+		</Unit>
+		<Unit filename="src/core/utils/pdf/VRPDF.cpp">
+			<Option target="PVR-Utils-d" />
+		</Unit>
+		<Unit filename="src/core/utils/pdf/VRPDF.h">
+			<Option target="PVR-Utils-d" />
+		</Unit>
+		<Unit filename="src/core/utils/pdf/VRPDF2DModel.cpp">
+			<Option target="PVR-Utils-d" />
+		</Unit>
+		<Unit filename="src/core/utils/pdf/VRPDF2DModel.h">
+			<Option target="PVR-Utils-d" />
+		</Unit>
+		<Unit filename="src/core/utils/pdf/VRPDF3DModel.cpp">
+			<Option target="PVR-Utils-d" />
+		</Unit>
+		<Unit filename="src/core/utils/pdf/VRPDF3DModel.h">
+			<Option target="PVR-Utils-d" />
+		</Unit>
+		<Unit filename="src/core/utils/pdf/VRPDFData.cpp">
+			<Option target="PVR-Utils-d" />
+		</Unit>
+		<Unit filename="src/core/utils/pdf/VRPDFData.h">
+			<Option target="PVR-Utils-d" />
+		</Unit>
+		<Unit filename="src/core/utils/pdf/VRPDFPage.cpp">
+			<Option target="PVR-Utils-d" />
+		</Unit>
+		<Unit filename="src/core/utils/pdf/VRPDFPage.h">
+			<Option target="PVR-Utils-d" />
+		</Unit>
+		<Unit filename="src/core/utils/png.cpp">
+			<Option target="PVR-Utils-d" />
+			<Option target="Release" />
+		</Unit>
+		<Unit filename="src/core/utils/png.h">
 			<Option target="PVR-Utils-d" />
 		</Unit>
 		<Unit filename="src/core/utils/system/VRSystem.cpp">

@@ -40,6 +40,7 @@
 #include <string.h>
 #include <termios.h>
 #include <fcntl.h>
+#include <unistd.h>
 
 struct _serialport {
    int fd;

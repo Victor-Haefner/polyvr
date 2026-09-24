@@ -33,10 +33,6 @@ bool VRWebSocket::open(string url) {
         cerr << "Cannot connect to " << url << endl;
         return false;
     }
-    if (!connection->is_websocket) {
-        cerr << "Error, '" << url << "' is not a websocket!" << endl;
-        return false;
-    }
 
     done = false;
     if (threadId < 0) threadId = VRSceneManager::get()->initThread(threadFkt, "webSocketPollThread", false);
@@ -45,6 +41,11 @@ bool VRWebSocket::open(string url) {
     while (connectionStatus < 0) {
 		this_thread::sleep_for(chrono::microseconds(10000));
 	}
+
+    if (!connection->is_websocket) {
+        cerr << "Error, '" << url << "' is not a websocket!" << endl;
+        return false;
+    }
 
     return connectionStatus;
 }
@@ -89,7 +90,7 @@ bool VRWebSocket::isConnected() {
     return false;
 }
 
-bool VRWebSocket::sendMessage(string message) {
+bool VRWebSocket::send(string message) {
     cout << "VRWebSocket::sendMessage N " << message.size() << endl;
     if (isConnected()) {
         mg_ws_send(connection, message.c_str(), message.length(), WEBSOCKET_OP_TEXT);
@@ -141,12 +142,14 @@ void VRWebSocket::eventHandler(struct mg_connection* nc, int ev, void* ev_data, 
             }
 
         case MG_EV_CONNECT:
+            /*cout << "-- Connecting " << ev_data << endl;
             status = *((int*) ev_data);
             if (status != 0) {
                 printf("-- Connection error: %d\n", status);
                 object->connectionStatus = 0;
                 object->done = true;
             }
+            cout << "-- Connecting done" << endl;*/
             break;
 
         case MG_EV_WS_OPEN:

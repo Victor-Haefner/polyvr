@@ -9,7 +9,9 @@ ImSetupManager::ImSetupManager() : ImWidget("SetupManager"),
         displaysOffset("displaysOffset", "Offset"),
         viewPosition("viewPos", "Area"),
         viewSize("viewSize", "Size"),
+        viewStereoMode("viewStereoMode", "Stereo Mode:"),
         eyeSeparation("eyeSep", "Eye separation [m]", "0.06"),
+        current_view_user("ViewTracker", "Tracker:"),
         viewProjUser("viewProjUser", "User"),
         viewProjCenter("viewProjCenter", "Center"),
         viewProjNormal("viewProjNormal", "Normal"),
@@ -33,6 +35,7 @@ ImSetupManager::ImSetupManager() : ImWidget("SetupManager"),
 
     windowMSAA.setList({"none", "x2", "x4", "x8", "x16"});
     slaveSystemScreens.setList({":0.0", ":0.1", ":1.0", ":1.1"});
+    viewStereoMode.setList({"Side by side", "Top and bottom", "Frame packed"});
 
     //vector<string> ctypes = {"Multicast", "SockPipeline", "StreamSock"};
     vector<string> ctypes = {"Multicast", "StreamSock"};
@@ -41,7 +44,6 @@ ImSetupManager::ImSetupManager() : ImWidget("SetupManager"),
 
     auto mgr = OSG::VRGuiSignals::get();
     mgr->addCallback("updateSetupsList", [&](OSG::VRGuiSignals::Options o){ updateSetupsList(o["setups"]); return true; } );
-    mgr->addCallback("updateViewTrackersList", [&](OSG::VRGuiSignals::Options o){ updateViewTrackersList(o["trackers"]); return true; } );
     mgr->addCallback("setCurrentSetup", [&](OSG::VRGuiSignals::Options o){ current_setup = toInt(o["setup"]); return true; } );
     mgr->addCallback("on_setup_tree_clear", [&](OSG::VRGuiSignals::Options o){ tree.clear(); return true; } );
     mgr->addCallback("on_setup_tree_append", [&](OSG::VRGuiSignals::Options o) { treeAppend(o["ID"], o["label"], o["type"], o["parent"]); return true; } );
@@ -56,6 +58,9 @@ ImSetupManager::ImSetupManager() : ImWidget("SetupManager"),
     mgr->addCallback("on_setup_select_slave", [&](OSG::VRGuiSignals::Options o) { selectSlave(o); return true; } );
     mgr->addCallback("on_setup_select_art_device", [&](OSG::VRGuiSignals::Options o) { selectARTDevice(o); return true; } );
     mgr->addCallback("on_setup_select_art", [&](OSG::VRGuiSignals::Options o) { selectART(o); return true; } );
+
+    mgr->addCallback("updateStereoModeList", [&](OSG::VRGuiSignals::Options o) { viewStereoMode.setList(o["list"]); return true; } );
+    mgr->addCallback("updateViewTrackersList", [&](OSG::VRGuiSignals::Options o) { current_view_user.setList(o["trackers"]); return true; } );
 
     mgr->addCallback("updateMouseList", [&](OSG::VRGuiSignals::Options o) { windowMouse.setList(o["list"]); return true; } );
     mgr->addCallback("updateMTouchList", [&](OSG::VRGuiSignals::Options o) { windowMultitouch.setList(o["list"]); return true; } );
@@ -99,17 +104,15 @@ void ImSetupManager::selectView(OSG::VRGuiSignals::Options o) {
     viewProjection = toBool(o["projection"]);
     viewMirror = toBool(o["mirror"]);
     eyeSeparation.value = o["eyeSeparation"];
-    string beacon = o["userBeacon"];
-    current_view_user = 0;
-    for (int i=0; i<view_users.size(); i++) {
-        if (view_users[i] == beacon) { current_view_user = i; break; }
-    }
+
+    current_view_user.set(o["userBeacon"]);
+    viewStereoMode.set(o["stereoMode"]);
 
     viewProjUser.set3( o["projUser"]);
     viewProjCenter.set3( o["projCenter"]);
     viewProjNormal.set3( o["projNormal"]);
     viewProjUp.set3( o["projUp"]);
-    viewProjSize.set3( o["projSize"]);
+    viewProjSize.set2( o["projSize"]);
     viewProjShear.set2( o["projShear"]);
     viewProjWarp.set2( o["projWarp"]);
     viewMirrorPos.set3( o["mirrorPos"]);
@@ -225,14 +228,10 @@ void ImSetupManager::updateSetupsList(string s) {
     toValue(s, setups);
 }
 
-void ImSetupManager::updateViewTrackersList(string s) {
-    toValue(s, view_users);
-}
-
 void ImSetupManager::begin() {
     vector<const char*> tmpSetups(setups.size(), 0);
     for (int i=0; i<setups.size(); i++) tmpSetups[i] = setups[i].c_str();
-    ImGui::Text("Setup:");
+    ImGui::TextUnformatted("Setup:");
     ImGui::SameLine();
     ImGui::SetNextItemWidth(150);
     if (ImGui::Combo("##Setups", &current_setup, &tmpSetups[0], tmpSetups.size())) {
@@ -264,7 +263,7 @@ void ImSetupManager::begin() {
     ImGui::BeginChild("setupProps", ImVec2(w2, h), false, flags);
         if (showDisplay) {
             int w3 = w2-20;
-            ImGui::Text(("Displays: " + selected).c_str());
+            ImGui::TextUnformatted(("Displays: " + selected).c_str());
             ImGui::Indent(10);
             if (displaysOffset.render(w3)) displaysOffset.signal("setup_set_displays_offset");
             if (ImGui::Checkbox("CalibrationOverlay", &calibOverlay)) uiSignal("setup_set_calibration_overlay", {{"active", toString(calibOverlay)}});
@@ -272,7 +271,7 @@ void ImSetupManager::begin() {
         }
 
         if (showWindow) {
-            ImGui::Text(("Window: " + selected).c_str());
+            ImGui::TextUnformatted(("Window: " + selected).c_str());
             ImGui::Indent(10);
             if (ImGui::Checkbox("active##winActive", &windowActive)) uiSignal("setup_set_win_active", {{"active", toString(windowActive)}});
             if (windowSize.render(220) && windowSize.vX > 0 && windowSize.vY > 0) windowSize.signal("win_set_res");
@@ -289,7 +288,7 @@ void ImSetupManager::begin() {
 
         if (showEditorWindow) {
             ImGui::Separator();
-            ImGui::Text(("Editor Window: " + selected).c_str());
+            ImGui::TextUnformatted(("Editor Window: " + selected).c_str());
             ImGui::Indent(10);
             // nothing yet
             ImGui::Unindent(10);
@@ -297,18 +296,18 @@ void ImSetupManager::begin() {
 
         if (showLocalWindow) {
             ImGui::Separator();
-            ImGui::Text(("Local Window: " + selected).c_str());
+            ImGui::TextUnformatted(("Local Window: " + selected).c_str());
             ImGui::Indent(10);
             ImGui::Unindent(10);
         }
 
         if (showRemoteWindow) {
             ImGui::Separator();
-            ImGui::Text(("Remote Window: " + selected).c_str());
+            ImGui::TextUnformatted(("Remote Window: " + selected).c_str());
             ImGui::Indent(10);
-            ImGui::Text("State:");
+            ImGui::TextUnformatted("State:");
             ImGui::SameLine();
-            ImGui::Text(remoteWinState.c_str());
+            ImGui::TextUnformatted(remoteWinState.c_str());
             ImGui::SameLine();
             if (ImGui::Button("connect##win")) uiSignal("win_click_connect", {{}});
 
@@ -322,7 +321,7 @@ void ImSetupManager::begin() {
                     string sID = "";
                     if (k < serverIDs.size()) sID = serverIDs[k];
                     string xy = toString(x) + " " + toString(y);
-                    ImGui::Text(xy.c_str());
+                    ImGui::TextUnformatted(xy.c_str());
                     ImInput entry("##nxy_"+xy, "", sID, ImGuiInputTextFlags_EnterReturnsTrue);
                     ImGui::SameLine();
                     if (entry.render(240)) uiSignal("win_set_serverID", {{"x", toString(x)}, {"y", toString(y)}, {"sID", entry.value}});
@@ -334,7 +333,7 @@ void ImSetupManager::begin() {
         }
 
         if (showViewport) {
-            ImGui::Text(("Viewport: " + selected).c_str());
+            ImGui::TextUnformatted(("Viewport: " + selected).c_str());
             ImGui::Indent(10);
 
             int w3 = w2-20;
@@ -345,6 +344,7 @@ void ImSetupManager::begin() {
 
             if (viewStereo) {
                 ImGui::Indent(10);
+                if (viewStereoMode.render(200)) viewStereoMode.signal("setup_switch_view_stereoMode");
                 if (eyeSeparation.render(50)) uiSignal("setup_set_view_eye_separation", {{"value", eyeSeparation.value}});
                 if (ImGui::Checkbox("Invert eyes", &viewEyesInverted)) uiSignal("setup_set_view_invert_eyes", {{"active", toString(viewEyesInverted)}});
                 if (ImGui::Checkbox("Active stereo", &viewActiveStereo)) uiSignal("setup_set_view_active_stereo", {{"active", toString(viewActiveStereo)}});
@@ -354,15 +354,7 @@ void ImSetupManager::begin() {
             if (ImGui::Checkbox("Projection", &viewProjection)) uiSignal("setup_set_view_projection", {{"active", toString(viewProjection)}});
             if (viewProjection) {
                 ImGui::Indent(10);
-                vector<const char*> tmpViewUsers(view_users.size(), 0);
-                for (int i=0; i<view_users.size(); i++) tmpViewUsers[i] = view_users[i].c_str();
-                ImGui::Text("Tracker:");
-                ImGui::SameLine();
-                ImGui::SetNextItemWidth(150);
-                if (ImGui::Combo("##ViewTracker", &current_view_user, &tmpViewUsers[0], tmpViewUsers.size())) {
-                    uiSignal("setup_switch_view_user", {{"tracker",view_users[current_view_user]}});
-                }
-
+                if (current_view_user.render(100)) current_view_user.signal("setup_switch_view_user");
                 if (viewProjCenter.render(w3)) viewProjCenter.signal("setup_set_view_proj_center");
                 if (viewProjUser.render(w3)) viewProjUser.signal("setup_set_view_proj_user");
                 if (viewProjNormal.render(w3)) viewProjNormal.signal("setup_set_view_proj_normal");
@@ -384,7 +376,7 @@ void ImSetupManager::begin() {
         }
 
         if (showVRPN) {
-            ImGui::Text(("VRPN: " + selected).c_str());
+            ImGui::TextUnformatted(("VRPN: " + selected).c_str());
             ImGui::Indent(10);
             ImGui::Checkbox("active##VRPN", &vrpnActive);
             ImGui::SameLine();
@@ -395,7 +387,7 @@ void ImSetupManager::begin() {
         }
 
         if (showVRPNTracker) {
-            ImGui::Text(("VRPN Tracker: " + selected).c_str());
+            ImGui::TextUnformatted(("VRPN Tracker: " + selected).c_str());
             ImGui::Indent(10);
             // address: entry ADDR
             // IF selected_type == "vrpn_device"
@@ -406,7 +398,7 @@ void ImSetupManager::begin() {
 
         if (showART) {
             int w3 = w2-20;
-            ImGui::Text("ART System");
+            ImGui::TextUnformatted("ART System");
             ImGui::Indent(10);
             if (ImGui::Checkbox("active##ART", &artActive)) uiSignal("setup_set_art_active", {{"active", toString(artActive)}});
 
@@ -419,14 +411,14 @@ void ImSetupManager::begin() {
         }
 
         if (showARTDevice) {
-            ImGui::Text(("ART Device: " + selected).c_str());
+            ImGui::TextUnformatted(("ART Device: " + selected).c_str());
             ImGui::Indent(10);
-            ImGui::Text(artID.c_str());
+            ImGui::TextUnformatted(artID.c_str());
             ImGui::Unindent(10);
         }
 
         if (showDevice) {
-            ImGui::Text(("Device: " + selected).c_str());
+            ImGui::TextUnformatted(("Device: " + selected).c_str());
             ImGui::Indent(10);
             // name: DEVICENAME
             // type: Combo devicetype
@@ -438,14 +430,14 @@ void ImSetupManager::begin() {
         }
 
         if (showMultitouch) {
-            ImGui::Text(("Multitouch Device: " + selected).c_str());
+            ImGui::TextUnformatted(("Multitouch Device: " + selected).c_str());
             ImGui::Indent(10);
             // device: combo devicelist
             ImGui::Unindent(10);
         }
 
         if (showLeap) {
-            ImGui::Text(("Leap Device: " + selected).c_str());
+            ImGui::TextUnformatted(("Leap Device: " + selected).c_str());
             ImGui::Indent(10);
             // address: entry ADDR
             // status: STATUS
@@ -459,7 +451,7 @@ void ImSetupManager::begin() {
         }
 
         if (showHaptics) {
-            ImGui::Text(("Haptic Device: " + selected).c_str());
+            ImGui::TextUnformatted(("Haptic Device: " + selected).c_str());
             ImGui::Indent(10);
             // IP: entry IP
             // combo type
@@ -473,25 +465,25 @@ void ImSetupManager::begin() {
             ImInput nUserEntry("##sshUsr", "ssh user:", nodeUser, ImGuiInputTextFlags_EnterReturnsTrue);
             ImInput nPathEntry("##pvrPath", "root path:", nodeSlave, ImGuiInputTextFlags_EnterReturnsTrue);
 
-            ImGui::Text(("Network Node: " + selected).c_str());
+            ImGui::TextUnformatted(("Network Node: " + selected).c_str());
             ImGui::Indent(10);
             if (nAddrEntry.render(240)) uiSignal("node_set_address", {{"address", nAddrEntry.value}});
             ImGui::SameLine();
-            ImGui::Text(nodeStatus.c_str());
+            ImGui::TextUnformatted(nodeStatus.c_str());
 
             if (nUserEntry.render(240)) uiSignal("node_set_user", {{"user", nUserEntry.value}});
             ImGui::SameLine();
-            ImGui::Text(nodeSshStatus.c_str());
+            ImGui::TextUnformatted(nodeSshStatus.c_str());
 
             if (ImGui::Button("distribute key##node")) uiSignal("node_clicked_distribkey", {{}});
             ImGui::SameLine();
-            ImGui::Text(nodeSshKeyStatus.c_str());
+            ImGui::TextUnformatted(nodeSshKeyStatus.c_str());
 
             if (ImGui::Button("stop slaves##node")) uiSignal("node_clicked_stopslaves", {{}});
 
             if (nPathEntry.render(240)) uiSignal("node_set_path", {{"path", nPathEntry.value}});
             ImGui::SameLine();
-            ImGui::Text(nodePathStatus.c_str());
+            ImGui::TextUnformatted(nodePathStatus.c_str());
             ImGui::Unindent(10);
         }
 
@@ -501,14 +493,14 @@ void ImSetupManager::begin() {
             ImInput sDelayEntry("##startupDelay", "startup delay:", slaveDelay, ImGuiInputTextFlags_EnterReturnsTrue);
             ImInput sGeometryEntry("##winGeometry", "geometry ('512x512+0+0'):", slaveGeometry, ImGuiInputTextFlags_EnterReturnsTrue);
 
-            ImGui::Text(("Network Slave, connection ID: " + slaveConnetionID).c_str());
+            ImGui::TextUnformatted(("Network Slave, connection ID: " + slaveConnetionID).c_str());
             ImGui::Indent(10);
             // connection identifier:  CONN_ID_STR
             if (ImGui::Checkbox("autostart##slave", &slaveAutostart)) uiSignal("slave_toggle_autostart", {{"state",toString(slaveAutostart)}});
             ImGui::SameLine();
             if (ImGui::Button("start##slave")) uiSignal("slave_clicked_start", {{}});
             ImGui::SameLine();
-            ImGui::Text(slaveStatus.c_str());
+            ImGui::TextUnformatted(slaveStatus.c_str());
 
             if (ImGui::Checkbox("active stereo##slave", &slaveActiveStereo)) uiSignal("slave_toggle_activestereo", {{"state",toString(slaveActiveStereo)}});
             if (ImGui::Checkbox("fullscreen##slave", &slaveFullscreen)) uiSignal("slave_toggle_fullscreen", {{"state",toString(slaveFullscreen)}});
@@ -519,13 +511,13 @@ void ImSetupManager::begin() {
             if (slaveSystemScreens.render(100)) uiSignal("slave_set_screen", {{"screen", slaveSystemScreens.get()}});
             if (sDelayEntry.render(240)) uiSignal("slave_set_delay", {{"delay", sDelayEntry.value}});
             ImGui::SameLine();
-            ImGui::Text("seconds");
+            ImGui::TextUnformatted("seconds");
             if (sGeometryEntry.render(240)) uiSignal("slave_set_geometry", {{"geometry", sGeometryEntry.value}});
             ImGui::Unindent(10);
         }
 
         if (showScript) {
-            ImGui::Text(("Script: " + selected).c_str());
+            ImGui::TextUnformatted(("Script: " + selected).c_str());
             ImGui::Indent(10);
             // nothing, TODO or deprecate?
             ImGui::Unindent(10);

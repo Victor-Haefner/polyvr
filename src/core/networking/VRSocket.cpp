@@ -95,10 +95,12 @@ class HTTPServer {
         }
 
         ~HTTPServer() {
-            delete data;
+            if (server) delete server;
+            if (data) delete data;
         }
 
         bool initServer(VRHTTP_cb* fkt, int p) {
+            cout << "HTTPServer, listen on port " << p << endl;
             port = p;
             data->cb = fkt;
             server = new mg_mgr();
@@ -201,19 +203,26 @@ class HTTPServer {
 };
 
 string processPHP(HTTP_args* sad) {
+    string path1 = sad->path;
+    string path2 = sad->path + "_tmp.php";
+    string folder = getFolderName(path2);
+    string file = getFileName(path2, true);
+
     // copy php file and prepend something to simulate GET/POST parameters
-    systemCall("cp "+sad->path+" "+sad->path+"_tmp.php" );
+    if (!exists(path1)) { cout << "Error in processPHP! no file " << path1 << endl; return "fail"; }
+    systemCall("cp "+path1+" "+path2 );
+    if (!exists(path2)) { cout << "Error in processPHP! no file " << path2 << ", copy probably failed!" << endl; return "fail"; }
+
     string toPrepend = "if (isset($argv[1])) { parse_str($argv[1], $_GET); parse_str($argv[1], $_POST); }";
-    systemCall("awk -i inplace 'NR==1{print; print \""+toPrepend+"\"} NR!=1' " + sad->path+"_tmp.php");
+    systemCall("awk -i inplace 'NR==1{print; print \""+toPrepend+"\"} NR!=1' " + path2);
 
     // execute php
-    string folder = getFolderName(sad->path);
-    string file = getFileName(sad->path, true) + "_tmp.php";
-    string cmd = "cd "+folder+" ; php "+file+" "+sad->paramsString;
+    string cmd = "cd "+folder+" ; php "+file+" \""+sad->paramsString+"\"";
     string res = systemCall(cmd);
-    //cout << "processPHP: " << cmd << endl << res << endl;
-    systemCall("rm "+sad->path+"_tmp.php" );
-    return subString( res, 0, res.size()-1 );
+    //res = subString( res, 0, res.size()-1 );
+    cout << "processPHP: " << cmd << endl << res.size() << endl;
+    //systemCall("rm "+path2 );
+    return res;
 }
 
 static void server_answer_to_connection_m(struct mg_connection *conn, int ev, void* ev_data, void* user_data) {
@@ -222,13 +231,11 @@ static void server_answer_to_connection_m(struct mg_connection *conn, int ev, vo
     if (v) {
         if (ev == MG_EV_ERROR) { VRLog::log("net", "MG_EV_ERROR\n"); return; }
         if (ev == MG_EV_OPEN) { VRLog::log("net", "MG_EV_OPEN\n"); return; }
-        if (ev == MG_EV_POLL) { return; }
         if (ev == MG_EV_RESOLVE) { VRLog::log("net", "MG_EV_RESOLVE\n"); return; }
         if (ev == MG_EV_CONNECT) { VRLog::log("net", "MG_EV_CONNECT\n"); return; }
         if (ev == MG_EV_ACCEPT) { VRLog::log("net", "MG_EV_ACCEPT\n"); return; }
         if (ev == MG_EV_TLS_HS) { VRLog::log("net", "MG_EV_TLS_HS\n"); return; }
         if (ev == MG_EV_READ) { VRLog::log("net", "MG_EV_READ\n"); return; }
-        if (ev == MG_EV_WRITE) { return; }
         if (ev == MG_EV_WS_OPEN) { VRLog::log("net", "MG_EV_WS_OPEN\n"); return; }
         if (ev == MG_EV_WS_CTL) { VRLog::log("net", "MG_EV_WS_CTL\n"); return; }
         if (ev == MG_EV_MQTT_CMD) { VRLog::log("net", "MG_EV_MQTT_CMD\n"); return; }
@@ -236,8 +243,11 @@ static void server_answer_to_connection_m(struct mg_connection *conn, int ev, vo
         if (ev == MG_EV_MQTT_OPEN) { VRLog::log("net", "MG_EV_MQTT_OPEN\n"); return; }
         if (ev == MG_EV_SNTP_TIME) { VRLog::log("net", "MG_EV_SNTP_TIME\n"); return; }
         if (ev == MG_EV_USER) { VRLog::log("net", "MG_EV_USER\n"); return; }
+        if (ev == MG_EV_POLL) { return; }
+        if (ev == MG_EV_WRITE) { return; }
     }
 
+    if (ev == MG_EV_POLL) return;
     HTTP_args* sad = (HTTP_args*)user_data;
 
     if (ev == MG_EV_CLOSE) {
@@ -251,6 +261,10 @@ static void server_answer_to_connection_m(struct mg_connection *conn, int ev, vo
             if (sad->serv->ws_groups.count(wsid)) sad->serv->ws_groups.erase(wsid);
         }
         return;
+    }
+
+    if (ev == MG_EV_ACCEPT) {
+        ;
     }
 
     if (ev == MG_EV_WS_MSG) {
@@ -317,6 +331,9 @@ static void server_answer_to_connection_m(struct mg_connection *conn, int ev, vo
         if (v) sad->print();
 
         auto sendString = [&](string data, int code = 200) {
+            //cout << " monggosee server, send data: " << data.size() << endl;
+            //mg_http_reply(conn, code, "", "%.*s", (int)data.size(), data.data());
+            //mg_http_reply(conn, 200, "Content-Type: application/octet-stream\r\n", "%.*s", (int)data.size(), data.data());
             mg_http_reply(conn, code, "", data.c_str());
 
             //mg_http_reply(conn, code, "Transfer-Encoding: chunked", "");
@@ -367,6 +384,7 @@ static void server_answer_to_connection_m(struct mg_connection *conn, int ev, vo
                     if (endsWith(sad->path, ".php", false)) {
                         if (v) VRLog::log("net", "Serve PHP\n");
                         sendString( processPHP(sad) );
+                        return; // else hangs
                     } else {
                         if (v) VRLog::log("net", "Serve ressource "+sad->path+"\n");
                         if (!doRootSrv) mg_http_serve_file(conn, hm, sad->path.c_str(), &s_http_server_opts);
@@ -390,6 +408,7 @@ static void server_answer_to_connection_m(struct mg_connection *conn, int ev, vo
 
 
 VRSocket::VRSocket(string name) {
+    cout << "VRSocket, open socket " << name << endl;
     http_fkt = 0;
     socketID = 0;
     run = false;

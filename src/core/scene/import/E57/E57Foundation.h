@@ -43,6 +43,7 @@
 #include <iostream>
 #include <float.h>
 #include <memory>
+#include <cstdint>
 
 using namespace std;
 

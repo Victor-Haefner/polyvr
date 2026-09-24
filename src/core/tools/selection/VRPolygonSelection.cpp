@@ -1,4 +1,6 @@
 #include "VRPolygonSelection.h"
+#include "core/math/partitioning/frustum.h"
+#include "core/math/pose.h"
 #include "core/math/partitioning/boundingbox.h"
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/material/VRMaterial.h"
@@ -14,13 +16,18 @@ VRPolygonSelection::VRPolygonSelection() {
     shape = VRGeometry::create("VRPolygonSelection");
     shape->setPersistency(0);
     shape->setMaterial(mat);
-    selection.setNearFar(Vec2d(0.1,1000));
+
+    convex_hull = Frustum::create();
+    selection = Frustum::create();
+    selection->setNearFar(Vec2d(0.1,1000));
+
+    origin = Pose::create();
 }
 
 shared_ptr<VRPolygonSelection> VRPolygonSelection::create() { return shared_ptr<VRPolygonSelection>( new VRPolygonSelection() ); }
 
-void VRPolygonSelection::setOrigin(Pose orig) {
-    selection.setPose(orig);
+void VRPolygonSelection::setOrigin(PosePtr orig) {
+    selection->setPose(orig);
     origin = orig;
 }
 
@@ -28,10 +35,10 @@ VRGeometryPtr VRPolygonSelection::getShape() { return shape; }
 bool VRPolygonSelection::isClosed() { return closed; }
 
 void VRPolygonSelection::close(VRObjectPtr world) {
-    selection.close();
-    convex_hull = selection.getConvexHull();
-    convex_hull.close();
-    convex_decomposition = selection.getConvexDecomposition();
+    selection->close();
+    convex_hull = selection->getConvexHull();
+    convex_hull->close();
+    convex_decomposition = selection->getConvexDecomposition();
     closed = true;
     apply(world);
     updateSubselection();
@@ -40,21 +47,21 @@ void VRPolygonSelection::close(VRObjectPtr world) {
 
 void VRPolygonSelection::addEdge(Vec3d dir) {
     if (closed) clear();
-    selection.addEdge(dir);
+    selection->addEdge(dir);
     updateShape(selection);
 }
 
 void VRPolygonSelection::clear() {
-    shape->hide();
+    if (shape) shape->hide();
     VRSelection::clear();
-    selection.clear();
-    convex_hull.clear();
+    if (selection) selection->clear();
+    if (convex_hull) convex_hull->clear();
     convex_decomposition.clear();
     closed = false;
 }
 
-bool inFrustum(Frustum& f, Vec3f p) {
-    auto planes = f.getPlanes();
+bool inFrustum(FrustumPtr f, Vec3f p) {
+    auto planes = f->getPlanes();
     for (unsigned int i=0; i<planes.size(); i++) {
         float d = planes[i].distance(p);
         if ( d < 0 ) return false;
@@ -65,23 +72,23 @@ bool inFrustum(Frustum& f, Vec3f p) {
 bool VRPolygonSelection::objSelected(VRGeometryPtr geo) {
     if (!closed) return false;
     auto bbox = geo->getBoundingbox();
-    Vec3d p0 = origin.pos();
+    Vec3d p0 = origin->pos();
     Vec3f c = Vec3f(bbox->center());
     if (!inFrustum(convex_hull, c)) return false;
     for (auto f : convex_decomposition ) if (inFrustum(f, c)) return true;
-    for (auto d : selection.getEdges()) {
+    for (auto d : selection->getEdges()) {
         if ( bbox->intersectedBy( Line(Pnt3f(p0),Vec3f(d)) ) ) return true;
     }
     return false;
 }
 
-Frustum VRPolygonSelection::getSelectionFrustum() { return selection; }
+FrustumPtr VRPolygonSelection::getSelectionFrustum() { return selection; }
 
 bool VRPolygonSelection::partialSelected(VRGeometryPtr geo) {
     if (!closed) return false;
     auto bbox = geo->getBoundingbox();
-    Vec3d p0 = origin.pos();
-    for (auto d : selection.getEdges()) if ( bbox->intersectedBy( Line(Pnt3f(p0),Vec3f(d)) ) ) return true;
+    Vec3d p0 = origin->pos();
+    for (auto d : selection->getEdges()) if ( bbox->intersectedBy( Line(Pnt3f(p0),Vec3f(d)) ) ) return true;
     return false;
 }
 
@@ -92,13 +99,13 @@ bool VRPolygonSelection::vertSelected(Vec3d p) {
     return false;
 }
 
-void VRPolygonSelection::updateShape(Frustum f) {
-    int N = f.getEdges().size();
+void VRPolygonSelection::updateShape(FrustumPtr f) {
+    int N = f->getEdges().size();
     if (N <= 1) return;
 
-    auto trans = f.getPose();
-    Vec3d dir = trans.dir(); dir.normalize();
-    Vec3d p0 = trans.pos();
+    auto trans = f->getPose();
+    Vec3d dir = trans->dir(); dir.normalize();
+    Vec3d p0 = trans->pos();
     float Near = 1;
     float Far = 1;
     if (bbox && !bbox->empty()) Near = dir.dot( bbox->center() - p0 ) - bbox->radius();
@@ -110,7 +117,7 @@ void VRPolygonSelection::updateShape(Frustum f) {
     GeoUInt32PropertyMTRecPtr types = GeoUInt32Property::create();
 
     cout << "updateShape" << endl;
-    for (auto e : f.getEdges()) {
+    for (auto e : f->getEdges()) {
         pos->addValue(p0+e*Near);
         pos->addValue(p0+e*Far);
         cout << " p0 " << p0 << " e " << e << " nf " << Near << " " << Far << endl;

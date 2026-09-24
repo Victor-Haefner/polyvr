@@ -23,7 +23,7 @@ void renderCombo(string& opt, vector<string>& options, string ID, string signal,
     ID = "##"+ID;
     int labelI = 0;
     vector<const char*> optionsCstr(options.size(),0);
-    for (int i=0; i<options.size(); i++) {
+    for (size_t i=0; i<options.size(); i++) {
         optionsCstr[i] = options[i].c_str();
         if (options[i] == opt) labelI = i;
     }
@@ -42,6 +42,16 @@ string formatPerformance(float exec_time) {
     return time;
 }
 
+
+#if IMGUI_VERSION_NUM <= 18600
+#define ImGuiKey_S 's'
+#define ImGuiKey_E 'e'
+#define ImGuiKey_W 'w'
+#define ImGuiKey_F 'f'
+#define ImGuiKey_T 't'
+#define ImGuiKey_D 'd'
+#endif // IMGUI_VERSION_NUM
+
 ImScriptGroup::ImScriptGroup(string name) : name(name) {}
 ImScriptEntry::ImScriptEntry(string name) : name(name) {}
 
@@ -51,10 +61,15 @@ ImScriptList::ImScriptList() {
     mgr->addCallback("scripts_list_add_group", [&](OSG::VRGuiSignals::Options o){ addGroup(o["name"], o["ID"]); return true; } );
     mgr->addCallback("scripts_list_add_script", [&](OSG::VRGuiSignals::Options o){ addScript(o["name"], o["group"], toFloat(o["perf"])); return true; } );
     mgr->addCallback("scripts_list_set_color", [&](OSG::VRGuiSignals::Options o){ setColor(o["name"], o["fg"], o["bg"]); return true; } );
+    mgr->addCallback("scripts_list_set_source", [&](OSG::VRGuiSignals::Options o){ setSource(o["name"], o["source"]); return true; } );
     mgr->addCallback("scripts_list_set_perf", [&](OSG::VRGuiSignals::Options o){ setPerformance(o["name"], toFloat(o["perf"])); return true; } );
-    mgr->addCallback("openUiScript", [&](OSG::VRGuiSignals::Options o) {
-        selected = o["name"];
-        uiSignal("select_script", {{"script",selected}});
+    mgr->addCallback("script_editor_set_cursor", [&](OSG::VRGuiSignals::Options o) {
+        if (!o.count("name")) return true;
+        string name = o["name"];
+        selected = name + "##script";
+        focus(name);
+        uiSignal("select_script", {{"script",name}});
+        if (input) input->value = name;
         return true;
     } );
 }
@@ -64,6 +79,17 @@ void ImScriptList::clear() {
     groupsList.clear();
     addGroup("__default__", "__default__");
     computeMinWidth();
+}
+
+void ImScriptList::focus(string name) {
+    for (auto& g : groups) {
+        for (auto& s : g.second.scripts) {
+            if (s.name == name) {
+                g.second.needsOpen = true;
+                return;
+            }
+        }
+    }
 }
 
 void ImScriptList::addGroup(string name, string ID) {
@@ -103,6 +129,17 @@ void ImScriptList::setColor(string name, string fg, string bg) {
     }
 }
 
+void ImScriptList::setSource(string name, string source) {
+    for (auto& g : groups) {
+        for (auto& s : g.second.scripts) {
+            if (s.name == name) {
+                s.source = source;
+                return;
+            }
+        }
+    }
+}
+
 void ImScriptList::computeMinWidth() {
     ImGuiIO& io = ImGui::GetIO();
     float fs = io.FontGlobalScale;
@@ -121,7 +158,7 @@ void ImScriptList::computeMinWidth() {
     width = max(width, float(Rinput+padding));
     for (auto& g : groups) {
         for (auto& s : g.second.scripts) {
-            auto R = strWidth( s.name );
+            auto R = uiStrWidth( s.name );
             width = max(width, R*fs+padding);
         }
     }
@@ -129,8 +166,9 @@ void ImScriptList::computeMinWidth() {
 
 void ImScriptList::renderScriptEntry(ImScriptEntry& scriptEntry) {
     string& script = scriptEntry.name;
+    string& source = scriptEntry.source;
     string bID = script + "##script";
-    if (!input) input = new ImInput("##renameScript", "", "Script0", ImGuiInputTextFlags_EnterReturnsTrue);
+
     //ImVec4 colorSelected(0.3f, 0.5f, 1.0f, 1.0f);
     bool isSelected = bool(selected == bID);
     //if (isSelected) ImGui::PushStyleColor(ImGuiCol_Button, colorSelected);
@@ -141,6 +179,7 @@ void ImScriptList::renderScriptEntry(ImScriptEntry& scriptEntry) {
         if (ImGui::Button(bID.c_str())) {
             selected = bID;
             uiSignal("select_script", {{"script",script}});
+            if (!input) input = new ImInput("##renameScript", "", script, ImGuiInputTextFlags_EnterReturnsTrue);
             if (input) input->value = script;
         }
 
@@ -150,10 +189,11 @@ void ImScriptList::renderScriptEntry(ImScriptEntry& scriptEntry) {
 		ImGui::PushStyleColor(ImGuiCol_Text, colorFromString(scriptEntry.fg));
 		ImGui::PushStyleColor(ImGuiCol_FrameBg, colorFromString(scriptEntry.bg));
 		ImGui::PushStyleColor(ImGuiCol_Border, colorFromString("#66AAFF"));
-		ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 2);
+		ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 3);
 
+        if (!input) input = new ImInput("##renameScript", "", script, ImGuiInputTextFlags_EnterReturnsTrue);
         if (input) {
-            Rinput = strWidth( input->value ) + 5;
+            Rinput = uiStrWidth( input->value ) + 5;
             if (input->render(Rinput)) {
                 script = input->value;
                 selected = bID;
@@ -170,10 +210,15 @@ void ImScriptList::renderScriptEntry(ImScriptEntry& scriptEntry) {
 		ImGui::PopStyleColor();
     }
 
+    if (!source.empty() && ImGui::IsItemHovered()) {
+        string tip = "source: "+source;
+        ImGui::SetTooltip(tip.c_str());
+    }
+
     if (doPerf) {
         string pTime = formatPerformance(scriptEntry.perf);
         ImGui::SameLine();
-        ImGui::Text(pTime.c_str());
+        ImGui::TextUnformatted(pTime.c_str());
     }
 
     //if (isSelected) ImGui::PopStyleColor();
@@ -212,10 +257,11 @@ void ImScriptList::render() {
 
     for (auto groupID : tmpGroupsList) {
         if (groupID == "__default__") continue;
-        string group = tmpGroups[groupID].name;
-        renderGroupEntry(tmpGroups[groupID].name);
+        auto& group = tmpGroups[groupID];
+        renderGroupEntry(group.name);
         ImGui::SameLine();
 
+        if (group.needsOpen) { group.needsOpen = false; ImGui::SetNextItemOpen(true, ImGuiCond_Always); }
         //if (ImGui::CollapsingHeader((group+"##"+groupID).c_str(), flags)) {
         if (ImGui::CollapsingHeader(("##"+groupID).c_str(), flags)) {
             ImGui::Indent();
@@ -235,16 +281,19 @@ ImScriptEditor::ImScriptEditor() {
     mgr->addCallback("script_editor_set_buffer", [&](OSG::VRGuiSignals::Options o){ setBuffer(o["data"]); return true; } );
     mgr->addCallback("script_editor_set_parameters", [&](OSG::VRGuiSignals::Options o){ setParameters(o["type"], o["group"]); return true; } );
     mgr->addCallback("script_editor_request_buffer", [&](OSG::VRGuiSignals::Options o){ getBuffer(toInt(o["skipLines"])); return true; } );
+    mgr->addCallback("script_editor_request_cursor", [&](OSG::VRGuiSignals::Options o){ getCursor(); return true; } );
     mgr->addCallback("scripts_list_clear", [&](OSG::VRGuiSignals::Options o){ clearGroups(); return true; } );
     mgr->addCallback("scripts_list_add_group", [&](OSG::VRGuiSignals::Options o){ addGroup(o["name"], o["ID"]); return true; } );
     mgr->addCallback("script_editor_clear_trigs_and_args", [&](OSG::VRGuiSignals::Options o){ clearTrigsAndArgs(); return true; } );
     mgr->addCallback("script_editor_add_trigger", [&](OSG::VRGuiSignals::Options o){ addTrigger(o["name"], o["trigger"], o["parameter"], o["device"], o["key"], o["state"]); return true; } );
     mgr->addCallback("script_editor_add_argument", [&](OSG::VRGuiSignals::Options o){ addArgument(o["name"], o["type"], o["value"]); return true; } );
+    mgr->addCallback("script_editor_toggle_whitespace", [&](OSG::VRGuiSignals::Options o){ showWhitespace(!doShowWhitespace); return true; } );
     mgr->addCallback("editor_cmd", [&](OSG::VRGuiSignals::Options o){ editorCommand(o["cmd"]); return true; } );
-    mgr->addCallback("openUiScript", [&](OSG::VRGuiSignals::Options o){ focusOn(o["line"], o["column"]); return true; } );
+    mgr->addCallback("script_editor_set_cursor", [&](OSG::VRGuiSignals::Options o){ focusOn(o["line"], o["column"]); return true; } );
     mgr->addCallback("shiftTab", [&](OSG::VRGuiSignals::Options o){ handleShiftTab(toInt(o["tab"]), toInt(o["shift"])); return true; }, true );
+    mgr->addCallback("ui_set_palette", [&](OSG::VRGuiSignals::Options o){ setPalette(o["theme"]); return true; } );
 
-    imEditor.SetShowWhitespaces(false); // TODO: add as feature!
+    imEditor.SetShowWhitespaces(doShowWhitespace);
     imEditor.SetLanguageDefinition(TextEditor::LanguageDefinition::Python());
 
     typeList = {"Logic (Python)", "Shader (GLSL)", "Web (HTML/JS/CSS)"};
@@ -254,22 +303,40 @@ ImScriptEditor::ImScriptEditor() {
     trigger_states = {"Pressed", "Released", "Drag", "Drop", "To edge", "From edge"};
 }
 
+void ImScriptEditor::setPalette(string t) {
+    if (t == "light") imEditor.SetPalette( TextEditor::GetLightPalette() );
+    if (t == "dark")  imEditor.SetPalette( TextEditor::GetDarkPalette() );
+}
+
+void ImScriptEditor::showWhitespace(bool b) {
+    doShowWhitespace = b;
+    imEditor.SetShowWhitespaces(b);
+}
+
 string ImScriptEditor::getSelection() {
     return imEditor.GetSelectedText();
 }
 
 void ImScriptEditor::handleShiftTab(int tab, int shift) {
 	ImGuiIO& io = ImGui::GetIO();
+#if IMGUI_VERSION_NUM <= 18600
 	io.KeysDown[int('\t')] = tab;
 	io.KeyShift = shift;
+#else
+	io.AddKeyEvent(ImGuiKey_Tab, (tab != 0));
+	io.AddKeyEvent(ImGuiMod_Shift, (shift != 0));
+#endif
 }
 
 void ImScriptEditor::focusOn(string line, string column) {
-    TextEditor::Coordinates coords(max(0,toInt(line)-1), toInt(column));
+    TextEditor::Coordinates coords(max(0,toInt(line)), toInt(column));
     imEditor.SetCursorPosition(coords);
+    imEditor.SetDoGrabFocus(true);
+	imEditor.SetDoEnsureCursorVisible(true);
 }
 
 void ImScriptEditor::editorCommand(string cmd) {
+    //cout << "editorCommand cmd " << cmd << endl;
     if (cmd == "toggleLine") {
         auto p = imEditor.GetCursorPosition();
         if (p.mLine <= 1) return;
@@ -326,6 +393,11 @@ void ImScriptEditor::editorCommand(string cmd) {
     uiSignal("script_editor_text_changed");
 }
 
+void ImScriptEditor::getCursor() {
+    auto p = imEditor.GetCursorPosition();
+    uiSignal("script_editor_transmit_cursor", {{"line",toString(p.mLine)},{"column",toString(p.mColumn)}});
+}
+
 void ImScriptEditor::getBuffer(int skipLines) {
     string core = imEditor.GetText();
     int begin = 0;
@@ -344,7 +416,7 @@ void ImScriptEditor::setBuffer(string data) {
 
 void ImScriptEditor::setParameters(string type, string group) {
     current_group = 0;
-    for (int i = 0; i < groupList.size(); i++) {
+    for (size_t i = 0; i < groupList.size(); i++) {
         if (startsWith(groupList[i], group)) current_group = i;
     }
 
@@ -387,10 +459,10 @@ void ImScriptEditor::render() {
 
     ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_CollapsingHeader;
     if (ImGui::CollapsingHeader("Options", flags)) {
-        ImGui::Text("Type: ");
+        ImGui::TextUnformatted("Type: ");
         ImGui::SameLine();
         vector<const char*> types(typeList.size(),0);
-        for (int i=0; i<typeList.size(); i++) types[i] = typeList[i].c_str();
+        for (size_t i=0; i<typeList.size(); i++) types[i] = typeList[i].c_str();
         if (ImGui::Combo("##scriptTypesCombo", &current_type, &types[0], types.size())) {
             string type = "Python";
             if (current_type == 1) type = "GLSL";
@@ -399,8 +471,8 @@ void ImScriptEditor::render() {
         }
 
         vector<const char*> groupsCstr(groupList.size(),0);
-        for (int i=0; i<groupList.size(); i++) groupsCstr[i] = groupList[i].c_str();
-        ImGui::Text("Group:");
+        for (size_t i=0; i<groupList.size(); i++) groupsCstr[i] = groupList[i].c_str();
+        ImGui::TextUnformatted("Group:");
         ImGui::SameLine();
         if (ImGui::Combo("##groupsCombo", &current_group, &groupsCstr[0], groupsCstr.size())) {
             string group = groups[groupList[current_group]];
@@ -469,29 +541,35 @@ ImScripting::ImScripting() {
 void ImScripting::render() {
     auto openSearch = [&]() {
         string s = editor.getSelection();
-        uiSignal("ui_open_popup", {{"name","search"}, {"width","400"}, {"height","300"}});
+        uiSignal("ui_open_popup", {{"name","search"},{"title","Find"}, {"width","400"}, {"height","300"}});
         uiSignal("ui_search_set", {{"string",s}});
     };
 
     ImGuiIO& io = ImGui::GetIO();
-#ifdef WIN32
-    if (io.KeyCtrl && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_S))) { uiSignal("scripts_toolbar_save"); }
-    if (io.KeyCtrl && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_E))) { uiSignal("scripts_toolbar_execute"); }
-    if (io.KeyCtrl && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_W))) { uiSignal("clearConsoles"); }
-#else
-    if (io.KeyCtrl && io.KeysDown['s']) { io.KeysDown['s'] = false; uiSignal("scripts_toolbar_save"); }
-    if (io.KeyCtrl && io.KeysDown['e']) { io.KeysDown['e'] = false; uiSignal("scripts_toolbar_execute"); }
-    if (io.KeyCtrl && io.KeysDown['w']) { io.KeysDown['w'] = false; uiSignal("clearConsoles"); }
-    if (io.KeyCtrl && io.KeysDown['f']) { io.KeysDown['f'] = false; openSearch(); }
-#endif
+
+    if (io.KeyCtrl) {
+        if (ImGui::IsKeyPressed(ImGuiKey_S)) uiSignal("scripts_toolbar_save");
+        if (ImGui::IsKeyPressed(ImGuiKey_E)) uiSignal("scripts_toolbar_execute");
+        if (ImGui::IsKeyPressed(ImGuiKey_W)) uiSignal("clearConsoles");
+        if (ImGui::IsKeyReleased(ImGuiKey_F)) openSearch();
+    }
 
     // toolbar
     ImGui::Spacing();
     ImGui::Indent(5);
         if (ImGui::Button("New")) uiSignal("scripts_toolbar_new");
-        ImGui::SameLine(); if (ImGui::Button("Template")) uiSignal("ui_toggle_popup", {{"name","template"}, {"width","800"}, {"height","600"}});
+        ImGui::SameLine(); if (ImGui::Button("Template")) uiSignal("ui_toggle_popup", {{"name","template"},{"title","Script Templates"}, {"width","800"}, {"height","600"}});
         ImGui::SameLine(); if (ImGui::Button("Group")) uiSignal("scripts_toolbar_group");
-        ImGui::SameLine(); if (ImGui::Button("Import")) uiSignal("ui_toggle_popup", {{"name","import"}, {"width","400"}, {"height","300"}});
+
+        ImGui::SameLine();
+        if (ImGui::Button("Import")) {
+            string filters = "PolyVR Project (.pvr .pvc){.pvr,.pvc,.xml}";
+            uiSignal("set_file_dialog_signal", {{"signal","script_import_clicked"}});
+            uiSignal("set_file_dialog_filter", {{"filter",filters}});
+            uiSignal("set_file_dialog_setup", {{"title","Choose project"}, {"dir","."}, {"file","myApp.pvr"}});
+            uiSignal("ui_toggle_popup", {{"name","file"},{"title","Choose project"}, {"width","600"}, {"height","500"}});
+        }
+
         ImGui::SameLine(); if (ImGui::Button("Delete")) uiSignal("askUser", {{"msg1","This will remove the selected script!"}, {"msg2","Are you sure?"}, {"sig","scripts_toolbar_delete"}});
 
         if (pause) pushGlowBorderStyle(1);
@@ -501,11 +579,12 @@ void ImScripting::render() {
         popGlowBorderStyle();
 
         ImGui::SameLine(); if (ImGui::Button("CPP")) uiSignal("scripts_toolbar_cpp");
+        ImGui::SameLine(); if (ImGui::Button("¶·>")) uiSignal("script_editor_toggle_whitespace");
 
                            if (ImGui::Button("Save")) uiSignal("scripts_toolbar_save");
         ImGui::SameLine(); if (ImGui::Button("Execute")) uiSignal("scripts_toolbar_execute");
         ImGui::SameLine(); if (ImGui::Button("Search")) openSearch();
-        ImGui::SameLine(); if (ImGui::Button("Documentation")) uiSignal("ui_toggle_popup", {{"name","documentation"}, {"width","800"}, {"height","600"}});
+        ImGui::SameLine(); if (ImGui::Button("Documentation")) uiSignal("ui_toggle_popup", {{"name","documentation"},{"title","API Documentation"}, {"width","800"}, {"height","600"}});
         ImGui::SameLine(); if (ImGui::Checkbox("Performance", &perf)) { scriptlist.doPerf = perf; scriptlist.computeMinWidth(); uiSignal("scripts_toolbar_performance", {{"state",toString(perf)}}); }
 
         ImGui::SameLine(0,30); ImGui::TextColored( io.KeyAlt   ? ImVec4(0,1,0,1) : ImVec4(0.8,0.8,0.8,1), "A");
@@ -539,14 +618,9 @@ void ImScripting::render() {
     ImGui::BeginGroup();
     ImGui::Spacing();
     ImGui::BeginChild("ScriptEditorPanel", ImVec2(w2, h), false, flags);
-    if (ImGui::IsWindowFocused(ImGuiFocusedFlags_ChildWindows)) {
-#ifdef WIN32
-        if (io.KeyCtrl && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_T))) { uiSignal("editor_cmd", {{"cmd","toggleLine"}}); }
-        if (io.KeyCtrl && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_D))) { uiSignal("editor_cmd", {{"cmd","duplicateLine"}}); }
-#else
-        if (io.KeyCtrl && io.KeysDown['t']) { io.KeysDown['t'] = false; uiSignal("editor_cmd", {{"cmd","toggleLine"}}); }
-        if (io.KeyCtrl && io.KeysDown['d']) { io.KeysDown['d'] = false; uiSignal("editor_cmd", {{"cmd","duplicateLine"}}); }
-#endif
+    if (ImGui::IsWindowFocused(ImGuiFocusedFlags_ChildWindows) && io.KeyCtrl) {
+        if (ImGui::IsKeyPressed(ImGuiKey_T)) { uiSignal("editor_cmd", {{"cmd","toggleLine"}}); }
+        if (ImGui::IsKeyPressed(ImGuiKey_D)) { uiSignal("editor_cmd", {{"cmd","duplicateLine"}}); }
     }
 
     editor.render();

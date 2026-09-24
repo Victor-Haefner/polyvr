@@ -32,22 +32,12 @@
 
 //#define IOBUF_VERBOSE
 
-#ifdef __GNUC__
 #ifndef max
-#define max(x,y) ({ \
-const typeof(x) _x = (x);	\
-const typeof(y) _y = (y);	\
-(void) (&_x == &_y);		\
-_x > _y ? _x : _y; })
-#endif /* __GNUC__ */
+#define max(x, y) ((x) > (y) ? (x) : (y))
+#endif
 
 #ifndef min
-#define min(x,y) ({ \
-const typeof(x) _x = (x);	\
-const typeof(y) _y = (y);	\
-(void) (&_x == &_y);		\
-_x < _y ? _x : _y; })
-#endif
+#define min(a,b) ((a) < (b) ? (a) : (b))
 #endif
 
 typedef struct ourstream_s {

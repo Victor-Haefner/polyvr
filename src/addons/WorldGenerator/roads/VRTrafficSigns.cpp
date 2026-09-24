@@ -21,7 +21,6 @@
 #include "addons/Semantics/Reasoning/VREntity.h"
 
 #include "core/utils/system/VRSystem.h"
-#include <boost/filesystem.hpp>
 
 using namespace OSG;
 

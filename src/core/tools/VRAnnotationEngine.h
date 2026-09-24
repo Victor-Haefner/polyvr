@@ -42,7 +42,9 @@ class VRAnnotationEngine : public VRGeometry {
             Vec3d pos;
             vector<int> entries;
             string str;
-						bool ascii = true;
+            bool ascii = true;
+            int maskA = -1;
+            int maskB = -1;
 
             Label(int id);
         };
@@ -69,6 +71,8 @@ class VRAnnotationEngine : public VRGeometry {
         void set(int i, Vec3d p, string s);
         void setLine(int i, Vec3d p, string s, bool ascii = false, bool force = false);
         int add(Vec3d p, string s);
+
+        void setMask(int i, float a, float b);
 
         void setSize(float f);
         void setColor(Color4f c);

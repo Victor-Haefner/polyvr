@@ -888,7 +888,10 @@ void TextEditor::HandleMouseInputs()
                     auto& line = mLines[lineNo];
                     const auto colNo = mState.mCursorPosition.mColumn;
                     for (auto& m : line.marks) {
-                        if (colNo >= m.c0 && colNo < m.c0 + m.L) TriggerMark(m);
+                        if (colNo >= m.c0 && colNo < m.c0 + m.L) {
+                            if (m.value[0] == 'L') TriggerMark(m);
+                            if (m.value[0] == 'S' && ctrl) TriggerMark(m);
+                        }
                     }
                 }
 			}
@@ -1091,9 +1094,14 @@ void TextEditor::Render()
 			{
 				auto& glyph = line.glyphs[i];
 				auto color = GetGlyphColor(glyph);
-				if (line.styles.size() > 0) {
+				if (line.styles.size() > 0) { // ABGR
                     if (line.styles[0].value == "redLink") color = 0xff2244ff;
                     if (line.styles[0].value == "blueLink") color = 0xffff9922;
+
+                    if (line.styles[0].value == "console91") color = 0xff1133ff;
+                    if (line.styles[0].value == "console92") color = 0xff33ff11;
+                    if (line.styles[0].value == "console93") color = 0xff1188aa;
+                    if (line.styles[0].value == "console94") color = 0xffff5522;
 				}
 
 				if ((color != prevColor || glyph.mChar == '\t' || glyph.mChar == ' ') && !mLineBuffer.empty())
@@ -1213,7 +1221,9 @@ void TextEditor::Render(const char* aTitle, const ImVec2& aSize, bool aBorder)
 	if (mHandleKeyboardInputs)
 	{
 		HandleKeyboardInputs();
+#if IMGUI_VERSION_NUM <= 18600
 		ImGui::PushAllowKeyboardFocus(true);
+#endif
 	}
 
 	if (mHandleMouseInputs)
@@ -1222,8 +1232,10 @@ void TextEditor::Render(const char* aTitle, const ImVec2& aSize, bool aBorder)
 	ColorizeInternal();
 	Render();
 
+#if IMGUI_VERSION_NUM <= 18600
 	if (mHandleKeyboardInputs)
 		ImGui::PopAllowKeyboardFocus();
+#endif
 
 	if (!mIgnoreImGuiChild)
 		ImGui::EndChild();

@@ -28,8 +28,7 @@ class Unzipper {
     public:
         Unzipper(istream& buffer);
         Unzipper(vector<unsigned char>& buffer);
-        Unzipper(const string& zipname);
-        Unzipper(const string& zipname, const string& password);
+        Unzipper(const string& zipname, const string& type = "", const string& password = "");
 
         ~Unzipper(void);
 

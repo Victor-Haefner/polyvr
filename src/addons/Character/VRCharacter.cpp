@@ -212,8 +212,8 @@ struct MoveTarget {
     MoveTarget(PosePtr p1, PosePtr p2) : target(p1) {
         path = Path::create();
         if (p1 && p2) {
-            path->addPoint(*p1.get());
-            path->addPoint(*p2.get());
+            path->addPoint(p1);
+            path->addPoint(p2);
             path->compute(16);
         }
     }
@@ -261,8 +261,8 @@ PathPtr VRCharacter::moveTo(Vec3d p1, float speed) {
     D.normalize();
 
     auto path = Path::create();
-    path->addPoint(*p0);
-    path->addPoint(Pose(p1, D));
+    path->addPoint(p0);
+    path->addPoint(Pose::create(p1, D));
     path->compute(32);
 
     cout << "moveTo " << p1 << " " << D << endl;

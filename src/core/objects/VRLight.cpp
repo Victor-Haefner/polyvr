@@ -89,7 +89,8 @@ VRLight::VRLight(string name) : VRObject(name) {
 }
 
 VRLight::~VRLight() {
-    VRScene::getCurrent()->subLight( getID() );
+    auto scene = VRScene::getCurrent();
+    if (scene) scene->subLight( getID() );
 }
 
 VRLightPtr VRLight::ptr() { return static_pointer_cast<VRLight>( shared_from_this() ); }

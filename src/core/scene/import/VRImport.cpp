@@ -1,4 +1,6 @@
 #include "VRImport.h"
+#include "VRExport.h"
+
 #ifndef WITHOUT_COLLADA
 #include "COLLADA/VRCOLLADA.h"
 #endif
@@ -267,16 +269,16 @@ void VRImport::LoadJob::load(VRThreadWeakPtr tw) {
             return;
         }
 #ifndef WITHOUT_IFC
-		if (ext == ".ifc") { loadIFC(path, res); return; }
+	if (ext == ".ifc") { loadIFC(path, res); return; }
 #endif
         if (preset == "PVR" || preset == "SOLIDWORKS-VRML2") {
             if (ext != ".wrl") preset = "OSG";
             if (ext == ".wrl" && preset == "SOLIDWORKS-VRML2") { VRFactory f; if (f.loadVRML(path, progress, res, thread)); else preset = "OSG"; }
             if (ext == ".wrl" && preset == "PVR") { loadVRML(path, res, progress, thread); }
         }
-#ifndef WASM
 #ifndef WITHOUT_VTK
-        if (ext == ".vtk") { loadVtk(path, res); return; }
+        if (ext == ".vtk") { loadVTK(path, res); return; }
+        if (ext == ".gz" && endsWith(path, ".vtk.gz")) { loadVTK(path, res); return; }
 #endif
 #ifndef WITHOUT_GDAL
         if (ext == ".pdf") { loadPDF(path, res, options); return; }
@@ -284,18 +286,19 @@ void VRImport::LoadJob::load(VRThreadWeakPtr tw) {
         if (ext == ".tiff" || ext == ".tif") { loadTIFF(path, res, options); return; }
         if (ext == ".hgt") { loadTIFF(path, res, options); return; }
 #endif
+#ifndef WASM
         if (preset == "DXF") {
             if (ext == ".dxf" || ext == ".DXF") {
                 loadDXF(path, res);
                 return;
             }
         }
+#endif
 #ifndef WITHOUT_DWG
         if (ext == ".dwg" || ext == ".dxf" || ext == ".DWG" || ext == ".DXF") {
             loadDWG(path, res, options);
             return;
         }
-#endif
 #endif
         if (ext == ".gltf" || ext == ".glb") { loadGLTF(path, res, progress, thread); return; }
         if (ext == ".osb" || ext == ".osg") { osgLoad(path, res); return; }
@@ -322,7 +325,8 @@ void VRImport::LoadJob::load(VRThreadWeakPtr tw) {
     if (useBinaryCache && !loadedFromCache && res->getChild(0)) {
         for (auto c : res->getChildren(true)) { if (auto t = dynamic_pointer_cast<VRTransform>(c)) t->enableOptimization(false); }
         string osbPath = getFolderName(path) + "/." + getFileName(path) + ".osb";
-        SceneFileHandler::the()->write(res->getChild(0)->getNode()->node, osbPath.c_str());
+        //SceneFileHandler::the()->write(res->getChild(0)->getNode()->node, osbPath.c_str());
+        VRExport::get()->write(res->getChild(0), osbPath);
         for (auto c : res->getChildren(true)) { if (auto t = dynamic_pointer_cast<VRTransform>(c)) t->enableOptimization(true); }
         // TODO: create descriptive hash of file, store hash
         cout << "store in binary cache: " << path << " " << osbPath << endl;
@@ -331,126 +335,121 @@ void VRImport::LoadJob::load(VRThreadWeakPtr tw) {
     VRImport::get()->triggerCallbacks(params);
 }
 
-VRObjectPtr VRImport::OSGConstruct(NodeMTRecPtr n, VRObjectPtr parent, string name, string currentFile, NodeCore* geoTrans, NodeCore* geoObj, string geoTransName) {
-    if (n == 0) return 0; // TODO add an osg wrap method for each object?
-
+VRObjectPtr VRImport::OSGConstruct(NodeMTRecPtr n, VRObjectPtr parent, string name, string currentFile, NodeMTRecPtr geoTrans, NodeMTRecPtr geoObj, string geoTransName) {
+    if (n == 0) return 0;
     VRObjectPtr tmp = 0;
-    VRMaterialPtr tmp_m;
-    VRLodPtr tmp_l;
-    VRPointCloudPtr tmp_p;
-    VRGeometryPtr tmp_g;
-    VRTransformPtr tmp_e;
-    VRGroupPtr tmp_gr;
-
     NodeCoreMTRecPtr core = n->getCore();
     string t_name = core->getTypeName();
-
-    if (getName(n)) name = getName(n);
-    else name = "Unnamed";
+    name = getName(n) ? getName(n) : "Unnamed";
     if (name == "") name = "NAN";
 
-    if (t_name == "Group") {//OpenSG Group
-        if (n->getNChildren() == 1) { // try to optimize the tree by avoiding obsolete objects
-            string tp = n->getChild(0)->getCore()->getTypeName();
-            if (tp == "Geometry") {
-                geoObj = n->getCore();
-                geoTransName = name;
-                tmp = parent;
-            }
-        }
+    auto wrapGroup = [](string& name, NodeMTRecPtr& n) {
+        auto tmp = VRObject::create(name);
+        tmp->wrapOSG(OSGObject::create(n));
+        return tmp;
+    };
 
-        if (tmp == 0) {
-            tmp = VRObject::create(name);
-            tmp->setCore(OSGCore::create(core), "Object");
-            tmp->addAttachment("collada_name", name);
-        }
-    }
+    auto wrapTransform = [](string& name, NodeMTRecPtr& n) {
+        auto tmp = VRTransform::create(name);
+        tmp->wrapOSG(OSGObject::create(n));
+        return tmp;
+    };
 
-    else if (t_name == "ComponentTransform") {
-        if (tmp == 0) {
-            tmp_e = VRTransform::create(name);
-            tmp_e->setMatrix(toMatrix4d(dynamic_cast<ComponentTransform *>(n->getCore())->getMatrix()));
-            tmp = tmp_e;
-        }
-    }
+    auto wrapLoD = [](string& name, NodeMTRecPtr& n) {
+        auto tmp = VRLod::create(name);
+        tmp->wrapOSG(OSGObject::create(n));
+        return tmp;
+    };
 
-    else if (t_name == "Transform") {
-        if (n->getNChildren() == 1) { // try to optimize the tree by avoiding obsolete transforms
-            string tp = n->getChild(0)->getCore()->getTypeName();
-            if (tp == "Geometry") {
-                geoTrans = n->getCore();
-                geoTransName = name;
-                tmp = parent;
-            }
-        }
+    auto wrapPointcloud = [](string& name, NodeMTRecPtr& n) {
+        auto tmp = VRPointCloud::create(name);
+        tmp->wrapOSG(OSGObject::create(n));
+        return tmp;
+    };
 
-        if (tmp == 0) {
-            tmp_e = VRTransform::create(name);
-            tmp_e->setMatrix(toMatrix4d(dynamic_cast<Transform *>(n->getCore())->getMatrix()));
-            tmp = tmp_e;
-            tmp->addAttachment("collada_name", name);
-        }
-    }
-
-    else if (t_name == "MaterialGroup") { // highly inefficient! is there a reason to support this??
-        tmp = parent;
-        /*tmp_m = VRMaterial::create(name);
-        tmp = tmp_m;
-        tmp->setCore(OSGCore::create(core), "Material");*/
-    }
-
-    else if (t_name == "DistanceLOD") {
-        DistanceLOD* lod = dynamic_cast<DistanceLOD*>(n->getCore());
-        tmp_l = VRLod::create(name);
-        tmp_l->setCore(OSGCore::create(core), "Lod", true);
-        tmp_l->setCenter(Vec3d(lod->getCenter()));
-        auto dists = lod->getMFRange();
-        for (size_t i=0; i<dists->size(); i++) tmp_l->addDistance(lod->getRange(i));
-        tmp = tmp_l;
-    }
-
-    else if (t_name == "PointCloud") {
-        tmp_p = VRPointCloud::create(name);
-        tmp_p->setCore(OSGCore::create(core), "PointCloud");
-        tmp = tmp_p;
-    }
-
-    else if (t_name == "Geometry") {
+    auto wrapGeometry = [&](string& name, NodeMTRecPtr& n) -> VRGeometryPtr { // TODO: fix wrapOSG for this case!
         auto osgGeo = dynamic_cast<Geometry*>(n->getCore());
         if (!osgGeo->getPositions()) return 0;
         if (osgGeo->getPositions()->size() == 0) return 0;
-        if (geoTrans) {
-            tmp_g = VRGeometry::create(geoTransName); // more consistent with storing and loading to/from osb!
-            tmp_g->addAttachment("collada_name", geoTransName);
-            tmp_g->setMatrix(toMatrix4d(dynamic_cast<Transform*>(geoTrans)->getMatrix()));
-            geoTrans = 0;
-            geoTransName = "";
-        } else if (geoObj) {
-            tmp_g = VRGeometry::create(geoTransName); // more consistent with storing and loading to/from osb!
-            tmp_g->addAttachment("collada_name", geoTransName);
-            geoObj = 0;
-            geoTransName = "";
-        } else {
-            tmp_g = VRGeometry::create(name);
-        }
+
+        auto tmp = VRGeometry::create(name);
+        //tmp->wrapOSG(OSGObject::create(n));
 
         VRGeometry::Reference ref;
         ref.type = VRGeometry::FILE;
-        ref.parameter = currentFile + "|" + tmp_g->getName();
-        tmp_g->setMesh( OSGGeometry::create( osgGeo ), ref, true);
-        tmp = tmp_g;
+        ref.parameter = currentFile + "|" + tmp->getName();
+        tmp->setReference(ref);
+
+        tmp->setMesh( OSGGeometry::create( osgGeo ), ref, true);
+
+        auto p = n->getParent();
+        p->subChild(n);
+        p->addChild(tmp->getNode()->node);
+
+        return tmp;
+    };
+
+    auto wrapGeometry2 = [&](string& name, NodeMTRecPtr& n, NodeMTRecPtr& nGeo) -> VRGeometryPtr {
+        auto osgGeo = dynamic_cast<Geometry*>(nGeo->getCore());
+        if (!osgGeo->getPositions()) return 0;
+        if (osgGeo->getPositions()->size() == 0) return 0;
+
+        auto tmp = VRGeometry::create(name);
+        tmp->wrapOSG(OSGObject::create(n), OSGObject::create(nGeo));
+
+        VRGeometry::Reference ref;
+        ref.type = VRGeometry::FILE;
+        ref.parameter = currentFile + "|" + tmp->getName();
+        tmp->setReference(ref);
+
+        return tmp;
+    };
+
+    auto hasSingleGeometry = [](NodeMTRecPtr n) -> NodeMTRecPtr {
+        NodeMTRecPtr nGeo;
+        int N = 0;
+        for (unsigned int i=0; i<n->getNChildren(); i++) {
+            NodeMTRecPtr c = n->getChild(i);
+            string tp = c->getCore()->getTypeName();
+            if (tp == "Geometry") {
+                nGeo = c;
+                N++;
+            }
+        }
+        if (N == 1) return nGeo;
+        return 0;
+    };
+
+    NodeMTRecPtr childToSkip = 0;
+    vector<NodeMTRecPtr> children;
+    for (unsigned int i=0; i<n->getNChildren(); i++) children.push_back(n->getChild(i));
+
+    if (t_name == "Group" || t_name == "Transform" || t_name == "ComponentTransform") { // resolve special case transform->geometry
+        if (NodeMTRecPtr nGeo = hasSingleGeometry(n)) {
+            tmp = wrapGeometry2(name, n, nGeo);
+            if (tmp) childToSkip = nGeo;
+        }
     }
 
-    else {
-        tmp = VRObject::create(name);
-        tmp->setCore(OSGCore::create(core), t_name);
+    if (!tmp) {
+        if (t_name == "Group") tmp = wrapGroup(name, n);
+        if (t_name == "Transform") tmp = wrapTransform(name, n);
+        if (t_name == "ComponentTransform") tmp = wrapTransform(name, n);
+        if (t_name == "MaterialGroup") tmp = wrapGroup(name, n);
+        if (t_name == "DistanceLOD") tmp = wrapLoD(name, n);
+        if (t_name == "PointCloud") tmp = wrapPointcloud(name, n);
+        if (t_name == "Geometry") tmp = wrapGeometry(name, n);
     }
 
-    for (unsigned int i=0;i<n->getNChildren();i++) {
-        auto obj = OSGConstruct(n->getChild(i), tmp, name, currentFile, geoTrans, geoObj, geoTransName);
-        if (obj) tmp->addChild(obj);
+    if (!tmp) tmp = wrapGroup(name, n);
+
+    for (auto& child : children) {
+        if (child == childToSkip) continue;
+        auto obj = OSGConstruct(child, tmp, name, currentFile, geoTrans, geoObj, geoTransName);
+        if (obj) tmp->addChild(obj, false);
     }
 
+    tmp->addAttachment("collada_name", name);
     return tmp;
 }
 
@@ -471,13 +470,14 @@ VRGeometryPtr VRImport::loadGeometry(string file, string object, string preset, 
     }
 
     VRObjectPtr o = cache[file].objects[object];
-    if (o->getType() != "Geometry") {
+    auto geo = dynamic_pointer_cast<VRGeometry>(o);
+    if (!geo) {
         cout << "VRImport::loadGeometry - Warning: " << file << " is cached but object " << object << " has wrong type: " << o->getType() << endl;
         for (auto o : cache[file].objects) cout << " cache " << o.first << ", " << o.second->getType() << endl;
         return 0;
     }
 
-    return static_pointer_cast<VRGeometry>(o);
+    return geo;
 }
 
 VRProgressPtr VRImport::getProgressObject() { return progress; }

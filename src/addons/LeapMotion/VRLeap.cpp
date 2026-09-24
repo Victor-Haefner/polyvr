@@ -355,7 +355,7 @@ bool VRLeap::reconnect() {
     result = webSocket.open(url);
 
     if (result) {
-        result = webSocket.sendMessage("{\"background\": true}");
+        result = webSocket.send("{\"background\": true}");
         connectionStatus = "connected to " + getAddress();
     } else {
         connectionStatus = "connection error (daemon running?)";

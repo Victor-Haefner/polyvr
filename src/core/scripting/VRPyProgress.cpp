@@ -6,7 +6,7 @@ using namespace OSG;
 simpleVRPyType( Progress, New_ptr );
 
 template<> string typeName(const VRProgress::Mode* t) { return "Progress Mode"; }
-template<> bool toValue(PyObject* o, VRProgress::Mode& v) { if (!PyInt_Check(o)) return 0; v = (VRProgress::Mode)PyInt_AsLong(o); return 1; }
+template<> bool toValue(PyObject* o, VRProgress::Mode& v) { if (!PyLong_Check(o)) return 0; v = (VRProgress::Mode)PyLong_AsLong(o); return 1; }
 
 PyMethodDef VRPyProgress::methods[] = {
     {"setup", PyWrapOpt(Progress, setup, "Setup the progress parameters", "0", void, string, size_t, VRProgress::Mode) },

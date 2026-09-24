@@ -4,6 +4,7 @@
 #include <iostream>
 #include <libxml/tree.h>
 #include <libxml/parser.h>
+#include <libxml/HTMLparser.h>
 
 using namespace OSG;
 
@@ -38,7 +39,9 @@ string XMLElement::getName() {
 
 string XMLElement::getNameSpace() {
     if (!node || ! node->ns) return "";
-    return string((const char*)node->ns);
+    if (node->ns->href) return string((const char*)node->ns->href);
+    //return string((const char*)node->ns);
+    return "";
 }
 
 string XMLElement::getText() {
@@ -53,7 +56,14 @@ bool XMLElement::hasText() {
     if (!node || !node->children) return false;
     auto txt = xmlNodeGetContent( node->children );
     if (!txt) return false;
+    xmlFree(txt);
     return true;
+}
+
+void XMLElement::setText(string text) {
+    if (!node) return;
+    xmlNodeSetContent(node, NULL);
+    xmlNodeAddContent(node, (const xmlChar*)text.c_str());
 }
 
 string XMLElement::getAttribute(string name) {
@@ -74,10 +84,12 @@ map<string,string> XMLElement::getAttributes() {
     xmlAttr* attribute = node->properties;
     while(attribute) {
         xmlChar* value = xmlNodeListGetString(node->doc, attribute->children, 1);
-        string ans((const char*)attribute->name);
-        string vas((const char*)value);
-        res[ans] = vas;
-        xmlFree(value);
+        if (value) {
+            string ans((const char*)attribute->name);
+            string vas((const char*)value);
+            res[ans] = vas;
+            xmlFree(value);
+        }
         attribute = attribute->next;
     }
     return res;
@@ -114,12 +126,16 @@ vector<XMLElementPtr> XMLElement::getChildren(string name, bool recursive) {
     return res;
 }
 
-XMLElementPtr XMLElement::getChild(string name) {
+XMLElementPtr XMLElement::getChild(string name, int i) {
     if (!node) return 0;
     auto cnode = getNextNode( node->xmlChildrenNode );
+    int j = 0;
     while ( cnode ) {
         if (cnode->type == XML_ELEMENT_NODE) {
-            if (name == string((const char*)cnode->name)) return XMLElement::create(cnode);
+            if (name == string((const char*)cnode->name)) {
+                if (i <= j) return XMLElement::create(cnode);
+                j++;
+            }
         }
         cnode = getNextNode( cnode->next );
     }
@@ -127,6 +143,7 @@ XMLElementPtr XMLElement::getChild(string name) {
 }
 
 XMLElementPtr XMLElement::getChild(int i) {
+    if (!node) return 0;
     int k = 0;
     auto cnode = getNextNode( node->xmlChildrenNode );
     while ( cnode ) {
@@ -145,9 +162,11 @@ XMLElementPtr XMLElement::addChild(string name) {
     return XMLElement::create(child);
 }
 
-void XMLElement::setText(string text) {
-    auto child = xmlNewText((xmlChar*)text.c_str());
-    xmlAddChild(node, child);
+void XMLElement::clearChildren() {
+    if (!node) return;
+    xmlFreeNodeList(node->children);
+    node->children = nullptr;
+    node->last = nullptr;
 }
 
 void XMLElement::importNode(XMLElementPtr e, bool recursive, XML& xml) {
@@ -167,11 +186,17 @@ XML::~XML() {
 XMLPtr XML::create() { return XMLPtr( new XML() ); }
 
 void XML::read(string path, bool validate) {
+    auto isHTML = [&]() {
+        for (auto& e : {"htm", "HTM", "html", "HTML"}) if (endsWith(path, e)) return true;
+        return false;
+    };
+
     if (doc) xmlFreeDoc(doc);
     // parser.set_validate(false); // TODO!
-    doc = xmlParseFile(path.c_str());
+    if (isHTML()) doc = htmlParseFile(path.c_str(), NULL);
+    else doc = xmlParseFile(path.c_str());
     xmlNodePtr xmlRoot = xmlDocGetRootElement(doc);
-    root = XMLElement::create(xmlRoot);
+    if (xmlRoot) root = XMLElement::create(xmlRoot);
 }
 
 void XML::parse(string data, bool validate) {
@@ -179,7 +204,7 @@ void XML::parse(string data, bool validate) {
     // parser.set_validate(false); // TODO!
     doc = xmlParseMemory(data.c_str(), data.size());
     xmlNodePtr xmlRoot = xmlDocGetRootElement(doc);
-    root = XMLElement::create(xmlRoot);
+    if (xmlRoot) root = XMLElement::create(xmlRoot);
 }
 
 XMLElementPtr XML::getRoot() { return root; }
@@ -253,9 +278,9 @@ string XML::toString() {
     xmlKeepBlanksDefault(0);
     xmlBuffer* buffer = xmlBufferCreate();
     xmlOutputBuffer* outputBuffer = xmlOutputBufferCreateBuffer( buffer, NULL );
-    xmlSaveFormatFileTo(outputBuffer, doc, "UTF-8", 1);
+    xmlSaveFormatFileTo(outputBuffer, doc, "UTF-8", 1); // frees outputBuffer
     string str( (char*) buffer->content, buffer->use );
-    xmlBufferFree( buffer );
+    xmlBufferFree(buffer);
     return str;
 }
 

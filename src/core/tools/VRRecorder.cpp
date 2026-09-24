@@ -88,11 +88,9 @@ class VRFrame {
 }
 
 VRRecorder::VRRecorder() {
-#ifndef _WIN32
-#ifndef __APPLE__
+#if LIBAVFORMAT_VERSION_MAJOR < 58
     av_register_all();
     avcodec_register_all();
-#endif
 #endif
 
     toggleCallback = VRFunction<bool>::create("recorder toggle", bind(&VRRecorder::setRecording, this, _1));
@@ -241,8 +239,8 @@ void VRRecorder::initCodec() {
 }
 
 void VRRecorder::closeCodec() {
-    avcodec_close(codec_context);
-    av_free(codec_context);
+    avcodec_free_context(&codec_context);
+    codec_context = 0;
 }
 
 void VRRecorder::initFrame() {

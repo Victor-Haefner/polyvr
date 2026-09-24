@@ -3,7 +3,8 @@
 
 #include "core/utils/VRFwdDeclTemplate.h"
 
-ptrFwd(VRPrimitive);
+struct VRPrimitive;
+typedef std::shared_ptr<VRPrimitive> VRPrimitivePtr;
 
 namespace OSG {
 

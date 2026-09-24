@@ -1022,7 +1022,7 @@ void VRRoadIntersection::computePatch() {
     }
     if (patch->computeArea() < 1e-6) { patch.reset(); return; }
     for (auto p : intersectionPoints) patch->addPoint(Vec2d(p[0], p[2]));
-    *patch = patch->getConvexHull();
+    patch = patch->getConvexHull();
     if (patch->size() <= 2) { patch.reset(); return; }
 
     median = patch->getBoundingBox().center();

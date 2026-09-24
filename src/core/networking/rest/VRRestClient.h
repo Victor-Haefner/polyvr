@@ -3,6 +3,7 @@
 
 #include <string>
 #include <list>
+#include <map>
 #include <OpenSG/OSGConfig.h>
 #include "../VRNetworkClient.h"
 
@@ -20,19 +21,26 @@ class VRRestClient : public VRNetworkClient {
 
         list<shared_ptr<RestPromise>> promises;
 
-        void finishAsync(VRRestCbPtr cb, VRRestResponsePtr res);
+        void cleanupPromises();
+        static void finishAsync(VRRestClientWeakPtr self, VRRestCbPtr cb, VRRestResponsePtr res);
 
 	public:
 		VRRestClient(string name);
 		~VRRestClient();
 
 		static VRRestClientPtr create(string name = "none");
-		//VRRestClientPtr ptr();
+		VRRestClientPtr ptr();
 
 		VRRestResponsePtr get(string uri, int timeoutSecs = 2, vector<string> headers = {});
 		void getAsync(string uri, VRRestCbPtr cb, int timeoutSecs = 2, vector<string> headers = {});
+
 		VRRestResponsePtr post(string uri, const string& data, int timeoutSecs = 2, vector<string> headers = {});
+		VRRestResponsePtr postForm(string uri, const vector<map<string,string>>& data, int timeoutSecs = 2, vector<string> headers = {});
 		void postAsync(string uri, VRRestCbPtr cb, const string& data, int timeoutSecs = 2, vector<string> headers = {});
+		void postFormAsync(string uri, VRRestCbPtr cb, const vector<map<string,string>>& data, int timeoutSecs = 2, vector<string> headers = {});
+
+		VRRestResponsePtr del(string uri, int timeoutSecs = 2, vector<string> headers = {});
+		void deleteAsync(string uri, VRRestCbPtr cb, int timeoutSecs = 2, vector<string> headers = {});
 
 		void connect(string uri, int timeoutSecs = 2);
 		void connectPort(string uri, int port, int timeoutSecs = 2);

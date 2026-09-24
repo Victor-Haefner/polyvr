@@ -4,8 +4,7 @@
 #include "core/scripting/VRPyBaseT.h"
 
 template<> PyTypeObject VRPyBaseT<OSG::VRAdjacencyGraph>::type = {
-    PyObject_HEAD_INIT(NULL)
-    0,                         /*ob_size*/
+    PyVarObject_HEAD_INIT(NULL, 0)
     "VR.AdjacencyGraph",             /*tp_name*/
     sizeof(VRPyAdjacencyGraph),             /*tp_basicsize*/
     0,                         /*tp_itemsize*/
@@ -48,7 +47,7 @@ template<> PyTypeObject VRPyBaseT<OSG::VRAdjacencyGraph>::type = {
 PyMethodDef VRPyAdjacencyGraph::methods[] = {
     {"setGeometry", (PyCFunction)VRPyAdjacencyGraph::setGeometry, METH_VARARGS, "Set the geometry to set up the graph - setGeometry( geo )" },
     {"computeNeighbors", (PyCFunction)VRPyAdjacencyGraph::computeNeighbors, METH_NOARGS, "Compute the vertex neighbors list - computeNeighbors()" },
-    {"computeTriLoockup", (PyCFunction)VRPyAdjacencyGraph::computeTriLoockup, METH_NOARGS, "Compute the triangle loockup table - computeTriLoockup()" },
+    {"computeTriLoockup", (PyCFunction)VRPyAdjacencyGraph::computeTriLookup, METH_NOARGS, "Compute the triangle loockup table - computeTriLoockup()" },
     {"computeCurvatures", (PyCFunction)VRPyAdjacencyGraph::computeCurvatures, METH_VARARGS, "Compute the vertex curvatures list - computeCurvatures( int range )" },
     {"getNeighbors", (PyCFunction)VRPyAdjacencyGraph::getNeighbors, METH_VARARGS, "Return the neighbor indices to index i - [int] getNeighbors(int i, int range)" },
     {"getCurvature", (PyCFunction)VRPyAdjacencyGraph::getCurvature, METH_VARARGS, "Return the mesh curvature at index i - float getCurvature(int i)" },
@@ -67,8 +66,8 @@ PyObject* VRPyAdjacencyGraph::computeNeighbors(VRPyAdjacencyGraph* self) {
     Py_RETURN_TRUE;
 }
 
-PyObject* VRPyAdjacencyGraph::computeTriLoockup(VRPyAdjacencyGraph* self) {
-    self->objPtr->compTriLoockup();
+PyObject* VRPyAdjacencyGraph::computeTriLookup(VRPyAdjacencyGraph* self) {
+    self->objPtr->compTriLookup();
     Py_RETURN_TRUE;
 }
 
@@ -85,7 +84,7 @@ PyObject* VRPyAdjacencyGraph::getNeighbors(VRPyAdjacencyGraph* self, PyObject* a
     if (! PyArg_ParseTuple(args, "i|i:getNeighbors", &i, &r)) return NULL;
     auto v = self->objPtr->getNeighbors(i,r);
     PyObject* res = PyList_New(v.size());
-    for (unsigned int i=0; i<v.size(); i++) PyList_SetItem(res, i, PyInt_FromLong(v[i]));
+    for (unsigned int i=0; i<v.size(); i++) PyList_SetItem(res, i, PyLong_FromLong(v[i]));
     return res;
 }
 

@@ -2,20 +2,19 @@
 #define VRPOLYGONSELECTION_H_INCLUDED
 
 #include "core/math/OSGMathFwd.h"
+#include "core/tools/selection/VRSelectionFwd.h"
 #include <string>
 #include "VRSelection.h"
-#include "core/math/partitioning/frustum.h"
-#include "core/math/pose.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
 class VRPolygonSelection : public VRSelection {
     private:
-        Pose origin;
-        Frustum selection;
-        Frustum convex_hull;
-        vector<Frustum> convex_decomposition;
+        PosePtr origin;
+        FrustumPtr selection;
+        FrustumPtr convex_hull;
+        vector<FrustumPtr> convex_decomposition;
         bool closed = false;
         VRGeometryPtr shape;
 
@@ -23,22 +22,22 @@ class VRPolygonSelection : public VRSelection {
         bool objSelected(VRGeometryPtr geo) override;
         bool partialSelected(VRGeometryPtr geo) override;
 
-        void updateShape(Frustum f);
+        void updateShape(FrustumPtr f);
 
     public:
         VRPolygonSelection();
         void clear();
 
-        static shared_ptr<VRPolygonSelection> create();
+        static VRPolygonSelectionPtr create();
 
-        void setOrigin(Pose orig);
+        void setOrigin(PosePtr orig);
         void addEdge(Vec3d dir);
         void close(VRObjectPtr world);
 
         bool isClosed();
         VRGeometryPtr getShape();
 
-        Frustum getSelectionFrustum();
+        FrustumPtr getSelectionFrustum();
 };
 
 OSG_END_NAMESPACE;

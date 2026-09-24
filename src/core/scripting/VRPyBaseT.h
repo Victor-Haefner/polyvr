@@ -8,8 +8,7 @@
 
 #define newPyType( X, Y, NEWfkt ) \
 template<> PyTypeObject VRPyBaseT< X >::type = { \
-    PyObject_HEAD_INIT(NULL) \
-    0, \
+    PyVarObject_HEAD_INIT(NULL, 0) \
     "VR." #Y, \
     sizeof( VRPy ## Y ),0, \
     (destructor)dealloc, \
@@ -91,9 +90,9 @@ bool VRPyBaseT<T>::check(PyObject* o) {
 
 template <typename T, typename R>
 R VRPyBase::execPyCall(PyObject* pyFkt, PyObject* pArgs, T t) {
+    VRPyGilGuard gilGuard;
     R r;
     if (pyFkt == 0) return r;
-    PyGILState_STATE gstate = PyGILState_Ensure();
     if (PyErr_Occurred() != NULL) PyErr_Print();
 
     PyTuple_SetItem(pArgs, pySize(pArgs)-1, VRPyTypeCaster::cast(t));
@@ -102,7 +101,6 @@ R VRPyBase::execPyCall(PyObject* pyFkt, PyObject* pArgs, T t) {
     //Py_XDECREF(pArgs); Py_DecRef(pyFkt); // TODO!!
 
     if (PyErr_Occurred() != NULL) PyErr_Print();
-    PyGILState_Release(gstate);
 
     toValue(res, r);
     return r;
@@ -110,9 +108,9 @@ R VRPyBase::execPyCall(PyObject* pyFkt, PyObject* pArgs, T t) {
 
 template <typename T1, typename T2, typename R>
 R VRPyBase::execPyCall2(PyObject* pyFkt, PyObject* pArgs, T1 t1, T2 t2) {
+    VRPyGilGuard gilGuard;
     R r;
     if (pyFkt == 0) return r;
-    PyGILState_STATE gstate = PyGILState_Ensure();
     if (PyErr_Occurred() != NULL) PyErr_Print();
 
     PyTuple_SetItem(pArgs, pySize(pArgs)-2, VRPyTypeCaster::cast(t1));
@@ -122,7 +120,6 @@ R VRPyBase::execPyCall2(PyObject* pyFkt, PyObject* pArgs, T1 t1, T2 t2) {
     //Py_XDECREF(pArgs); Py_DecRef(pyFkt); // TODO!!
 
     if (PyErr_Occurred() != NULL) PyErr_Print();
-    PyGILState_Release(gstate);
 
     toValue(res, r);
     return r;
@@ -130,34 +127,23 @@ R VRPyBase::execPyCall2(PyObject* pyFkt, PyObject* pArgs, T1 t1, T2 t2) {
 
 template <typename T>
 void VRPyBase::execPyCallVoid(PyObject* pyFkt, PyObject* pArgs, T t) {
+    VRPyGilGuard gilGuard;
     if (pyFkt == 0) return;
-    PyGILState_STATE gstate = PyGILState_Ensure();
+
+    if (!PyCallable_Check(pyFkt)) {
+        fprintf(stderr, "pyFkt is not callable!\n");
+        PyErr_Print();
+    }
+
     if (PyErr_Occurred() != NULL) PyErr_Print();
 
     PyTuple_SetItem(pArgs, pySize(pArgs)-1, VRPyTypeCaster::cast(t));
-    PyObject_CallObject(pyFkt, pArgs);
+    PyObject* result = PyObject_CallObject(pyFkt, pArgs);
 
-    //Py_XDECREF(pArgs); Py_DecRef(pyFkt); // TODO!!
+    if (result) Py_DECREF(result);
+    else PyErr_Print();
 
     if (PyErr_Occurred() != NULL) PyErr_Print();
-    PyGILState_Release(gstate);
-}
-
-template <typename T, typename R>
-VRFunction<T, R>* VRPyBase::parseCallback(PyObject* args) {
-	PyObject* pyFkt = 0;
-	PyObject* pArgs = 0;
-    if (pySize(args) == 1) if (! PyArg_ParseTuple(args, "O", &pyFkt)) return 0;
-    if (pySize(args) == 2) if (! PyArg_ParseTuple(args, "OO", &pyFkt, &pArgs)) return 0;
-	if (pyFkt == 0) return 0;
-    Py_IncRef(pyFkt);
-    addPyCallback(pyFkt);
-
-    if (pArgs == 0) pArgs = PyTuple_New(0);
-    else if (string(pArgs->ob_type->tp_name) == "list") pArgs = PyList_AsTuple(pArgs);
-    _PyTuple_Resize(&pArgs, pySize(pArgs)+1);
-
-    return new VRFunction<T, R>( "pyExecCall", bind(VRPyBase::execPyCall<T, R>, pyFkt, pArgs, std::placeholders::_1) );
 }
 
 template <class T, class t>
@@ -178,8 +164,17 @@ bool VRPyBase::pyListToVector(PyObject* o, T& vec) {
 }
 
 template<class T>
+void initCppMembers(VRPyBaseT<T>* self) {
+    if (!self) return;
+    self->obj = nullptr;
+    new (&self->objPtr) std::shared_ptr<T>();
+    self->owner = true;
+}
+
+template<class T>
 PyObject* VRPyBaseT<T>::fromObject(T obj) {
-    VRPyBaseT<T> *self = (VRPyBaseT<T> *)allocatePyObject(typeRef, VRPyBaseT<T>::typeBases);
+    VRPyBaseT<T>* self = (VRPyBaseT<T> *)allocatePyObject(typeRef, VRPyBaseT<T>::typeBases);
+    initCppMembers(self);
     if (self == NULL) Py_RETURN_NONE;
     T* optr = new T(obj);
     self->objPtr = std::shared_ptr<T>( optr );
@@ -190,6 +185,7 @@ PyObject* VRPyBaseT<T>::fromObject(T obj) {
 template<class T>
 PyObject* VRPyBaseT<T>::fromPtr(T* obj) {
     VRPyBaseT<T> *self = (VRPyBaseT<T> *)allocatePyObject(typeRef, VRPyBaseT<T>::typeBases);
+    initCppMembers(self);
     if (self == NULL) Py_RETURN_NONE;
     self->obj = obj;
     self->owner = false;
@@ -204,6 +200,7 @@ PyObject* VRPyBaseT<T>::fromSharedPtr(std::shared_ptr<T> obj) {
         Py_RETURN_NONE;
     }
     VRPyBaseT<T> *self = (VRPyBaseT<T> *)allocatePyObject(typeRef, VRPyBaseT<T>::typeBases);
+    initCppMembers(self);
     if (self == NULL) {
         cout << "VRPyBase::fromSharedPtr for type " << typeName<T>(&obj) << " failed because of failed type alloc" << endl;
         Py_RETURN_NONE;
@@ -237,6 +234,7 @@ bool VRPyBaseT<T>::parse(PyObject *args, std::shared_ptr<T>* obj) {
 template<class T>
 PyObject* VRPyBaseT<T>::allocPtr(PyTypeObject* type, std::shared_ptr<T> t) {
     VRPyBaseT<T>* self = (VRPyBaseT<T> *)allocatePyObject(type, VRPyBaseT<T>::typeBases);
+    initCppMembers(self);
     if (self != NULL) {
         self->owner = true;
         self->objPtr = t;
@@ -282,7 +280,8 @@ void VRPyBaseT<T>::dealloc(VRPyBaseT<T>* self) {
     //cout << "VRPyBaseT<T>::dealloc " << self << " " << self->obj << " " << self->objPtr << " " << typeRef->tp_name << endl;
     //if (self->owner && self->obj != 0) delete self->obj; // TOCHECK
     if (self->objPtr) self->objPtr = 0;
-    self->ob_type->tp_free((PyObject*)self);
+    self->objPtr.~shared_ptr<T>();
+    Py_TYPE(self)->tp_free((PyObject*)self);
 }
 
 template<class T>

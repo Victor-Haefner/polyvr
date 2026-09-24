@@ -22,27 +22,8 @@ void ImConsole::push(string data, string style, string mark) {
     auto cursor = console.GetCursorPosition();
     changed = 2;
     console.SetCursorPosition(console.GetEndCoordinates());
+    //cout << "ImConsole::push " << data << ", S: " << style << ", M: " << mark << endl;
     console.InsertText(data.c_str(), style, mark);
-    //console.ScrollBottom();
-
-    // TODO: reimplement error mark/style
-
-    //cout << " - - - - - - - ImConsoles::pushConsole " << ID << "  '" << data << "'  " << style << "  " << mark << endl;
-    /*auto dataV = splitString(data, '\n');
-
-    for (int i=0; i<dataV.size(); i++) {
-        int c0 = 0;
-        if (lines.size() > 0) c0 = lines[lines.size()-1].size();
-        int L = dataV[i].size();
-
-        //if (i == 0 && lines.size() > 0) lines[lines.size()-1] += dataV[i];
-        //else lines.push_back(dataV[i]);
-
-        if (mark.size() > 0)  attributes[lines.size()-1].marks.push_back({mark, c0, L});
-        if (style.size() > 0) attributes[lines.size()-1].styles.push_back({style, c0, L});
-    }*/
-
-    //if (data[data.size()-1] == '\n') lines.push_back("");
 }
 
 void ImConsole::render() {
@@ -68,65 +49,6 @@ void ImConsole::render() {
 
         console.Render(wID.c_str());
 
-		/*ImGui::BeginChild(wID.c_str());
-		ImGui::PushStyleColor(ImGuiCol_FrameBg, IM_COL32(0,0,0,0));
-		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0,0));
-		ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 0);
-		ImGui::PushStyleVar(ImGuiStyleVar_ItemInnerSpacing, ImVec2(0,0));
-		ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0,0));
-
-        size_t i = 0;
-		for (auto& l : lines) {
-            string lID = wID + toString(i);
-
-            bool colorized = false;
-            if (attributes.count(i)) {
-                auto& a = attributes[i];
-                ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(255,0,0,255));
-                colorized = true;
-            }
-
-            // TODO: test with InputTextMultiline
-            ImGui::SetNextItemWidth(-1);
-            ImGui::InputText(lID.c_str(), &l[0], l.size(), ImGuiInputTextFlags_ReadOnly);
-            if (colorized) ImGui::PopStyleColor();
-
-            if (ImGui::IsItemHovered() && ImGui::IsMouseReleased( 0 ) ) {
-                if (attributes.count(i)) {
-                    float mP = ImGui::GetMousePos().x;
-                    float r0 = ImGui::GetItemRectMin().x;
-                    ImFont* font = ImGui::GetFont();
-
-                    int cM = 0; // mouse column clicked in editor
-                    float pC = r0;
-                    for (int j=0; j<l.size(); j++) {
-                        auto& c = l[j];
-                        pC += font->CalcTextSizeA(font->FontSize, FLT_MAX, 0, &c, &c + 1).x;
-                        if (mP < pC) {
-                            cM = j;
-                            break;
-                        }
-                    }
-
-                    auto& a = attributes[i];
-                    for (auto& mark : a.marks) {
-                        if (cM > mark.c0 && cM < mark.c0+mark.L) {
-                            uiSignal("clickConsole", {{"mark",mark.value}, {"ID",ID}});
-                            break;
-                        }
-                    }
-                }
-            }
-            i++;
-		}
-
-		ImGui::PopStyleVar();
-		ImGui::PopStyleVar();
-		ImGui::PopStyleVar();
-		ImGui::PopStyleVar();
-		ImGui::PopStyleColor();
-		ImGui::EndChild();*/
-
         ImGui::EndTabItem();
     }
 
@@ -140,75 +62,153 @@ void ImConsole::clear() {
     changed = 0;
 }
 
+void ImConsole::setTheme(string theme) {
+    if (theme == "light") console.SetPalette( TextEditor::GetLightPalette() );
+    if (theme == "dark")  console.SetPalette( TextEditor::GetDarkPalette() );
+}
+
 void ImConsole::pause(bool b) {
     paused = b;
 }
 
+
+ImAIConsole::ImAIConsole(string ID) : ImConsole(ID), queryInput("queryInput", "", "", ImGuiInputTextFlags_None) {
+    auto mgr = OSG::VRGuiSignals::get();
+    mgr->addCallback("ai_console_append", [&](OSG::VRGuiSignals::Options o) { append(o["msg"], o["role"]); return true; }, true );
+}
+
+void ImAIConsole::append(string m, string r) {
+    string style;
+
+    if (r == "user") style = "console92";
+    if (r == "llm")  style = "console94";
+    cout << " - - ImAIConsole::append " << r << ", " << style << endl;
+
+    push(m, style, "");
+    push("\n\n", "", "");
+}
+
+void ImAIConsole::render() {
+    if (!sensitive) ImGui::BeginDisabled();
+
+    static int tick = 0; tick = (tick+1)%100;
+    bool colorLabel = (!tabOpen && changed && tick < 50);
+
+    if (colorLabel) ImGui::PushStyleColor(ImGuiCol_Text, color);
+    tabOpen = ImGui::BeginTabItem(name.c_str());
+    if (colorLabel) ImGui::PopStyleColor();
+
+    if (tabOpen) {
+        if (ImGui::Button(("Config##"+ID).c_str())) uiSignal("ui_toggle_popup", {{"name","aiConfig"},{"title","AI Config"}, {"width","400"}, {"height","300"}});
+        ImGui::SameLine();
+        if (ImGui::Button(("Connect##"+ID).c_str())) uiSignal("on_ai_console_connect", {{"ID",ID}, {"query",queryInput.value}});
+        ImGui::SameLine();
+        if (ImGui::Button(("Run##"+ID).c_str())) uiSignal("on_ai_console_run", {{"ID",ID}, {"query",queryInput.value}});
+        ImGui::SameLine();
+        queryInput.render(-1);
+
+        auto r = ImGui::GetContentRegionAvail();
+        string wID = "##"+name+"_text";
+
+        if (changed > 0 && !paused) {
+            //size_t N = countLines(data);
+            size_t N = console.GetTotalLines();
+            ImGui::SetNextWindowScroll(ImVec2(-1, N * ImGui::GetTextLineHeight()));
+            changed -= 1; // for some reason needs two passes
+        }
+
+        console.Render(wID.c_str());
+
+        ImGui::EndTabItem();
+    }
+
+    if (!sensitive) ImGui::EndDisabled();
+}
+
+
 ImConsoles::ImConsoles() : ImWidget("Consoles") {
     auto mgr = OSG::VRGuiSignals::get();
     mgr->addCallback("newConsole", [&](OSG::VRGuiSignals::Options o){ newConsole(o["ID"], o["color"]); return true; } );
+    mgr->addCallback("newAIConsole", [&](OSG::VRGuiSignals::Options o){ newAIConsole(o["ID"], o["color"]); return true; } );
     mgr->addCallback("setupConsole", [&](OSG::VRGuiSignals::Options o){ setupConsole(o["ID"], o["name"]); return true; } );
     mgr->addCallback("pushConsole", [&](OSG::VRGuiSignals::Options o){ pushConsole(o["ID"], o["string"], o["style"], o["mark"]); return true; } );
-    mgr->addCallback("clearConsole", [&](OSG::VRGuiSignals::Options o){ consoles[o["ID"]].clear(); return true; } );
-    mgr->addCallback("clearConsoles", [&](OSG::VRGuiSignals::Options o){ for (auto& c : consoles) c.second.clear(); return true; } );
-    mgr->addCallback("pauseConsoles", [&](OSG::VRGuiSignals::Options o){ paused = toBool(o["state"]); for (auto& c : consoles) c.second.pause(paused); return true; } );
+    mgr->addCallback("clearConsole", [&](OSG::VRGuiSignals::Options o){ clearConsole(o["ID"]); return true; } );
+    mgr->addCallback("clearConsoles", [&](OSG::VRGuiSignals::Options o){ for (auto& c : consoles) c.second->clear(); return true; } );
+    mgr->addCallback("pauseConsoles", [&](OSG::VRGuiSignals::Options o){ paused = toBool(o["state"]); for (auto& c : consoles) c.second->pause(paused); return true; } );
     mgr->addCallback("setConsoleLabelColor", [&](OSG::VRGuiSignals::Options o){ setConsoleLabelColor(o["ID"], o["color"]); return true; } );
+    mgr->addCallback("ui_set_palette", [&](OSG::VRGuiSignals::Options o){ setConsolesPalette(o["theme"]); return true; } );
+}
+
+void ImConsoles::setConsolesPalette(string t) {
+    theme = t;
+    for (auto& c : consoles) c.second->setTheme(theme);
 }
 
 void ImConsoles::setConsoleLabelColor(string ID, string color) {
     auto c = colorFromString(color);
-    consoles[ID].color = ImGui::GetColorU32(c);
+    consoles[ID]->color = ImGui::GetColorU32(c);
 }
 
 void ImConsoles::newConsole(string ID, string color) {
-    consoles[ID] = ImConsole(ID);
+    consoles[ID] = ImConsolePtr( new ImConsole(ID) );
+    consoles[ID]->setTheme(theme);
+    consolesOrder.push_back(ID);
+    setConsoleLabelColor(ID, color);
+}
+
+void ImConsoles::newAIConsole(string ID, string color) {
+    consoles[ID] = ImAIConsolePtr( new ImAIConsole(ID) );
+    consoles[ID]->setTheme(theme);
     consolesOrder.push_back(ID);
     setConsoleLabelColor(ID, color);
 }
 
 void ImConsoles::clearConsole(string ID) {
     if (!consoles.count(ID)) return;
-    consoles[ID].clear();
+    consoles[ID]->clear();
 }
 
 void ImConsoles::setupConsole(string ID, string name) {
     if (!consoles.count(ID)) return;
-    consoles[ID].name = name;
+    consoles[ID]->name = name;
 }
 
 void ImConsoles::pushConsole(string ID, string data, string style, string mark) {
     if (data.size() == 0) return;
     if (!consoles.count(ID)) return;
-    consoles[ID].push(data, style, mark);
+    consoles[ID]->push(data, style, mark);
 }
 
-ImViewControls::ImViewControls() {
+ImViewControls::ImViewControls() : cameras("currentCamera", "Camera:") {
     auto mgr = OSG::VRGuiSignals::get();
     mgr->addCallback("ui_clear_navigations", [&](OSG::VRGuiSignals::Options o){ navigations.clear(); return true; } );
     mgr->addCallback("ui_add_navigation", [&](OSG::VRGuiSignals::Options o){ navigations[o["nav"]] = toBool(o["active"]); return true; } );
 
-    mgr->addCallback("ui_clear_cameras", [&](OSG::VRGuiSignals::Options o){ cameras.clear(); return true; } );
-    mgr->addCallback("ui_add_camera", [&](OSG::VRGuiSignals::Options o){ cameras.push_back(o["cam"]); return true; } );
-    mgr->addCallback("ui_set_active_camera", [&](OSG::VRGuiSignals::Options o){ current_camera = toInt(o["camIndex"]); return true; } );
+    mgr->addCallback("ui_clear_cameras", [&](OSG::VRGuiSignals::Options o){ cameras.clearList(); return true; } );
+    mgr->addCallback("ui_add_camera", [&](OSG::VRGuiSignals::Options o){ cameras.appendList(o["cam"]); return true; } );
+    mgr->addCallback("ui_set_active_camera", [&](OSG::VRGuiSignals::Options o){ cameras.set(o["cam"]); return true; } );
 }
 
 void ImViewControls::render() {
     ImGuiIO& io = ImGui::GetIO();
-    vector<const char*> tmpCameras(cameras.size(), 0);
+    /*vector<const char*> tmpCameras(cameras.size(), 0);
     for (int i=0; i<cameras.size(); i++) tmpCameras[i] = cameras[i].c_str();
     ImGui::SameLine();
-    ImGui::Text("Camera:");
+    ImGui::TextUnformatted("Camera:");
     ImGui::SameLine();
     ImGui::SetNextItemWidth(150*io.FontGlobalScale);
     if (ImGui::Combo("##Cameras", &current_camera, &tmpCameras[0], tmpCameras.size())) {
         uiSignal("view_switch_camera", {{"cam",cameras[current_camera]}});
-    }
+    }*/
+    ImGui::SameLine();
+    if (cameras.render(150*io.FontGlobalScale)) cameras.signal("view_switch_camera");
 
     ImGui::SameLine();
     ImGui::SetNextItemWidth(150*io.FontGlobalScale);
     if (ImGui::BeginCombo("##Navigations", "Navigations", 0)) {
         for (auto& n : navigations) {
-            if (ImGui::Checkbox(n.first.c_str(), &n.second)) uiSignal("view_toggle_navigation", {{"nav",n.first}, {"state",toString(n.second)}});
+            string ID = n.first + "##navOpt";
+            if (ImGui::Checkbox(ID.c_str(), &n.second)) uiSignal("view_toggle_navigation", {{"nav",n.first}, {"state",toString(n.second)}});
         }
         ImGui::EndCombo();
     }
@@ -229,27 +229,12 @@ void ImViewControls::render() {
 
     ImGui::SameLine();
     if (ImGui::Button("Fullscreen")) uiSignal("toolbar_fullscreen");
-
-
-    ImGui::SameLine(ImGui::GetWindowWidth()-250*io.FontGlobalScale);
-    ImGui::SetNextItemWidth(100*io.FontGlobalScale);
-    if (ImGui::BeginCombo("##UItheme", "Theme", 0)) {
-        if (ImGui::RadioButton("Light", &uiTheme, 0)) { ImGui::StyleColorsLight(); uiStoreParameter("uiTheme", "light"); }
-        if (ImGui::RadioButton("Dark", &uiTheme, 1)) { ImGui::StyleColorsDark(); uiStoreParameter("uiTheme", "dark"); }
-        if (ImGui::RadioButton("Classic", &uiTheme, 2)) { ImGui::StyleColorsClassic(); uiStoreParameter("uiTheme", "classic"); }
-        ImGui::EndCombo();
-    }
     ImGui::SameLine();
-
-    ImGui::Text("Font size:"); ImGui::SameLine();
-    //io.FontAllowUserScaling = false;
-    if (ImGui::Button("+##FontSizeP")) { io.FontGlobalScale += 0.1; uiStoreParameter("fontScale", toString(io.FontGlobalScale)); } ImGui::SameLine();
-    if (ImGui::Button("-##FontSizeM")) { io.FontGlobalScale -= 0.1; uiStoreParameter("fontScale", toString(io.FontGlobalScale)); } ImGui::SameLine();
-    if (ImGui::Button("1##FontSize1")) { io.FontGlobalScale = 1.0;  uiStoreParameter("fontScale", toString(io.FontGlobalScale)); }
-
+    if (ImGui::Button("See All")) uiSignal("toolbar_seeall");
 }
 
 void ImConsoles::begin() {
+    ImGuiIO& io = ImGui::GetIO();
     viewControls.render();
     ImGui::Separator();
 
@@ -257,11 +242,15 @@ void ImConsoles::begin() {
     ImGui::BeginChild("highlightFrame", ImVec2(0,0), true);
 
     if (ImGui::BeginTabBar("ConsolesTabBar", ImGuiTabBarFlags_None)) {
-        for (auto& c : consolesOrder) consoles[c].render();
+        for (auto& c : consolesOrder) consoles[c]->render();
         ImGui::EndTabBar();
     }
 
-    ImGui::SameLine(ImGui::GetWindowWidth()-280);
+    ImGui::SameLine();
+    double x1 = ImGui::GetCursorPosX();
+    double x2 = ImGui::GetWindowWidth()-130*io.FontGlobalScale;
+
+    ImGui::SameLine(max(x1,x2));
     if (ImGui::Button("clear")) uiSignal("clearConsoles");
 
     ImGui::SameLine();

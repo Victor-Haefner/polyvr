@@ -14,11 +14,108 @@
 
 using namespace OSG;
 
+
+Table::Table() {}
+Table::~Table() {}
+
+TablePtr Table::create() { return TablePtr( new Table() ); }
+TablePtr Table::ptr() { return static_pointer_cast<Table>(shared_from_this()); }
+
+vector<string> Table::getCol(string name) {
+    if (!data.count(name)) return {};
+    vector<string>& c = data[name];
+    size_t N = c.size();
+    for (size_t i = N; i<rowsN; i++) c.push_back("");
+    return c;
+}
+
+vector<string> Table::getRow(size_t row) {
+    if (row >= rowsN) return {};
+    vector<string> r;
+    for ( auto& n : colOrder ) {
+        vector<string>& c = data[n];
+        if (row < c.size()) r.push_back( c[row] );
+        else r.push_back("");
+    };
+    return r;
+}
+
+vector< vector<string> > Table::getRows() {
+    vector< vector<string> > rows;
+    for (size_t i=0; i<rowsN; i++) rows.push_back( getRow(i) );
+    return rows;
+}
+
+string Table::get(string name, size_t row) {
+    if (!data.count(name)) return "";
+    vector<string>& c = data[name];
+    if (row < c.size()) return data[name][row];
+    return "";
+}
+
+vector<string> Table::getColumns() {
+    return colOrder;
+}
+
+size_t Table::getNCols() { return colOrder.size(); }
+size_t Table::getNRows() { return rowsN; }
+
+
+void Table::addCol(string name) {
+    colOrder.push_back(name);
+    data[name] = {};
+}
+
+void Table::add(string name, string val) {
+    if (!data.count(name)) return;
+    vector<string>& c = data[name];
+    c.push_back(val);
+    rowsN = max(rowsN, c.size());
+}
+
+void Table::set(string name, size_t row, string val) {
+    if (!data.count(name)) return;
+    data[name][row] = val;
+}
+
+size_t Table::getColSize(string name) {
+    if (!data.count(name)) return 0;
+    return data[name].size();
+}
+
+
 VRSpreadsheet::VRSpreadsheet() {}
 VRSpreadsheet::~VRSpreadsheet() {}
 
 VRSpreadsheetPtr VRSpreadsheet::create() { return VRSpreadsheetPtr( new VRSpreadsheet() ); }
 VRSpreadsheetPtr VRSpreadsheet::ptr() { return static_pointer_cast<VRSpreadsheet>(shared_from_this()); }
+
+TablePtr VRSpreadsheet::asTable(string sheet) {
+    auto t = Table::create();
+    if (!sheets.count(sheet)) { cout << "Unknown sheet \"" << sheet << "\"" << endl; return t; }
+
+    Sheet& s = sheets[sheet];
+    if (s.NRows == 0 || s.NCols == 0) return t;
+
+    Row& cols = s.rows[0]; // expect column headers in first row
+
+    map<string, int> colIDs;
+    for (Cell& c : cols.cells) {
+        t->addCol(c.data);
+        colIDs[c.data] = c.col;
+    }
+
+    for (size_t i = 1; i<s.NRows; i++) {
+        Row& row = s.rows[i];
+        for (auto& ci : colIDs) {
+            Cell& c = row.cells[ci.second];
+            while (t->getColSize(ci.first)+1 < c.row) t->add(ci.first, ""); // fill column if necessary
+            t->add(ci.first, c.data);
+        }
+    }
+
+    return t;
+}
 
 void VRSpreadsheet::read(string path) {
     if (!exists(path)) {
@@ -36,23 +133,26 @@ void VRSpreadsheet::read(string path) {
     };
 
     if (ext == ".xlsx") {
-        Unzipper z(path);
-        auto entries = z.entries();
+        try {
+            Unzipper z(path, ".zip");
 
-        sheets.clear();
+            auto entries = z.entries();
 
-        string workbookData1 = extractZipEntry(z, "xl/workbook.xml");
-        string workbookData2 = extractZipEntry(z, "xl/_rels/workbook.xml.rels");
-        auto sheets = parseWorkbook(workbookData1, workbookData2);
+            sheets.clear();
 
-        string stringsData = extractZipEntry(z, "xl/sharedStrings.xml");
-        auto strings = parseStrings(stringsData);
+            string workbookData1 = extractZipEntry(z, "xl/workbook.xml");
+            string workbookData2 = extractZipEntry(z, "xl/_rels/workbook.xml.rels");
+            auto sheets = parseWorkbook(workbookData1, workbookData2);
 
-        for (auto s : sheets) {
-            string path = "xl/" + s.first;
-            string data = extractZipEntry(z, path);
-            addSheet(s.second, data, strings);
-        }
+            string stringsData = extractZipEntry(z, "xl/sharedStrings.xml");
+            auto strings = parseStrings(stringsData);
+
+            for (auto s : sheets) {
+                string path = "xl/" + s.first;
+                string data = extractZipEntry(z, path);
+                addSheet(s.second, data, strings);
+            }
+        } catch(exception& e) { cout << "VRSpreadsheet::read unzipper error: " << e.what() << endl; return; }
 
         return;
     }
@@ -91,9 +191,9 @@ void VRSpreadsheet::read(string path) {
 
                 // header
                 Row row;
-                for (int i=0;i<table->num_cols;i++) {
+                for (size_t i=0; i<table->num_cols; i++) {
                     MdbColumn* col = (MdbColumn*)g_ptr_array_index(table->columns,i);
-                    Cell C;
+                    Cell C(i, 0);
                     C.ID   = "";
                     C.type = "s";
                     C.data = col->name;
@@ -107,7 +207,7 @@ void VRSpreadsheet::read(string path) {
                 while(mdb_fetch_row(table)) {
                     Row row;
                     for (int i=0;i<table->num_cols;i++) {
-                        Cell C;
+                        Cell C(i, sheet.NRows);
                         C.ID   = "";
                         C.type = "s";
 
@@ -267,14 +367,16 @@ void VRSpreadsheet::addSheet(string& name, string& data, vector<string>& strings
 
     for (auto row : sdata->getChildren()) {
         Row R;
+        size_t ci = 0;
         for (auto col : row->getChildren()) {
-            Cell C;
+            Cell C(ci, sheet.NRows);
             C.ID   = col->getAttribute("r");
             C.type = col->getAttribute("t");
             auto V = col->getChild("v");
             C.data = V ? V->getText() : "";
             if (C.type == "s") C.data = strings[toInt(C.data)];
             R.cells.push_back(C);
+            ci++;
         }
         sheet.rows.push_back(R);
         sheet.NRows++;
@@ -344,7 +446,7 @@ void VRSpreadsheet::setCell(string sheet, size_t i, size_t j, string c) {
         sheets[sheet].rows.push_back(Row());
     }
     while (i >= sheets[sheet].rows[j].cells.size()) {
-        sheets[sheet].rows[j].cells.push_back(Cell());
+        sheets[sheet].rows[j].cells.push_back(Cell(i,j));
     }
     sheets[sheet].rows[j].cells[i].data = c;
 }

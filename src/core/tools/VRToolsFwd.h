@@ -11,6 +11,7 @@ ptrFwd(VRAnalyticGeometry);
 ptrFwd(VRClipPlane);
 ptrFwd(VRColorChooser);
 ptrFwd(VRMenu);
+ptrFctFwd( VRMenu, VRMenuPtr );
 ptrFwd(VRWaypoint);
 ptrFwd(VRMeasure);
 ptrFwd(VRTextureRenderer);
@@ -26,6 +27,9 @@ ptrFwd(VRRecorder);
 ptrFwd(VRPathtool);
 ptrFwd(VRSnappingEngine);
 ptrFwd(VRConstructionKit);
+ptrFwd(VRGizmo);
+ptrFwd(VRTimeline);
+ptrFwd(VRPlayer);
 
 }
 

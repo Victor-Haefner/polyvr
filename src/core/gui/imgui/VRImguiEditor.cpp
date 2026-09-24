@@ -4,14 +4,10 @@
 #include <iostream>
 #include <GL/glew.h>
 #include <GL/glut.h>
+#include <GL/freeglut_ext.h>
 
-#ifdef _WIN32
-#include <imgui_impl_glut.h>
-#include <imgui_impl_opengl3.h>
-#else
-#include <backends/imgui_impl_glut.h>
-#include <backends/imgui_impl_opengl3.h>
-#endif
+#include "backends/imgui_impl_glut.h"
+#include "backends/imgui_impl_opengl3.h"
 
 #include "core/gui/VRGuiSignals.h"
 #include "core/gui/VRGuiManager.h"
@@ -26,6 +22,18 @@
 #include "imFileDialog/ImGuiFileDialog.h"
 #include "../clipboard/clip.h"
 #include "../VRGuiManager.h"
+#include "core/utils/VRTimer.h"
+#include "core/setup/windows/glut/GlutWindow.h"
+
+
+
+bool doPrintKeyEvents2 = false;
+
+/*void checkKeysDownMap(string tag) {
+    ImGuiIO& io = ImGui::GetIO();
+    for (int i=0; i<512; i++) if (io.KeysDown[i]) cout << " AAAAAAAAAA " << i << " " << tag << endl;
+}*/
+
 
 void updateGlutCursor() {
     auto mc = ImGui::GetMouseCursor();
@@ -80,13 +88,16 @@ void ImSection::end() {
 }
 
 void ImSection::updateLayout(const Surface& newSize) {
+    auto& l = layout;
+
     //cout << " updateLayout " << newSize.y + newSize.height << "/800?   " << layout << ", parentSurface: " << parentSurface;
-    layout.left  = float(newSize.x - parentSurface.x) / parentSurface.width;
-    layout.right = float(newSize.x + newSize.width - parentSurface.x) / parentSurface.width;
-    layout.top    = 1.0 - float(newSize.y - parentSurface.y) / parentSurface.height;
-    layout.bottom = 1.0 - float(newSize.y + newSize.height - parentSurface.y) / parentSurface.height;
-    surface.compute(parentSurface, layout);
-    //cout << ", new size: " << newSize << " -> " << layout << endl;
+    l.left   = double(newSize.x - parentSurface.x) / parentSurface.width;
+    l.right  = double(newSize.x + newSize.width - parentSurface.x) / parentSurface.width;
+    l.top    = 1.0 - double(newSize.y - parentSurface.y) / parentSurface.height;
+    l.bottom = 1.0 - double(newSize.y + newSize.height - parentSurface.y) / parentSurface.height;
+    l.clamp();
+
+    surface.compute(parentSurface, l);
 }
 
 void ImSection::resize(const Surface& parent) {
@@ -161,14 +172,15 @@ ImConsolesSection::ImConsolesSection(ImRectangle r) : ImSection("Consoles", r) {
 }
 
 void ImToolbar::begin() {
+    ImGuiIO& io = ImGui::GetIO();
     ImSection::begin();
 
     if (ImGui::Button("New")) {
         string filters = "PolyVR Project (.pvr .pvc){.pvr,.pvc,.xml}";
         uiSignal("set_file_dialog_signal", {{"signal","ui_new_file"}});
         uiSignal("set_file_dialog_filter", {{"filter",filters}});
-        uiSignal("set_file_dialog_setup", {{"title","Choose File"}, {"dir","."}, {"file","myApp.pvr"}});
-        uiSignal("ui_toggle_popup", {{"name","file"}, {"width","600"}, {"height","500"}});
+        uiSignal("set_file_dialog_setup", {{"title","Choose File"}, {"dir","."}, {"file","myApp\.pvr"}});
+        uiSignal("ui_toggle_popup", {{"name","file"},{"title","Choose Filename"}, {"width","600"}, {"height","500"}});
     }
 
     ImGui::SameLine();
@@ -181,7 +193,7 @@ void ImToolbar::begin() {
         uiSignal("set_file_dialog_signal", {{"signal","ui_open_file"}});
         uiSignal("set_file_dialog_filter", {{"filter",filters}});
         uiSignal("set_file_dialog_setup", {{"title","Open File"}, {"dir","."}, {"file",""}});
-        uiSignal("ui_toggle_popup", {{"name","file"}, {"width","600"}, {"height","500"}});
+        uiSignal("ui_toggle_popup", {{"name","file"},{"title","Choose File"}, {"width","600"}, {"height","500"}});
     }
 
     ImGui::SameLine(); if (ImGui::Button("Save")) uiSignal("toolbar_save");
@@ -191,17 +203,43 @@ void ImToolbar::begin() {
         string filters = "PolyVR Project (.pvr .pvc){.pvr,.pvc,.xml}";
         uiSignal("set_file_dialog_signal", {{"signal","ui_saveas_file"}});
         uiSignal("set_file_dialog_filter", {{"filter",filters}});
-        uiSignal("set_file_dialog_setup", {{"title","Save as.."}, {"dir","."}, {"file","myApp.pvr"}});
-        uiSignal("ui_toggle_popup", {{"name","file"}, {"width","600"}, {"height","500"}});
+        uiSignal("set_file_dialog_setup", {{"title","Save As.."}, {"dir","."}, {"file","myApp.pvr"}});
+        uiSignal("ui_toggle_popup", {{"name","file"},{"title","Save As.."}, {"width","600"}, {"height","500"}});
     }
 
-    ImGui::SameLine(); if (ImGui::Button("Export")) uiSignal("toolbar_export");
     ImGui::SameLine(); if (ImGui::Button("Close")) uiSignal("toolbar_close");
     ImGui::SameLine(); if (ImGui::Button("Exit")) uiSignal("toolbar_exit");
-    ImGui::SameLine(); if (ImGui::Button("About")) uiSignal("ui_toggle_popup", {{"name","about"}, {"width","400"}, {"height","500"}});
-    ImGui::SameLine(); if (ImGui::Button("Profiler")) uiSignal("ui_toggle_popup", {{"name","profiler"}, {"width","600"}, {"height","500"}});
-    ImGui::SameLine(); if (ImGui::Button("Recorder")) uiSignal("ui_toggle_popup", {{"name","recorder"}, {"width","400"}, {"height","200"}});
+    ImGui::SameLine(); if (ImGui::Button("Profiler")) uiSignal("ui_toggle_popup", {{"name","profiler"},{"title","Profiler"}, {"width","600"}, {"height","500"}});
+    //ImGui::SameLine(); if (ImGui::Button("Recorder")) uiSignal("ui_toggle_popup", {{"name","recorder"},{"title","Recorder"}, {"width","400"}, {"height","200"}});
+    ImGui::SameLine(); if (ImGui::Button("Export")) uiSignal("ui_toggle_popup", {{"name","webExport"},{"title","Web export"}, {"width","400"}, {"height","300"}});
+    ImGui::SameLine(); if (ImGui::Button("About")) uiSignal("ui_toggle_popup", {{"name","about"},{"title","About"}, {"width","400"}, {"height","500"}});
     ImGui::SameLine(); if (ImGui::Checkbox("Fotomode", &fotomode)) uiSignal("ui_toggle_fotomode", {{"active",toString(fotomode)}});
+
+    ImGui::SameLine();
+    double x1 = ImGui::GetCursorPosX();
+    double x2 = ImGui::GetWindowWidth()-310*io.FontGlobalScale;
+
+    ImGui::SameLine(max(x1,x2));
+
+    ImGui::TextUnformatted("Theme:"); ImGui::SameLine();
+
+    if (ImGui::RadioButton("Light", &uiTheme, 0)) {
+        ImGui::StyleColorsLight();
+        uiSignal("ui_set_palette", {{"theme","light"}});
+        uiStoreParameter("uiTheme", "light");
+    } ImGui::SameLine();
+
+    if (ImGui::RadioButton("Dark" , &uiTheme, 1)) {
+        ImGui::StyleColorsDark();
+        uiSignal("ui_set_palette", {{"theme","dark"}});
+        uiStoreParameter("uiTheme", "dark");
+    } ImGui::SameLine();
+
+    ImGui::TextUnformatted("Font size:"); ImGui::SameLine();
+    //io.FontAllowUserScaling = false;
+    if (ImGui::Button("+##FontSizeP")) { io.FontGlobalScale += 0.1; uiStoreParameter("fontScale", toString(io.FontGlobalScale)); } ImGui::SameLine();
+    if (ImGui::Button("-##FontSizeM")) { io.FontGlobalScale -= 0.1; uiStoreParameter("fontScale", toString(io.FontGlobalScale)); } ImGui::SameLine();
+    if (ImGui::Button("1##FontSize1")) { io.FontGlobalScale  = 1.0; uiStoreParameter("fontScale", toString(io.FontGlobalScale)); }
 }
 
 void ImConsolesSection::begin() {
@@ -230,6 +268,8 @@ void VRImguiEditor::resizePopup(const Surface& parent) {
     profDialog.resize(parent);
     importDialog.resize(parent);
     templateDialog.resize(parent);
+    webExportDialog.resize(parent);
+    AIConfigDialog.resize(parent);
     ImGui_ImplGLUT_ReshapeFunc(parent.width, parent.height);
 }
 
@@ -250,22 +290,183 @@ void handleMouseWheel(int b, int s) {
     }
 }
 
-void handleSpecial(int b, int s) { // TODO: for some reason the imgui state is inverted..
-    //cout << "handleSpecial " << b << ", " << s << endl;
+#if IMGUI_VERSION_NUM > 18600
+static ImGuiKey ImGui_ImplGLUT_KeyToImGuiKey(int key) {
+    switch (key) {
+        case '\t':                      return ImGuiKey_Tab;
+        case 256 + GLUT_KEY_LEFT:       return ImGuiKey_LeftArrow;
+        case 256 + GLUT_KEY_RIGHT:      return ImGuiKey_RightArrow;
+        case 256 + GLUT_KEY_UP:         return ImGuiKey_UpArrow;
+        case 256 + GLUT_KEY_DOWN:       return ImGuiKey_DownArrow;
+        case 256 + GLUT_KEY_PAGE_UP:    return ImGuiKey_PageUp;
+        case 256 + GLUT_KEY_PAGE_DOWN:  return ImGuiKey_PageDown;
+        case 256 + GLUT_KEY_HOME:       return ImGuiKey_Home;
+        case 256 + GLUT_KEY_END:        return ImGuiKey_End;
+        case 256 + GLUT_KEY_INSERT:     return ImGuiKey_Insert;
+        case 127:                       return ImGuiKey_Delete;
+        case 8:                         return ImGuiKey_Backspace;
+        case ' ':                       return ImGuiKey_Space;
+        case 13:                        return ImGuiKey_Enter;
+        case 27:                        return ImGuiKey_Escape;
+        case 39:                        return ImGuiKey_Apostrophe;
+        case 44:                        return ImGuiKey_Comma;
+        case 45:                        return ImGuiKey_Minus;
+        case 46:                        return ImGuiKey_Period;
+        case 47:                        return ImGuiKey_Slash;
+        case 59:                        return ImGuiKey_Semicolon;
+        case 61:                        return ImGuiKey_Equal;
+        case 91:                        return ImGuiKey_LeftBracket;
+        case 92:                        return ImGuiKey_Backslash;
+        case 93:                        return ImGuiKey_RightBracket;
+        case 96:                        return ImGuiKey_GraveAccent;
+        //case 0:                         return ImGuiKey_CapsLock;
+        //case 0:                         return ImGuiKey_ScrollLock;
+        case 256 + 0x006D:              return ImGuiKey_NumLock;
+        //case 0:                         return ImGuiKey_PrintScreen;
+        //case 0:                         return ImGuiKey_Pause;
+        //case '0':                       return ImGuiKey_Keypad0;
+        //case '1':                       return ImGuiKey_Keypad1;
+        //case '2':                       return ImGuiKey_Keypad2;
+        //case '3':                       return ImGuiKey_Keypad3;
+        //case '4':                       return ImGuiKey_Keypad4;
+        //case '5':                       return ImGuiKey_Keypad5;
+        //case '6':                       return ImGuiKey_Keypad6;
+        //case '7':                       return ImGuiKey_Keypad7;
+        //case '8':                       return ImGuiKey_Keypad8;
+        //case '9':                       return ImGuiKey_Keypad9;
+        //case 46:                        return ImGuiKey_KeypadDecimal;
+        //case 47:                        return ImGuiKey_KeypadDivide;
+        case 42:                        return ImGuiKey_KeypadMultiply;
+        //case 45:                        return ImGuiKey_KeypadSubtract;
+        case 43:                        return ImGuiKey_KeypadAdd;
+        //case 13:                        return ImGuiKey_KeypadEnter;
+        //case 0:                         return ImGuiKey_KeypadEqual;
+        case 256 + 0x0072:              return ImGuiKey_LeftCtrl;
+        case 256 + 0x0070:              return ImGuiKey_LeftShift;
+        case 256 + 0x0074:              return ImGuiKey_LeftAlt;
+        //case 0:                         return ImGuiKey_LeftSuper;
+        case 256 + 0x0073:              return ImGuiKey_RightCtrl;
+        case 256 + 0x0071:              return ImGuiKey_RightShift;
+        case 256 + 0x0075:              return ImGuiKey_RightAlt;
+        //case 0:                         return ImGuiKey_RightSuper;
+        //case 0:                         return ImGuiKey_Menu;
+        case '0':                       return ImGuiKey_0;
+        case '1':                       return ImGuiKey_1;
+        case '2':                       return ImGuiKey_2;
+        case '3':                       return ImGuiKey_3;
+        case '4':                       return ImGuiKey_4;
+        case '5':                       return ImGuiKey_5;
+        case '6':                       return ImGuiKey_6;
+        case '7':                       return ImGuiKey_7;
+        case '8':                       return ImGuiKey_8;
+        case '9':                       return ImGuiKey_9;
+        case 'A': case 'a':             return ImGuiKey_A;
+        case 'B': case 'b':             return ImGuiKey_B;
+        case 'C': case 'c':             return ImGuiKey_C;
+        case 'D': case 'd':             return ImGuiKey_D;
+        case 'E': case 'e':             return ImGuiKey_E;
+        case 'F': case 'f':             return ImGuiKey_F;
+        case 'G': case 'g':             return ImGuiKey_G;
+        case 'H': case 'h':             return ImGuiKey_H;
+        case 'I': case 'i':             return ImGuiKey_I;
+        case 'J': case 'j':             return ImGuiKey_J;
+        case 'K': case 'k':             return ImGuiKey_K;
+        case 'L': case 'l':             return ImGuiKey_L;
+        case 'M': case 'm':             return ImGuiKey_M;
+        case 'N': case 'n':             return ImGuiKey_N;
+        case 'O': case 'o':             return ImGuiKey_O;
+        case 'P': case 'p':             return ImGuiKey_P;
+        case 'Q': case 'q':             return ImGuiKey_Q;
+        case 'R': case 'r':             return ImGuiKey_R;
+        case 'S': case 's':             return ImGuiKey_S;
+        case 'T': case 't':             return ImGuiKey_T;
+        case 'U': case 'u':             return ImGuiKey_U;
+        case 'V': case 'v':             return ImGuiKey_V;
+        case 'W': case 'w':             return ImGuiKey_W;
+        case 'X': case 'x':             return ImGuiKey_X;
+        case 'Y': case 'y':             return ImGuiKey_Y;
+        case 'Z': case 'z':             return ImGuiKey_Z;
+        case 256 + GLUT_KEY_F1:         return ImGuiKey_F1;
+        case 256 + GLUT_KEY_F2:         return ImGuiKey_F2;
+        case 256 + GLUT_KEY_F3:         return ImGuiKey_F3;
+        case 256 + GLUT_KEY_F4:         return ImGuiKey_F4;
+        case 256 + GLUT_KEY_F5:         return ImGuiKey_F5;
+        case 256 + GLUT_KEY_F6:         return ImGuiKey_F6;
+        case 256 + GLUT_KEY_F7:         return ImGuiKey_F7;
+        case 256 + GLUT_KEY_F8:         return ImGuiKey_F8;
+        case 256 + GLUT_KEY_F9:         return ImGuiKey_F9;
+        case 256 + GLUT_KEY_F10:        return ImGuiKey_F10;
+        case 256 + GLUT_KEY_F11:        return ImGuiKey_F11;
+        case 256 + GLUT_KEY_F12:        return ImGuiKey_F12;
+        default:                        return ImGuiKey_None;
+    }
+}
+#endif
+
+static void ImGui_ImplGLUT_UpdateKeyModifiers() {
     ImGuiIO& io = ImGui::GetIO();
-    if (b == 112) io.KeyShift = s;
-    if (b == 113) io.KeyShift = s;
-    if (b == 114) io.KeyCtrl = s;
-    if (b == 115) io.KeyCtrl = s;
-    if (b == 116) io.KeyAlt = s;
+    int mods = glutGetModifiers();
+    bool shiftDown = ((mods & GLUT_ACTIVE_SHIFT) != 0);
+    bool ctrlDown = ((mods & GLUT_ACTIVE_CTRL) != 0);
+    bool altDown = ((mods & GLUT_ACTIVE_ALT) != 0);
+#if IMGUI_VERSION_NUM > 18600
+    io.AddKeyEvent(ImGuiMod_Shift, shiftDown);
+    io.AddKeyEvent(ImGuiMod_Ctrl,  ctrlDown);
+    io.AddKeyEvent(ImGuiMod_Alt,   altDown);
+#else
+	io.KeyShift = shiftDown;
+	io.KeyCtrl  = ctrlDown;
+	io.KeyAlt   = altDown;
+#endif
 }
 
-void checkSpecials() {
+static void ImGui_ImplGLUT_AddKeyEvent(ImGuiKey key, bool down, int nKey) {
+    uiSignal("uiKeyEvent", {{"state", toString(down)}, {"key", toString(int(key))}});
     ImGuiIO& io = ImGui::GetIO();
-    auto mods = glutGetModifiers();
-    io.KeyCtrl = (mods & GLUT_ACTIVE_CTRL);
-    io.KeyShift = (mods & GLUT_ACTIVE_SHIFT);
-    io.KeyAlt = (mods & GLUT_ACTIVE_ALT);
+#if IMGUI_VERSION_NUM > 18600
+    io.AddKeyEvent(key, down);
+    if (key == ImGuiKey_LeftShift || key == ImGuiKey_RightShift) io.AddKeyEvent(ImGuiMod_Shift, down);
+    if (key == ImGuiKey_LeftCtrl || key == ImGuiKey_RightCtrl) io.AddKeyEvent(ImGuiMod_Ctrl, down);
+    if (key == ImGuiKey_LeftAlt || key == ImGuiKey_RightAlt) io.AddKeyEvent(ImGuiMod_Alt, down);
+#else
+    if (nKey < IM_ARRAYSIZE(io.KeysDown)) io.KeysDown[nKey] = down;
+    if (nKey == 256+GLUT_KEY_SHIFT_L || nKey == 256+GLUT_KEY_SHIFT_R) io.KeyShift = down;
+    if (nKey == 256+GLUT_KEY_CTRL_L || nKey == 256+GLUT_KEY_CTRL_R) io.KeyCtrl = down;
+    if (nKey == 256+GLUT_KEY_ALT_L || nKey == 256+GLUT_KEY_ALT_R) io.KeyAlt = down;
+#endif
+}
+
+static void ImGui_ImplGLUT_ReleaseAllKeys() {
+    //cout << "release all keys!!" << endl;
+    ImGuiIO& io = ImGui::GetIO();
+
+    for (int k = 0; k < ImGuiKey_COUNT; k++) {
+        ImGuiKey key = (ImGuiKey)k;
+
+        /*if (io.KeysDown[k]) {
+            ImGui_ImplGLUT_AddKeyEvent(key, false, 0);  // release it
+        }*/
+    }
+
+#if IMGUI_VERSION_NUM > 18600
+    io.AddKeyEvent(ImGuiMod_Shift, false);
+    io.AddKeyEvent(ImGuiMod_Ctrl,  false);
+    io.AddKeyEvent(ImGuiMod_Alt,   false);
+    io.AddKeyEvent(ImGuiMod_Super, false);
+#else
+	io.KeyShift = false;
+	io.KeyCtrl  = false;
+	io.KeyAlt   = false;
+#endif
+}
+
+static void printMods(const char *label) {
+    int m = glutGetModifiers();
+    printf("%s  mods: %s%s%s\n",
+           label,
+           (m & GLUT_ACTIVE_SHIFT) ? "Shift " : "",
+           (m & GLUT_ACTIVE_CTRL)  ? "Ctrl "  : "",
+           (m & GLUT_ACTIVE_ALT)   ? "Alt "   : "");
 }
 
 struct Utf8Handler {
@@ -294,110 +495,188 @@ struct Utf8Handler {
     }
 };
 
-void ImGui_ImplGLUT_KeyboardUpFunc_main(unsigned char c, int x, int y) {
-    static Utf8Handler utf8Handler;
-    if (utf8Handler.checkByte(c)) {
-        if (utf8Handler.active) return;
+void ImGui_ImplGLUT_Keyboard_main(int k, bool d, bool s, int x, int y) {
+    ImGui::SetCurrentContext(mainContext);
+
+    if (doPrintKeyEvents2) {
+        cout << "imgui main keyboard";
+        if (s) cout << " special";
+        if (d) cout << " down";
+        cout << " " << k << endl;
+        //printMods("main mods");
     }
 
-    //printf("imgui key up %i\n", c);
-    uiSignal("relayedImguiKeySignal", {{"key",toString((int)c)},{"state",toString(0)}});
-    ImGui::SetCurrentContext(mainContext);
-    ImGui_ImplGLUT_KeyboardUpFunc(c,x,y);
-}
-
-void ImGui_ImplGLUT_KeyboardFunc_main(unsigned char c, int x, int y) {
-    static Utf8Handler utf8Handler;
-    if (utf8Handler.checkByte(c)) {
-        if (!utf8Handler.active) {
-            //printf("imgui utf8 key down %s\n", utf8Handler.str().c_str());
+    if (s) {
+        if (!d) {
+            uiSignal("relayedImguiSpecialKeySignal", {{"key",toString(k)},{"state",toString(0)}});
             ImGui::SetCurrentContext(mainContext);
-            checkSpecials();
-            ImGui::GetIO().AddInputCharactersUTF8( utf8Handler.str().c_str() );
         }
-        return;
+
+#if IMGUI_VERSION_NUM > 18600
+        ImGuiKey imgui_key = ImGui_ImplGLUT_KeyToImGuiKey(k + 256);
+#else
+        ImGuiKey imgui_key = 0;
+#endif
+        ImGui_ImplGLUT_AddKeyEvent(imgui_key, d, k + 256);
+    } else {
+        unsigned char c = k;
+        ImGui_ImplGLUT_UpdateKeyModifiers();
+        int mods = glutGetModifiers();
+
+        if (d) {
+            ImGuiIO& io = ImGui::GetIO();
+
+            if ((mods & GLUT_ACTIVE_CTRL) && c <= 26) c = c + 'a' - 1; // convert ^A..^Z back to a..z
+
+            static Utf8Handler utf8Handler;
+            if (utf8Handler.checkByte(c)) {
+                if (!utf8Handler.active) {
+                    //printf("imgui utf8 key down %s\n", utf8Handler.str().c_str());
+                    ImGui::SetCurrentContext(mainContext);
+                    io.AddInputCharactersUTF8( utf8Handler.str().c_str() );
+                }
+                return;
+            }
+
+            //printf("imgui key down %i\n", c);
+            if (c == 27) uiSignal("ui_close_popup");
+            ImGui::SetCurrentContext(mainContext);
+
+#if IMGUI_VERSION_NUM > 18600
+            if (c >= 32) io.AddInputCharacter((unsigned int)c);
+            ImGuiKey key = ImGui_ImplGLUT_KeyToImGuiKey(c);
+            ImGui_ImplGLUT_AddKeyEvent(key, true, c);
+#else
+            ImGui_ImplGLUT_KeyboardFunc(c,x,y);
+#endif
+        } else {
+            if (mods & GLUT_ACTIVE_CTRL) {
+                // first release potential Enter/Backspace/Tab etc..
+#if IMGUI_VERSION_NUM > 18600
+                ImGuiKey key = ImGui_ImplGLUT_KeyToImGuiKey(c);
+                ImGui_ImplGLUT_AddKeyEvent(key, false, c);
+#else
+                ImGui_ImplGLUT_KeyboardUpFunc(c,x,y);
+#endif
+
+                //if (c <= 26) cout << " ------ " << (int)c << " -> " << (int)(c + 'a' - 1) << endl;
+                if (c <= 26) c = c + 'a' - 1; // convert ^A..^Z back to a..z
+            }
+
+            static Utf8Handler utf8Handler;
+            if (utf8Handler.checkByte(c)) {
+                if (utf8Handler.active) return;
+            }
+
+            uiSignal("relayedImguiKeySignal", {{"key",toString((int)c)},{"state",toString(0)}});
+            ImGui::SetCurrentContext(mainContext);
+#if IMGUI_VERSION_NUM > 18600
+            ImGuiKey key = ImGui_ImplGLUT_KeyToImGuiKey(c);
+            ImGui_ImplGLUT_AddKeyEvent(key, false, c);
+#else
+            ImGui_ImplGLUT_KeyboardUpFunc(c,x,y);
+#endif
+        }
     }
-
-    //printf("imgui key down %i\n", c);
-    if (c == 27) uiSignal("ui_close_popup");
-    ImGui::SetCurrentContext(mainContext);
-    checkSpecials();
-    ImGui_ImplGLUT_KeyboardFunc(c, x, y);
 }
 
-void ImGui_ImplGLUT_SpecialUpFunc_main(int k, int x, int y) {
-    //printf("imgui special up %i\n", k);
-    uiSignal("relayedImguiSpecialKeySignal", {{"key",toString(k)},{"state",toString(0)}});
-    ImGui::SetCurrentContext(mainContext);
-    ImGui_ImplGLUT_SpecialUpFunc(k,x,y);
-    handleSpecial(k,0);
-}
-
-void ImGui_ImplGLUT_SpecialFunc_main(int k, int x, int y) { ImGui::SetCurrentContext(mainContext); checkSpecials(); ImGui_ImplGLUT_SpecialFunc(k,x,y); handleSpecial(k,1); }
 void ImGui_ImplGLUT_ReshapeFunc_main(int x, int y) { ImGui::SetCurrentContext(mainContext); ImGui_ImplGLUT_ReshapeFunc(x,y); }
-void ImGui_ImplGLUT_MotionFunc_main(int x, int y) { updateGlutCursor(); ImGui::SetCurrentContext(mainContext); ImGui_ImplGLUT_MotionFunc(x, y); }
+void ImGui_ImplGLUT_MotionFunc_main(int x, int y) { ImGui::SetCurrentContext(mainContext); updateGlutCursor(); ImGui_ImplGLUT_MotionFunc(x, y); }
+
 void ImGui_ImplGLUT_MouseFunc_main(int b, int s, int x, int y) {
     ImGui::SetCurrentContext(mainContext);
-    checkSpecials();
     ImGui_ImplGLUT_MouseFunc(b,s,x,y);
     handleMouseWheel(b,s);
     uiSignal("uiGrabFocus", {});
 }
 
-void ImGui_ImplGLUT_KeyboardFunc_popup(unsigned char c, int x, int y) {
-    static Utf8Handler utf8Handler;
-    if (utf8Handler.checkByte(c)) {
-        if (!utf8Handler.active) {
-            //printf("imgui utf8 key down %s\n", utf8Handler.str().c_str());
+void ImGui_ImplGLUT_Keyboard_popup(int k, bool d, bool s, int x, int y) {
+    ImGui::SetCurrentContext(popupContext);
+
+    if (s) {
+#if IMGUI_VERSION_NUM > 18600
+        ImGuiKey imgui_key = ImGui_ImplGLUT_KeyToImGuiKey(k + 256);
+        ImGui_ImplGLUT_AddKeyEvent(imgui_key, d, k + 256);
+#else
+        ImGui_ImplGLUT_AddKeyEvent(0, d, k + 256);
+#endif
+    } else {
+        unsigned char c = k;
+        ImGui_ImplGLUT_UpdateKeyModifiers();
+        int mods = glutGetModifiers();
+        if ((mods & GLUT_ACTIVE_CTRL) && c <= 26) c = c + 'a' - 1; // convert ^A..^Z back to a..z
+        static Utf8Handler utf8Handler;
+
+        if (d) {
+            ImGuiIO& io = ImGui::GetIO();
+
+            if (utf8Handler.checkByte(c)) {
+                if (!utf8Handler.active) {
+                    //printf("imgui utf8 key down %s\n", utf8Handler.str().c_str());
+                    ImGui::SetCurrentContext(popupContext);
+                    io.AddInputCharactersUTF8( utf8Handler.str().c_str() );
+                }
+                return;
+            }
+
+            if (c == 27) uiSignal("ui_close_popup");
             ImGui::SetCurrentContext(popupContext);
-            checkSpecials();
-            ImGui::GetIO().AddInputCharactersUTF8( utf8Handler.str().c_str() );
+
+#if IMGUI_VERSION_NUM > 18600
+            if (c >= 32) io.AddInputCharacter((unsigned int)c);
+            ImGuiKey key = ImGui_ImplGLUT_KeyToImGuiKey(c);
+            ImGui_ImplGLUT_AddKeyEvent(key, true, c);
+#else
+            ImGui_ImplGLUT_KeyboardFunc(c,x,y);
+#endif
+        } else {
+            if (utf8Handler.checkByte(c)) {
+                if (utf8Handler.active) return;
+            }
+
+            ImGui::SetCurrentContext(popupContext);
+#if IMGUI_VERSION_NUM > 18600
+            ImGuiKey key = ImGui_ImplGLUT_KeyToImGuiKey(c);
+            ImGui_ImplGLUT_AddKeyEvent(key, false, c);
+#else
+            ImGui_ImplGLUT_KeyboardUpFunc(c,x,y);
+#endif
         }
-        return;
     }
-
-    if (c == 27) uiSignal("ui_close_popup");
-    ImGui::SetCurrentContext(popupContext);
-    checkSpecials();
-    ImGui_ImplGLUT_KeyboardFunc(c, x, y);
 }
 
-void ImGui_ImplGLUT_KeyboardUpFunc_popup(unsigned char c, int x, int y) {
-    static Utf8Handler utf8Handler;
-    if (utf8Handler.checkByte(c)) {
-        if (utf8Handler.active) return;
-    }
-
+void ImGui_ImplGLUT_MouseFunc_popup(int b, int s, int x, int y) {
     ImGui::SetCurrentContext(popupContext);
-    ImGui_ImplGLUT_KeyboardUpFunc(c,x,y);
+    ImGui_ImplGLUT_MouseFunc(b,s,x,y);
+    handleMouseWheel(b,s);
 }
 
-void ImGui_ImplGLUT_SpecialFunc_popup(int k, int x, int y) { ImGui::SetCurrentContext(popupContext); checkSpecials(); ImGui_ImplGLUT_SpecialFunc(k,x,y); handleSpecial(k,1); }
-void ImGui_ImplGLUT_SpecialUpFunc_popup(int k, int x, int y) { ImGui::SetCurrentContext(popupContext); ImGui_ImplGLUT_SpecialUpFunc(k,x,y); handleSpecial(k,0); }
-void ImGui_ImplGLUT_MouseFunc_popup(int b, int s, int x, int y) { ImGui::SetCurrentContext(popupContext); checkSpecials(); ImGui_ImplGLUT_MouseFunc(b,s,x,y); handleMouseWheel(b,s); }
 //void ImGui_ImplGLUT_ReshapeFunc_popup(int x, int y) { ImGui::SetCurrentContext(popupContext); ImGui_ImplGLUT_ReshapeFunc(x,y); }
-void ImGui_ImplGLUT_MotionFunc_popup(int x, int y) { updateGlutCursor(); ImGui::SetCurrentContext(popupContext); ImGui_ImplGLUT_MotionFunc(x,y); }
+
+void ImGui_ImplGLUT_MotionFunc_popup(int x, int y) {
+    updateGlutCursor();
+    ImGui::SetCurrentContext(popupContext);
+    ImGui_ImplGLUT_MotionFunc(x,y);
+}
 
 void ImGui_ImplGLUT_InstallFuncs_main() {
-    glutReshapeFunc(ImGui_ImplGLUT_ReshapeFunc_main);
-    glutMotionFunc(ImGui_ImplGLUT_MotionFunc_main);
-    glutPassiveMotionFunc(ImGui_ImplGLUT_MotionFunc_main);
-    glutMouseFunc(ImGui_ImplGLUT_MouseFunc_main);
-    glutKeyboardFunc(ImGui_ImplGLUT_KeyboardFunc_main);
-    glutKeyboardUpFunc(ImGui_ImplGLUT_KeyboardUpFunc_main);
-    glutSpecialFunc(ImGui_ImplGLUT_SpecialFunc_main);
-    glutSpecialUpFunc(ImGui_ImplGLUT_SpecialUpFunc_main);
+    auto win = OSG::GlutWindow::getActive();
+    if (!win) return;
+
+    win->setReshapeCb( [&](int x, int y){ ImGui_ImplGLUT_ReshapeFunc_main(x,y); } );
+    win->setMouseCb( [&](int k, int d, int x, int y){ ImGui_ImplGLUT_MouseFunc_main(k, d, x, y); } );
+    win->setMotionCb( [&](int x, int y, bool p) { ImGui_ImplGLUT_MotionFunc_main(x, y); });
+    win->setKeyboardCb( [&](int k, bool d, bool s, int x, int y) { ImGui_ImplGLUT_Keyboard_main(k, d, s, x, y); } );
 }
 
 void ImGui_ImplGLUT_InstallFuncs_popup() {
-    //glutReshapeFunc(ImGui_ImplGLUT_ReshapeFunc_popup);
-    glutMotionFunc(ImGui_ImplGLUT_MotionFunc_popup);
-    glutPassiveMotionFunc(ImGui_ImplGLUT_MotionFunc_popup);
-    glutMouseFunc(ImGui_ImplGLUT_MouseFunc_popup);
-    glutKeyboardFunc(ImGui_ImplGLUT_KeyboardFunc_popup);
-    glutKeyboardUpFunc(ImGui_ImplGLUT_KeyboardUpFunc_popup);
-    glutSpecialFunc(ImGui_ImplGLUT_SpecialFunc_popup);
-    glutSpecialUpFunc(ImGui_ImplGLUT_SpecialUpFunc_popup);
+    auto win = OSG::GlutWindow::getActive();
+    if (!win) return;
+
+    //win->setReshapeCb( [&](int x, int y){ ImGui_ImplGLUT_ReshapeFunc_popup(x,y); } );
+    win->setMouseCb( [&](int k, int d, int x, int y){ ImGui_ImplGLUT_MouseFunc_popup(k, d, x, y); } );
+    win->setMotionCb( [&](int x, int y, bool p) { ImGui_ImplGLUT_MotionFunc_popup(x, y); });
+    win->setKeyboardCb( [&](int k, bool d, bool s, int x, int y) { ImGui_ImplGLUT_Keyboard_popup(k, d, s, x, y); } );
 }
 
 void IMGUISetClipboardText(void* user_data, const char* text) {
@@ -416,20 +695,47 @@ const char* IMGUIGetClipboardText(void* user_data) {
     else return 0;
 }
 
-void VRImguiEditor::handleRelayedKey(int key, int state, bool special) {
-    if (special) {
-        if (state) ImGui_ImplGLUT_SpecialFunc_main(key, 0, 0);
-        else ImGui_ImplGLUT_SpecialUpFunc_main(key, 0, 0);
-    } else {
-        unsigned char c = key;
-        if (state) ImGui_ImplGLUT_KeyboardFunc_main(c, 0, 0);
-        else ImGui_ImplGLUT_KeyboardUpFunc_main(c, 0, 0);
+VRImguiEditor::VRImguiEditor() {}
+VRImguiEditor::~VRImguiEditor() {}
+
+void VRImguiEditor::onLooseFocus() {
+    ImGui::SetCurrentContext(mainContext);
+    ImGui_ImplGLUT_ReleaseAllKeys();
+}
+
+void VRImguiEditor::onAnyKey() {
+    focusTimer->start();
+}
+
+void VRImguiEditor::pollFocusSafety() {
+    double delta = focusTimer->stop();
+    if (delta > 2000) {
+        ImGui_ImplGLUT_ReleaseAllKeys();
+        focusTimer->start();
     }
 }
 
+void VRImguiEditor::handleRelayedKey(int key, int state, bool special) {
+    ImGui_ImplGLUT_Keyboard_main(key, state, special, 0, 0);
+}
+
 void VRImguiEditor::init(Signal signal, ResizeSignal resizeSignal) {
+    double hSlider = 0.3;
+    double vSlider = 0.3;
+    toValue(uiGetParameter("hPanelSlider", "0.3"), hSlider);
+    toValue(uiGetParameter("vPanelSlider", "0.3"), vSlider);
+    hSlider = clamp(hSlider, 0.05, 0.95);
+    vSlider = clamp(vSlider, 0.05, 0.95);
+
+    sidePanel.layout.right = hSlider;
+    consoles.layout.left = hSlider;
+    glArea.layout.left = hSlider;
+    consoles.layout.top = vSlider;
+    glArea.layout.bottom = vSlider;
+
     this->signal = signal;
     this->resizeSignal = resizeSignal;
+    focusTimer = OSG::VRTimer::create();
 
     cout << "Imgui::init" << endl;
     IMGUI_CHECKVERSION();
@@ -456,19 +762,22 @@ void VRImguiEditor::init(Signal signal, ResizeSignal resizeSignal) {
     profDialog.signal = signal;
     importDialog.signal = signal;
     templateDialog.signal = signal;
+    webExportDialog.signal = signal;
+    AIConfigDialog.signal = signal;
 
     auto mgr = OSG::VRGuiSignals::get();
     mgr->addCallback("relayedKeySignal", [&](OSG::VRGuiSignals::Options o){ handleRelayedKey(toInt(o["key"]), toInt(o["state"]), false); return true; } );
     mgr->addCallback("relayedSpecialKeySignal", [&](OSG::VRGuiSignals::Options o){ handleRelayedKey(toInt(o["key"]), toInt(o["state"]), true); return true; } );
+    mgr->addCallback("setWindowFocus", [&](OSG::VRGuiSignals::Options o){ if (o["winName"] != "uiMain") onLooseFocus(); return true; } );
+    mgr->addCallback("uiKeyEvent", [&](OSG::VRGuiSignals::Options o){ onAnyKey(); return true; } );
 
-    uiInitStore();
     toValue(uiGetParameter("fontScale", "1.0"), io.FontGlobalScale);
 
     string theme;
     toValue(uiGetParameter("uiTheme", "dark"), theme);
-    if (theme == "dark") ImGui::StyleColorsDark();
-    if (theme == "light") ImGui::StyleColorsLight();
-    if (theme == "classic") ImGui::StyleColorsClassic();
+    if (theme == "light") { ImGui::StyleColorsLight(); toolbar.uiTheme = 0; }
+    if (theme == "dark")  { ImGui::StyleColorsDark();  toolbar.uiTheme = 1; }
+    uiSignal("ui_set_palette", {{"theme",theme}});
 }
 
 void VRImguiEditor::initPopup() {
@@ -479,6 +788,7 @@ void VRImguiEditor::initPopup() {
 
     ImGui_ImplGLUT_Init();
     ImGui_ImplGLUT_InstallFuncs_popup();
+
 
     ImGuiIO& io = ImGui::GetIO();
     io.SetClipboardTextFn = IMGUISetClipboardText;
@@ -517,6 +827,7 @@ void VRImguiEditor::resolveResize(const string& name, const ResizeEvent& resizer
         glArea.layout.top = sidePanel.layout.top;
         glArea.resize(glArea.parentSurface);
         resizeSignal("glAreaResize", glArea.surface);
+        uiStoreParameter("hPanelSlider", toString(sidePanel.layout.right));
     }
 
     if (name == "Consoles") {
@@ -527,6 +838,8 @@ void VRImguiEditor::resolveResize(const string& name, const ResizeEvent& resizer
         glArea.layout.bottom = consoles.layout.top;
         glArea.resize(glArea.parentSurface);
         resizeSignal("glAreaResize", glArea.surface);
+        uiStoreParameter("hPanelSlider", toString(consoles.layout.left));
+        uiStoreParameter("vPanelSlider", toString(consoles.layout.top));
     }
 }
 
@@ -537,9 +850,14 @@ void VRImguiEditor::render() {
     ImGuiIO& io = ImGui::GetIO();
     if (io.DisplaySize.x < 0 || io.DisplaySize.y < 0) return;
 
+    pollFocusSafety();
+
     // Start the Dear ImGui frame
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGLUT_NewFrame();
+#if IMGUI_VERSION_NUM > 18940
+    ImGui::NewFrame();
+#endif
     ImGui::GetStyle().TouchExtraPadding = ImVec2(3, 3); // make DnD of section borders easier
 
 
@@ -571,6 +889,9 @@ void VRImguiEditor::renderPopup(OSG::VRGuiSignals::Options options) {
     // Start the Dear ImGui frame
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGLUT_NewFrame();
+#if IMGUI_VERSION_NUM > 18940
+    ImGui::NewFrame();
+#endif
 
     string name = options["name"];
     if (name == "notify") notifyDialog.render();
@@ -582,6 +903,8 @@ void VRImguiEditor::renderPopup(OSG::VRGuiSignals::Options options) {
     if (name == "profiler") profDialog.render();
     if (name == "import") importDialog.render();
     if (name == "template") templateDialog.render();
+    if (name == "webExport") webExportDialog.render();
+    if (name == "aiConfig") AIConfigDialog.render();
 
     // Rendering
     ImGui::Render();
@@ -603,11 +926,11 @@ ImAboutDialog::ImAboutDialog() : ImDialog("about") {
 
 void centeredText(string txt) {
     ImGuiStyle& style = ImGui::GetStyle();
-    float size = strWidth(txt);
+    float size = uiStrWidth(txt);
     float avail = ImGui::GetContentRegionAvail().x;
     float off = (avail - size) * 0.5;
     if (off > 0.0f) ImGui::SetCursorPosX(ImGui::GetCursorPosX() + off);
-    ImGui::Text(txt.c_str());
+    ImGui::TextUnformatted(txt.c_str());
 }
 
 void ImAboutDialog::begin() {
@@ -636,10 +959,63 @@ ImSearchDialog::ImSearchDialog() : ImDialog("search")
 }
 
 ImRecorderDialog::ImRecorderDialog() : ImDialog("recorder") {}
-ImImportDialog::ImImportDialog() : ImDialog("import") {}
+
+ImImportDialog::ImImportDialog() : ImDialog("import"), tree1("fileScriptsTree"), tree2("externScriptsTree") {
+    auto mgr = OSG::VRGuiSignals::get();
+    mgr->addCallback("import_scripts_clear", [&](OSG::VRGuiSignals::Options o){ clear(); return true; } );
+    mgr->addCallback("on_import_scripts_tree_append", [&](OSG::VRGuiSignals::Options o){ add(o["ID"], o["label"], o["parent"], toBool(o["local"])); return true; } );
+    mgr->addCallback("treeview_select", [&](OSG::VRGuiSignals::Options o) {
+            if(o["treeview"] == "fileScriptsTree")   selectScript(o["selection"], true );
+            if(o["treeview"] == "externScriptsTree") selectScript(o["selection"], false);
+            return true;
+        } );
+}
+
+void ImImportDialog::selectScript(string nodes, bool local) {
+    //cout << " select scripts to import " << nodes << endl;
+    if (local) selected1 = nodes;
+    else selected2 = nodes;
+}
+
+void ImImportDialog::clear() {
+    tree1.clear();
+    tree2.clear();
+}
+
+void ImImportDialog::add(string ID, string label, string parent, bool local) {
+    if (local) tree1.add(ID, label, 0, parent);
+    else       tree2.add(ID, label, 0, parent);
+}
+
+ImWebExportDialog::ImWebExportDialog() : ImDialog("webExport") {}
 
 ImProfDialog::ImProfDialog() : ImDialog("profiler") {
     profiler = ImWidgetPtr(new ImProfiler());
+}
+
+ImAIConfigDialog::ImAIConfigDialog() :
+        ImDialog("AIConfig")
+        , keyInput("keyInput", "Open API key (env var):", "", ImGuiInputTextFlags_EnterReturnsTrue)
+        , modelCombo("aiComboModel", "Model:")
+        , effortCombo("aiComboEffort", "Effort:") {
+
+    modelCombo.setList(vector<string>({"gpt-5-nano", "gpt-5.6-luna"}));
+    effortCombo.setList({"fast", "normal", "deep"});
+    modelCombo.set( uiGetParameter("aiModel", "gpt-5-nano") );
+    effortCombo.set( uiGetParameter("aiEffort", "fast") );
+    keyInput.value = uiGetParameter("aiKeyEnvVar", "OPENAI_KEY");
+
+    auto mgr = OSG::VRGuiSignals::get();
+    mgr->addCallback("ai_diag_get_config", [&](OSG::VRGuiSignals::Options o) { sendConfig(); return true; } );
+    sendConfig();
+}
+
+void ImAIConfigDialog::sendConfig() {
+    map<string, string> params;
+    params["key"] = keyInput.value;
+    params["model"] = modelCombo.get();
+    params["effort"] = effortCombo.get();
+    uiSignal("current_ai_config", params);
 }
 
 ImTemplateDialog::ImTemplateDialog() : ImDialog("template"), filter("templSearch", "Search:", ""), tree("templTree") {
@@ -678,9 +1054,20 @@ ImFileDialog::ImFileDialog() : ImDialog("file"), scaleInput("geoScale", "Scale:"
     mgr->addCallback("set_file_dialog_signal", [&](OSG::VRGuiSignals::Options o){ sig = o["signal"]; return true; } );
     mgr->addCallback("set_file_dialog_setup", [&](OSG::VRGuiSignals::Options o){ title = o["title"]; startDir = o["dir"]; startFile = o["file"]; return true; } );
     mgr->addCallback("set_file_dialog_options", [&](OSG::VRGuiSignals::Options o){ options = o["options"]; return true; } );
+    mgr->addCallback("ui_close_popup", [&](OSG::VRGuiSignals::Options o) { close(); return true; });
 }
 
 IGFD::FileDialog* imGuiFileDialogInstance = 0;
+
+
+void ImFileDialog::close() {
+    if (imGuiFileDialogInstance) {
+        imGuiFileDialogInstance->Close();
+        delete imGuiFileDialogInstance;
+        imGuiFileDialogInstance = 0;
+        internalOpened = false;
+    }
+}
 
 void ImFileDialog::begin() {
     if (!internalOpened) {
@@ -702,10 +1089,7 @@ void ImFileDialog::begin() {
             signal(sig, {{"fileName",fileName},{"filePath",filePath}});
         }
 
-        imGuiFileDialogInstance->Close();
-        delete imGuiFileDialogInstance;
         signal("ui_close_popup", {});
-        internalOpened = false;
     }
 
     if (doGeoOpts) {
@@ -766,7 +1150,7 @@ void ImDocDialog::begin() {
     // doc text
     //ImGui::BeginChild("docText", region2, false, flags);
     ImGui::InputTextMultiline("docText", &text[0], text.size(), region2, ImGuiInputTextFlags_ReadOnly);
-    //ImGui::Text(text.c_str());
+    //ImGui::TextUnformatted(text.c_str());
     //ImGui::EndChild();
 
 }
@@ -797,7 +1181,7 @@ void ImNotifyDialog::open(string msg1, string msg2, string sig) {
     message1 = msg1;
     message2 = msg2;
     signal = sig;
-    uiSignal("ui_toggle_popup", {{"name","notify"}, {"width","400"}, {"height","200"}});
+    uiSignal("ui_toggle_popup", {{"name","notify"},{"title","Notification"}, {"width","400"}, {"height","200"}});
 }
 
 void ImNotifyDialog::begin() {
@@ -818,9 +1202,78 @@ void ImProfDialog::begin() {
     profiler->render();
 }
 
+void ImAIConfigDialog::begin() {
+    ImSection::begin();
+    centeredText("AI Config");
+
+    if (keyInput.render(-1)) {
+        uiSignal("ai_dialog_setKey", {{"key",keyInput.value}});
+        uiStoreParameter("aiKeyEnvVar", keyInput.value);
+    }
+
+    ImGui::SameLine();
+    ImGui::Text(keyStatus.c_str());
+
+    ImGuiIO& io = ImGui::GetIO();
+
+    if (modelCombo.render(150*io.FontGlobalScale)) {
+        modelCombo.signal("ai_model_switch");
+        uiStoreParameter("aiModel", modelCombo.get());
+    }
+
+    if (effortCombo.render(150*io.FontGlobalScale)) {
+        effortCombo.signal("ai_effort_switch");
+        uiStoreParameter("aiEffort", effortCombo.get());
+    }
+
+    if (ImGui::Button("Close")) uiSignal("ui_close_popup");
+}
+
 void ImImportDialog::begin() {
     ImSection::begin();
-    centeredText("Import");
+    centeredText("Import scripts from other projects");
+
+    auto region1 = ImGui::GetContentRegionAvail();
+    auto region2 = ImGui::GetContentRegionAvail();
+    region1.x *= 0.5;
+    region2.x *= 0.5;
+    region1.y -= 50;
+    region2.y -= 50;
+
+    ImGui::BeginChild("fileScriptsTree", region1, false, ImGuiWindowFlags_None);
+    centeredText("File scripts");
+    tree1.render();
+    ImGui::EndChild();
+
+    ImGui::SameLine();
+    ImGui::BeginChild("externScriptsTree", region2, false, ImGuiWindowFlags_None);
+    centeredText("External scripts");
+    tree2.render();
+    ImGui::EndChild();
+
+
+    if (ImGui::Button("Ok")) {
+        uiSignal("ui_close_popup");
+        uiSignal("import_external_script", {{"IDs", selected2}});
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("Cancel")) uiSignal("ui_close_popup");
+}
+
+void ImWebExportDialog::begin() {
+    ImSection::begin();
+    centeredText("Export this project as webassembly");
+
+    bool withXR = false;
+    bool withEditor = false;
+    bool runBrowser = false;
+
+    if (ImGui::Button("Ok")) {
+        uiSignal("ui_close_popup");
+        uiSignal("web_export", {{"withXR", toString(withXR)}, {"withEditor", toString(withEditor)}, {"runBrowser", toString(runBrowser)}});
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("Cancel")) uiSignal("ui_close_popup");
 }
 
 void ImTemplateDialog::begin() {

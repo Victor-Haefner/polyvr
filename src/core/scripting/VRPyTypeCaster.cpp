@@ -23,6 +23,7 @@
 #include "addons/WorldGenerator/VRPyWorldGenerator.h"
 
 #include "core/objects/object/VRObject.h"
+#include "core/objects/geometry/drawing/VRPyDrawing.h"
 #include "core/setup/devices/VRDevice.h"
 #include "addons/Semantics/Reasoning/VRPyOntology.h"
 #include "addons/Semantics/VRSemanticsFwd.h"
@@ -61,6 +62,7 @@ template<> PyObject* VRPyTypeCaster::cast(const VRObjectPtr& obj) {
     else if (type == "GeoPrimitive") return VRPyGeoPrimitive::fromSharedPtr( static_pointer_cast<VRGeoPrimitive>(obj) );
     else if (type == "PointCloud") return VRPyPointCloud::fromSharedPtr( static_pointer_cast<VRPointCloud>(obj) );
     else if (type == "WorldGenerator") return VRPyWorldGenerator::fromSharedPtr( static_pointer_cast<VRWorldGenerator>(obj) );
+    else if (type == "TechnicalDrawing") return VRPyTechnicalDrawing::fromSharedPtr( static_pointer_cast<VRTechnicalDrawing>(obj) );
 #ifndef WITHOUT_TCP
     else if (type == "SyncNode") return VRPySyncNode::fromSharedPtr( static_pointer_cast<VRSyncNode>(obj) );
 #endif
@@ -71,17 +73,26 @@ template<> PyObject* VRPyTypeCaster::cast(const VRObjectPtr& obj) {
 
 typedef void* voidPtr;
 typedef PyObject* objPtr;
+
+template<> PyObject* VRPyTypeCaster::cast(const string& s) { 
+    PyObject* res = PyUnicode_DecodeUTF8(s.data(), s.size(), "strict");
+    if (!res) {
+        PyErr_Clear();
+        res = PyBytes_FromStringAndSize(s.data(), s.size());
+    }
+    return res;
+}
+
 template<> PyObject* VRPyTypeCaster::cast(const voidPtr& v) { if (v) { PyObject* o = (PyObject*)v; Py_INCREF(o); return o; } else Py_RETURN_NONE; }
 template<> PyObject* VRPyTypeCaster::cast(const objPtr& o) { if (o) { Py_INCREF(o); return o; } else Py_RETURN_NONE; }
-template<> PyObject* VRPyTypeCaster::cast(const int& i) { return PyInt_FromLong(i); }
-template<> PyObject* VRPyTypeCaster::cast(const unsigned int& i) { return PyInt_FromLong(i); }
-template<> PyObject* VRPyTypeCaster::cast(const short& s) { return PyInt_FromLong(s); }
-template<> PyObject* VRPyTypeCaster::cast(const char& i) { return PyInt_FromLong(i); }
-template<> PyObject* VRPyTypeCaster::cast(const size_t& i) { return PyInt_FromLong(i); }
-template<> PyObject* VRPyTypeCaster::cast(const unsigned char& i) { return PyInt_FromLong(i); }
+template<> PyObject* VRPyTypeCaster::cast(const int& i) { return PyLong_FromLong(i); }
+template<> PyObject* VRPyTypeCaster::cast(const unsigned int& i) { return PyLong_FromLong(i); }
+template<> PyObject* VRPyTypeCaster::cast(const short& s) { return PyLong_FromLong(s); }
+template<> PyObject* VRPyTypeCaster::cast(const char& i) { return PyLong_FromLong(i); }
+template<> PyObject* VRPyTypeCaster::cast(const size_t& i) { return PyLong_FromLong(i); }
+template<> PyObject* VRPyTypeCaster::cast(const unsigned char& i) { return PyLong_FromLong(i); }
 template<> PyObject* VRPyTypeCaster::cast(const double& d) { return PyFloat_FromDouble(d); }
 template<> PyObject* VRPyTypeCaster::cast(const float& f) { return PyFloat_FromDouble(f); }
-template<> PyObject* VRPyTypeCaster::cast(const string& s) { return PyString_FromString(s.c_str()); }
 template<> PyObject* VRPyTypeCaster::cast(const bool& b) { if (b) Py_RETURN_TRUE; else Py_RETURN_FALSE; }
 template<> PyObject* VRPyTypeCaster::cast(const Vec2d& b) { return toPyObject(b); }
 template<> PyObject* VRPyTypeCaster::cast(const Vec3d& b) { return toPyObject(b); }
@@ -95,6 +106,7 @@ template<> PyObject* VRPyTypeCaster::cast(const Vec3ub& b) { return VRPyBase::to
 template<> PyObject* VRPyTypeCaster::cast(const Color3ub& b) { return VRPyBase::toPyTuple(Vec3i(b[0], b[1], b[2])); }
 template<> PyObject* VRPyTypeCaster::cast(const Color3f& b) { return toPyObject(Vec3d(b)); }
 template<> PyObject* VRPyTypeCaster::cast(const Color4f& b) { return VRPyBase::toPyTuple(Vec4d(b)); }
+template<> PyObject* VRPyTypeCaster::cast(const Matrix4d& b) { return VRPyBase::toPyTuple(b); }
 //template<> PyObject* VRPyTypeCaster::cast(const Line& b) {}
 template<> PyObject* VRPyTypeCaster::cast(const Boundingbox& b) { return VRPyBoundingbox::fromObject(b); }
 

@@ -36,6 +36,7 @@ class VRSound {
         VRUDPServerPtr udpServer;
 
         unsigned int frequency = 0;
+        double duration = 0;
         int stream_id = 0;
         int init = 0;
         string path;
@@ -84,6 +85,7 @@ class VRSound {
         bool isRunning();
         int getState();
         string getPath();
+        double getDuration();
 
         void play();
         void stop();

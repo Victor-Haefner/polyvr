@@ -67,7 +67,9 @@ VRGlutWindow::VRGlutWindow() {
 
     glutWindows[winID] = this;
 
+#ifndef WASM
     glutDisplayFunc(glutDisplay);
+#endif
     glutReshapeFunc(glutResize);
     glutKeyboardFunc(glutKeyboard);
     glutSpecialFunc(glutSpecial);
@@ -76,6 +78,7 @@ VRGlutWindow::VRGlutWindow() {
     glutMotionFunc(glutMotion);
     glutMouseFunc(glutMouse);
 
+    cout << " Glut window check fullscreen" << endl;
     bool fullscreen = VROptions::get()->getOption<bool>("fullscreen");
     if (fullscreen) glutFullScreen();
     cout << " Glut window initiated" << endl;
@@ -106,9 +109,8 @@ void VRGlutWindow::initGlut() {
     if (VROptions::get()->getOption<bool>("active_stereo"))
         glutInitDisplayMode(GLUT_RGBA | GLUT_DEPTH | GLUT_DOUBLE | GLUT_STEREO | GLUT_STENCIL | GLUT_MULTISAMPLE);
     else glutInitDisplayMode(GLUT_RGBA | GLUT_DEPTH | GLUT_DOUBLE | GLUT_STENCIL | GLUT_MULTISAMPLE);
-#endif
-
     glutSetOption(GLUT_ACTION_ON_WINDOW_CLOSE, GLUT_ACTION_CONTINUE_EXECUTION);
+#endif
 
     cout << " ..done " << endl;
 }
@@ -118,15 +120,17 @@ void VRGlutWindow::load(XMLElementPtr node) { VRWindow::load(node); }
 
 void VRGlutWindow::onMouse(int b, int s, int x, int y) {
     // swap mouse wheel
+#ifndef WASM
     if (b == 3) b = 4;
     else if (b == 4) b = 3;
+#endif
 
-    cout << "VRGlutWindow::onMouse " << Vec4i(b, s, x, y) << endl;
+    //cout << "VRGlutWindow::onMouse " << Vec4i(b, s, x, y) << endl;
     if (auto m = getMouse()) m->mouse(b, s, x, y, 0);
 }
 
 void VRGlutWindow::onMotion(int x, int y) {
-    cout << "VRGlutWindow::onMouse " << Vec2i(x, y) << endl;
+    //cout << "VRGlutWindow::onMouse " << Vec2i(x, y) << endl;
     if (auto m = getMouse()) m->motion(x, y, 0);
 }
 
@@ -139,7 +143,7 @@ void VRGlutWindow::onKeyboard_special(int c, int s, int x, int y) {
 }
 
 void VRGlutWindow::onDisplay() {
-    #ifndef WITHOUT_OPENVR
+#ifndef WITHOUT_OPENVR
     if (hmd) {
         hmd->render();
     }
@@ -152,8 +156,12 @@ void VRGlutWindow::onDisplay() {
 
 void VRGlutWindow::render(bool fromThread) {
     if (fromThread) return;
+#ifdef WASM
+    onDisplay();
+#else
     glutPostRedisplay();
     glutMainLoopEvent();
+#endif
 }
 
 OSG_END_NAMESPACE;

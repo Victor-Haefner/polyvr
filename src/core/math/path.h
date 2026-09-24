@@ -12,7 +12,7 @@ using namespace std;
 
 class Path : public VRStorage {
     private:
-        vector<Pose> points;
+        vector<PosePtr> points;
         vector<Color3f> point_colors;
 
         vector<Vec3d> controlPoints;
@@ -27,6 +27,7 @@ class Path : public VRStorage {
         vector<Vec3d> up_vectors;
         vector<Vec3d> colors;
 
+        void rebaseIndices(int& i, int& j, float& t);
         Vec3d interp(vector<Vec3d>& vec, float t, int i = 0, int j = 0, bool verbose = false);
         Vec3d projectInPlane(Vec3d v, Vec3d n, bool keep_length);
         void cubicBezier(Vec3d* container, int N, Vec3d p0, Vec3d p1, Vec3d n0, Vec3d n1);
@@ -41,14 +42,15 @@ class Path : public VRStorage {
         static PathPtr create();
 
         void set(PosePtr p1, PosePtr p2, int res);
-        int addPoint( Pose p, Color3f c = Color3f() );
+        int addPoint( PosePtr p, Color3f c = Color3f() );
         int addPoint2( Vec3d p, Vec3d d, Color3f c, Vec3d u );
-        void setPoint(int i, const Pose& p, Color3f c = Color3f() );
-        Pose& getPoint(int i);
+        void setPoint(int i, PosePtr p, Color3f c = Color3f() );
+        PosePtr getPoint(int i);
         Color3f getPointColor(int i);
         void setPointColor(int i, Color3f c);
-        vector<Pose> getPoints();
+        vector<PosePtr> getPoints();
         vector<Vec3d> getControlPoints();
+        Vec2i getSegmentIDs(double t);
 
         void invert();
         void close();
@@ -58,11 +60,12 @@ class Path : public VRStorage {
         vector<Vec3d> getDirections();
         vector<Vec3d> getUpVectors();
         vector<Vec3d> getColors();
-        vector<Pose> getPoses();
+        vector<PosePtr> getPoses();
         Vec3d getPosition(float t, int i = 0, int j = 0, bool fast = true);
         void getOrientation(float t, Vec3d& dir, Vec3d& up, int i = 0, int j = 0, bool fast = true);
         Color3f getColor(float t, int i = 0, int j = 0);
         PosePtr getPose(float t, int i = 0, int j = 0, bool fast = true);
+        PosePtr getUniformPose(float t, int i = 0, int j = 0, bool fast = true);
 
         float getClosestPoint(Vec3d p); // return t parameter on Path
         float getDistance(Vec3d p);

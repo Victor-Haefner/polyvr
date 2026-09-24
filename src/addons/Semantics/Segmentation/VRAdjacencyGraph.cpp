@@ -14,7 +14,7 @@ shared_ptr<VRAdjacencyGraph> VRAdjacencyGraph::create() { return shared_ptr<VRAd
 void VRAdjacencyGraph::setGeometry(VRGeometryPtr geo) { this->geo = geo; }
 
 void VRAdjacencyGraph::clear() {
-    edge_triangle_loockup.clear();
+    edge_triangle_lookup.clear();
     vertex_neighbor_params.clear();
     vertex_neighbors.clear();
     vertex_curvatures.clear();
@@ -115,8 +115,8 @@ void VRAdjacencyGraph::compCurvatures(int range) {
     for (int i = 0; i < N; i++) vertex_curvatures[i] = curvAvg(i,range);
 }
 
-void VRAdjacencyGraph::compTriLoockup() {
-    edge_triangle_loockup.clear();
+void VRAdjacencyGraph::compTriLookup() {
+    edge_triangle_lookup.clear();
     auto sgeo = geo.lock();
     if (!sgeo) return;
 
@@ -127,9 +127,9 @@ void VRAdjacencyGraph::compTriLoockup() {
         t.v3 = it.getPositionIndex(2);
 
         auto reg = [&](int j0, int j1) {
-            if (edge_triangle_loockup.count(j0) == 0) edge_triangle_loockup[j0] = map<int, vector<triangle> >();
-            if (edge_triangle_loockup[j0].count(j1) == 0) edge_triangle_loockup[j0][j1] = vector<triangle>();
-            edge_triangle_loockup[j0][j1].push_back(t);
+            if (edge_triangle_lookup.count(j0) == 0) edge_triangle_lookup[j0] = map<int, vector<triangle> >();
+            if (edge_triangle_lookup[j0].count(j1) == 0) edge_triangle_lookup[j0][j1] = vector<triangle>();
+            edge_triangle_lookup[j0][j1].push_back(t);
         };
 
         reg(t.v1,t.v2); reg(t.v2,t.v1);
@@ -172,7 +172,7 @@ vector<int> VRAdjacencyGraph::getNeighbors(int i, int range) {
 vector<int> VRAdjacencyGraph::getBorderVertices() {
     vector<int> borders;
 
-    for (auto i : edge_triangle_loockup) {
+    for (auto i : edge_triangle_lookup) {
         for (auto j : i.second) {
             if (j.second.size() != 1) continue; // not an edge
             borders.push_back(i.first);
@@ -180,7 +180,73 @@ vector<int> VRAdjacencyGraph::getBorderVertices() {
         }
     }
 
+    if (borders.size() > 1) {
+        sort(borders.begin(), borders.end());
+        auto it = unique(borders.begin(), borders.end());
+        borders.erase(it, borders.end());
+    }
     return borders;
+}
+
+vector< vector<int> > VRAdjacencyGraph::getBorderLoops() {
+    auto bverts = getBorderVertices();
+    vector< vector<int> > loops;
+
+    map<int, bool> processed;
+
+    auto getNextBVerts = [&](int a, int b) {
+        vector<int> res;
+        auto& edges = edge_triangle_lookup[b];
+        for (auto& e : edges) {
+            auto& triangles = e.second;
+            if (e.first == a) continue;
+            if (triangles.size() != 1) continue; // not a boundary edge
+            res.push_back( e.first );
+            if (a == -1) return res;
+        }
+        return res;
+    };
+
+    auto finishLoop = [&](const vector<int>& loop) {
+        for (auto l : loop) processed[l] = true;
+        loops.push_back(loop);
+    };
+
+    function<bool(vector<int>&, int, int)> gatherLoop = [&](vector<int>& loop, int v, int v0) {
+        do {
+            int n = loop.size();
+            auto vs = getNextBVerts( n>1 ? loop[n-2] : -1, loop[n-1] );
+
+            if (vs.size() == 0) break;
+
+            if (vs.size() == 1) {
+                int v = vs[0];
+                if (v == v0) { finishLoop(loop); return true; }
+                if (find(loop.begin(), loop.end(), v) != loop.end()) return false;
+                loop.push_back(v);
+            } else {
+                for (auto& v2 : vs) {
+                    vector<int> subloop = loop;
+                    subloop.push_back(v2);
+                    if (gatherLoop(subloop, v2, v0)) return true;
+                }
+                break;
+            }
+        } while (true);
+
+        return false;
+    };
+
+    for (size_t i=0; i<bverts.size(); i++) {
+        int j = bverts[i];
+        if (processed[j]) continue;
+
+        vector<int> loop;
+        loop.push_back(j);
+        gatherLoop(loop, j, j);
+    }
+
+    return loops;
 }
 
 float VRAdjacencyGraph::getCurvature(int i) {

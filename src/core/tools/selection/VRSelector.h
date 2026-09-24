@@ -18,7 +18,8 @@ class VRSelector {
     public:
         enum VISUAL {
             OUTLINE = 0,
-            OVERLAY = 1
+            OVERLAY = 1,
+            BOX = 2
         };
 
     private:
@@ -37,12 +38,14 @@ class VRSelector {
         VRObjectPtr selected;
         VRSelectionPtr selection;
         VRGeometryPtr subselection;
+        VRObjectPtr boxRoot;
 
         void deselect();
         VRMaterialPtr getMat();
 
     public:
         VRSelector();
+        ~VRSelector();
 
         static VRSelectorPtr create();
 

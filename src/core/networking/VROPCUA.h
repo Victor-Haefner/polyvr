@@ -8,6 +8,8 @@
 #include <OpenSG/OSGConfig.h>
 #include "core/utils/VRMutex.h"
 
+#include <cstdint>
+
 namespace OpcUa {
     class Node;
     class UaClient;

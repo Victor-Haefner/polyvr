@@ -25,6 +25,8 @@ class Pose {
         static PosePtr create(const Pose& p);
         static PosePtr create(const Vec3d& p, const Vec3d& d = DIR(), const Vec3d& u = UP(), const Vec3d& s = SCALE());
 
+        PosePtr copy();
+
         void setPos(const Vec3d& p);
         void setDir(const Vec3d& d);
         void setUp(const Vec3d& u);
@@ -38,6 +40,7 @@ class Pose {
         Vec3d up();
         Vec3d x();
         Vec3d scale();
+        double distance(PosePtr);
 
         void translate(const Vec3d& p);
         void move(double x);
@@ -55,6 +58,7 @@ class Pose {
 
         string toString();
 
+        Pose operator * (const Pose& other) const;
         bool operator == (const Pose& other) const;
         bool operator != (const Pose& other) const;
 };

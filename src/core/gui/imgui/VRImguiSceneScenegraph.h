@@ -5,6 +5,8 @@
 #include "core/gui/VRGuiSignals.h"
 #include "imWidgets/VRImguiTreeview.h"
 #include "imWidgets/VRImguiVector.h"
+#include "imWidgets/VRImguiColorPicker.h"
+#include "imWidgets/VRImguiCombo.h"
 
 using namespace std;
 
@@ -21,6 +23,12 @@ class ImScenegraph {
         bool visible = true;
         bool pickable = false;
         bool castShadow = true;
+
+        bool hasEntity = false;
+        string entityName;
+        string entityConcepts;
+        vector<string> entityParams;
+        vector<string> entityParamNames;
 
         Im_Vector position;
         Im_Vector atvector;
@@ -59,16 +67,20 @@ class ImScenegraph {
         vector<double> lodDistances;
 
         string geoOrigin;
+        bool meshVisible = true;
         vector<string> geoParams;
         vector<string> geoParamNames;
         vector<pair<string, int>> geoData;
 
         string matName;
-        string matDiffuse;
-        string matSpecular;
-        string matAmbient;
+        ImColorPicker matAmbient;
+        ImColorPicker matDiffuse;
+        ImColorPicker matSpecular;
+        ImColorPicker matEmission;
         bool matLit;
         bool matMeshColors;
+        ImCombo matPointsize;
+        ImCombo matLinewidth;
 
         string texDims;
         string texSize;
@@ -82,6 +94,7 @@ class ImScenegraph {
         void treeAppend(string ID, string label, string parent, string type, string cla, string mod, string col);
 
         void setupObject(OSG::VRGuiSignals::Options o);
+        void setupEntity(OSG::VRGuiSignals::Options o);
         void setupTransform(OSG::VRGuiSignals::Options o);
         void setupCamera(OSG::VRGuiSignals::Options o);
         void setupLight(OSG::VRGuiSignals::Options o);

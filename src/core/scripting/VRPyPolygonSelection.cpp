@@ -5,8 +5,7 @@
 #include "VRPyTypeCaster.h"
 
 template<> PyTypeObject VRPyBaseT<OSG::VRPolygonSelection>::type = {
-    PyObject_HEAD_INIT(NULL)
-    0,                         /*ob_size*/
+    PyVarObject_HEAD_INIT(NULL, 0)
     "VR.PolygonSelection",             /*tp_name*/
     sizeof(VRPyPolygonSelection),             /*tp_basicsize*/
     0,                         /*tp_itemsize*/
@@ -53,7 +52,7 @@ PyMethodDef VRPyPolygonSelection::methods[] = {
     {"close", (PyCFunction)VRPyPolygonSelection::close, METH_VARARGS, "Close selection" },
     {"isClosed", (PyCFunction)VRPyPolygonSelection::isClosed, METH_NOARGS, "Check if selection is closed" },
     {"getShape", (PyCFunction)VRPyPolygonSelection::getShape, METH_NOARGS, "Get selection visual" },
-    {"getSelectionFrustum", PyWrap(PolygonSelection, getSelectionFrustum, "Get selection frustum", OSG::Frustum) },
+    {"getSelectionFrustum", PyWrap(PolygonSelection, getSelectionFrustum, "Get selection frustum", OSG::FrustumPtr) },
     {NULL}  /* Sentinel */
 };
 
@@ -61,7 +60,7 @@ PyObject* VRPyPolygonSelection::setOrigin(VRPyPolygonSelection* self, PyObject* 
     if (!self->valid()) return NULL;
     VRPyPose* p = 0;
     if (! PyArg_ParseTuple(args, "O:setOrigin", &p)) return NULL;
-    self->objPtr->setOrigin( *p->objPtr );
+    self->objPtr->setOrigin( p->objPtr );
     Py_RETURN_TRUE;
 }
 

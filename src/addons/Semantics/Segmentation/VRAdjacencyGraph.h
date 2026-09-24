@@ -15,7 +15,7 @@ class VRAdjacencyGraph {
         struct edge { int v1, v2; };
         struct triangle { int v1, v2, v3; };
 
-        map<int, map<int, vector<triangle> > > edge_triangle_loockup;
+        map<int, map<int, vector<triangle> > > edge_triangle_lookup;
         vector<int> vertex_neighbor_params;
         vector<int> vertex_neighbors;
         vector<float> vertex_curvatures;
@@ -32,11 +32,12 @@ class VRAdjacencyGraph {
         void setGeometry(VRGeometryPtr geo);
 
         void compNeighbors();
-        void compTriLoockup();
+        void compTriLookup();
         void compCurvatures(int range = 1);
 
         vector<int> getNeighbors(int i, int range = 1);
         vector<int> getBorderVertices();
+        vector< vector<int> > getBorderLoops();
         float getCurvature(int i);
 };
 

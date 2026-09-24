@@ -10,13 +10,13 @@ simplePyType( Graph , New_ptr );
 
 template<> PyObject* VRPyTypeCaster::cast(const Graph::edge& e) {
     PyObject* epy = PyTuple_New(2);
-    PyTuple_SetItem(epy, 0, PyInt_FromLong(e.from));
-    PyTuple_SetItem(epy, 1, PyInt_FromLong(e.to));
+    PyTuple_SetItem(epy, 0, PyLong_FromLong(e.from));
+    PyTuple_SetItem(epy, 1, PyLong_FromLong(e.to));
     return epy;
 }
 
 template<> PyObject* VRPyTypeCaster::cast(const Graph::node& n) {
-    return PyInt_FromLong(n.ID);
+    return PyLong_FromLong(n.ID);
 }
 
 PyMethodDef VRPyGraph::methods[] = {
@@ -34,6 +34,7 @@ PyMethodDef VRPyGraph::methods[] = {
     {"connected", PyWrap2(Graph, connected, "Check if n1 and n2 are connected (directed)", bool, int, int ) },
     {"disconnect", PyWrap2(Graph, disconnect, "Disconnect nodes n1 and n2", void, int, int ) },
     {"getNodes", PyWrap2( Graph, getNodesCopy, "Get all node IDs", vector<Graph::node> ) },
+    {"getRootNodes", PyWrap2( Graph, getRootNodes, "Get all nodes without incoming edges", vector<Graph::node> ) },
     {"hasNode", PyWrap2( Graph, hasNode, "Check if graph has node ID", bool, int ) },
     {"hasEdge", PyWrap2( Graph, hasEdge, "Check if graph has edge ID", bool, int ) },
     {"remNode", PyWrap2( Graph, remNode, "Remove node", void, int ) },

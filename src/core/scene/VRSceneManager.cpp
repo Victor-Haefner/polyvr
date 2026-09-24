@@ -24,7 +24,7 @@
 #include "core/gui/VRGuiSignals.h"
 
 #include <OpenSG/OSGSceneFileHandler.h>
-#include <boost/filesystem.hpp>
+#include <filesystem>
 #ifndef WASM
 #include "core/utils/VRMutex.h"
 
@@ -43,7 +43,7 @@ VRSceneManager::VRSceneManager() {
 #ifdef WASM
     original_workdir = "/";
 #else
-	original_workdir = boost::filesystem::current_path().string();
+	original_workdir = std::filesystem::current_path().string();
 #endif
 	examples = VRProjectsList::create();
 	projects = VRProjectsList::create();
@@ -136,10 +136,10 @@ void VRSceneManager::setWorkdir(string path) {
 	if (path == "") return;
 	if (exists(path)) path = canonical(path);
 #ifndef __EMSCRIPTEN__
-    boost::system::error_code ec;
-	boost::filesystem::current_path(path, ec);
+    std::error_code ec;
+	std::filesystem::current_path(path, ec);
 #endif
-    //cout << " VRSceneManager::setWorkdir A4 err: " << ec.message() << " " << BOOST_LIB_VERSION << endl;
+    //cout << " VRSceneManager::setWorkdir A4 err: " << ec.message() << endl;
 	clearDumpFiles();
 }
 
@@ -270,13 +270,19 @@ void VRSceneManager::updateSceneThread(VRThreadWeakPtr tw) {
 
 void VRSceneManager::updateScene() {
     if (!current) return;
+#ifndef WASM
     auto profiler = VRProfiler::get();
     int pID1 = profiler->regStart("update setup");
+#endif
     if (auto setup = VRSetup::getCurrent()) setup->updateActivatedSignals();
+#ifndef WASM
     profiler->regStop(pID1);
     int pID2 = profiler->regStart("update scene");
+#endif
     current->update();
+#ifndef WASM
     profiler->regStop(pID2);
+#endif
 }
 
 void VRSceneManager::setTargetFPS(double fps) { targetFPS = fps;  }
@@ -350,7 +356,6 @@ void VRSceneManager::update() {
         if (auto setup = VRSetup::getCurrent()) {
             VRTimer t2; t2.start();
             setup->updateWindows(); // rendering
-            setup.reset(); // updateGtk may close application, reset setup to avoid memory leak
             VRGlobals::WINDOWS_FRAME_RATE.update(t2);
             VRGlobals::UPDATE_LOOP5.update(timer);
         }

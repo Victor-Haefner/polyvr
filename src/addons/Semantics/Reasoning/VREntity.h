@@ -17,7 +17,7 @@ struct VRPropertyValue {// allows to cast type in py bindings
     VRPropertyValue() {}
 };
 
-struct VREntity : public VROntoID, public VRName {
+struct VREntity : public std::enable_shared_from_this<VREntity>, public VROntoID, public VRName {
     vector<VRConceptWeakPtr> concepts;
     vector<string> conceptNames;
     map<string, map<int, VRPropertyPtr> > properties;
@@ -28,11 +28,16 @@ struct VREntity : public VROntoID, public VRName {
     VREntity();
 
     static VREntityPtr create(string name = "none", VROntologyPtr o = 0, VRConceptPtr c = 0);
+    VREntityPtr ptr();
     VREntityPtr copy();
+
+    VROntologyPtr getOntology();
+
     void addConcept(VRConceptPtr c);
     VRConceptPtr getConcept();
     vector<VRConceptPtr> getConcepts();
     vector<string> getConceptNames();
+    bool hasProperty(string p);
     VRPropertyPtr getProperty(string p, bool warn = true);
     vector<VRPropertyPtr> getProperties();
     void rem(VRPropertyPtr);
@@ -64,6 +69,7 @@ struct VREntity : public VROntoID, public VRName {
     template<class T> T getValue(const string& prop, T t, int i = 0) {
         auto P = get(prop, i);
         if (P) toValue(P->value, t);
+        else set(prop, ::toString(t));
         return t;
     }
 
@@ -82,7 +88,7 @@ struct VREntity : public VROntoID, public VRName {
     Vec3d getVec3(const string& prop, int i = 0);
     vector< Vec3d > getAllVec3(const string& prop);
 
-    bool is_a(string concept);
+    bool is_a(string concept_);
     string toString();
     void save(XMLElementPtr e, int p) override;
     void load(XMLElementPtr e, VRStorageContextPtr context = 0) override;

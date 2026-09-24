@@ -151,10 +151,11 @@ template<typename T> int toValue(string s, vector<vector<T>>& t) { return true; 
 template<typename T, typename U> int toValue(string s, map<T, U>& t) { return true; } // not implemented
 template<class T>    T   toValue(string s) { T t; toValue(s,t); return t; }
 
-int   toInt  (string s);
-float toFloat(string s);
+int    toInt   (string s);
+size_t toLong  (string s);
+float  toFloat (string s);
 double toDouble(string s);
-bool  toBool (string s);
+bool   toBool  (string s);
 
 bool isNumber(string s);
 

@@ -8,9 +8,13 @@
 
 static bool doGrabShiftTab = true;
 string backend;
-HWND hwnd = 0;
+HWND hwndMain = 0;
+HWND hwndDialog = 0;
 
-void setWindowIcon(string path) {
+void setWindowIcon(string path, bool dialog) {
+    HWND hwnd = hwndMain;
+    if (dialog) hwnd = hwndDialog;
+
     cout << "  SetWindowIcon hwnd: " << hwnd << ", path: " << path << endl;
     if (!hwnd) return;
     HICON hIcon = static_cast<HICON>(LoadImage(nullptr, path.c_str(), IMAGE_ICON, 0, 0, LR_LOADFROMFILE | LR_DEFAULTSIZE | LR_SHARED));
@@ -22,17 +26,23 @@ void setWindowIcon(string path) {
 }
 
 void maximizeWindow() {
-    cout << "  maximizeWindow hwnd: " << hwnd << endl;
-    if (!hwnd) return;
-    ShowWindow(hwnd, SW_MAXIMIZE);
+    cout << "  maximizeWindow hwnd: " << hwndMain << endl;
+    if (!hwndMain) return;
+    ShowWindow(hwndMain, SW_MAXIMIZE);
 }
 
 void initGlutExtensions() {
     cout << " initGlutExtensions" << endl;
-    string icon = "ressources/gui/logo_icon_win.ico";
-    hwnd = FindWindow(nullptr, "PolyVR");
-    if (!hwnd) cout << "Cannot find window 'PolyVR'" << endl;
-    setWindowIcon("ressources/gui/logo_icon_win.ico");
+    hwndMain = FindWindow(nullptr, "PolyVR");
+    if (!hwndMain) cout << "Cannot find window 'PolyVR'" << endl;
+    setWindowIcon("ressources/gui/logo_icon_win.ico", false);
+}
+
+void initGlutDialogExtensions(string name) {
+    cout << " initGlutDialogExtensions" << endl;
+    hwndDialog = FindWindow(nullptr, name.c_str());
+    if (!hwndDialog) cout << "Cannot find window '" << name << "'" << endl;
+    setWindowIcon("ressources/gui/logo_icon_win.ico", true);
 }
 
 void cleanupGlutExtensions() {
@@ -44,24 +54,28 @@ void cleanupGlutExtensions() {
 Icon::Icon(int w, int h) : w(w), h(h) {
     data = (uint64_t*)malloc ((w*h) * sizeof(uint64_t));
 }
+Icon::~Icon() { if (data) free(data); }
+
+IconList::IconList() {}
+IconList::~IconList() { if (data) free(data); }
 
 uint64_t* IconList::add(int w, int h) {
-    images.push_back(Icon(w,h));
-    return images[images.size()-1].data;
+    images.push_back(shared_ptr<Icon>(new Icon(w, h)));
+    return images[images.size()-1]->data;
 }
 
 void IconList::compile() {
     size = 0;
-    for (auto& img : images) size += img.w*img.h + 2;
+    for (auto& img : images) size += img->w*img->h + 2;
     if (data) free(data);
     data = (uint64_t*)malloc (size * sizeof(uint64_t));
 
     int k=0;
     for (auto& img : images) {
-        data[k+0] = img.w;
-        data[k+1] = img.h;
-        for (int i=0; i<img.w*img.h; i++) data[k+i+2] = img.data[i];
-        k += img.w*img.h+2;
+        data[k+0] = img->w;
+        data[k+1] = img->h;
+        for (int i=0; i<img->w*img->h; i++) data[k+i+2] = img->data[i];
+        k += img->w*img->h+2;
     }
 }
 

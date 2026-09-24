@@ -57,76 +57,23 @@ void VRGuiBits::on_quit_clicked() {
     PolyVR::shutdown();
 }
 
-static string wasmServerSend =
-"\nfunction send(m) {\n"
-"    window.parent.postMessage(m, window.origin);\n"
-"}\n";
-
-static string wasmServerReceive =
-"window.addEventListener('message', (event) => {\n"
-"    handle(event.data);\n"
-"}, false);\n";
-
-string wrapTimeout(string code, string delay) {
-    return "setTimeout(function(){ "+code+" }, "+delay+");";
-}
-
-void VRGuiBits::updateWebPortRessources() {
-    /*bool withXR = getCheckButtonState("wed_opt_xr");
-
-    int startOpt = getRadioButtonState("wed_opt_start1");
-    startOpt +=  2*getRadioButtonState("wed_opt_start2");
-    startOpt +=  3*getRadioButtonState("wed_opt_start3");
-
+void VRGuiBits::updateWebPortRessources(bool withXR, bool withEditor, bool runBrowser) {
     string D = VRSceneManager::get()->getOriginalWorkdir();
     string project = VRScene::getCurrent()->getFile();
     string projectName = VRScene::getCurrent()->getFileName();
+
+    // copy websites
+    //if (!exists("./websites")) makedir("./websites");
+    for (auto script : VRScene::getCurrent()->getScripts()) {
+        if (script.second->getType() == "HTML") script.second->exportForWasm();
+    }
+
+    return; // TODO, update webport repo, add a install to directory script that does the copying below
 
     string folder = D+"/ressources/webBuild";
     if (!exists(folder+"/.git"))
         systemCall("git clone https://github.com/Victor-Haefner/polyvr-webport.git \"" + folder + "\"");
 
-    // copy websites
-    //if (!exists("./websites")) makedir("./websites");
-    for (auto script : VRScene::getCurrent()->getScripts()) {
-        if (script.second->getType() != "HTML") continue;
-        string core = script.second->getCore();
-
-        string onOpen = "";
-        auto itr = core.find("websocket.onopen"); // get the code executed on ws open
-        if (itr != string::npos) {
-            auto itr2 = core.find("{", itr);
-            if (itr2 != string::npos) {
-                auto itr3 = core.find("}", itr2);
-                if (itr3 != string::npos) {
-                    onOpen = core.substr(itr2+1, itr3-itr2-1);
-                    cout << " on open action: " << onOpen << endl;
-                }
-            }
-        }
-
-        itr = core.find("function send("); // delete that line, then insert wasmServerSend
-        if (itr != string::npos) {
-            auto itr2 = core.find("\n", itr);
-            if (itr2 != string::npos) {
-                core.erase(itr, itr2-itr);
-                core.insert(itr, wasmServerSend);
-            }
-        }
-
-        itr = core.find("var websocket"); // prepend wasmServerReceive
-        if (itr != string::npos) core.insert(itr, wasmServerReceive + wrapTimeout(onOpen, "1000") + "\n\t/*");
-
-        itr = core.find("websocket.onclose"); // close the comment to disable the websocket
-        if (itr != string::npos) {
-            auto itr2 = core.find("\n", itr);
-            if (itr2 != string::npos) core.insert(itr2, "*\/");
-        }
-
-        ofstream out(script.first+".html");
-        out << core;
-        out.close();
-    }
 
     systemCall("git -C \"" + folder + "\" pull");
     systemCall("cp -f \"" + folder + "/polyvr.wasm\" ./");
@@ -193,9 +140,8 @@ void VRGuiBits::updateWebPortRessources() {
     }
 
     vector<string> options;
-
     if (withXR) options.push_back("webXR");
-    if (startOpt == 3) options.push_back("editor");
+    if (withEditor) options.push_back("editor");
 
     string optionstr = "";
     for (int i=0; i<options.size(); i++) {
@@ -204,27 +150,20 @@ void VRGuiBits::updateWebPortRessources() {
         optionstr += options[i];
     }
 
-    if (startOpt > 1)
-        systemCall("google-chrome --new-window \"http://localhost:5500/"+projectName+".html"+optionstr+"\"");*/
-}
-
-void VRGuiBits::on_web_export_clicked() {
-    uiSignal("toolbar_export");
-}
-
-void VRGuiBits::on_web_cancel() {
-    uiSignal("dialog_export_cancel");
-}
-
-void VRGuiBits::on_web_start() {
-    uiSignal("dialog_export_start");
-    updateWebPortRessources();
+    if (runBrowser)
+        systemCall("google-chrome --new-window \"http://localhost:5500/"+projectName+".html"+optionstr+"\"");
 }
 
 void VRGuiBits::on_fullscreen_clicked() {
     toggleWidgets();
     //notifyUser("To Exit Fullscreen..", "Press both, F11 and F12");
     toggleFullscreen();
+}
+
+void VRGuiBits::on_seeall_clicked() {
+    auto scene = VRScene::getCurrent();
+    auto cam = scene->getActiveCamera();
+    cam->focusObject( scene->getRoot() );
 }
 
 void VRGuiBits::on_internal_clicked() {
@@ -363,13 +302,14 @@ VRGuiBits::VRGuiBits() {
 
     auto mgr = VRGuiSignals::get();
     mgr->addCallback("toolbar_save", [&](OSG::VRGuiSignals::Options o) { on_save_clicked(); return true; }, true );
-    mgr->addCallback("toolbar_export", [&](OSG::VRGuiSignals::Options o) { on_web_export_clicked(); return true; }, true );
+    mgr->addCallback("web_export", [&](OSG::VRGuiSignals::Options o) { updateWebPortRessources(toBool(o["withXR"]), toBool(o["withEditor"]), toBool(o["runBrowser"])); return true; }, true );
     mgr->addCallback("toolbar_exit", [&](OSG::VRGuiSignals::Options o) { on_quit_clicked(); return true; }, true );
 
-    mgr->addCallback("view_switch_camera", [&](OSG::VRGuiSignals::Options o) { on_camera_changed(o["cam"]); return true; }, true );
+    mgr->addCallback("view_switch_camera", [&](OSG::VRGuiSignals::Options o) { on_camera_changed(o["selection"]); return true; }, true );
     mgr->addCallback("view_toggle_navigation", [&](OSG::VRGuiSignals::Options o) { on_navigation_toggled(o["nav"], toBool(o["state"])); return true; }, true );
     mgr->addCallback("view_toggle_layer", [&](OSG::VRGuiSignals::Options o) { on_view_option_toggle(o["layer"], toBool(o["state"])); return true; }, true );
     mgr->addCallback("toolbar_fullscreen", [&](OSG::VRGuiSignals::Options o) { on_fullscreen_clicked(); return true; }, true );
+    mgr->addCallback("toolbar_seeall", [&](OSG::VRGuiSignals::Options o) { on_seeall_clicked(); return true; }, true );
 
     /*setToolButtonCallback("toolbutton18", bind(&VRGuiBits::on_internal_clicked, this));*/
     /*setButtonCallback("button21", bind(&VRGuiBits::on_internal_close_clicked, this));
@@ -397,15 +337,10 @@ VRGuiBits::VRGuiBits() {
     f.close();
     uiSignal("setAboutVersion", {{"version",getVersionString()}});
 
-    // window fullscreen
-    /*GtkWidget* win = VRGuiBuilder::get()->get_widget("window1");
-    connect_signal<bool,GdkEventKey*>(win, bind(&VRGuiBits::pressFKey, this, placeholders::_1), "key_press_event");
-    connect_signal<void>(win, bind(&VRGuiBits::on_quit_clicked, this), "destroy");*/
-
     // TERMINAL
-    //terminal = (GtkNotebook*)gtk_notebook_new();
     auto addTermTab = [&](string name) {
         auto c = VRConsoleWidgetPtr( new VRConsoleWidget() );
+        c->setup();
         c->setLabel( name );
         consoles[name] = c;
         return c;
@@ -421,12 +356,12 @@ VRGuiBits::VRGuiBits() {
     addTermTab("Tracking");
     auto colTab = addTermTab("Collaboration");
 
+    auto c = VRAIConsoleWidgetPtr( new VRAIConsoleWidget() );
+    c->setLabel("PolyAI");
+    consoles["PolyAI"] = c;
+
     colTab->addStyle( "red", "#ff3311", "#ffffff", false, false, false, true );
     colTab->addStyle( "green", "#00cc11", "#ffffff", false, false, false, true );
-
-    /*GtkWidget* box = VRGuiBuilder::get()->get_widget("hbox15");
-    gtk_box_pack_start((GtkBox*)box, (GtkWidget*)terminal, true, true, 0);
-    gtk_widget_show_all(box);*/
 
     updatePtr = VRUpdateCb::create( "IntMonitor_guiUpdate", VRGuiBits_on_internal_update );
     VRSceneManager::get()->addUpdateFkt(updatePtr);
@@ -441,7 +376,7 @@ bool VRGuiBits::update() { // scene changed
 
     uiSignal("ui_clear_cameras");
     for (auto cam : scene->getCameraNames()) uiSignal("ui_add_camera", {{"cam",cam}});
-    uiSignal("ui_set_active_camera", {{"camIndex",toString(scene->getActiveCameraIndex())}});
+    uiSignal("ui_set_active_camera", {{"cam",toString(scene->getActiveCameraName())}});
 
     /* // update setup && project label
     setLabel("label24", "Project: " + scene->getName());*/

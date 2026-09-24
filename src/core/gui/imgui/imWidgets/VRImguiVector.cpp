@@ -35,7 +35,7 @@ bool Im_Vector::render(int width) {
     if (label != "") {
         string bID = "box" + ID;
         ImGui::BeginChild(bID.c_str(), ImVec2(wPart, ImGui::GetTextLineHeightWithSpacing()));
-            ImGui::Text(label.c_str());
+            ImGui::TextUnformatted(label.c_str());
         ImGui::EndChild();
         ImGui::SameLine();
     }

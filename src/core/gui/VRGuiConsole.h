@@ -7,6 +7,7 @@
 
 #include "core/utils/VRFunctionFwd.h"
 #include "core/utils/VRDeviceFwd.h"
+#include "addons/LLM/VRLLMFwd.h"
 #include "VRGuiFwd.h"
 
 
@@ -18,13 +19,14 @@ class VRConsoleWidget {
         struct message {
             string msg;
             string style;
-            shared_ptr< VRFunction<string> > link;
+            VRMessageCbPtr link;
+            int source = -1;
 
             message() {}
-            message(string m, string s, shared_ptr< VRFunction<string> > l);
+            message(string m, string s, VRMessageCbPtr l, int i);
         };
 
-    private:
+    protected:
         string ID;
         string buffer;
         map<string, string> styles;
@@ -45,14 +47,37 @@ class VRConsoleWidget {
         static VRConsoleWidgetPtr get(string name);
         string getWindow();
 
+        void setup();
         void clear();
         void pause();
         void setLabel(string lbl);
         void configColor(string color);
         void forward();
-        void write(string s, string style = "", shared_ptr< VRFunction<string> > link = 0);
+        void write(string s, string style = "", VRMessageCbPtr link = 0, int sourceID = -1);
         void addStyle( string style, string fg, string bg, bool italiq, bool bold, bool underlined, bool editable );
         void update();
+};
+
+class VRAIConsoleWidget : public VRConsoleWidget {
+    private:
+        bool ready = false;
+
+        string key;
+        string model;
+        string effort;
+
+        VRMessageCbPtr onMsgCb;
+        VRLLMPtr llm;
+
+        void onMessage(string m);
+
+    public:
+        VRAIConsoleWidget();
+        ~VRAIConsoleWidget();
+
+        void connect();
+        void getKey(string keyVar);
+        void sendQuery(string q);
 };
 
 OSG_END_NAMESPACE;

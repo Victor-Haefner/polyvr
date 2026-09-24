@@ -32,6 +32,8 @@ class VRProjectManager : public VRObject {
         void newProject(string path, bool autosave = false);
         void save(string path = "");
         bool load(string path = "");
+        void saveTo(XMLElementPtr e);
+        bool loadFrom(XMLElementPtr e);
 
         void setPersistencyLevel(int p);
 };

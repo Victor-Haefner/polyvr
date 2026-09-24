@@ -9,15 +9,13 @@
 #include <OpenSG/OSGColor.h>
 #include <OpenSG/OSGLine.h>
 
-#include <boost/algorithm/string.hpp>
-#include <boost/uuid/uuid.hpp>
-#include <boost/uuid/uuid_io.hpp>
-#include <boost/uuid/uuid_generators.hpp>
-
 #include <algorithm>
+#include <random>
+#include <sstream>
+#include <iomanip>
+#include <string>
 
 using namespace OSG;
-using namespace boost::algorithm;
 
 
 size_t countLines(const string& s) {
@@ -28,8 +26,28 @@ size_t countLines(const string& s) {
 
 
 string genUUID() {
-    boost::uuids::uuid u = boost::uuids::random_generator()();
-    return boost::uuids::to_string(u);
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<uint32_t> dis(0, 0xFFFFFFFF);
+
+    auto rand32 = [&]() { return dis(gen); };
+
+    std::stringstream ss;
+    ss << std::hex << std::setfill('0');
+
+    uint32_t a = rand32();
+    uint16_t b = rand32() & 0xFFFF;
+    uint16_t c = rand32() & 0xFFFF;
+    uint16_t d = rand32() & 0xFFFF;
+    uint64_t e = ((uint64_t)rand32() << 32) | rand32();
+
+    ss << std::setw(8) << a << "-";
+    ss << std::setw(4) << b << "-";
+    ss << std::setw(4) << c << "-";
+    ss << std::setw(4) << d << "-";
+    ss << std::setw(12) << (e & 0xFFFFFFFFFFFF);
+
+    return ss.str();
 }
 
 vector<string> splitString(const string& s, char c) {
@@ -48,7 +66,7 @@ vector<string> splitString(const string& s, const string& d) {
     string token;
     do {
         pos = s.find(d, lpos);
-        token = s.substr(lpos, pos);
+        token = s.substr(lpos, (pos-lpos));
         res.push_back(token);
         lpos = pos+Nd;
         //s.erase(0, pos + d.length());
@@ -57,7 +75,7 @@ vector<string> splitString(const string& s, const string& d) {
 }
 
 string subString(const string& s, int beg, int len) {
-    if (len < 0) len = s.size()-beg;
+    if (len < 0) len = (int)s.size()-beg +len+1;
     if (len < 0) return "";
     if (beg >= s.length()) return "";
     if (beg+len > s.length()) return "";
@@ -72,14 +90,20 @@ string stripString(const string& str) {
     return str.substr(strBegin, strEnd - strBegin + 1);
 }
 
+string to_lower_copy(const string& s) {
+    string result = s;
+    transform(result.begin(), result.end(), result.begin(), [](unsigned char c){ return std::tolower(c); });
+    return result;
+}
+
 bool startsWith(const string& s, const string& s2, bool caseSensitive) {
-    string s1 = subString(s, 0, s2.size());
+    string s1 = subString(s, 0, (int)s2.size());
     if (caseSensitive) return bool(s1 == s2);
     else return bool(to_lower_copy(s1) == to_lower_copy(s2));
 }
 
 bool endsWith(const string& s, const string& s2, bool caseSensitive) {
-    string s1 = subString(s, s.size() - s2.size(), s2.size());
+    string s1 = subString(s, (int)(s.size() - s2.size()), (int)s2.size());
     if (caseSensitive) return bool(s1 == s2);
     else return bool(to_lower_copy(s1) == to_lower_copy(s2));
 }
@@ -106,6 +130,7 @@ template<> string toString(const unsigned short& i) { stringstream ss; ss << i; 
 template<> string toString(const int& i) { stringstream ss; ss << i; return ss.str(); }
 template<> string toString(const long& i) { stringstream ss; ss << i; return ss.str(); }
 template<> string toString(const unsigned long& i) { stringstream ss; ss << i; return ss.str(); } // sometimes same as size_t ?
+template<> string toString(const long long& i) { stringstream ss; ss << i; return ss.str(); }
 template<> string toString(const signed char& i) { stringstream ss; ss << i; return ss.str(); }
 template<> string toString(const unsigned char& i) { stringstream ss; ss << int(i); return ss.str(); }
 template<> string toString(const voidPtr& i) { stringstream ss; ss << i; return ss.str(); }
@@ -114,9 +139,6 @@ template<> string toString(const size_t& i) { stringstream ss; ss << i; return s
 #endif
 template<> string toString(const unsigned int& i) { stringstream ss; ss << long(i); return ss.str(); }
 
-#ifdef _WIN32
-template<> string toString(const __int64& i) { stringstream ss; ss << i; return ss.str(); }
-#endif
 
 string toString(const float& f, int d) {
     stringstream ss;
@@ -289,8 +311,8 @@ template<> string typeName(const Line* t) { return "Line"; }
 string typeName(const std::shared_ptr<VRFunction<void>>* t) { return "callback()"; }
 
 template <typename T, typename O> int ssToVal(stringstream& ss, T& t, const O& o) {
-    t = o; // initialize to avoid undefined values
-    int N = ss.tellg();
+    t = (T)o; // initialize to avoid undefined values
+    int N = (int)ss.tellg();
     bool b = false;
     do {
         b = bool(ss >> t);
@@ -305,11 +327,11 @@ template <typename T, typename O> int ssToVal(stringstream& ss, T& t, const O& o
 
 template<> int toValue(string sIn, vector<string>& s) {
     s = splitString(sIn, ',');
-    int N = s.size();
+    int N = (int)s.size();
     if (N == 0) return true;
     s[0] = subString(s[0], 1);
     if (N == 0) return true;
-    s[N-1] = subString(s[N-1], 0, s[N-1].length()-1);
+    s[N-1] = subString(s[N-1], 0, (int)s[N-1].length()-1);
     for (int i=0; i<N; i++) s[i] = stripString(s[i]);
     return true;
 }
@@ -336,11 +358,12 @@ template<> int toValue(stringstream& ss, int& v) { return ssToVal(ss, v, 0); }
 template<> int toValue(stringstream& ss, unsigned int& v) { return ssToVal(ss, v, 0); }
 template<> int toValue(stringstream& ss, long& v) { return ssToVal(ss, v, 0); }
 template<> int toValue(stringstream& ss, unsigned long& v) { return ssToVal(ss, v, 0); }
-template<> int toValue(stringstream& ss, float& v) { double d; auto r = ssToVal(ss, d, 0); v = d; return r; } // use double because stringstreams may fail to convert scientific notations to float
+template<> int toValue(stringstream& ss, float& v) { double d; auto r = ssToVal(ss, d, 0); v = (float)d; return r; } // use double because stringstreams may fail to convert scientific notations to float
 template<> int toValue(stringstream& ss, double& v) { return ssToVal(ss, v, 0); }
 
-int   toInt  (string s) { return toValue<int  >(s); }
-float toFloat(string s) { return toValue<float>(s); }
+int    toInt   (string s) { return toValue<int   >(s); }
+size_t toLong  (string s) { return toValue<size_t>(s); }
+float  toFloat (string s) { return toValue<float >(s); }
 double toDouble(string s) { return toValue<double>(s); }
 
 bool  toBool (string s) {

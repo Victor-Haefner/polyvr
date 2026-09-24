@@ -40,9 +40,8 @@ void VRCameraManager::setMActiveCamera(string cam) {
     }
 }
 
-VRCameraPtr VRCameraManager::getActiveCamera() {
-    return active.lock();
-}
+VRCameraPtr VRCameraManager::getActiveCamera() { return active.lock(); }
+string VRCameraManager::getActiveCameraName() { return activeName; }
 
 int VRCameraManager::getActiveCameraIndex() {
     int index = -1;

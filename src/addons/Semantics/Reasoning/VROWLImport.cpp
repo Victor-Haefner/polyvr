@@ -213,7 +213,7 @@ bool VROWLImport::ProcessSubject(RDFStatement& statement, vector<RDFStatement>& 
             if (predicate == "qualifiedCardinality") { restrictions[subject].min = restrictions[subject].max = toInt(object); return 0; }
             if (predicate == "minQualifiedCardinality") { restrictions[subject].min = toInt(object); return 0; }
             if (predicate == "maxQualifiedCardinality") { restrictions[subject].max = toInt(object); return 0; }
-            if (predicate == "onClass") { restrictions[subject].concept = object; return 0; }
+            if (predicate == "onClass") { restrictions[subject].concept_ = object; return 0; }
             if (predicate == "onDataRange") { restrictions[subject].dataRange = object; return 0; }
             if (predicate == "someValuesFrom") { restrictions[subject].someValuesFrom = object; return 0; }
             if (predicate == "allValuesFrom") { restrictions[subject].allValuesFrom = object; return 0; }
@@ -393,9 +393,9 @@ bool VROWLImport::ProcessSubject(RDFStatement& statement, vector<RDFStatement>& 
     return 1;
 }
 
-VRConceptPtr VROWLImport::getConcept(string concept) {
-    if (concepts.count(concept)) return concepts[concept];
-    if (auto c = onto->getConcept(concept)) return c;
+VRConceptPtr VROWLImport::getConcept(string concept_) {
+    if (concepts.count(concept_)) return concepts[concept_];
+    if (auto c = onto->getConcept(concept_)) return c;
     return VRConceptPtr();
 };
 

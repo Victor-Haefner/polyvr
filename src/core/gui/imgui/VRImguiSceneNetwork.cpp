@@ -16,6 +16,10 @@ ImNetwork::ImNetwork() {
     mgr->addCallback("canvas_widget_move", [&](OSG::VRGuiSignals::Options o) { placeWidget(o["ID"], toFloat(o["x"]), toFloat(o["y"])); return true; } );
 }
 
+#if (IMGUI_VERSION_NUM > 19000)
+#define ImDrawCornerFlags_All ImDrawFlags_RoundCornersAll
+#endif
+
 void ImNetwork::render() {
     // toolbar
     ImGui::Spacing();
@@ -37,7 +41,7 @@ void ImNetwork::render() {
             p.x += n.second.x;
             p.y += n.second.y;
             ImGui::SetCursorScreenPos(p);
-            ImGui::Text(n.second.name.c_str());
+            ImGui::TextUnformatted(n.second.name.c_str());
         }
 
         const ImU32 col32 = ImColor(1.0f, 1.0f, 1.0f, 1.0f);

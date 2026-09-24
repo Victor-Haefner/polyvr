@@ -7,11 +7,11 @@
 using namespace OSG;
 
 template<> bool toValue(PyObject* obj, VRSnappingEngine::PRESET& e) {
-    return toValue( PyString_AsString(obj) , e);
+    return toValue( PyUnicode_AsUTF8(obj) , e);
 }
 
 template<> bool toValue(PyObject* obj, VRSnappingEngine::Type& e) {
-    return toValue( PyString_AsString(obj) , e);
+    return toValue( PyUnicode_AsUTF8(obj) , e);
 }
 
 template<> bool toValue(PyObject* o, VRSnappingEngine::VRSnapCbPtr& e) {
@@ -26,8 +26,8 @@ template<> PyObject* VRPyTypeCaster::cast(const VRSnappingEngine::EventSnapWeakP
     auto e = we.lock();
     auto res = PyTuple_New(8);
     if (!e) return res;
-    PyTuple_SetItem(res, 0, PyInt_FromLong(e->snap));
-    PyTuple_SetItem(res, 1, PyInt_FromLong(e->snapID));
+    PyTuple_SetItem(res, 0, PyLong_FromLong(e->snap));
+    PyTuple_SetItem(res, 1, PyLong_FromLong(e->snapID));
     PyTuple_SetItem(res, 2, VRPyTransform::fromSharedPtr(e->o1));
     PyTuple_SetItem(res, 3, VRPyTransform::fromSharedPtr(e->o2));
     PyTuple_SetItem(res, 4, VRPyPose::fromMatrix(e->m));
@@ -45,7 +45,7 @@ PyMethodDef VRPySnappingEngine::methods[] = {
     {"remObject", PyWrap(SnappingEngine, remObject, "Remove an object", void, VRTransformPtr ) },
     {"addTree", PyWrapOpt(SnappingEngine, addTree, "Add all subtree objects to be checked for snapping", "0", void, VRObjectPtr, int ) },
     {"setPreset", PyWrap(SnappingEngine, setPreset, "Initiate the engine with a preset - setPreset(str preset)\n   preset can be: 'SNAP_BACK', 'SIMPLE_ALIGNMENT'", void, VRSnappingEngine::PRESET ) },
-    {"addRule", PyWrapOpt(SnappingEngine, addRule, "Add snapping rule (Type1, Type2, Pose1, Pose2, snapDistance, group, snapReference), Type can be 'POINT', 'LINE' or 'PLANE'", "0|0", int, VRSnappingEngine::Type, VRSnappingEngine::Type, PosePtr, PosePtr, float, int, VRTransformPtr ) },
+    {"addRule", PyWrapOpt(SnappingEngine, addRule, "Add snapping rule (Type1, Type2, Pose1, Pose2, snapDistance, group, snapReference), Type can be 'NONE', POINT', 'LINE', 'SEGMENT' or 'PLANE'", "0|0", int, VRSnappingEngine::Type, VRSnappingEngine::Type, PosePtr, PosePtr, float, int, VRTransformPtr ) },
     {"remRule", PyWrap(SnappingEngine, remRule, "Remove a rule - remRule(int ID)", void, int ) },
     {"addObjectAnchor", PyWrapOpt(SnappingEngine, addObjectAnchor, "Remove a rule - addObjectAnchor(obj transform, obj anchor)", "0|0", void, VRTransformPtr, VRTransformPtr, int, int ) },
     {"clearObjectAnchors", PyWrap(SnappingEngine, clearObjectAnchors, "Remove a rule (obj transform)", void, VRTransformPtr ) },

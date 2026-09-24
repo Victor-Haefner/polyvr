@@ -34,6 +34,10 @@ Vec3i VRTextureGenerator::getSize() { return Vec3i(width, height, depth); };
 
 void VRTextureGenerator::set(VRTexturePtr t) {
     setSize(t->getSize(), 0);
+    addTexture(t);
+}
+
+void VRTextureGenerator::addTexture(VRTexturePtr t) {
     auto l = VRTexGenLayer::create();
     l->type = TEXTURE;
     l->tex = t;
@@ -307,8 +311,8 @@ template<typename T>
 void VRTextureGenerator::applyPath(T* data, PathPtr p, Color4f c, float w) {
     auto poses = p->getPoses();
     for (unsigned int i=1; i<poses.size(); i++) {
-        Pose& p1 = poses[i-1];
-        Pose& p2 = poses[i];
+        Pose& p1 = *poses[i-1];
+        Pose& p2 = *poses[i];
 
         Vec2d A1 = Vec2d(p1.pos()-p1.x()*w*0.5);
         Vec2d B1 = Vec2d(p1.pos()+p1.x()*w*0.5);
@@ -331,12 +335,15 @@ void VRTextureGenerator::applyPolygon(T* data, VRPolygonPtr p, Color4f c, float 
     Vec3d b = bb.max(); swap(b[1], b[2]);
     Vec3i A = Vec3i( upscale( a ) ) - Vec3i(1,1,1);
     Vec3i B = Vec3i( upscale( b ) ) + Vec3i(1,1,1);
+    //cout << "applyPolygon " << A << " -> " << B << endl;
     //float texelSize = 1.0/width; // TODO: non square textures?
     for (int j=A[1]; j<B[1]; j++) {
         for (int i=A[0]; i<B[0]; i++) {
             Vec2d pos = Vec2d(float(i)/width, float(j)/height);
             double d;
+            //cout << "AA " << clamp(Vec3i(i,j,0)) << " " << pos << " " << d << endl;
             if (p->isInside(pos, d)) {
+                //cout << " AA " << clamp(Vec3i(i,j,0)) << " " << c << endl;
                 for (int k=0; k<depth; k++) applyPixel(data, clamp(Vec3i(i,j,k)), c);
             } /*else if (d < texelSize) { // TODO: finish antialiasing feature
                 float a = 1.0 - d*width;
@@ -365,10 +372,13 @@ VRTexturePtr VRTextureGenerator::compose(int seed) { // TODO: optimise!
         if (hasAlpha)   fill(data4, data4+N, Color4f(1,1,1,1));
         else            fill(data3, data3+N, Color3f(1,1,1));
     }
-    for (auto l : layers) {
+    for (int i=0; i<layers.size(); i++) {
+        auto& l = layers[i];
+        float ma = (i == 0) ? 1.0 : 0.5;
+
         if (!hasAlpha) {
             if (l->type == BRICKS) VRBricks::apply(data3, dims, l->amount, l->c31, l->c32);
-            if (l->type == PERLIN) VRPerlin::apply(data3, dims, l->amount, l->c31, l->c32);
+            if (l->type == PERLIN) VRPerlin::apply(data3, dims, l->amount, l->c31, l->c32, ma);
             if (l->type == NORMALMAP) VRNormalmap::apply(data3, dims, l->amount);
             if (l->type == LINE) applyLine(data3, Vec3d(l->c31), Vec3d(l->c32), l->c41, l->amount);
             if (l->type == BOX) applyBox(data3, Vec3d(l->c31), Vec3d(l->c32), l->c41);
@@ -380,7 +390,7 @@ VRTexturePtr VRTextureGenerator::compose(int seed) { // TODO: optimise!
         }
         if (hasAlpha) {
             if (l->type == BRICKS) VRBricks::apply(data4, dims, l->amount, l->c41, l->c42);
-            if (l->type == PERLIN) VRPerlin::apply(data4, dims, l->amount, l->c41, l->c42);
+            if (l->type == PERLIN) VRPerlin::apply(data4, dims, l->amount, l->c41, l->c42, ma);
             if (l->type == NORMALMAP) VRNormalmap::apply(data4, dims, l->amount);
             if (l->type == LINE) applyLine(data4, Vec3d(l->c31), Vec3d(l->c32), l->c41, l->amount);
             if (l->type == BOX) applyBox(data4, Vec3d(l->c31), Vec3d(l->c32), l->c41);

@@ -14,8 +14,8 @@ using namespace OSG;
 
 // TODO
 
-VRConceptWidget::VRConceptWidget(VRGuiSemantics* m, VRConceptPtr concept) : VRSemanticWidget(m, "#00CCFF") {
-    this->concept = concept;
+VRConceptWidget::VRConceptWidget(VRGuiSemantics* m, VRConceptPtr concept_) : VRSemanticWidget(m, "#00CCFF") {
+    this->concept_ = concept_;
     /*gtk_label_set_text(label, concept->getName().c_str());
 
     auto toolbar2 = gtk_toolbar_new();
@@ -50,7 +50,7 @@ VRConceptWidget::VRConceptWidget(VRGuiSemantics* m, VRConceptPtr concept) : VRSe
     }*/
 }
 
-int VRConceptWidget::ID() { return concept->ID; }
+int VRConceptWidget::ID() { return concept_->ID; }
 
 void VRConceptWidget::on_edit_prop_clicked() {
     if (!selected_property) return;
@@ -144,19 +144,19 @@ void VRConceptWidget::on_new_rule_clicked() { manager->addRule(this); }
 void VRConceptWidget::reparent(VREntityWidgetPtr w) {}
 
 void VRConceptWidget::reparent(VRConceptWidgetPtr w) {
-    VRConceptPtr c = w->concept;
-    if (c->hasParent(concept) && c->parents.size() > 1) { // remove parent if he has at least two!
-        c->removeParent(concept);
+    VRConceptPtr c = w->concept_;
+    if (c->hasParent(concept_) && c->parents.size() > 1) { // remove parent if he has at least two!
+        c->removeParent(concept_);
         manager->disconnect(ptr(), w);
     } else { // add parent
-        concept->append(c);
+        concept_->append(c);
         manager->connect(ptr(), w, "#00CCFF");
     }
     //saveScene();
 }
 
 void VRConceptWidget::reparent(VRRuleWidgetPtr w) {
-    w->rule->associatedConcept = concept->getName();
+    w->rule->associatedConcept = concept_->getName();
     manager->disconnectAny(w);
     manager->connect(ptr(), w, "#00DD00");
     //saveScene();

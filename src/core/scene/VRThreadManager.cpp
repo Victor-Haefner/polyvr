@@ -24,7 +24,7 @@ VRThread::~VRThread() {
     control_flag = false;
     if (std_thread) {
         std_thread->join();
-        delete std_thread;
+        std_thread.reset();
     }
 }
 
@@ -96,7 +96,7 @@ void VRThreadManager::stopAllThreads() {
         for (auto t : threads) {
             //cout << "wait for " << t.second->name << " ID " << t.second->ID << " c " << count << endl;
             if (t.second->status == 2) {
-                if (t.second->std_thread) { t.second->std_thread->join(); delete t.second->std_thread; t.second->std_thread = 0; }
+                if (t.second->std_thread) { t.second->std_thread->join(); t.second->std_thread.reset(); }
                 threads.erase(t.first); break;
             }
         }
@@ -124,7 +124,7 @@ void VRThreadManager::stopThread(int id, int tries) {
         osgSleep(10);
     }
 
-    if (t->std_thread) { t->std_thread->join(); delete t->std_thread; t->std_thread = 0; }
+    if (t->std_thread) { t->std_thread->join(); t->std_thread.reset(); }
     threads.erase(id);
 }
 
@@ -132,6 +132,12 @@ void VRThreadManager::setThreadName(string name) {
 #ifdef WIN32
     std::wstring stemp = std::wstring(name.begin(), name.end());
     SetThreadDescription(GetCurrentThread(), stemp.c_str());
+#endif
+
+#ifdef __linux__
+    if (name.size() >= 16) name = name.substr(0, 15); // pthread_setname_np limits names to 16 chars including '\0'
+    int rc = pthread_setname_np(pthread_self(), name.c_str());
+    if (rc != 0) cout << "pthread_setname_np failed!!" << endl;
 #endif
 }
 
@@ -145,6 +151,11 @@ string VRThreadManager::getThreadName() {
         name = string(stemp.begin(), stemp.end());
         LocalFree(data);
     }
+#endif
+#ifdef __linux__
+    char buf[16]; // max 16 bytes
+    int rc = pthread_getname_np(pthread_self(), buf, sizeof(buf));
+    if (rc == 0) name = buf;
 #endif
     return name;
 }
@@ -171,6 +182,10 @@ void VRThreadManager::runLoop(VRThreadWeakPtr wt) {
     t->status = 2;
 }
 
+shared_ptr<ChangeList> createChangeList() {
+    return shared_ptr<ChangeList>(ChangeList::create(), [](ChangeList* cl){ OSG::subRef(cl); });
+}
+
 int VRThreadManager::initThread(VRThreadCbPtr f, string name, bool loop, int aspect) { //start thread
 #ifndef WASM
     static int id = 1;
@@ -185,8 +200,8 @@ int VRThreadManager::initThread(VRThreadCbPtr f, string name, bool loop, int asp
     t->t_last = getTime()*1e-3;
     t->selfSyncBarrier = Barrier::create();
     t->mainSyncBarrier = Barrier::create();
-    t->initCl = ChangeList::create();
-    t->std_thread = new ::Thread(name, bind(&VRThreadManager::runLoop, this, t));
+    t->initCl = createChangeList();
+    t->std_thread = shared_ptr<::Thread>(new ::Thread(name, bind(&VRThreadManager::runLoop, this, t)));
     threads[id] = t;
 
     id++;
@@ -210,7 +225,7 @@ void VRThreadManager::waitThread(int id) {
 void VRThreadManager::killThread(int id) {
     if (threads.count(id) == 0) return;
     cout << "\nKILL THREAD " << id << endl;
-    if (threads[id]->std_thread) { threads[id]->std_thread->join(); delete threads[id]->std_thread; threads[id]->std_thread = 0; }
+    if (threads[id]->std_thread) { threads[id]->std_thread->join(); threads[id]->std_thread.reset(); }
     threads.erase(id);
 }
 

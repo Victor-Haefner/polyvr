@@ -10,8 +10,6 @@
 
 #include <OpenSG/OSGSField.h>
 
-struct VRPrimitive;
-
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
@@ -32,7 +30,7 @@ class VRGeometry : public VRTransform {
 
     protected:
         VRMaterialPtr mat = 0;
-        VRPrimitive* primitive = 0;
+        shared_ptr<VRPrimitive> primitive = 0;
         OSGGeometryPtr mesh;
         OSGObjectPtr mesh_node;
         bool meshSet = false;
@@ -112,6 +110,8 @@ class VRGeometry : public VRTransform {
 
         void setRandomColors();
         void removeDoubles(float minAngle);
+        void closeHoles();
+        void fixFaceOrientations(int face0);
         void decimate(float f);
         void merge(VRGeometryPtr geo, PosePtr pose = 0);
         void removeSelection(VRSelectionPtr sel);
@@ -139,7 +139,7 @@ class VRGeometry : public VRTransform {
         float getMin(int axis);
 
         OSGGeometryPtr getMesh();
-        VRPrimitive* getPrimitive();
+        shared_ptr<VRPrimitive> getPrimitive();
 
         void setColor(string c);
         void setMaterial(VRMaterialPtr mat = 0);

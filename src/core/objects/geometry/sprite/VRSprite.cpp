@@ -48,7 +48,7 @@ VRSpritePtr VRSprite::create(string name, bool alpha, float w, float h) {
 
 VRSpritePtr VRSprite::ptr() { return static_pointer_cast<VRSprite>( shared_from_this() ); }
 
-CEFPtr VRSprite::getWebModule() { return web; }
+shared_ptr<CEF> VRSprite::getWebModule() { return web; }
 
 void VRSprite::updateGeo() {
     VRGeoData data;
@@ -130,7 +130,10 @@ void VRSprite::webOpen(string path, int res, float ratio) {
         var isVis = $1;
         var uri = Module.UTF8ToString($2);
         var parts = uri.split("/");
-        uri = parts[parts.length - 1]+".html";
+        var filename = parts[parts.length - 1];
+        var fns = filename.split("?");
+        if (fns.length == 1) uri = filename+".html";
+        else uri = fns[0]+".html?"+fns[1];
 
         var frame = document.createElement("iframe");
         if (document.getElementById("hudDiv")) {

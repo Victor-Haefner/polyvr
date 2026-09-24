@@ -6,14 +6,6 @@
 #include <OpenSG/OSGImage.h>
 
 
-#ifdef WASM
-PyGILState_STATE PyGILState_Ensure() {
-	return PyGILState_STATE();
-}
-
-void PyGILState_Release(PyGILState_STATE state) {}
-#endif
-
 static vector<PyObject*> pyCallbacks;
 
 void addPyCallback(PyObject* o) {
@@ -27,8 +19,34 @@ void cleanupPyCallbacks() {
 
 PyObject* VRPyBase::err = NULL;
 
+VRPyGilGuard::VRPyGilGuard() {
+    if (Py_IsInitialized()) {
+        state = (int)PyGILState_Ensure();
+        acquired = true;
+    }
+}
+
+VRPyGilGuard::~VRPyGilGuard() {
+    //if (acquired && Py_IsInitialized()) {
+    if (acquired) {
+        PyGILState_Release((PyGILState_STATE)state);
+    }
+}
+
 void VRPyBase::registerModule(PyTypeObject* typeRef, string name, PyObject* mod, vector<PyTypeObject*> tp_bases) {
-    if (tp_bases.size() == 1) typeRef->tp_base = tp_bases[0];
+    size_t Nb = tp_bases.size();
+
+    if (Nb == 1) {
+        typeRef->tp_base = tp_bases[0];
+    } else if (Nb > 1) {
+        PyObject* types = PyTuple_New(Nb);
+        for (size_t i=0; i<Nb; i++) {
+            Py_INCREF(tp_bases[i]);
+            PyTuple_SetItem(types, i, (PyObject*)tp_bases[i]);
+        }
+        typeRef->tp_bases = types;
+    }
+
     if ( PyType_Ready(typeRef) < 0 ) { cout << "\nERROR! could not register " << name << endl; return; }
     Py_INCREF(typeRef);
     PyModule_AddObject(mod, name.c_str(), (PyObject*)typeRef);
@@ -36,41 +54,6 @@ void VRPyBase::registerModule(PyTypeObject* typeRef, string name, PyObject* mod,
 
 PyObject* VRPyBase::allocatePyObject(PyTypeObject* typeRef, vector<PyTypeObject*>& tp_bases) {
     PyObject* obj = typeRef->tp_alloc(typeRef, 0);
-
-    size_t Nb = tp_bases.size();
-    if (Nb > 1) {
-        PyObject* types = PyTuple_New(Nb);
-        for (size_t i=0; i<Nb; i++) PyTuple_SetItem(types, i, (PyObject*)tp_bases[i]);
-        obj->ob_type->tp_bases = types;
-
-        Py_INCREF(tp_bases[0]);
-        obj->ob_type->tp_base = tp_bases[0];
-
-        size_t Nmro0 = PyTuple_GET_SIZE(obj->ob_type->tp_mro);
-        size_t Nmro = Nmro0;
-        for (size_t i=0; i<Nb; i++) Nmro += PyTuple_GET_SIZE(tp_bases[i]->tp_mro);
-        PyObject* mro = PyTuple_New(Nmro);
-
-        size_t mi=0;
-        for (size_t i = 0; i<Nmro0; i++, mi++) {
-            PyObject* m = PyTuple_GetItem(obj->ob_type->tp_mro, i);
-            Py_INCREF(m);
-            PyTuple_SetItem(mro, mi, m);
-        }
-
-        for (size_t j=0; j<Nb; j++) {
-            size_t Nmroi = PyTuple_GET_SIZE(tp_bases[j]->tp_mro);
-            for (size_t i = 0; i<Nmroi; i++, mi++) {
-                PyObject* m = PyTuple_GetItem(tp_bases[j]->tp_mro, i);
-                Py_INCREF(m);
-                PyTuple_SetItem(mro, mi, m);
-            }
-        }
-
-        obj->ob_type->tp_mro = mro;
-        //cout << " VRPyBase::allocatePyObject, mro tuple? " << PyTuple_Check(obj->ob_type->tp_mro) << endl;
-    }
-
     return obj;
 }
 
@@ -119,8 +102,8 @@ OSG::Vec2i VRPyBase::parseVec2iList(PyObject *li) {
     vector<PyObject*> lis = pyListToVector(li);
     if (lis.size() != 2) return OSG::Vec2i();
     int x,y;
-    x = PyInt_AsLong(lis[0]);
-    y = PyInt_AsLong(lis[1]);
+    x = PyLong_AsLong(lis[0]);
+    y = PyLong_AsLong(lis[1]);
     return OSG::Vec2i(x,y);
 }
 
@@ -129,9 +112,9 @@ OSG::Vec3i VRPyBase::parseVec3iList(PyObject *li) {
     vector<PyObject*> lis = pyListToVector(li);
     if (lis.size() != 3) return OSG::Vec3i();
     int x,y,z;
-    x = PyInt_AsLong(lis[0]);
-    y = PyInt_AsLong(lis[1]);
-    z = PyInt_AsLong(lis[2]);
+    x = PyLong_AsLong(lis[0]);
+    y = PyLong_AsLong(lis[1]);
+    z = PyLong_AsLong(lis[2]);
     return OSG::Vec3i(x,y,z);
 }
 
@@ -140,20 +123,30 @@ OSG::Vec4i VRPyBase::parseVec4iList(PyObject *li) {
     vector<PyObject*> lis = pyListToVector(li);
     if (lis.size() != 4) return OSG::Vec4i();
     int x,y,z,w;
-    x = PyInt_AsLong(lis[0]);
-    y = PyInt_AsLong(lis[1]);
-    z = PyInt_AsLong(lis[2]);
-    w = PyInt_AsLong(lis[3]);
+    x = PyLong_AsLong(lis[0]);
+    y = PyLong_AsLong(lis[1]);
+    z = PyLong_AsLong(lis[2]);
+    w = PyLong_AsLong(lis[3]);
     return OSG::Vec4i(x,y,z,w);
 }
 
 OSG::Line VRPyBase::PyToLine(PyObject *li) {
     if (li == 0) return OSG::Line();
     vector<PyObject*> lis = pyListToVector(li);
-    if (lis.size() != 6) return OSG::Line();
-    float r[6];
-    for (int i=0; i<6; i++) r[i] = PyFloat_AsDouble(lis[i]);
-    return OSG::Line(OSG::Pnt3f(r[3],r[4],r[5]), OSG::Vec3f(r[0],r[1],r[2]));
+
+    if (lis.size() == 2) {
+        OSG::Vec3d P = parseVec3dList( lis[0] );
+        OSG::Vec3d D = parseVec3dList( lis[1] );
+        return OSG::Line(OSG::Pnt3f(P), OSG::Vec3f(D));
+    }
+
+    if (lis.size() == 6) {
+        float r[6];
+        for (int i=0; i<6; i++) r[i] = PyFloat_AsDouble(lis[i]);
+        return OSG::Line(OSG::Pnt3f(r[3],r[4],r[5]), OSG::Vec3f(r[0],r[1],r[2]));
+    }
+
+    return OSG::Line();
 }
 
 OSG::Vec2d VRPyBase::parseVec2dList(PyObject *li) {
@@ -253,7 +246,7 @@ int VRPyBase::parseInt(PyObject *args) {
 string VRPyBase::parseString(PyObject *args) {
     PyObject* o = 0;
     if (! PyArg_ParseTuple(args, "O", &o)) return "";
-    return PyString_AsString(o);
+    return PyUnicode_AsUTF8(o);
 }
 
 PyObject* VRPyBase::toPyTuple(const OSG::Vec2d& v) {
@@ -276,25 +269,35 @@ PyObject* VRPyBase::toPyTuple(const OSG::Vec4d& v) {
 
 PyObject* VRPyBase::toPyTuple(const OSG::Vec2i& v) {
     PyObject* res = PyList_New(2);
-    for (int i=0; i<2; i++) PyList_SetItem(res, i, PyInt_FromLong(v[i]));
+    for (int i=0; i<2; i++) PyList_SetItem(res, i, PyLong_FromLong(v[i]));
     return res;
 }
 
 PyObject* VRPyBase::toPyTuple(const OSG::Vec3i& v) {
     PyObject* res = PyList_New(3);
-    for (int i=0; i<3; i++) PyList_SetItem(res, i, PyInt_FromLong(v[i]));
+    for (int i=0; i<3; i++) PyList_SetItem(res, i, PyLong_FromLong(v[i]));
     return res;
 }
 
 PyObject* VRPyBase::toPyTuple(const OSG::Vec4i& v) {
     PyObject* res = PyList_New(4);
-    for (int i=0; i<4; i++) PyList_SetItem(res, i, PyInt_FromLong(v[i]));
+    for (int i=0; i<4; i++) PyList_SetItem(res, i, PyLong_FromLong(v[i]));
+    return res;
+}
+
+PyObject* VRPyBase::toPyTuple(const OSG::Matrix4d& v) {
+    PyObject* res = PyList_New(16);
+    for (int i=0; i<4; i++) {
+        for (int j=0; j<4; j++) {
+            PyList_SetItem(res, i*4+j, PyFloat_FromDouble(v[i][j]));
+        }
+    }
     return res;
 }
 
 PyObject* VRPyBase::toPyTuple( const vector<string>& v ) {
     PyObject* res = PyList_New(v.size());
-    for (unsigned int i=0; i<v.size(); i++) PyList_SetItem(res, i, PyString_FromString(v[i].c_str()));
+    for (unsigned int i=0; i<v.size(); i++) PyList_SetItem(res, i, PyUnicode_FromString(v[i].c_str()));
     return res;
 }
 
@@ -304,8 +307,8 @@ PyObject* VRPyBase::toPyTuple( const vector<PyObject*>& v ) {
     return res;
 }
 
-int VRPyBase::toOSGConst(PyObject* o) { return toOSGConst( PyString_AsString(o) ); }
-int VRPyBase::toGLConst(PyObject* o) { return toGLConst( PyString_AsString(o) ); }
+int VRPyBase::toOSGConst(PyObject* o) { return toOSGConst( PyUnicode_AsUTF8(o) ); }
+int VRPyBase::toGLConst(PyObject* o) { return toGLConst( PyUnicode_AsUTF8(o) ); }
 
 int VRPyBase::toOSGConst(string s) {
     // pixel formats
@@ -435,6 +438,26 @@ int VRPyBase::toGLConst(string s) {
     if (s == "GL_ONE_MINUS_SRC_COLOR") return GL_ONE_MINUS_SRC_COLOR;
     if (s == "GL_ONE_MINUS_DST_COLOR") return GL_ONE_MINUS_DST_COLOR;
 
+#ifndef __EMSCRIPTEN__
+    if (s == "GL_RED") return GL_RED;
+#else
+    if (s == "GL_RED") return OSG::Image::OSG_R_PF;
+#endif
+    if (s == "GL_R8") return GL_R8;
+#ifndef __EMSCRIPTEN__
+    if (s == "GL_ALPHA8") return GL_ALPHA8;
+    if (s == "GL_LUMINANCE8") return GL_LUMINANCE8;
+    if (s == "GL_RGB8") return GL_RGB8;
+    if (s == "GL_RGBA8") return GL_RGBA8;
+#endif
+
+    if (s == "GL_R32F") return GL_R32F;
+    if (s == "GL_ALPHA32F_ARB") return GL_ALPHA32F_ARB;
+    if (s == "GL_LUMINANCE32F_ARB") return GL_LUMINANCE32F_ARB;
+    if (s == "GL_LUMINANCE_ALPHA32F_ARB") return GL_LUMINANCE_ALPHA32F_ARB;
+    if (s == "GL_RGB32F") return GL_RGB32F;
+    if (s == "GL_RGBA32F") return GL_RGBA32F;
+    if (s == "GL_RED_INTEGER_EXT") return GL_RED_INTEGER_EXT;
 
     return -1;
 }
@@ -443,13 +466,21 @@ bool VRPyBase::isNone(PyObject* o) { return (o == Py_None); }
 
 void VRPyBase::execPyCallVoidVoid(PyObject* pyFkt, PyObject* pArgs) {
     if (pyFkt == 0) return;
-    PyGILState_STATE gstate = PyGILState_Ensure();
+    VRPyGilGuard gilGuard;
     if (PyErr_Occurred() != NULL) PyErr_Print();
 
-    PyObject_CallObject(pyFkt, pArgs);
+    if (!PyCallable_Check(pyFkt)) {
+        PyErr_SetString(PyExc_TypeError, "Stored Python callback is not callable");
+        PyErr_Print();
+        return;
+    }
+
+    PyObject* result = PyObject_CallObject(pyFkt, pArgs);
+
+    if (result) Py_DECREF(result);
+    else PyErr_Print();
 
     //Py_XDECREF(pArgs); Py_DecRef(pyFkt); // TODO!!
 
     if (PyErr_Occurred() != NULL) PyErr_Print();
-    PyGILState_Release(gstate);
 }

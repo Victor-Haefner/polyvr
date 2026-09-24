@@ -13,16 +13,20 @@
 #include "core/utils/VRUndoInterfaceT.h"
 #include "core/utils/VRStorage_template.h"
 #include "core/scene/import/VRExport.h"
+#include "core/scene/VRScene.h"
+#include "core/scene/VRSemanticManager.h"
 #include "core/gui/VRGuiConsole.h"
+#include "addons/Semantics/Reasoning/VREntity.h"
+#include "addons/Semantics/Reasoning/VROntology.h"
 
 #include <OpenSG/OSGGroup.h>
 #include <OpenSG/OSGTransform.h>
 #include <OpenSG/OSGNameAttachment.h>
-#include <OpenSG/OSGStringAttributeMap.h>
 #include <OpenSG/OSGVisitSubTree.h>
 #include <OpenSG/OSGSceneFileHandler.h>
 
 using namespace OSG;
+
 
 template<> string typeName(const VRObject* o) {
     VRObject* O = (VRObject*)o;
@@ -170,14 +174,29 @@ string VRObject::getType() { return type; }
 bool VRObject::hasTag(string name) { return attachments.count(name); }
 void VRObject::remTag(string name) { remAttachment(name); }
 
+string packObjectTags(map<string, VRAttachment*> attachments) {
+    string res = "{";
+    int i=0;
+    for (auto& a : attachments) {
+        if (i > 0) res += ",";
+        res += a.first+":"+a.second->asString();
+        i++;
+    }
+    return res + "}";
+}
+
 void VRObject::addTag(string name) {
-    if (!attachments.count(name)) attachments[name] = new VRAttachment(name);
+    if (!attachments.count(name)) {
+        attachments[name] = new VRAttachment(name);
+        getNode()->setAttachment("tags", packObjectTags(attachments));
+    }
 }
 
 void VRObject::remAttachment(string name) {
     if (attachments.count(name)) {
         delete attachments[name];
         attachments.erase(name);
+        getNode()->setAttachment("tags", packObjectTags(attachments));
     }
 }
 
@@ -189,10 +208,14 @@ string VRObject::getAttachmentAsString(string name) {
 }
 
 void VRObject::setAttachmentFromString(string name, string value) {
-    if (!hasTag(name)) addAttachment(name, value);
-    else {
-        if (!attachments[name]->fromString(value))
+    if (!hasTag(name)) {
+        addAttachment(name, value);
+        getNode()->setAttachment("tags", packObjectTags(attachments));
+    } else {
+        if (!attachments[name]->fromString(value)) {
             attachments[name]->set(value);
+            getNode()->setAttachment("tags", packObjectTags(attachments));
+        }
     }
 }
 
@@ -287,6 +310,15 @@ void VRObject::switchCore(OSGCorePtr c) {
 void VRObject::disableCore() { osg->node->setCore( Group::create() ); }
 void VRObject::enableCore() { osg->node->setCore( core->core ); }
 
+bool getBit(const unsigned int& mask, int bit) {
+    return (mask & 1UL << bit);
+}
+
+void setBit(unsigned int& mask, int bit, bool value) {
+    if (value) mask |= 1UL << bit;
+    else mask &= ~(1UL << bit);
+}
+
 void VRObject::wrapOSG(OSGObjectPtr node) {
     if (!node || !getNode()) return;
     if (!node->node) return;
@@ -294,9 +326,58 @@ void VRObject::wrapOSG(OSGObjectPtr node) {
     if (!core || !node->node->getCore()) return;
     core->core = node->node->getCore();
 
-    Attachment* att = node->node->findAttachment( StringAttributeMap::getClassType().getGroupId());
-    StringAttributeMapUnrecPtr aMap = dynamic_cast<StringAttributeMap*>(att);
-    if (aMap && aMap->hasAttribute("pickable")) pickable = (aMap->getAttribute("pickable") == "yes");
+    type = core->core->getTypeName();
+    if (type == "Group") type = "Object";
+    if (type == "ComponentTransform") type = "Transform";
+    if (type == "DistanceLOD") type = "Lod";
+
+    // update own visibility bit mask
+    unsigned int mask = getTravMask();
+    bool showObj = getBit(mask, 0);
+    bool showShadow = getBit(mask, 4);
+    setBit(visibleMask, 0, showObj);
+    setBit(visibleMask, 1, showShadow);
+
+    if (node->hasAttachment("pickable")) pickable = (node->getAttachment("pickable") == "yes");
+
+    if (node->hasAttachment("tags")) {
+        string tags = node->getAttachment("tags");
+        if (tags.size() < 2) return;
+        tags = subString(tags, 1, tags.size()-2);
+
+        for (auto& t : splitString(tags, ',')) {
+            auto tpair = splitString(t, ':');
+            if (tpair.size() == 2) setAttachmentFromString(tpair[0], tpair[1]);
+            else addTag(tpair[0]);
+        }
+    }
+
+    if (node->hasAttachment("ontology")) {
+        string data = node->getAttachment("ontology");
+        auto xml = XML::create();
+        xml->newRoot("root", "", "");
+        xml->parse(data);
+        auto mgr = VRScene::getCurrent()->getSemanticManager();
+
+        auto ontoE = xml->getRoot()->getChild("ontology");
+        string oName = ontoE->getAttribute("name");
+
+        auto ontology = mgr->addOntology(oName);
+        ontology->load(xml->getRoot());
+    }
+
+    if (node->hasAttachment("entity")) {
+        string data = node->getAttachment("entity");
+        auto xml = XML::create();
+        xml->newRoot("root", "", "");
+        xml->parse(data);
+
+        auto e = VREntity::create();
+        e->load(xml->getRoot());
+        setEntity(e);
+        e->setSGObject(ptr());
+        //cout << " -- found entity " << e->toString() << endl;
+    }
 }
 
 OSGObjectPtr VRObject::getNode() { return osg; }
@@ -323,7 +404,7 @@ void VRObject::addChild(OSGObjectPtr n) {
 void VRObject::addChild(VRObjectPtr child, bool osg, int place) {
     if (child == 0 || child == ptr()) return;
     //cout << "VRObject::addChild " << child->getName() << "  to: " << getName() << endl;
-    if (child->getParent() != 0) { child->switchParent(ptr(), place); return; }
+    if (child->getParent() != 0) { child->switchParent(ptr(), false, place); return; }
 
     if (osg) addChild(child->osg);
     child->graphChanged = VRGlobals::CURRENT_FRAME;
@@ -359,7 +440,13 @@ void VRObject::subChild(VRObjectPtr child, bool doOsg) {
     updateChildrenIndices(true);
 }
 
-void VRObject::switchParent(VRObjectPtr new_p, int place) {
+void VRObject::switchParent(VRObjectPtr new_p, bool keepTransform, int place) {
+    Matrix4d wm;
+    if (keepTransform) {
+        if (auto t = dynamic_pointer_cast<VRTransform>(ptr()))
+            t->getWorldMatrix(wm);
+    }
+
     //cout << "VRObject::switchParent of: " << getName() << "  new parent: " << new_p->getName() << " destroyed? " << destroyed << endl;
     if (destroyed) { cout << "VRObject::switchParent ERROR: object is marked as destroyed!" << endl; return; }
     if (new_p == ptr()) return;
@@ -370,6 +457,11 @@ void VRObject::switchParent(VRObjectPtr new_p, int place) {
 
     getParent()->subChild(ptr(), true);
     new_p->addChild(ptr(), true, place);
+
+    if (keepTransform) {
+        if (auto t = dynamic_pointer_cast<VRTransform>(ptr()))
+            t->setWorldMatrix(wm);
+    }
 }
 
 void VRObject::replaceChild(int i, VRObjectPtr new_c) {
@@ -553,27 +645,37 @@ bool VRObject::hasGraphChanged() {
     return getParent()->hasGraphChanged();
 }
 
-BoundingboxPtr VRObject::getBoundingbox(bool commitSG) {
-    Pnt3f p1, p2;
-    if (commitSG) commitChanges(); // crashes in cave, but why??
-    osg->node->updateVolume();
-    osg->node->getVolume().getBounds(p1, p2);
-    auto b = Boundingbox::create();
-    b->update(Vec3d(p1));
-    b->update(Vec3d(p2));
-    return b;
-}
-
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/geometry/OSGGeometry.h"
 
-BoundingboxPtr VRObject::getWorldBoundingbox() {
+BoundingboxPtr VRObject::getBoundingbox(bool onlyVisible) {
+    auto b = Boundingbox::create();
+    auto self = ptr();
+    for (auto obj : getChildren(true, "", true)) {
+        auto geo = dynamic_pointer_cast<VRGeometry>(obj);
+        if (!geo) continue;
+        Matrix4d M = geo->getMatrixTo(self);
+        if (!geo->getMesh() || !geo->getMesh()->geo) continue;
+        if (onlyVisible && !geo->isVisible("", true)) continue;
+        auto pos = geo->getMesh()->geo->getPositions();
+        if (!pos) continue;
+        for (unsigned int i=0; i<pos->size(); i++) {
+            Pnt3d p = Pnt3d( pos->getValue<Pnt3f>(i) );
+            M.mult(p,p);
+            b->update(Vec3d(p));
+        }
+    }
+    return b;
+}
+
+BoundingboxPtr VRObject::getWorldBoundingbox(bool onlyVisible) {
     auto b = Boundingbox::create();
     for (auto obj : getChildren(true, "", true)) {
         auto geo = dynamic_pointer_cast<VRGeometry>(obj);
         if (!geo) continue;
         Matrix4d M = geo->getWorldMatrix();
         if (!geo->getMesh() || !geo->getMesh()->geo) continue;
+        if (onlyVisible && !geo->isVisible("", true)) continue;
         auto pos = geo->getMesh()->geo->getPositions();
         if (!pos) continue;
         for (unsigned int i=0; i<pos->size(); i++) {
@@ -631,7 +733,7 @@ string VRObject::getOSGTreeString() {
 }
 
 string VRObject::printOSGTreeString(OSGObjectPtr o, string indent) {
-    if (indent.size() > 10) return "recursionLimit10";
+    if (indent.size() > 30) return "recursionLimit 30";
     if (o == 0) return "";
     if (!o->node) return "noNode";
 
@@ -642,7 +744,7 @@ string VRObject::printOSGTreeString(OSGObjectPtr o, string indent) {
     string name = "Unnamed";
     if (OSG::getName(o->node)) name = OSG::getName(o->node);
 
-    string data = indent + name + " " + type + "  ";
+    string data = indent + name + " " + type + ", mask: " + toString(o->node->getTravMask()) + "  ";
     if (type == "Transform") {
         Transform* t = dynamic_cast<Transform*>(core);
         if (t) data += toString(Vec4d(t->getMatrix()[0])) + "  " + toString(Vec4d(t->getMatrix()[1])) + "  " + toString(Vec4d(t->getMatrix()[2]));
@@ -660,6 +762,15 @@ string VRObject::printOSGTreeString(OSGObjectPtr o, string indent) {
     for (uint i=0; i<o->node->getNChildren(); i++) {
         auto child = o->node->getChild(i);
         if (child) data += "\n" + printOSGTreeString(OSGObject::create(child), indent + " ");
+    }
+
+    if (type == "VisitSubTree") {
+        VisitSubTree* v = dynamic_cast<VisitSubTree*>(core);
+    	auto n = v->getSubTreeRoot();
+    	if (n) {
+    		data += "\n" + indent + " -->";
+    		data += "\n" + printOSGTreeString(OSGObject::create(n), indent + " ");
+    	}
     }
     return data;
 }
@@ -723,15 +834,6 @@ void VRObject::setVisibleUndo(unsigned int b) {
     setVisibleMask(b);
 }
 
-bool getBit(const unsigned int& mask, int bit) {
-    return (mask & 1UL << bit);
-}
-
-void setBit(unsigned int& mask, int bit, bool value) {
-    if (value) mask |= 1UL << bit;
-    else mask &= ~(1UL << bit);
-}
-
 int getVisibleMaskBit(const string& mode) {
     if (mode == "SHADOW") return 1;
     return 0;
@@ -780,20 +882,7 @@ void VRObject::setPickable(int b, bool setAttachment) {
     if (pickable == b) return;
 
     pickable = b;
-    if (!setAttachment) return;
-
-    StringAttributeMapUnrecPtr aMap = 0;
-    Attachment* att = getNode()->node->findAttachment( StringAttributeMap::getClassType().getGroupId());
-
-    if (!att) {
-        aMap = StringAttributeMap::create();
-        getNode()->node->addAttachment(aMap);
-    } else aMap = dynamic_cast<StringAttributeMap*>(att);
-
-    if (aMap) {
-        if (b) aMap->setAttribute("pickable", "yes");
-        else   aMap->setAttribute("pickable", "no");
-    }
+    if (setAttachment) getNode()->setAttachment("pickable", b?"yes":"no");
 }
 
 string VRObject::getPath() {

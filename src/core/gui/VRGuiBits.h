@@ -35,16 +35,14 @@ class VRGuiBits {
         void on_navigation_toggled(string name, bool b);
 
         void on_save_clicked();
-        void on_web_export_clicked();
         void on_quit_clicked();
         void on_internal_clicked();
         void on_fullscreen_clicked();
+        void on_seeall_clicked();
 
         void on_internal_close_clicked();
 
-        void updateWebPortRessources();
-        void on_web_cancel();
-        void on_web_start();
+        void updateWebPortRessources(bool withXR, bool withEditor, bool runBrowser);
 
     public:
         VRGuiBits();

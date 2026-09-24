@@ -11,7 +11,9 @@
 #include "core/math/partitioning/Quadtree.h"
 #include "core/math/pose.h"
 #include "core/math/path.h"
+#ifndef WITHOUT_LAPACKE_BLAS
 #include "core/math/PCA.h"
+#endif
 #include "core/utils/toString.h"
 #include "core/utils/VRProgress.h"
 #include "core/utils/VRTimer.h"
@@ -1253,6 +1255,7 @@ void VRPointCloud::externalTransform(string path, PosePtr p) {
 VRPointCloud::Splat VRPointCloud::computeSplat(Vec3d p0, vector<Splat> neighbors) {
     Splat res;
 
+#ifndef WITHOUT_LAPACKE_BLAS
     int N = neighbors.size();
     if (N >= 3) {
         PCA pca;
@@ -1277,6 +1280,7 @@ VRPointCloud::Splat VRPointCloud::computeSplat(Vec3d p0, vector<Splat> neighbors
         res.v1 = toSpherical(Vec3d(1,0,0));
         res.v2 = toSpherical(Vec3d(0,0,1));
     }
+#endif
 
     return res;
 }
@@ -1469,7 +1473,7 @@ void VRPointCloud::externalColorize(string path, string imgTable, PosePtr pcPose
                     vpPath = Path::create();
                 } else {
                     //cout << "  add point: " << vp.pose.pos() << "   " << vp.pose.dir() << "   " << vp.pose.dir().dot(D) << endl;
-                    vpPath->addPoint(vp.pose);
+                    vpPath->addPoint( Pose::create(vp.pose) );
                 }
             }
         }

@@ -54,12 +54,8 @@ VRGuiGeneral::VRGuiGeneral() {
 
 bool VRGuiGeneral::setBGColor(string c) {
     if (updating) return true;
-    auto parts = splitString(c, '|');
     Color4f col;
-    col[0] = toFloat(parts[0]);
-    col[1] = toFloat(parts[1]);
-    col[2] = toFloat(parts[2]);
-    col[3] = toFloat(parts[3]);
+    toValue(c, col);
     auto scene = VRScene::getCurrent();
     if (scene) scene->setBackgroundColor(toColor3f(col));
     return true;
@@ -216,7 +212,7 @@ bool VRGuiGeneral::updateScene() {
     Color3f color = scene->getBackgroundColor();
     VRBackground::TYPE t = scene->getBackgroundType();
 
-    uiSignal("set_bg_solid_color", {{"color",toString(color[0])+"|"+toString(color[1])+"|"+toString(color[2])+"|1"}});
+    uiSignal("set_bg_solid_color", {{"color",toString(color)}});
     uiSignal("set_bg_path", {{"path",scene->getBackgroundPath()}});
     uiSignal("set_bg_file_ext", {{"ext",scene->getSkyBGExtension()}});
     uiSignal("set_enable_splash", {{"show",toString(scene->getShowSplash())}});

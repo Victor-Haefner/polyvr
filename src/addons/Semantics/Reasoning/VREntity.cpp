@@ -4,6 +4,8 @@
 #include "core/utils/VRStorage_template.h"
 #include "core/utils/VRTimer.h"
 #include "core/utils/toString.h"
+#include "core/scene/VRScene.h"
+#include "core/scene/VRSemanticManager.h"
 
 #include <iostream>
 #include <OpenSG/OSGVector.h>
@@ -36,6 +38,8 @@ VREntity::VREntity(string name, VROntologyPtr o, VRConceptPtr c) {
 
 VREntityPtr VREntity::create(string name, VROntologyPtr o, VRConceptPtr c) { return VREntityPtr( new VREntity(name, o, c) ); }
 
+VREntityPtr VREntity::ptr() { return shared_from_this(); }
+
 void VREntity::setSGObject(VRObjectPtr o) { sgObject = o; }
 VRObjectPtr VREntity::getSGObject() { return sgObject.lock(); }
 
@@ -66,6 +70,8 @@ string VREntity::getConceptList() {
     return data;
 }
 
+VROntologyPtr VREntity::getOntology() { return ontology.lock(); }
+
 VRPropertyPtr VREntity::getProperty(string name, bool warn) {
     for (auto c : getConcepts()) if (auto p = c->getProperty(name, 0)) return p;
     if (warn) WARN("Warning in VREntity::getProperty: property " + name + " of " + toString() + " not found!");
@@ -76,6 +82,11 @@ vector<VRPropertyPtr> VREntity::getProperties() {
     vector<VRPropertyPtr> res;
     for (auto c : getConcepts()) for (auto p : c->properties) res.push_back(p.second);
     return res;
+}
+
+bool VREntity::hasProperty(string name) {
+    for (auto c : getConcepts()) if (auto p = c->getProperty(name, 0)) return true;
+    return false;
 }
 
 void VREntity::addProperty(VRPropertyPtr prop, string name, string value, int pos) {
@@ -274,20 +285,24 @@ string VREntity::toString() {
     return data;
 }
 
-bool VREntity::is_a(string concept) {
+bool VREntity::is_a(string concept_) {
     for (auto cw : concepts) {
         if (auto c = cw.lock()) {
-            if (c->is_a(concept)) return true;
+            if (c->is_a(concept_)) return true;
         }
     }
     return false;
 }
 
 void VREntity::save(XMLElementPtr e, int p) {
+    if (!e) return;
     VRStorage::save(e,p);
-    e = e->addChild("properties");
+
+    if (auto o = getOntology()) e->setAttribute("ontology", o->getBaseName());
+
+    auto eP = e->addChild("properties");
     for (auto p : properties) {
-        auto e2 = e->addChild(p.first);
+        auto e2 = eP->addChild(p.first);
         for (auto sp : p.second) {
             auto e3 = e2->addChild(sp.second->getName());
             e3->setAttribute("value", sp.second->value);
@@ -297,9 +312,29 @@ void VREntity::save(XMLElementPtr e, int p) {
 }
 
 void VREntity::load(XMLElementPtr e, VRStorageContextPtr context) {
+    if (!e) return;
     VRStorage::load(e, context);
-    e = e->getChild("properties");
-    for (auto el : e->getChildren()) {
+
+    if (e->hasAttribute("ontology")) {
+        string oName = e->getAttribute("ontology");
+        auto mgr = VRScene::getCurrent()->getSemanticManager();
+        if (auto onto = mgr->getOntology(oName)) ontology = onto;
+    }
+
+    if (auto o = getOntology()) {
+        auto self = ptr();
+        o->addEntity(self); //
+
+        concepts.clear();
+        for (auto cs : conceptNames) {
+            auto c = o->getConcept(cs);
+            if (c) concepts.push_back(c);
+        }
+    }
+
+    auto eP = e->getChild("properties");
+    properties.clear();
+    for (auto el : eP->getChildren()) {
         for (auto el2 : el->getChildren()) {
             string n = el2->getName();
             auto p = VRProperty::create(n,"");

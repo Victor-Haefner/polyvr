@@ -36,6 +36,12 @@ PosePtr Pose::create(const Vec3d& p, const Vec3d& d, const Vec3d& u, const Vec3d
     return PosePtr( new Pose(p,d,u,s) );
 }
 
+PosePtr Pose::copy() { return Pose::create(*this); }
+
+double Pose::distance(PosePtr p) {
+    return (pos() - p->pos()).length();
+}
+
 void Pose::set(const Vec3d& p, const Vec3d& d, const Vec3d& u, const Vec3d& s) {
     data.resize(4);
     data[0] = p;
@@ -151,6 +157,12 @@ PosePtr Pose::inverse() {
     auto p = create();
     p->set(Vec3d(m[3]), Vec3d(-m[2])*1.0/s3, Vec3d(m[1])*1.0/s2, Vec3d(s1,s2,s3));
     return p;
+}
+
+Pose Pose::operator * (const Pose& other) const {
+    auto m1 = asMatrix();
+    m1.mult( other.asMatrix() );
+    return Pose(m1);
 }
 
 bool Pose::operator == (const Pose& other) const {

@@ -14,22 +14,93 @@ class AVFormatContext;
 class AVCodecContext;
 class AVPacket;
 class AVFrame;
+class AVCodec;
+class AVStream;
 class SwsContext;
 
 typedef signed char ALbyte;
 
 OSG_BEGIN_NAMESPACE;
 
-class VRVideo : public VRStorage {
+class VRVideoFrame {
     private:
-        struct VStream {
-            AVCodecContext* vCodec = 0;
-            map< int, VRTexturePtr > frames;
-            double fps = 0;
-            int cachedFrameMax = 0;
-            ~VStream();
+        VRTexturePtr tex;
+        bool removalQueued = false;
+
+    public:
+        VRVideoFrame();
+        ~VRVideoFrame();
+
+        VRTexturePtr getTexture();
+        void setupTexture(int width, int height, int Ncols, vector<uint8_t>& data);
+        void applyToMaterial(VRMaterialPtr material);
+
+        bool isQueuedForRemoval();
+        void queueRemoval();
+};
+
+class VRVideoStream {
+    public:
+        struct texData {
+            int frameI;
+            int width;
+            int height;
+            int Ncols;
+            vector<uint8_t> data;
         };
 
+    public:
+        VRMutex osgMutex;
+        AVCodecContext* vCodec = 0;
+        double fps = 0;
+
+        AVFrame* vFrame = 0;
+        SwsContext* swsContext = 0;
+        //AVPacket* packet = 0;
+        AVFrame* nFrame = 0;
+        vector<UInt8> osgFrame;
+
+        int cacheSize = 100;
+        map< int, VRVideoFrame > frames;
+        int currentFrame = -1;
+        int cachedFrameMin = 0;
+        int cachedFrameMax = 0;
+
+        bool needsFrameUpdate = false;
+        bool texDataQueued = false;
+        bool needsCleanup = false;
+        map<int, texData> texDataPool;
+        vector<int> toRemove;
+
+    public:
+        VRVideoStream();
+        VRVideoStream(AVStream* avStream, AVCodecContext* avContext);
+        ~VRVideoStream();
+
+        int getFPS();
+        void reset();
+
+        int getCurrentFrame();
+        void setCurrentFrame(int f);
+
+        /** -= call from video thread =- **/
+
+        void queueFrameUpdate(int frame);
+        bool decode(AVPacket* packet);
+        bool needsData();
+        void checkOldFrames();
+
+        /** -= call from main thread =- **/
+
+        void updateFrame(VRMaterialPtr material);
+        void processFrames();
+        void doCleanup();
+
+        VRTexturePtr getTexture(int i);
+};
+
+class VRVideo : public VRStorage {
+    private:
         struct AStream {
             VRSoundPtr audio;
             map< int, vector<VRSoundBufferPtr> > frames;
@@ -38,7 +109,7 @@ class VRVideo : public VRStorage {
             ~AStream();
         };
 
-        map<int, VStream> vStreams;
+        map<int, VRVideoStream> vStreams;
         map<int, AStream> aStreams;
         int width = 0;
         int height = 0;
@@ -47,33 +118,29 @@ class VRVideo : public VRStorage {
         double start_time = 0;
         double duration = 0;
 
-        int cacheSize = 100;
         int audioQueue = 40;
-        int currentFrame = 0;
+        int currentStream = 0;
         bool interruptCaching = false;
 
         VRMaterialWeakPtr material;
         VRAnimationPtr anim;
         VRAnimCbPtr animCb;
 
+        VRUpdateCbPtr mainLoopCb;
+
         AVFormatContext* vFile = 0;
-        AVFrame* vFrame = 0;
-        AVFrame* nFrame = 0;
-        vector<UInt8> osgFrame;
-        SwsContext* swsContext = 0;
-        AVPacket* packet = 0;
 
         VRMutex avMutex;
-        VRMutex osgMutex;
         VRThreadCbPtr worker;
         int wThreadID = -1;
 
         int getNStreams();
         int getStream(int j);
-        VRTexturePtr convertFrame(int stream, AVPacket* packet);
         void frameUpdate(float t, int stream);
         void loadSomeFrames();
         void cacheFrames(VRThreadWeakPtr t);
+        void prepareJump();
+        void mainThreadUpdate();
 
     public:
         VRVideo(VRMaterialPtr mat);
@@ -88,6 +155,7 @@ class VRVideo : public VRStorage {
         void pause();
         void resume();
         bool isPaused();
+        bool isRunning();
         void goTo(float t);
         void setVolume(float v);
 

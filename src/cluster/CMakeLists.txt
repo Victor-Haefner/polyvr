@@ -10,6 +10,9 @@ endif()
 include_directories("${DISK}:/usr/include" "${DISK}:/usr/vcpkg/installed/x64-windows/include" "${DISK}:/usr/vcpkg/installed/x64-windows/include/boost")
 link_directories("${DISK}:/usr/lib/opensg" "${DISK}:/usr/vcpkg/installed/x64-windows/lib")
 
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
 add_executable(VRServer VRServer.cpp)
 target_link_libraries(VRServer OSGBase )
 target_link_libraries(VRServer OSGContribTrapezoidalShadowMaps )

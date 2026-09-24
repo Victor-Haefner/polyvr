@@ -1,13 +1,15 @@
 #include "VRSystem.h"
 #include "../VRTimer.h"
 #include "../toString.h"
+
 #include <stdlib.h>
 #include <cstdlib>
 #include <sys/stat.h>
 #include <errno.h>
 #include <iostream>
 #include <fstream>
-#include <boost/filesystem.hpp>
+#include <filesystem>
+
 #ifndef WITHOUT_EXECINFO
 #include <execinfo.h>
 #include <cxxabi.h>
@@ -29,6 +31,7 @@
 #include <mach/mach_time.h>
 #endif
 
+#include "core/scene/VRThreadManager.h"
 #include "core/utils/Thread.h"
 #include <chrono>
 
@@ -147,6 +150,8 @@ void printBacktrace() {
     int nptrs = backtrace(buffer, 100);
     printf("backtrace() returned %d addresses\n", nptrs);
 
+    cout << " thread: " << OSG::VRThreadManager::getThreadName() << endl;
+
     strings = backtrace_symbols(buffer, nptrs);
     if (strings != NULL) {
         for (int j = 0; j < nptrs; j++) {
@@ -164,7 +169,8 @@ bool exists(string path) {
 	struct stat buffer;
 	return (stat (path.c_str(), &buffer) == 0);
 #else
-	return boost::filesystem::exists(path);
+    try { return std::filesystem::exists(path); }
+    catch (...) { return false; }
 #endif
 }
 
@@ -172,8 +178,14 @@ bool exists(string path) {
 bool isFile(string path) { return false; }
 bool isFolder(string path) { return false; }
 #else
-bool isFile(string path) { return boost::filesystem::is_regular_file(path); }
-bool isFolder(string path) { return boost::filesystem::is_directory(path); }
+bool isFile(string path) { 
+    try { return std::filesystem::is_regular_file(path); }
+    catch (...) { return false; }
+}
+bool isFolder(string path) { 
+    try { return std::filesystem::is_directory(path); }
+    catch (...) { return false; }
+}
 #endif
 
 bool makedir(string path) {
@@ -193,8 +205,8 @@ bool makedir(string path) {
         tmp += f+"/";
     }
 #else
-    try { res = boost::filesystem::create_directories(path); }
-    catch(const boost::filesystem::filesystem_error& e) { cout << "ERROR: makedir failed when trying to create directory '" + path + "', " << e.code().message() << endl; }
+    try { res = std::filesystem::create_directories(path); }
+    catch(const std::filesystem::filesystem_error& e) { cout << "ERROR: makedir failed when trying to create directory '" + path + "', " << e.code().message() << endl; }
     catch(...) { cout << "ERROR: makedir failed when trying to create directory '" + path + "'" << endl; }
 #endif
     return res;
@@ -204,7 +216,8 @@ bool removeFile(string path) {
 #ifdef WASM
     return bool(std::remove(path.c_str()) == 0);
 #else
-    return boost::filesystem::remove(path);
+    try { return std::filesystem::remove(path); } 
+    catch (...) { return false; }
 #endif
 }
 
@@ -212,7 +225,8 @@ string canonical(string path) {
 #ifdef WASM
     return path;
 #else
-    return boost::filesystem::canonical(path).string();
+    try { return std::filesystem::canonical(path).string(); }
+    catch (...) { return path; }
 #endif
 }
 
@@ -220,7 +234,8 @@ string absolute(string path) {
 #ifdef WASM
     return path;
 #else
-    return boost::filesystem::absolute(path).string();
+    try { return std::filesystem::absolute(path).string(); }
+    catch (...) { return path; }
 #endif
 }
 
@@ -228,7 +243,9 @@ bool isSamePath(string path1, string path2) {
 #ifdef WASM
     return false;
 #else
-    return boost::filesystem::equivalent(path1, path2);
+    if (!exists(path1) || !exists(path2)) return false;
+    try { return std::filesystem::equivalent(path1, path2); } 
+    catch (...) { return false; }
 #endif
 }
 
@@ -262,11 +279,12 @@ vector<string> openFolder(string folder) {
     if ( !isFolder( folder ) ) return res;
 
 #ifndef WASM
-    boost::filesystem::directory_iterator End; // default construction yields past-the-end
-    for ( boost::filesystem::directory_iterator itr( folder ); itr != End; ++itr ) {
-        string name = itr->path().filename().string();
-        res.push_back( name );
+    try {
+        for (const auto& entry : std::filesystem::directory_iterator(folder)) {
+            res.push_back(entry.path().filename().string());
+        }
     }
+    catch (...) { return res; }
 #endif
     return res;
 }
@@ -442,17 +460,6 @@ void fileReplaceStrings(string filePath, string oldString, string newString) {
     systemCall(cmd);
     cout << "fileReplaceStrings " << cmd << endl;
 }
-
-#ifdef WASM
-namespace boost {
-	namespace filesystem {
-		BOOST_FILESYSTEM_DECL int path::compare(path const& p) const BOOST_NOEXCEPT
-		{
-		    return bool(string() == p.string());
-		}
-	}
-}
-#endif
 
 long readAvailableRAM() {
     std::ifstream meminfo("/proc/meminfo");
