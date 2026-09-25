@@ -60,7 +60,8 @@ class VRConsoleWidget {
 
 class VRAIConsoleWidget : public VRConsoleWidget {
     private:
-        bool ready = false;
+        bool connected = false;
+        string status;
 
         string key;
         string model;

@@ -91,6 +91,8 @@ class VRLLM : public enable_shared_from_this<VRLLM> {
 
 		void sendPyAPI();
 		void sendRequest(string req, string conv, string effort = "fast");
+
+		bool checkKey(const string& key, string& what);
 };
 
 OSG_END_NAMESPACE;

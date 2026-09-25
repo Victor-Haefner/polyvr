@@ -65,6 +65,7 @@ class ImAIConsole : public ImConsole {
     public:
         string query;
         ImInput queryInput;
+        bool connected = false;
 
         ImAIConsole(string ID);
 

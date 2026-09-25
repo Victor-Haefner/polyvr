@@ -177,21 +177,32 @@ VRAIConsoleWidget::~VRAIConsoleWidget() {}
 
 void VRAIConsoleWidget::getKey(string keyVar) {
     const char* _key = std::getenv( keyVar.c_str() );
-    if (_key) key = _key;
+
+    if (!_key) {
+        status = keyVar + " not found!";
+        key = "";
+    } else {
+        key = _key;
+        llm->checkKey(key, status);
+    }
+
+    uiSignal("ai_console_key_status", {{"status",status}});
 }
 
 void VRAIConsoleWidget::connect() {
+    connected = false;
     if (key.empty()) return;
 
     llm->setApiKey(key);
     llm->setModel(model);
     llm->sendPyAPI();
 
-    ready = true;
+    connected = true;
+    uiSignal("ai_console_set_connected", {{"connected",toString(connected)}});
 }
 
 void VRAIConsoleWidget::sendQuery(string q) {
-    if (!ready) return;
+    if (!connected) return;
     string conversation = "singleConversation";
     llm->sendRequest(q, conversation, effort);
     uiSignal("ai_console_append", {{"msg",q}, {"role","user"}});

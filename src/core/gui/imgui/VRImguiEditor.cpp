@@ -1007,6 +1007,7 @@ ImAIConfigDialog::ImAIConfigDialog() :
 
     auto mgr = OSG::VRGuiSignals::get();
     mgr->addCallback("ai_diag_get_config", [&](OSG::VRGuiSignals::Options o) { sendConfig(); return true; } );
+    mgr->addCallback("ai_console_key_status", [&](OSG::VRGuiSignals::Options o) { keyStatus = o["status"]; return true; } );
     sendConfig();
 }
 
@@ -1203,6 +1204,7 @@ void ImProfDialog::begin() {
 }
 
 void ImAIConfigDialog::begin() {
+    ImGuiIO& io = ImGui::GetIO();
     ImSection::begin();
     centeredText("AI Config");
 
@@ -1211,10 +1213,8 @@ void ImAIConfigDialog::begin() {
         uiStoreParameter("aiKeyEnvVar", keyInput.value);
     }
 
-    ImGui::SameLine();
     ImGui::Text(keyStatus.c_str());
 
-    ImGuiIO& io = ImGui::GetIO();
 
     if (modelCombo.render(150*io.FontGlobalScale)) {
         modelCombo.signal("ai_model_switch");

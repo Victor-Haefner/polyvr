@@ -75,6 +75,7 @@ void ImConsole::pause(bool b) {
 ImAIConsole::ImAIConsole(string ID) : ImConsole(ID), queryInput("queryInput", "", "", ImGuiInputTextFlags_None) {
     auto mgr = OSG::VRGuiSignals::get();
     mgr->addCallback("ai_console_append", [&](OSG::VRGuiSignals::Options o) { append(o["msg"], o["role"]); return true; }, true );
+    mgr->addCallback("ai_console_set_connected", [&](OSG::VRGuiSignals::Options o) { connected = toBool(o["connected"]); return true; }, true );
 }
 
 void ImAIConsole::append(string m, string r) {
@@ -100,12 +101,18 @@ void ImAIConsole::render() {
 
     if (tabOpen) {
         if (ImGui::Button(("Config##"+ID).c_str())) uiSignal("ui_toggle_popup", {{"name","aiConfig"},{"title","AI Config"}, {"width","400"}, {"height","300"}});
-        ImGui::SameLine();
-        if (ImGui::Button(("Connect##"+ID).c_str())) uiSignal("on_ai_console_connect", {{"ID",ID}, {"query",queryInput.value}});
+
+        if (!connected) {
+            ImGui::SameLine();
+            if (ImGui::Button(("Connect##"+ID).c_str())) uiSignal("on_ai_console_connect", {{"ID",ID}, {"query",queryInput.value}});
+        }
+
+        if (!connected) ImGui::BeginDisabled();
         ImGui::SameLine();
         if (ImGui::Button(("Run##"+ID).c_str())) uiSignal("on_ai_console_run", {{"ID",ID}, {"query",queryInput.value}});
         ImGui::SameLine();
         queryInput.render(-1);
+        if (!connected) ImGui::EndDisabled();
 
         auto r = ImGui::GetContentRegionAvail();
         string wID = "##"+name+"_text";

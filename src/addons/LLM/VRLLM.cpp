@@ -26,6 +26,18 @@ void VRLLM::setModel(string s) { model = s; }
 void VRLLM::setMsgCallback(VRMessageCbPtr c) { usrMsgCb = c; }
 void VRLLM::setRestCallback(VRMessageCbPtr c) { usrRestCb = c; }
 
+bool VRLLM::checkKey(const string& key, string& what) {
+    what = "";
+
+    if (startsWith(key, "sk-") ) {
+        what = "key valid";
+        return true;
+    }
+
+    what = "key not valid!";
+    return false;
+}
+
 void VRLLM::setupKnowledgeAssets() {
     auto scene = VRScene::getCurrent();
     if (!scene) return;
