@@ -66,6 +66,7 @@ class ImAIConsole : public ImConsole {
         string query;
         ImInput queryInput;
         bool connected = false;
+        int lastInputLineLength = 0;
 
         ImAIConsole(string ID);
 

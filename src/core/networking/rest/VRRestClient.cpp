@@ -40,7 +40,16 @@ VRRestClientPtr VRRestClient::create(string name) { return VRRestClientPtr( new 
 VRRestClientPtr VRRestClient::ptr() { return dynamic_pointer_cast<VRRestClient>(shared_from_this()); }
 
 size_t getRespData(char *ptr, size_t size, size_t nmemb, VRRestResponse* res) {
-    res->appendData(string(ptr, size*nmemb));
+    auto cb = res->getStreamCb();
+    string data = string(ptr, size*nmemb);
+
+    if (cb) {
+        auto callCb = [cb, data](){ (*cb)(data); };
+        auto fkt = VRUpdateCb::create("stream-update", callCb);
+        auto s = VRScene::getCurrent();
+        if (s) s->queueJob(fkt);
+    } else res->appendData(data);
+
     return size*nmemb;
 }
 
@@ -148,8 +157,9 @@ VRRestResponsePtr VRRestClient::get(string uri, int timeoutSecs, vector<string> 
     //cout << " response: " << response->getData() << endl;
 }
 
-VRRestResponsePtr VRRestClient::post(string uri, const string& data, int timeoutSecs, vector<string> headers) {
+VRRestResponsePtr VRRestClient::post(string uri, const string& data, int timeoutSecs, vector<string> headers, VRMessageCbPtr streamCb) {
     auto res = VRRestResponse::create();
+    if (streamCb) res->setStreamCb(streamCb);
 
 #ifndef __EMSCRIPTEN__
     auto curl = curl_easy_init();
@@ -161,7 +171,7 @@ VRRestResponsePtr VRRestClient::post(string uri, const string& data, int timeout
     curl_easy_setopt(curl, CURLOPT_HEADERDATA, res.get());
     curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, &getRespHeaders);
     curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, timeoutSecs);
-    curl_easy_setopt(curl, CURLOPT_TIMEOUT, timeoutSecs);
+    if (!streamCb) curl_easy_setopt(curl, CURLOPT_TIMEOUT, timeoutSecs);
     curl_easy_setopt(curl, CURLOPT_URL, uri.c_str());
     setupHeaders(curl, headers);
     res->setHeaders({});
@@ -273,7 +283,7 @@ void VRRestClient::getAsync(string uri, VRRestCbPtr cb, int timeoutSecs, vector<
 #endif
 }
 
-void VRRestClient::postAsync(string uri, VRRestCbPtr cb, const string& data, int timeoutSecs, vector<string> headers) { // TODO: implement correctly for wasm
+void VRRestClient::postAsync(string uri, VRRestCbPtr cb, const string& data, int timeoutSecs, vector<string> headers, bool stream) { // TODO: implement correctly for wasm
 #ifdef __EMSCRIPTEN__
     auto res = post(uri, timeoutSecs);
     VRRestClientWeakPtr wCli = ptr();
@@ -282,7 +292,19 @@ void VRRestClient::postAsync(string uri, VRRestCbPtr cb, const string& data, int
     if (s) s->queueJob(fkt);
 #else
     auto job = [&](string uri, VRRestCbPtr cb, string data, int timeoutSecs, vector<string> headers) -> void { // executed in async thread
-        auto res = post(uri, data, timeoutSecs, headers);
+        VRMessageCbPtr streamCb = 0;
+
+        if (stream) {
+            streamCb = VRMessageCb::create("postAsync-stream", [cb](string m) {
+                auto res = VRRestResponse::create();
+                res->setHeaders({});
+                res->setStatus(200);
+                res->appendData(m);
+                (*cb)(res);
+            } );
+        }
+
+        auto res = post(uri, data, timeoutSecs, headers, streamCb);
         if (cb) {
             VRRestClientWeakPtr wCli = ptr();
             auto fkt = VRUpdateCb::create("postAsync-finish", bind(&VRRestClient::finishAsync, wCli, cb, res));

@@ -67,10 +67,13 @@ class VRAIConsoleWidget : public VRConsoleWidget {
         string model;
         string effort;
 
+        string lastRole = "";
+
         VRMessageCbPtr onMsgCb;
         VRLLMPtr llm;
 
         void onMessage(string m);
+        void checkRole(string r);
 
     public:
         VRAIConsoleWidget();

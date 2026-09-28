@@ -14,10 +14,12 @@ void VRRestResponse::setHeaders(vector<string> h) { headers = h; }
 void VRRestResponse::appendHeader(string h) { headers.push_back(h); }
 void VRRestResponse::setData(string s) { data = s; }
 void VRRestResponse::appendData(string s) { data += s; }
+void VRRestResponse::setStreamCb(VRMessageCbPtr cb) { streamCb = cb; }
 
 int VRRestResponse::getStatus() { return status; }
 vector<string> VRRestResponse::getHeaders() { return headers; }
 string VRRestResponse::getData() { return data; }
+VRMessageCbPtr VRRestResponse::getStreamCb() { return streamCb; }
 
 // alphanum
 const char SAFE[256] = {

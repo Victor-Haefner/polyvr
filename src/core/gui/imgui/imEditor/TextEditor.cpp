@@ -1101,7 +1101,7 @@ void TextEditor::Render()
                     if (line.styles[0].value == "console91") color = 0xff1133ff;
                     if (line.styles[0].value == "console92") color = 0xff33ff11;
                     if (line.styles[0].value == "console93") color = 0xff1188aa;
-                    if (line.styles[0].value == "console94") color = 0xffff5522;
+                    if (line.styles[0].value == "console94") color = 0xffffaa66;
 				}
 
 				if ((color != prevColor || glyph.mChar == '\t' || glyph.mChar == ' ') && !mLineBuffer.empty())

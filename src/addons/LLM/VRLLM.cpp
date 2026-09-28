@@ -13,6 +13,7 @@ using namespace OSG;
 VRLLM::VRLLM() {
     cli = VRRestClient::create("llm");
     restCb =  VRRestCb::create("llmResp", bind(&VRLLM::processResponse, this, placeholders::_1) );
+    streamCb =  VRRestCb::create("llmResp", bind(&VRLLM::processStream, this, placeholders::_1) );
     setupKnowledgeAssets();
 }
 
@@ -135,14 +136,22 @@ map<string, string> VRLLM::parseJsonMap(const string& data) {
     return m;
 }
 
-void VRLLM::processResponse(VRRestResponsePtr r) {
-    string s = r->getData();
+void VRLLM::processEvent(string s) {
     cout << "LLM response: " << s << endl;
     if (usrRestCb) (*usrRestCb)(s);
 
     Json::Value data;
     Json::Reader reader;
     if (!reader.parse(s, data)) return;
+
+    if (data.isMember("type")) {
+        string type = data["type"].asString();
+
+        if (type == "response.output_text.delta" && usrMsgCb) {
+            (*usrMsgCb)(data["delta"].asString());
+            return;
+        }
+    }
 
     if (data.isMember("output") && usrMsgCb) {
         for (const auto& o : data["output"]) {
@@ -182,6 +191,31 @@ void VRLLM::processResponse(VRRestResponsePtr r) {
     }
 }
 
+void VRLLM::processStream(VRRestResponsePtr r) {
+    string s = r->getData();
+    streamBuffer += s;
+
+    size_t pos;
+    while ((pos = streamBuffer.find("\n\n")) != string::npos) {
+        string event = streamBuffer.substr(0, pos);
+        streamBuffer.erase(0, pos + 2);
+
+        // get JSON payload
+        size_t dataPos = event.find("data:");
+        if (dataPos == string::npos) continue;
+        string data = event.substr(dataPos + 5);
+
+        size_t first = data.find_first_not_of(" \t\r\n");
+        if (first != string::npos) data.erase(0, first);
+        processEvent(data);
+    }
+}
+
+void VRLLM::processResponse(VRRestResponsePtr r) {
+    string s = r->getData();
+    processEvent(s);
+}
+
 void VRLLM::processFileUpload(string storeName, VRRestResponsePtr r) {
     string s = r->getData();
     cout << "LLM file upload response: " << s << endl;
@@ -203,7 +237,7 @@ void VRLLM::processFileUpload(string storeName, VRRestResponsePtr r) {
     Json::Value data2;
     data2["file_id"] = f.ID;
     string uri = "https://api.openai.com/v1/vector_stores/"+store.ID+"/files";
-    send(uri, data2);
+    send(uri, data2, restCb);
 }
 
 void VRLLM::get(const string& uri, VRRestCbPtr cb) {
@@ -219,7 +253,6 @@ void VRLLM::get(const string& uri, VRRestCbPtr cb) {
 
 void VRLLM::send(const string& uri, const Json::Value& data, VRRestCbPtr cb) {
     if (apiKey == "") return;
-    if (!cb) cb = restCb;
 
     vector<string> headers = {
         "Content-Type: application/json",
@@ -239,7 +272,7 @@ void VRLLM::startConversation(const string& conv) {
     data["metadata"]["name"] = conv;
 
     string uri = "https://api.openai.com/v1/conversations";
-    send(uri, data);
+    send(uri, data, restCb);
 }
 
 string VRLLM::convertEffort(const string& effort, const string& model) {
@@ -284,6 +317,7 @@ void VRLLM::sendRequest(string req, string conv, string effort) {
     Json::Value data;
     data["model"] = model;
     data["input"] = req;
+    data["stream"] = true;
     if (con) data["conversation"] = con->ID;
     if (effort != "") data["reasoning"]["effort"] = effort;
     data["text"]["verbosity"] = verbosity;
@@ -297,7 +331,7 @@ void VRLLM::sendRequest(string req, string conv, string effort) {
     }
 
     string uri = "https://api.openai.com/v1/responses";
-    send(uri, data);
+    send(uri, data, streamCb);
 }
 
 void VRLLM::deleteStore(const string& id) {
@@ -473,7 +507,7 @@ void VRLLM::sendPyAPI() {
                     Json::Value data2;
                     data2["file_id"] = f.ID;
                     string uri = "https://api.openai.com/v1/vector_stores/"+store.ID+"/files";
-                    send(uri, data2);
+                    send(uri, data2, restCb);
                 }
             }
 

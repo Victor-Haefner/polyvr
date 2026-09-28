@@ -5,6 +5,7 @@
 #include <list>
 #include <map>
 #include <OpenSG/OSGConfig.h>
+#include "core/utils/VRFunctionFwd.h"
 #include "../VRNetworkClient.h"
 
 typedef void CURL;
@@ -34,9 +35,9 @@ class VRRestClient : public VRNetworkClient {
 		VRRestResponsePtr get(string uri, int timeoutSecs = 2, vector<string> headers = {});
 		void getAsync(string uri, VRRestCbPtr cb, int timeoutSecs = 2, vector<string> headers = {});
 
-		VRRestResponsePtr post(string uri, const string& data, int timeoutSecs = 2, vector<string> headers = {});
+		VRRestResponsePtr post(string uri, const string& data, int timeoutSecs = 2, vector<string> headers = {}, VRMessageCbPtr streamCb = 0);
 		VRRestResponsePtr postForm(string uri, const vector<map<string,string>>& data, int timeoutSecs = 2, vector<string> headers = {});
-		void postAsync(string uri, VRRestCbPtr cb, const string& data, int timeoutSecs = 2, vector<string> headers = {});
+		void postAsync(string uri, VRRestCbPtr cb, const string& data, int timeoutSecs = 2, vector<string> headers = {}, bool stream = false);
 		void postFormAsync(string uri, VRRestCbPtr cb, const vector<map<string,string>>& data, int timeoutSecs = 2, vector<string> headers = {});
 
 		VRRestResponsePtr del(string uri, int timeoutSecs = 2, vector<string> headers = {});

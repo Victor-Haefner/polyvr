@@ -201,14 +201,23 @@ void VRAIConsoleWidget::connect() {
     uiSignal("ai_console_set_connected", {{"connected",toString(connected)}});
 }
 
+void VRAIConsoleWidget::checkRole(string r) {
+    if (lastRole != r) {
+        uiSignal("ai_console_append", {{"msg","\n\n"}, {"role",""}});
+        lastRole = r;
+    }
+}
+
 void VRAIConsoleWidget::sendQuery(string q) {
     if (!connected) return;
     string conversation = "singleConversation";
     llm->sendRequest(q, conversation, effort);
+    checkRole("user");
     uiSignal("ai_console_append", {{"msg",q}, {"role","user"}});
 }
 
 void VRAIConsoleWidget::onMessage(string m) {
+    checkRole("llm");
     uiSignal("ai_console_append", {{"msg",m}, {"role","llm"}});
 }
 

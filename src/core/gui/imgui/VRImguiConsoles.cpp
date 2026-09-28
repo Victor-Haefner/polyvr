@@ -80,13 +80,32 @@ ImAIConsole::ImAIConsole(string ID) : ImConsole(ID), queryInput("queryInput", ""
 
 void ImAIConsole::append(string m, string r) {
     string style;
-
     if (r == "user") style = "console92";
     if (r == "llm")  style = "console94";
-    cout << " - - ImAIConsole::append " << r << ", " << style << endl;
 
-    push(m, style, "");
-    push("\n\n", "", "");
+    const int maxN = 120; // word wrap
+
+    while (!m.empty()) {
+        if (m.size()+lastInputLineLength <= maxN) {
+            push(m, style, "");
+            lastInputLineLength += m.size();
+            break;
+        }
+
+        int avail = max(0, maxN-lastInputLineLength);
+        size_t cut = m.rfind(' ', avail);
+        if (cut == string::npos) { // no space before maxN -> just push it
+            push(m+"\n", style, "");
+            lastInputLineLength = 0;
+            break;
+        }
+
+        push(m.substr(0, cut)+"\n", style, "");
+        lastInputLineLength = 0;
+
+        m.erase(0, cut);
+        while (!m.empty() && m.front() == ' ') m.erase(0, 1);
+    }
 }
 
 void ImAIConsole::render() {
