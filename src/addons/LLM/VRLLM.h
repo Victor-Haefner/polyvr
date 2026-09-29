@@ -58,6 +58,7 @@ class VRLLM : public enable_shared_from_this<VRLLM> {
 	    VRMessageCbPtr usrRestCb;
 	    VRRestCbPtr restCb;
 	    VRRestCbPtr streamCb;
+	    VRDeviceCbPtr sceneChangedCb;
 
         string streamBuffer;
 
@@ -70,6 +71,7 @@ class VRLLM : public enable_shared_from_this<VRLLM> {
 	    map<string, string> parseJsonMap(const string& data);
 	    string convertEffort(const string& effort, const string& model);
 	    Json::Value parseJson(const string& s);
+	    bool on_scene_changed();
 
 	    void processEvent(string data);
 	    void processStream(VRRestResponsePtr r);

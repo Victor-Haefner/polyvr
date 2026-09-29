@@ -17,14 +17,20 @@ VRLLM::VRLLM() {
     streamCb =  VRRestCb::create("llmResp", bind(&VRLLM::processStream, this, placeholders::_1) );
     setupKnowledgeAssets();
 
-    auto fkt = VRDeviceCb::create("LLM_sceneUpdated", [this](VRDeviceWeakPtr) -> bool { setupKnowledgeAssets(); return true; } );
-    VRGuiSignals::get()->getSignal("scene_changed")->add( fkt );
+    sceneChangedCb = VRDeviceCb::create("LLM_sceneChanged", bind(&VRLLM::on_scene_changed, this) );
+    VRGuiSignals::get()->getSignal("scene_changed")->add( sceneChangedCb );
 }
 
 VRLLM::~VRLLM() {}
 
 VRLLMPtr VRLLM::create() { return VRLLMPtr( new VRLLM() ); }
 VRLLMPtr VRLLM::ptr() { return static_pointer_cast<VRLLM>(shared_from_this()); }
+
+bool VRLLM::on_scene_changed() {
+	cout << "VRLLM::on_scene_changed" << endl;
+    setupKnowledgeAssets();
+    return true;
+}
 
 void VRLLM::setApiKey(string s) { apiKey = s; }
 void VRLLM::setModel(string s) { model = s; }
