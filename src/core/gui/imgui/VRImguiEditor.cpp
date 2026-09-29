@@ -215,9 +215,10 @@ void ImToolbar::begin() {
     ImGui::SameLine(); if (ImGui::Button("About")) uiSignal("ui_toggle_popup", {{"name","about"},{"title","About"}, {"width","400"}, {"height","500"}});
     ImGui::SameLine(); if (ImGui::Checkbox("Fotomode", &fotomode)) uiSignal("ui_toggle_fotomode", {{"active",toString(fotomode)}});
 
+
     ImGui::SameLine();
     double x1 = ImGui::GetCursorPosX();
-    double x2 = ImGui::GetWindowWidth()-310*io.FontGlobalScale;
+    double x2 = ImGui::GetWindowWidth()-400*io.FontGlobalScale;
 
     ImGui::SameLine(max(x1,x2));
 
@@ -743,6 +744,7 @@ void VRImguiEditor::init(Signal signal, ResizeSignal resizeSignal) {
     ImGui::SetCurrentContext(mainContext);
     ImGui_ImplOpenGL3_Init();
     ImGui::StyleColorsDark();
+    loadFontRanges();
 
     ImGui_ImplGLUT_Init();
     ImGui_ImplGLUT_InstallFuncs_main();
@@ -778,6 +780,28 @@ void VRImguiEditor::init(Signal signal, ResizeSignal resizeSignal) {
     if (theme == "light") { ImGui::StyleColorsLight(); toolbar.uiTheme = 0; }
     if (theme == "dark")  { ImGui::StyleColorsDark();  toolbar.uiTheme = 1; }
     uiSignal("ui_set_palette", {{"theme",theme}});
+}
+
+void VRImguiEditor::loadFontRanges() {
+    ImGuiIO& io = ImGui::GetIO();
+    string path = "ressources/fonts/Mono.ttf";
+
+    static ImVector<ImWchar> ranges;
+    ImFontGlyphRangesBuilder builder;
+
+    builder.AddRanges(io.Fonts->GetGlyphRangesDefault());
+    builder.AddChar(0x2018); // ‘
+    builder.AddChar(0x2019); // ’
+    builder.AddChar(0x201C); // “
+    builder.AddChar(0x201D); // ”
+    builder.AddChar(0x2013); // –
+    builder.AddChar(0x2014); // —
+    builder.AddChar(0x2026); // …
+    builder.AddChar(0x20AC); // €
+    builder.AddRanges(io.Fonts->GetGlyphRangesGreek());
+
+    builder.BuildRanges(&ranges);
+    io.Fonts->AddFontFromFileTTF( path.c_str(), 16.0f, nullptr, ranges.Data );
 }
 
 void VRImguiEditor::initPopup() {
@@ -935,7 +959,6 @@ void centeredText(string txt) {
 
 void ImAboutDialog::begin() {
     ImSection::begin();
-
     centeredText("PolyVR");
     ImGui::Spacing();
     centeredText("Version:");

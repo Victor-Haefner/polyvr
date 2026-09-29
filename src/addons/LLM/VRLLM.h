@@ -69,6 +69,7 @@ class VRLLM : public enable_shared_from_this<VRLLM> {
 	    void send(const string& uri, const Json::Value& data, VRRestCbPtr cb);
 	    map<string, string> parseJsonMap(const string& data);
 	    string convertEffort(const string& effort, const string& model);
+	    Json::Value parseJson(const string& s);
 
 	    void processEvent(string data);
 	    void processStream(VRRestResponsePtr r);

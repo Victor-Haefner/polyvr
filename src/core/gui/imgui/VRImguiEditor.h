@@ -230,6 +230,7 @@ class VRImguiEditor {
         void onLooseFocus();
         void onAnyKey();
         void pollFocusSafety();
+        void loadFontRanges();
 
     public:
         VRImguiEditor();

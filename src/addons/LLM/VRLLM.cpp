@@ -5,6 +5,7 @@
 #include "core/utils/toString.h"
 #include "core/scene/VRScene.h"
 #include "core/scripting/VRScriptManager.h"
+#include "core/gui/VRGuiManager.h"
 
 #define JSONSTR(txt) #txt
 
@@ -15,6 +16,9 @@ VRLLM::VRLLM() {
     restCb =  VRRestCb::create("llmResp", bind(&VRLLM::processResponse, this, placeholders::_1) );
     streamCb =  VRRestCb::create("llmResp", bind(&VRLLM::processStream, this, placeholders::_1) );
     setupKnowledgeAssets();
+
+    auto fkt = VRDeviceCb::create("LLM_sceneUpdated", [this](VRDeviceWeakPtr) -> bool { setupKnowledgeAssets(); return true; } );
+    VRGuiSignals::get()->getSignal("scene_changed")->add( fkt );
 }
 
 VRLLM::~VRLLM() {}
@@ -40,20 +44,7 @@ bool VRLLM::checkKey(const string& key, string& what) {
 }
 
 void VRLLM::setupKnowledgeAssets() {
-    auto scene = VRScene::getCurrent();
-    if (!scene) return;
-
-    string PolyVR_API = R"API(
-PolyVR is a IDE for developing virtual environments.
-It has a focus on engineering applications and includes many interfaces and simulation modules.
-The application logic is created with Python scripts, shader can be written with GLSL, and UI elements with websites.
-
-The API is provided as separate files:
-    - PolyVR_GUI.txt contains a description of the GUI as presented to the user
-    - PolyVR_API_modules.txt contains a list of all modules available to the user when scripting the application logic
-    )API";
-
-    string PolyVR_GUI = R"API(
+string PolyVR_GUI = R"API(
 # PolyVR GUI layout
 - Toolbar at the top
     - Buttons: New, Open, Save, Save.., Close, Exit, Profiler, Export, About
@@ -92,31 +83,99 @@ The API is provided as separate files:
         - Scene Panel:
             - Tabs: Rendering, Scenegraph, Scripting, Network
             - TODO ;)
-    )API";
+)API";
 
-    string PolyVR_API_modules = R"API(
+string PolyVR_API_modules = R"API(
 Here follows a list of all modules and objects available to the user in the PolyVR scripting environment.
 
-    )API";
+)API";
 
-    for (auto mod : scene->getPyVRModules()) {
-        PolyVR_API_modules += "# Module " + mod + "\n";
-        for (auto tpe : scene->getPyVRTypes(mod)) {
-            string dcr = scene->getPyVRDescription(mod, tpe);
-            PolyVR_API_modules += " ## Class " + tpe + "\n";
-            PolyVR_API_modules += "     " + dcr + "\n";
-            for (auto mth : scene->getPyVRMethods(mod, tpe)) {
-                string mdoc = scene->getPyVRMethodDoc(mod, tpe, mth);
-                PolyVR_API_modules += " ### Method " + mth + "\n";
-                PolyVR_API_modules += "      " + mdoc + "\n";
+    auto scene = VRScene::getCurrent();
+    if (scene) {
+        for (auto mod : scene->getPyVRModules()) {
+            PolyVR_API_modules += "# Module " + mod + "\n";
+            for (auto tpe : scene->getPyVRTypes(mod)) {
+                string dcr = scene->getPyVRDescription(mod, tpe);
+                PolyVR_API_modules += " ## Class " + tpe + "\n";
+                PolyVR_API_modules += "     " + dcr + "\n";
+                for (auto mth : scene->getPyVRMethods(mod, tpe)) {
+                    string mdoc = scene->getPyVRMethodDoc(mod, tpe, mth);
+                    PolyVR_API_modules += " ### Method " + mth + "\n";
+                    PolyVR_API_modules += "      " + mdoc + "\n";
+                }
             }
         }
     }
 
+
+string PolyVR_API = R"API(
+PolyVR is a IDE for developing virtual environments.
+It has a focus on engineering applications and includes many interfaces and simulation modules.
+The application logic is created with Python scripts, shader can be written with GLSL, and UI elements with websites.
+
+The API is provided as separate files:
+    - PolyVR_GUI.txt contains a description of the GUI as presented to the user
+    - PolyVR_API_modules.txt contains a list of all modules available to the user when scripting the application logic
+
+Further examples are provided:
+    - PolyVR_API_examples_scenegraph
+
+# Scripting basics:
+
+The user adds scripts with the UI, every script appears as a list entry in the GUI and its content can be edited in a integrated text editor.
+Such a script is internally a python function object, the user can execute the function using a button or define trigger like
+- on_scene_load, execute the script when scene is loaded
+- on_timeout, entry for timeout N in ms, executes the script every N ms
+- on_device, combobox with devices like mouse, keyboard, flystick, server1, then a signal key, then a signal state like pressed or released, executes the script if the device is firing a signal.
+
+Every script starts with
+    import VR
+
+VR is the main module where everything else lives.
+- Every module described in PolyVR_API_modules.txt
+- Every script of the current PolyVR project.
+
+Every new project starts with a default "init" script.
+
+    import VR
+    VR.scene = VR.Object('scene', 'light')
+
+This creates a new object called scene and attaches it to the default light object.
+
+)API";
+
+string PolyVR_API_examples_scenegraph = R"API(
+    import VR
+
+    obj = VR.Object('newObject')
+    VR.scene.addChild(obj)
+
+    trans = VR.Transform('newTransform')
+    VR.scene.addChild(trans)
+
+    trans.setFrom([1,0,0])
+
+    cube = VR.Geometry('cube')
+    cube.setPrimitive('Box 0.3 0.3 0.3 4 4 4')
+    cube.setTransform([0,1,0], [1,0,0], [0,0.5,0.5])
+    trans.addChild(cube)
+)API";
+
     knowledgeAssets["PolyVR_API"] = PolyVR_API;
-    knowledgeAssets["PolyVR_GUI"] = PolyVR_API;
-    knowledgeAssets["PolyVR_API_modules"] = PolyVR_API_modules;
+    knowledgeAssets["PolyVR_GUI"] = PolyVR_GUI;
+    if (scene) knowledgeAssets["PolyVR_API_modules"] = PolyVR_API_modules;
+    knowledgeAssets["PolyVR_API_examples_scenegraph"] = PolyVR_API_examples_scenegraph;
 }
+
+string PolyVR_API_instructions = R"API(
+You are an assistant integrated into PolyVR, a VR/VE development environment.
+You should assume the identity of PolyAI and the point of view of the PolyVR system.
+Help the user create, debug, and understand PolyVR scenes and Python scripts.
+The provided file_search vector store contains the PolyVR API documentation and GUI description.
+Use that documentation when answering PolyVR questions.
+Do not invent API methods that are not supported by the documentation.
+Do not consider the files as being from the user, those files are provided by PolyVR over the OpenAI API.
+)API";
 
 map<string, string> VRLLM::parseJsonMap(const string& data) {
     map<string, string> m;
@@ -137,30 +196,35 @@ map<string, string> VRLLM::parseJsonMap(const string& data) {
 }
 
 void VRLLM::processEvent(string s) {
-    cout << "LLM response: " << s << endl;
+    //cout << "LLM response: " << s << endl;
     if (usrRestCb) (*usrRestCb)(s);
 
     Json::Value data;
     Json::Reader reader;
     if (!reader.parse(s, data)) return;
 
+    auto processMessage = [&](const string& s) {
+        //cout << " " << s;
+        if (usrMsgCb) (*usrMsgCb)(s);
+    };
+
     if (data.isMember("type")) {
         string type = data["type"].asString();
 
-        if (type == "response.output_text.delta" && usrMsgCb) {
-            (*usrMsgCb)(data["delta"].asString());
+        if (type == "response.output_text.delta") {
+            processMessage(data["delta"].asString());
             return;
         }
     }
 
-    if (data.isMember("output") && usrMsgCb) {
+    if (data.isMember("output")) {
         for (const auto& o : data["output"]) {
             if (!o.isMember("content")) continue;
             if (o["type"].asString() != "message") continue;
 
             for (const auto& c : o["content"]) {
                 if (c["type"].asString() != "output_text") continue;
-                if (c.isMember("text")) (*usrMsgCb)(c["text"].asString());
+                if (c.isMember("text")) processMessage(c["text"].asString());
             }
         }
     }
@@ -218,7 +282,7 @@ void VRLLM::processResponse(VRRestResponsePtr r) {
 
 void VRLLM::processFileUpload(string storeName, VRRestResponsePtr r) {
     string s = r->getData();
-    cout << "LLM file upload response: " << s << endl;
+    //cout << "LLM file upload response: " << s << endl;
     auto data = parseJsonMap(s);
 
     auto& store = stores[storeName];
@@ -234,6 +298,7 @@ void VRLLM::processFileUpload(string storeName, VRRestResponsePtr r) {
     f.ready = true;
     store.files.push_back(f);
 
+    cout << " add file " << f.name << " entry to store " << storeName << endl;
     Json::Value data2;
     data2["file_id"] = f.ID;
     string uri = "https://api.openai.com/v1/vector_stores/"+store.ID+"/files";
@@ -321,6 +386,7 @@ void VRLLM::sendRequest(string req, string conv, string effort) {
     if (con) data["conversation"] = con->ID;
     if (effort != "") data["reasoning"]["effort"] = effort;
     data["text"]["verbosity"] = verbosity;
+    data["instructions"] = PolyVR_API_instructions;
 
     for (auto& s : stores) {
         auto& store = s.second;
@@ -336,6 +402,7 @@ void VRLLM::sendRequest(string req, string conv, string effort) {
 
 void VRLLM::deleteStore(const string& id) {
     if (apiKey.empty() || id.empty()) return;
+    cout << " delete store " << id << endl;
     vector<string> headers = { "Authorization: Bearer " + apiKey };
     string uri = "https://api.openai.com/v1/vector_stores/" + id;
     cli->deleteAsync(uri, restCb, 30, headers);
@@ -343,6 +410,7 @@ void VRLLM::deleteStore(const string& id) {
 
 void VRLLM::deleteFile(const string& id) {
     if (apiKey.empty() || id.empty()) return;
+    cout << " delete file " << id << endl;
     vector<string> headers = { "Authorization: Bearer " + apiKey };
     string uri = "https://api.openai.com/v1/files/" + id;
     cli->deleteAsync(uri, restCb, 30, headers);
@@ -350,6 +418,7 @@ void VRLLM::deleteFile(const string& id) {
 
 void VRLLM::deleteFileEntry(const string& store, const string& id) {
     if (apiKey.empty() || store.empty() || id.empty()) return;
+    cout << " delete file entry " << id << " in store " << store << endl;
     vector<string> headers = { "Authorization: Bearer " + apiKey };
     string uri = "https://api.openai.com/v1/vector_stores/" + store + "/files/" + id;
     cli->deleteAsync(uri, restCb, 30, headers);
@@ -365,6 +434,7 @@ void VRLLM::setupFile(const string& store, const string& filename, const string&
         { {"name", "file"}, {"data", content}, {"filename", filename}, {"contentType", "text/plain"} }
     };
 
+    cout << " upload file " << filename << endl;
     auto cb = VRRestCb::create( "processFileUpload", bind(&VRLLM::processFileUpload, this, store, placeholders::_1) );
     cli->postFormAsync( "https://api.openai.com/v1/files", cb, form, 30, headers );
 }
@@ -372,7 +442,7 @@ void VRLLM::setupFile(const string& store, const string& filename, const string&
 void VRLLM::setupVectorStore(const string& store, function<void(void)>& onStoreReady) {
     auto onStoreStatus = VRRestCb::create( "onStoreStatus", bind([this, store, onStoreReady](VRRestResponsePtr r) {
         string s = r->getData();
-        cout << "LLM store status response: " << s << endl;
+        //cout << "LLM store status response: " << s << endl;
 
         Json::Value data;
         Json::Reader reader;
@@ -397,7 +467,7 @@ void VRLLM::setupVectorStore(const string& store, function<void(void)>& onStoreR
             }
         }
 
-        cout << "keep store: " << keepID << endl;
+        cout << "  keep store: " << keepID << endl;
         for (const auto& id : removeIDs) deleteStore(id);
 
         if (!keepID.empty()) {
@@ -418,6 +488,7 @@ void VRLLM::setupVectorStore(const string& store, function<void(void)>& onStoreR
         }
     }, placeholders::_1) );
 
+    cout << " .. setupVectorStore " << store << endl;
     stores[store] = Store(store);
     get("https://api.openai.com/v1/vector_stores", onStoreStatus);
 }
@@ -428,6 +499,13 @@ time_t getBuildTimestamp() {
     ss >> std::get_time(&tm, "%b %d %Y %H:%M:%S");
     tm.tm_isdst = -1; // let mktime determine DST automatically
     return std::mktime(&tm);
+}
+
+Json::Value VRLLM::parseJson(const string& s) {
+    Json::Value value;
+    Json::Reader reader;
+    if (!reader.parse(s, value)) cout << " Error, json parse failed!" << endl;
+    return value;
 }
 
 void VRLLM::sendPyAPI() {
@@ -443,9 +521,8 @@ void VRLLM::sendPyAPI() {
             return;
         }
 
-        Json::Value data;
-        Json::Reader reader;
-        if (!reader.parse(s, data)) return;
+        Json::Value data = parseJson(s);
+        if (data.empty()) { cout << " no data" << endl; return; }
 
         struct FileStatus {
             string ID;
@@ -461,6 +538,7 @@ void VRLLM::sendPyAPI() {
             string name = subString(filename, 0, -5);
             if (!knowledgeAssets.count(name)) continue;
 
+            cout << "  found hosted asset " << filename << endl;
             FileStatus fstat;
             fstat.ID = file["id"].asString();
             fstat.filename = filename;
@@ -475,16 +553,17 @@ void VRLLM::sendPyAPI() {
             bool needsReupload = false;
             FileStatus keepFS;
             string keepID;
+            cout << "  check asset " << a.first << endl;
 
             if (!filesStatus.count(a.first)) needsReupload = true;
             else {
                 for (auto f : filesStatus[a.first]) {
-                    cout << " ++++ " << a.first << ": " << bTime << ", " << f.createdAt << ", " << keepFS.createdAt << endl;
-                    if (f.createdAt < bTime) { cout << "too old" << endl; removeIDs.push_back(f.ID); continue; }
-                    if (f.bytes != a.second.size()) { cout << "wrong bytes" << endl; removeIDs.push_back(f.ID); continue; }
+                    //cout << " ++++ " << a.first << ": " << bTime << ", " << f.createdAt << ", " << keepFS.createdAt << endl;
+                    if (f.createdAt < bTime) { cout << "   too old" << endl; removeIDs.push_back(f.ID); continue; }
+                    if (f.bytes != a.second.size()) { cout << "   wrong bytes" << endl; removeIDs.push_back(f.ID); continue; }
                     if (keepFS.createdAt > 0) {
-                        if (f.createdAt < keepFS.createdAt) { cout << "older than keeper" << endl; removeIDs.push_back(f.ID); continue; }
-                        else { cout << "keeper older" << endl; removeIDs.push_back(keepID); }
+                        if (f.createdAt < keepFS.createdAt) { cout << "   older than keeper" << endl; removeIDs.push_back(f.ID); continue; }
+                        else { cout << "   keeper older" << endl; removeIDs.push_back(keepID); }
                     }
                     keepID = f.ID;
                     keepFS = f;
@@ -511,7 +590,11 @@ void VRLLM::sendPyAPI() {
                 }
             }
 
-            if (needsReupload) { setupFile(storeName, a.first+".txt", a.second); continue; }
+            if (needsReupload) {
+                cout << " .. reupload file " << keepID << endl;
+                setupFile(storeName, a.first+".txt", a.second);
+                continue;
+            }
         }
 
         for (const auto& id : removeIDs) deleteFile(id);
@@ -525,23 +608,30 @@ void VRLLM::sendPyAPI() {
 
     auto onFileEntriesStatus = VRRestCb::create( "onFileEntriesStatus", bind([this, storeName, onFilesStatus](VRRestResponsePtr r) {
         string s = r->getData();
-        cout << "LLM file store entries: " << s << endl;
+        //cout << "LLM file store entries: " << s << endl;
 
         Json::Value data;
         Json::Reader reader;
         if (!reader.parse(s, data)) return;
 
         auto& store = stores[storeName];
-        for (const auto& fe : data["data"]) {
-            string ID = fe["id"].asString();
-            store.hostEntries.push_back(ID);
+        if (data["data"].size() == 0) {
+            cout << "  .. no file entries" << endl;
+        } else {
+            for (const auto& fe : data["data"]) {
+                string ID = fe["id"].asString();
+                store.hostEntries.push_back(ID);
+                cout << "  store file entry: " << ID << endl;
+            }
         }
 
+        cout << " request files list.." << endl;
         get("https://api.openai.com/v1/files", onFilesStatus);
     }, placeholders::_1) );
 
     function<void(void)> onStoreReady = [this, storeName, onFileEntriesStatus]() {
         string storeID = stores[storeName].ID;
+        cout << " request file entries from store.." << endl;
         get("https://api.openai.com/v1/vector_stores/"+storeID+"/files", onFileEntriesStatus);
         //get("https://api.openai.com/v1/files", onFilesStatus);
     };
