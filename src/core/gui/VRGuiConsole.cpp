@@ -154,6 +154,7 @@ void VRConsoleWidget::forward() { // TODO
 
 VRAIConsoleWidget::VRAIConsoleWidget() {
     llm = VRLLM::create();
+    llm->setWordWrap(100);
 
     onMsgCb = VRMessageCb::create("ai_console_onMsgCb", bind(&VRAIConsoleWidget::onMessage, this, placeholders::_1));
     llm->setMsgCallback(onMsgCb);

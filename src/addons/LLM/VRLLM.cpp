@@ -201,6 +201,10 @@ map<string, string> VRLLM::parseJsonMap(const string& data) {
     return m;
 }
 
+void VRLLM::setWordWrap(int N) {
+    wordWrap = N;
+}
+
 void VRLLM::processEvent(string s) {
     //cout << "LLM response: " << s << endl;
     if (usrRestCb) (*usrRestCb)(s);
@@ -209,8 +213,9 @@ void VRLLM::processEvent(string s) {
     Json::Reader reader;
     if (!reader.parse(s, data)) return;
 
-    auto processMessage = [&](const string& s) {
+    auto processMessage = [&](string s) {
         //cout << " " << s;
+        if (wordWrap > 0) wrapper.wrap(s, wordWrap);
         if (usrMsgCb) (*usrMsgCb)(s);
     };
 

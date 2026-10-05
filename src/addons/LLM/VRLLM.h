@@ -5,6 +5,7 @@
 #include "core/networking/VRNetworkingFwd.h"
 #include "VRLLMFwd.h"
 #include "core/utils/VRFunctionFwd.h"
+#include "core/utils/WordWrap.h"
 
 #include <string>
 #include <functional>
@@ -61,6 +62,8 @@ class VRLLM : public enable_shared_from_this<VRLLM> {
 	    VRDeviceCbPtr sceneChangedCb;
 
         string streamBuffer;
+        WordWrap wrapper;
+        int wordWrap = 0;
 
 	    map<string,string> knowledgeAssets;
 	    map<string, Store> stores;
@@ -98,6 +101,7 @@ class VRLLM : public enable_shared_from_this<VRLLM> {
 
 		void setApiKey(string s);
 		void setModel(string s);
+		void setWordWrap(int N);
 		void setMsgCallback(VRMessageCbPtr cb);
 		void setRestCallback(VRMessageCbPtr cb);
 

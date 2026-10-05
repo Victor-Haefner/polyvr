@@ -83,7 +83,9 @@ void ImAIConsole::append(string m, string r) {
     if (r == "user") style = "console92";
     if (r == "llm")  style = "console94";
 
-    const int maxN = 120; // word wrap
+    push(m, style, "");
+
+    /*const int maxN = 120; // word wrap
 
     while (!m.empty()) {
         if (m.size()+lastInputLineLength <= maxN) {
@@ -105,7 +107,7 @@ void ImAIConsole::append(string m, string r) {
 
         m.erase(0, cut);
         while (!m.empty() && m.front() == ' ') m.erase(0, 1);
-    }
+    }*/
 }
 
 void ImAIConsole::render() {
