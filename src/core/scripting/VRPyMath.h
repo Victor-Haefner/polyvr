@@ -83,6 +83,7 @@ struct VRPyVec3f : VRPyBaseT<OSG::Vec3d> {
     static PyObject* dot(VRPyVec3f* self, PyObject* args);
     static PyObject* cross(VRPyVec3f* self, PyObject* args);
     static PyObject* asList(VRPyVec3f* self, PyObject* args);
+    static PyObject* asHex(VRPyVec3f* self, PyObject* args);
     static PyObject* distance(VRPyVec3f* self, PyObject* args);
 
     static PyObject* add(PyObject* self, PyObject* v);
