@@ -457,6 +457,7 @@ void VRPathtool::updateHandle(VRGeometryPtr handle) { // update paths the handle
             if (e->p->size() <= pnt) continue;
             auto op = e->p->getPoint(pnt);
             e->p->setPoint( e->points[key], Pose::create(p->pos(), op->dir(), p->up()));
+            e->doUpdate = true;
             updateEntry(e);
         }
 
@@ -479,12 +480,12 @@ void VRPathtool::updateHandle(VRGeometryPtr handle) { // update paths the handle
         VRGeometryPtr pg = dynamic_pointer_cast<VRGeometry>(handle->getDragParent());
         if (!pg) pg = dynamic_pointer_cast<VRGeometry>(handle->getParent());
         if (!pg) return; // failed to get parent handle
-
-        //Vec3d d = p->pos() - pg->getRelativePosition(ptr());
-        Vec3d d = p->pos() - pg->getWorldPosition();
+        auto rP = getPoseTo(pg);
+        Vec3d d = p->pos() - rP->pos();
         auto e = handleToEntries[key][0]; // should only be one entry at most!
         auto op = e->p->getPoint(e->points[key]);
         e->p->setPoint( e->points[key], Pose::create(op->pos(), d, op->up()));
+        e->doUpdate = true;
         updateEntry(e);
     }
 }
@@ -530,7 +531,7 @@ void VRPathtool::setupHandles(entryPtr e, VRGeometryPtr ha, VRGeometryPtr he) {
     auto opt = options[e->edge];
     int N = e->p->size();
     for (int i=0; i<N; i++) {
-        auto point = e->p->getPoint(i);
+        PosePtr point = e->p->getPoint(i);
         VRGeometryPtr h, h1, h2;
         if (i == 0) h = ha;
         if (i == N-1) h = he;

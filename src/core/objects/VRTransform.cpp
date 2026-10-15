@@ -291,10 +291,10 @@ Vec3d VRTransform::getRelativeUp(VRObjectPtr o, bool parentOnly) {
 }
 
 void VRTransform::getRelativeMatrix(Matrix4d& m, VRObjectPtr o, bool parentOnly) {
-    m = getWorldMatrix(parentOnly);
+    m = getWorldMatrix();
     VRTransformPtr ent = VRTransform::getParentTransform(o);
     if (ent) {
-        Matrix4d sm = ent->getWorldMatrix();
+        Matrix4d sm = ent->getWorldMatrix(parentOnly);
         sm.invert();
         m.multLeft(sm);
     }
