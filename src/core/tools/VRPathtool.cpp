@@ -482,6 +482,8 @@ void VRPathtool::updateHandle(VRGeometryPtr handle) { // update paths the handle
         if (!pg) return; // failed to get parent handle
         auto rP = getPoseTo(pg);
         Vec3d d = p->pos() - rP->pos();
+        double s = rP->scale()[0];
+        d *= 1.0/s;
         auto e = handleToEntries[key][0]; // should only be one entry at most!
         auto op = e->p->getPoint(e->points[key]);
         e->p->setPoint( e->points[key], Pose::create(op->pos(), d, op->up()));
