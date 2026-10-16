@@ -85,6 +85,8 @@ void VRManipulator::setup() {
 VRPathtool::option::option(int r, bool uch) : resolution(r), useControlHandles(uch) {}
 
 VRPathtool::VRPathtool() : VRTransform("Pathtool") {
+    type = "Pathtool";
+
     updatePtr = VRUpdateCb::create("path tool update", bind(&VRPathtool::updateDevs, this) );
     VRScene::getCurrent()->addUpdateFkt(updatePtr, 100);
 
@@ -191,7 +193,7 @@ void VRPathtool::removeNode(int i) {
 
 int VRPathtool::getNodeID(VRObjectPtr o) {
     auto k = (VRGeometry*)o.get();
-    if (!handleToNode.count(k)) return -1;
+    if (!handleToNode.count(k)) { cout << "Warning in VRPathtool::getNodeID, unknown handle geometry" << endl; return -1; }
     return handleToNode[k];
 }
 
@@ -456,7 +458,7 @@ void VRPathtool::updateHandle(VRGeometryPtr handle) { // update paths the handle
             auto pnt = e->points[key];
             if (e->p->size() <= pnt) continue;
             auto op = e->p->getPoint(pnt);
-            e->p->setPoint( e->points[key], Pose::create(p->pos(), op->dir(), p->up()));
+            e->p->setPoint( pnt, Pose::create(p->pos(), op->dir(), p->up()));
             e->doUpdate = true;
             updateEntry(e);
         }

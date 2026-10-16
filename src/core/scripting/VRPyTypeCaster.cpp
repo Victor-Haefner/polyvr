@@ -13,6 +13,7 @@
 #include "VRPyLightBeacon.h"
 #include "VRPyAnnotationEngine.h"
 #include "VRPyTextureRenderer.h"
+#include "VRPyPathtool.h"
 #include "VRPyWaypoint.h"
 #include "VRPyGeoPrimitive.h"
 #include "VRPyPointCloud.h"
@@ -54,6 +55,7 @@ template<> PyObject* VRPyTypeCaster::cast(const VRObjectPtr& obj) {
     else if (type == "Camera") return VRPyCamera::fromSharedPtr( static_pointer_cast<VRCamera>(obj) );
     else if (type == "Menu") return VRPyMenu::fromSharedPtr( static_pointer_cast<VRMenu>(obj) );
     else if (type == "LightBeacon") return VRPyLightBeacon::fromSharedPtr( static_pointer_cast<VRLightBeacon>(obj) );
+    else if (type == "Pathtool") return VRPyPathtool::fromSharedPtr( static_pointer_cast<VRPathtool>(obj) );
     else if (type == "TextureRenderer") return VRPyTextureRenderer::fromSharedPtr( static_pointer_cast<VRTextureRenderer>(obj) );
     else if (type == "AnnotationEngine") return VRPyAnnotationEngine::fromSharedPtr( static_pointer_cast<VRAnnotationEngine>(obj) );
     else if (type == "Waypoint") return VRPyWaypoint::fromSharedPtr( static_pointer_cast<VRWaypoint>(obj) );
@@ -74,7 +76,7 @@ template<> PyObject* VRPyTypeCaster::cast(const VRObjectPtr& obj) {
 typedef void* voidPtr;
 typedef PyObject* objPtr;
 
-template<> PyObject* VRPyTypeCaster::cast(const string& s) { 
+template<> PyObject* VRPyTypeCaster::cast(const string& s) {
     PyObject* res = PyUnicode_DecodeUTF8(s.data(), s.size(), "strict");
     if (!res) {
         PyErr_Clear();
