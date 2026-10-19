@@ -79,11 +79,18 @@ void VRSelector::update() {
     }
 
     // visualise subselections
-    if (selection->getSubselections().size() <= 1) return; // hack! should be zero!
+    auto subSelections = selection->getSubselections();
+    if (subSelections.size() == 0) return;
+
+    size_t Nss = 0;
+    for (auto ss : subSelections) Nss += ss.second.size();
+    if (Nss == 0) return;
+
     subselection = VRGeometry::create("subsel");
     subselection->setPersistency(0);
-    for (auto m : selection->getSubselections()) {
+    for (auto m : subSelections) {
         if (!m.first) continue;
+        if (m.second.size() == 0) continue;
         auto s = m.first->copySelection(selection);
         s->setWorldMatrix(m.first->getWorldMatrix());
         subselection->merge(s);
