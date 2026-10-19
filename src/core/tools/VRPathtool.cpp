@@ -127,6 +127,8 @@ VRPathtool::~VRPathtool() {
 
 VRPathtoolPtr VRPathtool::create() { return VRPathtoolPtr( new VRPathtool() ); }
 
+void VRPathtool::setAutoTangent(bool b) { autoTangent = b; }
+
 void VRPathtool::setupBefore(VRStorageContextPtr context) {
     bool onlyReload = false;
     if (context) onlyReload = context->onlyReload;
@@ -189,6 +191,35 @@ void VRPathtool::removeNode(int i) {
         for (auto e : nOut) disconnect(i,e);
         knots.erase(i);
     }
+}
+
+vector<VRGeometryPtr> VRPathtool::getControlHandles(VRObjectPtr handle) {
+    vector<VRGeometryPtr> res;
+    for (auto c : handle->getChildrenWithTag("controlhandle")) {
+        VRGeometryPtr g = dynamic_pointer_cast<VRGeometry>(c);
+        if (g) res.push_back(g);
+    }
+    return res;
+}
+
+VRGeometryPtr VRPathtool::getPrevHandle(VRObjectPtr handle) {
+    VRGeometry* key = (VRGeometry*)handle.get();
+    if (!handleToEntries.count(key)) return 0;
+    auto e = handleToEntries[key][0];
+    if (!e->points.count(key)) return 0;
+    int nID = e->points[key];
+    if (nID == 0) return 0;
+    return handles[nID-1].lock();
+}
+
+VRGeometryPtr VRPathtool::getNextHandle(VRObjectPtr handle) {
+    VRGeometry* key = (VRGeometry*)handle.get();
+    if (!handleToEntries.count(key)) return 0;
+    auto e = handleToEntries[key][0];
+    if (!e->points.count(key)) return 0;
+    int nID = e->points[key];
+    if (nID+1 == e->p->size()) return 0;
+    return handles[nID+1].lock();
 }
 
 int VRPathtool::getNodeID(VRObjectPtr o) {
@@ -463,12 +494,41 @@ void VRPathtool::updateHandle(VRGeometryPtr handle) { // update paths the handle
             updateEntry(e);
         }
 
-        for (auto c : handle->getChildrenWithTag("controlhandle")) {
-            VRGeometryPtr g = dynamic_pointer_cast<VRGeometry>(c);
-            if (g) updateHandle(g);
+        auto cHandles = getControlHandles(handle);
+
+        if (autoTangent) {
+            auto prevH = getPrevHandle(handle);
+            auto nextH = getNextHandle(handle);
+            Vec3d p_1, p_2;
+
+            if (prevH && nextH) {
+                p_1 = getPoseTo(prevH)->pos();
+                p_2 = getPoseTo(nextH)->pos();
+            } else if (prevH) {
+                p_1 = getPoseTo(prevH->getChild(0))->pos();
+                p_2 = p->pos();
+            } else if (nextH) {
+                p_1 = p->pos();
+                p_2 = getPoseTo(nextH->getChild(0))->pos();
+            }
+
+            double s = p->scale()[0];
+            Vec3d t = p_2 - p_1;
+            t.normalize();
+
+            for (auto g : cHandles) {
+
+                if (!g->isVisible()) {
+                    auto chP = getPoseTo(g);
+                    Vec3d chp = p->pos()+t*s;
+                    chP->setPos(chp);
+                    g->setPoseTo(chP, ptr());
+                }
+                updateHandle(g);
+            }
         }
 
-        if (handle->getChildrenWithTag("controlhandle").size() == 0) { // no control handles -> smooth knots curve
+        if (cHandles.size() == 0) { // no control handles -> smooth knots curve
             map<int, Vec3d> hPositions; // get handle positions
 
             int nID = handleToNode[key];

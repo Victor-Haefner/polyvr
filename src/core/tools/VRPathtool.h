@@ -107,6 +107,7 @@ class VRPathtool : public VRTransform {
         VRGeometryWeakPtr bezierHulls;
         VRGeometryPtr arrowTemplate;
 
+        bool autoTangent = false;
         bool showBControlPoints = false;
         bool showBHulls = false;
         float arrowScale = 1;
@@ -174,11 +175,16 @@ class VRPathtool : public VRTransform {
         PathPtr getPath(VRGeometryPtr h1, VRGeometryPtr h2);
         VRGeometryPtr getHandle(int ID);
         vector<VRGeometryPtr> getHandles(PathPtr p = 0);
+        vector<VRGeometryPtr> getControlHandles(VRObjectPtr handle);
+        VRGeometryPtr getPrevHandle(VRObjectPtr handle);
+        VRGeometryPtr getNextHandle(VRObjectPtr handle);
         VRStrokePtr getStroke(PathPtr p);
 
         VRMaterialPtr getPathMaterial();
         VRMaterialPtr getArrowMaterial();
         void setArrowSize(float s);
+
+        void setAutoTangent(bool b);
 
         // edge options
         void setEdgeResolution(int eID, int resolution);

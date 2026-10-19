@@ -39,6 +39,7 @@ PyMethodDef VRPyPathtool::methods[] = {
     {"setEdgeSmoothGraphNodes", PyWrap( Pathtool, setEdgeSmoothGraphNodes, "Set edge flag for computing smooth graph nodes", void, int, bool ) },
     {"setEdgeVisibility", PyWrap( Pathtool, setEdgeVisibility, "Set edge flag for computing smooth graph nodes", void, int, bool ) },
     {"setArrowSize", PyWrap( Pathtool, setArrowSize, "Set arrow sizes, call after the arrows are instantiated!", void, float ) },
+    {"setAutoTangent", PyWrap( Pathtool, setAutoTangent, "If handles are not visible, computes a path tangent as node direction", void, bool ) },
     {NULL}  /* Sentinel */
 };
 
