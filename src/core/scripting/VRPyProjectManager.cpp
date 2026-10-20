@@ -6,6 +6,7 @@
 using namespace OSG;
 
 simpleVRPyType(Storage, 0);
+simpleVRPyType(StorageContext, 0);
 simpleVRPyType(ProjectManager, New_ptr);
 
 PyObject* VRPyStorage::fromSharedPtr(VRStoragePtr sto) {
@@ -14,7 +15,14 @@ PyObject* VRPyStorage::fromSharedPtr(VRStoragePtr sto) {
     return VRPyBaseT<VRStorage>::fromSharedPtr(sto);
 }
 
+PyMethodDef VRPyStorageContext::methods[] = {
+    {NULL}
+};
+
 PyMethodDef VRPyStorage::methods[] = {
+    {"save", PyWrapOpt(Storage, save, "Save to XML Element, optional set persistency level, default 0", "0", void, XMLElementPtr, int ) },
+    {"saveUnder", PyWrapOpt(Storage, saveUnder, "Save to node appended to XML Element, optional set persistency level, default 0, and optional tag name override", "0|", XMLElementPtr, XMLElementPtr, int, string ) },
+    {"load", PyWrapOpt(Storage, load, "Load from XML Element", "0", void, XMLElementPtr, VRStorageContextPtr ) },
     {NULL}  /* Sentinel */
 };
 

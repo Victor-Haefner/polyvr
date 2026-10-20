@@ -197,7 +197,7 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPyAnimation>("Animation", pModVR);
     sm->registerModule<VRPyKeyFrameAnimation>("KeyFrameAnimation", pModVR, VRPyAnimation::typeRef);
     sm->registerModule<VRPyPose>("Pose", pModVR);
-    sm->registerModule<VRPyPath>("Path", pModVR);
+    sm->registerModule<VRPyPath>("Path", pModVR, VRPyStorage::typeRef);
     sm->registerModule<VRPyGraph>("Graph", pModVR);
     sm->registerModule<VRPyDatarow>("Datarow", pModVR);
 #ifndef WITHOUT_PANGO_CAIRO
@@ -235,6 +235,7 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPyHandle>("Handle", pModVR, VRPyGeometry::typeRef);
     sm->registerModule<VRPyGeoPrimitive>("GeoPrimitive", pModVR, VRPyTransform::typeRef);
     sm->registerModule<VRPyStorage>("Storage", pModVR);
+    sm->registerModule<VRPyStorageContext>("StorageContext", pModVR);
     sm->registerModule<VRPySnappingEngine>("SnappingEngine", pModVR);
     sm->registerModule<VRPyAnnotationEngine>("AnnotationEngine", pModVR, VRPyGeometry::typeRef);
     sm->registerModule<VRPyAnalyticGeometry>("AnalyticGeometry", pModVR, VRPyObject::typeRef);

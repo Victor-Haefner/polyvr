@@ -4,6 +4,10 @@
 #include "core/tools/VRProjectManager.h"
 #include "VRPyBase.h"
 
+struct VRPyStorageContext : public VRPyBaseT<OSG::VRStorageContext> {
+    static PyMethodDef methods[];
+};
+
 struct VRPyStorage : public VRPyBaseT<OSG::VRStorage> {
     static PyMethodDef methods[];
 
