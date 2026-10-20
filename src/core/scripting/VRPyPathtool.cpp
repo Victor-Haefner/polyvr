@@ -19,14 +19,18 @@ PyMethodDef VRPyPathtool::methods[] = {
     {"getPath", PyWrap( Pathtool, getPath, "Return path between handles h1 and h2 - [path] getPath( handle h1, handle h2 )", PathPtr, VRGeometryPtr, VRGeometryPtr ) },
     {"getHandle", PyWrap( Pathtool, getHandle, "Return a handle by node ID", VRGeometryPtr, int ) },
     {"getHandles", PyWrap(Pathtool, getHandles, "Return a list of paths handles", vector<VRGeometryPtr>, PathPtr ) },
+    {"getPrevHandle", PyWrap(Pathtool, getPrevHandle, "Return a the preceding handle", VRGeometryPtr, VRObjectPtr ) },
+    {"getNextHandle", PyWrap(Pathtool, getNextHandle, "Return a the next handle", VRGeometryPtr, VRObjectPtr ) },
     {"getStroke", PyWrap( Pathtool, getStroke, "Return the stroke object", VRStrokePtr, PathPtr ) },
     {"update", PyWrap( Pathtool, update, "Update the tool", void ) },
+    {"updateHandle", PyWrap( Pathtool, updateHandle, "Update the tool around a handle", void, VRGeometryPtr ) },
     {"clear", PyWrapOpt( Pathtool, clear, "Clear a path or all paths nodes", "0", void, PathPtr ) },
     {"setHandleGeometry", PyWrap( Pathtool, setHandleGeometry, "Replace the default handle geometry - setHandleGeometry( geo )", void, VRGeometryPtr ) },
     {"getPathMaterial", PyWrap( Pathtool, getPathMaterial, "Get the material used for paths geometry", VRMaterialPtr ) },
     {"getArrowMaterial", PyWrap( Pathtool, getArrowMaterial, "Get the material used for arrow geometry", VRMaterialPtr ) },
     {"setGraph", PyWrapOpt( Pathtool, setGraph, "Setup from graph, flags: doClear, doHandles, doArrows", "1|0|0", void, GraphPtr, bool, bool, bool ) },
     {"addHandle", PyWrap( Pathtool, addHandle, "Add handle, graph nodeID, pose", VRGeometryPtr, int, PosePtr ) },
+    {"remHandle", PyWrap( Pathtool, remHandle, "Remove handle, graph nodeID", void, VRGeometryPtr ) },
     {"addNode", PyWrap( Pathtool, addNode, "Add node", int, PosePtr ) },
     {"removeNode", PyWrap( Pathtool, removeNode, "Remove node by id", void, int ) },
     {"getNodeID", PyWrap(Pathtool, getNodeID, "Return node ID from handle", int, VRObjectPtr) },
@@ -39,7 +43,7 @@ PyMethodDef VRPyPathtool::methods[] = {
     {"setEdgeSmoothGraphNodes", PyWrap( Pathtool, setEdgeSmoothGraphNodes, "Set edge flag for computing smooth graph nodes", void, int, bool ) },
     {"setEdgeVisibility", PyWrap( Pathtool, setEdgeVisibility, "Set edge flag for computing smooth graph nodes", void, int, bool ) },
     {"setArrowSize", PyWrap( Pathtool, setArrowSize, "Set arrow sizes, call after the arrows are instantiated!", void, float ) },
-    {"setAutoTangent", PyWrap( Pathtool, setAutoTangent, "If handles are not visible, computes a path tangent as node direction", void, bool ) },
+    {"setAutoTangent", PyWrap( Pathtool, setAutoTangent, "If handles are not visible, computes a path tangent as node direction, optional only consider the previous node for the tangent", void, bool, bool ) },
     {NULL}  /* Sentinel */
 };
 

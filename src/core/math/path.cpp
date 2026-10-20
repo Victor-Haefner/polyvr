@@ -267,6 +267,12 @@ int Path::addPoint( PosePtr p, Color3f c ) {
     return size() - 1;
 }
 
+void Path::remPoint(int i) {
+    points.erase(points.begin()+i);
+    point_colors.erase(point_colors.begin()+i);
+    compute(iterations);
+}
+
 float Path::getLength(int i, int j) {
     float l = 0;
     if (j <= i) j = size()-1;

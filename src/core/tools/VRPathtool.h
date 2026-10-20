@@ -108,6 +108,7 @@ class VRPathtool : public VRTransform {
         VRGeometryPtr arrowTemplate;
 
         bool autoTangent = false;
+        bool atOnlyConsiderPrev = false;
         bool showBControlPoints = false;
         bool showBHulls = false;
         float arrowScale = 1;
@@ -132,7 +133,6 @@ class VRPathtool : public VRTransform {
         VRGeometryPtr newHandle();
         entryPtr newEntry(PathPtr p, option o, int eID, VRObjectPtr anchor = 0);
         void setupHandles(entryPtr p, VRGeometryPtr ha, VRGeometryPtr he);
-        void updateHandle(VRGeometryPtr handle);
         void updateEntry(entryPtr e);
         void updateDevs();
 
@@ -163,6 +163,7 @@ class VRPathtool : public VRTransform {
 
         PathPtr newPath(VRDevicePtr dev, VRObjectPtr anchor, int resolution = 10, bool doCHandles = false);
         VRGeometryPtr extrude(VRDevicePtr dev, PathPtr p);
+        void remHandle(VRGeometryPtr h);
         void remPath(PathPtr p);
 
         void addPath(PathPtr p, VRObjectPtr anchor = 0, VRGeometryPtr ha = 0, VRGeometryPtr he = 0, bool handles = true);
@@ -184,7 +185,7 @@ class VRPathtool : public VRTransform {
         VRMaterialPtr getArrowMaterial();
         void setArrowSize(float s);
 
-        void setAutoTangent(bool b);
+        void setAutoTangent(bool b, bool onlyPrev);
 
         // edge options
         void setEdgeResolution(int eID, int resolution);
@@ -197,6 +198,7 @@ class VRPathtool : public VRTransform {
         void selectPath(PathPtr p);
         void deselect();
         void update();
+        void updateHandle(VRGeometryPtr handle);
 };
 
 OSG_END_NAMESPACE
