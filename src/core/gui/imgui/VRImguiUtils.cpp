@@ -104,6 +104,7 @@ void uiInitStore() {
     OSG::XML xml;
     xml.read(uiParameterFile, false);
     OSG::XMLElementPtr root = xml.getRoot();
+    if (!root) return;
 
     auto params = root->getChild("params");
     if (!params) return;
