@@ -622,7 +622,8 @@ void VRPathtool::setupHandles(entryPtr e, VRGeometryPtr ha, VRGeometryPtr he) {
 }
 
 void VRPathtool::addPath(PathPtr p, VRObjectPtr anchor, VRGeometryPtr ha, VRGeometryPtr he, bool handles) {
-    auto e = newEntry( p, option(10, handles), -options.size(), anchor );
+    int res = p->getResolution();
+    auto e = newEntry( p, option(res, handles), -options.size(), anchor );
     setupHandles(e, ha, he);
 }
 

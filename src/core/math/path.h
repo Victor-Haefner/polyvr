@@ -19,7 +19,7 @@ class Path : public VRStorage {
 
         int degree = 3;
         int direction = 1;
-        int iterations = 80;
+        int iterations = 32;
         bool closed = false;
 
         vector<Vec3d> positions;
@@ -57,6 +57,8 @@ class Path : public VRStorage {
         void close();
         bool isClosed();
         void compute(int N);
+        int getResolution();
+
         vector<Vec3d> getPositions();
         vector<Vec3d> getDirections();
         vector<Vec3d> getUpVectors();

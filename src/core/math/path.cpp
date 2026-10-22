@@ -304,6 +304,7 @@ void Path::setPoint(int i, PosePtr p, Color3f c ) {
 vector<PosePtr> Path::getPoints() { return points; }
 vector<Vec3d> Path::getControlPoints() { return controlPoints; }
 int Path::size() { return points.size(); }
+int Path::getResolution() { return iterations; }
 
 PosePtr Path::getPoint(int i) {
     size_t N = size();
