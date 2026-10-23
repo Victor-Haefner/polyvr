@@ -565,7 +565,7 @@ PosePtr Path::getUniformPose(float t, int i, int j, bool fast) {
     double Lk = t*L;
     double l = 0;
 
-    for (int k=i+1; k<j; k++) {
+    for (int k=i+1; k<=j; k++) {
         double Li = getLength(k-1,k);
         if (Li > 1e-3 && Lk < l+Li) return getPose((Lk-l)/Li, k-1, k, fast);
         l += Li;
