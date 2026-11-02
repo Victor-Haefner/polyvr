@@ -672,7 +672,8 @@ VRGeometryPtr VRPathtool::newHandle() {
     VRGeometryPtr h;
 
     if (customHandle) {
-        h = static_pointer_cast<VRGeometry>( customHandle->duplicate() );
+        h = dynamic_pointer_cast<VRGeometry>( customHandle->duplicate() );
+        h->makeUnique();
     } else {
         h = VRGeometry::create("handle");
         h->setPrimitive("Torus 0.04 0.15 3 4");
@@ -760,7 +761,7 @@ VRGeometryPtr VRPathtool::extrude(VRDevicePtr dev, PathPtr p) {
 }
 
 void VRPathtool::setHandleGeometry(VRGeometryPtr geo) {
-    customHandle = static_pointer_cast<VRGeometry>( geo->duplicate() );
+    customHandle = dynamic_pointer_cast<VRGeometry>( geo->duplicate() );
 }
 
 void VRPathtool::clear(PathPtr p) {
