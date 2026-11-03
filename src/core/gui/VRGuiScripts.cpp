@@ -716,7 +716,7 @@ void VRGuiScripts::getLineFocus(int& line, int& column) {
 }
 
 void VRGuiScripts::on_search_link_clicked(searchResult res, string s) {
-    focusScript(res.scriptName, res.line, res.column);
+    focusScript(res.scriptName, res.line-1, res.column);
 }
 
 // TODO: implement replace function

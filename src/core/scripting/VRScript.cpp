@@ -348,7 +348,7 @@ int VRScript::getHeadSize() { // number of head lines
 }
 
 void VRScript::on_err_link_clicked(Reference link, string s) {
-    cout << "VRScript::on_err_link_clicked " << s << endl;
+    cout << "VRScript::on_err_link_clicked " << s << ", line: " << link.line << endl;
     VRGuiManager::get()->focusScript(link.filename, link.line, link.column);
 }
 
