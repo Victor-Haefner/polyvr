@@ -180,24 +180,24 @@ struct DWGContext {
 
     void addPoint(Pnt3d p, string style, Dwg_Object_LAYER* layer) {
         drawing->setActiveTransform( transformation );
-        drawing->addPoint("", Pnt2d(p), style);
+        drawing->addPoint("", p, style);
 	}
 
 	void addLine(Pnt3d vec1, Pnt3d vec2, string style, Dwg_Object_LAYER* layer) {
         drawing->setActiveTransform( transformation );
-        drawing->addLine("", Pnt2d(vec1), Pnt2d(vec2), style);
+        drawing->addLine("", vec1, vec2, style);
 	}
 
 	void addQuad(Pnt3d vec1, Pnt3d vec2, Pnt3d vec3, Pnt3d vec4, string style, Dwg_Object_LAYER* layer) {
         drawing->setActiveTransform( transformation );
-        drawing->addQuad("", Pnt2d(vec1), Pnt2d(vec2), Pnt2d(vec3), Pnt2d(vec4), style);
+        drawing->addQuad("", vec1, vec2, vec3, vec4, style);
 	}
 
     /** DWG arcs always rotate counterclockwise! */
 	void addArc(Pnt3d c, double r, double a1, double a2, string style, Dwg_Object_LAYER* layer, Vec3d eBox = Vec3d(1,1,1)) {
 		if (r < 1e-6) r = 1; // elipse -> use box
         drawing->setActiveTransform( transformation );
-        drawing->addArc("", Pnt2d(c), r, a1, a2, Vec2d(eBox), style);
+        drawing->addArc("", c, r, a1, a2, Vec2d(eBox), style);
 	}
 
 	void addCircle(Vec3d c, double r, string style, Dwg_Object_LAYER* layer) {
@@ -272,7 +272,7 @@ struct DWGContext {
         p = Vec3d(x.dot(p),u.dot(p), 0);
 
         for (auto& ms : strings) {
-            drawing->addLabel("", Pnt2d(p), ms.txt, style);
+            drawing->addLabel("", Pnt3d(p), ms.txt, style);
             p[1] -= h+lD;
         }
     }

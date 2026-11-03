@@ -22,6 +22,7 @@
 #include <OpenSG/OSGImage.h>
 #include "core/objects/geometry/VRGeoData.h"
 #include "core/objects/geometry/VRGeometry.h"
+#include "core/objects/geometry/drawing/VRTechnicalDrawing.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/material/VRTexture.h"
 #include "core/objects/object/VRObjectT.h"
@@ -46,11 +47,159 @@ template<> string toString<vector<OSG::Vec3d > >(vector<OSG::Vec3d > const&) { r
 
 OSG_BEGIN_NAMESPACE;
 
+
+struct GISContext {
+    string filePath;
+    VRTechnicalDrawingPtr drawing;
+
+    GISContext() {
+        drawing = VRTechnicalDrawing::create();
+    }
+
+    /*void compute_current_transformation() {
+	    transformation.setIdentity();
+
+		rot_angle = 0;
+		for (double f : rot_angle_stack) rot_angle += f;
+
+	    //if (offset_stack.size() > 0) cout << "compute_current_transformation " << offset_stack.size() << endl;
+		for (uint i=0; i<offset_stack.size(); i++) {
+			Vec3d o  = offset_stack[i];
+			if (i == 0) o += offset;
+			Vec3d s  = scale_stack[i];
+			Vec3d e  = extrusion_stack[i];
+			double f = rot_angle_stack[i];
+
+			Matrix4d T,S,E;
+			T.setTranslate(o);
+			T.setRotate(Quaterniond(Vec3d(0,0,1),f));
+			S.setScale(s);
+			E = getExtrusionMatrix(e);
+
+			T.mult(E); // maybe multLeft ?
+			T.mult(S);
+			transformation.mult(T);
+			//cout << "   " << i << "  scale " << s << " pos " << o << "  extr " << e << "  ang " << f << endl;
+		}
+		//if (offset_stack.size() > 0) cout << endl;
+	}
+
+	double scaleLength(double l) {
+        Vec3d s = Vec3d(1,0,0);
+		transformation.mult(s,s);
+		return l * s.length();
+	}
+
+    void addPoint(Pnt3d p, string style, Dwg_Object_LAYER* layer) {
+        drawing->setActiveTransform( transformation );
+        drawing->addPoint("", Pnt2d(p), style);
+	}
+
+	void addLine(Pnt3d vec1, Pnt3d vec2, string style, Dwg_Object_LAYER* layer) {
+        drawing->setActiveTransform( transformation );
+        drawing->addLine("", Pnt2d(vec1), Pnt2d(vec2), style);
+	}
+
+	void addQuad(Pnt3d vec1, Pnt3d vec2, Pnt3d vec3, Pnt3d vec4, string style, Dwg_Object_LAYER* layer) {
+        drawing->setActiveTransform( transformation );
+        drawing->addQuad("", Pnt2d(vec1), Pnt2d(vec2), Pnt2d(vec3), Pnt2d(vec4), style);
+	}
+
+    // DWG arcs always rotate counterclockwise!
+	void addArc(Pnt3d c, double r, double a1, double a2, string style, Dwg_Object_LAYER* layer, Vec3d eBox = Vec3d(1,1,1)) {
+		if (r < 1e-6) r = 1; // elipse -> use box
+        drawing->setActiveTransform( transformation );
+        drawing->addArc("", Pnt2d(c), r, a1, a2, Vec2d(eBox), style);
+	}
+
+	void addCircle(Vec3d c, double r, string style, Dwg_Object_LAYER* layer) {
+		addArc( c, r, 0, 2*Pi, style, layer );
+	}
+
+	void addEllipse(Vec3d c, double a, double b, string style, Dwg_Object_LAYER* layer) {
+		Vec3d box = Vec3d(a, b,0);
+		transformation.mult(box, box);
+		for (int i=0; i<3; i++) box[i] = abs(box[i]);
+		addArc( c, 0, 0, 2*Pi, style, layer, box );
+	}
+
+	struct MString {
+        string txt;
+        string font;
+        string A; // ???
+        int line = 0;
+	};
+
+	vector<MString> parseMarkupString(string s) {
+        vector<string> lines = splitString(s, "\\P");
+        vector<MString> strings;
+        for (size_t i=0; i<lines.size(); i++) {
+            string& s = lines[i];
+            MString ms;
+            ms.line = i;
+
+            if (s.size() > 0)
+                if (s[0] == '{' && s[s.size()-1] == '}') s = subString(s, 1, s.size()-2);
+
+            for (size_t j=0; j<s.size(); j++) {
+                if (s[j] == '\\') {
+                    if (s[j+1] == 'f') {
+                        int scP = s.find(';', j);
+                        int n = scP-j-2;
+                        ms.font = s.substr(j+2, n);
+                        j += n+2; continue;
+                    }
+                    if (s[j+1] == 'A') {
+                        int scP = s.find(';', j);
+                        int n = scP-j-2;
+                        ms.A = s.substr(j+2, n);
+                        j += n+2; continue;
+                    }
+                }
+
+                ms.txt += s[j];
+            }
+
+            strings.push_back(ms);
+        }
+        return strings;
+	}
+
+    void addText(Vec3d p, Vec3d x, Vec2d box, string t, double height, Dwg_Object_LAYER* layer) {
+        auto strings = parseMarkupString(t);
+
+        float h = height*0.9;
+        float w = h*0.6;
+        float lD = h*0.7;
+
+        string style = "txt_"+toString(h)+"_"+toString(x);
+        drawing->setActiveTransform( transformation );
+
+        size_t Nmax = 0;
+        for (auto& ms : strings) Nmax = max(Nmax, ms.txt.size());
+
+        Vec3d u = x.cross(Vec3d(0,0,-1));
+        p += u * ( strings.size()-1 ) * (h+lD) * 0.5; // center vertically
+        p -= x * Nmax * w * 0.5; // center horizontally
+        p = Vec3d(x.dot(p),u.dot(p), 0);
+
+        for (auto& ms : strings) {
+            drawing->addLabel("", Pnt2d(p), ms.txt, style);
+            p[1] -= h+lD;
+        }
+    }*/
+};
+
+
 void loadPDF(string path, VRTransformPtr res, map<string, string> opts) {
     loadTIFF(path, res, opts);
 }
 
-auto toVec3d = [](const OGRPoint& p) { return Vec3d( p.getX(), p.getZ(), -p.getY() ); };
+auto toVec3d = [](const OGRPoint& p, bool xz = false) {
+    if (xz) return Vec3d( p.getX(), p.getZ(), -p.getY() );
+    return Vec3d( p.getX(), p.getY(), p.getZ() );
+};
+
 auto toOGRPoint = [](const Vec3d& p) { return OGRPoint( p[0], -p[2], p[1] ); };
 
 void GDALErrHandler(CPLErr eErrClass, int err_no, const char *msg) {
@@ -61,10 +210,10 @@ void loadSHP(string path, VRTransformPtr res, map<string, string> opts) {
     CPLPushErrorHandler(GDALErrHandler);
     GDALAllRegister();
     OGRRegisterAll();
-    
+
     //cout << "SHP driver available: " << GetGDALDriverManager()->GetDriverByName("ESRI Shapefile") << endl;
     //cout << " file exists? " << exists(path) << endl;
-    
+
 #if GDAL_VERSION_MAJOR < 2
  	OGRDataSource *poDS = OGRSFDriverRegistrar::Open(path.c_str(), false);
 #else
@@ -91,35 +240,32 @@ void loadSHP(string path, VRTransformPtr res, map<string, string> opts) {
 
     vector<Vec3d> geoCoords;
 
-    auto handlePoint = [&](OGRGeometry* geo, VRGeoDataPtr data, size_t fI) {
+    auto handlePoint = [&](OGRGeometry* geo, GISContext& data, size_t fI) {
         OGRPoint* pnt = (OGRPoint*)geo;
         Vec3d p = toVec3d(*pnt) - offset;
-        Vec3d n = Vec3d(0,1,0);
-        Vec2d tc1 = Vec2d(fI, geoCoords.size());
-        geoCoords.push_back(p); // keep original coordinates
+        Vec3d n = Vec3d(0,0,1);
+
+        // TODO: how to handle the coords with technical drawings?
+        //Vec2d tc1 = Vec2d(fI, geoCoords.size());
+        //geoCoords.push_back(p); // keep original coordinates
 
         if (pointSize > 0) {
             float W2 = pointSize; //0.00002;
             Vec3d x1 = Vec3d(1,0,0);
-            Vec3d x2 = Vec3d(0,0,1);
+            Vec3d x2 = Vec3d(0,1,0);
 
-            Vec3d p11 = p + x1*W2 + x2*W2;
-            Vec3d p12 = p + x1*W2 - x2*W2;
-            Vec3d p21 = p - x1*W2 + x2*W2;
-            Vec3d p22 = p - x1*W2 - x2*W2;
+            Pnt3d p11 = p + x1*W2 + x2*W2;
+            Pnt3d p12 = p + x1*W2 - x2*W2;
+            Pnt3d p21 = p - x1*W2 + x2*W2;
+            Pnt3d p22 = p - x1*W2 - x2*W2;
 
-            data->pushVert(p11, n, tc1);
-            data->pushVert(p12, n, tc1);
-            data->pushVert(p22, n, tc1);
-            data->pushVert(p21, n, tc1);
-            data->pushQuad();
+            data.drawing->addQuad("", p11, p12, p22, p21, "");
         } else {
-            data->pushVert(p, n, tc1);
-            data->pushPoint();
+            data.drawing->addPoint("", p, "");
         }
     };
 
-    auto handleLine = [&](OGRGeometry* geo, VRGeoDataPtr data, size_t fI, bool verbose) {
+    auto handleLine = [&](OGRGeometry* geo, GISContext& data, size_t fI, bool verbose) {
         OGRLineString* line = (OGRLineString*) geo;
 
         Vec3d p, p1, p2, d, x;
@@ -149,61 +295,77 @@ void loadSHP(string path, VRTransformPtr res, map<string, string> opts) {
                 Vec3d p21 = p2 + x*W;
                 Vec3d p22 = p2 - x*W;
 
-                data->pushVert(p11, n, tc1);
-                data->pushVert(p21, n, tc2);
-                data->pushVert(p22, n, tc2);
-                data->pushVert(p12, n, tc1);
-                data->pushQuad();
+                //data->pushVert(p11, n, tc1);
+                //data->pushVert(p21, n, tc2);
+                //data->pushVert(p22, n, tc2);
+                //data->pushVert(p12, n, tc1);
+                data.drawing->addQuad("", p11, p12, p22, p21, "");
             }
         } else {
             if (verbose) cout << " line " << line->getNumPoints() << endl;
+            vector<Pnt3d> points;
             for (int i=0; i<line->getNumPoints(); i++) {
                 line->getPoint(i, &pnt);
                 p = toVec3d(pnt) - offset;
+                points.push_back(p);
                 Vec2d tc = Vec2d(fI, geoCoords.size());
                 geoCoords.push_back(p); // keep original coordinates
-                data->pushVert(p, n, tc);
-                if (i > 0) data->pushLine();
+                //data->pushVert(p, n, tc);
+                data.drawing->addPolyLine("", points, "");
+                //if (i > 0) data->pushLine();
                 if (verbose) cout << "  line point " << p << endl;
             }
         }
     };
 
-    auto handlePolygon = [&](OGRGeometry* geo, VRGeoDataPtr data, size_t fI) { // TODO: will not work with export
+    auto handlePolygon = [&](OGRGeometry* geo, GISContext& data, size_t fI) { // TODO: will not work with export
 #ifndef WASM
         OGRPolygon* poly = (OGRPolygon*) geo;
         OGRLinearRing* ex = poly->getExteriorRing();
         Vec2d tc = Vec2d(fI, 1);
 
         // outer bound
-        VRPolygon outer;
+        vector<Pnt3d> outer;
         OGRPoint pnt;
         for (int i=0; i<ex->getNumPoints(); i++) {
             ex->getPoint(i, &pnt);
-            outer.addPoint(toVec3d(pnt) - offset);
+            outer.push_back(toVec3d(pnt) - offset);
         }
-
-        Triangulator t;
-        t.add(outer);
 
         // inner bounds
+        vector<vector<Pnt3d>> vInner;
         for (int i=0; i<poly->getNumInteriorRings(); i++) {
             OGRLinearRing* in = poly->getInteriorRing(i);
-            VRPolygon inner;
+            vector<Pnt3d> inner;
             for (int i=0; i<in->getNumPoints(); i++) {
                 in->getPoint(i, &pnt);
-                inner.addPoint(toVec3d(pnt) - offset);
+                inner.push_back(toVec3d(pnt) - offset);
             }
-            t.add(inner, false);
+            vInner.push_back(inner);
         }
 
-        int n = t.append(data, false);
+
+        /*
+        Triangulator t;
+        VRPolygon pOuter;
+        for (auto& p : outer) pOuter.addPoint(Vec3d(p));
+        t.add(pOuter);
+
+        for (auto& inner : vInner) {
+            VRPolygon pInner;
+            for (auto& p : inner) pInner.addPoint(Vec3d(p));
+            t.add(pInner, false);
+        }
+
+        int n = t.append(data.drawing, false);
         for (auto i=0; i<n; i++) data->pushTexCoord(tc);
-        for (auto i=0; i<n; i++) data->pushTexCoord(tc,1);
+        for (auto i=0; i<n; i++) data->pushTexCoord(tc,1);*/
+
+		data.drawing->addPolygon("", outer, vInner, "");
 #endif
     };
 
-    auto handleMultiPolygon = [&](OGRGeometry* geo, VRGeoDataPtr data, size_t fI) {
+    auto handleMultiPolygon = [&](OGRGeometry* geo, GISContext& data, size_t fI) {
         cout << "loadSHP::handleGeometry WARNING: it's a multipolygon, not handled" << endl;
     };
 
@@ -215,7 +377,7 @@ void loadSHP(string path, VRTransformPtr res, map<string, string> opts) {
         return "UNKNOWN";
     };
 
-    auto handleFeature = [&](OGRGeometry* geo, VRGeoDataPtr data, size_t fI, bool verbose) {
+    auto handleFeature = [&](OGRGeometry* geo, GISContext& data, size_t fI, bool verbose) {
         auto type = wkbFlatten(geo->getGeometryType());
         if (verbose) cout << "handle feature " << shpTypeName(type) << endl;
         if (type == wkbPoint) handlePoint(geo, data, fI);
@@ -226,6 +388,7 @@ void loadSHP(string path, VRTransformPtr res, map<string, string> opts) {
     };
 
     cout << "opened file " << path << " with layers:" << endl;
+    GISContext data;
 
     for (int i=0; i<poDS->GetLayerCount(); i++) {
         OGRLayer* poLayer = poDS->GetLayer(i);
@@ -233,7 +396,10 @@ void loadSHP(string path, VRTransformPtr res, map<string, string> opts) {
         cout << " " << i << " " << poLayer->GetName() << ", geom type: " << shpTypeName(poLayer->GetGeomType()) << endl;
         string layer_name = poLayer->GetName();
 
-        VRGeoDataPtr data = VRGeoData::create();
+        data.drawing->addLayer( layer_name );
+        data.drawing->setActiveLayer( layer_name );
+
+        //VRGeoDataPtr data = VRGeoData::create();
         poLayer->ResetReading();
         int gi = 0;
         auto entLayer = ontology->addEntity("layer", "Layer");
@@ -288,13 +454,16 @@ void loadSHP(string path, VRTransformPtr res, map<string, string> opts) {
         }
         //cout << "  handled " << gi << " features" << endl;
 
-        if (data->size() > 0) {
+        /*if (data->size() > 0) {
             auto vlayer = data->asGeometry(layer_name);
             vlayer->setEntity(entLayer);
             vlayer->addAttachment<vector<Vec3d>>("geoCoords", geoCoords);
-            res->addChild(vlayer);
-        }
+            //res->addChild(vlayer);
+        }*/
     }
+
+    data.drawing->updateGeometries();
+    res->addChild( data.drawing );
 
 #if GDAL_VERSION_MAJOR < 2
  	OGRDataSource::DestroyDataSource(poDS);
@@ -337,7 +506,7 @@ void writeSHP(VRObjectPtr obj, string path, map<string, string> options) {
         // get continuous SHP features.. this may be incorrect if geometry was altered, this is filtered below
         vector<Vec2i> features = { Vec2i(0,0) };
         size_t lT = data.getTexCoord(0)[0];
-        for (size_t i=1; i<data.size(); i++) {
+        for (int i=1; i<data.size(); i++) {
             size_t t = data.getTexCoord(i)[0];
             if (t == lT) features[features.size()-1][1] = i;
             else features.push_back( Vec2i(i,i) );
@@ -420,7 +589,7 @@ void writeSHP(VRObjectPtr obj, string path, map<string, string> options) {
             if (layerType == wkbLineString) {
                 if (f[1] == f[0]) continue; // may happen if edge is deleted
                 OGRLineString line;
-                for (size_t i=f[0]; i<=f[1]; i++) {
+                for (int i=f[0]; i<=f[1]; i++) {
                     Vec2d t = data.getTexCoord(i);
                     Vec3d p = geoCoords[t[1]];
                     OGRPoint point = toOGRPoint(p);
@@ -977,7 +1146,6 @@ void analyzeSHP(string path, string out) {
         fout << " " << i << " " << poLayer->GetName() << ", geom type: " << (int)poLayer->GetGeomType() << endl;
 
         poLayer->ResetReading();
-        int gi = 0;
         OGRFeatureDefn* poFDefn = poLayer->GetLayerDefn();
         for( int field = 0; field < poFDefn->GetFieldCount(); field++ ) {
             OGRFieldDefn* poFieldDefn = poFDefn->GetFieldDefn( field );

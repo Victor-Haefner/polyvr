@@ -4,6 +4,7 @@
 #include "core/objects/material/VRMaterial.h"
 #include "core/tools/VRAnnotationEngine.h"
 #include "core/utils/toString.h"
+#include "core/math/triangulator.h"
 
 using namespace OSG;
 
@@ -35,9 +36,57 @@ template<typename T> void VRTechnicalDrawing::unpackParam(Parameter p, T& t) { t
 template<> void VRTechnicalDrawing::unpackParam(Parameter p, string& t) { t = p.data; }
 
 template<typename T> void VRTechnicalDrawing::unpackParam(Parameter p, vector<T>& t) {
+    auto read = [&](void* ptr, size_t size) {
+        if (size > p.data.size()) return;
+        memcpy(ptr, p.data.data(), size);
+    };
+
     size_t N = p.data.size() / sizeof(T);
-    t = vector<T>(N);
-    if (N > 0) memcpy( &t[0], &p.data[0], N*sizeof(T) );
+    if (N == 0) return;
+    t.resize(N);
+    read(t.data(), N*sizeof(T) );
+}
+
+template<typename T> VRTechnicalDrawing::Parameter VRTechnicalDrawing::packParam(ParameterType type, vector<vector<T>> data) {
+    Parameter p;
+    p.type = type;
+
+    auto append = [&](const void* ptr, size_t size) { p.data.append((const char*)ptr, size); };
+
+    size_t N = data.size();
+    append(&N, sizeof(size_t));
+
+    for (const auto& v : data) {
+        size_t n = v.size();
+        if (n == 0) continue;
+        append(&n, sizeof(size_t));
+        append(v.data(), n*sizeof(T));
+    }
+
+    return p;
+}
+
+template<typename T> void VRTechnicalDrawing::unpackParam(Parameter p, vector<vector<T>>& t) {
+   size_t offset = 0;
+
+    auto read = [&](void* ptr, size_t size) {
+        if (size > p.data.size() - offset) return;
+        memcpy(ptr, p.data.data() + offset, size);
+        offset += size;
+    };
+
+    size_t N;
+    read(&N, sizeof(size_t));
+    t.resize(N);
+
+    for (auto& v : t) {
+        size_t n;
+        read(&n, sizeof(size_t));
+        if (n == 0 || n > (p.data.size() - offset) / sizeof(T)) continue;
+
+        v.resize(n);
+        read(v.data(), n*sizeof(T));
+    }
 }
 
 void VRTechnicalDrawing::setActiveLayer(string layer) { context.layer = layer; }
@@ -64,32 +113,31 @@ void VRTechnicalDrawing::addMarkup(string name, VRAnnotationEnginePtr style, str
 VRTechnicalDrawing::Object& VRTechnicalDrawing::addObject(string name, ObjectType type, string style) {
     Object o(name, type, style);
     o.transform = context.transform;
-    if (!layers.count( context.layer) ) { cout << "Error in addObject, layer " << context.layer << " not found" << endl; }
+    if (!layers.count( context.layer) ) { cout << "Error in addObject, layer '" << context.layer << "' not found" << endl; }
     auto& layer = layers[context.layer];
     layer.objects[o.ID] = o;
     layer.changed = true;
     return layer.objects[o.ID];
 }
 
-void VRTechnicalDrawing::addPoint(string name, Pnt2d p, string style) {
+void VRTechnicalDrawing::addPoint(string name, Pnt3d p, string style) {
     Object& o = addObject(name, POINT, style);
     o.parameters[POSITION] = packParam(POSITION, p);
 }
 
-void VRTechnicalDrawing::addLine(string name, Pnt2d p1, Pnt2d p2, string style) {
+void VRTechnicalDrawing::addLine(string name, Pnt3d p1, Pnt3d p2, string style) {
     Object& o = addObject(name, LINE, style);
-    vector<Pnt2d> vIn({p1,p2});
+    vector<Pnt3d> vIn({p1,p2});
     o.parameters[POSITIONS] = packParam(POSITIONS, vIn);
 }
 
-
-void VRTechnicalDrawing::addQuad(string name, Pnt2d p1, Pnt2d p2, Pnt2d p3, Pnt2d p4, string style) {
+void VRTechnicalDrawing::addQuad(string name, Pnt3d p1, Pnt3d p2, Pnt3d p3, Pnt3d p4, string style) {
     Object& o = addObject(name, QUAD, style);
-    vector<Pnt2d> vIn({p1,p2,p3,p4});
+    vector<Pnt3d> vIn({p1,p2,p3,p4});
     o.parameters[POSITIONS] = packParam(POSITIONS, vIn);
 }
 
-void VRTechnicalDrawing::addArc(string name, Pnt2d c, double r, double b, double e, Vec2d s, string style) {
+void VRTechnicalDrawing::addArc(string name, Pnt3d c, double r, double b, double e, Vec2d s, string style) {
     Object& o = addObject(name, ARC, style);
     o.parameters[CENTER] = packParam(CENTER, c);
     o.parameters[RADIUS] = packParam(RADIUS, r);
@@ -98,11 +146,17 @@ void VRTechnicalDrawing::addArc(string name, Pnt2d c, double r, double b, double
     o.parameters[SCALE] = packParam(SCALE, s);
 }
 
-void VRTechnicalDrawing::addCircle(string name, Pnt2d cp, double r, string style) {}
-void VRTechnicalDrawing::addEllipse(string name, Pnt2d cp, double a, double b, string style) {}
-void VRTechnicalDrawing::addPolyLine(string name, vector<Pnt2d> v, string style) {}
+void VRTechnicalDrawing::addCircle(string name, Pnt3d cp, double r, string style) {}
+void VRTechnicalDrawing::addEllipse(string name, Pnt3d cp, double a, double b, string style) {}
+void VRTechnicalDrawing::addPolyLine(string name, vector<Pnt3d> v, string style) {}
 
-void VRTechnicalDrawing::addLabel(string name, Pnt2d p, string text, string style) {
+void VRTechnicalDrawing::addPolygon(string name, vector<Pnt3d> outer, vector<vector<Pnt3d>> inner, string style) {
+    Object& o = addObject(name, POLYGON, style);
+    o.parameters[POSITIONS] = packParam(POSITIONS, outer);
+    o.parameters[HOLES] = packParam(HOLES, inner);
+}
+
+void VRTechnicalDrawing::addLabel(string name, Pnt3d p, string text, string style) {
     Object& o = addObject(name, LABEL, style);
     o.parameters[POSITION] = packParam(POSITION, p);
     o.parameters[TEXT] = packParam(TEXT, text);
@@ -131,11 +185,11 @@ void VRTechnicalDrawing::updateGeometry(Layer& l, Object& o) {
     Color3f col = materials[o.style].color;
 
     if (o.type == LINE) {
-        vector<Pnt2d> v;
+        vector<Pnt3d> v;
         unpackParam( o.parameters[POSITIONS], v);
 
-        Pnt3d p1 = Pnt3d( v[0] );
-        Pnt3d p2 = Pnt3d( v[1] );
+        Pnt3d p1 = v[0];
+        Pnt3d p2 = v[1];
 		p1 = o.transform * p1;
 		p2 = o.transform * p2;
         geo->pushVert(p1);
@@ -144,14 +198,14 @@ void VRTechnicalDrawing::updateGeometry(Layer& l, Object& o) {
         geo->pushColor(col);
         geo->pushLine();
     } else if (o.type == QUAD) {
-        vector<Pnt2d> v;
+        vector<Pnt3d> v;
         unpackParam( o.parameters[POSITIONS], v);
         if (v.size() != 4) { cout << "ERROR: Quad needs 4 vertices, got " << v.size() << endl; return; }
 
-        Pnt3d p1 = Pnt3d( v[0] );
-        Pnt3d p2 = Pnt3d( v[1] );
-        Pnt3d p3 = Pnt3d( v[2] );
-        Pnt3d p4 = Pnt3d( v[3] );
+        Pnt3d p1 = v[0];
+        Pnt3d p2 = v[1];
+        Pnt3d p3 = v[2];
+        Pnt3d p4 = v[3];
 		p1 = o.transform * p1;
 		p2 = o.transform * p2;
 		p3 = o.transform * p3;
@@ -166,16 +220,14 @@ void VRTechnicalDrawing::updateGeometry(Layer& l, Object& o) {
         geo->pushColor(col);
         geo->pushQuad();
     } else if (o.type == ARC) {
-        Pnt2d c;
+        Pnt3d C;
         Vec2d s;
         double r, a1, a2;
-        unpackParam( o.parameters[CENTER], c);
+        unpackParam( o.parameters[CENTER], C);
         unpackParam( o.parameters[RADIUS], r);
         unpackParam( o.parameters[BEGIN], a1);
         unpackParam( o.parameters[END],   a2);
         unpackParam( o.parameters[SCALE],  s);
-
-        Pnt3d C = Pnt3d(c);
 
         double da = 0.1;
         int N = max(int(abs(a2-a1)/da),1);
@@ -189,17 +241,20 @@ void VRTechnicalDrawing::updateGeometry(Layer& l, Object& o) {
             if (i > 0) geo->pushLine();
         }
     } else if (o.type == POINT) {
-        Pnt2d p;
-        unpackParam( o.parameters[POSITION], p);
-        Pnt3d P(p);
+        Pnt3d P;
+        unpackParam( o.parameters[POSITION], P);
 		P = o.transform * P;
         geo->pushVert(P);
+        if (o.parameters.count(ATTRIBUTE)) {
+            Vec2d a;
+            unpackParam( o.parameters[ATTRIBUTE], a);
+            geo->pushTexCoord(a);
+        }
         geo->pushColor(col);
         geo->pushPoint();
     } else if (o.type == LABEL) {
-        Pnt2d p;
-        unpackParam( o.parameters[POSITION], p);
-        Pnt3d P(p);
+        Pnt3d P;
+        unpackParam( o.parameters[POSITION], P);
 		P = o.transform * P;
 		string t;
         unpackParam( o.parameters[TEXT], t);
@@ -218,6 +273,24 @@ void VRTechnicalDrawing::updateGeometry(Layer& l, Object& o) {
 
 		auto a = l.annotationStyles[o.style];
 		a->add(Vec3d(P), t);
+    } else if (o.type == POLYGON) {
+        vector<Pnt3d> outer;
+        vector<vector<Pnt3d>> vInner;
+        unpackParam( o.parameters[POSITIONS], outer);
+        unpackParam( o.parameters[HOLES], vInner);
+
+        Triangulator t;
+        VRPolygon pOuter;
+        for (auto& p : outer) pOuter.addPoint(Vec3d(p));
+        t.add(pOuter);
+
+        for (auto& inner : vInner) {
+            VRPolygon pInner;
+            for (auto& p : inner) pInner.addPoint(Vec3d(p));
+            t.add(pInner, false);
+        }
+
+        t.append(geo, false);
     } else {
         cout << "Warning! type " << o.type << " not handled!" << endl;
     }

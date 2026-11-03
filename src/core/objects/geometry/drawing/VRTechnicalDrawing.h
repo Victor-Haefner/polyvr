@@ -22,7 +22,8 @@ class VRTechnicalDrawing : public VRTransform {
             CIRCLE,
             ELLIPSE,
             POLYLINE,
-            LABEL
+            LABEL,
+            POLYGON
         };
 
         enum ParameterType {
@@ -33,7 +34,9 @@ class VRTechnicalDrawing : public VRTransform {
             BEGIN,
             END,
             SCALE,
-            TEXT
+            TEXT,
+            HOLES,
+            ATTRIBUTE
         };
 
         struct Parameter {
@@ -98,9 +101,11 @@ class VRTechnicalDrawing : public VRTransform {
 
 	    template<typename T> Parameter packParam(ParameterType type, T data);
 	    template<typename T> Parameter packParam(ParameterType type, vector<T> data);
+	    template<typename T> Parameter packParam(ParameterType type, vector<vector<T>> data);
 	    template<typename T> Parameter packParam(ParameterType type, string data);
 	    template<typename T> void unpackParam(Parameter p, T& t);
 	    template<typename T> void unpackParam(Parameter p, vector<T>& t);
+	    template<typename T> void unpackParam(Parameter p, vector<vector<T>>& t);
 	    template<typename T> void unpackParam(Parameter p, string& t);
 
 		void updateGeometry(Layer& l, Object& o);
@@ -127,14 +132,15 @@ class VRTechnicalDrawing : public VRTransform {
 		void setActiveLayer(string layer);
 		void setActiveTransform(Matrix4d transform);
 
-		void addPoint(string name, Pnt2d p, string style);
-		void addLine(string name, Pnt2d p1, Pnt2d p2, string style);
-		void addQuad(string name, Pnt2d p1, Pnt2d p2, Pnt2d p3, Pnt2d p4, string style);
-		void addArc(string name, Pnt2d c, double r, double b, double e, Vec2d s, string style);
-		void addCircle(string name, Pnt2d cp, double r, string style);
-		void addEllipse(string name, Pnt2d cp, double a, double b, string style);
-		void addPolyLine(string name, vector<Pnt2d> v, string style);
-		void addLabel(string name, Pnt2d p, string text, string style);
+		void addPoint(string name, Pnt3d p, string style);
+		void addLine(string name, Pnt3d p1, Pnt3d p2, string style);
+		void addQuad(string name, Pnt3d p1, Pnt3d p2, Pnt3d p3, Pnt3d p4, string style);
+		void addArc(string name, Pnt3d c, double r, double b, double e, Vec2d s, string style);
+		void addCircle(string name, Pnt3d cp, double r, string style);
+		void addEllipse(string name, Pnt3d cp, double a, double b, string style);
+		void addPolyLine(string name, vector<Pnt3d> v, string style);
+		void addPolygon(string name, vector<Pnt3d> outer, vector<vector<Pnt3d>> inner, string style);
+		void addLabel(string name, Pnt3d p, string text, string style);
 
 		vector<VRObjectPtr> getLayers();
 };
