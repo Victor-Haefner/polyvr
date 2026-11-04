@@ -281,16 +281,31 @@ void VRTechnicalDrawing::updateGeometry(Layer& l, Object& o) {
 
         Triangulator t;
         VRPolygon pOuter;
+        for (auto& p : outer) p = o.transform * p;
         for (auto& p : outer) pOuter.addPoint(Vec3d(p));
         t.add(pOuter);
 
+        int Nv = outer.size();
         for (auto& inner : vInner) {
+            Nv += inner.size();
             VRPolygon pInner;
+            for (auto& p : inner) p = o.transform * p;
             for (auto& p : inner) pInner.addPoint(Vec3d(p));
             t.add(pInner, false);
         }
 
-        t.append(geo, false);
+        //int Nt = t.append(geo, false);
+        //for (int i=0; i<Nt; i++) geo->pushColor(col);
+
+        // add outlines
+        int N = outer.size();
+        for (int i=0; i<N; i++) {
+            auto& p = outer[i];
+            geo->pushVert(p);
+            geo->pushColor(col);
+            if (i > 0) geo->pushLine();
+            //if (i+1 == N) geo->pushLine(-N, -1);
+        }
     } else {
         cout << "Warning! type " << o.type << " not handled!" << endl;
     }

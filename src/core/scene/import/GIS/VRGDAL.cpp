@@ -348,6 +348,7 @@ void loadSHP(string path, VRTransformPtr res, map<string, string> opts) {
         OGRPoint pnt;
         for (int i=0; i<ex->getNumPoints(); i++) {
             ex->getPoint(i, &pnt);
+            //cout << " -- " << toVec3d(pnt) << " -- " << offset << " -- " << toVec3d(pnt) - offset << endl;
             outer.push_back(toVec3d(pnt) - offset);
         }
 
