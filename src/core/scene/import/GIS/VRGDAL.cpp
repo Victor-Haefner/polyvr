@@ -52,8 +52,24 @@ struct GISContext {
     string filePath;
     VRTechnicalDrawingPtr drawing;
 
+    OGRSpatialReference ctSrc, ctDst;
+    OGRCoordinateTransformation* cTransform = 0;
+
     GISContext() {
         drawing = VRTechnicalDrawing::create();
+    }
+
+    ~GISContext() {
+        if (cTransform) OCTDestroyCoordinateTransformation(cTransform);
+    }
+
+    void setupCoordTransform(int in, int out) {
+        ctSrc.importFromEPSG(in);
+        ctDst.importFromEPSG(out);
+        ctSrc.SetAxisMappingStrategy(OAMS_TRADITIONAL_GIS_ORDER); // ensure xy plane
+        ctDst.SetAxisMappingStrategy(OAMS_TRADITIONAL_GIS_ORDER);
+        if (cTransform) OCTDestroyCoordinateTransformation(cTransform);
+        cTransform = OGRCreateCoordinateTransformation(&ctSrc, &ctDst);
     }
 
     /*void compute_current_transformation() {
@@ -235,6 +251,9 @@ void loadSHP(string path, VRTransformPtr res, map<string, string> opts) {
     double lineSize = opts.count("lineSize") ? toValue<double>(opts["lineSize"]) : -1;
     Vec3d offset = opts.count("offset") ? toValue<Vec3d>(opts["offset"]) : Vec3d();
 
+    int projSrc = 4326; // WGS84 lon/lat
+    int projTarget = opts.count("projTarget") ? toValue<int>(opts["projTarget"]) : 32632; // default: UTM 32N, meters
+
     Layer->addProperty("type", "int");
     Layer->addProperty("features", "Shape");
 
@@ -378,6 +397,7 @@ void loadSHP(string path, VRTransformPtr res, map<string, string> opts) {
     };
 
     auto handleFeature = [&](OGRGeometry* geo, GISContext& data, size_t fI, bool verbose) {
+        if (data.cTransform) geo->transform(data.cTransform);
         auto type = wkbFlatten(geo->getGeometryType());
         if (verbose) cout << "handle feature " << shpTypeName(type) << endl;
         if (type == wkbPoint) handlePoint(geo, data, fI);
@@ -395,6 +415,19 @@ void loadSHP(string path, VRTransformPtr res, map<string, string> opts) {
         if (!poLayer) continue;
         cout << " " << i << " " << poLayer->GetName() << ", geom type: " << shpTypeName(poLayer->GetGeomType()) << endl;
         string layer_name = poLayer->GetName();
+
+        const OGRSpatialReference* src = poLayer->GetSpatialRef();
+        if (src) {
+            const char* epsg = src->GetAuthorityCode(nullptr);
+            if (!epsg) { // try CRS definition
+                OGRSpatialReference srs(*src);
+                srs.AutoIdentifyEPSG();
+                epsg = srs.GetAuthorityCode(nullptr);
+            }
+            if (epsg) projSrc = std::stoi(epsg);
+        }
+
+        data.setupCoordTransform(projSrc, projTarget);
 
         data.drawing->addLayer( layer_name );
         data.drawing->setActiveLayer( layer_name );
