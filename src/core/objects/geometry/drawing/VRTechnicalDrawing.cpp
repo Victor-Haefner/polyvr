@@ -181,15 +181,10 @@ void VRTechnicalDrawing::updateGeometries() {
 void VRTechnicalDrawing::updateGeometry(Layer& l, Object& o) {
     if (!l.root) { cout << "Error in updateGeometry, layer without root object! " << l.name << endl; return; }
     if (!l.geoAggregators.count(o.style)) l.geoAggregators[o.style] = VRGeoData::create();
+    if (!l.geoAggregators.count(o.style+"_poly")) l.geoAggregators[o.style+"_poly"] = VRGeoData::create();
     VRGeoDataPtr geo = l.geoAggregators[o.style];
+    VRGeoDataPtr polyGeo = l.geoAggregators[o.style+"_poly"];
     Color3f col = materials[o.style].color;
-
-    vector<VRGeometryPtr> polyGeos;
-
-    auto mPoly = VRMaterial::create("mPoly");
-    mPoly->setTransparency(0.3);
-    mPoly->setDiffuse(col);
-    mPoly->setLit(false);
 
     if (o.type == LINE) {
         vector<Pnt3d> v;
@@ -301,11 +296,7 @@ void VRTechnicalDrawing::updateGeometry(Layer& l, Object& o) {
             t.add(pInner, false);
         }
 
-        //int Nt = t.append(geo, false);
-        //for (int i=0; i<Nt; i++) geo->pushColor(col);
-        auto gt = t.compute(); // TODO: optimize to only use one geometry!
-        gt->setMaterial(mPoly);
-        polyGeos.push_back(gt);
+        int Nt = t.append(polyGeo, false);
 
         // add outlines
         int N = outer.size();
@@ -320,17 +311,30 @@ void VRTechnicalDrawing::updateGeometry(Layer& l, Object& o) {
         cout << "Warning! type " << o.type << " not handled!" << endl;
     }
 
-    if (!geo->size()) return;
+    if (!geo->size() && !polyGeo->size()) return;
+
     if (!l.geometries.count(o.style)) {
         auto g = geo->asGeometry(l.name);
         g->setMaterial(mat);
         l.geometries[o.style] = g;
         l.root->addChild( g );
     }
-
     auto geom = l.geometries[o.style];
+
+    if (!l.geometries.count(o.style+"_poly")) {
+        auto mPoly = VRMaterial::create("mPoly");
+        mPoly->setTransparency(0.3);
+        mPoly->setDiffuse(col);
+        mPoly->setLit(false);
+
+        auto g = polyGeo->asGeometry(l.name+"_faces");
+        g->setMaterial(mPoly);
+        l.geometries[o.style+"_poly"] = g;
+        geom->addChild( g );
+    }
+    auto polyGeom = l.geometries[o.style+"_poly"];
+
     geo->apply( geom );
-    //geom->clearChildren();
-    for (auto g : polyGeos) geom->addChild(g);
+    polyGeo->apply( polyGeom );
 }
 
