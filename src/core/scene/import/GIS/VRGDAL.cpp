@@ -278,9 +278,9 @@ void loadSHP(string path, VRTransformPtr res, map<string, string> opts) {
             Pnt3d p21 = p - x1*W2 + x2*W2;
             Pnt3d p22 = p - x1*W2 - x2*W2;
 
-            data.drawing->addQuad("", p11, p12, p22, p21, "");
+            data.drawing->addQuad("", p11, p12, p22, p21, "blue");
         } else {
-            data.drawing->addPoint("", p, "");
+            data.drawing->addPoint("", p, "blue");
         }
     };
 
@@ -318,7 +318,7 @@ void loadSHP(string path, VRTransformPtr res, map<string, string> opts) {
                 //data->pushVert(p21, n, tc2);
                 //data->pushVert(p22, n, tc2);
                 //data->pushVert(p12, n, tc1);
-                data.drawing->addQuad("", p11, p12, p22, p21, "");
+                data.drawing->addQuad("", p11, p12, p22, p21, "blue");
             }
         } else {
             if (verbose) cout << " line " << line->getNumPoints() << endl;
@@ -330,7 +330,7 @@ void loadSHP(string path, VRTransformPtr res, map<string, string> opts) {
                 Vec2d tc = Vec2d(fI, geoCoords.size());
                 geoCoords.push_back(p); // keep original coordinates
                 //data->pushVert(p, n, tc);
-                data.drawing->addPolyLine("", points, "");
+                data.drawing->addPolyLine("", points, "blue");
                 //if (i > 0) data->pushLine();
                 if (verbose) cout << "  line point " << p << endl;
             }
@@ -364,24 +364,7 @@ void loadSHP(string path, VRTransformPtr res, map<string, string> opts) {
             vInner.push_back(inner);
         }
 
-
-        /*
-        Triangulator t;
-        VRPolygon pOuter;
-        for (auto& p : outer) pOuter.addPoint(Vec3d(p));
-        t.add(pOuter);
-
-        for (auto& inner : vInner) {
-            VRPolygon pInner;
-            for (auto& p : inner) pInner.addPoint(Vec3d(p));
-            t.add(pInner, false);
-        }
-
-        int n = t.append(data.drawing, false);
-        for (auto i=0; i<n; i++) data->pushTexCoord(tc);
-        for (auto i=0; i<n; i++) data->pushTexCoord(tc,1);*/
-
-		data.drawing->addPolygon("", outer, vInner, "");
+		data.drawing->addPolygon("", outer, vInner, "blue");
 #endif
     };
 
@@ -410,6 +393,9 @@ void loadSHP(string path, VRTransformPtr res, map<string, string> opts) {
 
     cout << "opened file " << path << " with layers:" << endl;
     GISContext data;
+
+    data.drawing->addMaterial("blue");
+    data.drawing->setColor("blue", Color3f(0.1,0.3,1));
 
     for (int i=0; i<poDS->GetLayerCount(); i++) {
         OGRLayer* poLayer = poDS->GetLayer(i);

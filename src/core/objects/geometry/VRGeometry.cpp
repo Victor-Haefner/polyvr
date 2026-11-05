@@ -1495,6 +1495,13 @@ void VRGeometry::clear() {
     geo.clear();
 }
 
+void VRGeometry::addColor(Color3f c) {
+    VRGeoData geo(ptr());
+    bool toApply = (geo.getNIndices() == 0);
+    geo.pushColor(c);
+    if (toApply) geo.apply(ptr(), false);
+}
+
 void VRGeometry::addPoint(int i) {
     VRGeoData geo(ptr());
     bool toApply = (geo.getNIndices() == 0);

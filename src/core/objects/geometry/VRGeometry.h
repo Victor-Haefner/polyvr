@@ -9,6 +9,7 @@
 #include "../VRTransform.h"
 
 #include <OpenSG/OSGSField.h>
+#include <OpenSG/OSGColor.h>
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -102,6 +103,8 @@ class VRGeometry : public VRTransform {
         void setPositionalTexCoords2D(float scale = 1.0, int i = 0, Vec2i format = Vec2i(0,1));
 
         void remColors(bool copyGeometry = false);
+
+        void addColor(Color3f c);
 
         void addPoint(int i = -1);
         void addLine( Vec2i ij = Vec2i(-2,-1) );

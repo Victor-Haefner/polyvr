@@ -745,7 +745,7 @@ VRGeometryPtr VRGeoData::asGeometry(string name) const {
     return geo;
 }
 
-string VRGeoData::status() const {
+string VRGeoData::status(bool detailed) const {
     string res;
     res += "VRGeoData stats:\n";
     res += " " + toString(data->types->size()) + " types: ";
@@ -755,7 +755,7 @@ string VRGeoData::status() const {
     for (unsigned int i=0; i<data->lengths->size(); i++) res += " " + toString(data->lengths->getValue(i));
     res += "\n";
     res += " " + toString(data->pos->size()) + " positions\n";
-    for (unsigned int i=0; i<data->pos->size(); i++) res += " " + toString(Pnt3d(data->pos->getValue(i)));
+    if (detailed) for (unsigned int i=0; i<data->pos->size(); i++) res += " " + toString(Pnt3d(data->pos->getValue(i)));
     res += "\n";
     res += " " + toString(data->norms->size()) + " normals\n";
     res += " " + toString(data->cols3->size()) + " colors 3\n";
@@ -765,7 +765,7 @@ string VRGeoData::status() const {
     res += " " + toString(data->texs[0]->size()) + " texture coordinates\n";
     res += " " + toString(data->texs[1]->size()) + " texture coordinates 2\n";
     res += " " + toString(data->indices->size()) + " indices: ";
-    for (unsigned int i=0; i<data->indices->size(); i++) res += " " + toString(data->indices->getValue(i));
+    if (detailed) for (unsigned int i=0; i<data->indices->size(); i++) res += " " + toString(data->indices->getValue(i));
     res += "\n";
     return res;
 }

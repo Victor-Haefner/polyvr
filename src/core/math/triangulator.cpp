@@ -84,6 +84,11 @@ size_t Triangulator::append(VRGeoDataPtr data, bool aN) {
     return data->size() - n0;
 }
 
+size_t Triangulator::appendTo(VRGeometryPtr g, bool aN) {
+    geo = VRGeoDataPtr( new VRGeoData(g) );
+    return append(geo, aN);
+}
+
 // GLU_TESS CALLBACKS
 void tessBeginCB(GLenum which, void* data) {
     auto Self = (Triangulator*)data;
@@ -97,8 +102,9 @@ void tessEndCB(void* data) {
     auto Self = (Triangulator*)data;
     int Nprim = Self->num_points;
 
-    int Ni0 = Self->geo->getNIndices();
-    for (int i=0; i<Nprim; i++) Self->geo->pushIndex( Ni0 + i );
+    //int i0 = Self->geo->getNIndices();
+    int i0 = Self->geo->size() - Nprim;
+    for (int i=0; i<Nprim; i++) Self->geo->pushIndex( i0 + i );
 
     Self->geo->pushLength(Nprim);
     //Self->geo->updateType(Self->current_primitive, Self->num_points);

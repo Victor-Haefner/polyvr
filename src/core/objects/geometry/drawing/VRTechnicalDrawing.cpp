@@ -184,6 +184,13 @@ void VRTechnicalDrawing::updateGeometry(Layer& l, Object& o) {
     VRGeoDataPtr geo = l.geoAggregators[o.style];
     Color3f col = materials[o.style].color;
 
+    vector<VRGeometryPtr> polyGeos;
+
+    auto mPoly = VRMaterial::create("mPoly");
+    mPoly->setTransparency(0.3);
+    mPoly->setDiffuse(col);
+    mPoly->setLit(false);
+
     if (o.type == LINE) {
         vector<Pnt3d> v;
         unpackParam( o.parameters[POSITIONS], v);
@@ -296,6 +303,9 @@ void VRTechnicalDrawing::updateGeometry(Layer& l, Object& o) {
 
         //int Nt = t.append(geo, false);
         //for (int i=0; i<Nt; i++) geo->pushColor(col);
+        auto gt = t.compute(); // TODO: optimize to only use one geometry!
+        gt->setMaterial(mPoly);
+        polyGeos.push_back(gt);
 
         // add outlines
         int N = outer.size();
@@ -304,7 +314,7 @@ void VRTechnicalDrawing::updateGeometry(Layer& l, Object& o) {
             geo->pushVert(p);
             geo->pushColor(col);
             if (i > 0) geo->pushLine();
-            //if (i+1 == N) geo->pushLine(-N, -1);
+            if (i+1 == N) geo->pushLine(-N, -1);
         }
     } else {
         cout << "Warning! type " << o.type << " not handled!" << endl;
@@ -317,6 +327,10 @@ void VRTechnicalDrawing::updateGeometry(Layer& l, Object& o) {
         l.geometries[o.style] = g;
         l.root->addChild( g );
     }
-    geo->apply( l.geometries[o.style] );
+
+    auto geom = l.geometries[o.style];
+    geo->apply( geom );
+    //geom->clearChildren();
+    for (auto g : polyGeos) geom->addChild(g);
 }
 

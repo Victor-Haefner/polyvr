@@ -116,6 +116,7 @@ PyMethodDef VRPyGeometry::methods[] = {
 
     {"addVertex", (PyCFunction)VRPyGeometry::addVertex, METH_VARARGS, "Add a vertex to geometry - addVertex( pos | norm, col, tc )" },
     {"setVertex", (PyCFunction)VRPyGeometry::setVertex, METH_VARARGS, "Set a vertex - setVertex( int i, pos | norm, col, tc )" },
+    {"addColor", PyWrap( Geometry, addColor, "Add a color to geometry - addColor( col )", void, Color3f ) },
     {"addPoint", PyWrapOpt( Geometry, addPoint, "Add a point to geometry - addPoint( | int i )", "-1", void, int ) },
     {"addLine", PyWrapOpt( Geometry, addLine, "Add a line to geometry - addLine( | [i1,i2] )", "-2 -1", void, Vec2i ) },
     {"addTriangle", PyWrapOpt( Geometry, addTriangle, "Add a triangle to geometry - addTriangle( | [i1,i2,i3] )", "-3 -2 -1", void, Vec3i ) },
