@@ -123,8 +123,8 @@ void VRPolygon::runTest() {
 
 void VRPolygon::addPoint(Vec2d p) { if (!closed) points.push_back(p); }
 void VRPolygon::addPoint(Vec3d p) { if (!closed) points3.push_back(p); }
-Vec2d VRPolygon::getPoint(int i) { return points[i]; }
-Vec3d VRPolygon::getPoint3(int i) { return points3[i]; }
+Vec2d VRPolygon::getPoint(int i)  { return (i >= 0 && i < points.size()) ? points[i]  : Vec2d(); }
+Vec3d VRPolygon::getPoint3(int i) { return (i >= 0 && i < points.size()) ? points3[i] : Vec3d(); }
 int VRPolygon::size() { return max( points.size(), points3.size() ); }
 int VRPolygon::size2() { return points.size(); }
 int VRPolygon::size3() { return points3.size(); }
