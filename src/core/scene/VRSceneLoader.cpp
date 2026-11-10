@@ -160,6 +160,7 @@ bool VRSceneLoader::loadScene(string path, string encryptionKey) {
 #endif
 
     XMLElementPtr sceneN = xml.getRoot();
+    if (!sceneN) return false;
     XMLElementPtr objectsN = sceneN->getChild("Objects");
     if (!objectsN) return false;
     XMLElementPtr root = objectsN->getChild(0);
