@@ -92,17 +92,52 @@ bool PyVec_Check(PyObject* o, int N, char type) {
     return true;
 }
 
-template<> bool toValue(PyObject* o, Color3f& v) { if (!PyVec_Check(o, 3, 'f')) return 0; v = Vec3f(VRPyBase::parseVec3dList(o)); return 1; }
-template<> bool toValue(PyObject* o, Color4f& v) {
+bool toColorValue(PyObject* o, Color4f& v) {
     if (PyVec_Check(o, 4, 'f')) { v = Vec4f(VRPyBase::parseVec4dList(o)); return 1; }
     if (PyVec_Check(o, 3, 'f')) { v = Vec4f(VRPyBase::parseVec3dList(o)); return 1; }
+    if (PyVec_Check(o, 4, 'i')) { v = Vec4f(VRPyBase::parseVec4iList(o)); return 1; }
+    if (PyVec_Check(o, 3, 'i')) { v = Vec4f(VRPyBase::parseVec3iList(o)); return 1; }
+
+    auto hex = [](char c) -> int {
+        if (c >= '0' && c <= '9') return c - '0';
+        if (c >= 'a' && c <= 'f') return c - 'a' + 10;
+        if (c >= 'A' && c <= 'F') return c - 'A' + 10;
+        return 0;
+    };
+
+    auto c1 = [&](char a) { return hex(a) / 15.f; };
+    auto c2 = [&](char a, char b) { return (hex(a) * 16 + hex(b)) / 255.f; };
+
+    string s; toValue(o, s);
+    if (s.length() == 4 && s[0] == '#') { v = Color4f(c1(s[1]), c1(s[2]), c1(s[3]), 1.0); return 1; }
+    if (s.length() == 5 && s[0] == '#') { v = Color4f(c1(s[1]), c1(s[2]), c1(s[3]), c1(s[4])); return 1; }
+    if (s.length() == 7 && s[0] == '#') { v = Color4f(c2(s[1],s[2]), c2(s[3],s[4]), c2(s[5],s[6]),1.0); return 1; }
+    if (s.length() == 9 && s[0] == '#') { v = Color4f(c2(s[1],s[2]), c2(s[3],s[4]), c2(s[5],s[6]), c2(s[7],s[8])); return 1; }
+
     return 0;
 }
 
-template<> bool toValue(PyObject* o, Color3ub& v) { if (!PyVec_Check(o, 3, 'i')) return 0; v = Vec3ub(VRPyBase::parseVec3iList(o)); return 1; }
+template<> bool toValue(PyObject* o, Color3f& v) {
+    Color4f col;
+    if (toColorValue(o, col)) { v = Color3f(col[0], col[1], col[2]); return 1; }
+    return 0;
+}
+
+template<> bool toValue(PyObject* o, Color4f& v) {
+    Color4f col;
+    if (toColorValue(o, col)) { v = col; return 1; }
+    return 0;
+}
+
+template<> bool toValue(PyObject* o, Color3ub& v) {
+    Color4f col;
+    if (toColorValue(o, col)) { v = Color3ub(col[0], col[1], col[2]); return 1; }
+    return 0;
+}
+
 template<> bool toValue(PyObject* o, Color4ub& v) {
-    if (PyVec_Check(o, 4, 'i')) { v = Vec4ub(VRPyBase::parseVec4iList(o)); return 1; }
-    if (PyVec_Check(o, 3, 'i')) { v = Vec4ub(VRPyBase::parseVec3iList(o)); return 1; }
+    Color4f col;
+    if (toColorValue(o, col)) { v = Color4ub(col[0], col[1], col[2], col[3]); return 1; }
     return 0;
 }
 
