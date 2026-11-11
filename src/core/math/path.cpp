@@ -267,6 +267,18 @@ int Path::addPoint( PosePtr p, Color3f c ) {
     return size() - 1;
 }
 
+int Path::insertPoint2( int prev, Vec3d p, Vec3d d, Color3f c, Vec3d u ) {
+    return insertPoint(prev, Pose::create(p,d,u), c);
+}
+
+int Path::insertPoint( int prev, PosePtr p, Color3f c ) {
+    if (prev < -1 || prev >= size()) return -1;
+    int i = prev + 1;
+    points.insert(points.begin() + i, p);
+    point_colors.insert(point_colors.begin() + i, c);
+    return i;
+}
+
 void Path::remPoint(int i) {
     points.erase(points.begin()+i);
     point_colors.erase(point_colors.begin()+i);
