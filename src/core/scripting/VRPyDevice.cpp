@@ -51,7 +51,8 @@ PyMethodDef VRPyDevice::methods[] = {
                                                                     "  dir:    [optional] default=[0,0,-1]\n"
                                                                     "          Direction of intersection ray in beacon coordinates.\n\n"
                                                                     "  skipVolumes: [optional] default=False\n"
-                                                                    "          Skip volumes of object and transform nodes.", "0|0|0|0 0 -1|0", bool, VRObjectPtr, bool, VRTransformPtr, Vec3d, bool ) },
+                                                                    "          Skip volumes of object and transform nodes.\n\n"
+                                                                    " set traversal mask of objects to smaller than 8 to ignore them for intersection traversal", "0|0|0|0 0 -1|0", bool, VRObjectPtr, bool, VRTransformPtr, Vec3d, bool ) },
     {"getIntersected", PyWrap(Device, getIntersected, "Get device intersected object.", VRObjectPtr ) },
     {"getIntersection", PyWrap(Device, getIntersectionPoint, "Get device intersection point", Pnt3d ) },
     {"getIntersectionRay", PyWrap(Device, getIntersectionRay, "Get intersection ray", Line ) },
