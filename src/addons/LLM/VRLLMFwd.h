@@ -5,6 +5,7 @@
 
 namespace OSG {
     ptrFwd(VRLLM);
+    ptrFwd(VRPolyAI);
 }
 
 #endif // VRLLMFWD_H_INCLUDED

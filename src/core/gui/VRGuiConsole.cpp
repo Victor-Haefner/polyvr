@@ -3,7 +3,7 @@
 #include "core/utils/VRFunction.h"
 #include "core/utils/VRMutex.h"
 #include "core/utils/toString.h"
-#include "addons/LLM/VRLLM.h"
+#include "addons/LLM/VRPolyAI.h"
 
 using namespace OSG;
 
@@ -153,11 +153,11 @@ void VRConsoleWidget::forward() { // TODO
 
 
 VRAIConsoleWidget::VRAIConsoleWidget() {
-    llm = VRLLM::create();
-    llm->setWordWrap(100);
+    polyAI = VRPolyAI::create();
+    polyAI->setWordWrap(100);
 
     onMsgCb = VRMessageCb::create("ai_console_onMsgCb", bind(&VRAIConsoleWidget::onMessage, this, placeholders::_1));
-    llm->setMsgCallback(onMsgCb);
+    polyAI->setMsgCallback(onMsgCb);
 
     auto mgr = OSG::VRGuiSignals::get();
     //mgr->addCallback("clickConsole", [&](OSG::VRGuiSignals::Options o) { if (o["ID"] == ID) on_link_activate( o["mark"] ); return true; }, true );
@@ -184,7 +184,7 @@ void VRAIConsoleWidget::getKey(string keyVar) {
         key = "";
     } else {
         key = _key;
-        llm->checkKey(key, status);
+        polyAI->checkKey(key, status);
     }
 
     uiSignal("ai_console_key_status", {{"status",status}});
@@ -194,9 +194,9 @@ void VRAIConsoleWidget::connect() {
     connected = false;
     if (key.empty()) return;
 
-    llm->setApiKey(key);
-    llm->setModel(model);
-    llm->sendPyAPI();
+    polyAI->setApiKey(key);
+    polyAI->setModel(model);
+    polyAI->sendPyAPI();
 
     connected = true;
     uiSignal("ai_console_set_connected", {{"connected",toString(connected)}});
@@ -212,7 +212,7 @@ void VRAIConsoleWidget::checkRole(string r) {
 void VRAIConsoleWidget::sendQuery(string q) {
     if (!connected) return;
     string conversation = "singleConversation";
-    llm->sendRequest(q, conversation, effort);
+    polyAI->sendRequest(q, conversation, effort);
     checkRole("user");
     uiSignal("ai_console_append", {{"msg",q}, {"role","user"}});
 }

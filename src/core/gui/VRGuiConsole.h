@@ -70,7 +70,7 @@ class VRAIConsoleWidget : public VRConsoleWidget {
         string lastRole = "";
 
         VRMessageCbPtr onMsgCb;
-        VRLLMPtr llm;
+        VRPolyAIPtr polyAI;
 
         void onMessage(string m);
         void checkRole(string r);
