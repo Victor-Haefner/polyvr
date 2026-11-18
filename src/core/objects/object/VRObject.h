@@ -155,7 +155,7 @@ class VRObject : public std::enable_shared_from_this<VRObject>, public VRName, p
         bool isVisible(string mode = "", bool recursive = false);
         void setVisibleMask(unsigned int mask);
         virtual void setVisible(bool b, string mode = "");
-        void toggleVisible(string mode = "");
+        bool toggleVisible(string mode = "");
 
         bool isPickable();
         void setPickable(int b, bool setAttachment = true);

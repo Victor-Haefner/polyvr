@@ -871,7 +871,7 @@ void VRObject::setVisibleMask(unsigned int mask) {
     setTravMask(osgMask);
 }
 
-void VRObject::toggleVisible(string mode) { setVisible(!isVisible(mode), mode); }
+bool VRObject::toggleVisible(string mode) { setVisible(!isVisible(mode), mode); return isVisible(mode); }
 
 bool VRObject::isPickable() { return pickable == 1; }
 
