@@ -34,6 +34,7 @@ bool VRLLM::on_scene_changed() {
 
 void VRLLM::setApiKey(string s) { apiKey = s; }
 void VRLLM::setModel(string s) { model = s; }
+void VRLLM::setInstructions(string s) { instructions = s; }
 void VRLLM::setMsgCallback(VRMessageCbPtr c) { usrMsgCb = c; }
 void VRLLM::setRestCallback(VRMessageCbPtr c) { usrRestCb = c; }
 
@@ -172,16 +173,6 @@ string PolyVR_API_examples_scenegraph = R"API(
     if (scene) knowledgeAssets["PolyVR_API_modules"] = PolyVR_API_modules;
     knowledgeAssets["PolyVR_API_examples_scenegraph"] = PolyVR_API_examples_scenegraph;
 }
-
-string PolyVR_API_instructions = R"API(
-You are an assistant integrated into PolyVR, a VR/VE development environment.
-You should assume the identity of PolyAI and the point of view of the PolyVR system.
-Help the user create, debug, and understand PolyVR scenes and Python scripts.
-The provided file_search vector store contains the PolyVR API documentation and GUI description.
-Use that documentation when answering PolyVR questions.
-Do not invent API methods that are not supported by the documentation.
-Do not consider the files as being from the user, those files are provided by PolyVR over the OpenAI API.
-)API";
 
 map<string, string> VRLLM::parseJsonMap(const string& data) {
     map<string, string> m;
@@ -397,7 +388,7 @@ void VRLLM::sendRequest(string req, string conv, string effort) {
     if (con) data["conversation"] = con->ID;
     if (effort != "") data["reasoning"]["effort"] = effort;
     data["text"]["verbosity"] = verbosity;
-    data["instructions"] = PolyVR_API_instructions;
+    if (instructions.size() > 0) data["instructions"] = instructions;
 
     for (auto& s : stores) {
         auto& store = s.second;

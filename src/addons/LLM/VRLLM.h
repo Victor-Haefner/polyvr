@@ -55,6 +55,7 @@ class VRLLM : public enable_shared_from_this<VRLLM> {
 	    VRRestClientPtr cli;
 	    string apiKey;
 	    string model = "gpt-5.6-luna";
+	    string instructions;
 	    VRMessageCbPtr usrMsgCb;
 	    VRMessageCbPtr usrRestCb;
 	    VRRestCbPtr restCb;
@@ -105,6 +106,7 @@ class VRLLM : public enable_shared_from_this<VRLLM> {
 		void setMsgCallback(VRMessageCbPtr cb);
 		void setRestCallback(VRMessageCbPtr cb);
 
+		void setInstructions(string i);
 		void sendPyAPI();
 		void sendRequest(string req, string conv, string effort = "fast");
 
