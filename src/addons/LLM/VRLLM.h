@@ -33,6 +33,7 @@ class VRLLM : public enable_shared_from_this<VRLLM> {
         struct File {
             string name;
             string ID;
+            string data;
             size_t createdAt = 0;
             bool ready = false;
         };
@@ -44,7 +45,7 @@ class VRLLM : public enable_shared_from_this<VRLLM> {
             bool ready = false;
             string queuedRequest;
 
-            vector<File> files;
+            map<string,File> files;
             vector<string> hostEntries;
 
             Store() {}
@@ -60,13 +61,11 @@ class VRLLM : public enable_shared_from_this<VRLLM> {
 	    VRMessageCbPtr usrRestCb;
 	    VRRestCbPtr restCb;
 	    VRRestCbPtr streamCb;
-	    VRDeviceCbPtr sceneChangedCb;
 
         string streamBuffer;
         WordWrap wrapper;
         int wordWrap = 0;
 
-	    map<string,string> knowledgeAssets;
 	    map<string, Store> stores;
 	    map<string, Conversation> conversations;
 
@@ -75,19 +74,17 @@ class VRLLM : public enable_shared_from_this<VRLLM> {
 	    map<string, string> parseJsonMap(const string& data);
 	    string convertEffort(const string& effort, const string& model);
 	    Json::Value parseJson(const string& s);
-	    bool on_scene_changed();
 
 	    void processEvent(string data);
 	    void processStream(VRRestResponsePtr r);
 	    void processResponse(VRRestResponsePtr r);
 	    void processFileUpload(string store, VRRestResponsePtr r);
 
-	    void setupKnowledgeAssets();
 	    void deleteFile(const string& id);
 	    void deleteStore(const string& id);
 	    void deleteFileEntry(const string& store, const string& id);
         void setupFile(const string& store, const string& file, const string& content);
-        void setupVectorStore(const string& store, function<void(void)>& cb);
+        void setupVectorStore(const string& store, function<void(string)>& cb);
         void startConversation(const string& conv);
 
         void sendStream(const string& uri, const Json::Value& data);
@@ -107,7 +104,8 @@ class VRLLM : public enable_shared_from_this<VRLLM> {
 		void setRestCallback(VRMessageCbPtr cb);
 
 		void setInstructions(string i);
-		void sendPyAPI();
+		void addKnowledgeAsset(string name, string store, string data);
+		void sendKnowledgeAssets();
 		void sendRequest(string req, string conv, string effort = "fast");
 
 		bool checkKey(const string& key, string& what);

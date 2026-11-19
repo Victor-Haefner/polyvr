@@ -3,9 +3,7 @@
 #include "core/networking/rest/VRRestClient.h"
 #include "core/utils/VRFunction.h"
 #include "core/utils/toString.h"
-#include "core/scene/VRScene.h"
 #include "core/scripting/VRScriptManager.h"
-#include "core/gui/VRGuiManager.h"
 
 #define JSONSTR(txt) #txt
 
@@ -15,10 +13,6 @@ VRLLM::VRLLM() {
     cli = VRRestClient::create("llm");
     restCb =  VRRestCb::create("llmResp", bind(&VRLLM::processResponse, this, placeholders::_1) );
     streamCb =  VRRestCb::create("llmResp", bind(&VRLLM::processStream, this, placeholders::_1) );
-    setupKnowledgeAssets();
-
-    sceneChangedCb = VRDeviceCb::create("LLM_sceneChanged", bind(&VRLLM::on_scene_changed, this) );
-    VRGuiSignals::get()->getSignal("scene_changed")->add( sceneChangedCb );
 }
 
 VRLLM::~VRLLM() {}
@@ -26,14 +20,9 @@ VRLLM::~VRLLM() {}
 VRLLMPtr VRLLM::create() { return VRLLMPtr( new VRLLM() ); }
 VRLLMPtr VRLLM::ptr() { return static_pointer_cast<VRLLM>(shared_from_this()); }
 
-bool VRLLM::on_scene_changed() {
-	cout << "VRLLM::on_scene_changed" << endl;
-    setupKnowledgeAssets();
-    return true;
-}
-
 void VRLLM::setApiKey(string s) { apiKey = s; }
 void VRLLM::setModel(string s) { model = s; }
+void VRLLM::setWordWrap(int N) { wordWrap = N; }
 void VRLLM::setInstructions(string s) { instructions = s; }
 void VRLLM::setMsgCallback(VRMessageCbPtr c) { usrMsgCb = c; }
 void VRLLM::setRestCallback(VRMessageCbPtr c) { usrRestCb = c; }
@@ -50,128 +39,13 @@ bool VRLLM::checkKey(const string& key, string& what) {
     return false;
 }
 
-void VRLLM::setupKnowledgeAssets() {
-string PolyVR_GUI = R"API(
-# PolyVR GUI layout
-- Toolbar at the top
-    - Buttons: New, Open, Save, Save.., Close, Exit, Profiler, Export, About
-    - Checkbox "Fotomode"
-    - Radiobuttons for GUI Theme: "Light", "Dark"
-    - Buttons for GUI Fontsize: +, -, 1
-- 3D view on the right, below the toolbar
-- Toolbar related to 3d view below the 3d view
-    - Combobox to change the active camera
-    - Combobox with checkboxes to control active navigation systems
-    - Combobox with checkboxes to control debug layers
-        - Cameras
-        - Lights
-        - Pause window
-        - Physics
-        - Objects
-        - Setup
-        - Statistics
-        - Stencil
-    - Buttons: Fullscreen, See All
-- Output consoles, below the 3D view and its toolbar
-    - Tabs for the different output consoles
-        - tabs: "Console", "Errors", "Syntax", "Search results", "Reasoning", "Tracking", "Collaboration"
-    - A clear button that wipes all output consoles
-    - A pause checkbox to toggle the auto scroll of the output consoles
-- A panel below the main toolbar and left of the 3d view
-    - Tabs: Apps, Setup, Scene
-        - Apps Panel:
-            - entry to filter displayed projects
-            - Two tabs: Projects, Examples
-                - Same for each tab, a list of PolyVR projects to run
-                    - For each project entry: a button "run" and a button "run without scripts" hidden in a drop down "advanced"
-        - Setup Panel:
-            - configuration of hardware environments
-            - TODO ;)
-        - Scene Panel:
-            - Tabs: Rendering, Scenegraph, Scripting, Network
-            - TODO ;)
-)API";
-
-string PolyVR_API_modules = R"API(
-Here follows a list of all modules and objects available to the user in the PolyVR scripting environment.
-
-)API";
-
-    auto scene = VRScene::getCurrent();
-    if (scene) {
-        for (auto mod : scene->getPyVRModules()) {
-            PolyVR_API_modules += "# Module " + mod + "\n";
-            for (auto tpe : scene->getPyVRTypes(mod)) {
-                string dcr = scene->getPyVRDescription(mod, tpe);
-                PolyVR_API_modules += " ## Class " + tpe + "\n";
-                PolyVR_API_modules += "     " + dcr + "\n";
-                for (auto mth : scene->getPyVRMethods(mod, tpe)) {
-                    string mdoc = scene->getPyVRMethodDoc(mod, tpe, mth);
-                    PolyVR_API_modules += " ### Method " + mth + "\n";
-                    PolyVR_API_modules += "      " + mdoc + "\n";
-                }
-            }
-        }
-    }
-
-
-string PolyVR_API = R"API(
-PolyVR is a IDE for developing virtual environments.
-It has a focus on engineering applications and includes many interfaces and simulation modules.
-The application logic is created with Python scripts, shader can be written with GLSL, and UI elements with websites.
-
-The API is provided as separate files:
-    - PolyVR_GUI.txt contains a description of the GUI as presented to the user
-    - PolyVR_API_modules.txt contains a list of all modules available to the user when scripting the application logic
-
-Further examples are provided:
-    - PolyVR_API_examples_scenegraph
-
-# Scripting basics:
-
-The user adds scripts with the UI, every script appears as a list entry in the GUI and its content can be edited in a integrated text editor.
-Such a script is internally a python function object, the user can execute the function using a button or define trigger like
-- on_scene_load, execute the script when scene is loaded
-- on_timeout, entry for timeout N in ms, executes the script every N ms
-- on_device, combobox with devices like mouse, keyboard, flystick, server1, then a signal key, then a signal state like pressed or released, executes the script if the device is firing a signal.
-
-Every script starts with
-    import VR
-
-VR is the main module where everything else lives.
-- Every module described in PolyVR_API_modules.txt
-- Every script of the current PolyVR project.
-
-Every new project starts with a default "init" script.
-
-    import VR
-    VR.scene = VR.Object('scene', 'light')
-
-This creates a new object called scene and attaches it to the default light object.
-
-)API";
-
-string PolyVR_API_examples_scenegraph = R"API(
-    import VR
-
-    obj = VR.Object('newObject')
-    VR.scene.addChild(obj)
-
-    trans = VR.Transform('newTransform')
-    VR.scene.addChild(trans)
-
-    trans.setFrom([1,0,0])
-
-    cube = VR.Geometry('cube')
-    cube.setPrimitive('Box 0.3 0.3 0.3 4 4 4')
-    cube.setTransform([0,1,0], [1,0,0], [0,0.5,0.5])
-    trans.addChild(cube)
-)API";
-
-    knowledgeAssets["PolyVR_API"] = PolyVR_API;
-    knowledgeAssets["PolyVR_GUI"] = PolyVR_GUI;
-    if (scene) knowledgeAssets["PolyVR_API_modules"] = PolyVR_API_modules;
-    knowledgeAssets["PolyVR_API_examples_scenegraph"] = PolyVR_API_examples_scenegraph;
+void VRLLM::addKnowledgeAsset(string name, string store, string data) {
+    if (!stores.count(store)) stores[store] = Store(store);
+    auto& s = stores[store];
+    File f;
+    f.data = data;
+    f.name = name;
+    s.files[name] = f;
 }
 
 map<string, string> VRLLM::parseJsonMap(const string& data) {
@@ -190,10 +64,6 @@ map<string, string> VRLLM::parseJsonMap(const string& data) {
     }
 #endif // WITHOUT_JSONCPP
     return m;
-}
-
-void VRLLM::setWordWrap(int N) {
-    wordWrap = N;
 }
 
 void VRLLM::processEvent(string s) {
@@ -298,7 +168,7 @@ void VRLLM::processFileUpload(string storeName, VRRestResponsePtr r) {
     f.ID = data["id"];
     f.createdAt = toLong(data["created_at"]);
     f.ready = true;
-    store.files.push_back(f);
+    store.files[f.name] = f;
 
     cout << " add file " << f.name << " entry to store " << storeName << endl;
     Json::Value data2;
@@ -441,7 +311,7 @@ void VRLLM::setupFile(const string& store, const string& filename, const string&
     cli->postFormAsync( "https://api.openai.com/v1/files", cb, form, 30, headers );
 }
 
-void VRLLM::setupVectorStore(const string& store, function<void(void)>& onStoreReady) {
+void VRLLM::setupVectorStore(const string& store, function<void(string)>& onStoreReady) {
     auto onStoreStatus = VRRestCb::create( "onStoreStatus", bind([this, store, onStoreReady](VRRestResponsePtr r) {
         string s = r->getData();
         //cout << "LLM store status response: " << s << endl;
@@ -474,14 +344,14 @@ void VRLLM::setupVectorStore(const string& store, function<void(void)>& onStoreR
 
         if (!keepID.empty()) {
             stores[store].ID = keepID;
-            onStoreReady();
+            onStoreReady(store);
         } else {
             auto onNewStore = VRRestCb::create( "onNewStore", bind([this, store, onStoreReady](VRRestResponsePtr r) {
                 string s = r->getData();
                 cout << "LLM store ready response: " << s << endl;
                 auto data = parseJsonMap(s);
                 stores[store].ID = data["id"];
-                onStoreReady();
+                onStoreReady(store);
             }, placeholders::_1) );
 
             Json::Value data;
@@ -491,7 +361,6 @@ void VRLLM::setupVectorStore(const string& store, function<void(void)>& onStoreR
     }, placeholders::_1) );
 
     cout << " .. setupVectorStore " << store << endl;
-    stores[store] = Store(store);
     get("https://api.openai.com/v1/vector_stores", onStoreStatus);
 }
 
@@ -510,145 +379,139 @@ Json::Value VRLLM::parseJson(const string& s) {
     return value;
 }
 
-void VRLLM::sendPyAPI() {
-    string storeName = "PolyVR_PythonAPI";
-
-    auto onFilesStatus = VRRestCb::create( "onFilesStatus", bind([this, storeName](VRRestResponsePtr r) {
-        string s = r->getData();
-        cout << "LLM files status response: " << s << endl;
-
-        auto& store = stores[storeName];
-        if (store.ID.empty()) {
-            cout << "Error in processFileUpload: store " << storeName << ", ID is empty!" << endl;
-            return;
-        }
-
-        Json::Value data = parseJson(s);
-        if (data.empty()) { cout << " no data" << endl; return; }
-
-        struct FileStatus {
-            string ID;
-            string filename;
-            size_t bytes = 0;
-            time_t createdAt = 0;
-        };
-
-        map<string, vector<FileStatus>> filesStatus;
-        for (const auto& file : data["data"]) {
-            string filename = file["filename"].asString();
-            if (filename.size() < 6) continue;
-            string name = subString(filename, 0, -5);
-            if (!knowledgeAssets.count(name)) continue;
-
-            cout << "  found hosted asset " << filename << endl;
-            FileStatus fstat;
-            fstat.ID = file["id"].asString();
-            fstat.filename = filename;
-            fstat.bytes = file["bytes"].asInt64();
-            fstat.createdAt = file["created_at"].asInt64();
-            filesStatus[name].push_back( fstat );
-        }
-
-        time_t bTime = getBuildTimestamp();
-        vector<string> removeIDs;
-        for (auto a : knowledgeAssets) {
-            bool needsReupload = false;
-            FileStatus keepFS;
-            string keepID;
-            cout << "  check asset " << a.first << endl;
-
-            if (!filesStatus.count(a.first)) needsReupload = true;
-            else {
-                for (auto f : filesStatus[a.first]) {
-                    //cout << " ++++ " << a.first << ": " << bTime << ", " << f.createdAt << ", " << keepFS.createdAt << endl;
-                    if (f.createdAt < bTime) { cout << "   too old" << endl; removeIDs.push_back(f.ID); continue; }
-                    if (f.bytes != a.second.size()) { cout << "   wrong bytes" << endl; removeIDs.push_back(f.ID); continue; }
-                    if (keepFS.createdAt > 0) {
-                        if (f.createdAt < keepFS.createdAt) { cout << "   older than keeper" << endl; removeIDs.push_back(f.ID); continue; }
-                        else { cout << "   keeper older" << endl; removeIDs.push_back(keepID); }
-                    }
-                    keepID = f.ID;
-                    keepFS = f;
-                }
-            }
-
-            if (keepID.empty()) needsReupload = true;
-            else {
-                cout << " .. keep file " << keepID << endl;
-
-                VRLLM::File f;
-                f.name = keepFS.filename;
-                f.ID = keepID;
-                f.createdAt = keepFS.createdAt;
-                f.ready = true;
-                store.files.push_back(f);
-
-                bool hasEntry = find( store.hostEntries.begin(), store.hostEntries.end(), f.ID ) != store.hostEntries.end();
-                if (!hasEntry) {
-                    Json::Value data2;
-                    data2["file_id"] = f.ID;
-                    string uri = "https://api.openai.com/v1/vector_stores/"+store.ID+"/files";
-                    send(uri, data2, restCb);
-                }
-            }
-
-            if (needsReupload) {
-                cout << " .. reupload file " << keepID << endl;
-                setupFile(storeName, a.first+".txt", a.second);
-                continue;
-            }
-        }
-
-        for (const auto& id : removeIDs) deleteFile(id);
-
-        for (auto& fe : store.hostEntries) {
-            bool doRemove = true;
-            for (auto f : store.files) if (f.ID == fe) doRemove = false;
-            if (doRemove) deleteFileEntry(store.ID, fe);
-        }
-    }, placeholders::_1) );
-
-    auto onFileEntriesStatus = VRRestCb::create( "onFileEntriesStatus", bind([this, storeName, onFilesStatus](VRRestResponsePtr r) {
-        string s = r->getData();
-        //cout << "LLM file store entries: " << s << endl;
-
-        Json::Value data;
-        Json::Reader reader;
-        if (!reader.parse(s, data)) return;
-
-        auto& store = stores[storeName];
-        if (data["data"].size() == 0) {
-            cout << "  .. no file entries" << endl;
-        } else {
-            for (const auto& fe : data["data"]) {
-                string ID = fe["id"].asString();
-                store.hostEntries.push_back(ID);
-                cout << "  store file entry: " << ID << endl;
-            }
-        }
-
-        cout << " request files list.." << endl;
-        get("https://api.openai.com/v1/files", onFilesStatus);
-    }, placeholders::_1) );
-
-    function<void(void)> onStoreReady = [this, storeName, onFileEntriesStatus]() {
+void VRLLM::sendKnowledgeAssets() {
+    function<void(string)> onStoreReady = [this](string storeName) {
         string storeID = stores[storeName].ID;
         cout << " request file entries from store.." << endl;
+
+        auto onFilesStatus = VRRestCb::create( "onFilesStatus", bind([this, storeName](VRRestResponsePtr r) {
+            string s = r->getData();
+            cout << "LLM files status response: " << s << endl;
+
+            auto& store = stores[storeName];
+            if (store.ID.empty()) {
+                cout << "Error in processFileUpload: store " << storeName << ", ID is empty!" << endl;
+                return;
+            }
+
+            Json::Value data = parseJson(s);
+            if (data.empty()) { cout << " no data" << endl; return; }
+
+            struct FileStatus {
+                string ID;
+                string filename;
+                size_t bytes = 0;
+                time_t createdAt = 0;
+            };
+
+            map<string, vector<FileStatus>> filesStatus;
+            for (const auto& file : data["data"]) {
+                string filename = file["filename"].asString();
+                if (filename.size() < 6) continue;
+                string name = subString(filename, 0, -5);
+                if (!store.files.count(name)) continue;
+
+                cout << "  found hosted asset " << filename << endl;
+                FileStatus fstat;
+                fstat.ID = file["id"].asString();
+                fstat.filename = filename;
+                fstat.bytes = file["bytes"].asInt64();
+                fstat.createdAt = file["created_at"].asInt64();
+                filesStatus[name].push_back( fstat );
+            }
+
+            time_t bTime = getBuildTimestamp();
+            vector<string> removeIDs;
+            for (auto& f : store.files) {
+                bool needsReupload = false;
+                FileStatus keepFS;
+                string keepID;
+                cout << "  check asset " << f.first << endl;
+
+                if (!filesStatus.count(f.first)) needsReupload = true;
+                else {
+                    for (auto fs : filesStatus[f.first]) {
+                        //cout << " ++++ " << a.first << ": " << bTime << ", " << f.createdAt << ", " << keepFS.createdAt << endl;
+                        if (fs.createdAt < bTime) { cout << "   too old" << endl; removeIDs.push_back(fs.ID); continue; }
+                        if (fs.bytes != f.second.data.size()) { cout << "   wrong bytes" << endl; removeIDs.push_back(fs.ID); continue; }
+                        if (keepFS.createdAt > 0) {
+                            if (fs.createdAt < keepFS.createdAt) { cout << "   older than keeper" << endl; removeIDs.push_back(fs.ID); continue; }
+                            else { cout << "   keeper older" << endl; removeIDs.push_back(keepID); }
+                        }
+                        keepID = fs.ID;
+                        keepFS = fs;
+                    }
+                }
+
+                if (keepID.empty()) needsReupload = true;
+                else {
+                    cout << " .. keep file " << keepID << endl;
+                    f.second.name = keepFS.filename;
+                    f.second.ID = keepID;
+                    f.second.createdAt = keepFS.createdAt;
+                    f.second.ready = true;
+
+                    bool hasEntry = find( store.hostEntries.begin(), store.hostEntries.end(), f.second.ID ) != store.hostEntries.end();
+                    if (!hasEntry) {
+                        Json::Value data2;
+                        data2["file_id"] = f.second.ID;
+                        string uri = "https://api.openai.com/v1/vector_stores/"+store.ID+"/files";
+                        send(uri, data2, restCb);
+                    }
+                }
+
+                if (needsReupload) {
+                    cout << " .. reupload file " << keepID << endl;
+                    setupFile(storeName, f.first+".txt", f.second.data);
+                    continue;
+                }
+            }
+
+            for (const auto& id : removeIDs) deleteFile(id);
+
+            for (auto& fe : store.hostEntries) {
+                bool doRemove = true;
+                for (auto f : store.files) if (f.second.ID == fe) doRemove = false;
+                if (doRemove) deleteFileEntry(store.ID, fe);
+            }
+        }, placeholders::_1) );
+
+        auto onFileEntriesStatus = VRRestCb::create( "onFileEntriesStatus", bind([this, storeName, onFilesStatus](VRRestResponsePtr r) {
+            string s = r->getData();
+            cout << "LLM file store entries: " << s << endl;
+
+            Json::Value data;
+            Json::Reader reader;
+            if (!reader.parse(s, data)) return;
+
+            auto& store = stores[storeName];
+            if (data["data"].size() == 0) {
+                cout << "  .. no file entries" << endl;
+            } else {
+                for (const auto& fe : data["data"]) {
+                    string ID = fe["id"].asString();
+                    store.hostEntries.push_back(ID);
+                    cout << "  store file entry: " << ID << endl;
+                }
+            }
+
+            cout << " request files list.." << endl;
+            get("https://api.openai.com/v1/files", onFilesStatus);
+        }, placeholders::_1) );
+
         get("https://api.openai.com/v1/vector_stores/"+storeID+"/files", onFileEntriesStatus);
         //get("https://api.openai.com/v1/files", onFilesStatus);
     };
 
-    setupVectorStore(storeName, onStoreReady);
+    for (auto& s : stores) {
+        setupVectorStore(s.second.name, onStoreReady);
+    }
 }
 
 /** IDEAS
 
-- goals:
-    - ask the LLM to ad a cube to the scene
-
-- python api > LLM
-    - LLM needs to know the api
-    - LLM needs to be able to create a script, execute the script
+- check out MCP, Model Context Protocol, might be helpful
+- Add interface to support skills
 
 */
 

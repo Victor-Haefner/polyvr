@@ -11,6 +11,10 @@ OSG_BEGIN_NAMESPACE;
 class VRPolyAI : public std::enable_shared_from_this<VRPolyAI> {
 	private:
 	    VRLLMPtr llm;
+	    VRDeviceCbPtr sceneChangedCb;
+
+	    bool on_scene_changed();
+	    void setupKnowledgeAssets();
 
 	public:
 		VRPolyAI();
