@@ -24,7 +24,7 @@ class VRLLM : public enable_shared_from_this<VRLLM> {
             string ID;
             size_t createdAt = 0;
             bool ready = false;
-            string queuedRequest;
+            Json::Value queuedRequest;
 
             Conversation() {}
             Conversation(string n) : name(n) {}
@@ -52,6 +52,25 @@ class VRLLM : public enable_shared_from_this<VRLLM> {
             Store(string n) : name(n) {}
         };
 
+        struct Parameter {
+            string name;
+            string type;
+            string description;
+        };
+
+        struct Tool {
+            string name;
+            string description;
+            map<string, Parameter> parameters;
+            function<void(string,map<string,string>,string&)> cb;
+
+            string pendingCallID;
+            string pendingCallResult;
+
+            Tool() {}
+            Tool(string n) : name(n) {}
+        };
+
 	private:
 	    VRRestClientPtr cli;
 	    string apiKey;
@@ -67,7 +86,11 @@ class VRLLM : public enable_shared_from_this<VRLLM> {
         int wordWrap = 0;
 
 	    map<string, Store> stores;
+	    map<string, Tool> tools;
 	    map<string, Conversation> conversations;
+
+        string lastConversation;
+        string lastEffort;
 
 	    void get(const string& uri, VRRestCbPtr cb = 0);
 	    void send(const string& uri, const Json::Value& data, VRRestCbPtr cb);
@@ -87,8 +110,10 @@ class VRLLM : public enable_shared_from_this<VRLLM> {
         void setupVectorStore(const string& store, function<void(string)>& cb);
         void startConversation(const string& conv);
 
+		void sendJsonRequest(Json::Value req, string conv, string effort = "fast");
         void sendStream(const string& uri, const Json::Value& data);
         void processStreamChunk(const string& chunk);
+        void sendToolOutput(const string& callID, const string& output);
 
 	public:
 		VRLLM();
@@ -105,10 +130,12 @@ class VRLLM : public enable_shared_from_this<VRLLM> {
 
 		void setInstructions(string i);
 		void addKnowledgeAsset(string name, string store, string data);
-		void sendKnowledgeAssets();
-		void sendRequest(string req, string conv, string effort = "fast");
+		void addTool(string name, function<void(string,map<string,string>,string&)> cb, string description);
+        void addToolParameter(string tool, string param, string type, string description);
 
 		bool checkKey(const string& key, string& what);
+		void sendKnowledgeAssets();
+		void sendRequest(string req, string conv, string effort = "fast");
 };
 
 OSG_END_NAMESPACE;

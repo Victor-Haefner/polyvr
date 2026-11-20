@@ -1080,6 +1080,7 @@ VRGuiScripts::VRGuiScripts() {
     mgr->addCallback("select_script_template", [&](OSG::VRGuiSignals::Options o) { on_select_templ(o["ID"]); return true; }, true );
     mgr->addCallback("import_script_template", [&](OSG::VRGuiSignals::Options o) { on_templ_import_clicked(o["ID"]); return true; }, true );
 
+    mgr->addCallback("scripts_update_list", [&](OSG::VRGuiSignals::Options o) { updateList(); return true; }, true );
     mgr->addCallback("script_import_clicked", [&](OSG::VRGuiSignals::Options o) { on_import_project_selected(o["fileName"]); return true; }, true );
 
     mgr->addCallback("import_external_script", [&](OSG::VRGuiSignals::Options o) {

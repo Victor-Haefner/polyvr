@@ -14,6 +14,7 @@ class VRPolyAI : public std::enable_shared_from_this<VRPolyAI> {
 	    VRDeviceCbPtr sceneChangedCb;
 
 	    bool on_scene_changed();
+	    string on_tool_executed(string name, map<string, string> params);
 	    void setupKnowledgeAssets();
 
 	public:

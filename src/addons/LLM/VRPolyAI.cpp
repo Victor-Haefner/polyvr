@@ -9,7 +9,7 @@ string PolyVR_API_instructions = R"API(
 You are an assistant integrated into PolyVR, a VR/VE development environment.
 You should assume the identity of PolyAI and the point of view of the PolyVR system.
 Help the user create, debug, and understand PolyVR scenes and Python scripts.
-The provided file_search vector store contains the PolyVR API documentation and GUI description.
+The provided vector store contains the PolyVR API documentation and GUI description.
 Use that documentation when answering PolyVR questions.
 Do not invent API methods that are not supported by the documentation.
 Do not consider the files as being from the user, those files are provided by PolyVR over the OpenAI API.
@@ -160,9 +160,72 @@ string PolyVR_API_examples_scenegraph = R"API(
     trans.addChild(cube)
 )API";
 
+    string PolyVR_scriptGuide = R"API(
+A script has a name, core and parameters.
+The script is handled internally as a python function.
+The name has to to be a valid python function name.
+The core is technically the content of the python function.
+Every line of the core needs to be indented one level.
+The convention for all indentation is to use tabs, not spaces.
+The core does not contain the function head, the function head is generated based on the script name.
+To define Python classes in PolyVR just define it in a script core and return an instance directly from the script, use the script as a factory.
+)API";
+
     string storeName = "PolyVR_PythonAPI";
     llm->addKnowledgeAsset("PolyVR_API", storeName, PolyVR_API);
     llm->addKnowledgeAsset("PolyVR_GUI", storeName, PolyVR_GUI);
+    llm->addKnowledgeAsset("PolyVR_scriptGuide", storeName, PolyVR_scriptGuide);
     if (scene) llm->addKnowledgeAsset("PolyVR_API_modules", storeName, PolyVR_API_modules);
     llm->addKnowledgeAsset("PolyVR_API_examples_scenegraph", storeName, PolyVR_API_examples_scenegraph);
+
+    string createScriptDoc = R"API(
+Create a python script in PolyVR.
+Pass the function name and function core, follow the guidelines in the file PolyVR_scriptGuide.
+)API";
+
+    string createScriptCoreDoc = R"API(
+Python function body only.
+Do NOT include a 'def ...' function declaration.
+Every non-empty line MUST begin with exactly one tab character.
+Use tabs for indentation, not spaces.
+Example:
+\tprint('hello')
+)API";
+
+    auto handleTool = [this](string name, map<string, string> params, string& result) { result = on_tool_executed(name, params); };
+    llm->addTool("create_script", handleTool, createScriptDoc);
+    llm->addToolParameter("create_script", "name", "string", "Valid Python function identifier used as the script name");
+    llm->addToolParameter("create_script", "core", "string", createScriptCoreDoc);
+    llm->addTool("execute_script", handleTool, "Execute a python script in PolyVR, pass the function name");
+    llm->addToolParameter("execute_script", "name", "string", "Script name to execute");
 }
+
+string VRPolyAI::on_tool_executed(string name, map<string, string> params) {
+    cout << "executed tool: " << name << ", params: " << toString(params) << endl;
+
+    if (name == "create_script") {
+        string name = params["name"];
+        string core = params["core"];
+
+        auto scene = VRScene::getCurrent();
+        scene->newScript(name, core);
+        uiSignal("scripts_update_list");
+        return "Script added successfully";
+    }
+
+    if (name == "execute_script") {
+        string name = params["name"];
+
+        auto scene = VRScene::getCurrent();
+        scene->triggerScript(name);
+        return "Script exexcuted successfully";
+    }
+
+    return "Error: unknown tool";
+}
+
+
+
+
+
+

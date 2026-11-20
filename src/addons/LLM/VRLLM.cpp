@@ -48,6 +48,22 @@ void VRLLM::addKnowledgeAsset(string name, string store, string data) {
     s.files[name] = f;
 }
 
+void VRLLM::addTool(string name, function<void(string,map<string,string>,string&)> cb, string description) {
+    Tool t(name);
+    t.description = description;
+    t.cb = cb;
+    tools[name] = t;
+}
+
+void VRLLM::addToolParameter(string tool, string param, string type, string description) {
+    if (!tools.count(tool)) return;
+    Parameter p;
+    p.name = param;
+    p.type = type;
+    p.description = description;
+    tools[tool].parameters[param] = p;
+}
+
 map<string, string> VRLLM::parseJsonMap(const string& data) {
     map<string, string> m;
 #ifndef WITHOUT_JSONCPP
@@ -80,12 +96,56 @@ void VRLLM::processEvent(string s) {
         if (usrMsgCb) (*usrMsgCb)(s);
     };
 
+    if (data.isMember("error")) {
+        cout << "error:\n" << s << endl;
+    }
+
     if (data.isMember("type")) {
         string type = data["type"].asString();
 
         if (type == "response.output_text.delta") {
             processMessage(data["delta"].asString());
             return;
+        }
+
+        if (type == "response.output_item.done") {
+            auto& item = data["item"];
+
+            if (item["type"].asString() == "function_call") {
+                string name   = item["name"].asString();
+                string callID = item["call_id"].asString();
+                map<string,string> params;
+
+                Json::Reader reader;
+                Json::Value args;
+
+                if (reader.parse(item["arguments"].asString(), args)) {
+                    for (const auto& key : args.getMemberNames()) {
+                        params[key] = args[key].asString();
+                    }
+                }
+
+                auto& tool = tools[name];
+                tool.pendingCallID = callID;
+                tool.cb(name, params, tool.pendingCallResult);
+            }
+        }
+
+        if (type == "response.completed") {
+            cout << "handle completed response" << endl;
+
+            auto& ov = data["response"]["output"];
+            for (auto& o : ov) {
+                if (o.isMember("type")) {
+                    string type = o["type"].asString();
+                    if (type == "function_call") {
+                        string name = o["name"].asString();
+                        auto& t = tools[name];
+                        cout << " send tool ouput " << t.pendingCallID << " " << t.pendingCallResult << endl;
+                        sendToolOutput(t.pendingCallID, t.pendingCallResult);
+                    }
+                }
+            }
         }
     }
 
@@ -112,7 +172,7 @@ void VRLLM::processEvent(string s) {
             conv.ready = true;
 
             if (!conv.queuedRequest.empty()) {
-                sendRequest(conv.queuedRequest, conv.name);
+                sendJsonRequest(conv.queuedRequest, conv.name, lastEffort);
                 conv.queuedRequest = "";
             }
         }
@@ -129,7 +189,21 @@ void VRLLM::processEvent(string s) {
 
 void VRLLM::processStream(VRRestResponsePtr r) {
     string s = r->getData();
+    //cout << "LLM stream response: " << s << endl;
     streamBuffer += s;
+
+    size_t p;
+    while ((p = streamBuffer.find("\r\n")) != string::npos) streamBuffer.replace(p, 2, "\n");
+
+    auto first = streamBuffer.find_first_not_of(" \t\r\n");
+    if (first != string::npos && streamBuffer[first] == '{') { // detected JSON response, not SSE
+        auto last = streamBuffer.find_last_not_of(" \t\r\n");
+        if (last != string::npos && streamBuffer[last] == '}') {
+            processEvent(streamBuffer);
+            streamBuffer.clear();
+        }
+        return;
+    }
 
     size_t pos;
     while ((pos = streamBuffer.find("\n\n")) != string::npos) {
@@ -233,7 +307,15 @@ string VRLLM::convertEffort(const string& effort, const string& model) {
 
 
 void VRLLM::sendRequest(string req, string conv, string effort) {
+    Json::Value data(req);
+    sendJsonRequest(data, conv, effort);
+}
+
+void VRLLM::sendJsonRequest(Json::Value req, string conv, string effort) {
     Conversation* con = 0;
+
+    lastConversation = conv;
+    lastEffort = effort;
 
     if (conv != "") {
         if (!conversations.count(conv)) {
@@ -247,29 +329,70 @@ void VRLLM::sendRequest(string req, string conv, string effort) {
         if (!con->ready) return;
     }
 
+    auto addFileSearchTools = [&](Json::Value& data) {
+        for (auto& s : stores) {
+            auto& store = s.second;
+            Json::Value tool;
+            tool["type"] = "file_search";
+            tool["vector_store_ids"].append(store.ID);
+            data["tools"].append(tool);
+        }
+    };
+
+    auto addFunctionTools = [&](Json::Value& data) {
+        for (auto& t : tools) {
+            map<string, string> properties; // name, type
+
+            Json::Value tool;
+            tool["type"] = "function";
+            tool["name"] = t.second.name;
+            tool["description"] = t.second.description;
+            tool["parameters"]["type"] = "object";
+            tool["parameters"]["additionalProperties"] = false;
+            tool["strict"] = true;
+
+            for (auto& p : t.second.parameters) {
+                auto& P = p.second;
+                tool["parameters"]["required"].append(P.name);
+                auto& prop = tool["parameters"]["properties"][P.name];
+                prop["type"] = P.type;
+                prop["description"] = P.description;
+            }
+
+            data["tools"].append(tool);
+        }
+    };
+
     effort = convertEffort(effort, model);
-    cout << " -- effort: " << effort << endl;
     string verbosity = "low";
 
     Json::Value data;
     data["model"] = model;
     data["input"] = req;
     data["stream"] = true;
-    if (con) data["conversation"] = con->ID;
-    if (effort != "") data["reasoning"]["effort"] = effort;
     data["text"]["verbosity"] = verbosity;
-    if (instructions.size() > 0) data["instructions"] = instructions;
+    data["parallel_tool_calls"] = false;
 
-    for (auto& s : stores) {
-        auto& store = s.second;
-        Json::Value tool;
-        tool["type"] = "file_search";
-        tool["vector_store_ids"].append(store.ID);
-        data["tools"].append(tool);
-    }
+    if (con)                        data["conversation"] = con->ID;
+    if (effort != "")               data["reasoning"]["effort"] = effort;
+    if (instructions.size() > 0)    data["instructions"] = instructions;
+
+    addFileSearchTools(data);
+    addFunctionTools(data);
 
     string uri = "https://api.openai.com/v1/responses";
     send(uri, data, streamCb);
+}
+
+void VRLLM::sendToolOutput( const string& callID, const string& output ) {
+    Json::Value item;
+    item["type"] = "function_call_output";
+    item["call_id"] = callID;
+    item["output"] = output;
+
+    Json::Value data(Json::arrayValue);
+    data.append(item);
+    sendJsonRequest(data, lastConversation, lastEffort);
 }
 
 void VRLLM::deleteStore(const string& id) {
