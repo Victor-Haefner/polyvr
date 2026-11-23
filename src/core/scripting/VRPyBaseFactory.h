@@ -46,6 +46,17 @@ template<typename T, typename U> bool toValue(PyObject* o, map<T, U>& m) {
     return 1;
 }
 
+template<typename T, typename R> bool toValue(PyObject* o, std::shared_ptr<VRFunction<T,R>>& v) {
+    //if (!VRPyEntity::check(o)) return 0; // TODO: add checks!
+    if (VRPyBase::isNone(o)) v = 0;
+    else {
+        Py_IncRef(o);
+        addPyCallback(o);
+        v = VRFunction<T,R>::create( "pyExecCall", bind(VRPyBase::execPyCall<T,R>, o, PyTuple_New(1), std::placeholders::_1) );
+    }
+    return 1;
+}
+
 template<typename T> bool toValue(PyObject* o, std::shared_ptr<VRFunction<T>>& v) {
     //if (!VRPyEntity::check(o)) return 0; // TODO: add checks!
     if (VRPyBase::isNone(o)) v = 0;

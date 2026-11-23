@@ -13,6 +13,8 @@ PyMethodDef VRPyLLM::methods[] = {
     {"setInstructions", PyWrap(LLM, setInstructions, "Set instructions passed with every request", void, string) },
     {"addKnowledgeAsset", PyWrap(LLM, addKnowledgeAsset, "Add knowledge asset (name, store, text)", void, string, string, string) },
     {"sendKnowledgeAssets", PyWrap(LLM, sendKnowledgeAssets, "Send the knowledge assets to OpenAI", void) },
+    {"addTool", PyWrap(LLM, addTool, "Add tool to OpenAI (tool, callback <str(map<str,str>)>, description)", void, string, VRServerCbPtr, string) },
+    {"addToolParameter", PyWrap(LLM, addToolParameter, "Add parameter to tool", void, string, string, string, string) },
     {"setMsgCallback", PyWrap(LLM, setMsgCallback, "Set msg callback, signature: def onMsg(msg)", void, VRMessageCbPtr) },
     {"setRestCallback", PyWrap(LLM, setRestCallback, "Set rest callback, signature: def onRestMsg(msg)", void, VRMessageCbPtr) },
     {"sendRequest", PyWrapOpt(LLM, sendRequest, "Send request, (request, conversation, effort = 'fast'), effort: [fast, normal, deep]", "fast", void, string, string, string) },

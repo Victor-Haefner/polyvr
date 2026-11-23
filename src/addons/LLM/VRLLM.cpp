@@ -48,7 +48,7 @@ void VRLLM::addKnowledgeAsset(string name, string store, string data) {
     s.files[name] = f;
 }
 
-void VRLLM::addTool(string name, function<void(string,map<string,string>,string&)> cb, string description) {
+void VRLLM::addTool(string name, VRServerCbPtr cb, string description) {
     Tool t(name);
     t.description = description;
     t.cb = cb;
@@ -127,7 +127,7 @@ void VRLLM::processEvent(string s) {
 
                 auto& tool = tools[name];
                 tool.pendingCallID = callID;
-                tool.cb(name, params, tool.pendingCallResult);
+                tool.pendingCallResult = (*tool.cb)(params);
             }
         }
 

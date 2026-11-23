@@ -192,11 +192,12 @@ Example:
 \tprint('hello')
 )API";
 
-    auto handleTool = [this](string name, map<string, string> params, string& result) { result = on_tool_executed(name, params); };
-    llm->addTool("create_script", handleTool, createScriptDoc);
+    handleCreateScript = VRServerCb::create("onCreateScript", [this](map<string, string> params) { return on_tool_executed("create_script", params); } );
+    handleExecScript   = VRServerCb::create("onExecScript",   [this](map<string, string> params) { return on_tool_executed("execute_script", params); } );
+    llm->addTool("create_script", handleCreateScript, createScriptDoc);
     llm->addToolParameter("create_script", "name", "string", "Valid Python function identifier used as the script name");
     llm->addToolParameter("create_script", "core", "string", createScriptCoreDoc);
-    llm->addTool("execute_script", handleTool, "Execute a python script in PolyVR, pass the function name");
+    llm->addTool("execute_script", handleExecScript, "Execute a python script in PolyVR, pass the function name");
     llm->addToolParameter("execute_script", "name", "string", "Script name to execute");
 }
 

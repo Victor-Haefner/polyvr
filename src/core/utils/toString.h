@@ -105,6 +105,8 @@ template<typename T> string typeName(const std::shared_ptr<VRFunction<vector<T>>
 template<typename T> string typeName(const std::shared_ptr<VRFunction<vector<std::shared_ptr<T>>>>* t) { return "callback(list of "+typeName<T>((T*)0)+")"; }
 template<typename T, typename U> string typeName(const std::shared_ptr<VRFunction<map<T,U>>>* t) { return "callback(dictionary of "+typeName<T>((T*)0) + " to " + typeName<U>((U*)0)+")"; }
 template<typename T, typename U> string typeName(const std::shared_ptr<VRFunction<map<T,std::shared_ptr<U>>>>* t) { return "callback(dictionary of "+typeName<T>((T*)0) + " to " + typeName<U>((U*)0)+")"; }
+template<typename T, typename U, typename R> string typeName(const std::shared_ptr<VRFunction<map<T,U>,R>>* t) { return typeName<R>((R*)0)+" callback(dictionary of "+typeName<T>((T*)0) + " to " + typeName<U>((U*)0)+")"; }
+template<typename T, typename U, typename R> string typeName(const std::shared_ptr<VRFunction<map<T,std::shared_ptr<U>>,R>>* t) { return typeName<R>((R*)0)+" callback(dictionary of "+typeName<T>((T*)0) + " to " + typeName<U>((U*)0)+")"; }
 
 template<typename T> int toValue(stringstream& s, T& t);
 template<typename T> int toValue(stringstream& s, vector<std::shared_ptr<T>>& t) { return true; }

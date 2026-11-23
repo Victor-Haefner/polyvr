@@ -62,7 +62,7 @@ class VRLLM : public enable_shared_from_this<VRLLM> {
             string name;
             string description;
             map<string, Parameter> parameters;
-            function<void(string,map<string,string>,string&)> cb;
+            VRServerCbPtr cb;
 
             string pendingCallID;
             string pendingCallResult;
@@ -130,7 +130,7 @@ class VRLLM : public enable_shared_from_this<VRLLM> {
 
 		void setInstructions(string i);
 		void addKnowledgeAsset(string name, string store, string data);
-		void addTool(string name, function<void(string,map<string,string>,string&)> cb, string description);
+		void addTool(string name, VRServerCbPtr cb, string description);
         void addToolParameter(string tool, string param, string type, string description);
 
 		bool checkKey(const string& key, string& what);
