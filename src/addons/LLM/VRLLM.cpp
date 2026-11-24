@@ -349,6 +349,8 @@ void VRLLM::sendJsonRequest(Json::Value req, string conv, string effort) {
             tool["description"] = t.second.description;
             tool["parameters"]["type"] = "object";
             tool["parameters"]["additionalProperties"] = false;
+            tool["parameters"]["properties"] = Json::Value(Json::objectValue);
+            tool["parameters"]["required"] = Json::Value(Json::arrayValue);
             tool["strict"] = true;
 
             for (auto& p : t.second.parameters) {
