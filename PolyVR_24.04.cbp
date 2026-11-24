@@ -1153,6 +1153,9 @@
 		<Unit filename="src/addons/LLM/VRLLMFwd.h">
 			<Option target="PVR-Addons-d" />
 		</Unit>
+		<Unit filename="src/addons/LLM/VRPolyAI.cpp">
+			<Option target="PVR-Addons-d" />
+		</Unit>
 		<Unit filename="src/addons/LLM/VRPyLLM.cpp">
 			<Option target="PVR-Addons-d" />
 		</Unit>
