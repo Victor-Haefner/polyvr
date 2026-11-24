@@ -21,6 +21,8 @@
 #include <stdint.h>
 
 #include <regex>
+#include <deque>
+#include <utility>
 
 using namespace OSG;
 
@@ -75,6 +77,8 @@ static struct mg_http_serve_opts s_http_server_opts;
 class HTTPServer {
     private:
         VRThreadCbPtr serverThread;
+        VRMutex mtx;
+        deque<pair<int, string>> wsMessageQueue;
 
     public:
         //server----------------------------------------------------------------
@@ -148,7 +152,9 @@ class HTTPServer {
         }
 
         void loop(VRThreadWeakPtr wt) {
-            if (server) mg_mgr_poll(server, 100);
+            if (!server) return;
+            processWebsocketQueue();
+            mg_mgr_poll(server, 100);
             //if (auto t = wt.lock()) if (t->control_flag == false) return;
         }
 
@@ -168,15 +174,26 @@ class HTTPServer {
         }
 
         void websocket_send(int id, string message) {
-            static VRMutex mtx;
+            VRLock lock(mtx);
+            wsMessageQueue.emplace_back(id, std::move(message));
+        }
 
-            //cout << "websocket_send " << id << ", " << message << endl;
-            if (websockets.count(id) && websockets[id]) {
+        void processWebsocketQueue() {
+            deque<pair<int, string>> queue;
+
+            {
                 VRLock lock(mtx);
+                queue.swap(wsMessageQueue);
+            }
+
+            for (auto& msg : queue) {
+                int id = msg.first;
+                if (!websockets.count(id) || !websockets[id]) continue;
                 mg_connection* c = websockets[id];
-                //if (c->send_mbuf.len > 2200) return;
-                //cout << " mgc " << c->send_mbuf.len << ", " << c->send_mbuf.size << ", " << c->recv_mbuf.len << ", " << c->recv_mbuf.size << ", " << message << endl;
-                mg_ws_send(c, message.c_str(), message.size(), WEBSOCKET_OP_TEXT);
+                if (!c) continue;
+                if (!c->is_websocket) continue;
+                if (c->is_closing) continue;
+                mg_ws_send(c, msg.second.c_str(), msg.second.size(), WEBSOCKET_OP_TEXT);
             }
         }
 
