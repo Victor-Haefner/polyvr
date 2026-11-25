@@ -35,6 +35,7 @@ PyMethodDef VRPyPath::methods[] = {
     {"getDistance", PyWrap2(Path, getDistance, "Return the distance from point to path - float getDistance( [x,y,z] )", float, Vec3d ) },
     {"getDistanceToHull", PyWrap2(Path, getDistanceToHull, "Return the distance from point to path hull - float getDistanceToHull( [x,y,z] )", float, Vec3d ) },
     {"getClosestPoint", PyWrap2(Path, getClosestPoint, "Return the closest point on path in path coordinate t - float getClosestPoint( [x,y,z] ) Return value from 0 (path start) to 1 (path end)", float, Vec3d ) },
+    {"getSubPath", PyWrap2(Path, getSubPath, "Return path between path coords t1 and t2 (t1,t2,resolution)", PathPtr, double, double, int ) },
     {"approximate", PyWrap2(Path, approximate, "Convert the cubic bezier spline in a quadratic or linear one (currently only quadratic) - approximate(int degree)", void, int ) },
     {"isStraight", PyWrapOpt2(Path, isStraight, "Check if the path is straight between point i and j - bool isStraight( | int i, int j )", "0|0", bool, int, int ) },
     {"isCurve", PyWrapOpt2(Path, isCurve, "Check if the path is curved between point i and j - bool isCurve( | int i, int j )", "0|0", bool, int, int ) },

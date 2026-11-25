@@ -318,6 +318,35 @@ vector<Vec3d> Path::getControlPoints() { return controlPoints; }
 int Path::size() { return points.size(); }
 int Path::getResolution() { return iterations; }
 
+PathPtr Path::getSubPath(double t1, double t2, int res) {
+    auto P0 = getUniformPose(t1);
+    auto C0 = getColor(t1); // TODO: get uniform colors
+    auto PL = getUniformPose(t2);
+    auto CL = getColor(t2);
+
+    auto sp = create();
+    sp->addPoint(P0, C0);
+
+    double L = getLength(0,1);
+    double Lk1 = t1*L;
+    double Lk2 = t2*L;
+
+    double l = 0;
+    for (int i=1; i<points.size(); i++) {
+        double Li = getLength(i-1,i);
+        if (l > Lk1+1e-3 && l < Lk2-1e-3) {
+            auto P = points[i-1];
+            auto C = point_colors[i];
+            sp->addPoint(P, C);
+        }
+        l += Li;
+    }
+
+    sp->addPoint(PL, CL);
+    sp->compute(res);
+    return sp;
+}
+
 PosePtr Path::getPoint(int i) {
     size_t N = size();
     if (N == 0) return 0;
