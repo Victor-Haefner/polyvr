@@ -26,6 +26,7 @@ PyMethodDef VRPyPath::methods[] = {
     {"getSegmentIDs", PyWrap2(Path, getSegmentIDs, "Return the two IDs of the points before and after t, t from 0 to 1", Vec2i, double ) },
     {"getControlPoints", PyWrap2(Path, getControlPoints, "Return a list of the path control points", vector<Vec3d> ) },
     {"close", PyWrap2(Path, close, "Close the path - close()", void ) },
+    {"subdivide", PyWrap2(Path, subdivide, "Subdivide the path by adding n points on it", void, int ) },
     {"getPositions", PyWrap2(Path, getPositions, "Return the positions from the computed path - [[x,y,z]] getPositions()", vector<Vec3d> ) },
     {"getDirections", PyWrap2(Path, getDirections, "Return the directions from the computed path - [[x,y,z]] getDirections()", vector<Vec3d> ) },
     {"getUpVectors", PyWrap2(Path, getUpVectors, "Return the up vectors from the computed path - [[x,y,z]] getUpVectors()", vector<Vec3d> ) },

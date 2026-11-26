@@ -318,6 +318,32 @@ vector<Vec3d> Path::getControlPoints() { return controlPoints; }
 int Path::size() { return points.size(); }
 int Path::getResolution() { return iterations; }
 
+void Path::subdivide(int n) {
+    int N = size();
+    if (N <= 1) return;
+
+    vector<PosePtr> nPoints;
+    vector<Color3f> nPoint_colors;
+    nPoints.push_back(points[0]);
+    nPoint_colors.push_back(point_colors[0]);
+
+    double t = 0;
+    double ti = 1.0/(n+1);
+    for (int i=0; i<n; i++) {
+        t += ti;
+        auto P = getUniformPose(t);
+        auto C = getColor(t);
+        nPoints.push_back(P);
+        nPoint_colors.push_back(C);
+    }
+
+    nPoints.push_back(points[N-1]);
+    nPoint_colors.push_back(nPoint_colors[N-1]);
+    points = nPoints;
+    point_colors = nPoint_colors;
+    compute(iterations);
+}
+
 PathPtr Path::getSubPath(double t1, double t2, int res) {
     auto P0 = getUniformPose(t1);
     auto C0 = getColor(t1); // TODO: get uniform colors

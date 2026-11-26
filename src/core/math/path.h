@@ -57,6 +57,7 @@ class Path : public VRStorage {
 
         void invert();
         void close();
+        void subdivide(int n);
         bool isClosed();
         void compute(int N);
         int getResolution();
